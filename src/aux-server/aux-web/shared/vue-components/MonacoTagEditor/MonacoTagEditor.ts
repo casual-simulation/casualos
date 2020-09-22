@@ -9,6 +9,8 @@ import {
     PrecalculatedBot,
     loadBots,
     hasValue,
+    getTagValueForSpace,
+    getUpdateForTagAndSpace,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike, Subscription } from 'rxjs';
@@ -40,6 +42,7 @@ setup();
 export default class MonacoTagEditor extends Vue {
     @Prop({ required: true }) tag: string;
     @Prop({ required: true }) bot: Bot;
+    @Prop({ required: true }) space: string;
     @Prop({ default: true }) showResize: boolean;
 
     private _simulation: BrowserSimulation;
@@ -81,7 +84,7 @@ export default class MonacoTagEditor extends Vue {
     }
 
     get errorsCount() {
-        return sumBy(this.scriptErrors, e => e.count);
+        return sumBy(this.scriptErrors, (e) => e.count);
     }
 
     get errorsLabel() {
@@ -96,14 +99,24 @@ export default class MonacoTagEditor extends Vue {
 
     get isScript() {
         if (this.bot && this.tag) {
-            return isScript(this.bot.tags[this.tag]);
+            const currentValue = getTagValueForSpace(
+                this.bot,
+                this.tag,
+                this.space
+            );
+            return isScript(currentValue);
         }
         return false;
     }
 
     get isFormula() {
         if (this.bot && this.tag) {
-            return isFormula(this.bot.tags[this.tag]);
+            const currentValue = getTagValueForSpace(
+                this.bot,
+                this.tag,
+                this.space
+            );
+            return isFormula(currentValue);
         }
         return false;
     }
@@ -129,7 +142,7 @@ export default class MonacoTagEditor extends Vue {
 
                 const sub2 = sim.watcher.botsDiscovered
                     .pipe(
-                        tap(bots => {
+                        tap((bots) => {
                             let update = false;
                             for (let b of bots) {
                                 if (
@@ -168,7 +181,7 @@ export default class MonacoTagEditor extends Vue {
                             }
                         })
                     )
-                    .subscribe(null, e => console.error(e));
+                    .subscribe(null, (e) => console.error(e));
                 this._sub.add(sub);
                 this._sub.add(sub2);
                 return [sub];
@@ -200,7 +213,7 @@ export default class MonacoTagEditor extends Vue {
     }
 
     makeNormalTag() {
-        let currentValue = this.bot.tags[this.tag];
+        let currentValue = getTagValueForSpace(this.bot, this.tag, this.space);
         if (typeof currentValue === 'object') {
             return;
         }
@@ -212,16 +225,15 @@ export default class MonacoTagEditor extends Vue {
             final = currentValue.slice(1);
         }
         if (final !== null) {
-            this._simulation.helper.updateBot(this.bot, {
-                tags: {
-                    [this.tag]: final,
-                },
-            });
+            this._simulation.helper.updateBot(
+                this.bot,
+                getUpdateForTagAndSpace(this.tag, final, this.space)
+            );
         }
     }
 
     makeScriptTag() {
-        let currentValue = this.bot.tags[this.tag];
+        let currentValue = getTagValueForSpace(this.bot, this.tag, this.space);
         if (typeof currentValue === 'object') {
             return;
         }
@@ -235,20 +247,20 @@ export default class MonacoTagEditor extends Vue {
             final = '@' + currentValue;
         }
         if (final !== null) {
-            this._simulation.helper.updateBot(this.bot, {
-                tags: {
-                    [this.tag]: final,
-                },
-            });
+            this._simulation.helper.updateBot(
+                this.bot,
+                getUpdateForTagAndSpace(this.tag, final, this.space)
+            );
         }
     }
 
     private _updateModel() {
         const bot = this.bot;
         const tag = this.tag;
+        const space = this.space;
 
         const oldModel = this._model;
-        this._model = loadModel(this._simulation, bot, tag);
+        this._model = loadModel(this._simulation, bot, tag, space);
         if (
             oldModel &&
             oldModel !== this._model &&
@@ -270,10 +282,10 @@ export default class MonacoTagEditor extends Vue {
         }
 
         const scriptErrors = this._allErrors.filter(
-            e => e.botId === bot.id && e.tag === tag
+            (e) => e.botId === bot.id && e.tag === tag
         );
-        const grouped = groupBy(scriptErrors, e => `${e.name}${e.message}`);
-        this.scriptErrors = Object.keys(grouped).map(k => {
+        const grouped = groupBy(scriptErrors, (e) => `${e.name}${e.message}`);
+        this.scriptErrors = Object.keys(grouped).map((k) => {
             let error = grouped[k][0];
             return {
                 ...error,

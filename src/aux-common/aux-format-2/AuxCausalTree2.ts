@@ -17,6 +17,7 @@ import {
     insertAtoms,
     removeAtoms,
     AtomCardinality,
+    first,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxOp,
@@ -30,6 +31,8 @@ import {
     signedCert,
     signedValue,
     signedRevocation,
+    tagMask,
+    TagMaskOp,
 } from './AuxOpTypes';
 import { BotsState, PartialBotsState, BotTags } from '../bots/Bot';
 import reducer, { certificateId } from './AuxWeaveReducer';
@@ -53,6 +56,7 @@ import {
     findBotNode,
     findBotNodes,
     findValueNodeByValue,
+    findTagMaskNodes,
 } from './AuxWeaveHelpers';
 import { Action } from '@casual-simulation/causal-trees';
 
@@ -273,6 +277,47 @@ export function applyEvents(
         return result;
     };
 
+    const updateTagMasks = (botId: string, tags: BotTags) => {
+        let result: AuxResult = auxResultIdentity();
+        for (let key in tags) {
+            let node = first(findTagMaskNodes(tree.weave, botId, key));
+            const val = tags[key];
+            if (!node) {
+                // create new tag
+                const tagResult = addAtom(null, tagMask(botId, key));
+
+                result = mergeAuxResults(result, tagResult);
+
+                const newAtom = addedAtom(tagResult.results[0]);
+
+                if (!newAtom) {
+                    continue;
+                }
+                node = tree.weave.getNode(newAtom.id) as WeaveNode<TagMaskOp>;
+            }
+
+            const currentVal = findValueNode(node);
+            if (!currentVal || val !== currentVal.atom.value.value) {
+                const valueResult = addAtom(node.atom, value(val));
+                result = mergeAuxResults(result, valueResult);
+
+                const newAtom = addedAtom(valueResult.results[0]);
+                if (newAtom) {
+                    const weaveResult = tree.weave.removeSiblingsBefore(
+                        newAtom
+                    );
+                    result = mergeAuxResults(result, {
+                        results: [weaveResult],
+                        newSite: null,
+                        update: {},
+                    });
+                }
+            }
+        }
+
+        return result;
+    };
+
     const prevState = tree.state;
     let result: AuxResult = auxResultIdentity();
     let returnActions: Action[] = [];
@@ -294,13 +339,18 @@ export function applyEvents(
                 newResult = botResult;
             }
         } else if (event.type === 'update_bot') {
-            if (!event.update.tags) {
-                continue;
+            let oldResult = newResult;
+            if (event.update.tags) {
+                const node = findBotNode(tree.weave, event.id);
+                if (node) {
+                    newResult = updateTags(node, event.update.tags);
+                }
             }
-
-            const node = findBotNode(tree.weave, event.id);
-            if (node) {
-                newResult = updateTags(node, event.update.tags);
+            if (event.update.masks && space && event.update.masks[space]) {
+                newResult = updateTagMasks(event.id, event.update.masks[space]);
+            }
+            if (newResult === oldResult) {
+                continue;
             }
         } else if (event.type == 'remove_bot') {
             for (let node of findBotNodes(tree.weave, event.id)) {
@@ -592,7 +642,7 @@ export function applyAtoms(
 
     tree.state = finalState;
 
-    return { tree, updates, results };
+    return { tree, updates, results, update };
 }
 
 // /**

@@ -50,11 +50,30 @@ export interface Bot {
      * The set of signatures that the bot contains.
      */
     signatures?: BotSignatures;
+
+    /**
+     * The set of tag masks that have been applied to the bot.
+     */
+    masks?: BotTagMasks;
 }
 
+/**
+ * Defines an interface that indicates a bot was updated.
+ */
 export interface UpdatedBot {
+    /**
+     * The updated bot.
+     */
     bot: Bot;
+
+    /**
+     * The tags that were updated on the bot.
+     */
     tags: string[];
+
+    /**
+     * The signatures that were updated on the bot.
+     */
     signatures?: string[];
 }
 
@@ -109,6 +128,20 @@ export interface ScriptTags extends PrecalculatedTags {
  */
 export interface BotSignatures {
     [hash: string]: string;
+}
+
+/**
+ * Defines an interface for a map of tag masks to tag names.
+ *
+ * Tag masks are special tags that can exist in a different space from the bot they are applied to.
+ * This makes it possible to have some local-only data applied to a shared bot for example.
+ *
+ * The actual data structure is similar to the bot tags structure except that tags are additionally
+ * split by the space that they originated from. This makes it possible to identify which space a tag came from and also
+ * prevents cross-space conflicts.
+ */
+export interface BotTagMasks {
+    [space: string]: BotTags;
 }
 
 export interface BotTags {
@@ -629,6 +662,36 @@ export const BOOTSTRAP_PARTITION_ID = 'bootstrap';
  * The partition ID for other player bots.
  */
 export const OTHER_PLAYERS_PARTITION_ID = 'otherPlayers';
+
+/**
+ * The space that tag masks get placed in by default.
+ */
+export const DEFAULT_TAG_MASK_SPACE: BotSpace = 'tempLocal';
+
+/**
+ * The list of spaces that tag masks should be prioritized by.
+ * Listed in reverse order of where they actually end up applied.
+ */
+export const TAG_MASK_SPACE_PRIORITIES_REVERSE = [
+    'admin',
+    'shared',
+    'otherPlayers',
+    'player',
+    'local',
+    'tempLocal',
+] as BotSpace[];
+
+/**
+ * The list of spaces that tag masks should be prioritized by.
+ */
+export const TAG_MASK_SPACE_PRIORITIES = [
+    'tempLocal',
+    'local',
+    'player',
+    'otherPlayers',
+    'shared',
+    'admin',
+] as BotSpace[];
 
 /**
  * The name of the branch that contains admin space.

@@ -6,6 +6,8 @@ import {
     Transpiler,
     KNOWN_TAGS,
     isScript,
+    hasValue,
+    getTagValueForSpace,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
 import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
@@ -26,7 +28,7 @@ import { propertyInsertText } from './CompletionHelpers';
 export function setup() {
     // Tell monaco how to create the web workers
     (<any>self).MonacoEnvironment = {
-        getWorker: function(moduleId: string, label: string) {
+        getWorker: function (moduleId: string, label: string) {
             if (label === 'typescript' || label === 'javascript') {
                 return new TypescriptWorker();
             } else if (label === 'html') {
@@ -79,13 +81,13 @@ export function setup() {
      * Monkeypatch to make 'Find All References' work across multiple files
      * https://github.com/Microsoft/monaco-editor/issues/779#issuecomment-374258435
      */
-    SimpleEditorModelResolverService.prototype.findModel = function(
+    SimpleEditorModelResolverService.prototype.findModel = function (
         editor: monaco.editor.IStandaloneCodeEditor,
         resource: any
     ) {
         return monaco.editor
             .getModels()
-            .find(model => model.uri.toString() === resource.toString());
+            .find((model) => model.uri.toString() === resource.toString());
     };
 }
 
@@ -118,14 +120,14 @@ export function setActiveModel(model: monaco.editor.ITextModel) {
  */
 export function watchSimulation(simulation: BrowserSimulation) {
     let sub = simulation.watcher.botsDiscovered
-        .pipe(flatMap(f => f))
-        .subscribe(f => {
+        .pipe(flatMap((f) => f))
+        .subscribe((f) => {
             for (let tag of tagsOnBot(f)) {
                 if (
                     shouldKeepModelWithTagLoaded(tag) ||
                     isFormula(f.tags[tag])
                 ) {
-                    loadModel(simulation, f, tag);
+                    loadModel(simulation, f, tag, null);
                 }
             }
         });
@@ -168,7 +170,8 @@ export function watchSimulation(simulation: BrowserSimulation) {
                     for (let id in result.references) {
                         for (let tag of result.references[id]) {
                             const bot = simulation.helper.botsState[id];
-                            let m = loadModel(simulation, bot, tag);
+                            // TODO: Support references to tag masks
+                            let m = loadModel(simulation, bot, tag, null);
                             locations.push(
                                 ...m
                                     .findMatches(
@@ -179,7 +182,7 @@ export function watchSimulation(simulation: BrowserSimulation) {
                                         null,
                                         false
                                     )
-                                    .map(r => ({
+                                    .map((r) => ({
                                         range: r.range,
                                         uri: m.uri,
                                     }))
@@ -224,7 +227,7 @@ export function watchSimulation(simulation: BrowserSimulation) {
                 const usedTags = await simulation.code.getTags();
                 const knownTags = KNOWN_TAGS;
                 const allTags = sortBy(union(usedTags, knownTags)).filter(
-                    t => !/[()]/g.test(t)
+                    (t) => !/[()]/g.test(t)
                 );
 
                 const tagColumn = tagIndex + offset;
@@ -232,7 +235,7 @@ export function watchSimulation(simulation: BrowserSimulation) {
 
                 return {
                     suggestions: allTags.map(
-                        t =>
+                        (t) =>
                             <monaco.languages.CompletionItem>{
                                 kind: monaco.languages.CompletionItemKind.Field,
                                 label: t,
@@ -292,19 +295,20 @@ export function clearModels() {
 export function loadModel(
     simulation: BrowserSimulation,
     bot: Bot,
-    tag: string
+    tag: string,
+    space: string
 ) {
-    const uri = getModelUri(bot, tag);
+    const uri = getModelUri(bot, tag, space);
     let model = monaco.editor.getModel(uri);
     if (!model) {
-        let script = getScript(bot, tag);
+        let script = getScript(bot, tag, space);
         model = monaco.editor.createModel(
             script,
-            tagScriptLanguage(tag, bot.tags[tag]),
+            tagScriptLanguage(tag, getTagValueForSpace(bot, tag, space)),
             uri
         );
 
-        watchModel(simulation, model, bot, tag);
+        watchModel(simulation, model, bot, tag, space);
     }
 
     return model;
@@ -359,7 +363,8 @@ function watchModel(
     simulation: BrowserSimulation,
     model: monaco.editor.ITextModel,
     bot: Bot,
-    tag: string
+    tag: string,
+    space: string
 ) {
     let sub = new Subscription();
     let info: ModelInfo = {
@@ -377,25 +382,29 @@ function watchModel(
             .botTagsChanged(bot.id)
             .pipe(
                 skip(1),
-                takeWhile(update => update !== null)
+                takeWhile((update) => update !== null)
             )
-            .subscribe(update => {
+            .subscribe((update) => {
                 bot = update.bot;
                 if (model === activeModel || !update.tags.has(tag)) {
                     return;
                 }
-                let script = getScript(bot, tag);
+                let script = getScript(bot, tag, space);
                 let value = model.getValue();
                 if (script !== value) {
                     model.setValue(script);
                 }
-                updateLanguage(model, tag, bot.tags[tag]);
+                updateLanguage(
+                    model,
+                    tag,
+                    getTagValueForSpace(bot, tag, space)
+                );
             })
     );
 
     sub.add(
         toSubscription(
-            model.onDidChangeContent(async e => {
+            model.onDidChangeContent(async (e) => {
                 if (e.isFlush) {
                     return;
                 }
@@ -408,7 +417,7 @@ function watchModel(
                     }
                 }
                 updateLanguage(model, tag, val);
-                await simulation.editBot(bot, tag, val);
+                await simulation.editBot(bot, tag, val, space);
             })
         )
     );
@@ -416,16 +425,16 @@ function watchModel(
     sub.add(
         simulation.watcher.botsRemoved
             .pipe(
-                flatMap(f => f),
-                first(id => id === bot.id)
+                flatMap((f) => f),
+                first((id) => id === bot.id)
             )
-            .subscribe(f => {
+            .subscribe((f) => {
                 unloadModel(model);
             })
     );
 
     models.set(model.uri.toString(), info);
-    updateDecorators(model, info, bot.tags[tag]);
+    updateDecorators(model, info, getTagValueForSpace(bot, tag, space));
     subs.push(sub);
 }
 
@@ -513,17 +522,23 @@ function updateDecorators(
     }
 }
 
-function getModelUri(bot: Bot, tag: string) {
-    return getModelUriFromId(bot.id, tag);
+function getModelUri(bot: Bot, tag: string, space: string) {
+    return getModelUriFromId(bot.id, tag, space);
 }
 
-function getModelUriFromId(id: string, tag: string) {
+function getModelUriFromId(id: string, tag: string, space: string) {
     let tagWithExtension = tag.indexOf('.') >= 0 ? tag : `${tag}.js`;
-    return monaco.Uri.parse(encodeURI(`file:///${id}/${tagWithExtension}`));
+    if (hasValue(space)) {
+        return monaco.Uri.parse(
+            encodeURI(`file:///${id}/${space}/${tagWithExtension}`)
+        );
+    } else {
+        return monaco.Uri.parse(encodeURI(`file:///${id}/${tagWithExtension}`));
+    }
 }
 
-export function getScript(bot: Bot, tag: string) {
-    let val = bot.tags[tag];
+export function getScript(bot: Bot, tag: string, space: string) {
+    let val = getTagValueForSpace(bot, tag, space);
     if (typeof val !== 'undefined' && val !== null) {
         let str = val.toString();
         if (typeof val === 'object') {

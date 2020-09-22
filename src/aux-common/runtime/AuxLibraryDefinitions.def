@@ -1786,6 +1786,11 @@ declare interface Bot {
     tags: BotTags;
 
     /**
+     * The tag masks that are applied to the bot.
+     */
+    masks: BotTags;
+
+    /**
      * The raw tag values that the bot contains.
      * If you want to access the script code for a formula, use this.
      * Otherwise, use the tags property.
@@ -1796,6 +1801,13 @@ declare interface Bot {
      * The tags that have been changed on this bot.
      */
     changes: BotTags;
+
+    /**
+     * The tag masks that have been changed on this bot.
+     */
+    maskChanges: {
+        [space: string]: BotTags;
+    };
 }
 
 /**
@@ -2409,6 +2421,26 @@ declare global {
      * setTag(this, "color", "green");
      */
     function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any;
+
+    /**
+     * Sets the value of the given tag mask in the given bot.
+     * @param bot The bot.
+     * @param tag The tag to set.
+     * @param value The value to set.
+     * @param space The space that the tag mask should be placed in. If not specified, then the tempLocal space will be used.
+     * 
+     * @example
+     * // Set a bot's color to "green".
+     * setTagMask(this, "color", "green")
+     */
+    function setTagMask(bot: Bot | Bot[], tag: string, value: any, space?: BotSpace): any;
+
+    /**
+     * Clears the tag masks from the given bot.
+     * @param bot The bot or bots that the tag masks should be cleared from.
+     * @param space The space that the tag masks should be cleared from. If not specified, then all spaces will be cleared.
+     */
+    function clearTagMasks(bot: Bot | Bot[], space?: BotSpace): void;
 
     /**
      * Creates a mod from declareed mod data.

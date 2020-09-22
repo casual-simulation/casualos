@@ -298,7 +298,11 @@ describe('Weave2', () => {
                 const nodes = [...iterateFrom(result.loserRef)];
 
                 expect(result.loserRef.prev).toBe(null);
-                expect(nodes.map(n => n.atom)).toEqual([atom2, atom2b, atom2a]);
+                expect(nodes.map((n) => n.atom)).toEqual([
+                    atom2,
+                    atom2b,
+                    atom2a,
+                ]);
             });
         });
 
@@ -625,7 +629,7 @@ describe('Weave2', () => {
 
             const nodes = [...iterateCausalGroup(weave.roots[0])];
 
-            expect(nodes.map(n => n.atom)).toEqual([a2, a1]);
+            expect(nodes.map((n) => n.atom)).toEqual([a2, a1]);
         });
 
         it('should return the nested children of the given node', () => {
@@ -645,7 +649,7 @@ describe('Weave2', () => {
 
             const nodes = [...iterateCausalGroup(weave.roots[0])];
 
-            expect(nodes.map(n => n.atom)).toEqual([a5, a2, a4, a1, a3]);
+            expect(nodes.map((n) => n.atom)).toEqual([a5, a2, a4, a1, a3]);
         });
 
         it('should exclude non-children of the given node', () => {
@@ -665,7 +669,7 @@ describe('Weave2', () => {
 
             const nodes = [...iterateCausalGroup(weave.getNode(a2.id))];
 
-            expect(nodes.map(n => n.atom)).toEqual([a4]);
+            expect(nodes.map((n) => n.atom)).toEqual([a4]);
         });
 
         it('should exclude atoms with the same timestamp', () => {
@@ -679,7 +683,7 @@ describe('Weave2', () => {
 
             const nodes = [...iterateCausalGroup(weave.getNode(cause1.id))];
 
-            expect(nodes.map(n => n.atom)).toEqual([]);
+            expect(nodes.map((n) => n.atom)).toEqual([]);
         });
     });
 
@@ -709,7 +713,7 @@ describe('Weave2', () => {
             const a5Node = weave.getNode(a5.id);
             const nodes = [...iterateSiblings(a5Node)];
 
-            expect(nodes.map(n => n.atom)).toEqual([a2, a1]);
+            expect(nodes.map((n) => n.atom)).toEqual([a2, a1]);
         });
 
         it('should exclude cousin atoms', () => {
@@ -732,7 +736,7 @@ describe('Weave2', () => {
             const a6Node = weave.getNode(a6.id);
             const nodes = [...iterateSiblings(a6Node)];
 
-            expect(nodes.map(n => n.atom)).toEqual([a5]);
+            expect(nodes.map((n) => n.atom)).toEqual([a5]);
         });
 
         it('should exclude cousin atoms with the same timestamp', () => {
@@ -755,7 +759,7 @@ describe('Weave2', () => {
             const b3Node = weave.getNode(b3.id);
             const nodes = [...iterateSiblings(b3Node)];
 
-            expect(nodes.map(n => n.atom)).toEqual([b2]);
+            expect(nodes.map((n) => n.atom)).toEqual([b2]);
         });
 
         it('should work with root atoms', () => {
@@ -778,7 +782,7 @@ describe('Weave2', () => {
             const rootNode = weave.getNode(root.id);
             const nodes = [...iterateSiblings(rootNode)];
 
-            expect(nodes.map(n => n.atom)).toEqual([]);
+            expect(nodes.map((n) => n.atom)).toEqual([]);
         });
     });
 
@@ -793,7 +797,7 @@ describe('Weave2', () => {
             const root = atom(atomId('a', 0), null, {});
             weave.insert(root);
             const chain = weave.referenceChain(root.id);
-            expect(chain.map(ref => ref.atom)).toEqual([root]);
+            expect(chain.map((ref) => ref.atom)).toEqual([root]);
         });
 
         it('should return all the ancestors of the given reference', () => {
@@ -815,7 +819,7 @@ describe('Weave2', () => {
 
             const chain = weave.referenceChain(greatGrandChild.id);
 
-            expect(chain.map(ref => ref.atom)).toEqual([
+            expect(chain.map((ref) => ref.atom)).toEqual([
                 greatGrandChild,
                 grandChild,
                 child,
@@ -887,7 +891,7 @@ describe('Weave2', () => {
             const removed = result.ref;
             expect(removed.atom).toEqual(a1);
 
-            const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
+            const removedAtoms = [...iterateFrom(removed)].map((n) => n.atom);
             expect(removedAtoms).toEqual([a1, a3, a2]);
 
             const atoms = weave.getAtoms();
@@ -912,7 +916,7 @@ describe('Weave2', () => {
 
             const result = weave.remove(a2) as AtomRemovedResult;
             const removed = result.ref;
-            const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
+            const removedAtoms = [...iterateFrom(removed)].map((n) => n.atom);
             expect(removedAtoms).toEqual([a2, a4, a3]);
 
             const atoms = weave.getAtoms();
@@ -991,7 +995,7 @@ describe('Weave2', () => {
 
             const result = weave.removeSiblingsBefore(a4) as AtomRemovedResult;
             const removed = result.ref;
-            const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
+            const removedAtoms = [...iterateFrom(removed)].map((n) => n.atom);
             expect(removedAtoms).toEqual([a3, a2]);
 
             const atoms = weave.getAtoms();
@@ -1013,7 +1017,7 @@ describe('Weave2', () => {
 
             const result = weave.removeSiblingsBefore(a3) as AtomRemovedResult;
             const removed = result.ref;
-            const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
+            const removedAtoms = [...iterateFrom(removed)].map((n) => n.atom);
             expect(removedAtoms).toEqual([a2]);
 
             const atoms = weave.getAtoms();
@@ -1056,7 +1060,7 @@ describe('Weave2', () => {
 
             const result = weave.removeSiblingsBefore(a4) as AtomRemovedResult;
             const removed = result.ref;
-            const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
+            const removedAtoms = [...iterateFrom(removed)].map((n) => n.atom);
             expect(removedAtoms).toEqual([a2, a3]);
 
             const atoms = weave.getAtoms();
@@ -1095,7 +1099,7 @@ describe('Weave2', () => {
 
             const result = weave.removeSiblingsBefore(a7) as AtomRemovedResult;
             const removed = result.ref;
-            const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
+            const removedAtoms = [...iterateFrom(removed)].map((n) => n.atom);
             expect(removedAtoms).toEqual([a4, a6, a5]);
 
             const atoms = weave.getAtoms();

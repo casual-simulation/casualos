@@ -1,4 +1,11 @@
-import { BotsState, BotAction, Bot, UpdatedBot } from '../bots';
+import {
+    BotsState,
+    BotAction,
+    Bot,
+    UpdatedBot,
+    PartialBotsState,
+    StateUpdatedEvent,
+} from '../bots';
 import {
     StatusUpdate,
     RemoteAction,
@@ -114,6 +121,11 @@ export interface AuxPartitionBase extends SubscriptionLike {
     onBotsUpdated: Observable<UpdatedBot[]>;
 
     /**
+     * Gets an observable list that resolves whenever the partition state is updated.
+     */
+    onStateUpdated: Observable<StateUpdatedEvent>;
+
+    /**
      * Gets an observable list of errors from the partition.
      */
     onError: Observable<any>;
@@ -137,10 +149,13 @@ export interface ProxyBridgePartition extends AuxPartitionBase {
         onBotsAdded?: (bot: Bot[]) => void,
         onBotsRemoved?: (bot: string[]) => void,
         onBotsUpdated?: (bots: UpdatedBot[]) => void,
+        onStateUpdated?: (state: StateUpdatedEvent) => void,
         onError?: (error: any) => void,
         onEvents?: (actions: Action[]) => void,
         onStatusUpdated?: (status: StatusUpdate) => void
     ): Promise<void>;
+
+    setSpace(space: string): Promise<void>;
 }
 
 /**

@@ -3566,6 +3566,54 @@ The **second parameter** is the tag that should be retrieved.
 const color = getTag(this, "#color");
 ```
 
+### `setTagMask(bot, tag, value, space?)`
+
+Sets the given tag mask to the given value on the given bot or list of bots.
+If a space is specified, then the tag mask will be set inside that space.
+
+The **first parameter** is the bot or list of bots that the tag mask should be set on.
+
+The **second parameter** is the tag that should be changed.
+
+The **third parameter** is the value that should be placed into the tag(s).
+
+The **fourth parameter** is optional and is the space that the tag mask should exist in.
+If omitted, then the tag mask will be created in the `tempLocal` space.
+
+#### Examples:
+
+1. Set a bot's <TagLink tag='color'/> to `green`.
+```typescript
+setTagMask(this, "#color", "green");
+```
+
+2. Set a bot's <TagLink tag='color'/> to `green` in the `local` space.
+```typescript
+setTagMask(this, "#color", "green", "local");
+```
+
+### `clearTagMasks(bot, space?)`
+
+Clears the tag masks on the given bot or list of bots.
+If a space is specified, then only the tag masks in that space will be deleted.
+
+The **first parameter** is the bot or list of bots that the tag mask should be set on.
+
+The **fourth parameter** is optional and is the space that the tag mask should exist in.
+If omitted, then the tag masks in all spaces will be deleted.
+
+#### Examples:
+
+1. Clear all tag masks on a bot.
+```typescript
+clearTagMasks(this);
+```
+
+2. Clear all tag masks in the local space/
+```typescript
+clearTagMasks(this, "local");
+```
+
 ## Math Actions
 
 ### `math.sum(list)`

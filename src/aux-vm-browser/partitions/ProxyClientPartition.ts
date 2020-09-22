@@ -7,6 +7,10 @@ import {
     ProxyClientPartition,
     ProxyBridgePartition,
     AuxPartitionRealtimeStrategy,
+    StateUpdatedEvent,
+    applyUpdates,
+    PrecalculatedBotsState,
+    stateUpdatedEvent,
 } from '@casual-simulation/aux-common';
 import {
     DeviceAction,
@@ -39,13 +43,22 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
     private _onBotsAdded: Subject<Bot[]>;
     private _onBotsRemoved: Subject<string[]>;
     private _onBotsUpdated: Subject<UpdatedBot[]>;
+    private _onStateUpdated: Subject<StateUpdatedEvent>;
     private _onError: Subject<any>;
     private _onEvents: Subject<Action[]>;
     private _onStatusUpdated: Subject<StatusUpdate>;
     private _proxies: readonly any[];
     private _sub: Subscription;
+    private _space: string;
 
-    space: string;
+    get space(): string {
+        return this._space;
+    }
+    set space(value: string) {
+        this._space = value;
+        this._bridge.setSpace(value);
+    }
+
     type: 'proxy_client';
     state: BotsState;
     private: boolean;
@@ -59,6 +72,11 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
     }
     get onBotsUpdated(): Observable<UpdatedBot[]> {
         return this._onBotsUpdated;
+    }
+    get onStateUpdated(): Observable<StateUpdatedEvent> {
+        return this._onStateUpdated.pipe(
+            startWith(stateUpdatedEvent(this.state))
+        );
     }
     get onError(): Observable<any> {
         return this._onError;
@@ -80,6 +98,7 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
         this._onBotsAdded = new Subject<Bot[]>();
         this._onBotsRemoved = new Subject<string[]>();
         this._onBotsUpdated = new Subject<UpdatedBot[]>();
+        this._onStateUpdated = new Subject<StateUpdatedEvent>();
         this._onError = new Subject<any>();
         this._onEvents = new Subject<Action[]>();
         this._onStatusUpdated = new Subject<StatusUpdate>();
@@ -90,6 +109,9 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
             proxy((bots: Bot[]) => this._handleOnBotsAdded(bots)),
             proxy((bots: string[]) => this._handleOnBotsRemoved(bots)),
             proxy((bots: UpdatedBot[]) => this._handleOnBotsUpdated(bots)),
+            proxy((update: StateUpdatedEvent) =>
+                this._handleOnStateUpdated(update)
+            ),
             proxy((error: any) => this._onError.next(error)),
             proxy((events: Action[]) => this._onEvents.next(events)),
             proxy((status: StatusUpdate) => this._onStatusUpdated.next(status)),
@@ -130,11 +152,16 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
         this._onBotsUpdated.next(bots);
     }
 
+    private _handleOnStateUpdated(update: StateUpdatedEvent): void {
+        this.state = applyUpdates(<PrecalculatedBotsState>this.state, update);
+        this._onStateUpdated.next(update);
+    }
+
     applyEvents(events: any[]): Promise<any[]> {
         // Unwrap the nested promise
         // (technically gets unwrapped automatically, but this
         //  fixes a return type issue)
-        return this._bridge.applyEvents(events).then(a => a);
+        return this._bridge.applyEvents(events).then((a) => a);
     }
 
     async sendRemoteEvents(events: any[]): Promise<void> {

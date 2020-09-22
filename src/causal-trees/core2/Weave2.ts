@@ -650,9 +650,8 @@ export function* iterateChildren<T>(parent: WeaveNode<T>) {
     const firstChild = first(iterateCausalGroup(parent));
     if (firstChild) {
         yield firstChild;
+        yield* iterateSiblings(firstChild);
     }
-
-    yield* iterateSiblings(firstChild);
 }
 
 /**

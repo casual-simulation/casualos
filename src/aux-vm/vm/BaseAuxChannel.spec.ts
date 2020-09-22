@@ -30,6 +30,7 @@ import {
     action,
     Bot,
     runScript,
+    stateUpdatedEvent,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
@@ -394,7 +395,7 @@ describe('BaseAuxChannel', () => {
             await channel.initAndWait();
 
             let deviceEvents: DeviceAction[] = [];
-            channel.onDeviceEvents.subscribe(e => deviceEvents.push(...e));
+            channel.onDeviceEvents.subscribe((e) => deviceEvents.push(...e));
 
             await channel.sendEvents([
                 {
@@ -440,7 +441,7 @@ describe('BaseAuxChannel', () => {
 
         it('should buffer events that are sent before the channel is initialized', async () => {
             let localEvents = [] as Action[];
-            channel.onLocalEvents.subscribe(e => localEvents.push(...e));
+            channel.onLocalEvents.subscribe((e) => localEvents.push(...e));
 
             await channel.sendEvents([toast('abc')]);
 
@@ -449,7 +450,7 @@ describe('BaseAuxChannel', () => {
             await channel.initAndWait();
 
             let deviceEvents: DeviceAction[] = [];
-            channel.onDeviceEvents.subscribe(e => deviceEvents.push(...e));
+            channel.onDeviceEvents.subscribe((e) => deviceEvents.push(...e));
 
             expect(localEvents).toEqual([toast('abc')]);
         });
@@ -459,8 +460,8 @@ describe('BaseAuxChannel', () => {
             // this lets us control when the memory partition first sends a state
             // update to the channel.
             const _memory = <any>memory;
-            const subject = new Subject<Bot[]>();
-            Object.defineProperty(_memory, 'onBotsAdded', {
+            const subject = new Subject<StateUpdatedEvent>();
+            Object.defineProperty(_memory, 'onStateUpdated', {
                 get() {
                     return subject;
                 },
@@ -482,7 +483,7 @@ describe('BaseAuxChannel', () => {
             channel = new AuxChannelImpl(user, device, config);
 
             let localEvents = [] as Action[];
-            channel.onLocalEvents.subscribe(e => localEvents.push(...e));
+            channel.onLocalEvents.subscribe((e) => localEvents.push(...e));
 
             await memory.applyEvents([
                 botAdded(
@@ -500,11 +501,13 @@ describe('BaseAuxChannel', () => {
 
             expect(localEvents).toEqual([]);
 
-            subject.next([
-                createBot('test1', {
-                    test: '@player.toast("abc");',
-                }),
-            ]);
+            subject.next(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        test: '@player.toast("abc");',
+                    }),
+                })
+            );
             await waitAsync();
 
             expect(localEvents).toEqual([toast('abc')]);
@@ -515,13 +518,12 @@ describe('BaseAuxChannel', () => {
             // this lets us control when the memory partition first sends a state
             // update to the channel.
             const _memory = <any>memory;
-            const subject = new Subject<Bot[]>();
-            Object.defineProperty(_memory, 'onBotsAdded', {
+            const subject = new Subject<StateUpdatedEvent>();
+            Object.defineProperty(_memory, 'onStateUpdated', {
                 get() {
                     return subject;
                 },
             });
-            // _memory.onBotsAdded = subject;
             config = {
                 config: {
                     version: 'v1.0.0',
@@ -538,7 +540,7 @@ describe('BaseAuxChannel', () => {
             channel = new AuxChannelImpl(user, device, config);
 
             let localEvents = [] as Action[];
-            channel.onLocalEvents.subscribe(e => localEvents.push(...e));
+            channel.onLocalEvents.subscribe((e) => localEvents.push(...e));
 
             await memory.applyEvents([
                 botAdded(
@@ -555,14 +557,52 @@ describe('BaseAuxChannel', () => {
             await channel.sendEvents([action('test')]);
             expect(localEvents).toEqual([]);
 
-            subject.next([
-                createBot('test1', {
-                    test: '@player.toast("abc");',
-                }),
-            ]);
+            subject.next(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        test: '@player.toast("abc");',
+                    }),
+                })
+            );
             await waitAsync();
 
             expect(localEvents).toEqual([toast('abc')]);
+        });
+
+        it('should support tag masks', async () => {
+            await channel.initAndWait();
+
+            await channel.sendEvents([
+                botAdded({
+                    id: 'test',
+                    tags: {},
+                    masks: {
+                        shared: {
+                            abc: 'def',
+                        },
+                    },
+                }),
+            ]);
+
+            const result = channel.runtime.execute(
+                `return getBot("abc", "def").tags.abc`
+            );
+
+            expect(memory.state).toEqual({
+                userId: expect.anything(),
+                dimensionBot: expect.anything(),
+                test: {
+                    id: 'test',
+                    space: 'shared',
+                    tags: {},
+                    masks: {
+                        shared: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            });
+            expect(result.result).toEqual('def');
         });
 
         describe('load_space', () => {
@@ -627,12 +667,12 @@ describe('BaseAuxChannel', () => {
                 await waitAsync();
 
                 let updates = [] as StateUpdatedEvent[];
-                channel.onStateUpdated.subscribe(update =>
+                channel.onStateUpdated.subscribe((update) =>
                     updates.push(update)
                 );
 
                 let actions = [] as BotAction[];
-                channel.onLocalEvents.subscribe(events =>
+                channel.onLocalEvents.subscribe((events) =>
                     actions.push(...events)
                 );
 
@@ -663,7 +703,8 @@ describe('BaseAuxChannel', () => {
                                 {
                                     value: 'fun',
                                 },
-                                undefined
+                                undefined,
+                                'shared'
                             ),
                         },
                     },
@@ -679,7 +720,7 @@ describe('BaseAuxChannel', () => {
 
                 const task = channel.runtime.context.createTask();
                 let resolved = false;
-                task.promise.then(val => {
+                task.promise.then((val) => {
                     resolved = true;
                 });
 
@@ -707,7 +748,7 @@ describe('BaseAuxChannel', () => {
 
                 const task = channel.runtime.context.createTask();
                 let resolved = false;
-                task.promise.then(val => {
+                task.promise.then((val) => {
                     resolved = true;
                 });
 
@@ -906,8 +947,8 @@ class AuxChannelImpl extends BaseAuxChannel {
     protected _createPartition(config: PartitionConfig): Promise<AuxPartition> {
         return createAuxPartition(
             config,
-            cfg => createMemoryPartition(cfg),
-            config => createBotClientPartition(config)
+            (cfg) => createMemoryPartition(cfg),
+            (config) => createBotClientPartition(config)
         );
     }
 }

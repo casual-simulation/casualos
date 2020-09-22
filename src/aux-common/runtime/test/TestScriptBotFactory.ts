@@ -4,6 +4,8 @@ import {
     BotSpace,
     Bot,
     BotSignatures,
+    botsFromShortIds,
+    TAG_MASK_SPACE_PRIORITIES,
 } from '../../bots';
 import {
     createRuntimeBot,
@@ -78,4 +80,30 @@ export const testScriptBotInterface: RuntimeBotInterface = {
         }
     },
     notifyChange() {},
+    getTagMask(bot: CompiledBot, tag: string): any {
+        if (!bot.masks) {
+            return undefined;
+        }
+        for (let space of TAG_MASK_SPACE_PRIORITIES) {
+            if (!bot.masks[space]) {
+                continue;
+            }
+            if (tag in bot.masks[space]) {
+                return bot.masks[space][tag];
+            }
+        }
+        return undefined;
+    },
+    updateTagMask(bot: CompiledBot, tag: string, spaces: string[], value: any) {
+        if (!bot.masks) {
+            bot.masks = {};
+        }
+        for (let space of spaces) {
+            if (!bot.masks[space]) {
+                bot.masks[space] = {};
+            }
+            bot.masks[space][tag] = value;
+        }
+        return RealtimeEditMode.Immediate;
+    },
 };

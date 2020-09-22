@@ -5,6 +5,7 @@ import {
     ValueOp,
     BotOp,
     CertificateOp,
+    TagMaskOp,
 } from './AuxOpTypes';
 import {
     Weave,
@@ -38,11 +39,11 @@ export function* findBotNodes(
 ): IterableIterator<WeaveNode<BotOp>> {
     for (let root of weave.roots) {
         if (
-            root.atom.value.type === AuxOpType.bot &&
+            root.atom.value.type === AuxOpType.Bot &&
             root.atom.value.id === id
         ) {
             const firstAtom = first(iterateCausalGroup(root));
-            if (!firstAtom || firstAtom.atom.value.type !== AuxOpType.delete) {
+            if (!firstAtom || firstAtom.atom.value.type !== AuxOpType.Delete) {
                 yield root as WeaveNode<BotOp>;
             }
         }
@@ -60,7 +61,7 @@ export function findTagNode(
 ): WeaveNode<TagOp> {
     for (let node of iterateCausalGroup(bot)) {
         if (
-            node.atom.value.type === AuxOpType.tag &&
+            node.atom.value.type === AuxOpType.Tag &&
             node.atom.value.name === tag
         ) {
             return node as WeaveNode<TagOp>;
@@ -71,12 +72,37 @@ export function findTagNode(
 }
 
 /**
+ * Finds the tag mask node for the given bot ID and tag.
+ * @param weave The weave.
+ * @param botId The ID of the bot.
+ * @param tag The tag.
+ */
+export function* findTagMaskNodes(
+    weave: Weave<AuxOp>,
+    botId: string,
+    tag: string
+): IterableIterator<WeaveNode<TagMaskOp>> {
+    for (let root of weave.roots) {
+        if (
+            root.atom.value.type === AuxOpType.TagMask &&
+            root.atom.value.botId === botId &&
+            root.atom.value.name === tag
+        ) {
+            const firstAtom = first(iterateCausalGroup(root));
+            if (!firstAtom || firstAtom.atom.value.type !== AuxOpType.Delete) {
+                yield root as WeaveNode<TagMaskOp>;
+            }
+        }
+    }
+}
+
+/**
  * Finds the first value weave node for the given tag node.
  * @param tag The tag node that should be searched.
  */
 export function findValueNode(tag: WeaveNode<AuxOp>): WeaveNode<ValueOp> {
     for (let node of iterateCausalGroup(tag)) {
-        if (node.atom.value.type === AuxOpType.value) {
+        if (node.atom.value.type === AuxOpType.Value) {
             return node as WeaveNode<ValueOp>;
         }
     }
@@ -95,7 +121,7 @@ export function findValueNodeByValue(
 ): WeaveNode<ValueOp> {
     for (let node of iterateCausalGroup(tag)) {
         if (
-            node.atom.value.type === AuxOpType.value &&
+            node.atom.value.type === AuxOpType.Value &&
             isEqual(node.atom.value.value, value)
         ) {
             return node as WeaveNode<ValueOp>;

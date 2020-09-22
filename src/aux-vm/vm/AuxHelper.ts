@@ -31,6 +31,7 @@ import {
     AsyncActions,
     asyncError,
     botRemoved,
+    BotTagMasks,
 } from '@casual-simulation/aux-common';
 import {
     RemoteAction,
@@ -80,7 +81,7 @@ export class AuxHelper extends BaseHelper<Bot> {
 
         this._runtime.onActions
             .pipe(
-                tap(e => {
+                tap((e) => {
                     this._sendEvents(e);
                 })
             )
@@ -88,7 +89,7 @@ export class AuxHelper extends BaseHelper<Bot> {
 
         this._runtime.onErrors
             .pipe(
-                tap(errors => {
+                tap((errors) => {
                     for (let error of errors) {
                         console.error(error.error);
                     }
@@ -98,7 +99,7 @@ export class AuxHelper extends BaseHelper<Bot> {
                     // so that the runtime can't error
                     // infinitely
                     this._sendEvents(
-                        errors.map(e =>
+                        errors.map((e) =>
                             botAdded(
                                 createBot(
                                     undefined,
@@ -131,7 +132,7 @@ export class AuxHelper extends BaseHelper<Bot> {
      * Gets the public bot state.
      */
     get publicBotsState(): BotsState {
-        return this._getPartitionsState('public', p => !p.private);
+        return this._getPartitionsState('public', (p) => !p.private);
     }
 
     get localEvents() {
@@ -166,7 +167,7 @@ export class AuxHelper extends BaseHelper<Bot> {
         let state: BotsState = null;
 
         let keys = Object.keys(this._partitions);
-        let sorted = sortBy(keys, k => k !== '*');
+        let sorted = sortBy(keys, (k) => k !== '*');
         for (let key of sorted) {
             const partition = this._partitions[key];
             if (!filter(partition)) {
@@ -296,7 +297,7 @@ export class AuxHelper extends BaseHelper<Bot> {
     async createOrUpdateUserDimensionBot() {
         const calc = this.createContext();
         const dimensionBot = this.objects.find(
-            b => getBotConfigDimensions(calc, b).indexOf(USERS_DIMENSION) >= 0
+            (b) => getBotConfigDimensions(calc, b).indexOf(USERS_DIMENSION) >= 0
         );
         if (dimensionBot) {
             return;
@@ -311,9 +312,9 @@ export class AuxHelper extends BaseHelper<Bot> {
         let parsed: StoredAux = JSON.parse(builder);
         let state = getBotsStateFromStoredAux(parsed);
         const objects = getActiveObjects(state);
-        const stateCalc = createPrecalculatedContext(<PrecalculatedBot[]>(
-            objects
-        ));
+        const stateCalc = createPrecalculatedContext(
+            <PrecalculatedBot[]>objects
+        );
         const calc = this.createContext();
         let needsUpdate = false;
         let needsToBeEnabled = false;
@@ -388,13 +389,13 @@ export class AuxHelper extends BaseHelper<Bot> {
     }
 
     async formulaBatch(formulas: string[]): Promise<void> {
-        this._runtime.process(formulas.map(f => runScript(f)));
+        this._runtime.process(formulas.map((f) => runScript(f)));
     }
 
     getTags(): string[] {
         let objects = getActiveObjects(this.botsState);
-        let allTags = union(...objects.map(o => tagsOnBot(o)));
-        let sorted = sortBy(allTags, t => t);
+        let allTags = union(...objects.map((o) => tagsOnBot(o)));
+        let sorted = sortBy(allTags, (t) => t);
         return sorted;
     }
 
@@ -422,6 +423,21 @@ export class AuxHelper extends BaseHelper<Bot> {
             } else {
                 if (event.type === 'add_bot') {
                     newBotPartitions.set(event.bot.id, partition);
+                }
+            }
+            let masks = null as BotTagMasks;
+            let id = null as string;
+            if (event.type === 'update_bot') {
+                if (event.update.masks) {
+                    masks = event.update.masks;
+                    id = event.id;
+                    delete event.update.masks;
+                }
+            } else if (event.type === 'add_bot') {
+                if (event.bot.masks) {
+                    masks = event.bot.masks;
+                    id = event.id;
+                    delete event.bot.masks;
                 }
             }
             if (typeof partition === 'undefined') {
@@ -455,6 +471,26 @@ export class AuxHelper extends BaseHelper<Bot> {
                 map.set(partition, batch);
             } else {
                 batch.push(event);
+            }
+
+            if (masks) {
+                for (let space in masks) {
+                    const maskPartition = this._partitionForBotType(space);
+                    if (maskPartition) {
+                        const newEvent = botUpdated(id, {
+                            masks: {
+                                [space]: masks[space],
+                            },
+                        });
+                        let batch = map.get(maskPartition);
+                        if (!batch) {
+                            batch = [newEvent];
+                            map.set(maskPartition, batch);
+                        } else {
+                            batch.push(newEvent);
+                        }
+                    }
+                }
             }
         }
 

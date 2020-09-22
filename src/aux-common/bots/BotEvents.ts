@@ -1,4 +1,11 @@
-import { PartialBot, BotsState, Bot, BotTags, BotSpace } from './Bot';
+import {
+    PartialBot,
+    BotsState,
+    Bot,
+    BotTags,
+    BotSpace,
+    BotTagMasks,
+} from './Bot';
 import {
     Action,
     DeviceAction,
