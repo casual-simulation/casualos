@@ -5489,6 +5489,194 @@ describe('AuxRuntime', () => {
                         updatedBots: ['test'],
                     });
                 });
+
+                it('should buffer tag masks that are added before the corresponding bot is added', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    shared: {
+                                        def: 123,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update1).toEqual({
+                        state: {},
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                id: 'test',
+                                precalculated: true,
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                values: {
+                                    abc: 'def',
+                                    def: 123,
+                                },
+                                masks: {
+                                    shared: {
+                                        def: 123,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should not allow buffered tag masks to overwrite tag masks that are specified when the bot is added', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    shared: {
+                                        def: 123,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update1).toEqual({
+                        state: {},
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                masks: {
+                                    shared: {
+                                        def: 987,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                id: 'test',
+                                precalculated: true,
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                values: {
+                                    abc: 'def',
+                                    def: 987,
+                                },
+                                masks: {
+                                    shared: {
+                                        def: 987,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should merge buffered tag masks with tag masks that are specified when the bot is added', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    shared: {
+                                        def: 123,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update1).toEqual({
+                        state: {},
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                masks: {
+                                    tempLocal: {
+                                        custom: true,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                id: 'test',
+                                precalculated: true,
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                values: {
+                                    abc: 'def',
+                                    def: 123,
+                                    custom: true,
+                                },
+                                masks: {
+                                    shared: {
+                                        def: 123,
+                                    },
+                                    tempLocal: {
+                                        custom: true,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
             });
         });
     });

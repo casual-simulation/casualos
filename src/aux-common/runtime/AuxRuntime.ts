@@ -39,6 +39,7 @@ import {
     PartialBot,
     updatedBot,
     TAG_MASK_SPACE_PRIORITIES,
+    BotTagMasks,
 } from '../bots';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -94,6 +95,7 @@ import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 export class AuxRuntime
     implements RuntimeBotInterface, RuntimeBotFactory, SubscriptionLike {
     private _compiledState: CompiledBotsState = {};
+    private _existingMasks: { [id: string]: BotTagMasks } = {};
     private _compiler = new AuxCompiler();
     private _dependencies = new DependencyManager();
     private _onActions: Subject<BotAction[]>;
@@ -716,8 +718,8 @@ export class AuxRuntime
             if (hasValue(bot.signatures)) {
                 precalculated.signatures = bot.signatures;
             }
-            if (hasValue(bot.masks)) {
-                precalculated.masks = bot.masks;
+            if (hasValue(newBot.masks)) {
+                precalculated.masks = newBot.masks;
             }
             newBots.push([newBot, precalculated]);
             newBotIDs.add(newBot.id);
@@ -871,6 +873,11 @@ export class AuxRuntime
             let compiled = this._compiledState[id];
 
             if (!compiled) {
+                // buffer tag masks
+                if (u.masks) {
+                    const existing = this._existingMasks[id] || {};
+                    this._existingMasks[id] = merge(existing, u.masks);
+                }
                 continue;
             }
 
@@ -1220,6 +1227,28 @@ export class AuxRuntime
         if (hasValue(bot.signatures)) {
             compiledBot.signatures = bot.signatures;
         }
+
+        // Copy existing tag masks to the new bot
+        if (!fromFactory && this._existingMasks[bot.id]) {
+            const existing = this._existingMasks[bot.id];
+            delete this._existingMasks[bot.id];
+            for (let space in existing) {
+                if (!bot.masks) {
+                    bot.masks = {};
+                }
+                for (let tag in existing[space]) {
+                    if (hasValue(bot.masks?.[space]?.[tag])) {
+                        continue;
+                    }
+                    if (!bot.masks[space]) {
+                        bot.masks[space] = {};
+                    }
+                    bot.masks[space][tag] = existing[space][tag];
+                }
+            }
+        }
+
+        // Copy the new bot tag masks to the compiled bot
         if (hasValue(bot.masks)) {
             compiledBot.masks = {};
             for (let space in bot.masks) {

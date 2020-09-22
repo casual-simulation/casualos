@@ -514,7 +514,6 @@ describe('AuxHelper', () => {
                 test: {
                     id: 'test',
                     space: 'shared',
-                    tags: {},
                     masks: {
                         shared: {
                             abc: 'def',
