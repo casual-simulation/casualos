@@ -58,7 +58,7 @@
 
                     <!-- Other tags -->
                     <div
-                        v-for="({ tag }, index) in tags"
+                        v-for="({ tag, space }, index) in tags"
                         :key="index"
                         class="bot-cell header"
                         @click="searchForTag(tag)"
@@ -66,15 +66,15 @@
                         <bot-tag
                             ref="tags"
                             :tag="tag"
-                            :isScript="isTagOnlyScripts(tag)"
-                            :isFormula="isTagOnlyFormulas(tag)"
+                            :isScript="isTagOnlyScripts(tag, space)"
+                            :isFormula="isTagOnlyFormulas(tag, space)"
                             :allowCloning="true"
                         ></bot-tag>
 
                         <!-- Show X button for tags that don't have values or tags that are hidden -->
                         <md-button
                             class="remove-tag md-icon-button md-dense"
-                            v-if="!tagHasValue(tag) || isHiddenTag(tag)"
+                            v-if="!tagHasValue(tag, space) || isHiddenTag(tag)"
                             @click="removeTag(tag)"
                         >
                             <md-icon>close</md-icon>
@@ -175,6 +175,7 @@
                     ref="multilineEditor"
                     :bot="focusedBot"
                     :tag="focusedTag"
+                    :space="focusedSpace"
                     :showDesktopEditor="!isMobile()"
                 ></tag-value-editor>
             </tag-value-editor-wrapper>

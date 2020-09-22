@@ -27,6 +27,7 @@ import {
     goToDimension,
     BotTags,
     tweenTo,
+    getTagValueForSpace,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../EventBus';
 
@@ -165,22 +166,22 @@ export default class BotTable extends Vue {
         return this.editableMap.get(bot.id) === false;
     }
 
-    isTagOnlyScripts(tag: string) {
+    isTagOnlyScripts(tag: string, space: string) {
         const numScripts = sumBy(this.bots, (b) =>
-            isScript(b.tags[tag]) ? 1 : 0
+            isScript(getTagValueForSpace(b, tag, space)) ? 1 : 0
         );
         const emptyTags = sumBy(this.bots, (b) =>
-            !hasValue(b.tags[tag]) ? 1 : 0
+            !hasValue(getTagValueForSpace(b, tag, space)) ? 1 : 0
         );
         return numScripts > 0 && this.bots.length === numScripts + emptyTags;
     }
 
-    isTagOnlyFormulas(tag: string) {
+    isTagOnlyFormulas(tag: string, space: string) {
         const numFormulas = sumBy(this.bots, (b) =>
-            isFormula(b.tags[tag]) ? 1 : 0
+            isFormula(getTagValueForSpace(b, tag, space)) ? 1 : 0
         );
         const emptyTags = sumBy(this.bots, (b) =>
-            !hasValue(b.tags[tag]) ? 1 : 0
+            !hasValue(getTagValueForSpace(b, tag, space)) ? 1 : 0
         );
         return numFormulas > 0 && this.bots.length === numFormulas + emptyTags;
     }
@@ -568,7 +569,11 @@ export default class BotTable extends Vue {
             this.focusedBot = bot;
             this.focusedTag = tag;
             this.focusedSpace = space;
-            this.multilineValue = this.focusedBot.tags[this.focusedTag];
+            this.multilineValue = getTagValueForSpace(
+                this.focusedBot,
+                this.focusedTag,
+                this.focusedSpace
+            );
             this.isFocusedTagFormula = isFormula(this.multilineValue);
 
             this.$nextTick(() => {
@@ -604,8 +609,10 @@ export default class BotTable extends Vue {
         this._updateTags();
     }
 
-    tagHasValue(tag: string): boolean {
-        return some(this.bots, (f) => hasValue(f.tags[tag]));
+    tagHasValue(tag: string, space: string): boolean {
+        return some(this.bots, (f) =>
+            hasValue(getTagValueForSpace(f, tag, space))
+        );
     }
 
     isHiddenTag(tag: string): boolean {
@@ -726,14 +733,14 @@ export default class BotTable extends Vue {
                     removed = true;
                 }
             }
-            if (this.isTagOnlyScripts(tag)) {
+            if (this.isTagOnlyScripts(tag, null)) {
                 listenerList.push(tag);
                 if (!removed) {
                     sortedArray.splice(i, 1);
                     removed = true;
                 }
             }
-            if (this.isTagOnlyFormulas(tag)) {
+            if (this.isTagOnlyFormulas(tag, null)) {
                 formulaList.push(tag);
                 if (!removed) {
                     sortedArray.splice(i, 1);
@@ -908,7 +915,7 @@ export default class BotTable extends Vue {
     }
 
     searchForTag(tag: string) {
-        if (tag === null || this.tagHasValue(tag)) {
+        if (tag === null || this.tagHasValue(tag, null)) {
             this.$emit('goToTag', tag);
         }
     }
