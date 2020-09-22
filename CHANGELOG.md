@@ -27,6 +27,10 @@
         -   Animations.
         -   Storing decrypted data.
 
+### :100: Other Changes
+
+-   Pinned the Deno version to `v1.4` so that we can decide when to adopt future Deno updates.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `server.setupStory()` would load a simulation and never dispose it.
