@@ -28,6 +28,8 @@ import {
     BotTags,
     tweenTo,
     getTagValueForSpace,
+    TAG_MASK_SPACE_PRIORITIES,
+    BotSpace,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../EventBus';
 
@@ -554,6 +556,31 @@ export default class BotTable extends Vue {
             );
             downloadAuxState(stored, `selection-${Date.now()}`);
         }
+    }
+
+    shouldShowRealValue(tag: string, space: string, tagIndex: number) {
+        // Find all the same tags
+        const sameTags = this.tags.filter(
+            (t) => t.tag === tag && t.space !== space
+        );
+
+        // Figure out if the current tag and space have the highest priority
+        // by comparing them to the priority list.
+        const currentSpacePriorityIndex = TAG_MASK_SPACE_PRIORITIES.indexOf(
+            space as BotSpace
+        );
+        for (let t of sameTags) {
+            const priorityIndex = TAG_MASK_SPACE_PRIORITIES.indexOf(
+                t.space as BotSpace
+            );
+            if (currentSpacePriorityIndex < priorityIndex) {
+                // There is another tag that has a higher priority space than us.
+                // Therefore we should show the real tag value.
+                return true;
+            }
+        }
+
+        return false;
     }
 
     onTagChanged(bot: Bot, tag: string, value: string, space: string) {

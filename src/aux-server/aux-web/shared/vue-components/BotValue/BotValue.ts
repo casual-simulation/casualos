@@ -22,6 +22,9 @@ export default class BotValue extends Vue {
     @Prop() readOnly: boolean;
     @Prop() space: string;
 
+    @Prop({ default: false })
+    alwaysShowRealValue: boolean;
+
     @Prop({ default: true })
     showFormulaWhenFocused: boolean;
 
@@ -107,7 +110,7 @@ export default class BotValue extends Vue {
 
     private _updateVisibleValue() {
         if (
-            !hasValue(this.space) &&
+            !this.alwaysShowRealValue &&
             (!this._focused || !this.showFormulaWhenFocused)
         ) {
             this.value = this.getBotManager().helper.calculateFormattedBotValue(

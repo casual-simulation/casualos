@@ -135,6 +135,7 @@
                                 :bot="bot"
                                 :tag="tag"
                                 :space="space"
+                                :alwaysShowRealValue="shouldShowRealValue(tag, space, tagIndex)"
                                 @tagChanged="onTagChanged"
                                 @focusChanged="onTagFocusChanged(bot, tag, space, $event)"
                             ></bot-value>
