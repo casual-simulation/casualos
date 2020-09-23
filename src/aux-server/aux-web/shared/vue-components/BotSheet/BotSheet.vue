@@ -14,6 +14,9 @@
                     :diffSelected="isDiff"
                     :dimension="dimension"
                     :showNewBot="showNewBot"
+                    :showExitSheet="showButton"
+                    :exitSheetIcon="buttonIcon"
+                    :exitSheetHint="buttonHint"
                 ></bot-table>
             </md-card-content>
         </md-card>

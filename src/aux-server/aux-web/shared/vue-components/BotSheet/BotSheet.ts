@@ -10,12 +10,20 @@ import {
     ON_SHEET_BOT_CLICK,
     toast,
     tweenTo,
+    SHEET_PORTAL,
+    CLICK_ACTION_NAME,
+    onClickArg,
 } from '@casual-simulation/aux-common';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import {
+    BrowserSimulation,
+    userBotChanged,
+} from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import BotTable from '../BotTable/BotTable';
 import { SubscriptionLike } from 'rxjs';
 import { copyToClipboard } from '../../SharedUtils';
+import { tap } from 'rxjs/operators';
+import { SheetPortalConfig } from './SheetPortalConfig';
 
 @Component({
     components: {
@@ -29,7 +37,12 @@ export default class BotSheet extends Vue {
     hasPortal: boolean = false;
     showNewBot: boolean = true;
 
+    showButton: boolean = true;
+    buttonIcon: string = null;
+    buttonHint: string = null;
+
     private _simulation: BrowserSimulation;
+    private _currentConfig: SheetPortalConfig;
 
     constructor() {
         super();
@@ -50,6 +63,20 @@ export default class BotSheet extends Vue {
                     this.showNewBot = !e.isSingleBot;
                 })
             );
+            this._currentConfig = new SheetPortalConfig(
+                SHEET_PORTAL,
+                botManager
+            );
+            subs.push(
+                this._currentConfig,
+                this._currentConfig.onUpdated
+                    .pipe(
+                        tap(() => {
+                            this._updateConfig();
+                        })
+                    )
+                    .subscribe()
+            );
             return subs;
         });
     }
@@ -58,7 +85,23 @@ export default class BotSheet extends Vue {
         this._simulation.helper.setEditingBot(bot);
     }
 
-    exitSheet() {
+    async exitSheet() {
+        if (this._currentConfig) {
+            const result = await this._simulation.helper.shout(
+                CLICK_ACTION_NAME,
+                [this._currentConfig.configBot],
+                onClickArg(null, this.dimension)
+            );
+
+            if (result.results.length <= 0) {
+                this._exitSheet();
+            }
+        } else {
+            this._exitSheet();
+        }
+    }
+
+    private _exitSheet() {
         const pagePortal = this._simulation.helper.userBot.values.pagePortal;
         let tags: BotTags = {
             sheetPortal: null,
@@ -115,6 +158,18 @@ export default class BotSheet extends Vue {
                     sheetPortal: tag,
                 },
             });
+        }
+    }
+
+    private _updateConfig() {
+        if (this._currentConfig) {
+            this.showButton = this._currentConfig.showButton;
+            this.buttonIcon = this._currentConfig.buttonIcon;
+            this.buttonHint = this._currentConfig.buttonHint;
+        } else {
+            this.showButton = true;
+            this.buttonIcon = null;
+            this.buttonHint = null;
         }
     }
 }

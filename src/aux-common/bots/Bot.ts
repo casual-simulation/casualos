@@ -1075,11 +1075,16 @@ export const TAG_PORTAL: string = 'tagPortal';
 export const DATA_PORTAL: string = 'dataPortal';
 
 /**
+ * The name of the sheet portal.
+ */
+export const SHEET_PORTAL: string = 'sheetPortal';
+
+/**
  * The list of all portal tags.
  */
 export const KNOWN_PORTALS: string[] = [
     'pagePortal',
-    'sheetPortal',
+    SHEET_PORTAL,
     'inventoryPortal',
     'menuPortal',
     'leftWristPortal',
@@ -1216,6 +1221,9 @@ export const KNOWN_TAGS: string[] = [
     'tagPortalShowButton',
     'tagPortalButtonIcon',
     'tagPortalButtonHint',
+    'sheetPortalShowButton',
+    'sheetPortalButtonIcon',
+    'sheetPortalButtonHint',
 
     'color',
     'creator',

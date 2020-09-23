@@ -167,9 +167,9 @@
                 </div>
             </div>
             <div class="bot-table-middle">
-                <md-button class="md-fab exit-sheet" @click="exitSheet()">
-                    <md-icon>web_asset</md-icon>
-                    <md-tooltip>Page Portal</md-tooltip>
+                <md-button v-if="showExitSheet" class="md-fab exit-sheet" @click="exitSheet()">
+                    <md-icon>{{ finalExitSheetIcon }}</md-icon>
+                    <md-tooltip>{{ finalExitSheetHint }}</md-tooltip>
                 </md-button>
             </div>
             <tag-value-editor-wrapper v-if="focusedBot && focusedTag && !isBotReadOnly(focusedBot)">

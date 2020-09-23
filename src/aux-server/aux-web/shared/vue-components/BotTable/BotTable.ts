@@ -88,6 +88,15 @@ export default class BotTable extends Vue {
     @Prop({ required: true })
     showNewBot: boolean;
 
+    @Prop({ default: true })
+    showExitSheet: boolean;
+
+    @Prop({ default: 'web_asset' })
+    exitSheetIcon: string;
+
+    @Prop({ default: 'Page Portal' })
+    exitSheetHint: string;
+
     tags: { tag: string; space: string }[] = [];
     addedTags: string[] = [];
     lastEditedTag: string = null;
@@ -118,6 +127,20 @@ export default class BotTable extends Vue {
     deletedBotId: string = '';
     showBotDestroyed: boolean = false;
     lastSelectionCount: number = 0;
+
+    get finalExitSheetIcon() {
+        if (hasValue(this.exitSheetIcon)) {
+            return this.exitSheetIcon;
+        }
+        return 'web_asset';
+    }
+
+    get finalExitSheetHint() {
+        if (hasValue(this.exitSheetHint)) {
+            return this.exitSheetHint;
+        }
+        return 'Page Portal';
+    }
 
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
