@@ -549,6 +549,10 @@ export default class BotTable extends Vue {
         );
     }
 
+    botClicked(bot: Bot) {
+        this.$emit('botClick', bot);
+    }
+
     async downloadBots() {
         if (this.hasBots) {
             const stored = await this.getBotManager().exportBots(

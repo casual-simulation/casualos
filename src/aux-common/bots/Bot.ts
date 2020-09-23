@@ -1371,6 +1371,7 @@ export const KNOWN_TAGS: string[] = [
 
     ON_SHEET_TAG_CLICK,
     ON_SHEET_BOT_ID_CLICK,
+    ON_SHEET_BOT_CLICK,
 ];
 
 export function onClickArg(face: string, dimension: string) {

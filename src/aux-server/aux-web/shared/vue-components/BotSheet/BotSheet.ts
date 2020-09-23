@@ -7,7 +7,9 @@ import {
     BotTags,
     ON_SHEET_TAG_CLICK,
     ON_SHEET_BOT_ID_CLICK,
+    ON_SHEET_BOT_CLICK,
     toast,
+    tweenTo,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
@@ -67,6 +69,22 @@ export default class BotSheet extends Vue {
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
             tags: tags,
         });
+    }
+
+    async botClick(bot: Bot) {
+        const result = await this._simulation.helper.shout(
+            ON_SHEET_BOT_CLICK,
+            null,
+            {
+                bot: bot,
+            }
+        );
+        if (result.results.length <= 0) {
+            this.exitSheet();
+            this._simulation.helper.transaction(
+                tweenTo(bot.id, undefined, undefined, undefined, 0)
+            );
+        }
     }
 
     async botIDClick(id: string) {

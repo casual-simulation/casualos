@@ -96,7 +96,7 @@
                                 ref="tags"
                                 :allowCloning="true"
                                 :createMod="true"
-                                @click="selectBot(bot)"
+                                @click="botClicked(bot)"
                             >
                             </mini-bot>
                         </div>

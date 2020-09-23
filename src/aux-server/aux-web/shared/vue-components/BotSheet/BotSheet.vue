@@ -9,6 +9,7 @@
                     @exitSheet="exitSheet()"
                     @goToTag="goToTag"
                     @botIDClick="botIDClick"
+                    @botClick="botClick"
                     :bots="bots"
                     :diffSelected="isDiff"
                     :dimension="dimension"
