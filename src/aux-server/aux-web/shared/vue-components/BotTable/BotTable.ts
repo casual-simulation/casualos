@@ -583,6 +583,10 @@ export default class BotTable extends Vue {
         return false;
     }
 
+    async botIDClick(id: string) {
+        this.$emit('botIDClick', id);
+    }
+
     onTagChanged(bot: Bot, tag: string, value: string, space: string) {
         this.lastEditedTag = this.focusedTag = tag;
         this.focusedBot = bot;

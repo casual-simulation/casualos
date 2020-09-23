@@ -6,11 +6,14 @@ import {
     hasValue,
     BotTags,
     ON_SHEET_TAG_CLICK,
+    ON_SHEET_BOT_ID_CLICK,
+    toast,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import BotTable from '../BotTable/BotTable';
 import { SubscriptionLike } from 'rxjs';
+import { copyToClipboard } from '../../SharedUtils';
 
 @Component({
     components: {
@@ -64,6 +67,20 @@ export default class BotSheet extends Vue {
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
             tags: tags,
         });
+    }
+
+    async botIDClick(id: string) {
+        const result = await this._simulation.helper.shout(
+            ON_SHEET_BOT_ID_CLICK,
+            null,
+            {
+                bot: this._simulation.helper.botsState[id],
+            }
+        );
+        if (result.results.length <= 0) {
+            copyToClipboard(id);
+            this._simulation.helper.transaction(toast('Copied!'));
+        }
     }
 
     async goToTag(tag: string) {

@@ -110,6 +110,7 @@
                             :allowCloning="true"
                             :shortID="getShortId(bot)"
                             class="bot-cell header"
+                            @click="botIDClick"
                         >
                         </bot-id>
 

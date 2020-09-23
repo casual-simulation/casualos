@@ -8,6 +8,7 @@
                     @tagFocusChanged="tagFocusChanged"
                     @exitSheet="exitSheet()"
                     @goToTag="goToTag"
+                    @botIDClick="botIDClick"
                     :bots="bots"
                     :diffSelected="isDiff"
                     :dimension="dimension"

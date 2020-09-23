@@ -1370,6 +1370,7 @@ export const KNOWN_TAGS: string[] = [
     ON_ANY_BOTS_CHANGED_ACTION_NAME,
 
     ON_SHEET_TAG_CLICK,
+    ON_SHEET_BOT_ID_CLICK,
 ];
 
 export function onClickArg(face: string, dimension: string) {
