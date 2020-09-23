@@ -1037,6 +1037,21 @@ export const ON_BOT_CHANGED_ACTION_NAME = 'onBotChanged';
 export const ON_ANY_BOTS_CHANGED_ACTION_NAME = 'onAnyBotsChanged';
 
 /**
+ * The name of the event that is triggered when a tag is clicked in the sheet.
+ */
+export const ON_SHEET_TAG_CLICK = 'onSheetTagClick';
+
+/**
+ * The name of the event that is triggered when a Bot's ID is clicked in the sheet.
+ */
+export const ON_SHEET_BOT_ID_CLICK = 'onSheetBotIDClick';
+
+/**
+ * The name of the event that is triggered when a Bot is clicked in the sheet.
+ */
+export const ON_SHEET_BOT_CLICK = 'onSheetBotClick';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -1353,6 +1368,8 @@ export const KNOWN_TAGS: string[] = [
 
     ON_BOT_CHANGED_ACTION_NAME,
     ON_ANY_BOTS_CHANGED_ACTION_NAME,
+
+    ON_SHEET_TAG_CLICK,
 ];
 
 export function onClickArg(face: string, dimension: string) {

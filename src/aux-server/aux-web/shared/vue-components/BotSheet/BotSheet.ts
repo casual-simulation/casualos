@@ -1,7 +1,12 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
-import { Bot, hasValue, BotTags } from '@casual-simulation/aux-common';
+import {
+    Bot,
+    hasValue,
+    BotTags,
+    ON_SHEET_TAG_CLICK,
+} from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import BotTable from '../BotTable/BotTable';
@@ -61,11 +66,20 @@ export default class BotSheet extends Vue {
         });
     }
 
-    goToTag(tag: string) {
-        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
-            tags: {
-                sheetPortal: tag,
-            },
-        });
+    async goToTag(tag: string) {
+        const result = await this._simulation.helper.shout(
+            ON_SHEET_TAG_CLICK,
+            null,
+            {
+                tag: tag,
+            }
+        );
+        if (result.results.length <= 0) {
+            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+                tags: {
+                    sheetPortal: tag,
+                },
+            });
+        }
     }
 }
