@@ -29,6 +29,12 @@ export interface AuxConfigParameters {
      * that have valid signatures.
      */
     forceSignedScripts?: boolean;
+
+    /**
+     * Whether to run in debug mode.
+     * This will likely cause more verbose console output.
+     */
+    debug?: boolean;
 }
 
 export function buildVersionNumber(config: AuxConfigParameters) {

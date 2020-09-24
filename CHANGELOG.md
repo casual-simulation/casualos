@@ -1,5 +1,31 @@
 # CasualOS Changelog
 
+## V1.2.13
+
+#### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Renamed the `_editingBot` tag to `editingBot`.
+
+### :rocket: Improvements
+
+-   sheetPortal Improvements
+    -   Added the `@onSheetTagClick` listener which is triggered when a tag name is clicked.
+    -   Added the `@onSheetBotIDClick` listener which is triggered when a Bot ID is clicked.
+    -   Added the `@onSheetBotClick` listener which is triggered when a bot visualization is clicked in the sheet.
+    -   Added the `sheetPortalShowButton` config bot tag to control whether the button in the bottom right corner of the sheet is shown.
+    -   Added the `sheetPortalButtonIcon` config bot tag to control the icon on the button in the bottom right corner of the sheet.
+    -   Added the `sheetPortalButtonHint` config bot tag to control the tooltip on the button in the bottom right corner of the sheet.
+    -   Added the `sheetPortalAllowedTags` config bot tag to control which tags are allowed to be shown and edited in the sheet portal.
+    -   Swapped the position of the new bot and new tag buttons in the sheet.
+    -   Added the `editingTag` tag which contains the tag that the player is currently editing.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where cells in the sheet portal would not cover the entire cell area.
+-   Fixed an issue where `clearTagMasks()` would error if given a bot that had no tag masks.
+
 ## V1.2.12
 
 #### Date: 9/22/2020

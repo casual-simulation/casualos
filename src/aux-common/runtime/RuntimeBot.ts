@@ -406,11 +406,15 @@ export function createRuntimeBot(
 
     Object.defineProperty(script, CLEAR_TAG_MASKS_SYMBOL, {
         value: (space: string) => {
-            let spaces = hasValue(space) ? [space] : TAG_MASK_SPACE_PRIORITIES;
-            for (let space of spaces) {
-                const tags = bot.masks[space];
-                for (let tag in tags) {
-                    script[SET_TAG_MASK_SYMBOL](tag, null, space);
+            if (bot.masks) {
+                let spaces = hasValue(space)
+                    ? [space]
+                    : TAG_MASK_SPACE_PRIORITIES;
+                for (let space of spaces) {
+                    const tags = bot.masks[space];
+                    for (let tag in tags) {
+                        script[SET_TAG_MASK_SYMBOL](tag, null, space);
+                    }
                 }
             }
         },

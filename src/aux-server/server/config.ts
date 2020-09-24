@@ -42,6 +42,11 @@ export interface Config {
      * Whether to enable GPIO support.
      */
     gpio: boolean;
+
+    /**
+     * Whether to enable debug logging.
+     */
+    debug: boolean;
 }
 
 export type SandboxType = 'none' | 'deno';

@@ -16,6 +16,7 @@ import {
     createPrecalculatedBot,
     filterBotsBySelection,
     botsInDimension,
+    SHEET_PORTAL,
 } from '@casual-simulation/aux-common';
 
 /**
@@ -68,7 +69,7 @@ export class BotPanelManager implements SubscriptionLike {
     unsubscribe(): void {
         if (!this.closed) {
             this.closed = true;
-            this._subs.forEach(s => s.unsubscribe());
+            this._subs.forEach((s) => s.unsubscribe());
             this._subs = null;
         }
     }
@@ -85,7 +86,7 @@ export class BotPanelManager implements SubscriptionLike {
         return bufferedEvents.pipe(
             flatMap(async () => {
                 if (this._helper.userBot) {
-                    const dimension = this._helper.userBot.values.sheetPortal;
+                    const dimension = this._helper.userBot.values[SHEET_PORTAL];
                     if (!!dimension && dimension !== true) {
                         const bots = filterBotsBySelection(
                             this._helper.objects,

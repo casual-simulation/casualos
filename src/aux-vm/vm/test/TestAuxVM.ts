@@ -156,7 +156,7 @@ export class TestAuxVM implements AuxVM {
 
     async getTags(): Promise<string[]> {
         let objects = getActiveObjects(this.state);
-        let allTags = union(...objects.map(o => tagsOnBot(o))).sort();
+        let allTags = union(...objects.map((o) => tagsOnBot(o))).sort();
         return allTags;
     }
 

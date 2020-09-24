@@ -235,12 +235,13 @@ export function isBotFocusable(calc: BotCalculationContext, bot: Bot): boolean {
  * in this list.
  * @param extraTags The list of tags that should not be removed from the
  * output list.
+ * @param allowedTags The list of tags that should be allowed in the output list.
  */
 export function botTags(
     bots: Bot[],
     currentTags: string[],
     extraTags: string[],
-    tagWhitelist: (string | boolean)[][] = []
+    allowedTags: string[] = null
 ): { tag: string; space: string }[] {
     const botTags = flatMap(bots, (f) => keys(f.tags)).map(
         (t) => ({ tag: t, space: null as string } as const)
@@ -276,45 +277,12 @@ export function botTags(
 
     const onlyTagsToKeep = intersectionBy(allTags, tagsToKeep, tagComparer);
 
-    let allInactive = true;
-
-    // if there is a blacklist index and the  first index [all] is not selected
-    if (tagWhitelist != undefined && tagWhitelist.length > 0) {
-        let filteredTags: string[] = [];
-
-        for (let i = tagWhitelist.length - 1; i >= 0; i--) {
-            if (tagWhitelist[i][1]) {
-                allInactive = false;
-            }
-        }
-
-        if (!allInactive) {
-            for (let i = tagWhitelist.length - 1; i >= 0; i--) {
-                if (!tagWhitelist[i][1]) {
-                    for (let j = 2; j < tagWhitelist[i].length; j++) {
-                        for (let k = onlyTagsToKeep.length - 1; k >= 0; k--) {
-                            if (
-                                onlyTagsToKeep[k].tag ===
-                                <string>tagWhitelist[i][j]
-                            ) {
-                                onlyTagsToKeep.splice(k, 1);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            const initialTags = onlyTagsToKeep.filter(
-                (t) => !isHiddenTag(t.tag)
-            );
-            return initialTags;
-        }
-
-        return onlyTagsToKeep;
-    } else {
-        return onlyTagsToKeep;
+    if (allowedTags) {
+        const allowedTagsSet = new Set(allowedTags);
+        return onlyTagsToKeep.filter((t) => allowedTagsSet.has(t.tag));
     }
+
+    return onlyTagsToKeep;
 
     function tagComparer(tagPair: { tag: string; space: string }) {
         return `${tagPair.tag}.${!tagPair.space ? 'null' : tagPair.space}`;
