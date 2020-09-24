@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Renamed the `_editingBot` tag to `editingBot`.
+
 ### :rocket: Improvements
 
 -   sheetPortal Improvements
