@@ -97,6 +97,9 @@ export default class BotTable extends Vue {
     @Prop({ default: 'Page Portal' })
     exitSheetHint: string;
 
+    @Prop({})
+    allowedTags: string[];
+
     tags: { tag: string; space: string }[] = [];
     addedTags: string[] = [];
     lastEditedTag: string = null;
@@ -113,7 +116,6 @@ export default class BotTable extends Vue {
     viewMode: 'rows' | 'columns' = 'columns';
     showHidden: boolean = false;
 
-    tagWhitelist: (string | boolean)[][] = [];
     editableMap: Map<string, boolean>;
 
     private _simulation: BrowserSimulation;
@@ -169,22 +171,6 @@ export default class BotTable extends Vue {
 
     isMobile(): boolean {
         return this._isMobile;
-    }
-
-    isWhitelistTagActive(index: number | string): boolean {
-        if (typeof index === 'number') {
-            if (index < 0) {
-                return false;
-            }
-            return <boolean>this.tagWhitelist[index][1];
-        } else {
-            const idx = this.tagWhitelist.findIndex((bl) => bl[0] === index);
-            return this.isWhitelistTagActive(idx);
-        }
-    }
-
-    getWhitelistCount(index: number): number {
-        return this.tagWhitelist[index].length - 2;
     }
 
     isBotReadOnly(bot: Bot): boolean {
@@ -271,7 +257,6 @@ export default class BotTable extends Vue {
 
         this.lastSelectionCount = this.bots.length;
 
-        this.setTagWhitelist();
         this._updateTags();
         this.numBotsSelected = this.bots.length;
         if (this.focusedBot) {
@@ -645,7 +630,6 @@ export default class BotTable extends Vue {
 
     toggleHidden() {
         this.showHidden = !this.showHidden;
-        this.setTagWhitelist();
         this._updateTags();
     }
 
@@ -663,7 +647,6 @@ export default class BotTable extends Vue {
             this.addedTags.splice(index, 1);
         }
 
-        this.setTagWhitelist();
         this._updateTags();
     }
 
@@ -723,7 +706,6 @@ export default class BotTable extends Vue {
             return [];
         });
 
-        this.setTagWhitelist();
         this._updateTags();
         this.numBotsSelected = this.bots.length;
         this._updateEditable();
@@ -755,214 +737,10 @@ export default class BotTable extends Vue {
                 this.bots,
                 this.tags.map((t) => t.tag),
                 allExtraTags,
-                this.tagWhitelist
+                this.allowedTags
             ),
             (t) => t.tag
         );
-    }
-
-    toggleWhitelistIndex(index: number) {
-        this.tagWhitelist[index][1] = !this.tagWhitelist[index][1];
-        this._updateTags();
-    }
-
-    setTagWhitelist() {
-        let sortedArray: string[] = getAllBotTags(this.bots, true).sort();
-
-        // remove any duplicates from the array to fix multiple bots adding in duplicate tags
-        sortedArray = sortedArray.filter(function (elem, index, self) {
-            return index === self.indexOf(elem);
-        });
-
-        let whitelist: (string | boolean)[][] = [];
-
-        let hiddenList: (string | boolean)[] = [];
-        let generalList: (string | boolean)[] = [];
-        let listenerList: (string | boolean)[] = [];
-        let formulaList: (string | boolean)[] = [];
-
-        for (let i = sortedArray.length - 1; i >= 0; i--) {
-            const tag = sortedArray[i];
-            let removed = false;
-            if (isHiddenTag(tag)) {
-                hiddenList.push(tag);
-                if (!removed) {
-                    sortedArray.splice(i, 1);
-                    removed = true;
-                }
-            }
-            if (this.isTagOnlyScripts(tag, null)) {
-                listenerList.push(tag);
-                if (!removed) {
-                    sortedArray.splice(i, 1);
-                    removed = true;
-                }
-            }
-            if (this.isTagOnlyFormulas(tag, null)) {
-                formulaList.push(tag);
-                if (!removed) {
-                    sortedArray.splice(i, 1);
-                    removed = true;
-                }
-            }
-        }
-
-        let camelCaseRegex = /(?=[A-Z])/g;
-
-        let current = '';
-        let tempArray: (string | boolean)[] = [];
-        for (let i = sortedArray.length - 1; i >= 0; i--) {
-            if (
-                current.split(camelCaseRegex)[0] !=
-                sortedArray[i].split(camelCaseRegex)[0]
-            ) {
-                if (tempArray.length > 0) {
-                    if (whitelist.length === 0) {
-                        whitelist = [tempArray];
-                    } else {
-                        whitelist.push(tempArray);
-                    }
-                }
-
-                tempArray = [];
-            }
-            current = sortedArray[i];
-
-            // if new tag matces the current tag section
-            if (tempArray.length === 0) {
-                // if the temp array has been reset
-
-                // add the section name in slot 0
-                tempArray.push(current.split(camelCaseRegex)[0]);
-
-                let activeCheck = false;
-                // add the section visibility in slot 1
-                if (this.tagWhitelist.length > 0) {
-                    this.tagWhitelist.forEach((element) => {
-                        if (element[0] === tempArray[0]) {
-                            activeCheck = <boolean>element[1];
-                        }
-                    });
-                }
-                tempArray.push(activeCheck);
-
-                // add the tag that started the match in slot 2
-                tempArray.push(current);
-
-                sortedArray.splice(i, 2);
-            } else {
-                tempArray.push(sortedArray[i]);
-                sortedArray.splice(i, 1);
-            }
-        }
-
-        // makes sure if the loop ends on an array it will add in the temp array correctly to the whitelist
-        if (tempArray.length > 0) {
-            if (whitelist.length === 0) {
-                whitelist = [tempArray];
-            } else {
-                whitelist.push(tempArray);
-            }
-        }
-
-        if (hiddenList.length > 0) {
-            let activeCheck = false;
-
-            if (this.tagWhitelist.length > 0) {
-                this.tagWhitelist.forEach((element) => {
-                    if (element[0] === 'hidden') {
-                        activeCheck = <boolean>element[1];
-                    }
-                });
-            }
-
-            hiddenList.unshift(activeCheck);
-            hiddenList.unshift('hidden');
-            whitelist.unshift(hiddenList);
-        } else {
-            hiddenList.forEach((hiddenTags) => {
-                sortedArray.push(<string>hiddenTags);
-            });
-        }
-
-        if (listenerList.length > 0) {
-            let activeCheck = false;
-
-            if (this.tagWhitelist.length > 0) {
-                this.tagWhitelist.forEach((element) => {
-                    if (element[0] === '@') {
-                        activeCheck = <boolean>element[1];
-                    }
-                });
-            }
-
-            listenerList.unshift(activeCheck);
-            listenerList.unshift('@');
-            whitelist.unshift(listenerList);
-        }
-
-        if (formulaList.length > 0) {
-            let activeCheck = false;
-
-            if (this.tagWhitelist.length > 0) {
-                this.tagWhitelist.forEach((element) => {
-                    if (element[0] === '@') {
-                        activeCheck = <boolean>element[1];
-                    }
-                });
-            }
-
-            formulaList.unshift(activeCheck);
-            formulaList.unshift('=');
-            whitelist.unshift(formulaList);
-        }
-
-        if (sortedArray.length > 0) {
-            let activeCheck = true;
-
-            if (this.tagWhitelist.length > 0) {
-                this.tagWhitelist.forEach((element) => {
-                    if (element[0] === '#') {
-                        activeCheck = <boolean>element[1];
-                    }
-                });
-            }
-
-            generalList.unshift(activeCheck);
-            generalList.unshift('#');
-
-            sortedArray.forEach((generalTags) => {
-                generalList.push(<string>generalTags);
-            });
-
-            whitelist.unshift(generalList);
-        }
-
-        this.tagWhitelist = whitelist;
-    }
-
-    getTagWhitelist(): string[] {
-        let tagList: string[] = [];
-
-        this.tagWhitelist.forEach((element) => {
-            tagList.push(<string>element[0]);
-        });
-
-        return tagList;
-    }
-
-    getVisualTagWhitelist(index: number): string {
-        let newWhitelist: string;
-
-        if ((<string>this.tagWhitelist[index][0]).length > 15) {
-            newWhitelist =
-                (<string>this.tagWhitelist[index][0]).substring(0, 15) + '..';
-        } else {
-            newWhitelist =
-                (<string>this.tagWhitelist[index][0]).substring(0, 15) + '*';
-        }
-
-        return '#' + newWhitelist;
     }
 
     private _updateEditable() {

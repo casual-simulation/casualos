@@ -22,6 +22,7 @@ import {
     Bot,
     CLICK_ACTION_NAME,
     onClickArg,
+    calculateStringListTagValue,
 } from '@casual-simulation/aux-common';
 import { Color } from 'three';
 import {
@@ -43,6 +44,7 @@ export class SheetPortalConfig implements SubscriptionLike {
     private _showButton: boolean;
     private _buttonIcon: string;
     private _buttonHint: string;
+    private _allowedTags: string[];
     private _configBot: Bot;
     private _simulation: Simulation;
 
@@ -63,6 +65,13 @@ export class SheetPortalConfig implements SubscriptionLike {
     get buttonHint(): string {
         if (hasValue(this._buttonHint)) {
             return this._buttonHint;
+        }
+        return null;
+    }
+
+    get allowedTags(): string[] {
+        if (hasValue(this._allowedTags)) {
+            return this._allowedTags;
         }
         return null;
     }
@@ -112,6 +121,7 @@ export class SheetPortalConfig implements SubscriptionLike {
         this._showButton = null;
         this._buttonIcon = null;
         this._buttonHint = null;
+        this._allowedTags = null;
         this._updated.next();
     }
 
@@ -136,6 +146,12 @@ export class SheetPortalConfig implements SubscriptionLike {
             calc,
             bot,
             'auxSheetPortalButtonHint',
+            null
+        );
+        this._allowedTags = calculateStringListTagValue(
+            calc,
+            bot,
+            'auxSheetPortalAllowedTags',
             null
         );
         this._updated.next();

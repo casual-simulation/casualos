@@ -40,6 +40,7 @@ export default class BotSheet extends Vue {
     showButton: boolean = true;
     buttonIcon: string = null;
     buttonHint: string = null;
+    allowedTags: string[] = null;
 
     private _simulation: BrowserSimulation;
     private _currentConfig: SheetPortalConfig;
@@ -82,7 +83,7 @@ export default class BotSheet extends Vue {
     }
 
     tagFocusChanged(bot: Bot, tag: string, focused: boolean) {
-        this._simulation.helper.setEditingBot(bot);
+        this._simulation.helper.setEditingBot(bot, tag);
     }
 
     async exitSheet() {
@@ -166,10 +167,12 @@ export default class BotSheet extends Vue {
             this.showButton = this._currentConfig.showButton;
             this.buttonIcon = this._currentConfig.buttonIcon;
             this.buttonHint = this._currentConfig.buttonHint;
+            this.allowedTags = this._currentConfig.allowedTags;
         } else {
             this.showButton = true;
             this.buttonIcon = null;
             this.buttonHint = null;
+            this.allowedTags = null;
         }
     }
 }

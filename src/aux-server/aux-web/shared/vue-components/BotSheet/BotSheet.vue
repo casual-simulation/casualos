@@ -17,6 +17,7 @@
                     :showExitSheet="showButton"
                     :exitSheetIcon="buttonIcon"
                     :exitSheetHint="buttonHint"
+                    :allowedTags="allowedTags"
                 ></bot-table>
             </md-card-content>
         </md-card>
