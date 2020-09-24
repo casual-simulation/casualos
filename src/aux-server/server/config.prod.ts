@@ -79,8 +79,9 @@ if (
             },
         };
         console.log(
-            `[Config] Enabling CassandraDB for Causal Repos with:\n\tkeyspace: ${cassandraKeyspace}\n\tcreateKeyspace: ${cassandraKeyspace ===
-                'true'}`
+            `[Config] Enabling CassandraDB for Causal Repos with:\n\tkeyspace: ${cassandraKeyspace}\n\tcreateKeyspace: ${
+                cassandraKeyspace === 'true'
+            }`
         );
     }
 }
@@ -102,6 +103,8 @@ const botsTimeToLive =
     parseInt(process.env.BOTS_TIME_TO_LIVE) || 60 * 60 * 24 * 7;
 
 const gpio = process.env.GPIO === 'true' || false;
+
+const debug = process.env.DEBUG === 'true';
 
 const config: Config = {
     socket: {
@@ -168,6 +171,7 @@ const config: Config = {
     drives: path.resolve(__dirname, '..', '..', 'drives'),
     sandbox: sandboxType,
     gpio: gpio,
+    debug: debug,
 };
 
 export default config;

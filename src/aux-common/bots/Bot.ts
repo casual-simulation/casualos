@@ -200,7 +200,7 @@ export interface BotTags {
     ['menuPortalConfigBot']?: string;
     ['leftWristPortalConfigBot']?: string;
     ['rightWristPortalConfigBot']?: string;
-    ['_editingBot']?: string;
+    ['editingBot']?: string;
 
     // Admin channel task tags
     ['auxRunningTasks']?: boolean;
@@ -1037,6 +1037,21 @@ export const ON_BOT_CHANGED_ACTION_NAME = 'onBotChanged';
 export const ON_ANY_BOTS_CHANGED_ACTION_NAME = 'onAnyBotsChanged';
 
 /**
+ * The name of the event that is triggered when a tag is clicked in the sheet.
+ */
+export const ON_SHEET_TAG_CLICK = 'onSheetTagClick';
+
+/**
+ * The name of the event that is triggered when a Bot's ID is clicked in the sheet.
+ */
+export const ON_SHEET_BOT_ID_CLICK = 'onSheetBotIDClick';
+
+/**
+ * The name of the event that is triggered when a Bot is clicked in the sheet.
+ */
+export const ON_SHEET_BOT_CLICK = 'onSheetBotClick';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -1060,11 +1075,16 @@ export const TAG_PORTAL: string = 'tagPortal';
 export const DATA_PORTAL: string = 'dataPortal';
 
 /**
+ * The name of the sheet portal.
+ */
+export const SHEET_PORTAL: string = 'sheetPortal';
+
+/**
  * The list of all portal tags.
  */
 export const KNOWN_PORTALS: string[] = [
     'pagePortal',
-    'sheetPortal',
+    SHEET_PORTAL,
     'inventoryPortal',
     'menuPortal',
     'leftWristPortal',
@@ -1167,7 +1187,8 @@ export const KNOWN_TAGS: string[] = [
     'rightPointer_squeeze',
     'forceSignedScripts',
 
-    '_editingBot',
+    'editingBot',
+    'editingTag',
 
     'portalColor',
     'portalLocked',
@@ -1201,6 +1222,10 @@ export const KNOWN_TAGS: string[] = [
     'tagPortalShowButton',
     'tagPortalButtonIcon',
     'tagPortalButtonHint',
+    'sheetPortalShowButton',
+    'sheetPortalButtonIcon',
+    'sheetPortalButtonHint',
+    'sheetPortalAllowedTags',
 
     'color',
     'creator',
@@ -1353,6 +1378,10 @@ export const KNOWN_TAGS: string[] = [
 
     ON_BOT_CHANGED_ACTION_NAME,
     ON_ANY_BOTS_CHANGED_ACTION_NAME,
+
+    ON_SHEET_TAG_CLICK,
+    ON_SHEET_BOT_ID_CLICK,
+    ON_SHEET_BOT_CLICK,
 ];
 
 export function onClickArg(face: string, dimension: string) {

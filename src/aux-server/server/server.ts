@@ -267,7 +267,7 @@ export class ClientServer {
                                     optimizedData: <any>optimizedData,
                                     optimizedContentType: optimizedContentType,
                                 },
-                                val => !!val
+                                (val) => !!val
                             )
                         );
 
@@ -449,19 +449,16 @@ export class Server {
 
         this._app.use(cors());
 
-        this._mongoClient = await connect(
-            this._config.mongodb.url,
-            {
-                useNewUrlParser: this._config.mongodb.useNewUrlParser,
-            } as MongoClientOptions
-        );
+        this._mongoClient = await connect(this._config.mongodb.url, {
+            useNewUrlParser: this._config.mongodb.useNewUrlParser,
+        } as MongoClientOptions);
         if (this._config.cassandradb) {
             console.log('[Server] Using CassandraDB');
             const requestTracker = new CassandraTracker.RequestLogger({
                 slowThreshold: this._config.cassandradb.slowRequestTime,
             });
             const requestEmitter = <EventEmitter>(<any>requestTracker).emitter;
-            requestEmitter.on('slow', message => {
+            requestEmitter.on('slow', (message) => {
                 console.log(`[Cassandra] ${message}`);
             });
 
@@ -469,7 +466,7 @@ export class Server {
             if ('awsRegion' in this._config.cassandradb) {
                 const config = this._config.cassandradb;
                 const region = AWS_KEYSPACES_REGIONS.find(
-                    r => r.region === config.awsRegion
+                    (r) => r.region === config.awsRegion
                 );
                 if (!region) {
                     throw new Error(
@@ -660,7 +657,7 @@ export class Server {
             .branchInfo(id)
             .pipe(
                 first(),
-                map(info => info.exists)
+                map((info) => info.exists)
             )
             .toPromise();
 
@@ -675,7 +672,11 @@ export class Server {
                 ? new DenoSimulationImpl(
                       user,
                       id,
-                      null,
+                      {
+                          version: null,
+                          versionHash: null,
+                          debug: this._config.debug,
+                      },
                       'http://localhost:3000'
                   )
                 : nodeSimulationForBranch(user, this._webhooksClient, id);
@@ -684,7 +685,7 @@ export class Server {
 
             // Wait for full sync
             await simulation.connection.syncStateChanged
-                .pipe(first(synced => synced))
+                .pipe(first((synced) => synced))
                 .toPromise();
 
             const bot = simulation.helper.botsState[portal];
@@ -695,9 +696,9 @@ export class Server {
 
             const bots = sortBy(
                 simulation.index.findBotsWithTag(portal),
-                b => b.id
+                (b) => b.id
             );
-            const values = bots.map(b => {
+            const values = bots.map((b) => {
                 if (isFormula(b.tags[portal])) {
                     return calculateBotValue(null, b, portal);
                 } else {
@@ -748,7 +749,7 @@ export class Server {
             .branchInfo(id)
             .pipe(
                 first(),
-                map(info => info.exists)
+                map((info) => info.exists)
             )
             .toPromise();
 
@@ -788,7 +789,7 @@ export class Server {
         );
 
         if (result.results.length > 0) {
-            let firstValue = result.results.find(r => hasValue(r));
+            let firstValue = result.results.find((r) => hasValue(r));
             if (firstValue) {
                 if (typeof firstValue === 'object') {
                     if (typeof firstValue.headers === 'object') {
@@ -833,7 +834,7 @@ export class Server {
                 const result = await this._directory.findEntries(ip);
                 if (result.type === 'query_results') {
                     return res.send(
-                        result.entries.map(e => ({
+                        result.entries.map((e) => ({
                             publicName: e.publicName,
                             url: url.format({
                                 protocol: req.protocol,
@@ -886,9 +887,7 @@ export class Server {
         }
 
         console.log(
-            `[Server] Configuring Directory Client for ${
-                this._config.directory.client.upstream
-            }`
+            `[Server] Configuring Directory Client for ${this._config.directory.client.upstream}`
         );
 
         const tunnelClient = this._config.directory.client.tunnel
@@ -984,7 +983,11 @@ export class Server {
                       new DenoSimulationImpl(
                           user,
                           branch,
-                          null,
+                          {
+                              version: null,
+                              versionHash: null,
+                              debug: this._config.debug,
+                          },
                           'http://localhost:3000'
                       )
                 : (user, client, branch) =>
@@ -1011,7 +1014,7 @@ export class Server {
         const bridge = new ConnectionBridge(checkoutDevice);
         const client = new CausalRepoClient(bridge.clientConnection);
         const module = new CheckoutModule2(
-            key => new Stripe(key),
+            (key) => new Stripe(key),
             checkoutUser,
             client
         );
@@ -1179,7 +1182,7 @@ function getWebhooksUser(): AuxUser {
  * @param func
  */
 function dataPortalMiddleware(func: express.Handler) {
-    return function(req: Request, res: Response, next: NextFunction) {
+    return function (req: Request, res: Response, next: NextFunction) {
         if (hasValue(req.query.story) && hasValue(req.query[DATA_PORTAL])) {
             return func(req, res, next);
         } else {

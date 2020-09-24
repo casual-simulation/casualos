@@ -1614,6 +1614,92 @@ describe('BotCalculations', () => {
                 { tag: 'other', space: null },
             ]);
         });
+
+        it('should only exclude tags not in the allowed tags list', () => {
+            const bots: Bot[] = [
+                {
+                    id: 'test',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                    },
+                },
+                {
+                    id: 'test2',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        tag: 'hello',
+                    },
+                },
+                {
+                    id: 'test3',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        tag: 'again',
+                    },
+                },
+                {
+                    id: 'test4',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        other: 'tag',
+                    },
+                },
+            ];
+
+            const tags = botTags(bots, [], [], ['tag', 'other']);
+
+            expect(tags).toEqual([
+                { tag: 'tag', space: null },
+                { tag: 'other', space: null },
+            ]);
+        });
+
+        it('should not include extra tags if theyre not in the allowed tags list', () => {
+            const bots: Bot[] = [
+                {
+                    id: 'test',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                    },
+                },
+                {
+                    id: 'test2',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        tag: 'hello',
+                    },
+                },
+                {
+                    id: 'test3',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        tag: 'again',
+                    },
+                },
+                {
+                    id: 'test4',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        other: 'tag',
+                    },
+                },
+            ];
+
+            const tags = botTags(bots, [], ['_position'], ['tag', 'other']);
+
+            expect(tags).toEqual([
+                { tag: 'tag', space: null },
+                { tag: 'other', space: null },
+            ]);
+        });
     });
 
     describe('createContextId()', () => {

@@ -13,6 +13,14 @@
                         <div v-show="!isMakingNewTag">
                             <!-- keep place here so it shows up as empty-->
                             <md-button
+                                v-if="!isSearch && showNewBot"
+                                class="md-icon-button create-bot"
+                                @click="createBot()"
+                            >
+                                <cube-icon></cube-icon>
+                                <md-tooltip>Create Empty Bot</md-tooltip>
+                            </md-button>
+                            <md-button
                                 v-show="hasBots"
                                 class="md-icon-button"
                                 @click="openNewTag()"
@@ -29,14 +37,6 @@
                                     <img alt="Add Tag" src="../../public/icons/tag-add.png" />
                                 </picture>
                                 <md-tooltip>Add Tag</md-tooltip>
-                            </md-button>
-                            <md-button
-                                v-if="!isSearch && showNewBot"
-                                class="md-icon-button create-bot"
-                                @click="createBot()"
-                            >
-                                <cube-icon></cube-icon>
-                                <md-tooltip>Create Empty Bot</md-tooltip>
                             </md-button>
                         </div>
                     </div>
@@ -96,7 +96,7 @@
                                 ref="tags"
                                 :allowCloning="true"
                                 :createMod="true"
-                                @click="selectBot(bot)"
+                                @click="botClicked(bot)"
                             >
                             </mini-bot>
                         </div>
@@ -110,6 +110,7 @@
                             :allowCloning="true"
                             :shortID="getShortId(bot)"
                             class="bot-cell header"
+                            @click="botIDClick"
                         >
                         </bot-id>
 
@@ -166,9 +167,9 @@
                 </div>
             </div>
             <div class="bot-table-middle">
-                <md-button class="md-fab exit-sheet" @click="exitSheet()">
-                    <md-icon>web_asset</md-icon>
-                    <md-tooltip>Page Portal</md-tooltip>
+                <md-button v-if="showExitSheet" class="md-fab exit-sheet" @click="exitSheet()">
+                    <md-icon>{{ finalExitSheetIcon }}</md-icon>
+                    <md-tooltip>{{ finalExitSheetHint }}</md-tooltip>
                 </md-button>
             </div>
             <tag-value-editor-wrapper v-if="focusedBot && focusedTag && !isBotReadOnly(focusedBot)">

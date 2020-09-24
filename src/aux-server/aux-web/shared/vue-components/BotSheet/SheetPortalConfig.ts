@@ -22,6 +22,7 @@ import {
     Bot,
     CLICK_ACTION_NAME,
     onClickArg,
+    calculateStringListTagValue,
 } from '@casual-simulation/aux-common';
 import { Color } from 'three';
 import {
@@ -36,34 +37,22 @@ import { Simulation } from '@casual-simulation/aux-vm';
 /**
  * Defines a class that is able to watch dimension confic bots and update values.
  */
-export class TagPortalConfig implements SubscriptionLike {
+export class SheetPortalConfig implements SubscriptionLike {
     private _sub: Subscription;
     private _portalTag: string;
     private _updated: Subject<void>;
-    private _style: Object;
     private _showButton: boolean;
     private _buttonIcon: string;
     private _buttonHint: string;
+    private _allowedTags: string[];
     private _configBot: Bot;
     private _simulation: Simulation;
-
-    /**
-     * Gets the CSS style that should be applied.
-     */
-    get style(): Object {
-        if (hasValue(this._style)) {
-            return this._style;
-        }
-        return calculateMeetPortalAnchorPointOffset(
-            DEFAULT_TAG_PORTAL_ANCHOR_POINT
-        );
-    }
 
     get showButton(): boolean {
         if (hasValue(this._showButton)) {
             return this._showButton;
         }
-        return false;
+        return true;
     }
 
     get buttonIcon(): string {
@@ -76,6 +65,13 @@ export class TagPortalConfig implements SubscriptionLike {
     get buttonHint(): string {
         if (hasValue(this._buttonHint)) {
             return this._buttonHint;
+        }
+        return null;
+    }
+
+    get allowedTags(): string[] {
+        if (hasValue(this._allowedTags)) {
+            return this._allowedTags;
         }
         return null;
     }
@@ -96,20 +92,8 @@ export class TagPortalConfig implements SubscriptionLike {
         return this._updated;
     }
 
-    buttonClick() {
-        if (!this._simulation || !this._configBot) {
-            return;
-        }
-        const dimension = calculateBotValue(
-            null,
-            this._simulation.helper.userBot,
-            this._portalTag
-        );
-        this._simulation.helper.action(
-            CLICK_ACTION_NAME,
-            [this._configBot],
-            onClickArg(null, dimension)
-        );
+    get configBot() {
+        return this._configBot;
     }
 
     constructor(portalTag: string, simulation: BrowserSimulation) {
@@ -134,10 +118,10 @@ export class TagPortalConfig implements SubscriptionLike {
     }
 
     protected _clearPortalValues() {
-        this._style = null;
         this._showButton = null;
         this._buttonIcon = null;
         this._buttonHint = null;
+        this._allowedTags = null;
         this._updated.next();
     }
 
@@ -146,49 +130,28 @@ export class TagPortalConfig implements SubscriptionLike {
         bot: PrecalculatedBot,
         portalTag: string
     ) {
-        this._style = calculateBotValue(calc, bot, 'tagPortalStyle');
-        if (typeof this._style !== 'object') {
-            this._style = null;
-        }
-        const anchorPoint = calculateBotValue(
-            calc,
-            bot,
-            'auxTagPortalAnchorPoint'
-        );
-
-        if (hasValue(anchorPoint)) {
-            if (!this._style) {
-                this._style = {
-                    top: null,
-                    bottom: null,
-                    height: null,
-                    width: null,
-                    'min-height': null,
-                    'min-width': null,
-                    left: null,
-                    right: null,
-                };
-            }
-            const offset = getBotTagPortalAnchorPointOffset(calc, bot);
-            merge(this._style, offset);
-        }
-
         this._showButton = calculateBooleanTagValue(
             calc,
             bot,
-            'auxTagPortalShowButton',
+            'auxSheetPortalShowButton',
             null
         );
         this._buttonIcon = calculateStringTagValue(
             calc,
             bot,
-            'auxTagPortalButtonIcon',
+            'auxSheetPortalButtonIcon',
             null
         );
         this._buttonHint = calculateStringTagValue(
             calc,
             bot,
-            'auxTagPortalButtonHint',
+            'auxSheetPortalButtonHint',
+            null
+        );
+        this._allowedTags = calculateStringListTagValue(
+            calc,
+            bot,
+            'auxSheetPortalAllowedTags',
             null
         );
         this._updated.next();

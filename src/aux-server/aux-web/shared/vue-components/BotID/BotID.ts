@@ -27,11 +27,7 @@ export default class BotID extends Vue {
         super();
     }
 
-    copyID() {
-        copyToClipboard(this.bots.id);
-        const sim = appManager.simulationManager.primary;
-        if (sim) {
-            sim.helper.transaction(toast('Copied!'));
-        }
+    click() {
+        this.$emit('click', this.bots.id);
     }
 }

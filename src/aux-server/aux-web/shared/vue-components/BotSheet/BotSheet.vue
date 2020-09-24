@@ -8,10 +8,16 @@
                     @tagFocusChanged="tagFocusChanged"
                     @exitSheet="exitSheet()"
                     @goToTag="goToTag"
+                    @botIDClick="botIDClick"
+                    @botClick="botClick"
                     :bots="bots"
                     :diffSelected="isDiff"
                     :dimension="dimension"
                     :showNewBot="showNewBot"
+                    :showExitSheet="showButton"
+                    :exitSheetIcon="buttonIcon"
+                    :exitSheetHint="buttonHint"
+                    :allowedTags="allowedTags"
                 ></bot-table>
             </md-card-content>
         </md-card>

@@ -1352,6 +1352,66 @@ The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the
   </PossibleValue>
 </PossibleValuesTable>
 
+### `sheetPortalShowButton`
+
+Whether the sheet portal should show a button that allows a custom action.
+When set to true, the button will be displayed in the lower right hand corner of the sheet portal.
+
+Clicking the button will trigger a <TagLink tag='@onClick'/> on the sheet portal config bot.
+If there is no `@onClick`, then the sheet portal will be closed.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The button is shown. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+      No button is shown.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `sheetPortalButtonIcon`
+
+The [Material Icon](https://material.io/resources/icons/?style=baseline) that should be shown on the sheet portal button.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='web_asset'>
+    The Web Asset icon. (Default)
+  </PossibleValue>
+  <PossibleValue value='Any Material Icon'>
+    See <a href='https://material.io/resources/icons/?style=baseline'>https://material.io/resources/icons/?style=baseline</a>.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `sheetPortalButtonHint`
+
+The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the sheet portal button.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='Page Portal'>
+    "Page Portal" (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The text that should be displayed as a hint when the user hovers their mouse over the button.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `sheetPortalAllowedTags`
+
+The list of tags that should be allowed in the sheet portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    All tags are allowed. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Array'>
+    Only the specified tags can be shown in the sheet portal.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ## History Tags
 
 History tags are tags that are automatically applied to bots in the `history` space.
@@ -2084,15 +2144,7 @@ The URL that is currently specified in the tab.
   </PossibleValue>
 </PossibleValuesTable>
 
-## Hidden Tags
-
-Hidden tags are tags that are hidden in the sheet by default.
-
-<Alert type='info'>
-  You can make your own hidden tags by adding a `_` (underscore) to the start of the tag.
-</Alert>
-
-### `_editingBot`
+### `editingBot`
 
 <Badges>
   <UserBotBadge/>
@@ -2100,3 +2152,20 @@ Hidden tags are tags that are hidden in the sheet by default.
 
 The ID of the bot that the user is currently editing.
 Only available on the player bot.
+
+### `editingTag`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The tag that the user is currently editing.
+Only available on the player bot.
+
+## Hidden Tags
+
+Hidden tags are tags that are hidden in the sheet by default.
+
+<Alert type='info'>
+  You can make your own hidden tags by adding a `_` (underscore) to the start of the tag.
+</Alert>
