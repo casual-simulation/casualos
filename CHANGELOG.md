@@ -19,6 +19,7 @@
 
 ### :bug: Bug Fixes
 
+-   Fixed an issue where cells in the sheet portal would not cover the entire cell area.
 -   Fixed an issue where `clearTagMasks()` would error if given a bot that had no tag masks.
 
 ## V1.2.12
