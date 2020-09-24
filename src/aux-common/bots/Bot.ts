@@ -200,7 +200,7 @@ export interface BotTags {
     ['menuPortalConfigBot']?: string;
     ['leftWristPortalConfigBot']?: string;
     ['rightWristPortalConfigBot']?: string;
-    ['_editingBot']?: string;
+    ['editingBot']?: string;
 
     // Admin channel task tags
     ['auxRunningTasks']?: boolean;
@@ -1187,7 +1187,8 @@ export const KNOWN_TAGS: string[] = [
     'rightPointer_squeeze',
     'forceSignedScripts',
 
-    '_editingBot',
+    'editingBot',
+    'editingTag',
 
     'portalColor',
     'portalLocked',

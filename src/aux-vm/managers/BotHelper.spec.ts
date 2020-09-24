@@ -53,17 +53,18 @@ describe('BotHelper', () => {
     });
 
     describe('setEditingBot()', () => {
-        it('should set the _editingBot tag on the user bot', async () => {
+        it('should set the editingBot and editingTag tags on the user bot', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user'),
                 test: createPrecalculatedBot('test'),
             };
-            await helper.setEditingBot(helper.botsState['test']);
+            await helper.setEditingBot(helper.botsState['test'], 'abc');
 
             expect(vm.events).toEqual([
                 botUpdated('user', {
                     tags: {
-                        _editingBot: 'test',
+                        editingBot: 'test',
+                        editingTag: 'abc',
                     },
                 }),
             ]);

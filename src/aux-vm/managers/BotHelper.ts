@@ -239,10 +239,11 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * Sets the bot that the user is editing.
      * @param bot The bot.
      */
-    setEditingBot(bot: Bot) {
+    setEditingBot(bot: Bot, tag: string) {
         return this.updateBot(this.userBot, {
             tags: {
-                _editingBot: bot.id,
+                editingBot: bot.id,
+                editingTag: tag,
             },
         });
     }
