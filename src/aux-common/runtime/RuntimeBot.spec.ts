@@ -711,6 +711,13 @@ describe('RuntimeBot', () => {
             expect(script.masks.value).toEqual(null);
             expect(script.masks.other).toEqual(null);
         });
+
+        it('should work when the bot has no tag masks', () => {
+            script[CLEAR_TAG_MASKS_SYMBOL]('local');
+
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({});
+        });
     });
 });
 

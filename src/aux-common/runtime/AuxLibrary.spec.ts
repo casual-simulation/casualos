@@ -4556,6 +4556,11 @@ describe('AuxLibrary', () => {
             });
         });
 
+        it('should do nothing if the bot does not have any tag masks', () => {
+            library.api.clearTagMasks(bot1);
+            expect(bot1.maskChanges).toEqual({});
+        });
+
         it('should remove the tag masks from the given bot and space', () => {
             bot1[SET_TAG_MASK_SYMBOL]('name', 'bob', 'local');
             bot1[SET_TAG_MASK_SYMBOL]('other', 'bob', 'local');
