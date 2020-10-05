@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.2.14
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where calling `server.setupStory()` twice with the same story name would cause the story to be setup twice.
+-   Fixed an issue where bots would be incorrectly removed from the menu portal if they existed in both the old and new dimensions.
+
 ## V1.2.13
 
 #### Date: 9/24/2020
