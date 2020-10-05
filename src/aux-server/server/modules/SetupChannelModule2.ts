@@ -5,7 +5,7 @@ import {
     remoteError,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
-import { flatMap, map } from 'rxjs/operators';
+import { concatMap, flatMap, map } from 'rxjs/operators';
 import {
     action,
     SetupChannelAction,
@@ -34,7 +34,7 @@ export class SetupChannelModule2 implements AuxModule2 {
         sub.add(
             simulation.localEvents
                 .pipe(
-                    flatMap(async event => {
+                    concatMap(async (event) => {
                         if (event.type === 'setup_story') {
                             await this._setupChannel(simulation, event);
                         }
@@ -63,13 +63,11 @@ export class SetupChannelModule2 implements AuxModule2 {
         try {
             const hasChannel = await this._client
                 .branchInfo(event.channel)
-                .pipe(map(e => e.exists))
+                .pipe(map((e) => e.exists))
                 .toPromise();
             if (!hasChannel) {
                 console.log(
-                    `[SetupChannelModule2] Setting up new channel ${
-                        event.channel
-                    }`
+                    `[SetupChannelModule2] Setting up new channel ${event.channel}`
                 );
 
                 // TODO: Rework so that other modules can be used like webhooks.
@@ -115,6 +113,21 @@ export class SetupChannelModule2 implements AuxModule2 {
                     }
                 } finally {
                     simulation.unsubscribe();
+                }
+            } else {
+                if (hasValue(event.taskId) && hasValue(event.playerId)) {
+                    await currentSim.helper.transaction(
+                        remoteError(
+                            {
+                                error: 'failure',
+                                exception: 'The story already exists.',
+                            },
+                            {
+                                sessionId: event.playerId,
+                            },
+                            event.taskId
+                        )
+                    );
                 }
             }
         } catch (err) {
