@@ -8,6 +8,7 @@
 
 -   Fixed an issue where calling `server.setupStory()` twice with the same story name would cause the story to be setup twice.
 -   Fixed an issue where bots would be incorrectly removed from the menu portal if they existed in both the old and new dimensions.
+-   Greatly reduced the number of scenarios where formulas would be recalculated after any change.
 
 ## V1.2.13
 
