@@ -4,7 +4,11 @@ import {
     setupStory,
     createPrecalculatedBot,
 } from '@casual-simulation/aux-common';
-import { deviceInfo, remoteResult } from '@casual-simulation/causal-trees';
+import {
+    deviceInfo,
+    remoteError,
+    remoteResult,
+} from '@casual-simulation/causal-trees';
 import { SetupChannelModule2 } from './SetupChannelModule2';
 import { AuxUser, Simulation } from '@casual-simulation/aux-vm';
 import { Subscription } from 'rxjs';
@@ -254,13 +258,52 @@ describe('SetupChannelModule2', () => {
                 );
             });
 
+            it('should send a remote error if the story already exists', async () => {
+                expect.assertions(1);
+
+                // Creates the new channel
+                const newChannelSim = nodeSimulationForBranch(
+                    processingUser,
+                    processingClient,
+                    'newChannel'
+                );
+                await newChannelSim.init();
+
+                const remoteEvents = [] as SendRemoteActionEvent[];
+                serverConnection
+                    .event<SendRemoteActionEvent>(SEND_EVENT)
+                    .subscribe((e) => remoteEvents.push(e));
+
+                await simulation.helper.transaction(
+                    setupStory('newChannel', undefined, 'task1', 'player1')
+                );
+
+                await waitAsync();
+
+                expect(remoteEvents).toEqual([
+                    {
+                        branch: 'id',
+                        action: remoteError(
+                            {
+                                error: 'failure',
+                                exception: 'The story already exists.',
+                            },
+                            {
+                                sessionId: 'player1',
+                            },
+                            'task1'
+                        ),
+                    },
+                ]);
+            });
+
             it('should send a remote result when the channel is setup', async () => {
                 expect.assertions(1);
 
                 const remoteEvents = [] as SendRemoteActionEvent[];
                 serverConnection
                     .event<SendRemoteActionEvent>(SEND_EVENT)
-                    .subscribe(e => remoteEvents.push(e));
+                    .subscribe((e) => remoteEvents.push(e));
 
                 await simulation.helper.transaction(
                     setupStory('newChannel', undefined, 'task1', 'player1')
@@ -277,6 +320,89 @@ describe('SetupChannelModule2', () => {
                                 sessionId: 'player1',
                             },
                             'task1'
+                        ),
+                    },
+                ]);
+            });
+
+            it('should only setup a story once when triggered twice in a row', async () => {
+                expect.assertions(3);
+
+                const remoteEvents = [] as SendRemoteActionEvent[];
+                serverConnection
+                    .event<SendRemoteActionEvent>(SEND_EVENT)
+                    .subscribe((e) => remoteEvents.push(e));
+
+                await simulation.helper.transaction(
+                    setupStory(
+                        'newChannel',
+                        {
+                            color: 'red',
+                        },
+                        'task1',
+                        'player1'
+                    ),
+                    setupStory(
+                        'newChannel',
+                        {
+                            color: 'blue',
+                        },
+                        'task2',
+                        'player1'
+                    )
+                );
+
+                await waitAsync();
+
+                const newChannelSim = nodeSimulationForBranch(
+                    processingUser,
+                    processingClient,
+                    'newChannel'
+                );
+                await newChannelSim.init();
+
+                expect(newChannelSim.helper.objects).toContainEqual(
+                    createPrecalculatedBot(
+                        expect.any(String),
+                        {
+                            color: 'red',
+                        },
+                        undefined,
+                        'shared'
+                    )
+                );
+                expect(newChannelSim.helper.objects).not.toContainEqual(
+                    createPrecalculatedBot(
+                        expect.any(String),
+                        {
+                            color: 'blue',
+                        },
+                        undefined,
+                        'shared'
+                    )
+                );
+                expect(remoteEvents).toEqual([
+                    {
+                        branch: 'id',
+                        action: remoteResult(
+                            undefined,
+                            {
+                                sessionId: 'player1',
+                            },
+                            'task1'
+                        ),
+                    },
+                    {
+                        branch: 'id',
+                        action: remoteError(
+                            {
+                                error: 'failure',
+                                exception: 'The story already exists.',
+                            },
+                            {
+                                sessionId: 'player1',
+                            },
+                            'task2'
                         ),
                     },
                 ]);

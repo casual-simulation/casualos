@@ -882,6 +882,52 @@ describe('Dependencies', () => {
                 });
             });
         });
+
+        describe('object literals', () => {
+            it('should return dependencies for object literals', () => {
+                const result = dependencies.dependencyTree(
+                    `func({ first: 'abc', second: true })`
+                );
+
+                expect(result).toEqual({
+                    type: 'expression',
+                    dependencies: [
+                        {
+                            type: 'call',
+                            identifier: {
+                                type: 'member',
+                                identifier: 'func',
+                                reference: null,
+                                object: null,
+                            },
+                            dependencies: [
+                                {
+                                    type: 'object_expression',
+                                    properties: [
+                                        {
+                                            type: 'property',
+                                            name: 'first',
+                                            value: {
+                                                type: 'literal',
+                                                value: 'abc',
+                                            },
+                                        },
+                                        {
+                                            type: 'property',
+                                            name: 'second',
+                                            value: {
+                                                type: 'literal',
+                                                value: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+        });
     });
 
     describe('simplify()', () => {
@@ -1172,6 +1218,80 @@ describe('Dependencies', () => {
             ]);
         });
 
+        it('should not oversimplify object literals', () => {
+            const result = dependencies.simplify({
+                type: 'expression',
+                dependencies: [
+                    {
+                        type: 'call',
+                        identifier: {
+                            type: 'member',
+                            identifier: 'func',
+                            reference: null,
+                            object: null,
+                        },
+                        dependencies: [
+                            {
+                                type: 'object_expression',
+                                properties: [
+                                    {
+                                        type: 'property',
+                                        name: 'first',
+                                        value: {
+                                            type: 'literal',
+                                            value: 'abc',
+                                        },
+                                    },
+                                    {
+                                        type: 'property',
+                                        name: 'second',
+                                        value: {
+                                            type: 'literal',
+                                            value: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            });
+
+            expect(result).toEqual([
+                {
+                    type: 'function',
+                    name: 'func',
+                    dependencies: [
+                        {
+                            type: 'object_expression',
+                            dependencies: [
+                                {
+                                    type: 'property',
+                                    name: 'first',
+                                    dependencies: [
+                                        {
+                                            type: 'literal',
+                                            value: 'abc',
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: 'property',
+                                    name: 'second',
+                                    dependencies: [
+                                        {
+                                            type: 'literal',
+                                            value: true,
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
         it('should correctly handle member names with dots', () => {
             const result = dependencies.simplify({
                 type: 'expression',
@@ -1199,6 +1319,55 @@ describe('Dependencies', () => {
                         {
                             type: 'member',
                             name: 'abc',
+                            reference: null,
+                            dependencies: [],
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should not oversimplify members after function calls', () => {
+            const result = dependencies.simplify({
+                type: 'expression',
+                dependencies: [
+                    {
+                        type: 'member',
+                        object: {
+                            type: 'call',
+                            identifier: {
+                                type: 'member',
+                                identifier: 'abc',
+                                reference: null,
+                                object: {
+                                    type: 'member',
+                                    identifier: 'test',
+                                    reference: null,
+                                    object: null,
+                                },
+                            },
+                            dependencies: [],
+                        },
+                        identifier: 'name',
+                        reference: null,
+                    },
+                ],
+            });
+
+            expect(result).toEqual([
+                {
+                    type: 'function',
+                    name: 'test.abc',
+                    dependencies: [
+                        {
+                            // when a function has a member reference after it,
+                            // we include a special "dependency" which indicates that the
+                            // parameters have ended
+                            type: 'end_function_parameters',
+                        },
+                        {
+                            type: 'member',
+                            name: 'name',
                             reference: null,
                             dependencies: [],
                         },
@@ -1418,7 +1587,7 @@ describe('Dependencies', () => {
                     },
                 ],
 
-                test: node => [
+                test: (node) => [
                     {
                         type: 'tag',
                         name: 'qwerty',
@@ -1451,7 +1620,7 @@ describe('Dependencies', () => {
 
         it.each(nestedReplacementCases)(
             'should replace dependencies in %s when it doesnt have a replacement',
-            type => {
+            (type) => {
                 let replacements: AuxScriptReplacements = {
                     myVar: (node: AuxScriptSimpleMemberDependency) => [
                         {
@@ -1525,6 +1694,15 @@ describe('Dependencies', () => {
                         {
                             type: 'literal',
                             value: 'name',
+                        },
+                        {
+                            type: 'end_function_parameters',
+                        },
+                        {
+                            type: 'member',
+                            name: 'length',
+                            reference: null,
+                            dependencies: [],
                         },
                     ],
                 },
@@ -1750,7 +1928,7 @@ describe('Dependencies', () => {
     describe('replaceAuxDependencies()', () => {
         const botDependencyCases = [
             ['getBot()', 'getBot'],
-            ['getBots()', 'getBot'],
+            ['getBots()', 'getBots'],
         ];
 
         describe.each(botDependencyCases)('%s', (desc, name) => {
@@ -1778,6 +1956,21 @@ describe('Dependencies', () => {
             it('should return an all dependency when unable to determine the tag name', () => {
                 const tree = dependencies.dependencyTree(
                     `${name}(myVar, "value")`
+                );
+                const simple = dependencies.simplify(tree);
+
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'all',
+                    },
+                ]);
+            });
+
+            it('should return an all dependency when unable to determine the tag name because of a function call', () => {
+                const tree = dependencies.dependencyTree(
+                    `${name}(getTag(myBot, "tag"), "value")`
                 );
                 const simple = dependencies.simplify(tree);
 
@@ -1839,6 +2032,317 @@ describe('Dependencies', () => {
                         dependencies: [],
                     },
                 ]);
+            });
+
+            const filterCases = [
+                [
+                    'byTag(tag, value)',
+                    'byTag("#fun", "value")',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 'value',
+                                },
+                            ],
+                        },
+                    ],
+                ],
+                [
+                    'byTag(tag)',
+                    'byTag("#fun")',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [],
+                        },
+                    ],
+                ],
+                [
+                    'byTag()',
+                    'byTag()',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'id',
+                            dependencies: [],
+                        },
+                    ],
+                ],
+                [
+                    'inDimension(dim)',
+                    'inDimension("#fun")',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: true,
+                                },
+                            ],
+                        },
+                    ],
+                ],
+                ['inDimension()', 'inDimension()', [] as any[]],
+                [
+                    'atPosition(dim, x, y)',
+                    'atPosition("#fun", 1, 2)',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: true,
+                                },
+                            ],
+                        },
+                        {
+                            type: 'bot',
+                            name: 'funX',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 1,
+                                },
+                            ],
+                        },
+                        {
+                            type: 'bot',
+                            name: 'funY',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 2,
+                                },
+                            ],
+                        },
+                    ],
+                ],
+                [
+                    'atPosition(dim, x)',
+                    'atPosition("#fun", 1)',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: true,
+                                },
+                            ],
+                        },
+                        {
+                            type: 'bot',
+                            name: 'funX',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 1,
+                                },
+                            ],
+                        },
+                    ],
+                ],
+                [
+                    'atPosition(dim)',
+                    'atPosition("#fun")',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: true,
+                                },
+                            ],
+                        },
+                    ],
+                ],
+                ['atPosition()', 'atPosition()', [] as any[]],
+                [
+                    'inStack(bot, dim)',
+                    'inStack(myBot, "#fun")',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: true,
+                                },
+                            ],
+                        },
+                        {
+                            type: 'bot',
+                            name: 'funX',
+                            dependencies: [],
+                        },
+                        {
+                            type: 'bot',
+                            name: 'funY',
+                            dependencies: [],
+                        },
+                    ],
+                ],
+                ['inStack(bot)', 'inStack(myBot)', [] as any[]],
+                ['inStack()', 'inStack()', [] as any[]],
+                [
+                    'byCreator(bot)',
+                    'byCreator(myBot)',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'creator',
+                            dependencies: [],
+                        },
+                    ],
+                ],
+                [
+                    'byCreator()',
+                    'byCreator()',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'creator',
+                            dependencies: [],
+                        },
+                    ],
+                ],
+                [
+                    'bySpace(space)',
+                    'bySpace("test")',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'space',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 'test',
+                                },
+                            ],
+                        },
+                    ],
+                ],
+                [
+                    'bySpace()',
+                    'bySpace()',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'space',
+                            dependencies: [],
+                        },
+                    ],
+                ],
+                [
+                    'byMod(literal)',
+                    'byMod({ fun: true, other: false })',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: true,
+                                },
+                            ],
+                        },
+                        {
+                            type: 'bot',
+                            name: 'other',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: false,
+                                },
+                            ],
+                        },
+                    ],
+                ],
+                [
+                    'byMod(literal, literal)',
+                    'byMod({ fun: true, other: false }, { diff: 123 })',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: true,
+                                },
+                            ],
+                        },
+                        {
+                            type: 'bot',
+                            name: 'other',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: false,
+                                },
+                            ],
+                        },
+                    ],
+                ],
+                [
+                    'byMod(obj)',
+                    'byMod(myBot)',
+                    [
+                        {
+                            type: 'all',
+                        },
+                    ],
+                ],
+                [
+                    'byMod(func)',
+                    'byMod(myFunc())',
+                    [
+                        {
+                            type: 'all',
+                        },
+                    ],
+                ],
+                ['byMod()', 'byMod()', []],
+            ];
+
+            describe.each(filterCases)('%s', (_, filter, expected) => {
+                it('should reference the specified tag', () => {
+                    const tree = dependencies.dependencyTree(
+                        `${name}(${filter})`
+                    );
+                    const simple = dependencies.simplify(tree);
+                    const replaced = dependencies.replaceAuxDependencies(
+                        simple
+                    );
+
+                    expect(replaced).toEqual(expected);
+                });
+
+                it('should support multiple filters', () => {
+                    const tree = dependencies.dependencyTree(
+                        `${name}(${filter}, ${filter})`
+                    );
+                    const simple = dependencies.simplify(tree);
+                    const replaced = dependencies.replaceAuxDependencies(
+                        simple
+                    );
+
+                    expect(replaced).toEqual([...expected, ...expected]);
+                });
             });
         });
 
@@ -2257,6 +2761,44 @@ describe('Dependencies', () => {
                     },
                 ]);
             });
+
+            it('should not fallback to all dependencies', () => {
+                const tree = dependencies.dependencyTree(
+                    `getBot(byTag("first", player.getBot().id)).${name}.second`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'bot',
+                        name: 'first',
+                        dependencies: [
+                            {
+                                type: 'function',
+                                name: 'player.getBot',
+                                dependencies: [
+                                    { type: 'end_function_parameters' },
+                                    {
+                                        type: 'member',
+                                        name: 'id',
+                                        reference: null,
+                                        dependencies: [],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        type: 'end_function_parameters',
+                    },
+                    {
+                        type: 'tag_value',
+                        name: 'second',
+                        dependencies: [],
+                    },
+                ]);
+            });
         });
 
         it('should support using the tagName variable as a normal variable', () => {
@@ -2323,7 +2865,7 @@ describe('Dependencies', () => {
 
             it.each(tagsVariableCases)(
                 'should support using the %s variable',
-                variable => {
+                (variable) => {
                     const tree = dependencies.dependencyTree(
                         `${name}.${variable}.abc`
                     );

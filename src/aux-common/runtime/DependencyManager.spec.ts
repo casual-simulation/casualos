@@ -2,7 +2,10 @@ import { DependencyManager } from './DependencyManager';
 import { createBot } from '../bots/BotCalculations';
 
 describe('DependencyManager', () => {
-    const nullOrUndefinedCases = [['null', null], ['undefined', undefined]];
+    const nullOrUndefinedCases = [
+        ['null', null],
+        ['undefined', undefined],
+    ];
 
     describe('addBot()', () => {
         it('should add all of the given bots tags to the tag map', async () => {
@@ -60,7 +63,7 @@ describe('DependencyManager', () => {
             );
         });
 
-        it('should be able to retrieve tag the dependencies the bot has', async () => {
+        it('should be able to retrieve the tag dependencies the bot has', async () => {
             let subject = new DependencyManager();
 
             let test = createBot('test', {
@@ -81,12 +84,28 @@ describe('DependencyManager', () => {
                     {
                         type: 'bot',
                         name: 'num',
-                        dependencies: [],
+                        dependencies: [
+                            { type: 'end_function_parameters' },
+                            {
+                                type: 'member',
+                                name: 'length',
+                                reference: null,
+                                dependencies: [],
+                            },
+                        ],
                     },
                     {
                         type: 'bot',
                         name: 'sum',
-                        dependencies: [],
+                        dependencies: [
+                            { type: 'end_function_parameters' },
+                            {
+                                type: 'member',
+                                name: 'length',
+                                reference: null,
+                                dependencies: [],
+                            },
+                        ],
                     },
                 ],
                 extra: [{ type: 'this' }, { type: 'this' }],
@@ -355,7 +374,12 @@ describe('DependencyManager', () => {
             const dependents = subject.getDependents('sum', 'test');
 
             expect(tags).toEqual(
-                new Map([['id', []], ['tag', []], ['hello', []], ['other', []]])
+                new Map([
+                    ['id', []],
+                    ['tag', []],
+                    ['hello', []],
+                    ['other', []],
+                ])
             );
             expect(bots).toEqual(new Map([]));
             expect(dependencies).toBe(undefined);
@@ -881,7 +905,7 @@ describe('DependencyManager', () => {
                 cases.push([sub]);
             }
         }
-        it.each(cases)('should support %s', async formula => {
+        it.each(cases)('should support %s', async (formula) => {
             let subject = new DependencyManager();
 
             let test = createBot('test', {
