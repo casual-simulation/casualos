@@ -20,7 +20,7 @@ export class Dependencies {
             const flat = this.flatten(replaced);
             return <AuxScriptExternalDependency[]>(
                 flat.filter(
-                    f =>
+                    (f) =>
                         f.type === 'all' ||
                         f.type === 'tag' ||
                         f.type === 'bot' ||
@@ -62,6 +62,8 @@ export class Dependencies {
             return this._simpleMemberDependencies(node);
         } else if (node.type === 'literal') {
             return this._simpleLiteralDependencies(node);
+        } else if (node.type === 'object_expression') {
+            return this._simpleObjectExpressionDependencies(node);
         }
 
         return [];
@@ -72,7 +74,7 @@ export class Dependencies {
      * @param nodes The nodes to flatten.
      */
     flatten(nodes: AuxScriptSimpleDependency[]): AuxScriptSimpleDependency[] {
-        return flatMap(nodes, n => {
+        return flatMap(nodes, (n) => {
             if (
                 n.type === 'bot' ||
                 n.type === 'tag' ||
@@ -113,7 +115,9 @@ export class Dependencies {
                 if (
                     node.type !== 'literal' &&
                     node.type !== 'all' &&
-                    node.type !== 'this'
+                    node.type !== 'this' &&
+                    node.type !== 'object_expression' &&
+                    node.type !== 'property'
                 ) {
                     const replacement =
                         replacements[<string>node.name] ||
@@ -128,7 +132,8 @@ export class Dependencies {
                     if (
                         node.type === 'function' ||
                         node.type === 'bot' ||
-                        node.type === 'tag'
+                        node.type === 'tag' ||
+                        node.type === 'object_expression'
                     ) {
                         yield {
                             ...node,
@@ -234,7 +239,7 @@ export class Dependencies {
         if (current) {
             return [
                 ...this._simpleRootDependencies(current),
-                ...flatMap(node.dependencies, d => this.simplify(d)),
+                ...flatMap(node.dependencies, (d) => this.simplify(d)),
             ];
         }
 
@@ -242,7 +247,9 @@ export class Dependencies {
             {
                 type: 'function',
                 name: this.getMemberName(node.identifier),
-                dependencies: flatMap(node.dependencies, d => this.simplify(d)),
+                dependencies: flatMap(node.dependencies, (d) =>
+                    this.simplify(d)
+                ),
             },
         ];
     }
@@ -254,7 +261,9 @@ export class Dependencies {
             <AuxScriptSimpleBotDependency | AuxScriptSimpleTagDependency>{
                 type: node.type,
                 name: this.getMemberName(node),
-                dependencies: flatMap(node.dependencies, d => this.simplify(d)),
+                dependencies: flatMap(node.dependencies, (d) =>
+                    this.simplify(d)
+                ),
             },
         ];
     }
@@ -262,13 +271,28 @@ export class Dependencies {
     private _simpleExpressionDependencies(
         node: AuxScriptExpressionDependencies
     ): AuxScriptSimpleDependency[] {
-        return flatMap(node.dependencies, d => this.simplify(d));
+        return flatMap(node.dependencies, (d) => this.simplify(d));
     }
 
     private _simpleLiteralDependencies(
         node: AuxScriptLiteralDependency
     ): AuxScriptSimpleDependency[] {
         return [node];
+    }
+
+    private _simpleObjectExpressionDependencies(
+        node: AuxScriptObjectExpressionDependencies
+    ): AuxScriptSimpleDependency[] {
+        return [
+            {
+                type: node.type,
+                dependencies: node.properties.map((p) => ({
+                    type: p.type,
+                    name: p.name,
+                    dependencies: this.simplify(p.value),
+                })),
+            },
+        ];
     }
 
     /**
@@ -320,6 +344,35 @@ export class Dependencies {
         };
     }
 
+    private _objectOrExpressionDependencies(
+        node: any
+    ): AuxScriptExpressionDependencies | AuxScriptObjectExpressionDependencies {
+        if (node.type === 'ObjectExpression') {
+            return this._objectExpressionDependencies(node);
+        }
+
+        return this._expressionDependencies(node);
+    }
+
+    private _objectExpressionDependencies(
+        node: any
+    ): AuxScriptObjectExpressionDependencies {
+        return {
+            type: 'object_expression',
+            properties: node.properties.map((prop: any) => {
+                let key =
+                    prop.key.type === 'Identifier'
+                        ? prop.key.name
+                        : prop.key.value;
+                return {
+                    type: 'property',
+                    name: key,
+                    value: this._nodeDependency(prop.value, prop),
+                } as AuxScriptProperty;
+            }),
+        };
+    }
+
     private _nodeDependency(node: any, parent: any): AuxScriptDependency {
         if (
             parent &&
@@ -360,7 +413,7 @@ export class Dependencies {
                 .map(
                     (arg: any) =>
                         this._nodeDependency(arg, node) ||
-                        this._expressionDependencies(arg)
+                        this._objectOrExpressionDependencies(arg)
                 )
                 .filter((arg: any) => !!arg),
         };
@@ -372,14 +425,14 @@ export class Dependencies {
             type: node.type === 'TagValue' ? 'tag' : 'bot',
             name: tag,
             dependencies: args
-                .map(a => {
+                .map((a) => {
                     const dep = this._nodeDependency(a, node);
                     if (dep) {
                         return dep;
                     }
-                    return this._expressionDependencies(a);
+                    return this._objectOrExpressionDependencies(a);
                 })
-                .filter(e =>
+                .filter((e) =>
                     e.type === 'expression' ? e.dependencies.length > 0 : true
                 ),
         };
@@ -755,7 +808,8 @@ export type AuxScriptDependency =
     | AuxScriptFunctionDependency
     | AuxScriptMemberDependency
     | AuxScriptExpressionDependencies
-    | AuxScriptLiteralDependency;
+    | AuxScriptLiteralDependency
+    | AuxScriptObjectExpressionDependencies;
 
 export type AuxScriptObjectDependency =
     | AuxScriptMemberDependency
@@ -767,6 +821,17 @@ export interface AuxScriptExpressionDependencies {
     type: 'expression';
 
     dependencies: AuxScriptDependency[];
+}
+
+export interface AuxScriptObjectExpressionDependencies {
+    type: 'object_expression';
+    properties: AuxScriptProperty[];
+}
+
+export interface AuxScriptProperty {
+    type: 'property';
+    name: string;
+    value: AuxScriptDependency;
 }
 
 export interface AuxScriptMemberDependency {
@@ -829,7 +894,9 @@ export type AuxScriptSimpleDependency =
     | AuxScriptSimpleLiteralDependency
     | AuxScriptSimpleAllDependency
     | AuxScriptSimpleThisDependency
-    | AuxScriptSimpleTagValueDependency;
+    | AuxScriptSimpleTagValueDependency
+    | AuxScriptSimpleObjectExpressionDependency
+    | AuxScriptSimpleProperty;
 
 export type AuxScriptExternalDependency =
     | AuxScriptSimpleBotDependency
@@ -887,3 +954,14 @@ export interface AuxScriptReplacements {
 export type AuxScriptReplacement = (
     node: AuxScriptSimpleDependency
 ) => AuxScriptSimpleDependency[];
+
+export interface AuxScriptSimpleObjectExpressionDependency {
+    type: 'object_expression';
+    dependencies: AuxScriptSimpleDependency[];
+}
+
+export interface AuxScriptSimpleProperty {
+    type: 'property';
+    name: string;
+    dependencies: AuxScriptSimpleDependency[];
+}

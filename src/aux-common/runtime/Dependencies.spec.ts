@@ -882,6 +882,52 @@ describe('Dependencies', () => {
                 });
             });
         });
+
+        describe('object literals', () => {
+            it('should return dependencies for object literals', () => {
+                const result = dependencies.dependencyTree(
+                    `func({ first: 'abc', second: true })`
+                );
+
+                expect(result).toEqual({
+                    type: 'expression',
+                    dependencies: [
+                        {
+                            type: 'call',
+                            identifier: {
+                                type: 'member',
+                                identifier: 'func',
+                                reference: null,
+                                object: null,
+                            },
+                            dependencies: [
+                                {
+                                    type: 'object_expression',
+                                    properties: [
+                                        {
+                                            type: 'property',
+                                            name: 'first',
+                                            value: {
+                                                type: 'literal',
+                                                value: 'abc',
+                                            },
+                                        },
+                                        {
+                                            type: 'property',
+                                            name: 'second',
+                                            value: {
+                                                type: 'literal',
+                                                value: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+        });
     });
 
     describe('simplify()', () => {
@@ -1172,6 +1218,80 @@ describe('Dependencies', () => {
             ]);
         });
 
+        it('should not oversimplify object literals', () => {
+            const result = dependencies.simplify({
+                type: 'expression',
+                dependencies: [
+                    {
+                        type: 'call',
+                        identifier: {
+                            type: 'member',
+                            identifier: 'func',
+                            reference: null,
+                            object: null,
+                        },
+                        dependencies: [
+                            {
+                                type: 'object_expression',
+                                properties: [
+                                    {
+                                        type: 'property',
+                                        name: 'first',
+                                        value: {
+                                            type: 'literal',
+                                            value: 'abc',
+                                        },
+                                    },
+                                    {
+                                        type: 'property',
+                                        name: 'second',
+                                        value: {
+                                            type: 'literal',
+                                            value: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            });
+
+            expect(result).toEqual([
+                {
+                    type: 'function',
+                    name: 'func',
+                    dependencies: [
+                        {
+                            type: 'object_expression',
+                            dependencies: [
+                                {
+                                    type: 'property',
+                                    name: 'first',
+                                    dependencies: [
+                                        {
+                                            type: 'literal',
+                                            value: 'abc',
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: 'property',
+                                    name: 'second',
+                                    dependencies: [
+                                        {
+                                            type: 'literal',
+                                            value: true,
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
         it('should correctly handle member names with dots', () => {
             const result = dependencies.simplify({
                 type: 'expression',
@@ -1418,7 +1538,7 @@ describe('Dependencies', () => {
                     },
                 ],
 
-                test: node => [
+                test: (node) => [
                     {
                         type: 'tag',
                         name: 'qwerty',
@@ -1451,7 +1571,7 @@ describe('Dependencies', () => {
 
         it.each(nestedReplacementCases)(
             'should replace dependencies in %s when it doesnt have a replacement',
-            type => {
+            (type) => {
                 let replacements: AuxScriptReplacements = {
                     myVar: (node: AuxScriptSimpleMemberDependency) => [
                         {
