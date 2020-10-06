@@ -606,6 +606,9 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 return [node];
             }
             if (node.dependencies.length >= 1) {
+                if (node.dependencies[0].type === 'function') {
+                    return replace(node.dependencies);
+                }
                 const name = getTagName(node.dependencies[0]);
                 if (!name) {
                     return [{ type: 'all' }];
@@ -631,6 +634,9 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 return [node];
             }
             if (node.dependencies.length >= 1) {
+                if (node.dependencies[0].type === 'function') {
+                    return replace(node.dependencies);
+                }
                 const name = getTagName(node.dependencies[0]);
                 if (!name) {
                     return [{ type: 'all' }];
@@ -753,6 +759,186 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                     dependencies: [],
                 },
             ];
+        },
+        byTag: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            if (node.dependencies.length >= 1) {
+                const name = getTagName(node.dependencies[0]);
+                if (!name) {
+                    return [{ type: 'all' }];
+                }
+                return [
+                    {
+                        type: 'bot',
+                        name: name,
+                        dependencies: replace(node.dependencies.slice(1)),
+                    },
+                ];
+            }
+            return [
+                {
+                    type: 'bot',
+                    name: 'id',
+                    dependencies: [],
+                },
+            ];
+        },
+        inDimension: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            if (node.dependencies.length >= 1) {
+                const name = getTagName(node.dependencies[0]);
+                if (!name) {
+                    return [{ type: 'all' }];
+                }
+                return [
+                    {
+                        type: 'bot',
+                        name: name,
+                        dependencies: [
+                            {
+                                type: 'literal',
+                                value: true,
+                            },
+                        ],
+                    },
+                ];
+            }
+            return [];
+        },
+        atPosition: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            if (node.dependencies.length >= 1) {
+                const name = getTagName(node.dependencies[0]);
+                if (!name) {
+                    return [{ type: 'all' }];
+                }
+
+                let extras = [] as AuxScriptSimpleDependency[];
+
+                if (node.dependencies.length >= 2) {
+                    extras.push({
+                        type: 'bot',
+                        name: name + 'X',
+                        dependencies: [node.dependencies[1]],
+                    });
+                }
+
+                if (node.dependencies.length >= 3) {
+                    extras.push({
+                        type: 'bot',
+                        name: name + 'Y',
+                        dependencies: [node.dependencies[2]],
+                    });
+                }
+
+                return [
+                    {
+                        type: 'bot',
+                        name: name,
+                        dependencies: [
+                            {
+                                type: 'literal',
+                                value: true,
+                            },
+                        ],
+                    },
+                    ...extras,
+                ];
+            }
+            return [];
+        },
+        inStack: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            if (node.dependencies.length >= 2) {
+                const name = getTagName(node.dependencies[1]);
+                if (!name) {
+                    return [{ type: 'all' }];
+                }
+
+                return [
+                    {
+                        type: 'bot',
+                        name: name,
+                        dependencies: [
+                            {
+                                type: 'literal',
+                                value: true,
+                            },
+                        ],
+                    },
+                    {
+                        type: 'bot',
+                        name: name + 'X',
+                        dependencies: [],
+                    },
+                    {
+                        type: 'bot',
+                        name: name + 'Y',
+                        dependencies: [],
+                    },
+                ];
+            }
+            return [];
+        },
+        byCreator: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            return [
+                {
+                    type: 'bot',
+                    name: 'creator',
+                    dependencies: [],
+                },
+            ];
+        },
+        bySpace: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            return [
+                {
+                    type: 'bot',
+                    name: 'space',
+                    dependencies: node.dependencies,
+                },
+            ];
+        },
+        byMod: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            if (node.dependencies.length >= 1) {
+                const obj = node.dependencies[0];
+                if (obj.type === 'object_expression') {
+                    let deps = [] as AuxScriptSimpleDependency[];
+                    for (let prop of obj.dependencies) {
+                        if (prop.type === 'property') {
+                            deps.push({
+                                type: 'bot',
+                                name: prop.name,
+                                dependencies: prop.dependencies,
+                            });
+                        }
+                    }
+                    return deps;
+                } else {
+                    return [
+                        {
+                            type: 'all',
+                        },
+                    ];
+                }
+            }
+            return [];
         },
         [defaultReplacement]: (node: AuxScriptSimpleDependency) => {
             if (

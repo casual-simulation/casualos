@@ -1960,6 +1960,317 @@ describe('Dependencies', () => {
                     },
                 ]);
             });
+
+            const filterCases = [
+                [
+                    'byTag(tag, value)',
+                    'byTag("#fun", "value")',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 'value',
+                                },
+                            ],
+                        },
+                    ],
+                ],
+                [
+                    'byTag(tag)',
+                    'byTag("#fun")',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [],
+                        },
+                    ],
+                ],
+                [
+                    'byTag()',
+                    'byTag()',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'id',
+                            dependencies: [],
+                        },
+                    ],
+                ],
+                [
+                    'inDimension(dim)',
+                    'inDimension("#fun")',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: true,
+                                },
+                            ],
+                        },
+                    ],
+                ],
+                ['inDimension()', 'inDimension()', [] as any[]],
+                [
+                    'atPosition(dim, x, y)',
+                    'atPosition("#fun", 1, 2)',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: true,
+                                },
+                            ],
+                        },
+                        {
+                            type: 'bot',
+                            name: 'funX',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 1,
+                                },
+                            ],
+                        },
+                        {
+                            type: 'bot',
+                            name: 'funY',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 2,
+                                },
+                            ],
+                        },
+                    ],
+                ],
+                [
+                    'atPosition(dim, x)',
+                    'atPosition("#fun", 1)',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: true,
+                                },
+                            ],
+                        },
+                        {
+                            type: 'bot',
+                            name: 'funX',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 1,
+                                },
+                            ],
+                        },
+                    ],
+                ],
+                [
+                    'atPosition(dim)',
+                    'atPosition("#fun")',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: true,
+                                },
+                            ],
+                        },
+                    ],
+                ],
+                ['atPosition()', 'atPosition()', [] as any[]],
+                [
+                    'inStack(bot, dim)',
+                    'inStack(myBot, "#fun")',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: true,
+                                },
+                            ],
+                        },
+                        {
+                            type: 'bot',
+                            name: 'funX',
+                            dependencies: [],
+                        },
+                        {
+                            type: 'bot',
+                            name: 'funY',
+                            dependencies: [],
+                        },
+                    ],
+                ],
+                ['inStack(bot)', 'inStack(myBot)', [] as any[]],
+                ['inStack()', 'inStack()', [] as any[]],
+                [
+                    'byCreator(bot)',
+                    'byCreator(myBot)',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'creator',
+                            dependencies: [],
+                        },
+                    ],
+                ],
+                [
+                    'byCreator()',
+                    'byCreator()',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'creator',
+                            dependencies: [],
+                        },
+                    ],
+                ],
+                [
+                    'bySpace(space)',
+                    'bySpace("test")',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'space',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 'test',
+                                },
+                            ],
+                        },
+                    ],
+                ],
+                [
+                    'bySpace()',
+                    'bySpace()',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'space',
+                            dependencies: [],
+                        },
+                    ],
+                ],
+                [
+                    'byMod(literal)',
+                    'byMod({ fun: true, other: false })',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: true,
+                                },
+                            ],
+                        },
+                        {
+                            type: 'bot',
+                            name: 'other',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: false,
+                                },
+                            ],
+                        },
+                    ],
+                ],
+                [
+                    'byMod(literal, literal)',
+                    'byMod({ fun: true, other: false }, { diff: 123 })',
+                    [
+                        {
+                            type: 'bot',
+                            name: 'fun',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: true,
+                                },
+                            ],
+                        },
+                        {
+                            type: 'bot',
+                            name: 'other',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: false,
+                                },
+                            ],
+                        },
+                    ],
+                ],
+                [
+                    'byMod(obj)',
+                    'byMod(myBot)',
+                    [
+                        {
+                            type: 'all',
+                        },
+                    ],
+                ],
+                [
+                    'byMod(func)',
+                    'byMod(myFunc())',
+                    [
+                        {
+                            type: 'all',
+                        },
+                    ],
+                ],
+                ['byMod()', 'byMod()', []],
+            ];
+
+            describe.each(filterCases)('%s', (_, filter, expected) => {
+                it('should reference the specified tag', () => {
+                    const tree = dependencies.dependencyTree(
+                        `${name}(${filter})`
+                    );
+                    const simple = dependencies.simplify(tree);
+                    const replaced = dependencies.replaceAuxDependencies(
+                        simple
+                    );
+
+                    expect(replaced).toEqual(expected);
+                });
+
+                it('should support multiple filters', () => {
+                    const tree = dependencies.dependencyTree(
+                        `${name}(${filter}, ${filter})`
+                    );
+                    const simple = dependencies.simplify(tree);
+                    const replaced = dependencies.replaceAuxDependencies(
+                        simple
+                    );
+
+                    expect(replaced).toEqual([...expected, ...expected]);
+                });
+            });
         });
 
         describe('getBotTagValues()', () => {
@@ -2377,6 +2688,27 @@ describe('Dependencies', () => {
                     },
                 ]);
             });
+
+            it('should not fallback to all dependencies', () => {
+                const tree = dependencies.dependencyTree(
+                    `getBot(byTag("first", player.getBot().id)).${name}.second`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag_value',
+                        name: 'first',
+                        dependencies: [],
+                    },
+                    {
+                        type: 'tag_value',
+                        name: 'second',
+                        dependencies: [],
+                    },
+                ]);
+            });
         });
 
         it('should support using the tagName variable as a normal variable', () => {
@@ -2443,7 +2775,7 @@ describe('Dependencies', () => {
 
             it.each(tagsVariableCases)(
                 'should support using the %s variable',
-                variable => {
+                (variable) => {
                     const tree = dependencies.dependencyTree(
                         `${name}.${variable}.abc`
                     );
