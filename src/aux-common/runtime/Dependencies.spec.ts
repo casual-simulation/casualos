@@ -1750,7 +1750,7 @@ describe('Dependencies', () => {
     describe('replaceAuxDependencies()', () => {
         const botDependencyCases = [
             ['getBot()', 'getBot'],
-            ['getBots()', 'getBot'],
+            ['getBots()', 'getBots'],
         ];
 
         describe.each(botDependencyCases)('%s', (desc, name) => {
