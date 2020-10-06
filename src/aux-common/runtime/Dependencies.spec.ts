@@ -1327,6 +1327,55 @@ describe('Dependencies', () => {
             ]);
         });
 
+        it('should not oversimplify members after function calls', () => {
+            const result = dependencies.simplify({
+                type: 'expression',
+                dependencies: [
+                    {
+                        type: 'member',
+                        object: {
+                            type: 'call',
+                            identifier: {
+                                type: 'member',
+                                identifier: 'abc',
+                                reference: null,
+                                object: {
+                                    type: 'member',
+                                    identifier: 'test',
+                                    reference: null,
+                                    object: null,
+                                },
+                            },
+                            dependencies: [],
+                        },
+                        identifier: 'name',
+                        reference: null,
+                    },
+                ],
+            });
+
+            expect(result).toEqual([
+                {
+                    type: 'function',
+                    name: 'test.abc',
+                    dependencies: [
+                        {
+                            // when a function has a member reference after it,
+                            // we include a special "dependency" which indicates that the
+                            // parameters have ended
+                            type: 'end_function_parameters',
+                        },
+                        {
+                            type: 'member',
+                            name: 'name',
+                            reference: null,
+                            dependencies: [],
+                        },
+                    ],
+                },
+            ]);
+        });
+
         const cases = [
             ['@ expressions', 'bot', '@'],
             ['# expressions', 'tag', '#'],
@@ -1645,6 +1694,15 @@ describe('Dependencies', () => {
                         {
                             type: 'literal',
                             value: 'name',
+                        },
+                        {
+                            type: 'end_function_parameters',
+                        },
+                        {
+                            type: 'member',
+                            name: 'length',
+                            reference: null,
+                            dependencies: [],
                         },
                     ],
                 },
@@ -2698,9 +2756,26 @@ describe('Dependencies', () => {
 
                 expect(replaced).toEqual([
                     {
-                        type: 'tag_value',
+                        type: 'bot',
                         name: 'first',
-                        dependencies: [],
+                        dependencies: [
+                            {
+                                type: 'function',
+                                name: 'player.getBot',
+                                dependencies: [
+                                    { type: 'end_function_parameters' },
+                                    {
+                                        type: 'member',
+                                        name: 'id',
+                                        reference: null,
+                                        dependencies: [],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        type: 'end_function_parameters',
                     },
                     {
                         type: 'tag_value',

@@ -117,7 +117,8 @@ export class Dependencies {
                     node.type !== 'all' &&
                     node.type !== 'this' &&
                     node.type !== 'object_expression' &&
-                    node.type !== 'property'
+                    node.type !== 'property' &&
+                    node.type !== 'end_function_parameters'
                 ) {
                     const replacement =
                         replacements[<string>node.name] ||
@@ -155,9 +156,57 @@ export class Dependencies {
     ): AuxScriptSimpleDependency[] {
         let root = this._rootMembers(node);
         if (root) {
+            if (root.type === 'call') {
+                let deps = this._simpleFunctionDependencies(root);
+                let func = deps[0];
+                if (func.type === 'function') {
+                    let member = this._simplifyMember(node, false);
+                    func.dependencies.push(
+                        {
+                            type: 'end_function_parameters',
+                        },
+                        ...member
+                    );
+                }
+
+                return deps;
+            }
+
             return this._simpleRootDependencies(root);
         }
 
+        return this._simplifyMember(node, true);
+    }
+
+    private _simplifyMember(
+        node: AuxScriptMemberDependency,
+        allowFunctions: boolean
+    ): AuxScriptSimpleDependency[] {
+        let firstMember: AuxScriptSimpleMemberDependency = this._reorderMember(
+            node,
+            allowFunctions
+        );
+
+        if (!firstMember) {
+            return [];
+        }
+
+        if (firstMember.name === 'this') {
+            return [{ type: 'this' }];
+        }
+        return [firstMember];
+    }
+
+    /**
+     * Produces a new simple member dependency that provides a top-down view of the
+     * tree instead of a bottom up view.
+     * @param node The node.
+     * @param allowFunctions Whether to continue when a call dependency occurs. If true, then function names can be part of the member name.
+     */
+    private _reorderMember(
+        node: AuxScriptMemberDependency,
+        allowFunctions: boolean
+    ) {
         let stack = [];
         let current: AuxScriptObjectDependency = node;
         while (current) {
@@ -169,8 +218,11 @@ export class Dependencies {
             } else if (current.type === 'tag') {
                 current = null;
             } else if (current.type === 'call') {
-                current = current.identifier;
-                // current = null;
+                if (allowFunctions) {
+                    current = current.identifier;
+                } else {
+                    current = null;
+                }
             }
         }
 
@@ -193,17 +245,14 @@ export class Dependencies {
                 currentMember = nextMember;
             }
         }
-
-        if (!firstMember) {
-            return [];
-        }
-
-        if (firstMember.name === 'this') {
-            return [{ type: 'this' }];
-        }
-        return [firstMember];
+        return firstMember;
     }
 
+    /**
+     * Gets the root-most member from the given node.
+     * This is useful for finding if the member node is attached to the end of a function call or if it is standalone.
+     * @param node
+     */
     private _rootMembers(
         node: AuxScriptObjectDependency
     ): AuxScriptObjectDependency {
@@ -1082,7 +1131,8 @@ export type AuxScriptSimpleDependency =
     | AuxScriptSimpleThisDependency
     | AuxScriptSimpleTagValueDependency
     | AuxScriptSimpleObjectExpressionDependency
-    | AuxScriptSimpleProperty;
+    | AuxScriptSimpleProperty
+    | AuxScriptEndFunctionParametersDependency;
 
 export type AuxScriptExternalDependency =
     | AuxScriptSimpleBotDependency
@@ -1107,6 +1157,15 @@ export interface AuxScriptSimpleFunctionDependency {
     type: 'function';
     name: string;
     dependencies: AuxScriptSimpleDependency[];
+}
+
+/**
+ * Defines a special "dependency" which is used to indicate that
+ * the parameters for a function dependency have ended and that further dependencies
+ * should not be interpreted as function parameters.
+ */
+export interface AuxScriptEndFunctionParametersDependency {
+    type: 'end_function_parameters';
 }
 
 export interface AuxScriptSimpleMemberDependency {
