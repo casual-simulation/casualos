@@ -103,6 +103,7 @@ export class AuxRuntime
 
     private _actionBatch: BotAction[] = [];
     private _errorBatch: ScriptError[] = [];
+    private _runFormulas: boolean = true;
 
     private _userId: string;
     private _zone: Zone;
@@ -128,6 +129,20 @@ export class AuxRuntime
 
     get context() {
         return this._globalContext;
+    }
+
+    /**
+     * Gets whether to compile and run formulas.
+     */
+    get runFormulas(): boolean {
+        return this._runFormulas;
+    }
+
+    /**
+     * Sets whether to compile and run formulas.
+     */
+    set runFormulas(value: boolean) {
+        this._runFormulas = value;
     }
 
     /**
@@ -1327,7 +1342,9 @@ export class AuxRuntime
         const compiled = newBot.compiledValues[tag];
         try {
             const value = (newBot.values[tag] =
-                typeof compiled === 'function' ? compiled() : compiled);
+                this._runFormulas && typeof compiled === 'function'
+                    ? compiled()
+                    : compiled);
 
             if (
                 isScript(value) &&
@@ -1427,7 +1444,7 @@ export class AuxRuntime
         listener: AuxCompiledScript;
     } {
         let listener: AuxCompiledScript;
-        if (isFormula(value)) {
+        if (isFormula(value) && this._runFormulas) {
             try {
                 value = this._compile(bot, tag, value, {
                     allowsEditing: false,
