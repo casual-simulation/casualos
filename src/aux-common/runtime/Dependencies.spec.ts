@@ -1968,6 +1968,21 @@ describe('Dependencies', () => {
                 ]);
             });
 
+            it('should return an all dependency when unable to determine the tag name because of a function call', () => {
+                const tree = dependencies.dependencyTree(
+                    `${name}(getTag(myBot, "tag"), "value")`
+                );
+                const simple = dependencies.simplify(tree);
+
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'all',
+                    },
+                ]);
+            });
+
             it('should return a bot dependency on the ID tag when there are no arguments', () => {
                 const tree = dependencies.dependencyTree(`${name}()`);
                 const simple = dependencies.simplify(tree);

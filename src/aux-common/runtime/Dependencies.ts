@@ -560,255 +560,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
         );
     }
 
-    return {
-        getTag: (node: AuxScriptSimpleDependency) => {
-            if (node.type !== 'function') {
-                return [node];
-            }
-            if (node.dependencies.length >= 2) {
-                const extras = node.dependencies.slice(1);
-                return extras.map((n, i) => {
-                    const name = getTagName(n);
-                    if (!name) {
-                        return { type: 'all' };
-                    }
-                    return {
-                        type: 'tag_value',
-                        name: name,
-                        dependencies:
-                            i === 0 ? replace([node.dependencies[0]]) : [],
-                    };
-                });
-            }
-            return [];
-        },
-        tags: (node: AuxScriptSimpleDependency) => {
-            if (node.type !== 'member') {
-                return [node];
-            }
-            if (node.dependencies.length >= 1) {
-                const extras = node.dependencies;
-                return extras.map((n, i) => {
-                    const name = getMemberName(n);
-                    if (!name) {
-                        return { type: 'all' };
-                    }
-                    return {
-                        type: 'tag_value',
-                        name: name,
-                        dependencies: [],
-                    };
-                });
-            }
-
-            return [];
-        },
-        raw: (node: AuxScriptSimpleDependency) => {
-            if (node.type !== 'member') {
-                return [node];
-            }
-            if (node.dependencies.length >= 1) {
-                const extras = node.dependencies;
-                return extras.map((n, i) => {
-                    const name = getMemberName(n);
-                    if (!name) {
-                        return { type: 'all' };
-                    }
-                    return {
-                        type: 'tag_value',
-                        name: name,
-                        dependencies: [],
-                    };
-                });
-            }
-
-            return [];
-        },
-        creator: (node: AuxScriptSimpleDependency) => {
-            if (node.type !== 'member') {
-                return [node];
-            }
-
-            return [
-                {
-                    type: 'tag_value',
-                    name: 'creator',
-                    dependencies: replace(node.dependencies),
-                },
-            ];
-        },
-        config: (node: AuxScriptSimpleDependency) => {
-            if (node.type !== 'member') {
-                return [node];
-            }
-
-            return [
-                {
-                    type: 'tag_value',
-                    name: 'configBot',
-                    dependencies: replace(node.dependencies),
-                },
-            ];
-        },
-        getBot: (node: AuxScriptSimpleDependency) => {
-            if (node.type !== 'function') {
-                return [node];
-            }
-            if (node.dependencies.length >= 1) {
-                if (node.dependencies[0].type === 'function') {
-                    return replace(node.dependencies);
-                }
-                const name = getTagName(node.dependencies[0]);
-                if (!name) {
-                    return [{ type: 'all' }];
-                }
-                return [
-                    {
-                        type: 'bot',
-                        name: name,
-                        dependencies: replace(node.dependencies.slice(1)),
-                    },
-                ];
-            }
-            return [
-                {
-                    type: 'bot',
-                    name: 'id',
-                    dependencies: [],
-                },
-            ];
-        },
-        getBots: (node: AuxScriptSimpleDependency) => {
-            if (node.type !== 'function') {
-                return [node];
-            }
-            if (node.dependencies.length >= 1) {
-                if (node.dependencies[0].type === 'function') {
-                    return replace(node.dependencies);
-                }
-                const name = getTagName(node.dependencies[0]);
-                if (!name) {
-                    return [{ type: 'all' }];
-                }
-                return [
-                    {
-                        type: 'bot',
-                        name: name,
-                        dependencies: replace(node.dependencies.slice(1)),
-                    },
-                ];
-            }
-            return [
-                {
-                    type: 'bot',
-                    name: 'id',
-                    dependencies: [],
-                },
-            ];
-        },
-        getBotTagValues: (node: AuxScriptSimpleDependency) => {
-            if (node.type !== 'function') {
-                return [node];
-            }
-            if (node.dependencies.length >= 1) {
-                const name = getTagName(node.dependencies[0]);
-                if (!name) {
-                    return [{ type: 'all' }];
-                }
-                return [
-                    {
-                        type: 'tag',
-                        name: name,
-                        dependencies: replace(node.dependencies.slice(1)),
-                    },
-                ];
-            }
-            return [];
-        },
-        'player.getCurrentDimension': (node: AuxScriptSimpleDependency) => {
-            if (node.type !== 'function') {
-                return [node];
-            }
-            return [
-                {
-                    type: 'tag',
-                    name: 'pagePortal',
-                    dependencies: [],
-                },
-            ];
-        },
-        'player.getCurrentStory': (node: AuxScriptSimpleDependency) => {
-            if (node.type !== 'function') {
-                return [node];
-            }
-            return [
-                {
-                    type: 'tag',
-                    name: 'story',
-                    dependencies: [],
-                },
-            ];
-        },
-        'player.getMenuDimension': (node: AuxScriptSimpleDependency) => {
-            if (node.type !== 'function') {
-                return [node];
-            }
-            return [
-                {
-                    type: 'tag',
-                    name: 'menuPortal',
-                    dependencies: [],
-                },
-            ];
-        },
-        'player.getInventoryDimension': (node: AuxScriptSimpleDependency) => {
-            if (node.type !== 'function') {
-                return [node];
-            }
-            return [
-                {
-                    type: 'tag',
-                    name: 'inventoryPortal',
-                    dependencies: [],
-                },
-            ];
-        },
-        'player.hasBotInInventory': (node: AuxScriptSimpleDependency) => {
-            if (node.type !== 'function') {
-                return [node];
-            }
-            return [
-                {
-                    type: 'all',
-                },
-            ];
-        },
-        configTag: (node: AuxScriptSimpleDependency) => {
-            if (node.type !== 'member') {
-                return [node];
-            }
-
-            return [
-                {
-                    type: 'tag_value',
-                    name: tagNameSymbol,
-                    dependencies: [],
-                },
-            ];
-        },
-        tagName: (node: AuxScriptSimpleDependency) => {
-            if (node.type !== 'member') {
-                return [node];
-            }
-
-            return [
-                {
-                    type: 'tag_value',
-                    name: tagNameSymbol,
-                    dependencies: [],
-                },
-            ];
-        },
+    let filterFunctions = {
         byTag: (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];
@@ -989,6 +741,265 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             }
             return [];
         },
+    } as AuxScriptReplacements;
+
+    let others = {
+        getTag: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            if (node.dependencies.length >= 2) {
+                const extras = node.dependencies.slice(1);
+                return extras.map((n, i) => {
+                    const name = getTagName(n);
+                    if (!name) {
+                        return { type: 'all' };
+                    }
+                    return {
+                        type: 'tag_value',
+                        name: name,
+                        dependencies:
+                            i === 0 ? replace([node.dependencies[0]]) : [],
+                    };
+                });
+            }
+            return [];
+        },
+        tags: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'member') {
+                return [node];
+            }
+            if (node.dependencies.length >= 1) {
+                const extras = node.dependencies;
+                return extras.map((n, i) => {
+                    const name = getMemberName(n);
+                    if (!name) {
+                        return { type: 'all' };
+                    }
+                    return {
+                        type: 'tag_value',
+                        name: name,
+                        dependencies: [],
+                    };
+                });
+            }
+
+            return [];
+        },
+        raw: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'member') {
+                return [node];
+            }
+            if (node.dependencies.length >= 1) {
+                const extras = node.dependencies;
+                return extras.map((n, i) => {
+                    const name = getMemberName(n);
+                    if (!name) {
+                        return { type: 'all' };
+                    }
+                    return {
+                        type: 'tag_value',
+                        name: name,
+                        dependencies: [],
+                    };
+                });
+            }
+
+            return [];
+        },
+        creator: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'member') {
+                return [node];
+            }
+
+            return [
+                {
+                    type: 'tag_value',
+                    name: 'creator',
+                    dependencies: replace(node.dependencies),
+                },
+            ];
+        },
+        config: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'member') {
+                return [node];
+            }
+
+            return [
+                {
+                    type: 'tag_value',
+                    name: 'configBot',
+                    dependencies: replace(node.dependencies),
+                },
+            ];
+        },
+        getBot: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            if (node.dependencies.length >= 1) {
+                const first = node.dependencies[0];
+                if (
+                    first.type === 'function' &&
+                    first.name in filterFunctions
+                ) {
+                    return replace(node.dependencies);
+                }
+                const name = getTagName(node.dependencies[0]);
+                if (!name) {
+                    return [{ type: 'all' }];
+                }
+                return [
+                    {
+                        type: 'bot',
+                        name: name,
+                        dependencies: replace(node.dependencies.slice(1)),
+                    },
+                ];
+            }
+            return [
+                {
+                    type: 'bot',
+                    name: 'id',
+                    dependencies: [],
+                },
+            ];
+        },
+        getBots: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            if (node.dependencies.length >= 1) {
+                const first = node.dependencies[0];
+                if (
+                    first.type === 'function' &&
+                    first.name in filterFunctions
+                ) {
+                    return replace(node.dependencies);
+                }
+                const name = getTagName(node.dependencies[0]);
+                if (!name) {
+                    return [{ type: 'all' }];
+                }
+                return [
+                    {
+                        type: 'bot',
+                        name: name,
+                        dependencies: replace(node.dependencies.slice(1)),
+                    },
+                ];
+            }
+            return [
+                {
+                    type: 'bot',
+                    name: 'id',
+                    dependencies: [],
+                },
+            ];
+        },
+        getBotTagValues: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            if (node.dependencies.length >= 1) {
+                const name = getTagName(node.dependencies[0]);
+                if (!name) {
+                    return [{ type: 'all' }];
+                }
+                return [
+                    {
+                        type: 'tag',
+                        name: name,
+                        dependencies: replace(node.dependencies.slice(1)),
+                    },
+                ];
+            }
+            return [];
+        },
+        'player.getCurrentDimension': (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            return [
+                {
+                    type: 'tag',
+                    name: 'pagePortal',
+                    dependencies: [],
+                },
+            ];
+        },
+        'player.getCurrentStory': (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            return [
+                {
+                    type: 'tag',
+                    name: 'story',
+                    dependencies: [],
+                },
+            ];
+        },
+        'player.getMenuDimension': (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            return [
+                {
+                    type: 'tag',
+                    name: 'menuPortal',
+                    dependencies: [],
+                },
+            ];
+        },
+        'player.getInventoryDimension': (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            return [
+                {
+                    type: 'tag',
+                    name: 'inventoryPortal',
+                    dependencies: [],
+                },
+            ];
+        },
+        'player.hasBotInInventory': (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            return [
+                {
+                    type: 'all',
+                },
+            ];
+        },
+        configTag: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'member') {
+                return [node];
+            }
+
+            return [
+                {
+                    type: 'tag_value',
+                    name: tagNameSymbol,
+                    dependencies: [],
+                },
+            ];
+        },
+        tagName: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'member') {
+                return [node];
+            }
+
+            return [
+                {
+                    type: 'tag_value',
+                    name: tagNameSymbol,
+                    dependencies: [],
+                },
+            ];
+        },
         [defaultReplacement]: (node: AuxScriptSimpleDependency) => {
             if (
                 node.type !== 'member' &&
@@ -1006,6 +1017,11 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 },
             ];
         },
+    } as AuxScriptReplacements;
+
+    return {
+        ...filterFunctions,
+        ...others,
     };
 }
 
