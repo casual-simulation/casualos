@@ -2,7 +2,7 @@
 
 ## V1.2.14
 
-#### Date: TBD
+#### Date: 10/7/2020
 
 ### :bug: Bug Fixes
 
