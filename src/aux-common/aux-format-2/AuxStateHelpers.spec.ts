@@ -1,5 +1,5 @@
 import { createBot } from '../bots/BotCalculations';
-import { apply, updates } from './AuxStateHelpers';
+import { apply, del, edit, insert, updates } from './AuxStateHelpers';
 import { Bot } from '../bots/Bot';
 
 describe('AuxStateHelpers', () => {
@@ -80,6 +80,141 @@ describe('AuxStateHelpers', () => {
                     }),
                 });
             });
+
+            it('should not merge objects in tags', () => {
+                const current = {
+                    test: createBot('test', {
+                        abc: {
+                            def: 1,
+                        },
+                    }),
+                };
+                const update = {
+                    test: createBot('test', {
+                        abc: {
+                            ghi: 2,
+                        },
+                    }),
+                };
+
+                const final = apply(current, update);
+                expect(final).toEqual({
+                    test: createBot('test', {
+                        abc: {
+                            ghi: 2,
+                        },
+                    }),
+                });
+            });
+
+            it('should not merge objects in masks', () => {
+                const current = {
+                    test: {
+                        id: 'test',
+                        tags: {},
+                        masks: {
+                            shared: {
+                                abc: {
+                                    def: 1,
+                                },
+                            },
+                        },
+                    },
+                };
+                const update = {
+                    test: {
+                        masks: {
+                            shared: {
+                                abc: {
+                                    ghi: 2,
+                                },
+                            },
+                        },
+                    },
+                };
+
+                const final = apply(current, update);
+                expect(final).toEqual({
+                    test: {
+                        id: 'test',
+                        tags: {},
+                        masks: {
+                            shared: {
+                                abc: {
+                                    ghi: 2,
+                                },
+                            },
+                        },
+                    },
+                });
+            });
+                    const current = {
+                        test: createBot('test', {
+                            abc: {
+                                def: 1
+                            },
+                        }),
+                    };
+                    const update = {
+                        test: createBot('test', {
+                            abc: {
+                                ghi: 2
+                            },
+                        }),
+                    };
+    
+                    const final = apply(current, update);
+                    expect(final).toEqual({
+                        test: createBot('test', {
+                            abc: {
+                                ghi: 2
+                            },
+                        }),
+                    });
+                });
+
+                it('should not merge objects in masks', () => {
+                    const current = {
+                        test: {
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                shared: {
+                                    abc: {
+                                        def: 1
+                                    }
+                                }
+                            }
+                        },
+                    };
+                    const update = {
+                        test: {
+                            masks: {
+                                shared: {
+                                    abc: {
+                                        ghi: 2
+                                    }
+                                }
+                            }
+                        }
+                    };
+    
+                    const final = apply(current, update);
+                    expect(final).toEqual({
+                        test: {
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                shared: {
+                                    abc: {
+                                        ghi: 2
+                                    }
+                                }
+                            }
+                        },
+                    });
+                });
+
         });
 
         describe('deleted bots', () => {

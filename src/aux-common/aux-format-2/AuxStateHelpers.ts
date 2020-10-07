@@ -18,15 +18,52 @@ export function apply<T extends BotsState, U extends PartialBotsState>(
     state: T,
     update: U
 ): T {
-    let updatedState = merge(state, update);
+    let updatedState = Object.assign({}, state);
 
     for (let id in update) {
-        let botUpdate: Partial<Bot> = update[id];
+        let botUpdate: Partial<Bot | PrecalculatedBot> = update[id];
         if (!botUpdate) {
             delete updatedState[id];
             continue;
         }
+
         let bot = updatedState[id] as Bot | PrecalculatedBot;
+        if (!bot) {
+            updatedState[id] = update[id] as any;
+            continue;
+        } else {
+            bot = Object.assign({}, bot);
+            updatedState[id] = bot as any;
+        }
+
+        if (botUpdate.tags) {
+            bot.tags = Object.assign({}, bot.tags, botUpdate.tags);
+        }
+        if (botUpdate.signatures) {
+            bot.signatures = Object.assign(
+                {},
+                bot.signatures,
+                botUpdate.signatures
+            );
+        }
+        if ('values' in botUpdate) {
+            (<PrecalculatedBot>(<any>bot)).values = Object.assign(
+                {},
+                (<PrecalculatedBot>(<any>bot)).values,
+                botUpdate.values
+            );
+        }
+        if (botUpdate.masks) {
+            bot.masks = Object.assign({}, bot.masks);
+            for (let space in botUpdate.masks) {
+                bot.masks[space] = Object.assign(
+                    {},
+                    bot.masks[space],
+                    botUpdate.masks[space]
+                );
+            }
+        }
+
         for (let tag in botUpdate.tags) {
             if (bot.tags[tag] === null) {
                 delete bot.tags[tag];
