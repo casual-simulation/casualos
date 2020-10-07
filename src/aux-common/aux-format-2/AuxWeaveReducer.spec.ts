@@ -3,7 +3,7 @@ import {
     bot,
     tag,
     value,
-    del,
+    deleteOp,
     AuxOpType,
     CertificateOp,
     signedCert,
@@ -142,7 +142,7 @@ describe('AuxWeaveReducer', () => {
                 const bot1A = atom(atomId('a', 1), null, bot('test1'));
                 const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
                 const value1A = atom(atomId('a', 3), tag1A, value('def'));
-                const del1A = atom(atomId('a', 4), bot1A, del());
+                const del1A = atom(atomId('a', 4), bot1A, deleteOp());
 
                 const bot1B = atom(atomId('a', 5), null, bot('test1'));
                 const tag1B = atom(atomId('a', 6), bot1B, tag('abc'));
@@ -165,14 +165,14 @@ describe('AuxWeaveReducer', () => {
         describe('delete', () => {
             it('should remove the bot from the state', () => {
                 const bot1 = atom(atomId('a', 1), null, bot('test'));
-                const delete1 = atom(atomId('a', 2), bot1, del());
+                const delete1 = atom(atomId('a', 2), bot1, deleteOp());
                 state = add(bot1, delete1);
 
                 expect(state).toEqual({});
             });
 
             it('should ignore deletes whose cause is null', () => {
-                const delete1 = atom(atomId('a', 2), null, del());
+                const delete1 = atom(atomId('a', 2), null, deleteOp());
                 state = add(delete1);
 
                 expect(state).toEqual({});
@@ -180,7 +180,7 @@ describe('AuxWeaveReducer', () => {
 
             it('should ignore deletes that are not the first child of the bot', () => {
                 const bot1 = atom(atomId('a', 1), null, bot('test'));
-                const delete1 = atom(atomId('a', 2), bot1, del());
+                const delete1 = atom(atomId('a', 2), bot1, deleteOp());
                 const tag1 = atom(atomId('a', 3), bot1, tag('test'));
                 state = add(bot1, tag1, delete1);
 
@@ -195,7 +195,7 @@ describe('AuxWeaveReducer', () => {
             it('should not touch other bots', () => {
                 const bot1 = atom(atomId('a', 1), null, bot('test1'));
                 const bot2 = atom(atomId('a', 2), null, bot('test2'));
-                const delete1 = atom(atomId('a', 3), bot1, del());
+                const delete1 = atom(atomId('a', 3), bot1, deleteOp());
 
                 state = add(bot1, bot2, delete1);
 
@@ -215,7 +215,7 @@ describe('AuxWeaveReducer', () => {
                 const bot1B = atom(atomId('b', 110), null, bot('test2'));
                 const tag1B = atom(atomId('b', 111), bot1B, tag('tag1'));
                 const val1B = atom(atomId('b', 112), tag1B, value('val1B'));
-                const del1B = atom(atomId('b', 113), bot1B, del());
+                const del1B = atom(atomId('b', 113), bot1B, deleteOp());
 
                 state = add(bot1A, tag1A, val1A);
                 state = add(bot1B, tag1B, val1B);
@@ -248,7 +248,7 @@ describe('AuxWeaveReducer', () => {
                 const bot1 = atom(atomId('a', 1), null, bot('test'));
                 const tag1 = atom(atomId('a', 2), bot1, tag('tag'));
                 const value1 = atom(atomId('a', 3), tag1, value('abcdef'));
-                const delete1 = atom(atomId('a', 2), value1, del(0, 2));
+                const delete1 = atom(atomId('a', 2), value1, deleteOp(0, 2));
                 state = add(bot1, tag1, value1, delete1);
 
                 expect(state).toEqual({
@@ -496,7 +496,7 @@ describe('AuxWeaveReducer', () => {
                 it('should ignore values when the bot is deleted', () => {
                     const bot1 = atom(atomId('a', 1), null, bot('bot'));
                     const tag1 = atom(atomId('a', 2), bot1, tag('test'));
-                    const delete1 = atom(atomId('a', 3), bot1, del());
+                    const delete1 = atom(atomId('a', 3), bot1, deleteOp());
                     const value1 = atom(atomId('a', 4), tag1, value('haha'));
 
                     state = add(bot1, tag1, delete1, value1);
@@ -1023,7 +1023,7 @@ describe('AuxWeaveReducer', () => {
             });
 
             it('should not add a signature value for the tag if the bot is destroyed', () => {
-                const del1 = atom(atomId('b', 4), bot1, del());
+                const del1 = atom(atomId('b', 4), bot1, deleteOp());
 
                 state = add(c1, bot1, tag1, value1, del1, s1);
 
@@ -1631,7 +1631,7 @@ describe('AuxWeaveReducer', () => {
                     type: 4,
                     extra: 'haha',
                 });
-                const delete1B = atom(atomId('a', 2), bot1, del());
+                const delete1B = atom(atomId('a', 2), bot1, deleteOp());
                 state = add(bot1, delete1A, delete1B);
 
                 expect(state).toEqual({});

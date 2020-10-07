@@ -13,7 +13,7 @@ import {
     bot,
     tag,
     value,
-    del,
+    deleteOp,
     tagValueHash,
     CertificateOp,
     signedCert,
@@ -349,7 +349,7 @@ describe('AuxCausalTree2', () => {
                 const b1 = atom(atomId('a', 1), null, bot('test'));
                 const t1 = atom(atomId('a', 2), b1, tag('abc'));
                 const v1 = atom(atomId('a', 3), t1, value('def'));
-                const d1 = atom(atomId('a', 4, 1), b1, del());
+                const d1 = atom(atomId('a', 4, 1), b1, deleteOp());
 
                 expect(tree.weave.getAtoms()).toEqual([b1, d1]);
 
@@ -376,7 +376,7 @@ describe('AuxCausalTree2', () => {
                 const bot1A = atom(atomId('b', 100), null, bot('test2'));
                 const tag1A = atom(atomId('b', 101), bot1A, tag('tag1'));
                 const val1A = atom(atomId('b', 102), tag1A, value('val1A'));
-                const del1A = atom(atomId('b', 103), bot1A, del());
+                const del1A = atom(atomId('b', 103), bot1A, deleteOp());
 
                 const bot1B = atom(atomId('b', 110), null, bot('test2'));
                 const tag1B = atom(atomId('b', 111), bot1B, tag('tag1'));
@@ -667,7 +667,7 @@ describe('AuxCausalTree2', () => {
                 const bot1A = atom(atomId('b', 100), null, bot('test2'));
                 const tag1A = atom(atomId('b', 101), bot1A, tag('tag1'));
                 const val1A = atom(atomId('b', 102), tag1A, value('val1A'));
-                const del1A = atom(atomId('b', 103), bot1A, del());
+                const del1A = atom(atomId('b', 103), bot1A, deleteOp());
 
                 const bot1B = atom(atomId('b', 110), null, bot('test2'));
                 const tag1B = atom(atomId('b', 111), bot1B, tag('tag1'));
@@ -718,7 +718,7 @@ describe('AuxCausalTree2', () => {
                 const bot1B = atom(atomId('b', 110), null, bot('test2'));
                 const tag1B = atom(atomId('b', 111), bot1B, tag('tag1'));
                 const val1B = atom(atomId('b', 112), tag1B, value('val1B'));
-                const del1B = atom(atomId('b', 113), bot1B, del());
+                const del1B = atom(atomId('b', 113), bot1B, deleteOp());
 
                 ({ tree } = applyAtoms(tree, [
                     bot1A,

@@ -25,7 +25,7 @@ import {
     BotOp,
     value,
     bot,
-    del,
+    deleteOp,
     TagOp,
     selfSignedCert,
     signedCert,
@@ -354,7 +354,7 @@ export function applyEvents(
             }
         } else if (event.type == 'remove_bot') {
             for (let node of findBotNodes(tree.weave, event.id)) {
-                newResult = addAtom(node.atom, del(), 1);
+                newResult = addAtom(node.atom, deleteOp(), 1);
 
                 const newAtom = addedAtom(newResult.results[0]);
                 if (newAtom) {

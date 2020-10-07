@@ -6,7 +6,7 @@ import {
     newSite,
     createAtom,
 } from '@casual-simulation/causal-trees/core2';
-import { AuxOp, bot, tag, value, del } from './AuxOpTypes';
+import { AuxOp, bot, tag, value, deleteOp } from './AuxOpTypes';
 import { findTagNode, findValueNode, findBotNode } from './AuxWeaveHelpers';
 import { createBot } from '../bots';
 
@@ -30,7 +30,7 @@ describe('AuxWeaveHelpers', () => {
 
         it('should find the first node that defines the given bot that is not deleted', () => {
             const b1A = atom(atomId('a', 1), null, bot('test'));
-            const del1A = atom(atomId('a', 2), b1A, del());
+            const del1A = atom(atomId('a', 2), b1A, deleteOp());
             const b1B = atom(atomId('a', 3), null, bot('test'));
 
             weave.insert(b1A);
