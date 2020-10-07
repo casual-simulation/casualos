@@ -2,6 +2,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/edcore.main';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import debounce from 'lodash/debounce';
+import { ResizeObserverEntry } from '@juggle/resize-observer/lib/ResizeObserverEntry';
 
 @Component({})
 export default class MonacoEditor extends Vue {
@@ -70,9 +71,9 @@ export default class MonacoEditor extends Vue {
         if (this._editor) {
             // Uses native or polyfill, depending on browser support.
             this._resizeObserver = new ResizeObserver(
-                debounce((entries, observer) => {
+                debouceObserverUpdates(this.$el, () => {
                     this.resize();
-                }, 100)
+                })
             );
 
             this._resizeObserver.observe(<HTMLElement>this.$el);
@@ -108,7 +109,7 @@ export default class MonacoEditor extends Vue {
     }
 
     private _applyViewZones() {
-        this._editor.changeViewZones(changeAccessor => {
+        this._editor.changeViewZones((changeAccessor) => {
             const domNode = document.createElement('div');
             const viewZoneId = changeAccessor.addZone({
                 afterLineNumber: 0,
@@ -117,4 +118,26 @@ export default class MonacoEditor extends Vue {
             });
         });
     }
+}
+
+function debouceObserverUpdates(
+    target: Element,
+    callback: Function
+): (entries: ResizeObserverEntry[]) => void {
+    let lastHeight = NaN;
+    let lastWidth = NaN;
+    return (entries) => {
+        for (let entry of entries) {
+            if (entry.target === target) {
+                if (
+                    entry.contentRect.height !== lastHeight ||
+                    entry.contentRect.width !== lastWidth
+                ) {
+                    lastHeight = entry.contentRect.height;
+                    lastWidth = entry.contentRect.width;
+                    callback();
+                }
+            }
+        }
+    };
 }
