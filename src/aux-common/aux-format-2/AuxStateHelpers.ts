@@ -27,28 +27,35 @@ export function edit(...operations: TagEditOp[]): TagEdit {
 }
 
 /**
- * Creates a insert operation that inserts the given text at the given index.
- * @param index The index.
- * @param text The text.
+ * Creates a preserve operation that keeps the given number of characters.
+ * @param count The number of characters to preserve.
  */
-export function insert(index: number, text: string): TagInsertOp {
+export function preserve(count: number): TagPreserveOp {
+    return {
+        type: 'preserve',
+        count,
+    };
+}
+
+/**
+ * Creates a insert operation that inserts the given text.
+ * @param text The text to insert.
+ */
+export function insert(text: string): TagInsertOp {
     return {
         type: 'insert',
-        index,
         text,
     };
 }
 
 /**
  * Creates a delete operation that deletes the text between the given start and end indexes.
- * @param start The start index.
- * @param end The end index.
+ * @param count The number of characters to delete.
  */
-export function del(start: number, end: number): TagDeleteOp {
+export function del(count: number): TagDeleteOp {
     return {
         type: 'delete',
-        start,
-        end,
+        count,
     };
 }
 
@@ -60,18 +67,25 @@ export interface TagEdit {
     operations: TagEditOp[];
 }
 
-export type TagEditOp = TagInsertOp | TagDeleteOp;
+export type TagEditOp = TagPreserveOp | TagInsertOp | TagDeleteOp;
+
+/**
+ * A tag edit that represents the act of not changing some text in a tag's value.
+ */
+export interface TagPreserveOp {
+    type: 'preserve';
+
+    /**
+     * The number of characters to preserve.
+     */
+    count: number;
+}
 
 /**
  * A tag edit that represents inserting some text into a tag's value.
  */
 export interface TagInsertOp {
     type: 'insert';
-
-    /**
-     * The index that the text should be inserted at.
-     */
-    index: number;
 
     /**
      * The text that should be inserted.
@@ -86,14 +100,9 @@ export interface TagDeleteOp {
     type: 'delete';
 
     /**
-     * The start index of the deletion.
+     * The number of characters to delete.
      */
-    start: number;
-
-    /**
-     * The end index of the deletion.
-     */
-    end: number;
+    count: number;
 }
 
 /**
@@ -341,11 +350,15 @@ export function updates(
 
 function applyEdit(value: any, edit: TagEdit): any {
     if (typeof value === 'string') {
+        let index = 0;
         for (let op of edit.operations) {
-            if (op.type === 'insert') {
-                value = splice(value, op.index, 0, op.text);
+            if (op.type === 'preserve') {
+                index += op.count;
+            } else if (op.type === 'insert') {
+                value = splice(value, index, 0, op.text);
+                index += op.text.length;
             } else {
-                value = splice(value, op.start, op.end - op.start, '');
+                value = splice(value, index, op.count, '');
             }
         }
     }

@@ -1,5 +1,5 @@
 import { createBot } from '../bots/BotCalculations';
-import { apply, del, edit, insert, updates } from './AuxStateHelpers';
+import { apply, del, edit, insert, preserve, updates } from './AuxStateHelpers';
 import { Bot } from '../bots/Bot';
 
 describe('AuxStateHelpers', () => {
@@ -159,7 +159,7 @@ describe('AuxStateHelpers', () => {
                     const update = {
                         test: {
                             tags: {
-                                abc: edit(insert(3, 'ghi')),
+                                abc: edit(preserve(3), insert('ghi')),
                             },
                         },
                     };
@@ -181,7 +181,7 @@ describe('AuxStateHelpers', () => {
                     const update = {
                         test: {
                             tags: {
-                                abc: edit(insert(0, 'ghi')),
+                                abc: edit(insert('ghi')),
                             },
                         },
                     };
@@ -203,7 +203,7 @@ describe('AuxStateHelpers', () => {
                     const update = {
                         test: {
                             tags: {
-                                abc: edit(insert(1, 'ghi')),
+                                abc: edit(preserve(1), insert('ghi')),
                             },
                         },
                     };
@@ -225,7 +225,7 @@ describe('AuxStateHelpers', () => {
                     const update = {
                         test: {
                             tags: {
-                                abc: edit(del(1, 3)),
+                                abc: edit(preserve(1), del(2)),
                             },
                         },
                     };
@@ -247,7 +247,7 @@ describe('AuxStateHelpers', () => {
                     const update = {
                         test: {
                             tags: {
-                                abc: edit(del(0, 2)),
+                                abc: edit(del(2)),
                             },
                         },
                     };
@@ -269,7 +269,7 @@ describe('AuxStateHelpers', () => {
                     const update = {
                         test: {
                             tags: {
-                                abc: edit(del(1, 2)),
+                                abc: edit(preserve(1), del(1)),
                             },
                         },
                     };
@@ -278,6 +278,34 @@ describe('AuxStateHelpers', () => {
                     expect(final).toEqual({
                         test: createBot('test', {
                             abc: 'df',
+                        }),
+                    });
+                });
+
+                it('should support inserting and deleting text at the same time', () => {
+                    const current = {
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    };
+                    const update = {
+                        test: {
+                            tags: {
+                                abc: edit(
+                                    preserve(1),
+                                    del(1),
+                                    insert('a'),
+                                    preserve(1),
+                                    insert('b')
+                                ),
+                            },
+                        },
+                    };
+
+                    const final = apply(current, update);
+                    expect(final).toEqual({
+                        test: createBot('test', {
+                            abc: 'dafb',
                         }),
                     });
                 });
