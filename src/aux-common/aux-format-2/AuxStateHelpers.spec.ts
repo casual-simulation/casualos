@@ -148,73 +148,140 @@ describe('AuxStateHelpers', () => {
                     },
                 });
             });
+
+            describe('edit', () => {
+                it('should support inserting text at the end of the tag', () => {
                     const current = {
                         test: createBot('test', {
-                            abc: {
-                                def: 1
-                            },
+                            abc: 'def',
                         }),
                     };
                     const update = {
-                        test: createBot('test', {
-                            abc: {
-                                ghi: 2
+                        test: {
+                            tags: {
+                                abc: edit(insert(3, 'ghi')),
                             },
-                        }),
+                        },
                     };
-    
+
                     const final = apply(current, update);
                     expect(final).toEqual({
                         test: createBot('test', {
-                            abc: {
-                                ghi: 2
-                            },
+                            abc: 'defghi',
                         }),
                     });
                 });
 
-                it('should not merge objects in masks', () => {
+                it('should support inserting text at the beginning of the tag', () => {
                     const current = {
-                        test: {
-                            id: 'test',
-                            tags: {},
-                            masks: {
-                                shared: {
-                                    abc: {
-                                        def: 1
-                                    }
-                                }
-                            }
-                        },
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
                     };
                     const update = {
                         test: {
-                            masks: {
-                                shared: {
-                                    abc: {
-                                        ghi: 2
-                                    }
-                                }
-                            }
-                        }
+                            tags: {
+                                abc: edit(insert(0, 'ghi')),
+                            },
+                        },
                     };
-    
+
                     const final = apply(current, update);
                     expect(final).toEqual({
-                        test: {
-                            id: 'test',
-                            tags: {},
-                            masks: {
-                                shared: {
-                                    abc: {
-                                        ghi: 2
-                                    }
-                                }
-                            }
-                        },
+                        test: createBot('test', {
+                            abc: 'ghidef',
+                        }),
                     });
                 });
 
+                it('should support inserting text in the middle of the tag', () => {
+                    const current = {
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    };
+                    const update = {
+                        test: {
+                            tags: {
+                                abc: edit(insert(1, 'ghi')),
+                            },
+                        },
+                    };
+
+                    const final = apply(current, update);
+                    expect(final).toEqual({
+                        test: createBot('test', {
+                            abc: 'dghief',
+                        }),
+                    });
+                });
+
+                it('should support deleting text at the end of the tag', () => {
+                    const current = {
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    };
+                    const update = {
+                        test: {
+                            tags: {
+                                abc: edit(del(1, 3)),
+                            },
+                        },
+                    };
+
+                    const final = apply(current, update);
+                    expect(final).toEqual({
+                        test: createBot('test', {
+                            abc: 'd',
+                        }),
+                    });
+                });
+
+                it('should support deleting text at the beginning of the tag', () => {
+                    const current = {
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    };
+                    const update = {
+                        test: {
+                            tags: {
+                                abc: edit(del(0, 2)),
+                            },
+                        },
+                    };
+
+                    const final = apply(current, update);
+                    expect(final).toEqual({
+                        test: createBot('test', {
+                            abc: 'f',
+                        }),
+                    });
+                });
+
+                it('should support deleting text in the middle of the tag', () => {
+                    const current = {
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    };
+                    const update = {
+                        test: {
+                            tags: {
+                                abc: edit(del(1, 2)),
+                            },
+                        },
+                    };
+
+                    const final = apply(current, update);
+                    expect(final).toEqual({
+                        test: createBot('test', {
+                            abc: 'df',
+                        }),
+                    });
+                });
+            });
         });
 
         describe('deleted bots', () => {

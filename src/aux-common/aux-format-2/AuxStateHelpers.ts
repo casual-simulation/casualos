@@ -6,8 +6,90 @@ import {
     PartialPrecalculatedBotsState,
     PrecalculatedBot,
 } from '../bots/Bot';
-import { merge } from '../utils';
+import { merge, splice } from '../utils';
 import { isBot } from '../bots/BotCalculations';
+
+export const TAG_EDIT_SYMBOL = Symbol('tag_edit');
+
+/**
+ * Creates a tag edit using the given list of operations.
+ */
+export function edit(...operations: TagEditOp[]): TagEdit {
+    return {
+        [TAG_EDIT_SYMBOL]: true,
+        operations,
+    };
+}
+
+/**
+ * Creates a insert operation that inserts the given text at the given index.
+ * @param index The index.
+ * @param text The text.
+ */
+export function insert(index: number, text: string): TagInsertOp {
+    return {
+        type: 'insert',
+        index,
+        text,
+    };
+}
+
+/**
+ * Creates a delete operation that deletes the text between the given start and end indexes.
+ * @param start The start index.
+ * @param end The end index.
+ */
+export function del(start: number, end: number): TagDeleteOp {
+    return {
+        type: 'delete',
+        start,
+        end,
+    };
+}
+
+/**
+ * Defines an interface that represents a tag edit.
+ */
+export interface TagEdit {
+    [TAG_EDIT_SYMBOL]: boolean;
+    operations: TagEditOp[];
+}
+
+export type TagEditOp = TagInsertOp | TagDeleteOp;
+
+/**
+ * A tag edit that represents inserting some text into a tag's value.
+ */
+export interface TagInsertOp {
+    type: 'insert';
+
+    /**
+     * The index that the text should be inserted at.
+     */
+    index: number;
+
+    /**
+     * The text that should be inserted.
+     */
+    text: string;
+}
+
+/**
+ * A tag edit operation that represents deleting some text from a tag's value.
+ */
+export interface TagDeleteOp {
+    type: 'delete';
+
+    /**
+     * The start index of the deletion.
+     */
+    start: number;
+
+    /**
+     * The end index of the deletion.
+     */
+    end: number;
+}
 
 /**
  * Applies the given update to the current state and returns the final result.
@@ -37,7 +119,21 @@ export function apply<T extends BotsState, U extends PartialBotsState>(
         }
 
         if (botUpdate.tags) {
-            bot.tags = Object.assign({}, bot.tags, botUpdate.tags);
+            bot.tags = {
+                ...bot.tags,
+            };
+            for (let tag in botUpdate.tags) {
+                let val = botUpdate.tags[tag];
+                if (
+                    typeof val === 'object' &&
+                    val &&
+                    val[TAG_EDIT_SYMBOL] === true
+                ) {
+                    bot.tags[tag] = applyEdit(bot.tags[tag], val);
+                } else {
+                    bot.tags[tag] = val;
+                }
+            }
         }
         if (botUpdate.signatures) {
             bot.signatures = Object.assign(
@@ -236,6 +332,19 @@ export function updates(
     }
 
     return result;
+}
+
+function applyEdit(value: any, edit: TagEdit): any {
+    if (typeof value === 'string') {
+        for (let op of edit.operations) {
+            if (op.type === 'insert') {
+                value = splice(value, op.index, 0, op.text);
+            } else {
+                value = splice(value, op.start, op.end - op.start, '');
+            }
+        }
+    }
+    return value;
 }
 
 /**
