@@ -20,7 +20,7 @@ export class Dependencies {
             const flat = this.flatten(replaced);
             return <AuxScriptExternalDependency[]>(
                 flat.filter(
-                    f =>
+                    (f) =>
                         f.type === 'all' ||
                         f.type === 'tag' ||
                         f.type === 'bot' ||
@@ -62,6 +62,8 @@ export class Dependencies {
             return this._simpleMemberDependencies(node);
         } else if (node.type === 'literal') {
             return this._simpleLiteralDependencies(node);
+        } else if (node.type === 'object_expression') {
+            return this._simpleObjectExpressionDependencies(node);
         }
 
         return [];
@@ -72,7 +74,7 @@ export class Dependencies {
      * @param nodes The nodes to flatten.
      */
     flatten(nodes: AuxScriptSimpleDependency[]): AuxScriptSimpleDependency[] {
-        return flatMap(nodes, n => {
+        return flatMap(nodes, (n) => {
             if (
                 n.type === 'bot' ||
                 n.type === 'tag' ||
@@ -113,7 +115,10 @@ export class Dependencies {
                 if (
                     node.type !== 'literal' &&
                     node.type !== 'all' &&
-                    node.type !== 'this'
+                    node.type !== 'this' &&
+                    node.type !== 'object_expression' &&
+                    node.type !== 'property' &&
+                    node.type !== 'end_function_parameters'
                 ) {
                     const replacement =
                         replacements[<string>node.name] ||
@@ -128,7 +133,8 @@ export class Dependencies {
                     if (
                         node.type === 'function' ||
                         node.type === 'bot' ||
-                        node.type === 'tag'
+                        node.type === 'tag' ||
+                        node.type === 'object_expression'
                     ) {
                         yield {
                             ...node,
@@ -150,9 +156,57 @@ export class Dependencies {
     ): AuxScriptSimpleDependency[] {
         let root = this._rootMembers(node);
         if (root) {
+            if (root.type === 'call') {
+                let deps = this._simpleFunctionDependencies(root);
+                let func = deps[0];
+                if (func.type === 'function') {
+                    let member = this._simplifyMember(node, false);
+                    func.dependencies.push(
+                        {
+                            type: 'end_function_parameters',
+                        },
+                        ...member
+                    );
+                }
+
+                return deps;
+            }
+
             return this._simpleRootDependencies(root);
         }
 
+        return this._simplifyMember(node, true);
+    }
+
+    private _simplifyMember(
+        node: AuxScriptMemberDependency,
+        allowFunctions: boolean
+    ): AuxScriptSimpleDependency[] {
+        let firstMember: AuxScriptSimpleMemberDependency = this._reorderMember(
+            node,
+            allowFunctions
+        );
+
+        if (!firstMember) {
+            return [];
+        }
+
+        if (firstMember.name === 'this') {
+            return [{ type: 'this' }];
+        }
+        return [firstMember];
+    }
+
+    /**
+     * Produces a new simple member dependency that provides a top-down view of the
+     * tree instead of a bottom up view.
+     * @param node The node.
+     * @param allowFunctions Whether to continue when a call dependency occurs. If true, then function names can be part of the member name.
+     */
+    private _reorderMember(
+        node: AuxScriptMemberDependency,
+        allowFunctions: boolean
+    ) {
         let stack = [];
         let current: AuxScriptObjectDependency = node;
         while (current) {
@@ -164,8 +218,11 @@ export class Dependencies {
             } else if (current.type === 'tag') {
                 current = null;
             } else if (current.type === 'call') {
-                current = current.identifier;
-                // current = null;
+                if (allowFunctions) {
+                    current = current.identifier;
+                } else {
+                    current = null;
+                }
             }
         }
 
@@ -188,17 +245,14 @@ export class Dependencies {
                 currentMember = nextMember;
             }
         }
-
-        if (!firstMember) {
-            return [];
-        }
-
-        if (firstMember.name === 'this') {
-            return [{ type: 'this' }];
-        }
-        return [firstMember];
+        return firstMember;
     }
 
+    /**
+     * Gets the root-most member from the given node.
+     * This is useful for finding if the member node is attached to the end of a function call or if it is standalone.
+     * @param node
+     */
     private _rootMembers(
         node: AuxScriptObjectDependency
     ): AuxScriptObjectDependency {
@@ -234,7 +288,7 @@ export class Dependencies {
         if (current) {
             return [
                 ...this._simpleRootDependencies(current),
-                ...flatMap(node.dependencies, d => this.simplify(d)),
+                ...flatMap(node.dependencies, (d) => this.simplify(d)),
             ];
         }
 
@@ -242,7 +296,9 @@ export class Dependencies {
             {
                 type: 'function',
                 name: this.getMemberName(node.identifier),
-                dependencies: flatMap(node.dependencies, d => this.simplify(d)),
+                dependencies: flatMap(node.dependencies, (d) =>
+                    this.simplify(d)
+                ),
             },
         ];
     }
@@ -254,7 +310,9 @@ export class Dependencies {
             <AuxScriptSimpleBotDependency | AuxScriptSimpleTagDependency>{
                 type: node.type,
                 name: this.getMemberName(node),
-                dependencies: flatMap(node.dependencies, d => this.simplify(d)),
+                dependencies: flatMap(node.dependencies, (d) =>
+                    this.simplify(d)
+                ),
             },
         ];
     }
@@ -262,13 +320,28 @@ export class Dependencies {
     private _simpleExpressionDependencies(
         node: AuxScriptExpressionDependencies
     ): AuxScriptSimpleDependency[] {
-        return flatMap(node.dependencies, d => this.simplify(d));
+        return flatMap(node.dependencies, (d) => this.simplify(d));
     }
 
     private _simpleLiteralDependencies(
         node: AuxScriptLiteralDependency
     ): AuxScriptSimpleDependency[] {
         return [node];
+    }
+
+    private _simpleObjectExpressionDependencies(
+        node: AuxScriptObjectExpressionDependencies
+    ): AuxScriptSimpleDependency[] {
+        return [
+            {
+                type: node.type,
+                dependencies: node.properties.map((p) => ({
+                    type: p.type,
+                    name: p.name,
+                    dependencies: this.simplify(p.value),
+                })),
+            },
+        ];
     }
 
     /**
@@ -320,6 +393,35 @@ export class Dependencies {
         };
     }
 
+    private _objectOrExpressionDependencies(
+        node: any
+    ): AuxScriptExpressionDependencies | AuxScriptObjectExpressionDependencies {
+        if (node.type === 'ObjectExpression') {
+            return this._objectExpressionDependencies(node);
+        }
+
+        return this._expressionDependencies(node);
+    }
+
+    private _objectExpressionDependencies(
+        node: any
+    ): AuxScriptObjectExpressionDependencies {
+        return {
+            type: 'object_expression',
+            properties: node.properties.map((prop: any) => {
+                let key =
+                    prop.key.type === 'Identifier'
+                        ? prop.key.name
+                        : prop.key.value;
+                return {
+                    type: 'property',
+                    name: key,
+                    value: this._nodeDependency(prop.value, prop),
+                } as AuxScriptProperty;
+            }),
+        };
+    }
+
     private _nodeDependency(node: any, parent: any): AuxScriptDependency {
         if (
             parent &&
@@ -360,7 +462,7 @@ export class Dependencies {
                 .map(
                     (arg: any) =>
                         this._nodeDependency(arg, node) ||
-                        this._expressionDependencies(arg)
+                        this._objectOrExpressionDependencies(arg)
                 )
                 .filter((arg: any) => !!arg),
         };
@@ -372,14 +474,14 @@ export class Dependencies {
             type: node.type === 'TagValue' ? 'tag' : 'bot',
             name: tag,
             dependencies: args
-                .map(a => {
+                .map((a) => {
                     const dep = this._nodeDependency(a, node);
                     if (dep) {
                         return dep;
                     }
-                    return this._expressionDependencies(a);
+                    return this._objectOrExpressionDependencies(a);
                 })
-                .filter(e =>
+                .filter((e) =>
                     e.type === 'expression' ? e.dependencies.length > 0 : true
                 ),
         };
@@ -458,7 +560,190 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
         );
     }
 
-    return {
+    let filterFunctions = {
+        byTag: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            if (node.dependencies.length >= 1) {
+                const name = getTagName(node.dependencies[0]);
+                if (!name) {
+                    return [{ type: 'all' }];
+                }
+                return [
+                    {
+                        type: 'bot',
+                        name: name,
+                        dependencies: replace(node.dependencies.slice(1)),
+                    },
+                ];
+            }
+            return [
+                {
+                    type: 'bot',
+                    name: 'id',
+                    dependencies: [],
+                },
+            ];
+        },
+        inDimension: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            if (node.dependencies.length >= 1) {
+                const name = getTagName(node.dependencies[0]);
+                if (!name) {
+                    return [{ type: 'all' }];
+                }
+                return [
+                    {
+                        type: 'bot',
+                        name: name,
+                        dependencies: [
+                            {
+                                type: 'literal',
+                                value: true,
+                            },
+                        ],
+                    },
+                ];
+            }
+            return [];
+        },
+        atPosition: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            if (node.dependencies.length >= 1) {
+                const name = getTagName(node.dependencies[0]);
+                if (!name) {
+                    return [{ type: 'all' }];
+                }
+
+                let extras = [] as AuxScriptSimpleDependency[];
+
+                if (node.dependencies.length >= 2) {
+                    extras.push({
+                        type: 'bot',
+                        name: name + 'X',
+                        dependencies: [node.dependencies[1]],
+                    });
+                }
+
+                if (node.dependencies.length >= 3) {
+                    extras.push({
+                        type: 'bot',
+                        name: name + 'Y',
+                        dependencies: [node.dependencies[2]],
+                    });
+                }
+
+                return [
+                    {
+                        type: 'bot',
+                        name: name,
+                        dependencies: [
+                            {
+                                type: 'literal',
+                                value: true,
+                            },
+                        ],
+                    },
+                    ...extras,
+                ];
+            }
+            return [];
+        },
+        inStack: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            if (node.dependencies.length >= 2) {
+                const name = getTagName(node.dependencies[1]);
+                if (!name) {
+                    return [{ type: 'all' }];
+                }
+
+                return [
+                    {
+                        type: 'bot',
+                        name: name,
+                        dependencies: [
+                            {
+                                type: 'literal',
+                                value: true,
+                            },
+                        ],
+                    },
+                    {
+                        type: 'bot',
+                        name: name + 'X',
+                        dependencies: [],
+                    },
+                    {
+                        type: 'bot',
+                        name: name + 'Y',
+                        dependencies: [],
+                    },
+                ];
+            }
+            return [];
+        },
+        byCreator: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            return [
+                {
+                    type: 'bot',
+                    name: 'creator',
+                    dependencies: [],
+                },
+            ];
+        },
+        bySpace: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            return [
+                {
+                    type: 'bot',
+                    name: 'space',
+                    dependencies: node.dependencies,
+                },
+            ];
+        },
+        byMod: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            if (node.dependencies.length >= 1) {
+                const obj = node.dependencies[0];
+                if (obj.type === 'object_expression') {
+                    let deps = [] as AuxScriptSimpleDependency[];
+                    for (let prop of obj.dependencies) {
+                        if (prop.type === 'property') {
+                            deps.push({
+                                type: 'bot',
+                                name: prop.name,
+                                dependencies: prop.dependencies,
+                            });
+                        }
+                    }
+                    return deps;
+                } else {
+                    return [
+                        {
+                            type: 'all',
+                        },
+                    ];
+                }
+            }
+            return [];
+        },
+    } as AuxScriptReplacements;
+
+    let others = {
         getTag: (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];
@@ -553,6 +838,13 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 return [node];
             }
             if (node.dependencies.length >= 1) {
+                const first = node.dependencies[0];
+                if (
+                    first.type === 'function' &&
+                    first.name in filterFunctions
+                ) {
+                    return replace(node.dependencies);
+                }
                 const name = getTagName(node.dependencies[0]);
                 if (!name) {
                     return [{ type: 'all' }];
@@ -578,6 +870,13 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 return [node];
             }
             if (node.dependencies.length >= 1) {
+                const first = node.dependencies[0];
+                if (
+                    first.type === 'function' &&
+                    first.name in filterFunctions
+                ) {
+                    return replace(node.dependencies);
+                }
                 const name = getTagName(node.dependencies[0]);
                 if (!name) {
                     return [{ type: 'all' }];
@@ -718,6 +1017,11 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 },
             ];
         },
+    } as AuxScriptReplacements;
+
+    return {
+        ...filterFunctions,
+        ...others,
     };
 }
 
@@ -755,7 +1059,8 @@ export type AuxScriptDependency =
     | AuxScriptFunctionDependency
     | AuxScriptMemberDependency
     | AuxScriptExpressionDependencies
-    | AuxScriptLiteralDependency;
+    | AuxScriptLiteralDependency
+    | AuxScriptObjectExpressionDependencies;
 
 export type AuxScriptObjectDependency =
     | AuxScriptMemberDependency
@@ -767,6 +1072,17 @@ export interface AuxScriptExpressionDependencies {
     type: 'expression';
 
     dependencies: AuxScriptDependency[];
+}
+
+export interface AuxScriptObjectExpressionDependencies {
+    type: 'object_expression';
+    properties: AuxScriptProperty[];
+}
+
+export interface AuxScriptProperty {
+    type: 'property';
+    name: string;
+    value: AuxScriptDependency;
 }
 
 export interface AuxScriptMemberDependency {
@@ -829,7 +1145,10 @@ export type AuxScriptSimpleDependency =
     | AuxScriptSimpleLiteralDependency
     | AuxScriptSimpleAllDependency
     | AuxScriptSimpleThisDependency
-    | AuxScriptSimpleTagValueDependency;
+    | AuxScriptSimpleTagValueDependency
+    | AuxScriptSimpleObjectExpressionDependency
+    | AuxScriptSimpleProperty
+    | AuxScriptEndFunctionParametersDependency;
 
 export type AuxScriptExternalDependency =
     | AuxScriptSimpleBotDependency
@@ -854,6 +1173,15 @@ export interface AuxScriptSimpleFunctionDependency {
     type: 'function';
     name: string;
     dependencies: AuxScriptSimpleDependency[];
+}
+
+/**
+ * Defines a special "dependency" which is used to indicate that
+ * the parameters for a function dependency have ended and that further dependencies
+ * should not be interpreted as function parameters.
+ */
+export interface AuxScriptEndFunctionParametersDependency {
+    type: 'end_function_parameters';
 }
 
 export interface AuxScriptSimpleMemberDependency {
@@ -887,3 +1215,14 @@ export interface AuxScriptReplacements {
 export type AuxScriptReplacement = (
     node: AuxScriptSimpleDependency
 ) => AuxScriptSimpleDependency[];
+
+export interface AuxScriptSimpleObjectExpressionDependency {
+    type: 'object_expression';
+    dependencies: AuxScriptSimpleDependency[];
+}
+
+export interface AuxScriptSimpleProperty {
+    type: 'property';
+    name: string;
+    dependencies: AuxScriptSimpleDependency[];
+}
