@@ -9,14 +9,19 @@ import {
 import { merge, splice } from '../utils';
 import { isBot } from '../bots/BotCalculations';
 
-export const TAG_EDIT_SYMBOL = Symbol('tag_edit');
+/**
+ * The name of the property that indicates an object represents a tag edit.
+ * Uses the Device Control One control character (UTF code 11) at the beginning to help prevent conflicts with normal property names.
+ * Normally, we would use a Symbol, but symbols are not supported via structure clone which means that we have to use a normal property.
+ */
+export const TAG_EDIT_NAME = 'cqtag_edit';
 
 /**
  * Creates a tag edit using the given list of operations.
  */
 export function edit(...operations: TagEditOp[]): TagEdit {
     return {
-        [TAG_EDIT_SYMBOL]: true,
+        [TAG_EDIT_NAME]: true,
         operations,
     };
 }
@@ -51,7 +56,7 @@ export function del(start: number, end: number): TagDeleteOp {
  * Defines an interface that represents a tag edit.
  */
 export interface TagEdit {
-    [TAG_EDIT_SYMBOL]: boolean;
+    [TAG_EDIT_NAME]: boolean;
     operations: TagEditOp[];
 }
 
@@ -127,7 +132,7 @@ export function apply<T extends BotsState, U extends PartialBotsState>(
                 if (
                     typeof val === 'object' &&
                     val &&
-                    val[TAG_EDIT_SYMBOL] === true
+                    val[TAG_EDIT_NAME] === true
                 ) {
                     bot.tags[tag] = applyEdit(bot.tags[tag], val);
                 } else {
