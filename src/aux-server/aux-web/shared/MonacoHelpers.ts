@@ -24,6 +24,13 @@ import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import union from 'lodash/union';
 import sortBy from 'lodash/sortBy';
 import { propertyInsertText } from './CompletionHelpers';
+import {
+    del,
+    edit,
+    insert,
+    preserve,
+    TagEditOp,
+} from '@casual-simulation/aux-common/aux-format-2';
 
 export function setup() {
     // Tell monaco how to create the web workers
@@ -379,28 +386,86 @@ function watchModel(
 
     sub.add(
         simulation.watcher
-            .botTagsChanged(bot.id)
+            .botTagChanged(bot.id, tag, space)
             .pipe(
                 skip(1),
                 takeWhile((update) => update !== null)
             )
             .subscribe((update) => {
                 bot = update.bot;
-                if (model === activeModel || !update.tags.has(tag)) {
-                    return;
+                if (update.type === 'edit') {
+                    let index = 0;
+                    for (let op of update.operations) {
+                        if (op.type === 'preserve') {
+                            index += op.count;
+                        } else if (op.type === 'insert') {
+                            const pos = model.getPositionAt(index);
+                            const selection = new monaco.Selection(
+                                pos.lineNumber,
+                                pos.column,
+                                pos.lineNumber,
+                                pos.column
+                            );
+                            model.pushEditOperations(
+                                [],
+                                [{ range: selection, text: op.text }],
+                                () => null
+                            );
+                            index += op.text.length;
+                        } else if (op.type === 'delete') {
+                            const startPos = model.getPositionAt(index);
+                            const endPos = model.getPositionAt(
+                                index + op.count
+                            );
+                            const selection = new monaco.Selection(
+                                startPos.lineNumber,
+                                startPos.column,
+                                endPos.lineNumber,
+                                endPos.column
+                            );
+                            model.pushEditOperations(
+                                [],
+                                [{ range: selection, text: '' }],
+                                () => null
+                            );
+                        }
+                    }
+                } else {
+                    if (model === activeModel) {
+                        return;
+                    }
+                    let script = getScript(bot, tag, space);
+                    let value = model.getValue();
+                    if (script !== value) {
+                        model.setValue(script);
+                    }
+                    updateLanguage(
+                        model,
+                        tag,
+                        getTagValueForSpace(bot, tag, space)
+                    );
                 }
-                let script = getScript(bot, tag, space);
-                let value = model.getValue();
-                if (script !== value) {
-                    model.setValue(script);
-                }
-                updateLanguage(
-                    model,
-                    tag,
-                    getTagValueForSpace(bot, tag, space)
-                );
             })
     );
+
+    // TODO:
+    // sub.add(
+    //     toSubscription(
+    //         model.onDidChangeContent(async (e) => {
+    //             let operations = [] as TagEditOp[];
+    //             let index = 0;
+    //             for(let change of e.changes) {
+    //                 operations.push(
+    //                     preserve(change.rangeOffset - index),
+    //                     del(change.rangeLength),
+    //                     insert(change.text)
+    //                 );
+    //                 index += change.rangeLength;
+    //             }
+    //             await simulation.editBot(bot, tag, edit(...operations), space);
+    //         })
+    //     )
+    // );
 
     sub.add(
         toSubscription(
