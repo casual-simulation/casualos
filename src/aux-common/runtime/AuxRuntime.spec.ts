@@ -90,7 +90,7 @@ import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
 import { DeepObjectError } from './Utils';
-import { tagValueHash } from '../aux-format-2';
+import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -5049,6 +5049,80 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            describe('edits', () => {
+                it('should support edits on a tag', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    abc: edit(preserve(1), insert('1'), del(1)),
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    abc: edit(preserve(1), insert('1'), del(1)),
+                                },
+                                values: {
+                                    abc: 'd1f',
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should support edits on a formula', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: '=1+2',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    abc: edit(preserve(4), insert('+3')),
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    abc: edit(preserve(4), insert('+3')),
+                                },
+                                values: {
+                                    abc: 6,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+            });
+
             describe('masks', () => {
                 it('should handle adding masks', () => {
                     const update1 = runtime.stateUpdated(
@@ -5675,6 +5749,118 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                    });
+                });
+
+                describe('edits', () => {
+                    it('should support edits on a tag mask', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    space: 'shared',
+                                    tags: {},
+                                    masks: {
+                                        tempLocal: {
+                                            abc: 'def',
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        tempLocal: {
+                                            abc: edit(
+                                                preserve(1),
+                                                insert('1'),
+                                                del(1)
+                                            ),
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {},
+                                    masks: {
+                                        tempLocal: {
+                                            abc: edit(
+                                                preserve(1),
+                                                insert('1'),
+                                                del(1)
+                                            ),
+                                        },
+                                    },
+                                    values: {
+                                        abc: 'd1f',
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                        });
+                    });
+
+                    it('should support edits on a formula', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    space: 'shared',
+                                    tags: {},
+                                    masks: {
+                                        tempLocal: {
+                                            abc: '=1+2',
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        tempLocal: {
+                                            abc: edit(
+                                                preserve(4),
+                                                insert('+3')
+                                            ),
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {},
+                                    masks: {
+                                        tempLocal: {
+                                            abc: edit(
+                                                preserve(4),
+                                                insert('+3')
+                                            ),
+                                        },
+                                    },
+                                    values: {
+                                        abc: 6,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                        });
                     });
                 });
             });
