@@ -133,8 +133,8 @@ export function apply<T extends BotsState, U extends PartialBotsState>(
 
         let bot = updatedState[id] as Bot | PrecalculatedBot;
         if (!bot) {
-            updatedState[id] = update[id] as any;
-            continue;
+            bot = Object.assign({}, update[id]) as any;
+            updatedState[id] = bot as any;
         } else {
             bot = Object.assign({}, bot);
             updatedState[id] = bot as any;

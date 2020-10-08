@@ -16,7 +16,7 @@ describe('AuxStateHelpers', () => {
             });
         });
 
-        describe('updated tags', () => {
+        describe('updated bots', () => {
             it('should merge tags', () => {
                 const current = {
                     test: createBot('test', {
@@ -107,30 +107,32 @@ describe('AuxStateHelpers', () => {
                 });
             });
 
-            it('should not merge objects in masks', () => {
+            it('should delete tags that are set to null', () => {
                 const current = {
-                    test: {
-                        id: 'test',
-                        tags: {},
-                        masks: {
-                            shared: {
-                                abc: {
-                                    def: 1,
-                                },
-                            },
-                        },
-                    },
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
                 };
                 const update = {
                     test: {
-                        masks: {
-                            shared: {
-                                abc: {
-                                    ghi: 2,
-                                },
-                            },
+                        tags: {
+                            abc: null as string,
                         },
                     },
+                };
+
+                const final = apply(current, update);
+                expect(final).toEqual({
+                    test: createBot('test'),
+                });
+            });
+
+            it('should delete tags that were set to null in new bots', () => {
+                const current = {};
+                const update = {
+                    test: createBot('test', {
+                        abc: null as any,
+                    }),
                 };
 
                 const final = apply(current, update);
@@ -138,13 +140,6 @@ describe('AuxStateHelpers', () => {
                     test: {
                         id: 'test',
                         tags: {},
-                        masks: {
-                            shared: {
-                                abc: {
-                                    ghi: 2,
-                                },
-                            },
-                        },
                     },
                 });
             });
@@ -338,6 +333,157 @@ describe('AuxStateHelpers', () => {
             });
 
             describe('masks', () => {
+                it('should merge tag masks', () => {
+                    const current = {
+                        test: {
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                shared: {
+                                    abc: 'def',
+                                },
+                            },
+                        },
+                    };
+                    const update = {
+                        test: {
+                            masks: {
+                                shared: {
+                                    def: 'ghi',
+                                },
+                            },
+                        },
+                    };
+
+                    const final = apply(current, update);
+                    expect(final).toEqual({
+                        test: {
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                shared: {
+                                    abc: 'def',
+                                    def: 'ghi',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should overwrite tag masks', () => {
+                    const current = {
+                        test: {
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                shared: {
+                                    abc: [1, 2, 3],
+                                },
+                            },
+                        },
+                    };
+                    const update = {
+                        test: {
+                            masks: {
+                                shared: {
+                                    abc: 'haha',
+                                },
+                            },
+                        },
+                    };
+
+                    const final = apply(current, update);
+                    expect(final).toEqual({
+                        test: {
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                shared: {
+                                    abc: 'haha',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should not merge arrays in masks', () => {
+                    const current = {
+                        test: {
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                shared: {
+                                    abc: [1, 2, 3],
+                                },
+                            },
+                        },
+                    };
+                    const update = {
+                        test: {
+                            masks: {
+                                shared: {
+                                    abc: [3, 2, 1],
+                                },
+                            },
+                        },
+                    };
+
+                    const final = apply(current, update);
+                    expect(final).toEqual({
+                        test: {
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                shared: {
+                                    abc: [3, 2, 1],
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should not merge objects in masks', () => {
+                    const current = {
+                        test: {
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                shared: {
+                                    abc: {
+                                        def: 1,
+                                    },
+                                },
+                            },
+                        },
+                    };
+                    const update = {
+                        test: {
+                            masks: {
+                                shared: {
+                                    abc: {
+                                        ghi: 2,
+                                    },
+                                },
+                            },
+                        },
+                    };
+
+                    const final = apply(current, update);
+                    expect(final).toEqual({
+                        test: {
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                shared: {
+                                    abc: {
+                                        ghi: 2,
+                                    },
+                                },
+                            },
+                        },
+                    });
+                });
+
                 describe('edit', () => {
                     it('should support inserting text at the end of the tag', () => {
                         const current = {
@@ -598,6 +744,81 @@ describe('AuxStateHelpers', () => {
                     });
                 });
             });
+
+            describe('signatures', () => {
+                it('should delete signatures that are set to null', () => {
+                    const current = {
+                        test: {
+                            id: 'test',
+                            tags: {
+                                abc: 'def',
+                            },
+                            signatures: {
+                                sig: 'abc',
+                            },
+                        },
+                    };
+                    const update = {
+                        test: {
+                            signatures: {
+                                sig: null as string,
+                            },
+                        },
+                    };
+
+                    const final = apply(current, update);
+                    expect(final).toEqual({
+                        test: {
+                            id: 'test',
+                            tags: {
+                                abc: 'def',
+                            },
+                        },
+                    });
+                    expect(update).toEqual({
+                        test: {
+                            signatures: {
+                                sig: null,
+                            },
+                        },
+                    });
+                });
+
+                it('should not change the original signatures object if it was able to be copied', () => {
+                    const current = {
+                        test: {
+                            id: 'test',
+                            tags: {
+                                abc: 'def',
+                            },
+                        },
+                    };
+                    const update = {
+                        test: {
+                            signatures: {
+                                sig: null as string,
+                            },
+                        },
+                    };
+
+                    const final = apply(current, update);
+                    expect(final).toEqual({
+                        test: {
+                            id: 'test',
+                            tags: {
+                                abc: 'def',
+                            },
+                        },
+                    });
+                    expect(update).toEqual({
+                        test: {
+                            signatures: {
+                                sig: null,
+                            },
+                        },
+                    });
+                });
+            });
         });
 
         describe('deleted bots', () => {
@@ -613,103 +834,6 @@ describe('AuxStateHelpers', () => {
 
                 const final = apply(current, update);
                 expect(final).toEqual({});
-            });
-        });
-
-        describe('deleted tags', () => {
-            it('should delete tags that are set to null', () => {
-                const current = {
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                };
-                const update = {
-                    test: {
-                        tags: {
-                            abc: null as string,
-                        },
-                    },
-                };
-
-                const final = apply(current, update);
-                expect(final).toEqual({
-                    test: createBot('test'),
-                });
-            });
-        });
-
-        describe('deleted signatures', () => {
-            it('should delete signatures that are set to null', () => {
-                const current = {
-                    test: {
-                        id: 'test',
-                        tags: {
-                            abc: 'def',
-                        },
-                        signatures: {
-                            sig: 'abc',
-                        },
-                    },
-                };
-                const update = {
-                    test: {
-                        signatures: {
-                            sig: null as string,
-                        },
-                    },
-                };
-
-                const final = apply(current, update);
-                expect(final).toEqual({
-                    test: {
-                        id: 'test',
-                        tags: {
-                            abc: 'def',
-                        },
-                    },
-                });
-                expect(update).toEqual({
-                    test: {
-                        signatures: {
-                            sig: null,
-                        },
-                    },
-                });
-            });
-
-            it('should not change the original signatures object if it was able to be copied', () => {
-                const current = {
-                    test: {
-                        id: 'test',
-                        tags: {
-                            abc: 'def',
-                        },
-                    },
-                };
-                const update = {
-                    test: {
-                        signatures: {
-                            sig: null as string,
-                        },
-                    },
-                };
-
-                const final = apply(current, update);
-                expect(final).toEqual({
-                    test: {
-                        id: 'test',
-                        tags: {
-                            abc: 'def',
-                        },
-                    },
-                });
-                expect(update).toEqual({
-                    test: {
-                        signatures: {
-                            sig: null,
-                        },
-                    },
-                });
             });
         });
     });
