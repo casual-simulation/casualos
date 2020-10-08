@@ -60,6 +60,14 @@ export function del(count: number): TagDeleteOp {
 }
 
 /**
+ * Determines if the given value is a tag edit.
+ * @param value The value to check.
+ */
+export function isTagEdit(value: any): value is TagEdit {
+    return typeof value === 'object' && value && value[TAG_EDIT_NAME] === true;
+}
+
+/**
  * Defines an interface that represents a tag edit.
  */
 export interface TagEdit {
@@ -138,11 +146,7 @@ export function apply<T extends BotsState, U extends PartialBotsState>(
             };
             for (let tag in botUpdate.tags) {
                 let val = botUpdate.tags[tag];
-                if (
-                    typeof val === 'object' &&
-                    val &&
-                    val[TAG_EDIT_NAME] === true
-                ) {
+                if (isTagEdit(val)) {
                     bot.tags[tag] = applyEdit(bot.tags[tag], val);
                 } else {
                     bot.tags[tag] = val;
@@ -166,11 +170,20 @@ export function apply<T extends BotsState, U extends PartialBotsState>(
         if (botUpdate.masks) {
             bot.masks = Object.assign({}, bot.masks);
             for (let space in botUpdate.masks) {
-                bot.masks[space] = Object.assign(
-                    {},
-                    bot.masks[space],
-                    botUpdate.masks[space]
-                );
+                bot.masks[space] = Object.assign({}, bot.masks[space]);
+
+                const tags = botUpdate.masks[space];
+                for (let tag in tags) {
+                    let val = tags[tag];
+                    if (isTagEdit(val)) {
+                        bot.masks[space][tag] = applyEdit(
+                            bot.masks[space][tag],
+                            val
+                        );
+                    } else {
+                        bot.masks[space][tag] = val;
+                    }
+                }
             }
         }
 

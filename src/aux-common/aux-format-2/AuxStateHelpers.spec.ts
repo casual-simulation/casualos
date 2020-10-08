@@ -310,6 +310,268 @@ describe('AuxStateHelpers', () => {
                     });
                 });
             });
+
+            describe('masks', () => {
+                describe('edit', () => {
+                    it('should support inserting text at the end of the tag', () => {
+                        const current = {
+                            test: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 'def',
+                                    },
+                                },
+                            },
+                        };
+                        const update = {
+                            test: {
+                                masks: {
+                                    shared: {
+                                        abc: edit(preserve(3), insert('ghi')),
+                                    },
+                                },
+                            },
+                        };
+
+                        const final = apply(current, update);
+                        expect(final).toEqual({
+                            test: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 'defghi',
+                                    },
+                                },
+                            },
+                        });
+                    });
+
+                    it('should support inserting text at the beginning of the tag', () => {
+                        const current = {
+                            test: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 'def',
+                                    },
+                                },
+                            },
+                        };
+                        const update = {
+                            test: {
+                                masks: {
+                                    shared: {
+                                        abc: edit(insert('ghi')),
+                                    },
+                                },
+                            },
+                        };
+
+                        const final = apply(current, update);
+                        expect(final).toEqual({
+                            test: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 'ghidef',
+                                    },
+                                },
+                            },
+                        });
+                    });
+
+                    it('should support inserting text in the middle of the tag', () => {
+                        const current = {
+                            test: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 'def',
+                                    },
+                                },
+                            },
+                        };
+                        const update = {
+                            test: {
+                                masks: {
+                                    shared: {
+                                        abc: edit(preserve(1), insert('ghi')),
+                                    },
+                                },
+                            },
+                        };
+
+                        const final = apply(current, update);
+                        expect(final).toEqual({
+                            test: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 'dghief',
+                                    },
+                                },
+                            },
+                        });
+                    });
+
+                    it('should support deleting text at the end of the tag', () => {
+                        const current = {
+                            test: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 'def',
+                                    },
+                                },
+                            },
+                        };
+                        const update = {
+                            test: {
+                                masks: {
+                                    shared: {
+                                        abc: edit(preserve(1), del(2)),
+                                    },
+                                },
+                            },
+                        };
+
+                        const final = apply(current, update);
+                        expect(final).toEqual({
+                            test: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 'd',
+                                    },
+                                },
+                            },
+                        });
+                    });
+
+                    it('should support deleting text at the beginning of the tag', () => {
+                        const current = {
+                            test: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 'def',
+                                    },
+                                },
+                            },
+                        };
+                        const update = {
+                            test: {
+                                masks: {
+                                    shared: {
+                                        abc: edit(del(2)),
+                                    },
+                                },
+                            },
+                        };
+
+                        const final = apply(current, update);
+                        expect(final).toEqual({
+                            test: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 'f',
+                                    },
+                                },
+                            },
+                        });
+                    });
+
+                    it('should support deleting text in the middle of the tag', () => {
+                        const current = {
+                            test: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 'def',
+                                    },
+                                },
+                            },
+                        };
+                        const update = {
+                            test: {
+                                masks: {
+                                    shared: {
+                                        abc: edit(preserve(1), del(1)),
+                                    },
+                                },
+                            },
+                        };
+
+                        const final = apply(current, update);
+                        expect(final).toEqual({
+                            test: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 'df',
+                                    },
+                                },
+                            },
+                        });
+                    });
+
+                    it('should support inserting and deleting text at the same time', () => {
+                        const current = {
+                            test: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 'def',
+                                    },
+                                },
+                            },
+                        };
+                        const update = {
+                            test: {
+                                masks: {
+                                    shared: {
+                                        abc: edit(
+                                            preserve(1),
+                                            del(1),
+                                            insert('a'),
+                                            preserve(1),
+                                            insert('b')
+                                        ),
+                                    },
+                                },
+                            },
+                        };
+
+                        const final = apply(current, update);
+                        expect(final).toEqual({
+                            test: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 'dafb',
+                                    },
+                                },
+                            },
+                        });
+                    });
+                });
+            });
         });
 
         describe('deleted bots', () => {
