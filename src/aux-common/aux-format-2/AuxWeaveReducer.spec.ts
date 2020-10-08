@@ -16,6 +16,7 @@ import {
     TagOp,
     BotOp,
     tagMask,
+    insertOp,
 } from './AuxOpTypes';
 import {
     Atom,
@@ -25,7 +26,7 @@ import {
 } from '@casual-simulation/causal-trees/core2';
 import reduce, { CERT_ID_NAMESPACE, CERTIFIED_SPACE } from './AuxWeaveReducer';
 import { BotsState } from '../bots/Bot';
-import { apply } from './AuxStateHelpers';
+import { apply, edit, insert, preserve } from './AuxStateHelpers';
 import { isBot } from '../bots';
 import uuidv5 from 'uuid/v5';
 import { merge } from 'lodash';
@@ -1201,6 +1202,31 @@ describe('AuxWeaveReducer', () => {
             });
         });
 
+        describe('insert', () => {
+            describe('tag', () => {
+                it('should insert the given text into the tag value', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, 'ghi')
+                    );
+
+                    state = add(bot1, tag1, value1, insert1);
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: edit(preserve(1), insert('ghi')),
+                            },
+                        },
+                    });
+                });
+            });
+        });
         // TODO: Add support for inserts
     });
 

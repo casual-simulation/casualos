@@ -17,6 +17,7 @@ import {
     tagValueHash,
     CertificateOp,
     signedCert,
+    insertOp,
 } from './AuxOpTypes';
 import { createBot } from '../bots/BotCalculations';
 import {
@@ -36,8 +37,9 @@ import {
     asyncError,
     signTag,
     revokeCertificate,
+    stateUpdatedEvent,
 } from '../bots';
-import { BotStateUpdates } from './AuxStateHelpers';
+import { BotStateUpdates, edit, insert } from './AuxStateHelpers';
 import reducer, { CERTIFIED_SPACE, certificateId } from './AuxWeaveReducer';
 import { Action } from '@casual-simulation/causal-trees';
 
@@ -848,6 +850,37 @@ describe('AuxCausalTree2', () => {
                         },
                     },
                 });
+            });
+
+            it('should support inserting text via a tag edit', () => {
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit(insert('ghi')),
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'ghidef',
+                    }),
+                });
+                expect(result.update).toEqual({
+                    test: {
+                        tags: {
+                            abc: edit(insert('ghi')),
+                        },
+                    },
+                });
+
+                let bot1 = atom(atomId('a', 1), null, bot('test'));
+                let tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                let val1 = atom(atomId('a', 3), tag1, value('def'));
+                let insert1 = atom(atomId('a', 4), val1, insertOp(0, 'ghi'));
+
+                const atoms = tree.weave.getAtoms();
+                expect(atoms).toEqual([bot1, tag1, val1, insert1]);
             });
         });
 

@@ -33,6 +33,7 @@ import {
     signedRevocation,
     tagMask,
     TagMaskOp,
+    insertOp,
 } from './AuxOpTypes';
 import { BotsState, PartialBotsState, BotTags } from '../bots/Bot';
 import reducer, { certificateId } from './AuxWeaveReducer';
@@ -41,6 +42,7 @@ import {
     apply,
     updates as stateUpdates,
     BotStateUpdates,
+    isTagEdit,
 } from './AuxStateHelpers';
 import {
     BotActions,
@@ -257,9 +259,41 @@ export function applyEvents(
 
             const currentVal = findValueNode(node);
             if (!currentVal || val !== currentVal.atom.value.value) {
-                const valueResult = addAtom(node.atom, value(val));
-                result = mergeAuxResults(result, valueResult);
+                let valueResult: AuxResult;
+                if (isTagEdit(val)) {
+                    valueResult = auxResultIdentity();
+                    let index = 0;
+                    for (let op of val.operations) {
+                        if (op.type === 'preserve') {
+                            index += op.count;
+                        } else if (op.type === 'insert') {
+                            const insertResult = addAtom(
+                                currentVal.atom,
+                                insertOp(index, op.text)
+                            );
+                            valueResult = mergeAuxResults(
+                                valueResult,
+                                insertResult
+                            );
+                            index += op.text.length;
+                        } else if (op.type === 'delete') {
+                            const deleteResult = addAtom(
+                                currentVal.atom,
+                                deleteOp(index, index + op.count)
+                            );
+                            valueResult = mergeAuxResults(
+                                valueResult,
+                                deleteResult
+                            );
 
+                            // Increment the index because deletions do not affect the value node character indexes.
+                            index += op.count;
+                        }
+                    }
+                } else {
+                    valueResult = addAtom(node.atom, value(val));
+                    result = mergeAuxResults(result, valueResult);
+                }
                 const newAtom = addedAtom(valueResult.results[0]);
                 if (newAtom) {
                     const weaveResult = tree.weave.removeSiblingsBefore(

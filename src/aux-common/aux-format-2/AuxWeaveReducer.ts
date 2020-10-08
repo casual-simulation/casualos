@@ -26,6 +26,7 @@ import {
     validateSignedValue,
     tagValueHash,
     TagMaskOp,
+    InsertOp,
 } from './AuxOpTypes';
 import uuidv5 from 'uuid/v5';
 import { Bot, PartialBotsState, BotSpace } from '../bots/Bot';
@@ -33,6 +34,8 @@ import { merge } from '../utils';
 import { hasValue, createBot } from '../bots/BotCalculations';
 import lodashMerge from 'lodash/merge';
 import { findBotNode, findBotNodes } from './AuxWeaveHelpers';
+import reverse from 'lodash/reverse';
+import { edit, insert, preserve } from './AuxStateHelpers';
 
 export const CERT_ID_NAMESPACE = 'a1307e2b-8d80-4945-9792-2cd483c45e24';
 export const CERTIFIED_SPACE = 'certified';
@@ -73,6 +76,8 @@ function atomAddedReducer(
         return botAtomAddedReducer(atom, value, state, space);
     } else if (value.type === AuxOpType.Value) {
         return valueAtomAddedReducer(weave, atom, value, state, space);
+    } else if (value.type === AuxOpType.Insert) {
+        return insertAtomAddedReducer(weave, atom, value, state, space);
     } else if (value.type === AuxOpType.Delete) {
         return deleteAtomAddedReducer(weave, atom, value, state);
     } else if (value.type === AuxOpType.Certificate) {
@@ -217,6 +222,62 @@ function valueAtomAddedReducer(
             },
         },
     });
+    return state;
+}
+
+function insertAtomAddedReducer(
+    weave: Weave<AuxOp>,
+    atom: Atom<AuxOp>,
+    value: InsertOp,
+    state: PartialBotsState,
+    space: string
+) {
+    const [...values, tag, bot] = weave.referenceChain(atom.id);
+
+    if (!tag) {
+        return state;
+    }
+
+    if (!bot) {
+        return state;
+    }
+
+    if (bot.atom.value.type !== AuxOpType.Bot) {
+        return state;
+    }
+
+    if (tag.atom.value.type !== AuxOpType.Tag) {
+        return state;
+    }
+
+    if (!hasValue(tag.atom.value.name)) {
+        return state;
+    }
+
+    const tagName = tag.atom.value.name;
+    const id = bot.atom.value.id;
+
+    // "abc"
+    // " 1"
+    //  "2"
+
+    // The number of characters to preserve
+    // before the insert.
+    let count = 0;
+    for (let node of values) {
+        if (node.atom.value.type === AuxOpType.Insert) {
+            count += node.atom.value.text.length;
+        }
+    }
+
+    lodashMerge(state, {
+        [id]: {
+            tags: {
+                [tagName]: edit(preserve(count), insert(value.text)),
+            },
+        },
+    });
+
     return state;
 }
 
