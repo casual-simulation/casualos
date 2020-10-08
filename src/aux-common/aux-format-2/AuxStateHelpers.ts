@@ -14,7 +14,7 @@ import { isBot } from '../bots/BotCalculations';
  * Uses the Device Control One control character (UTF code 11) at the beginning to help prevent conflicts with normal property names.
  * Normally, we would use a Symbol, but symbols are not supported via structure clone which means that we have to use a normal property.
  */
-export const TAG_EDIT_NAME = 'cqtag_edit';
+export const TAG_EDIT_NAME = '\u0011tag_edit';
 
 /**
  * Creates a tag edit using the given list of operations.

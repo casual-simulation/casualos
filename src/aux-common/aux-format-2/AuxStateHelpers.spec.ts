@@ -309,6 +309,32 @@ describe('AuxStateHelpers', () => {
                         }),
                     });
                 });
+
+                it('should not conflict with a property with a similar name as the marker', () => {
+                    const current = {
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    };
+                    const update = {
+                        test: {
+                            tags: {
+                                abc: {
+                                    cqtag_edit: true,
+                                },
+                            },
+                        },
+                    };
+
+                    const final = apply(current, update);
+                    expect(final).toEqual({
+                        test: createBot('test', {
+                            abc: {
+                                cqtag_edit: true,
+                            },
+                        }),
+                    });
+                });
             });
 
             describe('masks', () => {
