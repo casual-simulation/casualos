@@ -30,6 +30,10 @@ import { Subject, Subscription, Observable, fromEventPattern } from 'rxjs';
 import { startWith, filter, map } from 'rxjs/operators';
 import pickBy from 'lodash/pickBy';
 import union from 'lodash/union';
+import {
+    applyEdit,
+    isTagEdit,
+} from '@casual-simulation/aux-common/aux-format-2';
 
 export class LocalStoragePartitionImpl implements LocalStoragePartition {
     protected _onBotsAdded = new Subject<Bot[]>();
@@ -228,7 +232,14 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                         }
 
                         if (hasValue(newVal)) {
-                            newBot.tags[tag] = newVal;
+                            if (isTagEdit(newVal)) {
+                                newBot.tags[tag] = applyEdit(
+                                    newBot.tags[tag],
+                                    newVal
+                                );
+                            } else {
+                                newBot.tags[tag] = newVal;
+                            }
                             updatedBot.tags[tag] = newVal;
                         } else {
                             delete newBot.tags[tag];
@@ -274,7 +285,11 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                         }
 
                         if (hasValue(newVal)) {
-                            masks[tag] = newVal;
+                            if (isTagEdit(newVal)) {
+                                masks[tag] = applyEdit(masks[tag], newVal);
+                            } else {
+                                masks[tag] = newVal;
+                            }
                         } else {
                             delete masks[tag];
                             updatedBot.masks[this.space][tag] = null;

@@ -7,6 +7,7 @@ import {
     botRemoved,
     botUpdated,
     StateUpdatedEvent,
+    stateUpdatedEvent,
 } from '../../bots';
 import { Subscription, never } from 'rxjs';
 import { StatusUpdate } from '@casual-simulation/causal-trees';
@@ -19,6 +20,7 @@ import {
     bufferCount,
     skip,
 } from 'rxjs/operators';
+import { del, edit, insert } from '../../aux-format-2';
 
 export function testPartitionImplementation(
     createPartition: () => Promise<AuxPartition>
@@ -619,6 +621,94 @@ export function testPartitionImplementation(
             }
         );
 
+        describe('edits', () => {
+            it('should support inserting text into a tag value', async () => {
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test', {
+                            abc: 'def',
+                        })
+                    ),
+                ]);
+
+                await waitAsync();
+
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit(insert('ghi')),
+                        },
+                    }),
+                ]);
+
+                expect(partition.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'ghidef',
+                    }),
+                });
+                expect(updated).toEqual([
+                    {
+                        bot: createBot('test', {
+                            abc: 'ghidef',
+                        }),
+                        tags: ['abc'],
+                    },
+                ]);
+                expect(updates.slice(1)).toEqual([
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                abc: edit(insert('ghi')),
+                            },
+                        },
+                    }),
+                ]);
+            });
+
+            it('should support deleting text from a tag value', async () => {
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test', {
+                            abc: 'def',
+                        })
+                    ),
+                ]);
+
+                await waitAsync();
+
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit(del(2)),
+                        },
+                    }),
+                ]);
+
+                expect(partition.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'f',
+                    }),
+                });
+                expect(updated).toEqual([
+                    {
+                        bot: createBot('test', {
+                            abc: 'f',
+                        }),
+                        tags: ['abc'],
+                    },
+                ]);
+                expect(updates.slice(1)).toEqual([
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                abc: edit(del(2)),
+                            },
+                        },
+                    }),
+                ]);
+            });
+        });
+
         describe('TagMasks', () => {
             beforeEach(() => {
                 partition.space = 'testSpace';
@@ -784,6 +874,104 @@ export function testPartitionImplementation(
                         updatedBots: ['test'],
                     },
                 ]);
+            });
+
+            describe('edits', () => {
+                it('should support inserting text into a tag mask value', async () => {
+                    await partition.applyEvents([
+                        botUpdated('test', {
+                            masks: {
+                                testSpace: {
+                                    abc: 'def',
+                                },
+                            },
+                        }),
+                    ]);
+
+                    await waitAsync();
+
+                    await partition.applyEvents([
+                        botUpdated('test', {
+                            masks: {
+                                testSpace: {
+                                    abc: edit(insert('ghi')),
+                                },
+                            },
+                        }),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(partition.state).toEqual({
+                        test: {
+                            masks: {
+                                testSpace: {
+                                    abc: 'ghidef',
+                                },
+                            },
+                        },
+                    });
+                    expect(updated).toEqual([]);
+                    expect(updates.slice(1)).toEqual([
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    testSpace: {
+                                        abc: edit(insert('ghi')),
+                                    },
+                                },
+                            },
+                        }),
+                    ]);
+                });
+
+                it('should support deleting text from a tag mask value', async () => {
+                    await partition.applyEvents([
+                        botUpdated('test', {
+                            masks: {
+                                testSpace: {
+                                    abc: 'def',
+                                },
+                            },
+                        }),
+                    ]);
+
+                    await waitAsync();
+
+                    await partition.applyEvents([
+                        botUpdated('test', {
+                            masks: {
+                                testSpace: {
+                                    abc: edit(del(2)),
+                                },
+                            },
+                        }),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(partition.state).toEqual({
+                        test: {
+                            masks: {
+                                testSpace: {
+                                    abc: 'f',
+                                },
+                            },
+                        },
+                    });
+                    expect(updated).toEqual([]);
+                    expect(updates.slice(1)).toEqual([
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    testSpace: {
+                                        abc: edit(del(2)),
+                                    },
+                                },
+                            },
+                        }),
+                    ]);
+                });
             });
         });
     });

@@ -26,6 +26,7 @@ import { startWith } from 'rxjs/operators';
 import flatMap from 'lodash/flatMap';
 import union from 'lodash/union';
 import { merge } from '../utils';
+import { applyEdit, isTagEdit } from '../aux-format-2';
 
 /**
  * Attempts to create a MemoryPartition from the given config.
@@ -187,7 +188,14 @@ class MemoryPartitionImpl implements MemoryPartition {
                         }
 
                         if (hasValue(newVal)) {
-                            newBot.tags[tag] = newVal;
+                            if (isTagEdit(newVal)) {
+                                newBot.tags[tag] = applyEdit(
+                                    newBot.tags[tag],
+                                    newVal
+                                );
+                            } else {
+                                newBot.tags[tag] = newVal;
+                            }
                             updatedBot.tags[tag] = newVal;
                         } else {
                             delete newBot.tags[tag];
@@ -233,7 +241,11 @@ class MemoryPartitionImpl implements MemoryPartition {
                         }
 
                         if (hasValue(newVal)) {
-                            masks[tag] = newVal;
+                            if (isTagEdit(newVal)) {
+                                masks[tag] = applyEdit(masks[tag], newVal);
+                            } else {
+                                masks[tag] = newVal;
+                            }
                         } else {
                             delete masks[tag];
                             updatedBot.masks[this.space][tag] = null;
