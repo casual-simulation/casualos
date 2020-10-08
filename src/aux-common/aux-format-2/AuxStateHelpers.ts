@@ -7,7 +7,7 @@ import {
     PrecalculatedBot,
 } from '../bots/Bot';
 import { merge, splice } from '../utils';
-import { isBot } from '../bots/BotCalculations';
+import { hasValue, isBot } from '../bots/BotCalculations';
 
 /**
  * The name of the property that indicates an object represents a tag edit.
@@ -361,7 +361,15 @@ export function updates(
     return result;
 }
 
-function applyEdit(value: any, edit: TagEdit): any {
+/**
+ * Applies the tag edit to the given value and returns the result.
+ * @param value The value.
+ * @param edit The edit that should be applied.
+ */
+export function applyEdit(value: any, edit: TagEdit): any {
+    if (!hasValue(value)) {
+        value = '';
+    }
     if (typeof value === 'string') {
         let index = 0;
         for (let op of edit.operations) {

@@ -1,5 +1,13 @@
 import { createBot } from '../bots/BotCalculations';
-import { apply, del, edit, insert, preserve, updates } from './AuxStateHelpers';
+import {
+    apply,
+    applyEdit,
+    del,
+    edit,
+    insert,
+    preserve,
+    updates,
+} from './AuxStateHelpers';
 import { Bot } from '../bots/Bot';
 
 describe('AuxStateHelpers', () => {
@@ -327,6 +335,26 @@ describe('AuxStateHelpers', () => {
                             abc: {
                                 cqtag_edit: true,
                             },
+                        }),
+                    });
+                });
+
+                it('should support inserting text into a tag that doesnt exist', () => {
+                    const current = {
+                        test: createBot('test', {}),
+                    };
+                    const update = {
+                        test: {
+                            tags: {
+                                abc: edit(insert('ghi')),
+                            },
+                        },
+                    };
+
+                    const final = apply(current, update);
+                    expect(final).toEqual({
+                        test: createBot('test', {
+                            abc: 'ghi',
                         }),
                     });
                 });
@@ -835,6 +863,77 @@ describe('AuxStateHelpers', () => {
                 const final = apply(current, update);
                 expect(final).toEqual({});
             });
+        });
+    });
+
+    describe('applyEdit()', () => {
+        const editCases = [
+            [
+                'should be able to insert at the end',
+                'abc',
+                edit(preserve(3), insert('def')),
+                'abcdef',
+            ],
+            [
+                'should be able to insert at the beginning',
+                'abc',
+                edit(insert('def')),
+                'defabc',
+            ],
+            [
+                'should be able to insert in the middle',
+                'abc',
+                edit(preserve(1), insert('def')),
+                'adefbc',
+            ],
+
+            [
+                'should replace an undefined value with the inserted value',
+                undefined,
+                edit(insert('def')),
+                'def',
+            ],
+            [
+                'should be able to insert multiple times into undefined',
+                undefined,
+                edit(insert('abc'), insert('def')),
+                'abcdef',
+            ],
+            [
+                'should replace an null value with the inserted value',
+                null,
+                edit(insert('def')),
+                'def',
+            ],
+            [
+                'should be able to insert multiple times into null',
+                null,
+                edit(insert('abc'), insert('def')),
+                'abcdef',
+            ],
+
+            [
+                'should be able to delete at the end',
+                'abc',
+                edit(preserve(2), del(1)),
+                'ab',
+            ],
+            [
+                'should be able to delete at the beginning',
+                'abc',
+                edit(del(1)),
+                'bc',
+            ],
+            [
+                'should be able to delete in the middle',
+                'abc',
+                edit(preserve(1), del(1)),
+                'ac',
+            ],
+        ];
+
+        it.each(editCases)('%s', (desc, start, edits, expected) => {
+            expect(applyEdit(start, edits)).toEqual(expected);
         });
     });
 
