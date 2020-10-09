@@ -10,6 +10,7 @@ import {
     Atom,
     AtomRemovedResult,
     iterateSiblings,
+    iterateNewerSiblings,
 } from '@casual-simulation/causal-trees/core2';
 import {
     BotOp,
@@ -35,7 +36,7 @@ import { hasValue, createBot } from '../bots/BotCalculations';
 import lodashMerge from 'lodash/merge';
 import { findBotNode, findBotNodes } from './AuxWeaveHelpers';
 import reverse from 'lodash/reverse';
-import { edit, insert, preserve } from './AuxStateHelpers';
+import { del, edit, insert, preserve } from './AuxStateHelpers';
 
 export const CERT_ID_NAMESPACE = 'a1307e2b-8d80-4945-9792-2cd483c45e24';
 export const CERTIFIED_SPACE = 'certified';
@@ -232,7 +233,7 @@ function insertAtomAddedReducer(
     state: PartialBotsState,
     space: string
 ) {
-    const [...values, tag, bot] = weave.referenceChain(atom.id);
+    const { tag, bot, values } = getTextEditNodes(weave, atom);
 
     if (!tag) {
         return state;
@@ -266,7 +267,14 @@ function insertAtomAddedReducer(
     let count = 0;
     for (let node of values) {
         if (node.atom.value.type === AuxOpType.Insert) {
-            count += node.atom.value.text.length;
+            count +=
+                node.atom.value.index +
+                calculateSiblingOffset(
+                    weave,
+                    node,
+                    node.atom.value.index,
+                    node.atom.value.text.length
+                );
         }
     }
 
@@ -279,6 +287,131 @@ function insertAtomAddedReducer(
     });
 
     return state;
+}
+
+function deleteTextReducer(
+    weave: Weave<AuxOp>,
+    atom: Atom<AuxOp>,
+    value: DeleteOp,
+    state: PartialBotsState
+) {
+    const { tag, bot, values } = getTextEditNodes(weave, atom);
+
+    if (!tag) {
+        return state;
+    }
+
+    if (!bot) {
+        return state;
+    }
+
+    if (bot.atom.value.type !== AuxOpType.Bot) {
+        return state;
+    }
+
+    if (tag.atom.value.type !== AuxOpType.Tag) {
+        return state;
+    }
+
+    if (!hasValue(tag.atom.value.name)) {
+        return state;
+    }
+
+    const tagName = tag.atom.value.name;
+    const id = bot.atom.value.id;
+
+    let count = 0;
+    for (let node of values) {
+        if (node.atom.value.type === AuxOpType.Insert) {
+            count +=
+                node.atom.value.index +
+                calculateSiblingOffset(
+                    weave,
+                    node,
+                    node.atom.value.index,
+                    node.atom.value.text.length
+                );
+        } else if (node.atom.value.type === AuxOpType.Delete) {
+            count +=
+                node.atom.value.start +
+                calculateSiblingOffset(
+                    weave,
+                    node,
+                    node.atom.value.start,
+                    node.atom.value.end - node.atom.value.start
+                );
+        }
+    }
+
+    lodashMerge(state, {
+        [id]: {
+            tags: {
+                [tagName]: edit(preserve(count), del(value.end - value.start)),
+            },
+        },
+    });
+
+    return state;
+}
+
+/**
+ * Determines the number of characters that sibling nodes offset the final text insertion/deletion point.
+ * @param weave The weave.
+ * @param node The node that is represents the insertion/deletion operation.
+ * @param offset The character offset that the insertion/deletion takes place at.
+ */
+function calculateSiblingOffset(
+    weave: Weave<AuxOp>,
+    node: WeaveNode<AuxOp>,
+    offset: number,
+    length: number
+) {
+    const parent = weave.getNode(node.atom.cause);
+    const children = [...iterateChildren(parent)];
+
+    let count = 0;
+    // iterating atoms causes us to move from the newest (highest timestamps/priority) to the
+    // oldest (lowest timestamps/priority).
+    // We use this variable to procedurally keep track of whether the current atom is newer or older.
+    // This allows the weave to use whatever logic for sorting atoms that it wants and we can adapt.
+    let newer = true;
+    for (let n of children) {
+        if (n === node) {
+            newer = false;
+            continue;
+        }
+        if (n.atom.value.type === AuxOpType.Insert) {
+            if (!newer && n.atom.value.index <= offset) {
+                count += n.atom.value.text.length;
+            }
+        } else if (n.atom.value.type === AuxOpType.Delete) {
+            if (n.atom.value.start <= offset) {
+                const deleteCount = n.atom.value.end - n.atom.value.start;
+                const shrink = -deleteCount;
+                const endOffset = length - deleteCount;
+                count += endOffset + shrink;
+            }
+        }
+    }
+
+    return count;
+}
+
+/**
+ * Gets the weave nodes needed for a text edit.
+ * Returns the bot node, tag node, and value/insert nodes.
+ */
+function getTextEditNodes(weave: Weave<AuxOp>, atom: Atom<AuxOp>) {
+    const nodes = weave.referenceChain(atom.id);
+    const tag = nodes[nodes.length - 2];
+    const bot = nodes[nodes.length - 1];
+    const values = nodes.slice(0, nodes.length - 2);
+
+    return {
+        tag,
+        bot,
+        values,
+    };
 }
 
 function tagMaskValueAtomAddedReducer(
@@ -344,6 +477,11 @@ function deleteAtomAddedReducer(
 
     if (parent.atom.value.type === AuxOpType.Bot) {
         return deleteBotReducer(weave, <WeaveNode<BotOp>>parent, atom, state);
+    } else if (
+        parent.atom.value.type === AuxOpType.Insert ||
+        parent.atom.value.type === AuxOpType.Value
+    ) {
+        return deleteTextReducer(weave, atom, value, state);
     }
 
     return state;
