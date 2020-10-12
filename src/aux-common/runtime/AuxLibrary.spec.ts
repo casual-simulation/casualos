@@ -4410,7 +4410,7 @@ describe('AuxLibrary', () => {
                     '[1, 2, 3]',
                     [1, 2, 3],
                     { x: 1, y: 1, z: 1 },
-                    { x: 0, y: -1, z: -2 },
+                    { x: 0, y: 3, z: -2 },
                 ],
             ];
 
@@ -4429,6 +4429,50 @@ describe('AuxLibrary', () => {
                         );
 
                         expect(position).toEqual(expected);
+                    });
+
+                    it('should handle custom uniform scale', () => {
+                        bot1.tags.homeX = pos.x;
+                        bot1.tags.homeY = pos.y;
+                        bot1.tags.homeZ = pos.z;
+                        bot1.tags.scale = 2;
+
+                        const position = library.api.experiment.getAnchorPointPosition(
+                            bot1,
+                            'home',
+                            anchorPoint
+                        );
+
+                        const scaled = {
+                            x: (expected.x - pos.x) * 2 + pos.x,
+                            y: (expected.y - pos.y) * 2 + pos.y,
+                            z: (expected.z - pos.z) * 2 + pos.z,
+                        };
+
+                        expect(position).toEqual(scaled);
+                    });
+
+                    it('should handle custom non-uniform scale', () => {
+                        bot1.tags.homeX = pos.x;
+                        bot1.tags.homeY = pos.y;
+                        bot1.tags.homeZ = pos.z;
+                        bot1.tags.scaleX = 2;
+                        bot1.tags.scaleY = 3;
+                        bot1.tags.scaleZ = 4;
+
+                        const position = library.api.experiment.getAnchorPointPosition(
+                            bot1,
+                            'home',
+                            anchorPoint
+                        );
+
+                        const scaled = {
+                            x: (expected.x - pos.x) * 2 + pos.x,
+                            y: (expected.y - pos.y) * 3 + pos.y,
+                            z: (expected.z - pos.z) * 4 + pos.z,
+                        };
+
+                        expect(position).toEqual(scaled);
                     });
                 }
             );
@@ -6728,16 +6772,16 @@ describe('AuxLibrary', () => {
 
     describe('math.getAnchorPointOffset()', () => {
         const cases = [
-            ['center', { x: 0, y: 0, z: 0 }],
-            ['front', { x: 0, y: -0.5, z: 0 }],
-            ['back', { x: 0, y: 0.5, z: 0 }],
-            ['bottom', { x: 0, y: 0, z: 0.5 }],
-            ['top', { x: 0, y: 0, z: -0.5 }],
-            ['left', { x: 0.5, y: 0, z: 0 }],
-            ['right', { x: -0.5, y: 0, z: 0 }],
+            ['center', { x: 0, y: -0, z: 0 }],
+            ['front', { x: 0, y: 0.5, z: 0 }],
+            ['back', { x: 0, y: -0.5, z: 0 }],
+            ['bottom', { x: 0, y: -0, z: 0.5 }],
+            ['top', { x: 0, y: -0, z: -0.5 }],
+            ['left', { x: 0.5, y: -0, z: 0 }],
+            ['right', { x: -0.5, y: -0, z: 0 }],
 
             // Should mirror the coordinates when using literals
-            [[1, 2, 3], { x: -1, y: -2, z: -3 }],
+            [[1, 2, 3], { x: -1, y: 2, z: -3 }],
         ];
 
         it.each(cases)('should support %s', (mode: any, expected: any) => {

@@ -141,6 +141,7 @@ import {
     isRuntimeBot,
     SET_TAG_MASK_SYMBOL,
     CLEAR_TAG_MASKS_SYMBOL,
+    getBotScale,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -2740,14 +2741,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         dimension: string,
         anchorPoint: BotAnchorPoint
     ) {
-        const value = calculateAnchorPoint(anchorPoint);
         const offset = getAnchorPointOffset(anchorPoint);
+        const scale = getBotScale(null, bot, 1);
         const position = getBotPosition(null, bot, dimension);
 
         return {
-            x: position.x + offset.x,
-            y: position.y + offset.y,
-            z: position.z + offset.z,
+            x: position.x + offset.x * scale.x,
+            y: position.y + offset.y * scale.y,
+            z: position.z + offset.z * scale.z,
         };
     }
 
