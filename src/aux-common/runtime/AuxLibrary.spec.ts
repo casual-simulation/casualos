@@ -4379,12 +4379,12 @@ describe('AuxLibrary', () => {
 
         describe('experiment.getAnchorPointPosition()', () => {
             const cases = [
-                ['top', 'top', { x: 1, y: 1, z: 1 }, { x: 1, y: 1, z: 1.5 }],
+                ['top', 'top', { x: 1, y: 1, z: 1 }, { x: 1, y: 1, z: 0.5 }],
                 [
                     'bottom',
                     'bottom',
                     { x: 1, y: 1, z: 1 },
-                    { x: 1, y: 1, z: 0.5 },
+                    { x: 1, y: 1, z: 1.5 },
                 ],
                 [
                     'center',
@@ -4399,12 +4399,18 @@ describe('AuxLibrary', () => {
                     { x: 1, y: 1.5, z: 1 },
                 ],
                 ['back', 'back', { x: 1, y: 1, z: 1 }, { x: 1, y: 0.5, z: 1 }],
-                ['left', 'left', { x: 1, y: 1, z: 1 }, { x: 0.5, y: 1, z: 1 }],
+                ['left', 'left', { x: 1, y: 1, z: 1 }, { x: 1.5, y: 1, z: 1 }],
                 [
                     'right',
                     'right',
                     { x: 1, y: 1, z: 1 },
-                    { x: 1.5, y: 1, z: 1 },
+                    { x: 0.5, y: 1, z: 1 },
+                ],
+                [
+                    '[1, 2, 3]',
+                    [1, 2, 3],
+                    { x: 1, y: 1, z: 1 },
+                    { x: 0, y: -1, z: -2 },
                 ],
             ];
 
@@ -6717,6 +6723,27 @@ describe('AuxLibrary', () => {
             expect(point.x).toBeCloseTo(0);
             expect(point.y).toBeCloseTo(0);
             expect(point.z).toBeCloseTo(0);
+        });
+    });
+
+    describe('math.getAnchorPointOffset()', () => {
+        const cases = [
+            ['center', { x: 0, y: 0, z: 0 }],
+            ['front', { x: 0, y: -0.5, z: 0 }],
+            ['back', { x: 0, y: 0.5, z: 0 }],
+            ['bottom', { x: 0, y: 0, z: 0.5 }],
+            ['top', { x: 0, y: 0, z: -0.5 }],
+            ['left', { x: 0.5, y: 0, z: 0 }],
+            ['right', { x: -0.5, y: 0, z: 0 }],
+
+            // Should mirror the coordinates when using literals
+            [[1, 2, 3], { x: -1, y: -2, z: -3 }],
+        ];
+
+        it.each(cases)('should support %s', (mode: any, expected: any) => {
+            expect(library.api.math.getAnchorPointOffset(mode)).toEqual(
+                expected
+            );
         });
     });
 

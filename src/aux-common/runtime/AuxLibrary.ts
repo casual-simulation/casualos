@@ -542,6 +542,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 random,
                 getForwardDirection,
                 intersectPlane,
+                getAnchorPointOffset,
             },
 
             crypto: {
@@ -2729,7 +2730,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the position of the given anchor point.
+     * Gets the position that the center of the given bot would placed at if it had the given anchor point.
      * @param bot The bot.
      * @param dimension The dimension to get the position of.
      * @param anchorPoint The anchor point.
@@ -2740,13 +2741,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         anchorPoint: BotAnchorPoint
     ) {
         const value = calculateAnchorPoint(anchorPoint);
-        const offset = calculateAnchorPointOffset(value);
+        const offset = getAnchorPointOffset(anchorPoint);
         const position = getBotPosition(null, bot, dimension);
 
         return {
-            x: position.x - offset.x,
-            y: position.y - offset.y,
-            z: position.z - offset.z,
+            x: position.x + offset.x,
+            y: position.y + offset.y,
+            z: position.z + offset.z,
         };
     }
 
@@ -2904,6 +2905,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Gets the position offset for the given bot anchor point.
+     * @param anchorPoint The anchor point to get the offset for.
+     */
+    function getAnchorPointOffset(anchorPoint: BotAnchorPoint) {
+        const value = calculateAnchorPoint(anchorPoint);
+        const offset = calculateAnchorPointOffset(value);
+        return {
+            x: offset.x,
+            y: -offset.y,
+            z: offset.z,
+        };
     }
 
     /**
