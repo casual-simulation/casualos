@@ -3775,6 +3775,21 @@ const groundPoint = math.intersectPlane(pointerPosition, pointerDirection);
 player.toast(groundPoint);
 ```
 
+### `math.getAnchorPointOffset(anchorPoint)`
+
+Calculates the 3D position offset for the given anchor point and returns it.
+This is essentially <ActionLink action='experiment.getAnchorPointPosition(bot, dimension, anchorPoint)'/> but without the bot's position/scale applied.
+
+The **third parameter** is the anchor point that should be calculated. Can be any valid <TagLink tag="anchorPoint"/> value.
+
+#### Examples:
+
+1. Calculate the anchor point offset for "bottom".
+```typescript
+const offset = math.getAnchorPointOffset("bottom");
+player.toast(offset);
+```
+
 ## Crypto Actions
 
 ### `crypto.sha256(...data)`
@@ -4443,6 +4458,59 @@ experiment.localRotationTween(
             mode: 'inout'
         }
     });
+```
+
+### `experiment.getAnchorPointPosition(bot, dimension, anchorPoint)`
+
+Gets the absolute position in the given dimension that the center of the given bot would be placed at if the bot was using the given anchor point.
+
+The **first parameter** is the bot that the anchor point position should be calculated for.
+
+The **second parameter** is the dimension that the anchor point position should be calculated in.
+
+The **third parameter** is the anchor point that should be calculated. Can be any valid <TagLink tag="anchorPoint"/> value.
+
+#### Examples:
+
+1. Get the top anchor point of the current bot in the "home" dimension.
+```typescript
+const point = experiment.getAnchorPointPosition(bot, "home", "top");
+player.toast(point);
+```
+
+2. Get the back right anchor point of the current bot in the "home" dimension.
+```typescript
+const point = experiment.getAnchorPointPosition(bot, "home", [ 0.5, -0.5, 0 ]);
+player.toast(point);
+```
+
+3. Place bots at each of the anchor points.
+```typescript
+let points = [
+    'top',
+    'bottom',
+    'front',
+    'back',
+    'left',
+    'right',
+    'center',
+];
+
+for(let point of points) {
+    let pos = experiment.getAnchorPointPosition(bot, player.getCurrentDimension(), point);
+    create({
+        space: 'player',
+        color: 'green',
+        [player.getCurrentDimension()]: true,
+        [player.getCurrentDimension() + "X"]: pos.x,
+        [player.getCurrentDimension() + "Y"]: pos.y,
+        [player.getCurrentDimension() + "Z"]: pos.z,
+        positioningMode: 'absolute',
+        anchorPoint: 'center',
+        targetAnchorPoint: point,
+        scale: 0.1,
+    });
+}
 ```
 
 [listen-tag]: docs/listen-tags

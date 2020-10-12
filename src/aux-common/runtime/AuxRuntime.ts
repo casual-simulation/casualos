@@ -40,6 +40,9 @@ import {
     updatedBot,
     TAG_MASK_SPACE_PRIORITIES,
     BotTagMasks,
+    RuntimeBot,
+    CLEAR_CHANGES_SYMBOL,
+    CompiledBotListener,
 } from '../bots';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -60,16 +63,9 @@ import {
     RuntimeBotInterface,
     RuntimeBotFactory,
     createRuntimeBot,
-    RuntimeBot,
     RealtimeEditMode,
-    CLEAR_CHANGES_SYMBOL,
-    isRuntimeBot,
 } from './RuntimeBot';
-import {
-    CompiledBot,
-    CompiledBotsState,
-    CompiledBotListener,
-} from './CompiledBot';
+import { CompiledBot, CompiledBotsState } from './CompiledBot';
 import sortBy from 'lodash/sortBy';
 import transform from 'lodash/transform';
 import { BatchingZoneSpec } from './BatchingZoneSpec';

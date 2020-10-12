@@ -133,6 +133,15 @@ import {
     Easing,
     LocalPositionTweenAction,
     LocalRotationTweenAction,
+    BotAnchorPoint,
+    calculateAnchorPoint,
+    calculateAnchorPointOffset,
+    getBotPosition,
+    RuntimeBot,
+    isRuntimeBot,
+    SET_TAG_MASK_SYMBOL,
+    CLEAR_TAG_MASKS_SYMBOL,
+    getBotScale,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -141,12 +150,6 @@ import {
     DeviceSelector,
 } from '@casual-simulation/causal-trees';
 import uuidv4 from 'uuid/v4';
-import {
-    RuntimeBot,
-    isRuntimeBot,
-    SET_TAG_MASK_SYMBOL,
-    CLEAR_TAG_MASKS_SYMBOL,
-} from './RuntimeBot';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
@@ -527,6 +530,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 localFormAnimation,
                 localPositionTween,
                 localRotationTween,
+                getAnchorPointPosition,
             },
 
             math: {
@@ -539,6 +543,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 random,
                 getForwardDirection,
                 intersectPlane,
+                getAnchorPointOffset,
             },
 
             crypto: {
@@ -2726,6 +2731,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Gets the position that the center of the given bot would placed at if it had the given anchor point.
+     * @param bot The bot.
+     * @param dimension The dimension to get the position of.
+     * @param anchorPoint The anchor point.
+     */
+    function getAnchorPointPosition(
+        bot: Bot,
+        dimension: string,
+        anchorPoint: BotAnchorPoint
+    ) {
+        const offset = getAnchorPointOffset(anchorPoint);
+        const scale = getBotScale(null, bot, 1);
+        const position = getBotPosition(null, bot, dimension);
+
+        return {
+            x: position.x + offset.x * scale.x,
+            y: position.y + offset.y * scale.y,
+            z: position.z + offset.z * scale.z,
+        };
+    }
+
+    /**
      * Sums the given array of numbers and returns the result.
      * If any value in the list is not a number, it will be converted to one.
      * If the given value is not an array, then it will be converted to a number and returned.
@@ -2879,6 +2906,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Gets the position offset for the given bot anchor point.
+     * @param anchorPoint The anchor point to get the offset for.
+     */
+    function getAnchorPointOffset(anchorPoint: BotAnchorPoint) {
+        const value = calculateAnchorPoint(anchorPoint);
+        const offset = calculateAnchorPointOffset(value);
+        return {
+            x: offset.x,
+            y: -offset.y,
+            z: offset.z,
+        };
     }
 
     /**

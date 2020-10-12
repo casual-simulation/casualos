@@ -7,10 +7,10 @@ import {
     botAdded,
     botRemoved,
     DEFAULT_ENERGY,
+    RuntimeBot,
 } from '../bots';
 import sortedIndexBy from 'lodash/sortedIndexBy';
 import {
-    RuntimeBot,
     RuntimeBotFactory,
     RuntimeBotsState,
     RealtimeEditMode,
@@ -171,7 +171,7 @@ export interface AsyncTask {
  * @param bot The bot.
  */
 function indexInContext(context: AuxGlobalContext, bot: Bot): number {
-    const index = sortedIndexBy(context.bots, <RuntimeBot>bot, sb => sb.id);
+    const index = sortedIndexBy(context.bots, <RuntimeBot>bot, (sb) => sb.id);
     const expected = context.bots.length > index ? context.bots[index] : null;
     if (!!expected && expected.id === bot.id) {
         return index;
@@ -189,7 +189,7 @@ export function addToContext(context: AuxGlobalContext, ...bots: RuntimeBot[]) {
         if (!!context.state[bot.id]) {
             throw new Error('Bot already exists in the context!');
         }
-        const index = sortedIndexBy(context.bots, bot, sb => sb.id);
+        const index = sortedIndexBy(context.bots, bot, (sb) => sb.id);
         context.bots.splice(index, 0, bot);
         context.state[bot.id] = bot;
     }

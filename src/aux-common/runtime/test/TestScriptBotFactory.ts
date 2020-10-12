@@ -6,19 +6,15 @@ import {
     BotSignatures,
     botsFromShortIds,
     TAG_MASK_SPACE_PRIORITIES,
+    RuntimeBot,
 } from '../../bots';
 import {
     createRuntimeBot,
     RuntimeBotInterface,
     RuntimeBotFactory,
-    RuntimeBot,
     RealtimeEditMode,
 } from '../RuntimeBot';
-import {
-    createCompiledBot,
-    CompiledBotListener,
-    CompiledBot,
-} from '../CompiledBot';
+import { createCompiledBot, CompiledBot } from '../CompiledBot';
 import pickBy from 'lodash/pickBy';
 
 export class TestScriptBotFactory implements RuntimeBotFactory {
