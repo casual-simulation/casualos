@@ -7,18 +7,18 @@ import {
     PLAYER_PARTITION_ID,
     OTHER_PLAYERS_PARTITION_ID,
     DEFAULT_TAG_MASK_SPACE,
+    RuntimeBot,
+    CLEAR_CHANGES_SYMBOL,
+    SET_TAG_MASK_SYMBOL,
+    CLEAR_TAG_MASKS_SYMBOL,
+    isRuntimeBot,
 } from '../bots';
 import { AuxGlobalContext, MemoryGlobalContext } from './AuxGlobalContext';
 import {
     createRuntimeBot,
     RuntimeBotInterface,
-    RuntimeBot,
     RealtimeEditMode,
-    CLEAR_CHANGES_SYMBOL,
-    isRuntimeBot,
     flattenTagMasks,
-    SET_TAG_MASK_SYMBOL,
-    CLEAR_TAG_MASKS_SYMBOL,
 } from './RuntimeBot';
 import { TestScriptBotFactory } from './test/TestScriptBotFactory';
 import { createCompiledBot, CompiledBot } from './CompiledBot';

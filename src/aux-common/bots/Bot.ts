@@ -6,6 +6,104 @@ export type Object = Bot;
 export type Workspace = Bot;
 
 /**
+ * Defines a symbol that is used to clear changes on a runtime bot.
+ */
+export const CLEAR_CHANGES_SYMBOL = Symbol('clear_changes');
+
+/**
+ * Defines a symbol that is used to set a tag mask on a runtime bot.
+ */
+export const SET_TAG_MASK_SYMBOL = Symbol('set_tag_mask');
+
+/**
+ * Defines a symbol that is used to get a tag mask on a runtime bot.
+ */
+export const GET_TAG_MASK_SYMBOL = Symbol('get_tag_mask');
+
+/**
+ * Defines a symbol that is used to get all the tag masks on a runtime bot.
+ */
+export const CLEAR_TAG_MASKS_SYMBOL = Symbol('clear_tag_masks');
+
+/**
+ * Defines an interface for a bot in a script/formula.
+ *
+ * The difference between this and Bot is that the tags
+ * are calculated values and raw is the original tag values.
+ *
+ * i.e. tags will evaluate formulas while raw will return the formula scripts themselves.
+ */
+export interface RuntimeBot {
+    id: string;
+    space?: BotSpace;
+
+    /**
+     * The calculated tag values.
+     * This lets you get the calculated values from formulas.
+     */
+    tags: ScriptTags;
+
+    /**
+     * The raw tag values. This lets you get the raw script text from formulas.
+     */
+    raw: BotTags;
+
+    /**
+     * The tag masks that have been applied to this bot.
+     */
+    masks: BotTags;
+
+    /**
+     * The changes that have been made to the bot.
+     */
+    changes: BotTags;
+
+    /**
+     * The tag mask changes that have been made to the bot.
+     */
+    maskChanges: BotTagMasks;
+
+    /**
+     * The signatures that are on the bot.
+     */
+    signatures: BotSignatures;
+
+    /**
+     * The calculated listener functions.
+     * This lets you get the compiled listener functions.
+     */
+    listeners: CompiledBotListeners;
+
+    /**
+     * A function that can clear all the changes from the runtime bot.
+     */
+    [CLEAR_CHANGES_SYMBOL]: () => void;
+
+    /**
+     * A function that can set a tag mask on the bot.
+     */
+    [SET_TAG_MASK_SYMBOL]: (tag: string, value: any, space?: string) => void;
+
+    /**
+     * A function that can clear the tag masks from the bot.
+     * @param space The space that the masks should be cleared from. If not specified then all tag masks in all spaces will be cleared.
+     */
+    [CLEAR_TAG_MASKS_SYMBOL]: (space?: string) => any;
+}
+
+/**
+ * An interface that maps tag names to compiled listener functions.
+ */
+export interface CompiledBotListeners {
+    [tag: string]: CompiledBotListener;
+}
+
+/**
+ * The type of a compiled bot listener.
+ */
+export type CompiledBotListener = (arg?: any) => any;
+
+/**
  * Defines an interface for a bot that is precalculated.
  */
 export interface PrecalculatedBot extends Bot {

@@ -1,5 +1,5 @@
-import { isRuntimeBot, RealtimeEditMode } from './RuntimeBot';
-import { isBot } from '../bots/BotCalculations';
+import { RealtimeEditMode } from './RuntimeBot';
+import { isBot, isRuntimeBot } from '../bots/BotCalculations';
 import { AuxPartitionRealtimeStrategy } from '../partitions/AuxPartition';
 import forOwn from 'lodash/forOwn';
 
@@ -54,7 +54,7 @@ function _convertToCopiableValue(
             const result = [] as any[];
             map.set(value, result);
             result.push(
-                ...value.map(val =>
+                ...value.map((val) =>
                     _convertToCopiableValue(val, depth + 1, map)
                 )
             );
