@@ -133,6 +133,14 @@ import {
     Easing,
     LocalPositionTweenAction,
     LocalRotationTweenAction,
+    BotAnchorPoint,
+    calculateAnchorPoint,
+    calculateAnchorPointOffset,
+    getBotPosition,
+    RuntimeBot,
+    isRuntimeBot,
+    SET_TAG_MASK_SYMBOL,
+    CLEAR_TAG_MASKS_SYMBOL,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -141,12 +149,6 @@ import {
     DeviceSelector,
 } from '@casual-simulation/causal-trees';
 import uuidv4 from 'uuid/v4';
-import {
-    RuntimeBot,
-    isRuntimeBot,
-    SET_TAG_MASK_SYMBOL,
-    CLEAR_TAG_MASKS_SYMBOL,
-} from './RuntimeBot';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
@@ -527,6 +529,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 localFormAnimation,
                 localPositionTween,
                 localRotationTween,
+                getAnchorPointPosition,
             },
 
             math: {
@@ -2723,6 +2726,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             task.taskId
         );
         return addAsyncAction(task, action);
+    }
+
+    /**
+     * Gets the position of the given anchor point.
+     * @param bot The bot.
+     * @param dimension The dimension to get the position of.
+     * @param anchorPoint The anchor point.
+     */
+    function getAnchorPointPosition(
+        bot: Bot,
+        dimension: string,
+        anchorPoint: BotAnchorPoint
+    ) {
+        const value = calculateAnchorPoint(anchorPoint);
+        const offset = calculateAnchorPointOffset(value);
+        const position = getBotPosition(null, bot, dimension);
+
+        return {
+            x: position.x - offset.x,
+            y: position.y - offset.y,
+            z: position.z - offset.z,
+        };
     }
 
     /**
