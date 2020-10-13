@@ -1551,7 +1551,7 @@ describe('AuxWeaveReducer', () => {
                     });
                 });
 
-                it.skip('should handle deleting the same text twice', () => {
+                it('should handle deleting the same text twice', () => {
                     const bot1 = atom(atomId('a', 1), null, bot('test'));
                     const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
                     const value1 = atom(atomId('a', 3), tag1, value('def'));
@@ -1561,12 +1561,12 @@ describe('AuxWeaveReducer', () => {
                         insertOp(1, '111')
                     );
                     const delete1 = atom(
-                        atomId('a', 5),
+                        atomId('a', 5, 1),
                         insert1,
                         deleteOp(1, 3)
                     );
                     const delete2 = atom(
-                        atomId('a', 6),
+                        atomId('a', 6, 1),
                         insert1,
                         deleteOp(1, 3)
                     );
@@ -1582,9 +1582,54 @@ describe('AuxWeaveReducer', () => {
 
                     state = apply(state, update);
 
+                    expect(update).toEqual({});
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: 'd1ef',
+                            },
+                        },
+                    });
+                });
+
+                it('should handle deleting the overlapping portions of text', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '11111')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 5, 1),
+                        insert1,
+                        deleteOp(0, 3)
+                    );
+                    const delete2 = atom(
+                        atomId('a', 6, 1),
+                        insert1,
+                        deleteOp(2, 4)
+                    );
+
+                    state = add(bot1, tag1, value1, insert1, delete1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(delete2),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
                     expect(update).toEqual({
                         ['test']: {
-                            tags: {},
+                            tags: {
+                                abc: edit(preserve(1), del(1)),
+                            },
                         },
                     });
 

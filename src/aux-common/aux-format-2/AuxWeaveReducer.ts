@@ -267,14 +267,13 @@ function insertAtomAddedReducer(
     let count = 0;
     for (let node of values) {
         if (node.atom.value.type === AuxOpType.Insert) {
-            count +=
-                node.atom.value.index +
-                calculateSiblingOffset(
-                    weave,
-                    node,
-                    node.atom.value.index,
-                    node.atom.value.text.length
-                );
+            const { offset } = calculateSiblingOffset(
+                weave,
+                node,
+                node.atom.value.index,
+                node.atom.value.text.length
+            );
+            count += node.atom.value.index + offset;
         }
     }
 
@@ -321,35 +320,37 @@ function deleteTextReducer(
     const id = bot.atom.value.id;
 
     let count = 0;
+    let length = value.end - value.start;
     for (let node of values) {
         if (node.atom.value.type === AuxOpType.Insert) {
-            count +=
-                node.atom.value.index +
-                calculateSiblingOffset(
-                    weave,
-                    node,
-                    node.atom.value.index,
-                    node.atom.value.text.length
-                );
+            const { offset, overlap } = calculateSiblingOffset(
+                weave,
+                node,
+                node.atom.value.index,
+                node.atom.value.text.length
+            );
+            count += node.atom.value.index + offset;
         } else if (node.atom.value.type === AuxOpType.Delete) {
-            count +=
-                node.atom.value.start +
-                calculateSiblingOffset(
-                    weave,
-                    node,
-                    node.atom.value.start,
-                    node.atom.value.end - node.atom.value.start
-                );
+            const { offset, overlap } = calculateSiblingOffset(
+                weave,
+                node,
+                node.atom.value.start,
+                node.atom.value.end - node.atom.value.start
+            );
+            count += node.atom.value.start + offset;
+            length -= overlap;
         }
     }
 
-    lodashMerge(state, {
-        [id]: {
-            tags: {
-                [tagName]: edit(preserve(count), del(value.end - value.start)),
+    if (length > 0) {
+        lodashMerge(state, {
+            [id]: {
+                tags: {
+                    [tagName]: edit(preserve(count), del(length)),
+                },
             },
-        },
-    });
+        });
+    }
 
     return state;
 }
@@ -359,6 +360,7 @@ function deleteTextReducer(
  * @param weave The weave.
  * @param node The node that is represents the insertion/deletion operation.
  * @param offset The character offset that the insertion/deletion takes place at.
+ * @param length The length of the insertion/deletion.
  */
 function calculateSiblingOffset(
     weave: Weave<AuxOp>,
@@ -370,6 +372,7 @@ function calculateSiblingOffset(
     const children = [...iterateChildren(parent)];
 
     let count = 0;
+    let overlap = 0;
     // iterating atoms causes us to move from the newest (highest timestamps/priority) to the
     // oldest (lowest timestamps/priority).
     // We use this variable to procedurally keep track of whether the current atom is newer or older.
@@ -386,15 +389,33 @@ function calculateSiblingOffset(
             }
         } else if (n.atom.value.type === AuxOpType.Delete) {
             if (n.atom.value.start <= offset) {
-                const deleteCount = n.atom.value.end - n.atom.value.start;
+                const deleteStart = n.atom.value.start;
+                const deleteEnd = n.atom.value.end;
+                const deleteCount = deleteEnd - deleteStart;
                 const shrink = -deleteCount;
-                const endOffset = length - deleteCount;
+                const endOffset = Math.abs(length - deleteCount);
+
+                const nodeStart = offset;
+                const nodeEnd = offset + length;
+
+                const startOverlap = Math.max(0, deleteStart - nodeStart);
+                const endOverlap = Math.max(0, nodeEnd - deleteEnd);
+                const totalOverlap = Math.max(
+                    0,
+                    length - (startOverlap + endOverlap)
+                );
+
+                overlap += totalOverlap;
                 count += endOffset + shrink;
+                // if (node.atom.value.type === AuxOpType.Delete) {
+                //     count -= totalOverlap;
+                // } else if(node.atom.value.type === AuxOpType.Insert) {
+                // }
             }
         }
     }
 
-    return count;
+    return { offset: count, overlap };
 }
 
 /**
