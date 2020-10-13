@@ -1811,6 +1811,19 @@ declare interface Bot {
 }
 
 /**
+ * Defines the possible bot anchor points.
+ */
+declare type BotAnchorPoint =
+    | 'top'
+    | 'front'
+    | 'back'
+    | 'left'
+    | 'right'
+    | 'bottom'
+    | 'center'
+    | [number, number, number];
+
+/**
  * Defines an interface for the state that an AUX bot can contain.
  */
 declare interface BotsState {
@@ -3484,6 +3497,13 @@ declare global {
          * @param direction The direction that the ray is pointing.
          */
         intersectPlane(origin: Point3D, direction: Point3D): Point3D;
+
+        /**
+         * Gets the position offset for the given bot anchor point.
+         * This is useful for doing custom math using anchor points.
+         * @param anchorPoint The anchor point to get the offset for.
+         */
+        getAnchorPointOffset(anchorPoint: BotAnchorPoint): Point3D;
     };
 
     // @ts-ignore: Ignore redeclaration
@@ -3684,5 +3704,17 @@ declare global {
             rotation: { x?: number, y?: number, z?: number },
             options?: TweenOptions
         ): LocalRotationTweenAction;
+
+        /**
+         * Gets the position that the center of the given bot would placed at if the bot was using the given anchor point.
+         * @param bot The bot.
+         * @param dimension The dimension to get the position of.
+         * @param anchorPoint The anchor point.
+         */
+        getAnchorPointPosition(
+            bot: Bot,
+            dimension: string,
+            anchorPoint: BotAnchorPoint
+        ): {x: number, y: number, z: number};
     };
 }

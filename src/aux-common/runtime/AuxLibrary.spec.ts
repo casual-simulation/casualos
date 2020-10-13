@@ -113,6 +113,10 @@ import {
     cancelSound,
     localPositionTween,
     localRotationTween,
+    getAnchorPointOffset,
+    calculateAnchorPointOffset,
+    RuntimeBot,
+    SET_TAG_MASK_SYMBOL,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -125,7 +129,7 @@ import {
     TestScriptBotFactory,
     createDummyRuntimeBot,
 } from './test/TestScriptBotFactory';
-import { RuntimeBot, RuntimeBatcher, SET_TAG_MASK_SYMBOL } from './RuntimeBot';
+import { RuntimeBatcher } from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
@@ -4372,6 +4376,107 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
         });
+
+        describe('experiment.getAnchorPointPosition()', () => {
+            const cases = [
+                ['top', 'top', { x: 1, y: 1, z: 1 }, { x: 1, y: 1, z: 0.5 }],
+                [
+                    'bottom',
+                    'bottom',
+                    { x: 1, y: 1, z: 1 },
+                    { x: 1, y: 1, z: 1.5 },
+                ],
+                [
+                    'center',
+                    'center',
+                    { x: 1, y: 1, z: 1 },
+                    { x: 1, y: 1, z: 1 },
+                ],
+                [
+                    'front',
+                    'front',
+                    { x: 1, y: 1, z: 1 },
+                    { x: 1, y: 1.5, z: 1 },
+                ],
+                ['back', 'back', { x: 1, y: 1, z: 1 }, { x: 1, y: 0.5, z: 1 }],
+                ['left', 'left', { x: 1, y: 1, z: 1 }, { x: 1.5, y: 1, z: 1 }],
+                [
+                    'right',
+                    'right',
+                    { x: 1, y: 1, z: 1 },
+                    { x: 0.5, y: 1, z: 1 },
+                ],
+                [
+                    '[1, 2, 3]',
+                    [1, 2, 3],
+                    { x: 1, y: 1, z: 1 },
+                    { x: 0, y: 3, z: -2 },
+                ],
+            ];
+
+            describe.each(cases)(
+                'should support %s',
+                (desc, anchorPoint, pos, expected) => {
+                    it('should return the position of the given anchor point in world space', () => {
+                        bot1.tags.homeX = pos.x;
+                        bot1.tags.homeY = pos.y;
+                        bot1.tags.homeZ = pos.z;
+
+                        const position = library.api.experiment.getAnchorPointPosition(
+                            bot1,
+                            'home',
+                            anchorPoint
+                        );
+
+                        expect(position).toEqual(expected);
+                    });
+
+                    it('should handle custom uniform scale', () => {
+                        bot1.tags.homeX = pos.x;
+                        bot1.tags.homeY = pos.y;
+                        bot1.tags.homeZ = pos.z;
+                        bot1.tags.scale = 2;
+
+                        const position = library.api.experiment.getAnchorPointPosition(
+                            bot1,
+                            'home',
+                            anchorPoint
+                        );
+
+                        const scaled = {
+                            x: (expected.x - pos.x) * 2 + pos.x,
+                            y: (expected.y - pos.y) * 2 + pos.y,
+                            z: (expected.z - pos.z) * 2 + pos.z,
+                        };
+
+                        expect(position).toEqual(scaled);
+                    });
+
+                    it('should handle custom non-uniform scale', () => {
+                        bot1.tags.homeX = pos.x;
+                        bot1.tags.homeY = pos.y;
+                        bot1.tags.homeZ = pos.z;
+                        bot1.tags.scaleX = 2;
+                        bot1.tags.scaleY = 3;
+                        bot1.tags.scaleZ = 4;
+
+                        const position = library.api.experiment.getAnchorPointPosition(
+                            bot1,
+                            'home',
+                            anchorPoint
+                        );
+
+                        const scaled = {
+                            x: (expected.x - pos.x) * 2 + pos.x,
+                            y: (expected.y - pos.y) * 3 + pos.y,
+                            z: (expected.z - pos.z) * 4 + pos.z,
+                        };
+
+                        expect(position).toEqual(scaled);
+                    });
+                }
+            );
+        });
     });
 
     describe('setTag()', () => {
@@ -6662,6 +6767,27 @@ describe('AuxLibrary', () => {
             expect(point.x).toBeCloseTo(0);
             expect(point.y).toBeCloseTo(0);
             expect(point.z).toBeCloseTo(0);
+        });
+    });
+
+    describe('math.getAnchorPointOffset()', () => {
+        const cases = [
+            ['center', { x: 0, y: -0, z: 0 }],
+            ['front', { x: 0, y: 0.5, z: 0 }],
+            ['back', { x: 0, y: -0.5, z: 0 }],
+            ['bottom', { x: 0, y: -0, z: 0.5 }],
+            ['top', { x: 0, y: -0, z: -0.5 }],
+            ['left', { x: 0.5, y: -0, z: 0 }],
+            ['right', { x: -0.5, y: -0, z: 0 }],
+
+            // Should mirror the coordinates when using literals
+            [[1, 2, 3], { x: -1, y: 2, z: -3 }],
+        ];
+
+        it.each(cases)('should support %s', (mode: any, expected: any) => {
+            expect(library.api.math.getAnchorPointOffset(mode)).toEqual(
+                expected
+            );
         });
     });
 

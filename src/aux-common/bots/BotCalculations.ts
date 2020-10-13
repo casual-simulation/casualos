@@ -42,6 +42,7 @@ import {
     BotSignatures,
     DEFAULT_TAG_PORTAL_ANCHOR_POINT,
     TAG_MASK_SPACE_PRIORITIES,
+    RuntimeBot,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -367,6 +368,26 @@ export function isHiddenTag(tag: string): boolean {
     return /^_/.test(tag) || /(\w+)\._/.test(tag);
 }
 
+/**
+ * Determines if the given bot is a runtime bot.
+ * @param bot The bot to check.
+ */
+export function isRuntimeBot(bot: any): bot is RuntimeBot {
+    if (!!bot && typeof bot === 'object') {
+        return (
+            !!bot.id &&
+            typeof bot.tags === 'object' &&
+            typeof bot.raw === 'object' &&
+            typeof bot.masks === 'object' &&
+            typeof bot.tags.toJSON === 'function' &&
+            typeof bot.listeners === 'object' &&
+            typeof bot.changes === 'object' &&
+            typeof bot.maskChanges === 'object'
+        );
+    }
+    return false;
+}
+
 export function isPrecalculated(
     bot: Object | PrecalculatedBot
 ): bot is PrecalculatedBot {
@@ -419,6 +440,8 @@ function calculateBotTagValue(
         return getBotSpace(object);
     } else if (isPrecalculated(object)) {
         return object.values[tag];
+    } else if (isRuntimeBot(object)) {
+        return object.tags[tag];
     } else {
         return calculateValue(object, tag, object.tags[tag]);
     }
@@ -1304,31 +1327,29 @@ export function getBotAnchorPoint(
     bot: Bot
 ): BotAnchorPoint {
     const mode = <BotAnchorPoint>calculateBotValue(calc, bot, 'auxAnchorPoint');
+    return calculateAnchorPoint(mode);
+}
 
-    if (Array.isArray(mode)) {
-        if (mode.length >= 3 && mode.every((v) => typeof v === 'number')) {
-            return mode;
+/**
+ * Ensures that the given bot anchor point value is valid by converting the given value to a valid anchor point value.
+ * @param value The value.
+ */
+export function calculateAnchorPoint(value: BotAnchorPoint) {
+    if (Array.isArray(value)) {
+        if (value.length >= 3 && value.every((v) => typeof v === 'number')) {
+            return value;
         }
-    } else if (possibleAnchorPoints.has(mode)) {
-        return mode;
+    } else if (possibleAnchorPoints.has(value)) {
+        return value;
     }
     return DEFAULT_ANCHOR_POINT;
 }
 
 /**
- * Gets the anchor point offset for the bot in AUX coordinates.
- * @param calc The calculation context.
- * @param bot The bot.
+ * Calculates the 3D offset of the anchor point.
+ * @param point The anchor point.
  */
-export function getAnchorPointOffset(
-    calc: BotCalculationContext,
-    bot: Bot
-): {
-    x: number;
-    y: number;
-    z: number;
-} {
-    const point = getBotAnchorPoint(calc, bot);
+export function calculateAnchorPointOffset(point: BotAnchorPoint) {
     if (typeof point === 'string') {
         let offset = {
             x: 0,
@@ -1362,6 +1383,23 @@ export function getAnchorPointOffset(
             z: -z,
         };
     }
+}
+
+/**
+ * Gets the anchor point offset for the bot in AUX coordinates.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getAnchorPointOffset(
+    calc: BotCalculationContext,
+    bot: Bot
+): {
+    x: number;
+    y: number;
+    z: number;
+} {
+    const point = getBotAnchorPoint(calc, bot);
+    return calculateAnchorPointOffset(point);
 }
 
 const possibleMeetPortalAnchorPoints = new Set([

@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V1.2.15
+
+#### Date: 10/12/2020
+
+### :rocket: Improvements
+
+-   Added the `experiment.getAnchorPointPosition()` and `math.getAnchorPointOffset()` functions.
+    -   These are useful for determining where a bot would be placed if it had a particular anchor point.
+    -   See the [docs](https://docs.casualsimulation.com/docs/actions) for more info.
+
 ## V1.2.14
 
 #### Date: 10/7/2020

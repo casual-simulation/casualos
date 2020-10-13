@@ -31,6 +31,9 @@ export function cacheFunction<T>(
     func: () => T,
     ...args: (string | number | boolean)[]
 ): T {
+    if (!calc) {
+        return func();
+    }
     let key = name;
     for (let arg of args) {
         key += `-${arg}`;
