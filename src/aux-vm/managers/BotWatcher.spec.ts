@@ -262,7 +262,7 @@ describe('BotWatcher', () => {
             stateUpdatedEvent({
                 test: {
                     tags: {
-                        abc: edit(preserve(1), insert('p')),
+                        abc: edit(1, preserve(1), insert('p')),
                     },
                     values: {
                         abc: 'dpef',
@@ -882,7 +882,7 @@ describe('BotWatcher', () => {
             let secondUpdate = stateUpdatedEvent({
                 test: {
                     tags: {
-                        abc: edit(preserve(1), insert('1'), del(1)),
+                        abc: edit(1, preserve(1), insert('1'), del(1)),
                     },
                     values: {
                         abc: 'd1f',
@@ -905,7 +905,7 @@ describe('BotWatcher', () => {
                     }),
                     tag: 'abc',
                     space: null,
-                    operations: [preserve(1), insert('1'), del(1)],
+                    operations: [[preserve(1), insert('1'), del(1)]],
                 },
             ]);
         });
@@ -938,7 +938,7 @@ describe('BotWatcher', () => {
                 test: {
                     masks: {
                         shared: {
-                            abc: edit(preserve(1), insert('1'), del(1)),
+                            abc: edit(1, preserve(1), insert('1'), del(1)),
                         },
                     },
                     values: {
@@ -984,7 +984,7 @@ describe('BotWatcher', () => {
                     },
                     tag: 'abc',
                     space: 'shared',
-                    operations: [preserve(1), insert('1'), del(1)],
+                    operations: [[preserve(1), insert('1'), del(1)]],
                 },
             ]);
         });

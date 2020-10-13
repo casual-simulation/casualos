@@ -162,7 +162,7 @@ describe('AuxStateHelpers', () => {
                     const update = {
                         test: {
                             tags: {
-                                abc: edit(preserve(3), insert('ghi')),
+                                abc: edit(1, preserve(3), insert('ghi')),
                             },
                         },
                     };
@@ -184,7 +184,7 @@ describe('AuxStateHelpers', () => {
                     const update = {
                         test: {
                             tags: {
-                                abc: edit(insert('ghi')),
+                                abc: edit(1, insert('ghi')),
                             },
                         },
                     };
@@ -206,7 +206,7 @@ describe('AuxStateHelpers', () => {
                     const update = {
                         test: {
                             tags: {
-                                abc: edit(preserve(1), insert('ghi')),
+                                abc: edit(1, preserve(1), insert('ghi')),
                             },
                         },
                     };
@@ -228,7 +228,7 @@ describe('AuxStateHelpers', () => {
                     const update = {
                         test: {
                             tags: {
-                                abc: edit(preserve(1), del(2)),
+                                abc: edit(1, preserve(1), del(2)),
                             },
                         },
                     };
@@ -250,7 +250,7 @@ describe('AuxStateHelpers', () => {
                     const update = {
                         test: {
                             tags: {
-                                abc: edit(del(2)),
+                                abc: edit(1, del(2)),
                             },
                         },
                     };
@@ -272,7 +272,7 @@ describe('AuxStateHelpers', () => {
                     const update = {
                         test: {
                             tags: {
-                                abc: edit(preserve(1), del(1)),
+                                abc: edit(1, preserve(1), del(1)),
                             },
                         },
                     };
@@ -295,6 +295,7 @@ describe('AuxStateHelpers', () => {
                         test: {
                             tags: {
                                 abc: edit(
+                                    1,
                                     preserve(1),
                                     del(1),
                                     insert('a'),
@@ -346,7 +347,7 @@ describe('AuxStateHelpers', () => {
                     const update = {
                         test: {
                             tags: {
-                                abc: edit(insert('ghi')),
+                                abc: edit(1, insert('ghi')),
                             },
                         },
                     };
@@ -529,7 +530,11 @@ describe('AuxStateHelpers', () => {
                             test: {
                                 masks: {
                                     shared: {
-                                        abc: edit(preserve(3), insert('ghi')),
+                                        abc: edit(
+                                            1,
+                                            preserve(3),
+                                            insert('ghi')
+                                        ),
                                     },
                                 },
                             },
@@ -565,7 +570,7 @@ describe('AuxStateHelpers', () => {
                             test: {
                                 masks: {
                                     shared: {
-                                        abc: edit(insert('ghi')),
+                                        abc: edit(1, insert('ghi')),
                                     },
                                 },
                             },
@@ -601,7 +606,11 @@ describe('AuxStateHelpers', () => {
                             test: {
                                 masks: {
                                     shared: {
-                                        abc: edit(preserve(1), insert('ghi')),
+                                        abc: edit(
+                                            1,
+                                            preserve(1),
+                                            insert('ghi')
+                                        ),
                                     },
                                 },
                             },
@@ -637,7 +646,7 @@ describe('AuxStateHelpers', () => {
                             test: {
                                 masks: {
                                     shared: {
-                                        abc: edit(preserve(1), del(2)),
+                                        abc: edit(1, preserve(1), del(2)),
                                     },
                                 },
                             },
@@ -673,7 +682,7 @@ describe('AuxStateHelpers', () => {
                             test: {
                                 masks: {
                                     shared: {
-                                        abc: edit(del(2)),
+                                        abc: edit(1, del(2)),
                                     },
                                 },
                             },
@@ -709,7 +718,7 @@ describe('AuxStateHelpers', () => {
                             test: {
                                 masks: {
                                     shared: {
-                                        abc: edit(preserve(1), del(1)),
+                                        abc: edit(1, preserve(1), del(1)),
                                     },
                                 },
                             },
@@ -746,6 +755,7 @@ describe('AuxStateHelpers', () => {
                                 masks: {
                                     shared: {
                                         abc: edit(
+                                            1,
                                             preserve(1),
                                             del(1),
                                             insert('a'),
@@ -871,63 +881,63 @@ describe('AuxStateHelpers', () => {
             [
                 'should be able to insert at the end',
                 'abc',
-                edit(preserve(3), insert('def')),
+                edit(1, preserve(3), insert('def')),
                 'abcdef',
             ],
             [
                 'should be able to insert at the beginning',
                 'abc',
-                edit(insert('def')),
+                edit(1, insert('def')),
                 'defabc',
             ],
             [
                 'should be able to insert in the middle',
                 'abc',
-                edit(preserve(1), insert('def')),
+                edit(1, preserve(1), insert('def')),
                 'adefbc',
             ],
 
             [
                 'should replace an undefined value with the inserted value',
                 undefined,
-                edit(insert('def')),
+                edit(1, insert('def')),
                 'def',
             ],
             [
                 'should be able to insert multiple times into undefined',
                 undefined,
-                edit(insert('abc'), insert('def')),
+                edit(1, insert('abc'), insert('def')),
                 'abcdef',
             ],
             [
                 'should replace an null value with the inserted value',
                 null,
-                edit(insert('def')),
+                edit(1, insert('def')),
                 'def',
             ],
             [
                 'should be able to insert multiple times into null',
                 null,
-                edit(insert('abc'), insert('def')),
+                edit(1, insert('abc'), insert('def')),
                 'abcdef',
             ],
 
             [
                 'should be able to delete at the end',
                 'abc',
-                edit(preserve(2), del(1)),
+                edit(1, preserve(2), del(1)),
                 'ab',
             ],
             [
                 'should be able to delete at the beginning',
                 'abc',
-                edit(del(1)),
+                edit(1, del(1)),
                 'bc',
             ],
             [
                 'should be able to delete in the middle',
                 'abc',
-                edit(preserve(1), del(1)),
+                edit(1, preserve(1), del(1)),
                 'ac',
             ],
         ];

@@ -262,32 +262,34 @@ export function applyEvents(
                 let valueResult: AuxResult;
                 if (isTagEdit(val)) {
                     valueResult = auxResultIdentity();
-                    let index = 0;
-                    for (let op of val.operations) {
-                        if (op.type === 'preserve') {
-                            index += op.count;
-                        } else if (op.type === 'insert') {
-                            const insertResult = addAtom(
-                                currentVal.atom,
-                                insertOp(index, op.text)
-                            );
-                            valueResult = mergeAuxResults(
-                                valueResult,
-                                insertResult
-                            );
-                            index += op.text.length;
-                        } else if (op.type === 'delete') {
-                            const deleteResult = addAtom(
-                                currentVal.atom,
-                                deleteOp(index, index + op.count)
-                            );
-                            valueResult = mergeAuxResults(
-                                valueResult,
-                                deleteResult
-                            );
+                    for (let ops of val.operations) {
+                        let index = 0;
+                        for (let op of ops) {
+                            if (op.type === 'preserve') {
+                                index += op.count;
+                            } else if (op.type === 'insert') {
+                                const insertResult = addAtom(
+                                    currentVal.atom,
+                                    insertOp(index, op.text)
+                                );
+                                valueResult = mergeAuxResults(
+                                    valueResult,
+                                    insertResult
+                                );
+                                index += op.text.length;
+                            } else if (op.type === 'delete') {
+                                const deleteResult = addAtom(
+                                    currentVal.atom,
+                                    deleteOp(index, index + op.count)
+                                );
+                                valueResult = mergeAuxResults(
+                                    valueResult,
+                                    deleteResult
+                                );
 
-                            // Increment the index because deletions do not affect the value node character indexes.
-                            index += op.count;
+                                // Increment the index because deletions do not affect the value node character indexes.
+                                index += op.count;
+                            }
                         }
                     }
                 } else {

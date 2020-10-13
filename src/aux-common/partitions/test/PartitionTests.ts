@@ -636,7 +636,7 @@ export function testPartitionImplementation(
                 await partition.applyEvents([
                     botUpdated('test', {
                         tags: {
-                            abc: edit(insert('ghi')),
+                            abc: edit(1, insert('ghi')),
                         },
                     }),
                 ]);
@@ -658,7 +658,7 @@ export function testPartitionImplementation(
                     stateUpdatedEvent({
                         test: {
                             tags: {
-                                abc: edit(insert('ghi')),
+                                abc: edit(1, insert('ghi')),
                             },
                         },
                     }),
@@ -679,7 +679,7 @@ export function testPartitionImplementation(
                 await partition.applyEvents([
                     botUpdated('test', {
                         tags: {
-                            abc: edit(del(2)),
+                            abc: edit(1, del(2)),
                         },
                     }),
                 ]);
@@ -701,7 +701,7 @@ export function testPartitionImplementation(
                     stateUpdatedEvent({
                         test: {
                             tags: {
-                                abc: edit(del(2)),
+                                abc: edit(1, del(2)),
                             },
                         },
                     }),
@@ -894,7 +894,7 @@ export function testPartitionImplementation(
                         botUpdated('test', {
                             masks: {
                                 testSpace: {
-                                    abc: edit(insert('ghi')),
+                                    abc: edit(1, insert('ghi')),
                                 },
                             },
                         }),
@@ -917,7 +917,7 @@ export function testPartitionImplementation(
                             test: {
                                 masks: {
                                     testSpace: {
-                                        abc: edit(insert('ghi')),
+                                        abc: edit(1, insert('ghi')),
                                     },
                                 },
                             },
@@ -942,7 +942,7 @@ export function testPartitionImplementation(
                         botUpdated('test', {
                             masks: {
                                 testSpace: {
-                                    abc: edit(del(2)),
+                                    abc: edit(1, del(2)),
                                 },
                             },
                         }),
@@ -965,7 +965,7 @@ export function testPartitionImplementation(
                             test: {
                                 masks: {
                                     testSpace: {
-                                        abc: edit(del(2)),
+                                        abc: edit(1, del(2)),
                                     },
                                 },
                             },

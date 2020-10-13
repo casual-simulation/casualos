@@ -856,7 +856,7 @@ describe('AuxCausalTree2', () => {
                 ({ tree, updates, result } = applyEvents(tree, [
                     botUpdated('test', {
                         tags: {
-                            abc: edit(insert('ghi')),
+                            abc: edit(1, insert('ghi')),
                         },
                     }),
                 ]));
@@ -869,7 +869,7 @@ describe('AuxCausalTree2', () => {
                 expect(result.update).toEqual({
                     test: {
                         tags: {
-                            abc: edit(insert('ghi')),
+                            abc: edit(1, insert('ghi')),
                         },
                     },
                 });

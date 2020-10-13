@@ -287,7 +287,11 @@ function insertAtomAddedReducer(
                 tags: {
                     [tagName]: mergeEdits(
                         possibleEdit,
-                        edit(preserve(count), insert(value.text))
+                        edit(
+                            atom.id.timestamp,
+                            preserve(count),
+                            insert(value.text)
+                        )
                     ),
                 },
             },
@@ -296,7 +300,11 @@ function insertAtomAddedReducer(
         lodashMerge(state, {
             [id]: {
                 tags: {
-                    [tagName]: edit(preserve(count), insert(value.text)),
+                    [tagName]: edit(
+                        atom.id.timestamp,
+                        preserve(count),
+                        insert(value.text)
+                    ),
                 },
             },
         });
@@ -367,7 +375,11 @@ function deleteTextReducer(
                     tags: {
                         [tagName]: mergeEdits(
                             possibleEdit,
-                            edit(preserve(count), del(length))
+                            edit(
+                                atom.id.timestamp,
+                                preserve(count),
+                                del(length)
+                            )
                         ),
                     },
                 },
@@ -376,7 +388,11 @@ function deleteTextReducer(
             lodashMerge(state, {
                 [id]: {
                     tags: {
-                        [tagName]: edit(preserve(count), del(length)),
+                        [tagName]: edit(
+                            atom.id.timestamp,
+                            preserve(count),
+                            del(length)
+                        ),
                     },
                 },
             });

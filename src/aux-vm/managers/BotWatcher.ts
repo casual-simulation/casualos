@@ -400,7 +400,7 @@ export interface BotTagEdit {
     /**
      * The edit operations.
      */
-    operations: TagEditOp[];
+    operations: TagEditOp[][];
 }
 
 /**

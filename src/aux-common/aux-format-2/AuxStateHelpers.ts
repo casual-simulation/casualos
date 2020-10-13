@@ -19,9 +19,10 @@ export const TAG_EDIT_NAME = '\u0011tag_edit';
 /**
  * Creates a tag edit using the given list of operations.
  */
-export function edit(...operations: TagEditOp[]): TagEdit {
+export function edit(timestamp: number, ...operations: TagEditOp[]): TagEdit {
     return {
         [TAG_EDIT_NAME]: true,
+        timestamp,
         operations: [operations],
     };
 }
@@ -29,9 +30,13 @@ export function edit(...operations: TagEditOp[]): TagEdit {
 /**
  * Creates a tag edit using the given list of operations.
  */
-export function edits(...operations: TagEditOp[][]): TagEdit {
+export function edits(
+    timestamp: number,
+    ...operations: TagEditOp[][]
+): TagEdit {
     return {
         [TAG_EDIT_NAME]: true,
+        timestamp,
         operations,
     };
 }
@@ -42,7 +47,11 @@ export function edits(...operations: TagEditOp[][]): TagEdit {
  * @param second The second edit.
  */
 export function mergeEdits(first: TagEdit, second: TagEdit): TagEdit {
-    return edits(...first.operations, ...second.operations);
+    return edits(
+        Math.max(first.timestamp, second.timestamp),
+        ...first.operations,
+        ...second.operations
+    );
 }
 
 /**
@@ -91,6 +100,15 @@ export function isTagEdit(value: any): value is TagEdit {
  */
 export interface TagEdit {
     [TAG_EDIT_NAME]: boolean;
+
+    /**
+     * The timestamp that the edit should be made at.
+     */
+    timestamp: number;
+
+    /**
+     * The operations that are part of the edit.
+     */
     operations: TagEditOp[][];
 }
 
