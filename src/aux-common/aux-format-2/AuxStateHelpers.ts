@@ -22,8 +22,27 @@ export const TAG_EDIT_NAME = '\u0011tag_edit';
 export function edit(...operations: TagEditOp[]): TagEdit {
     return {
         [TAG_EDIT_NAME]: true,
+        operations: [operations],
+    };
+}
+
+/**
+ * Creates a tag edit using the given list of operations.
+ */
+export function edits(...operations: TagEditOp[][]): TagEdit {
+    return {
+        [TAG_EDIT_NAME]: true,
         operations,
     };
+}
+
+/**
+ * Creates a new tag edit using the operations from both of the given edits.
+ * @param first The first edit.
+ * @param second The second edit.
+ */
+export function mergeEdits(first: TagEdit, second: TagEdit): TagEdit {
+    return edits(...first.operations, ...second.operations);
 }
 
 /**
@@ -72,7 +91,7 @@ export function isTagEdit(value: any): value is TagEdit {
  */
 export interface TagEdit {
     [TAG_EDIT_NAME]: boolean;
-    operations: TagEditOp[];
+    operations: TagEditOp[][];
 }
 
 export type TagEditOp = TagPreserveOp | TagInsertOp | TagDeleteOp;
@@ -371,15 +390,17 @@ export function applyEdit(value: any, edit: TagEdit): any {
         value = '';
     }
     if (typeof value === 'string') {
-        let index = 0;
-        for (let op of edit.operations) {
-            if (op.type === 'preserve') {
-                index += op.count;
-            } else if (op.type === 'insert') {
-                value = splice(value, index, 0, op.text);
-                index += op.text.length;
-            } else {
-                value = splice(value, index, op.count, '');
+        for (let ops of edit.operations) {
+            let index = 0;
+            for (let op of ops) {
+                if (op.type === 'preserve') {
+                    index += op.count;
+                } else if (op.type === 'insert') {
+                    value = splice(value, index, 0, op.text);
+                    index += op.text.length;
+                } else {
+                    value = splice(value, index, op.count, '');
+                }
             }
         }
     }

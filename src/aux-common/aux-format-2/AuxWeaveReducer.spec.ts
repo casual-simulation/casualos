@@ -26,7 +26,7 @@ import {
 } from '@casual-simulation/causal-trees/core2';
 import reduce, { CERT_ID_NAMESPACE, CERTIFIED_SPACE } from './AuxWeaveReducer';
 import { BotsState } from '../bots/Bot';
-import { apply, del, edit, insert, preserve } from './AuxStateHelpers';
+import { apply, del, edit, edits, insert, preserve } from './AuxStateHelpers';
 import { isBot } from '../bots';
 import uuidv5 from 'uuid/v5';
 import { merge } from 'lodash';
@@ -1375,6 +1375,50 @@ describe('AuxWeaveReducer', () => {
                     });
                 });
 
+                it('should handle inserts after a delete', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const delete1 = atom(
+                        atomId('a', 4, 1),
+                        value1,
+                        deleteOp(1, 2)
+                    );
+                    const insert1 = atom(
+                        atomId('a', 5),
+                        value1,
+                        insertOp(1, '111111')
+                    );
+
+                    state = add(bot1, tag1, value1, delete1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert1),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            tags: {
+                                abc: edit(preserve(1), insert('111111')),
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: 'd111111f',
+                            },
+                        },
+                    });
+                });
+
                 it('should handle deletes on inserts', () => {
                     const bot1 = atom(atomId('a', 1), null, bot('test'));
                     const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
@@ -1660,7 +1704,7 @@ describe('AuxWeaveReducer', () => {
                     const insert2 = atom(
                         atomId('a', 6),
                         insert1,
-                        insertOp(2, '222')
+                        insertOp(2, '22222')
                     );
 
                     state = add(bot1, tag1, value1, insert1, delete1);
@@ -1677,7 +1721,7 @@ describe('AuxWeaveReducer', () => {
                     expect(update).toEqual({
                         ['test']: {
                             tags: {
-                                abc: edit(preserve(2), insert('222')),
+                                abc: edit(preserve(2), insert('22222')),
                             },
                         },
                     });
@@ -1686,7 +1730,7 @@ describe('AuxWeaveReducer', () => {
                         ['test']: {
                             id: 'test',
                             tags: {
-                                abc: 'd1222ef',
+                                abc: 'd122222ef',
                             },
                         },
                     });
@@ -1736,6 +1780,168 @@ describe('AuxWeaveReducer', () => {
                             id: 'test',
                             tags: {
                                 abc: 'd2221ef',
+                            },
+                        },
+                    });
+                });
+
+                it('should handle multiple inserts in the same update', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '111')
+                    );
+                    const insert2 = atom(
+                        atomId('a', 5),
+                        value1,
+                        insertOp(1, '222')
+                    );
+
+                    state = add(bot1, tag1, value1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert1),
+                        undefined,
+                        space
+                    );
+
+                    let update2 = reduce(
+                        weave,
+                        weave.insert(insert2),
+                        update,
+                        space
+                    );
+
+                    state = apply(state, update2);
+
+                    expect(update2).toEqual({
+                        ['test']: {
+                            tags: {
+                                abc: edits(
+                                    [preserve(1), insert('111')],
+                                    [preserve(4), insert('222')]
+                                ),
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: 'd111222ef',
+                            },
+                        },
+                    });
+                });
+
+                it('should handle multiple deletes in the same update', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const delete1 = atom(
+                        atomId('a', 4, 1),
+                        value1,
+                        deleteOp(1, 2)
+                    );
+                    const delete2 = atom(
+                        atomId('a', 5, 1),
+                        value1,
+                        deleteOp(2, 3)
+                    );
+
+                    state = add(bot1, tag1, value1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(delete1),
+                        undefined,
+                        space
+                    );
+
+                    let update2 = reduce(
+                        weave,
+                        weave.insert(delete2),
+                        update,
+                        space
+                    );
+
+                    state = apply(state, update2);
+
+                    expect(update2).toEqual({
+                        ['test']: {
+                            tags: {
+                                abc: edits(
+                                    [preserve(1), del(1)],
+                                    [preserve(1), del(1)]
+                                ),
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: 'd',
+                            },
+                        },
+                    });
+                });
+
+                it('should handle inserts and deletes in the same update', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const delete1 = atom(
+                        atomId('a', 4, 1),
+                        value1,
+                        deleteOp(1, 2)
+                    );
+                    const insert1 = atom(
+                        atomId('a', 5),
+                        value1,
+                        insertOp(1, '111')
+                    );
+
+                    state = add(bot1, tag1, value1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(delete1),
+                        undefined,
+                        space
+                    );
+
+                    let update2 = reduce(
+                        weave,
+                        weave.insert(insert1),
+                        update,
+                        space
+                    );
+
+                    state = apply(state, update2);
+
+                    expect(update2).toEqual({
+                        ['test']: {
+                            tags: {
+                                abc: edits(
+                                    [preserve(1), del(1)],
+                                    [preserve(1), insert('111')]
+                                ),
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: 'd111f',
                             },
                         },
                     });

@@ -36,7 +36,14 @@ import { hasValue, createBot } from '../bots/BotCalculations';
 import lodashMerge from 'lodash/merge';
 import { findBotNode, findBotNodes } from './AuxWeaveHelpers';
 import reverse from 'lodash/reverse';
-import { del, edit, insert, preserve } from './AuxStateHelpers';
+import {
+    del,
+    edit,
+    insert,
+    isTagEdit,
+    mergeEdits,
+    preserve,
+} from './AuxStateHelpers';
 
 export const CERT_ID_NAMESPACE = 'a1307e2b-8d80-4945-9792-2cd483c45e24';
 export const CERTIFIED_SPACE = 'certified';
@@ -258,16 +265,12 @@ function insertAtomAddedReducer(
     const tagName = tag.atom.value.name;
     const id = bot.atom.value.id;
 
-    // "abc"
-    // " 1"
-    //  "2"
-
     // The number of characters to preserve
     // before the insert.
     let count = 0;
     for (let node of values) {
         if (node.atom.value.type === AuxOpType.Insert) {
-            const { offset } = calculateSiblingOffset(
+            const { offset, overlap } = calculateSiblingOffset(
                 weave,
                 node,
                 node.atom.value.index,
@@ -277,13 +280,27 @@ function insertAtomAddedReducer(
         }
     }
 
-    lodashMerge(state, {
-        [id]: {
-            tags: {
-                [tagName]: edit(preserve(count), insert(value.text)),
+    const possibleEdit = state?.[id]?.tags?.[tagName];
+    if (isTagEdit(possibleEdit)) {
+        lodashMerge(state, {
+            [id]: {
+                tags: {
+                    [tagName]: mergeEdits(
+                        possibleEdit,
+                        edit(preserve(count), insert(value.text))
+                    ),
+                },
             },
-        },
-    });
+        });
+    } else {
+        lodashMerge(state, {
+            [id]: {
+                tags: {
+                    [tagName]: edit(preserve(count), insert(value.text)),
+                },
+            },
+        });
+    }
 
     return state;
 }
@@ -337,19 +354,33 @@ function deleteTextReducer(
                 node.atom.value.start,
                 node.atom.value.end - node.atom.value.start
             );
-            count += node.atom.value.start + offset;
+            count = Math.max(0, count + node.atom.value.start + offset);
             length -= overlap;
         }
     }
 
     if (length > 0) {
-        lodashMerge(state, {
-            [id]: {
-                tags: {
-                    [tagName]: edit(preserve(count), del(length)),
+        const possibleEdit = state?.[id]?.tags?.[tagName];
+        if (isTagEdit(possibleEdit)) {
+            lodashMerge(state, {
+                [id]: {
+                    tags: {
+                        [tagName]: mergeEdits(
+                            possibleEdit,
+                            edit(preserve(count), del(length))
+                        ),
+                    },
                 },
-            },
-        });
+            });
+        } else {
+            lodashMerge(state, {
+                [id]: {
+                    tags: {
+                        [tagName]: edit(preserve(count), del(length)),
+                    },
+                },
+            });
+        }
     }
 
     return state;
@@ -393,7 +424,29 @@ function calculateSiblingOffset(
                 const deleteEnd = n.atom.value.end;
                 const deleteCount = deleteEnd - deleteStart;
                 const shrink = -deleteCount;
-                const endOffset = Math.abs(length - deleteCount);
+                let startOffset = 0;
+
+                // If the current atom is an insert atom and
+                // it starts at the same spot that the delete does,
+                // then we need to make sure that startOffset is set to 1.
+                // This is because while deletes can overlap, inserts cannot overlap deletes.
+                // As a result, any insert that shares a starting point with a delete
+                // needs to be ordered as occuring before or after the delete.
+                // Inserts that are treated as occuring before the delete will not be affected
+                // by the delete while inserts that are treated as happening after the delete will be affected.
+                if (node.atom.value.type === AuxOpType.Insert) {
+                    startOffset = offset - n.atom.value.start;
+
+                    if (startOffset === 0) {
+                        startOffset = deleteCount;
+                    }
+                }
+
+                // abcdefg
+                //  |--|
+                //   123
+
+                const endOffset = 0; //Math.abs(length - deleteCount);
 
                 const nodeStart = offset;
                 const nodeEnd = offset + length;
@@ -406,11 +459,7 @@ function calculateSiblingOffset(
                 );
 
                 overlap += totalOverlap;
-                count += endOffset + shrink;
-                // if (node.atom.value.type === AuxOpType.Delete) {
-                //     count -= totalOverlap;
-                // } else if(node.atom.value.type === AuxOpType.Insert) {
-                // }
+                count += startOffset + shrink;
             }
         }
     }
