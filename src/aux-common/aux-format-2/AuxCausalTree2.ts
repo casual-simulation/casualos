@@ -261,6 +261,7 @@ export function applyEvents(
             if (!currentVal || val !== currentVal.atom.value.value) {
                 let valueResult: AuxResult;
                 if (isTagEdit(val)) {
+                    let editTime = val.timestamp;
                     valueResult = auxResultIdentity();
                     for (let ops of val.operations) {
                         let index = 0;
@@ -294,8 +295,8 @@ export function applyEvents(
                     }
                 } else {
                     valueResult = addAtom(node.atom, value(val));
-                    result = mergeAuxResults(result, valueResult);
                 }
+                result = mergeAuxResults(result, valueResult);
                 const newAtom = addedAtom(valueResult.results[0]);
                 if (newAtom) {
                     const weaveResult = tree.weave.removeSiblingsBefore(
