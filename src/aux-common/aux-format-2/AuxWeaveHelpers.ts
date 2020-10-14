@@ -131,6 +131,12 @@ export function findValueNodeByValue(
     return null;
 }
 
+export function findEditPosition(
+    value: WeaveNode<AuxOp>,
+    timestamp: number,
+    index: number
+): any {}
+
 // /**
 //  * Adds the given atom to the weave.
 //  * Returns the new site status, weave result, atom that was added, and status update.

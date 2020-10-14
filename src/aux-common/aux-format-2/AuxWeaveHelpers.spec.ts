@@ -6,8 +6,13 @@ import {
     newSite,
     createAtom,
 } from '@casual-simulation/causal-trees/core2';
-import { AuxOp, bot, tag, value, deleteOp } from './AuxOpTypes';
-import { findTagNode, findValueNode, findBotNode } from './AuxWeaveHelpers';
+import { AuxOp, bot, tag, value, deleteOp, insertOp } from './AuxOpTypes';
+import {
+    findTagNode,
+    findValueNode,
+    findBotNode,
+    findEditPosition,
+} from './AuxWeaveHelpers';
 import { createBot } from '../bots';
 
 describe('AuxWeaveHelpers', () => {
@@ -124,6 +129,52 @@ describe('AuxWeaveHelpers', () => {
             const result = findValueNode(tagNode);
 
             expect(result).toBe(null);
+        });
+    });
+
+    describe('findEditPosition()', () => {
+        let weave: Weave<AuxOp>;
+
+        beforeEach(() => {
+            weave = new Weave();
+        });
+
+        const b1 = atom(atomId('a', 1), null, bot('test'));
+        const t1 = atom(atomId('a', 2), b1, tag('abc'));
+        const v1 = atom(atomId('a', 3), t1, value('111'));
+        const i1 = atom(atomId('a', 4), v1, insertOp(0, '222'));
+        const i2 = atom(atomId('a', 5), v1, insertOp(2, '333'));
+        // value: 22211333
+
+        const cases = [
+            // [timestamp, index, expectedAtom, expectedIndex]
+            [3, 0, v1, 0] as const,
+            [3, 1, v1, 1] as const,
+            [4, 0, i1, 0] as const,
+            [4, 1, i1, 1] as const,
+            [4, 3, i1, 3] as const,
+            [4, 4, v1, 1] as const,
+            [5, 0, i1, 0] as const,
+            [5, 1, i1, 1] as const,
+            [5, 3, i1, 3] as const,
+            [5, 5, v1, 3] as const,
+            [5, 6, i2, 1] as const,
+            [5, 7, i2, 2] as const,
+        ];
+        it('should find the insert atom that the given index is pointing to', () => {
+            weave.insert(b1);
+            weave.insert(t1);
+            weave.insert(v1);
+            weave.insert(i1);
+            weave.insert(i2);
+
+            const valueNode = weave.getNode(v1.id);
+
+            for (let [timestamp, index, expectedAtom, expectedIndex] of cases) {
+                const result = findEditPosition(valueNode, timestamp, index);
+                expect(result.atom).toBe(expectedAtom);
+                expect(result.index).toBe(expectedIndex);
+            }
         });
     });
 });

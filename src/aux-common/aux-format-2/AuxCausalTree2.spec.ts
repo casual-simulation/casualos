@@ -887,6 +887,92 @@ describe('AuxCausalTree2', () => {
                 atoms = tree.weave.getAtoms();
                 expect(atoms).toEqual([bot1, tag1, val1, insert1]);
             });
+
+            it('should support inserting text with a specific timestamp', () => {
+                const bot1A = atom(atomId('b', 100), null, bot('test2'));
+                const tag1A = atom(atomId('b', 101), bot1A, tag('tag1'));
+                const val1A = atom(atomId('b', 102), tag1A, value('val1A'));
+
+                const insert1 = atom(
+                    atomId('b', 103),
+                    val1A,
+                    insertOp(1, '!!!')
+                );
+                // After: v!!!al1A
+
+                const insert2 = atom(
+                    atomId('b', 104),
+                    insert1,
+                    insertOp(1, '@@@')
+                );
+                // After: v!@@@!!al1A
+
+                const insert3 = atom(
+                    atomId('b', 105),
+                    val1A,
+                    insertOp(0, '###')
+                );
+                // After: ###v!@@@!!a1A
+
+                // TODO: Improve applyAtoms to support inserts and deletes
+                // in new bots.
+                ({ tree } = applyAtoms(tree, [bot1A, tag1A, val1A]));
+
+                ({ tree } = applyAtoms(tree, [insert1, insert2, insert3]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                    test2: createBot('test2', {
+                        tag1: '###v!@@@!!al1A',
+                    }),
+                });
+
+                // Insert "ghi" at index 3 when the text looks like "v!@@@!!al1A".
+                // Should result with an edit that makes "###v!@ghi@@!!al1A"
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botUpdated('test2', {
+                        tags: {
+                            tag1: edit(104, preserve(3), insert('ghi')),
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                    test2: createBot('test2', {
+                        tag1: '###v!@ghi@@!!al1A',
+                    }),
+                });
+                expect(result.update).toEqual({
+                    test2: {
+                        tags: {
+                            tag1: edit(106, preserve(6), insert('ghi')),
+                        },
+                    },
+                });
+
+                const insert4 = atom(
+                    atomId('a', 106),
+                    insert2,
+                    insertOp(1, 'ghi')
+                );
+                const botAtoms = [
+                    ...iterateCausalGroup(tree.weave.getNode(bot1A.id)),
+                ];
+
+                expect(botAtoms).toEqual([
+                    tag1A,
+                    val1A,
+                    insert4,
+                    insert3,
+                    insert2,
+                    insert1,
+                ]);
+            });
         });
 
         describe('certificates', () => {
