@@ -99,10 +99,14 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
         // Update the offset for the display container
         // so that it rotates around the specified
         // point
+        const anchorFactor = this.bot3D.isOnGrid ? 1 : 2;
         this.bot3D.display.position.set(
-            anchorPointOffset.x,
-            anchorPointOffset.z,
-            anchorPointOffset.y
+            anchorPointOffset.x * anchorFactor,
+            anchorPointOffset.z * anchorFactor,
+            anchorPointOffset.y * anchorFactor
+        );
+        this.bot3D.transformContainer.position.copy(
+            this.bot3D.display.position
         );
 
         const userDimension = this.bot3D.dimension;
@@ -140,7 +144,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                         this.bot3D.dimension,
                         this._lastPos
                     );
-                    ids.push(...objectsAtLastPosition.map(b => b.id));
+                    ids.push(...objectsAtLastPosition.map((b) => b.id));
                 }
                 if (currentGridPos) {
                     const objectsAtCurrentPosition = objectsAtDimensionGridPosition(
@@ -148,7 +152,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                         this.bot3D.dimension,
                         currentGridPos
                     );
-                    ids.push(...objectsAtCurrentPosition.map(b => b.id));
+                    ids.push(...objectsAtCurrentPosition.map((b) => b.id));
                 }
 
                 this.bot3D.dimensionGroup.simulation3D.ensureUpdate(ids);
@@ -186,7 +190,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 this._lastPos
             );
             this.bot3D.dimensionGroup.simulation3D.ensureUpdate(
-                objectsAtPosition.map(f => f.id)
+                objectsAtPosition.map((f) => f.id)
             );
         }
     }
@@ -205,9 +209,9 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
     ): boolean {
         return (
             !this._lastPos ||
-            (currentGridPos.x !== this._lastPos.x ||
-                currentGridPos.y !== this._lastPos.y ||
-                currentGridPos.z !== this._lastPos.z) ||
+            currentGridPos.x !== this._lastPos.x ||
+            currentGridPos.y !== this._lastPos.y ||
+            currentGridPos.z !== this._lastPos.z ||
             this._lastSortOrder !== currentSortOrder
         );
     }
@@ -407,7 +411,7 @@ function getEasing(easing: Easing): any {
 
 function resolveEaseType(
     mode: EaseMode,
-    val: (typeof TWEEN.Easing.Circular) | typeof TWEEN.Easing.Linear
+    val: typeof TWEEN.Easing.Circular | typeof TWEEN.Easing.Linear
 ): any {
     if ('None' in val) {
         return val.None;
@@ -445,7 +449,7 @@ export function calculateObjectPositionInGrid(
 
     let totalScales = 0;
 
-    if (!isBotStackable(context, bot.bot)) {
+    if (!bot.isOnGrid || !isBotStackable(context, bot.bot)) {
         totalScales = 0;
     } else {
         const objectsAtPosition = objectsAtDimensionGridPosition(
