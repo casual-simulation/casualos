@@ -177,7 +177,7 @@ describe('AuxWeaveHelpers', () => {
 
             for (let [timestamp, index, expectedAtom, expectedIndex] of cases) {
                 const result = findEditPosition(valueNode, timestamp, index);
-                expect(result.atom).toBe(expectedAtom);
+                expect(result.node.atom).toBe(expectedAtom);
                 expect(result.index).toBe(expectedIndex);
             }
         });
@@ -193,7 +193,7 @@ describe('AuxWeaveHelpers', () => {
         it('should treat value nodes as a segment', () => {
             const b1 = atom(atomId('a', 1), null, bot('test'));
             const t1 = atom(atomId('a', 2), b1, tag('abc'));
-            
+
             const v1 = atom(atomId('a', 3), t1, value('111'));
 
             insert(b1, t1, v1);

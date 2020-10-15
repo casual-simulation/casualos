@@ -138,11 +138,46 @@ export function findValueNodeByValue(
     return null;
 }
 
+/**
+ * Finds the node and index at which the given edit should happen at.
+ * Useful for applying edits to a causal tree.
+ * @param value The value node.
+ * @param timestamp The last timestamp that was available when the edit was made.
+ * @param index The index at which the edit should happen.
+ */
 export function findEditPosition(
     value: WeaveNode<AuxOp>,
     timestamp: number,
     index: number
-): any {}
+): EditPosition {
+    if (value.atom.value.type !== AuxOpType.Value) {
+        throw new Error(
+            'Invalid Argument. The weave node must be a value node.'
+        );
+    }
+    return null;
+
+    // let val = value.atom.value.value as any;
+    // const children = sortBy([...iterateChildren(value)], n => {
+    //     if (n.atom.value.type === AuxOpType.Insert) {
+    //         return n.atom.value.index;
+    //     } else if(n.atom.value.type === AuxOpType.Delete) {
+    //         return n.atom.value.start;
+    //     }
+    // });
+    // for (let node of iterateCausalGroup(value)) {
+    //     if (node.atom.id.timestamp > timestamp) {
+    //         continue;
+    //     }
+
+    //     if (node.atom.value.type === AuxOpType.Insert) {
+    //         val = splice(val, node.atom.value.index, 0, node.atom.value.text);
+    //     } else if(node.atom.value.type === AuxOpType.Delete) {
+    //         val = splice(val, node.atom.value.start, node.atom.value.)
+    //     }
+    // }
+}
+
 /**
  * Calculates the list of ordered edits for the given value node.
  * This iterates each insert op and delete op and returns a list of text segments that have been derived from the value.
