@@ -1313,19 +1313,19 @@ describe('AuxWeaveReducer', () => {
 
                     state = apply(state, update);
 
-                    expect(update).toEqual({
-                        ['test']: {
-                            tags: {
-                                abc: edit(5, preserve(4), insert('222')),
-                            },
-                        },
-                    });
-
                     expect(state).toEqual({
                         ['test']: {
                             id: 'test',
                             tags: {
-                                abc: 'd111222ef',
+                                abc: 'd222111ef',
+                            },
+                        },
+                    });
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            tags: {
+                                abc: edit(5, preserve(1), insert('222')),
                             },
                         },
                     });
@@ -1357,19 +1357,19 @@ describe('AuxWeaveReducer', () => {
 
                     state = apply(state, update);
 
-                    expect(update).toEqual({
-                        ['test']: {
-                            tags: {
-                                abc: edit(4, preserve(1), insert('111')),
-                            },
-                        },
-                    });
-
                     expect(state).toEqual({
                         ['test']: {
                             id: 'test',
                             tags: {
-                                abc: 'd111222ef',
+                                abc: 'd222111ef',
+                            },
+                        },
+                    });
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            tags: {
+                                abc: edit(4, preserve(4), insert('111')),
                             },
                         },
                     });
@@ -1414,6 +1414,54 @@ describe('AuxWeaveReducer', () => {
                             id: 'test',
                             tags: {
                                 abc: 'd111111f',
+                            },
+                        },
+                    });
+                });
+
+                it('should handle inserts inside a delete', () => {
+                    const b1 = atom(atomId('a', 1), null, bot('test'));
+                    const t1 = atom(atomId('a', 2), b1, tag('abc'));
+
+                    const v1 = atom(atomId('a', 3), t1, value('111'));
+                    // 111
+                    const d0 = atom(atomId('a', 4, 1), v1, deleteOp(1, 2));
+                    // 11
+                    const i1 = atom(atomId('a', 5), v1, insertOp(0, '222'));
+                    // 22211
+                    const d1 = atom(atomId('a', 6, 1), i1, deleteOp(2, 3));
+                    // 2211
+                    const i2 = atom(atomId('a', 7), v1, insertOp(2, '333'));
+                    // 2213331 - insert is in the middle of v1 because it should apply to "111" and not "11"
+                    const i3 = atom(atomId('a', 9), i1, insertOp(2, '444'));
+                    // 2244413331
+                    const d3 = atom(atomId('a', 10, 1), i3, deleteOp(2, 3));
+                    // 224413331
+
+                    state = add(b1, t1, v1, d0, i1, d1, i3, d3);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(i2),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: '224413331',
+                            },
+                        },
+                    });
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            tags: {
+                                abc: edit(7, preserve(5), insert('333')),
                             },
                         },
                     });
@@ -1736,6 +1784,55 @@ describe('AuxWeaveReducer', () => {
                     });
                 });
 
+                it('should handle inserts that share an ending point with a delete', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '111')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 5, 1),
+                        insert1,
+                        deleteOp(1, 2)
+                    );
+                    const insert2 = atom(
+                        atomId('a', 6),
+                        insert1,
+                        insertOp(2, '22222')
+                    );
+
+                    state = add(bot1, tag1, value1, insert1, delete1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert2),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: 'd1222221ef',
+                            },
+                        },
+                    });
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            tags: {
+                                abc: edit(6, preserve(2), insert('22222')),
+                            },
+                        },
+                    });
+                });
+
                 it('should handle inserts before deletes', () => {
                     const bot1 = atom(atomId('a', 1), null, bot('test'));
                     const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
@@ -1785,6 +1882,55 @@ describe('AuxWeaveReducer', () => {
                     });
                 });
 
+                it('should handle inserts when sibling inserts have deletions', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(0, '111')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 5, 1),
+                        insert1,
+                        deleteOp(1, 3)
+                    );
+                    const insert2 = atom(
+                        atomId('a', 6),
+                        value1,
+                        insertOp(1, '222')
+                    );
+
+                    state = add(bot1, tag1, value1, insert1, delete1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert2),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: '1d222ef',
+                            },
+                        },
+                    });
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            tags: {
+                                abc: edit(6, preserve(2), insert('222')),
+                            },
+                        },
+                    });
+                });
+
                 it('should handle multiple inserts in the same update', () => {
                     const bot1 = atom(atomId('a', 1), null, bot('test'));
                     const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
@@ -1818,23 +1964,23 @@ describe('AuxWeaveReducer', () => {
 
                     state = apply(state, update2);
 
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: 'd222111ef',
+                            },
+                        },
+                    });
+
                     expect(update2).toEqual({
                         ['test']: {
                             tags: {
                                 abc: edits(
                                     5,
                                     [preserve(1), insert('111')],
-                                    [preserve(4), insert('222')]
+                                    [preserve(1), insert('222')]
                                 ),
-                            },
-                        },
-                    });
-
-                    expect(state).toEqual({
-                        ['test']: {
-                            id: 'test',
-                            tags: {
-                                abc: 'd111222ef',
                             },
                         },
                     });

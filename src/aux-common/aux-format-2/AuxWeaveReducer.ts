@@ -34,7 +34,11 @@ import { Bot, PartialBotsState, BotSpace } from '../bots/Bot';
 import { merge } from '../utils';
 import { hasValue, createBot } from '../bots/BotCalculations';
 import lodashMerge from 'lodash/merge';
-import { findBotNode, findBotNodes } from './AuxWeaveHelpers';
+import {
+    calculateOrderedEdits,
+    findBotNode,
+    findBotNodes,
+} from './AuxWeaveHelpers';
 import reverse from 'lodash/reverse';
 import {
     del,
@@ -236,11 +240,11 @@ function valueAtomAddedReducer(
 function insertAtomAddedReducer(
     weave: Weave<AuxOp>,
     atom: Atom<AuxOp>,
-    value: InsertOp,
+    op: InsertOp,
     state: PartialBotsState,
     space: string
 ) {
-    const { tag, bot, values } = getTextEditNodes(weave, atom);
+    const { tag, bot, value } = getTextEditNodes(weave, atom);
 
     if (!tag) {
         return state;
@@ -265,20 +269,31 @@ function insertAtomAddedReducer(
     const tagName = tag.atom.value.name;
     const id = bot.atom.value.id;
 
+    const nodes = [value, ...iterateCausalGroup(value)];
+    const edits = calculateOrderedEdits(nodes);
+
+    let count = 0;
+    for (let edit of edits) {
+        if (edit.node.atom === atom) {
+            break;
+        }
+        count += edit.text.length;
+    }
+
     // The number of characters to preserve
     // before the insert.
-    let count = 0;
-    for (let node of values) {
-        if (node.atom.value.type === AuxOpType.Insert) {
-            const { offset, overlap } = calculateSiblingOffset(
-                weave,
-                node,
-                node.atom.value.index,
-                node.atom.value.text.length
-            );
-            count += node.atom.value.index + offset;
-        }
-    }
+    // let count = 0;
+    // for (let node of values) {
+    //     if (node.atom.value.type === AuxOpType.Insert) {
+    //         const { offset, overlap } = calculateSiblingOffset(
+    //             weave,
+    //             node,
+    //             node.atom.value.index,
+    //             node.atom.value.text.length
+    //         );
+    //         count += node.atom.value.index + offset;
+    //     }
+    // }
 
     const possibleEdit = state?.[id]?.tags?.[tagName];
     if (isTagEdit(possibleEdit)) {
@@ -290,7 +305,7 @@ function insertAtomAddedReducer(
                         edit(
                             atom.id.timestamp,
                             preserve(count),
-                            insert(value.text)
+                            insert(op.text)
                         )
                     ),
                 },
@@ -303,7 +318,7 @@ function insertAtomAddedReducer(
                     [tagName]: edit(
                         atom.id.timestamp,
                         preserve(count),
-                        insert(value.text)
+                        insert(op.text)
                     ),
                 },
             },
@@ -440,6 +455,10 @@ function calculateSiblingOffset(
                 const deleteEnd = n.atom.value.end;
                 const deleteCount = deleteEnd - deleteStart;
                 const shrink = -deleteCount;
+
+                const nodeStart = offset;
+                const nodeEnd = offset + length;
+
                 let startOffset = 0;
 
                 // If the current atom is an insert atom and
@@ -450,7 +469,10 @@ function calculateSiblingOffset(
                 // needs to be ordered as occuring before or after the delete.
                 // Inserts that are treated as occuring before the delete will not be affected
                 // by the delete while inserts that are treated as happening after the delete will be affected.
-                if (node.atom.value.type === AuxOpType.Insert) {
+                if (
+                    node.atom.value.type === AuxOpType.Insert &&
+                    nodeStart <= deleteEnd
+                ) {
                     startOffset = offset - n.atom.value.start;
 
                     if (startOffset === 0) {
@@ -463,9 +485,6 @@ function calculateSiblingOffset(
                 //   123
 
                 const endOffset = 0; //Math.abs(length - deleteCount);
-
-                const nodeStart = offset;
-                const nodeEnd = offset + length;
 
                 const startOverlap = Math.max(0, deleteStart - nodeStart);
                 const endOverlap = Math.max(0, nodeEnd - deleteEnd);
@@ -489,6 +508,7 @@ function calculateSiblingOffset(
  */
 function getTextEditNodes(weave: Weave<AuxOp>, atom: Atom<AuxOp>) {
     const nodes = weave.referenceChain(atom.id);
+    const value = nodes[nodes.length - 3];
     const tag = nodes[nodes.length - 2];
     const bot = nodes[nodes.length - 1];
     const values = nodes.slice(0, nodes.length - 2);
@@ -496,6 +516,7 @@ function getTextEditNodes(weave: Weave<AuxOp>, atom: Atom<AuxOp>) {
     return {
         tag,
         bot,
+        value,
         values,
     };
 }

@@ -6,6 +6,7 @@ import {
     BotOp,
     CertificateOp,
     TagMaskOp,
+    InsertOp,
 } from './AuxOpTypes';
 import {
     Weave,
@@ -15,9 +16,15 @@ import {
     SiteStatus,
     addAtom,
     first,
+    iterateChildren,
+    idEquals,
+    AtomId,
+    atom,
 } from '@casual-simulation/causal-trees/core2';
 import reducer from './AuxWeaveReducer';
 import isEqual from 'lodash/isEqual';
+import { splice } from '../utils';
+import { sortBy } from 'lodash';
 
 /**
  * Finds the first weave node that defines a bot with the given ID.
@@ -136,6 +143,117 @@ export function findEditPosition(
     timestamp: number,
     index: number
 ): any {}
+/**
+ * Calculates the list of ordered edits for the given value node.
+ * This iterates each insert op and delete op and returns a list of text segments that have been derived from the value.
+ * @param nodes The list of nodes that the edits should be calculated from.
+ */
+export function calculateOrderedEdits(
+    nodes: WeaveNode<AuxOp>[]
+): TextSegment[] {
+    let segments = [] as TextSegmentInfo[];
+
+    for (let node of nodes) {
+        const atomValue = node.atom.value;
+        if (atomValue.type === AuxOpType.Value) {
+            let segment: TextSegmentInfo = {
+                text: atomValue.value,
+                node: node as WeaveNode<ValueOp>,
+                totalLength: atomValue.value.length,
+            };
+            segments.push(segment);
+        } else if (atomValue.type === AuxOpType.Insert) {
+            const segment: TextSegmentInfo = {
+                text: atomValue.text,
+                node: node as WeaveNode<InsertOp>,
+                totalLength: atomValue.text.length,
+            };
+            let count = 0;
+            let lastCause = 0;
+            let added = false;
+            for (let i = 0; i < segments.length; i++) {
+                const lastSegment = segments[i];
+                if (!idEquals(lastSegment.node.atom.id, node.atom.cause)) {
+                    continue;
+                }
+                lastCause = i;
+                if (atomValue.index <= 0) {
+                    segments.splice(i, 0, segment);
+                    added = true;
+                    break;
+                } else if (atomValue.index - count < +lastSegment.text.length) {
+                    const first: TextSegmentInfo = {
+                        text: lastSegment.text.slice(
+                            0,
+                            atomValue.index - count
+                        ),
+                        node: lastSegment.node,
+                        totalLength: lastSegment.totalLength,
+                    };
+                    const second: TextSegmentInfo = {
+                        text: lastSegment.text.slice(atomValue.index - count),
+                        node: lastSegment.node,
+                        totalLength: lastSegment.totalLength,
+                    };
+
+                    segments.splice(i, 1, first, segment, second);
+                    added = true;
+                    break;
+                }
+
+                count += lastSegment.text.length;
+            }
+            if (!added) {
+                segments.splice(lastCause + 1, 0, segment);
+            }
+        } else if (atomValue.type === AuxOpType.Delete) {
+            let lastSegment = segments.find((s) =>
+                idEquals(s.node.atom.id, node.atom.cause)
+            );
+            if (lastSegment) {
+                for (let i = atomValue.start; i < atomValue.end; i++) {
+                    lastSegment.text = splice(lastSegment.text, i, 1, '\0');
+                }
+            }
+        }
+    }
+
+    return segments
+        .map((s) => ({
+            text: s.text.replace(/\0/g, ''),
+            node: s.node,
+        }))
+        .filter((s) => s.text.length > 0);
+}
+
+/**
+ * Defines an interface that represents a segment of text that has been derived from a node.
+ */
+export interface TextSegment {
+    /**
+     * The text of the edit.
+     */
+    text: string;
+    /**
+     * The node that the edit text was produced from.
+     */
+    node: WeaveNode<ValueOp | InsertOp>;
+}
+
+/**
+ * Defines an interface that contains extra information about a text segment.
+ */
+export interface TextSegmentInfo extends TextSegment {
+    /**
+     * The total length of text sequences.
+     */
+    totalLength: number;
+}
+
+export interface EditPosition {
+    node: WeaveNode<AuxOp>;
+    index: number;
+}
 
 // /**
 //  * Adds the given atom to the weave.
