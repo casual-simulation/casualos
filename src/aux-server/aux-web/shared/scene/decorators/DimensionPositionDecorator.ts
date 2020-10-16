@@ -99,15 +99,19 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
         // Update the offset for the display container
         // so that it rotates around the specified
         // point
-        const anchorFactor = this.bot3D.isOnGrid ? 1 : 2;
         this.bot3D.display.position.set(
-            anchorPointOffset.x * anchorFactor,
-            anchorPointOffset.z * anchorFactor,
-            anchorPointOffset.y * anchorFactor
+            anchorPointOffset.x,
+            anchorPointOffset.z,
+            anchorPointOffset.y
         );
-        this.bot3D.transformContainer.position.copy(
-            this.bot3D.display.position
-        );
+
+        // The transform container gets the same position as the display but
+        // with the anchor point multiplied by 2.
+        // This is so that the "grid" for the bot is placed on the bot
+        // instead of inside the bot.
+        this.bot3D.transformContainer.position
+            .copy(this.bot3D.display.position)
+            .multiplyScalar(2);
 
         const userDimension = this.bot3D.dimension;
         if (userDimension) {
