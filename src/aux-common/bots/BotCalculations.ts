@@ -1788,6 +1788,18 @@ export function getBotDragMode(
 }
 
 /**
+ * Gets the ID of the bot that the given bot should be transformed by.
+ * @param calc The bot calculation context.
+ * @param bot The bot to check.
+ */
+export function getBotTransformer(
+    calc: BotCalculationContext,
+    bot: Bot
+): string {
+    return calculateStringTagValue(calc, bot, 'transformer', null);
+}
+
+/**
  * Gets whether the given bot is stackable.
  * @param calc The calculation context.
  * @param bot The bot to check.

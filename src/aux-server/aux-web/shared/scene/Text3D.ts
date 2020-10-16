@@ -149,6 +149,13 @@ export class Text3D extends Object3D {
             center
         );
 
+        // Grab the world scale and "remove" it from the final position.
+        // We have to do this because labels shouldn't be affected by scale
+        // but parenting bots via the transformer tag causes the bot container to be placed inside another
+        // bot's scale container.
+        this.parent.matrixWorld.decompose(tempPos, tempRot, worldScale);
+        pos.divide(worldScale);
+
         const worldPos = pos.clone();
         this.parent.localToWorld(worldPos);
 

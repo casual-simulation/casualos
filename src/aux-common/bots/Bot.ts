@@ -1367,6 +1367,7 @@ export const KNOWN_TAGS: string[] = [
     'minLODThreshold',
     'pointable',
     'focusable',
+    'transformer',
 
     'taskOutput',
     'taskError',
