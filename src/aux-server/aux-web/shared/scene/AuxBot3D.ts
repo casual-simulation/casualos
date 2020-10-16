@@ -13,7 +13,7 @@ import { DimensionGroup3D } from './DimensionGroup3D';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { AuxBotVisualizer } from './AuxBotVisualizer';
-import { buildSRGBColor } from './SceneUtils';
+import { buildSRGBColor, safeSetParent } from './SceneUtils';
 
 /**
  * Defines a class that is able to display Aux bots.
@@ -207,11 +207,13 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
      * @param parent The parent that this bot should have.
      */
     setParent(logicalParent: AuxBot3D | DimensionGroup3D) {
-        this._isOnGrid = logicalParent instanceof DimensionGroup3D;
         if (logicalParent instanceof DimensionGroup3D) {
+            this._isOnGrid = true;
             logicalParent.display.add(this);
         } else {
-            logicalParent.transformContainer.add(this);
+            if (safeSetParent(this, logicalParent.transformContainer)) {
+                this._isOnGrid = false;
+            }
         }
     }
 
