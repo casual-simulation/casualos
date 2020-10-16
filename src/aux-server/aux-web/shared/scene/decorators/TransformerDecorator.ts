@@ -13,6 +13,8 @@ import { calculateScale } from '../SceneUtils';
 import { Group, Object3D } from 'three';
 
 export class TransformerDecorator extends AuxBot3DDecoratorBase {
+    private _setup: boolean;
+
     constructor(bot3D: AuxBot3D) {
         super(bot3D);
     }
@@ -38,6 +40,20 @@ export class TransformerDecorator extends AuxBot3DDecoratorBase {
             if (!this.bot3D.isOnGrid) {
                 this.bot3D.setParent(this.bot3D.dimensionGroup);
             }
+        }
+
+        if (!this._setup) {
+            this._setup = true;
+
+            // Update all the bots that have this set as their transformer
+            const matches = calc.lookup.query(
+                calc,
+                ['transformer'],
+                [this.bot3D.bot.id]
+            );
+            this.bot3D.dimensionGroup.simulation3D.ensureUpdate(
+                matches.map((b) => b.id)
+            );
         }
     }
 
