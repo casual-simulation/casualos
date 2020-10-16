@@ -11,6 +11,9 @@ import {
     getBotPositioningMode,
     getBotPosition,
     getBotIndex,
+    calculateStringTagValue,
+    getBotTransformer,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
@@ -65,6 +68,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     protected _botsInStack: Bot[];
 
     protected _hitBot: AuxBot3D;
+    protected _gridOffset: Vector2 = new Vector2(0, 0);
+    private _hasGridOffset: boolean = false;
+    private _targetBot: Bot = undefined;
 
     protected get game(): PlayerGame {
         return <PlayerGame>this._simulation3D.game;
@@ -190,11 +196,11 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 hit,
             } = this._interaction.findHoveredGameObjectFromRay(
                 inputRay,
-                obj => {
+                (obj) => {
                     return (
                         obj.pointable &&
                         obj instanceof AuxBot3D &&
-                        !this._bots.find(b => b.id === obj.bot.id)
+                        !this._bots.find((b) => b.id === obj.bot.id)
                     );
                 },
                 viewport
@@ -213,6 +219,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
                 this._updateCurrentDimension(nextContext);
 
+                this._updateGridOffset(calc, gameObject.bot);
+
                 // Drag on the grid
                 const botPosition = getBotPosition(
                     calc,
@@ -221,8 +229,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 );
                 const botIndex = getBotIndex(calc, gameObject.bot, nextContext);
                 const coord = (this._toCoord = new Vector2(
-                    botPosition.x,
-                    botPosition.y
+                    botPosition.x + this._gridOffset.x,
+                    botPosition.y + this._gridOffset.y
                 ));
                 this._other = gameObject.bot;
                 this._sendDropEnterExitEvents(this._other);
@@ -254,6 +262,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
         this._updateCurrentDimension(nextContext);
 
+        this._updateGridOffset(calc);
+
         // Drag on the grid
         this._dragOnGridTile(calc, gridTile);
     }
@@ -276,6 +286,30 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         if (nextContext !== this._dimension) {
             this._previousDimension = this._dimension;
             this._dimension = nextContext;
+        }
+    }
+
+    private _updateGridOffset(calc: BotCalculationContext, targetBot?: Bot) {
+        if (this._hasGridOffset && this._targetBot === targetBot) {
+            return;
+        }
+        this._targetBot = targetBot;
+        this._gridOffset.set(0, 0);
+        const transformer = getBotTransformer(calc, this._bots[0]);
+        if (hasValue(transformer)) {
+            this._hasGridOffset = true;
+            let parent = calc.objects.find((bot) => bot.id === transformer);
+            while (parent) {
+                const pos = getBotPosition(calc, parent, this._dimension);
+                this._gridOffset.sub(new Vector2(pos.x, pos.y));
+
+                if (parent === targetBot) {
+                    break;
+                }
+
+                const transformer = getBotTransformer(calc, parent);
+                parent = calc.objects.find((bot) => bot.id === transformer);
+            }
         }
     }
 
@@ -389,7 +423,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
      */
     private _dragOnGridTile(calc: BotCalculationContext, gridTile: GridTile) {
         if (gridTile) {
-            this._toCoord = gridTile.tileCoordinate;
+            this._toCoord = gridTile.tileCoordinate.clone();
+            this._toCoord.add(this._gridOffset);
             const result = calculateBotDragStackPosition(
                 calc,
                 this._dimension,
@@ -401,17 +436,12 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             if (result.stackable || result.index === 0) {
                 this._updateBotsPositions(
                     this._bots,
-                    gridTile.tileCoordinate,
+                    this._toCoord,
                     result.index,
                     calc
                 );
             } else if (!result.stackable) {
-                this._updateBotsPositions(
-                    this._bots,
-                    gridTile.tileCoordinate,
-                    0,
-                    calc
-                );
+                this._updateBotsPositions(this._bots, this._toCoord, 0, calc);
             }
         }
     }
