@@ -752,6 +752,20 @@ When the minimum LOD is exited the <TagLink tag='@onMinLODExit'/> listener is tr
   </PossibleValue>
 </PossibleValuesTable>
 
+### `transformer`
+
+The ID of the bot that should transform this bot in the page and inventory portals.
+When the transformer bot and this bot are in the same dimension, this bot will inherit the position and rotation of the transformer bot.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The bot is positioned on the grid. (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The bot is positioned on the bot with the given ID.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ## Dimension Tags
 
 ### `[dimension]`

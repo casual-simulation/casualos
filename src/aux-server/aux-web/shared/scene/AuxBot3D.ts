@@ -13,7 +13,7 @@ import { DimensionGroup3D } from './DimensionGroup3D';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { AuxBotVisualizer } from './AuxBotVisualizer';
-import { buildSRGBColor } from './SceneUtils';
+import { buildSRGBColor, safeSetParent } from './SceneUtils';
 
 /**
  * Defines a class that is able to display Aux bots.
@@ -45,6 +45,11 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
     scaleContainer: Group;
 
     /**
+     * The container that contains other bots.
+     */
+    transformContainer: Group;
+
+    /**
      * The things that are displayed by this bot.
      */
     display: Group;
@@ -60,6 +65,7 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
     private _unitBoundingBox: Box3 = null;
     private _unitBoundingSphere: Sphere = null;
     private _updatesInFrame: number = 0;
+    private _isOnGrid = true;
 
     /**
      * Returns a copy of the bot 3d's current bounding box.
@@ -107,12 +113,22 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
     }
 
     get gridScale(): number {
-        const group = this.dimensionGroup;
-        const sim = group ? group.simulation3D : null;
-        const gridScale = sim
-            ? sim.getGridScale(this)
-            : calculateGridScale(null, null);
-        return gridScale;
+        if (this.isOnGrid) {
+            const group = this.dimensionGroup;
+            const sim = group ? group.simulation3D : null;
+            const gridScale = sim
+                ? sim.getGridScale(this)
+                : calculateGridScale(null, null);
+            return gridScale;
+        }
+        return 1;
+    }
+
+    /**
+     * Gets whether the bot is placed directly on the grid (true) or if it is nested in another bot (false).
+     */
+    get isOnGrid(): boolean {
+        return this._isOnGrid;
     }
 
     constructor(
@@ -130,9 +146,11 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
         this.container = new Group();
         this.display = new Group();
         this.scaleContainer = new Group();
+        this.transformContainer = new Group();
         this.add(this.container);
         this.container.add(this.scaleContainer);
         this.scaleContainer.add(this.display);
+        this.scaleContainer.add(this.transformContainer);
 
         this.decorators = decoratorFactory.loadDecorators(this);
         this.updateFrameUpdateList();
@@ -182,6 +200,21 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
             this._boundingSphere = new Sphere();
         }
         this._boundingBox.getBoundingSphere(this._boundingSphere);
+    }
+
+    /**
+     * Sets the parent of this bot.
+     * @param parent The parent that this bot should have.
+     */
+    setParent(logicalParent: AuxBot3D | DimensionGroup3D) {
+        if (logicalParent instanceof DimensionGroup3D) {
+            this._isOnGrid = true;
+            logicalParent.display.add(this);
+        } else {
+            if (safeSetParent(this, logicalParent.transformContainer)) {
+                this._isOnGrid = false;
+            }
+        }
     }
 
     /**
@@ -258,7 +291,7 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
     }
 
     updateFrameUpdateList() {
-        this._frameUpdateList = this.decorators.filter(d => !!d.frameUpdate);
+        this._frameUpdateList = this.decorators.filter((d) => !!d.frameUpdate);
     }
 
     dispose() {

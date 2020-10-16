@@ -16,6 +16,7 @@ import { UpdateMaxtrixDecorator } from './UpdateMatrixDecorator';
 import { Simulation3D } from '../Simulation3D';
 import { Game } from '../Game';
 import { BotLODDecorator } from './BotLODDecorator';
+import { TransformerDecorator } from './TransformerDecorator';
 
 export class AuxBot3DDecoratorFactory {
     public game: Game;
@@ -58,6 +59,10 @@ export class AuxBot3DDecoratorFactory {
                 textureDecorator,
                 progressBarDecorator
             );
+        }
+
+        if (!!this.game) {
+            decorators.push(new TransformerDecorator(bot3d));
         }
 
         decorators.push(

@@ -138,7 +138,7 @@ export class DimensionGroup3D extends GameObject implements DimensionGroup {
         this._helper.addBotToDimension(dimension, bot, mesh);
         const bots = this.getBotsInDimension(dimension);
 
-        this.display.add(mesh);
+        mesh.setParent(this);
         bots.set(bot.id, mesh);
 
         return mesh;
@@ -161,7 +161,7 @@ export class DimensionGroup3D extends GameObject implements DimensionGroup {
      * Gets the bots that are contained by this builder dimension.
      */
     getBots() {
-        return flatMap([...this.bots.values()].map(b => [...b.values()]));
+        return flatMap([...this.bots.values()].map((b) => [...b.values()]));
     }
 
     /**
