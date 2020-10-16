@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V1.2.16
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `transformer` tag.
+    -   When set to a bot ID, the bot will inherit the position, rotation, and scale of the specified bot inside the page portal.
+    -   This produces a "parenting" effect that is common in most 3D graphics engines.
+
 ## V1.2.15
 
 #### Date: 10/12/2020
