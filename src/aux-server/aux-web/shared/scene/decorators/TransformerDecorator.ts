@@ -7,6 +7,7 @@ import {
     DEFAULT_WORKSPACE_GRID_SCALE,
     calculateStringTagValue,
     hasValue,
+    getBotTransformer,
 } from '@casual-simulation/aux-common';
 import { calculateScale } from '../SceneUtils';
 import { Group, Object3D } from 'three';
@@ -17,12 +18,7 @@ export class TransformerDecorator extends AuxBot3DDecoratorBase {
     }
 
     botUpdated(calc: BotCalculationContext): void {
-        const transformer = calculateStringTagValue(
-            calc,
-            this.bot3D.bot,
-            'transformer',
-            null
-        );
+        const transformer = getBotTransformer(calc, this.bot3D.bot);
         if (hasValue(transformer)) {
             const bots = this.bot3D.dimensionGroup.simulation3D.findBotsById(
                 transformer
