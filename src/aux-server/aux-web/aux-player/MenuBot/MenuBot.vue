@@ -1,10 +1,5 @@
 <template>
-    <md-list-item
-        class="menu-bot"
-        :class="{ active: selected }"
-        :style="{ 'background-color': backgroundColor, height: scaleY * 40 + 'px' }"
-        @click="click()"
-    >
+    <md-list-item class="menu-bot" :class="{ active: selected }" :style="style" @click="click()">
         <div
             class="menu-bot-text"
             v-show="label"

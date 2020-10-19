@@ -34,6 +34,15 @@ export default class MenuBot extends Vue {
     labelAlign: BotLabelAlignment = 'center';
     backgroundColor: string = '#FFF';
     scaleY: number = 1;
+    extraStyle: Object = {};
+
+    get style(): any {
+        return {
+            'background-color': this.backgroundColor,
+            height: this.scaleY * 40 + 'px',
+            ...this.extraStyle,
+        };
+    }
 
     @Watch('item')
     private async _botChanged(item: DimensionItem) {
@@ -44,11 +53,13 @@ export default class MenuBot extends Vue {
             this._updateColor(calc, item.bot);
             this._updateAlignment(calc, item.bot);
             this._updateScale(calc, item.bot);
+            this._updateStyle(calc, item.bot);
         } else {
             this.label = '';
             this.labelColor = '#000';
             this.backgroundColor = '#FFF';
             this.scaleY = 1;
+            this.extraStyle = {};
         }
     }
 
@@ -105,6 +116,14 @@ export default class MenuBot extends Vue {
     private _updateScale(calc: BotCalculationContext, bot: Bot) {
         const scale = getBotScale(calc, bot, 1);
         this.scaleY = scale.y;
+    }
+
+    private _updateStyle(calc: BotCalculationContext, bot: Bot) {
+        let style = calculateBotValue(calc, bot, 'menuItemStyle');
+        if (typeof style !== 'object') {
+            style = null;
+        }
+        this.extraStyle = style || {};
     }
 }
 
