@@ -3,9 +3,15 @@
         <div
             class="menu-bot-text"
             v-show="label"
-            :style="{ color: labelColor, 'text-align': labelAlign }"
+            :style="{ 'text-align': labelAlign, color: labelColor }"
         >
-            {{ label }}
+            <span class="menu-bot-icon" v-if="hasIcon">
+                <img v-if="iconIsURL" :src="icon" />
+                <md-icon v-else>{{ icon }}</md-icon>
+            </span>
+            <span>
+                {{ label }}
+            </span>
         </div>
     </md-list-item>
 </template>

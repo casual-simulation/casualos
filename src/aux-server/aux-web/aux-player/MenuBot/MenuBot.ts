@@ -15,10 +15,12 @@ import {
     onAnyClickArg,
     hasValue,
     getBotScale,
+    calculateStringTagValue,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
 import { first } from '@casual-simulation/causal-trees';
+import { safeParseURL } from '../PlayerUtils';
 
 @Component({
     components: {},
@@ -35,6 +37,12 @@ export default class MenuBot extends Vue {
     backgroundColor: string = '#FFF';
     scaleY: number = 1;
     extraStyle: Object = {};
+    icon: string = null;
+    iconIsURL: boolean = false;
+
+    get hasIcon() {
+        return hasValue(this.icon);
+    }
 
     get style(): any {
         return {
@@ -54,12 +62,15 @@ export default class MenuBot extends Vue {
             this._updateAlignment(calc, item.bot);
             this._updateScale(calc, item.bot);
             this._updateStyle(calc, item.bot);
+            this._updateIcon(calc, item.bot);
         } else {
             this.label = '';
             this.labelColor = '#000';
             this.backgroundColor = '#FFF';
             this.scaleY = 1;
             this.extraStyle = {};
+            this.icon = null;
+            this.iconIsURL = false;
         }
     }
 
@@ -124,6 +135,12 @@ export default class MenuBot extends Vue {
             style = null;
         }
         this.extraStyle = style || {};
+    }
+
+    private _updateIcon(calc: BotCalculationContext, bot: Bot) {
+        const icon = calculateStringTagValue(calc, bot, 'menuIcon', null);
+        this.icon = icon;
+        this.iconIsURL = !!safeParseURL(icon);
     }
 }
 

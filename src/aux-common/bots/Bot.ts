@@ -1369,6 +1369,7 @@ export const KNOWN_TAGS: string[] = [
     'focusable',
     'transformer',
     'menuItemStyle',
+    'menuIcon',
 
     'taskOutput',
     'taskError',
