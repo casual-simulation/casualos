@@ -2,7 +2,7 @@
     <md-list-item
         class="menu-bot"
         :class="{ active: selected }"
-        :style="{ 'background-color': backgroundColor }"
+        :style="{ 'background-color': backgroundColor, height: scaleY * 40 + 'px' }"
         @click="click()"
     >
         <div

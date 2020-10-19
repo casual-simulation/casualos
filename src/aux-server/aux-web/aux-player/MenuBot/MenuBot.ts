@@ -14,6 +14,7 @@ import {
     ANY_CLICK_ACTION_NAME,
     onAnyClickArg,
     hasValue,
+    getBotScale,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
@@ -32,6 +33,7 @@ export default class MenuBot extends Vue {
     labelColor: string = '#000';
     labelAlign: BotLabelAlignment = 'center';
     backgroundColor: string = '#FFF';
+    scaleY: number = 1;
 
     @Watch('item')
     private async _botChanged(item: DimensionItem) {
@@ -41,10 +43,12 @@ export default class MenuBot extends Vue {
             this._updateLabel(calc, item.bot);
             this._updateColor(calc, item.bot);
             this._updateAlignment(calc, item.bot);
+            this._updateScale(calc, item.bot);
         } else {
             this.label = '';
             this.labelColor = '#000';
             this.backgroundColor = '#FFF';
+            this.scaleY = 1;
         }
     }
 
@@ -96,6 +100,11 @@ export default class MenuBot extends Vue {
 
     private _updateAlignment(calc: BotCalculationContext, bot: Bot) {
         this.labelAlign = getBotLabelAlignment(calc, bot);
+    }
+
+    private _updateScale(calc: BotCalculationContext, bot: Bot) {
+        const scale = getBotScale(calc, bot, 1);
+        this.scaleY = scale.y;
     }
 }
 

@@ -4,3 +4,7 @@
     font-size: 16px;
     flex: 1 1 auto;
 }
+
+.menu-bot.md-list-item > .md-list-item-button {
+    height: 100%;
+}
