@@ -766,6 +766,47 @@ When the transformer bot and this bot are in the same dimension, this bot will i
   </PossibleValue>
 </PossibleValuesTable>
 
+### `menuItemStyle`
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the menu item.
+Only applies to bots that are being shown in the menu portal.
+
+This is useful for positioning and styling the item in ways that are not possible using normal tags.
+Overridden by conflicting properties like <TagLink tag='color'/> or <TagLink tag='labelColor'/>.
+
+When setting this tag via the sheet, it is useful to utilize formulas to ensure that the resulting value is considered an object.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the menu item.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `menuIcon`
+
+The [Material Icon](https://material.io/resources/icons/?style=baseline) or image that should be shown on the menu item.
+Only applies to bots that are being shown in the menu portal.
+
+If the value is a URL, then the image at the given URL will be used for the icon.
+If the value is not a URL, then the given [Material Icon](https://material.io/resources/icons/?style=baseline) will be used.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Empty String'>
+    No icon. (Default)
+  </PossibleValue>
+  <PossibleValue value='Any URL'>
+    The image at the URL is used.
+  </PossibleValue>
+  <PossibleValue value='Any Material Icon'>
+    See <a href='https://material.io/resources/icons/?style=baseline'>https://material.io/resources/icons/?style=baseline</a>.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ## Dimension Tags
 
 ### `[dimension]`
