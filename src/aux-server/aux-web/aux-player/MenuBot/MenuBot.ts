@@ -46,9 +46,9 @@ export default class MenuBot extends Vue {
 
     get style(): any {
         return {
+            ...this.extraStyle,
             'background-color': this.backgroundColor,
             height: this.scaleY * 40 + 'px',
-            ...this.extraStyle,
         };
     }
 
