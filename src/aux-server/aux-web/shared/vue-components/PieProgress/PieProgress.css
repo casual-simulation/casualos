@@ -1,0 +1,10 @@
+svg {
+    width: 24px;
+    height: 24px;
+    transform: rotate(-90deg);
+    border-radius: 50%;
+}
+
+circle {
+    stroke-width: 32;
+}

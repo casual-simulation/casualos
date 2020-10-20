@@ -15,7 +15,7 @@ import HtmlWorker from 'worker-loader!monaco-editor/esm/vs/language/html/html.wo
 import CssWorker from 'worker-loader!monaco-editor/esm/vs/language/css/css.worker';
 import JsonWorker from 'worker-loader!monaco-editor/esm/vs/language/json/json.worker';
 import { calculateFormulaDefinitions } from './FormulaHelpers';
-import { lib_es2015_dts } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
+import { libFileMap } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
 import { SimpleEditorModelResolverService } from 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import { skip, flatMap, filter, first, takeWhile } from 'rxjs/operators';
@@ -67,7 +67,7 @@ export function setup() {
 
     // Register the ES2015 core library
     monaco.languages.typescript.javascriptDefaults.addExtraLib(
-        lib_es2015_dts,
+        libFileMap['lib.es2015.d.ts'],
         'defaultLib:lib.es2015.d.ts'
     );
 

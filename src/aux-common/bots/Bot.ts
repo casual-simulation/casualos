@@ -1368,6 +1368,7 @@ export const KNOWN_TAGS: string[] = [
     'pointable',
     'focusable',
     'transformer',
+    'menuItemStyle',
 
     'taskOutput',
     'taskError',
@@ -1574,6 +1575,13 @@ export function onLODArg(bot: Bot, dimension: string) {
 }
 
 export function onPointerEnterExitArg(bot: Bot, dimension: string) {
+    return {
+        bot,
+        dimension,
+    };
+}
+
+export function onPointerUpDownArg(bot: Bot, dimension: string) {
     return {
         bot,
         dimension,
