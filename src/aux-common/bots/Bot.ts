@@ -1581,6 +1581,13 @@ export function onPointerEnterExitArg(bot: Bot, dimension: string) {
     };
 }
 
+export function onPointerUpDownArg(bot: Bot, dimension: string) {
+    return {
+        bot,
+        dimension,
+    };
+}
+
 export interface BotDropDestination {
     x: number;
     y: number;
