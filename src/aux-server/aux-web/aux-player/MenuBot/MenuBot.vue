@@ -12,6 +12,13 @@
             <span>
                 {{ label }}
             </span>
+            <span class="menu-bot-progress" v-if="hasProgress">
+                <pie-progress
+                    :progress="progress"
+                    :color="progressBarForeground"
+                    :backgroundColor="progressBarBackground"
+                ></pie-progress>
+            </span>
         </div>
     </md-list-item>
 </template>

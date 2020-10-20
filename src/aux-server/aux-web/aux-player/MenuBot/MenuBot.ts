@@ -16,14 +16,19 @@ import {
     hasValue,
     getBotScale,
     calculateStringTagValue,
+    calculateNumericalTagValue,
+    clamp,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
 import { first } from '@casual-simulation/causal-trees';
 import { safeParseURL } from '../PlayerUtils';
+import PieProgress from '../../shared/vue-components/PieProgress/PieProgress';
 
 @Component({
-    components: {},
+    components: {
+        'pie-progress': PieProgress,
+    },
 })
 export default class MenuBot extends Vue {
     @Prop() item: DimensionItem;
@@ -39,6 +44,13 @@ export default class MenuBot extends Vue {
     extraStyle: Object = {};
     icon: string = null;
     iconIsURL: boolean = false;
+    progress: number = null;
+    progressBarForeground: string = null;
+    progressBarBackground: string = null;
+
+    get hasProgress() {
+        return hasValue(this.progress);
+    }
 
     get hasIcon() {
         return hasValue(this.icon);
@@ -63,6 +75,7 @@ export default class MenuBot extends Vue {
             this._updateScale(calc, item.bot);
             this._updateStyle(calc, item.bot);
             this._updateIcon(calc, item.bot);
+            this._updateProgress(calc, item.bot);
         } else {
             this.label = '';
             this.labelColor = '#000';
@@ -71,6 +84,7 @@ export default class MenuBot extends Vue {
             this.extraStyle = {};
             this.icon = null;
             this.iconIsURL = false;
+            this.progress = null;
         }
     }
 
@@ -141,6 +155,35 @@ export default class MenuBot extends Vue {
         const icon = calculateStringTagValue(calc, bot, 'menuIcon', null);
         this.icon = icon;
         this.iconIsURL = !!safeParseURL(icon);
+    }
+
+    private _updateProgress(calc: BotCalculationContext, bot: Bot) {
+        let progress = calculateNumericalTagValue(
+            calc,
+            bot,
+            'auxProgressBar',
+            null
+        );
+
+        this.progress = hasValue(progress) ? clamp(progress, 0, 1) : null;
+
+        let colorTagValue: any = calculateBotValue(
+            calc,
+            bot,
+            'auxProgressBarColor'
+        );
+        let bgColorTagValue: any = calculateBotValue(
+            calc,
+            bot,
+            'auxProgressBarBackgroundColor'
+        );
+
+        this.progressBarForeground = hasValue(colorTagValue)
+            ? colorTagValue
+            : '#000';
+        this.progressBarBackground = hasValue(bgColorTagValue)
+            ? bgColorTagValue
+            : '#fff';
     }
 }
 

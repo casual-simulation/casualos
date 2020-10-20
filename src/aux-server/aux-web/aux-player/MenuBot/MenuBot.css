@@ -24,3 +24,7 @@
     height: 24px;
     margin-right: 8px;
 }
+
+.menu-bot-progress {
+    float: right;
+}
