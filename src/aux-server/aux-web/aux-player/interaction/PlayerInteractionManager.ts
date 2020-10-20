@@ -29,6 +29,7 @@ import {
     getBotPosition,
     isBot,
     addDebugApi,
+    onPointerUpDownArg,
 } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
@@ -286,17 +287,25 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     }
 
     handlePointerDown(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {
-        simulation.helper.action('onPointerDown', [bot], {
-            dimension: [...bot3D.dimensionGroup.dimensions.values()][0],
-            bot: bot,
-        });
+        simulation.helper.action(
+            'onPointerDown',
+            [bot],
+            onPointerUpDownArg(
+                bot,
+                [...bot3D.dimensionGroup.dimensions.values()][0]
+            )
+        );
     }
 
     handlePointerUp(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {
-        simulation.helper.action('onPointerUp', [bot], {
-            dimension: [...bot3D.dimensionGroup.dimensions.values()][0],
-            bot: bot,
-        });
+        simulation.helper.action(
+            'onPointerUp',
+            [bot],
+            onPointerUpDownArg(
+                bot,
+                [...bot3D.dimensionGroup.dimensions.values()][0]
+            )
+        );
     }
 
     handleFocusEnter(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {

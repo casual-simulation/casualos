@@ -568,6 +568,9 @@ When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> i
 
 When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
 
+When the bot is in the menu portal, this is the URL of the image that should be shown on the menu item.
+If the given value is not a URL, then the specified [Material Icon](https://material.io/resources/icons/?style=baseline) will be shown.
+
 ### `formAnimation`
 
 The name of the animation that the mesh should play.
@@ -765,6 +768,36 @@ When the transformer bot and this bot are in the same dimension, this bot will i
     The bot is positioned on the bot with the given ID.
   </PossibleValue>
 </PossibleValuesTable>
+
+### `menuItemStyle`
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the menu item.
+Only applies to bots that are being shown in the menu portal.
+
+This is useful for positioning and styling the item in ways that are not possible using normal tags.
+Overridden by conflicting properties like <TagLink tag='color'/> or <TagLink tag='labelColor'/>.
+
+When setting this tag via the sheet, it is useful to utilize formulas to ensure that the resulting value is considered an object.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the menu item.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Round the top corners of the menu bot.
+```typescript
+=({
+    'border-radius': '8px 8px 0 0',
+    'margin-top': '8px'
+})
+```
 
 ## Dimension Tags
 

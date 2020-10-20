@@ -131,3 +131,7 @@ html.ar-app .webxr-sessions canvas {
     background-color: #c5c5c5;
     color: rgba(0, 0, 0.54);
 }
+
+.menu .md-list.md-theme-default {
+    background-color: transparent;
+}

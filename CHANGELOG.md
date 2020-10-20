@@ -1,5 +1,19 @@
 # CasualOS Changelog
 
+## V1.2.17
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved bots in the menu portal to support additional tags.
+    -   Added the ability to change the height of menu items by using `scale` and `scaleY`.
+    -   Added the ability to set an icon for a menu item by using the `formAddress` tag.
+    -   Added the ability to set arbitrary CSS styles on a menu bot by using the `menuItemStyle` tag.
+        -   This lets you use margins and borders to indicate grouping.
+    -   Added the ability to show a pie-chart progress bar on a menu item by using the `progressBar` tags.
+    -   Added the ability to use `@onPointerUp` and `@onPointerDown` for menu.
+
 ## V1.2.16
 
 #### Date: 10/16/2020
