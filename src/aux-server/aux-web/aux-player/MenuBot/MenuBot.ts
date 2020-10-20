@@ -18,12 +18,14 @@ import {
     calculateStringTagValue,
     calculateNumericalTagValue,
     clamp,
+    onPointerUpDownArg,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
 import { first } from '@casual-simulation/causal-trees';
 import { safeParseURL } from '../PlayerUtils';
 import PieProgress from '../../shared/vue-components/PieProgress/PieProgress';
+import { Input } from '../../shared/scene/Input';
 
 @Component({
     components: {
@@ -47,6 +49,8 @@ export default class MenuBot extends Vue {
     progress: number = null;
     progressBarForeground: string = null;
     progressBarBackground: string = null;
+
+    private _down: boolean = false;
 
     get hasProgress() {
         return hasValue(this.progress);
@@ -94,6 +98,17 @@ export default class MenuBot extends Vue {
 
     mounted() {
         this._botChanged(this.item);
+        this.mouseUp = this.mouseUp.bind(this);
+        this.touchStart = this.touchStart.bind(this);
+        this.touchEnd = this.touchEnd.bind(this);
+        this.touchCancel = this.touchCancel.bind(this);
+        window.addEventListener('mouseup', this.mouseUp);
+        window.addEventListener('touchstart', this.touchStart);
+    }
+
+    beforeDestroy() {
+        window.removeEventListener('mouseup', this.mouseUp);
+        window.removeEventListener('touchstart', this.touchStart);
     }
 
     async click() {
@@ -109,6 +124,55 @@ export default class MenuBot extends Vue {
             null,
             onAnyClickArg(null, dimension, this.item.bot)
         );
+    }
+
+    async mouseDown() {
+        this._down = true;
+
+        const simulation = _simulation(this.item);
+        const dimension = first(this.item.dimensions.values());
+        simulation.helper.action(
+            'onPointerDown',
+            [this.item.bot],
+            onPointerUpDownArg(this.item.bot, dimension)
+        );
+    }
+
+    async mouseUp() {
+        if (this._down === true) {
+            this._down = false;
+            const simulation = _simulation(this.item);
+            const dimension = first(this.item.dimensions.values());
+            simulation.helper.action(
+                'onPointerUp',
+                [this.item.bot],
+                onPointerUpDownArg(this.item.bot, dimension)
+            );
+        }
+    }
+
+    async touchStart(event: TouchEvent) {
+        const isForThisElement = Input.isEventForAnyElement(event, [this.$el]);
+        if (isForThisElement) {
+            event.target.addEventListener('touchend', this.touchEnd);
+            event.target.addEventListener('touchcancel', this.touchCancel);
+
+            this.mouseDown();
+        }
+    }
+
+    touchEnd(event: TouchEvent) {
+        event.target.removeEventListener('touchend', this.touchEnd);
+        event.target.removeEventListener('touchcancel', this.touchCancel);
+
+        this.mouseUp();
+    }
+
+    touchCancel(event: TouchEvent) {
+        event.target.removeEventListener('touchend', this.touchEnd);
+        event.target.removeEventListener('touchcancel', this.touchCancel);
+
+        this.mouseUp();
     }
 
     private _updateColor(calc: BotCalculationContext, bot: Bot) {

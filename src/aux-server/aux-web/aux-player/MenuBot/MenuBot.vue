@@ -1,5 +1,11 @@
 <template>
-    <md-list-item class="menu-bot" :class="{ active: selected }" :style="style" @click="click()">
+    <md-list-item
+        class="menu-bot"
+        :class="{ active: selected }"
+        :style="style"
+        @click="click()"
+        @mousedown="mouseDown()"
+    >
         <div
             class="menu-bot-text"
             v-show="label"
