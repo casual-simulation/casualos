@@ -152,7 +152,7 @@ export default class MenuBot extends Vue {
     }
 
     private _updateIcon(calc: BotCalculationContext, bot: Bot) {
-        const icon = calculateStringTagValue(calc, bot, 'menuIcon', null);
+        const icon = calculateStringTagValue(calc, bot, 'auxFormAddress', null);
         this.icon = icon;
         this.iconIsURL = !!safeParseURL(icon);
     }

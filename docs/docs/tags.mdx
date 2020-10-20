@@ -568,6 +568,9 @@ When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> i
 
 When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
 
+When the bot is in the menu portal, this is the URL of the image that should be shown on the menu item.
+If the given value is not a URL, then the specified [Material Icon](https://material.io/resources/icons/?style=baseline) will be shown.
+
 ### `formAnimation`
 
 The name of the animation that the mesh should play.
@@ -783,27 +786,6 @@ When setting this tag via the sheet, it is useful to utilize formulas to ensure 
   </PossibleValueCode>
   <PossibleValue value='Any Object'>
     The properties of the object will be applied as special styling to the menu item.
-  </PossibleValue>
-</PossibleValuesTable>
-
-### `menuIcon`
-
-The [Material Icon](https://material.io/resources/icons/?style=baseline) or image that should be shown on the menu item.
-Only applies to bots that are being shown in the menu portal.
-
-If the value is a URL, then the image at the given URL will be used for the icon.
-If the value is not a URL, then the given [Material Icon](https://material.io/resources/icons/?style=baseline) will be used.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value='Empty String'>
-    No icon. (Default)
-  </PossibleValue>
-  <PossibleValue value='Any URL'>
-    The image at the URL is used.
-  </PossibleValue>
-  <PossibleValue value='Any Material Icon'>
-    See <a href='https://material.io/resources/icons/?style=baseline'>https://material.io/resources/icons/?style=baseline</a>.
   </PossibleValue>
 </PossibleValuesTable>
 
