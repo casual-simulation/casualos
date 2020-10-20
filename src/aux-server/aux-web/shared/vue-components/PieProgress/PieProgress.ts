@@ -8,19 +8,6 @@ export default class PieProgress extends Vue {
     @Prop({ required: true }) color: string;
     @Prop({ required: true }) backgroundColor: string;
 
-    // get fillStyle() {
-    //     if (this.progress > 0.5) {
-    //         return {
-    //             transform: 'rotate(' + (this.progress - 0.5) +'turn)',
-    //             'background-color': this.color
-    //         };
-    //     } else {
-    //         return {
-    //             transform: 'rotate(' + this.progress  +'turn)'
-    //         };
-    //     }
-    // }
-
     constructor() {
         super();
     }
