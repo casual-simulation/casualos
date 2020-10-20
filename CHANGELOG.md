@@ -12,6 +12,7 @@
     -   Added the ability to set arbitrary CSS styles on a menu bot by using the `menuItemStyle` tag.
         -   This lets you use margins and borders to indicate grouping.
     -   Added the ability to show a pie-chart progress bar on a menu item by using the `progressBar` tags.
+    -   Added the ability to use `@onPointerUp` and `@onPointerDown` for menu.
 
 ## V1.2.16
 
