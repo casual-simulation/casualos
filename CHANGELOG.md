@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.2.18
+
+#### Date: 10/20/2020
+
+### :bug: Bug Fixes
+
+-   Fixed the code editor.
+
 ## V1.2.17
 
 #### Date: 10/20/2020

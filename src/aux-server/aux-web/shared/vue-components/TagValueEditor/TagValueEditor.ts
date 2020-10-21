@@ -4,12 +4,18 @@ import { Prop, Watch } from 'vue-property-decorator';
 import { Bot } from '@casual-simulation/aux-common';
 import SimpleTagEditor from '../SimpleTagEditor/SimpleTagEditor';
 import MonacoLoader from '../MonacoLoader/MonacoLoader';
+import MonacoLoaderError from '../MonacoLoaderError/MonacoLoaderError';
 
 const MonacoAsync = () => ({
-    component: import('../MonacoTagEditor/MonacoTagEditor'),
+    component: import('../MonacoTagEditor/MonacoTagEditor').catch((err) => {
+        console.error('Unable to load Monaco editor:', err);
+        throw err;
+    }),
     loading: MonacoLoader,
+    error: MonacoLoaderError,
 
     delay: 50,
+    timeout: 20000,
 });
 
 @Component({
