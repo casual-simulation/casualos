@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.2.18
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed the code editor.
+
 ## V1.2.17
 
 #### Date: TBD
