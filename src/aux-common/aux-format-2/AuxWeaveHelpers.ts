@@ -194,6 +194,7 @@ export function calculateOrderedEdits(
             let segment: TextSegmentInfo = {
                 text: atomValue.value,
                 node: node as WeaveNode<ValueOp>,
+                offset: 0,
                 totalLength: atomValue.value.length,
             };
             segments.push(segment);
@@ -201,6 +202,7 @@ export function calculateOrderedEdits(
             const segment: TextSegmentInfo = {
                 text: atomValue.text,
                 node: node as WeaveNode<InsertOp>,
+                offset: 0,
                 totalLength: atomValue.text.length,
             };
             let count = 0;
@@ -223,10 +225,12 @@ export function calculateOrderedEdits(
                             atomValue.index - count
                         ),
                         node: lastSegment.node,
+                        offset: lastSegment.offset + 0,
                         totalLength: lastSegment.totalLength,
                     };
                     const second: TextSegmentInfo = {
                         text: lastSegment.text.slice(atomValue.index - count),
+                        offset: lastSegment.offset + (atomValue.index - count),
                         node: lastSegment.node,
                         totalLength: lastSegment.totalLength,
                     };
@@ -256,6 +260,8 @@ export function calculateOrderedEdits(
     return segments
         .map((s) => ({
             text: s.text.replace(/\0/g, ''),
+            marked: s.text,
+            offset: s.offset,
             node: s.node,
         }))
         .filter((s) => s.text.length > 0);
@@ -269,6 +275,18 @@ export interface TextSegment {
      * The text of the edit.
      */
     text: string;
+
+    /**
+     * The index offset that this segment starts at.
+     * Useful when the node was split into two segments.
+     */
+    offset: number;
+
+    /**
+     * The text that includes null characters to indicate characters that were deleted.
+     */
+    marked: string;
+
     /**
      * The node that the edit text was produced from.
      */
@@ -278,11 +296,27 @@ export interface TextSegment {
 /**
  * Defines an interface that contains extra information about a text segment.
  */
-export interface TextSegmentInfo extends TextSegment {
+export interface TextSegmentInfo {
+    /**
+     * The text of the edit.
+     */
+    text: string;
+
     /**
      * The total length of text sequences.
      */
     totalLength: number;
+
+    /**
+     * The index offset that this segment starts at.
+     * Useful when the node was split into two segments.
+     */
+    offset: number;
+
+    /**
+     * The node that the edit text was produced from.
+     */
+    node: WeaveNode<ValueOp | InsertOp>;
 }
 
 export interface EditPosition {

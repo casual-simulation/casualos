@@ -183,7 +183,7 @@ describe('AuxWeaveHelpers', () => {
         });
     });
 
-    describe.only('calculateOrderedEdits()', () => {
+    describe('calculateOrderedEdits()', () => {
         let weave: Weave<AuxOp>;
 
         beforeEach(() => {
@@ -205,10 +205,14 @@ describe('AuxWeaveHelpers', () => {
 
             const result = segments.map((s) => ({
                 text: s.text,
+                marked: s.marked.replace(/\0/g, '•'),
+                offset: s.offset,
                 atom: s.node.atom,
             }));
 
-            expect(result).toEqual([{ text: '111', atom: v1 }]);
+            expect(result).toEqual([
+                { text: '111', marked: '111', offset: 0, atom: v1 },
+            ]);
         });
 
         it('should remove deleted sections from value nodes', () => {
@@ -227,10 +231,14 @@ describe('AuxWeaveHelpers', () => {
 
             const result = segments.map((s) => ({
                 text: s.text,
+                marked: s.marked.replace(/\0/g, '•'),
+                offset: s.offset,
                 atom: s.node.atom,
             }));
 
-            expect(result).toEqual([{ text: '11', atom: v1 }]);
+            expect(result).toEqual([
+                { text: '11', marked: '1•1', offset: 0, atom: v1 },
+            ]);
         });
 
         it('should not report empty text segments', () => {
@@ -249,6 +257,8 @@ describe('AuxWeaveHelpers', () => {
 
             const result = segments.map((s) => ({
                 text: s.text,
+                marked: s.marked.replace(/\0/g, '•'),
+                offset: s.offset,
                 atom: s.node.atom,
             }));
 
@@ -272,10 +282,14 @@ describe('AuxWeaveHelpers', () => {
 
             const result = segments.map((s) => ({
                 text: s.text,
+                marked: s.marked.replace(/\0/g, '•'),
+                offset: s.offset,
                 atom: s.node.atom,
             }));
 
-            expect(result).toEqual([{ text: '1', atom: v1 }]);
+            expect(result).toEqual([
+                { text: '1', marked: '1••', offset: 0, atom: v1 },
+            ]);
         });
 
         it('should support overlapping delete atoms on a single value node', () => {
@@ -295,10 +309,14 @@ describe('AuxWeaveHelpers', () => {
 
             const result = segments.map((s) => ({
                 text: s.text,
+                marked: s.marked.replace(/\0/g, '•'),
+                offset: s.offset,
                 atom: s.node.atom,
             }));
 
-            expect(result).toEqual([{ text: '1', atom: v1 }]);
+            expect(result).toEqual([
+                { text: '1', marked: '1••', offset: 0, atom: v1 },
+            ]);
         });
 
         it('should remove deleted sections from insert nodes', () => {
@@ -318,13 +336,15 @@ describe('AuxWeaveHelpers', () => {
 
             const result = segments.map((s) => ({
                 text: s.text,
+                marked: s.marked.replace(/\0/g, '•'),
+                offset: s.offset,
                 atom: s.node.atom,
             }));
 
             expect(result).toEqual([
-                { text: '1', atom: v1 },
-                { text: '22', atom: i1 },
-                { text: '11', atom: v1 },
+                { text: '1', marked: '1', offset: 0, atom: v1 },
+                { text: '22', marked: '2•2', offset: 0, atom: i1 },
+                { text: '11', marked: '11', offset: 1, atom: v1 },
             ]);
         });
 
@@ -346,13 +366,15 @@ describe('AuxWeaveHelpers', () => {
 
             const result = segments.map((s) => ({
                 text: s.text,
+                marked: s.marked.replace(/\0/g, '•'),
+                offset: s.offset,
                 atom: s.node.atom,
             }));
 
             expect(result).toEqual([
-                { text: '1', atom: v1 },
-                { text: '2', atom: i1 },
-                { text: '11', atom: v1 },
+                { text: '1', marked: '1', offset: 0, atom: v1 },
+                { text: '2', marked: '2••', offset: 0, atom: i1 },
+                { text: '11', marked: '11', offset: 1, atom: v1 },
             ]);
         });
 
@@ -374,13 +396,15 @@ describe('AuxWeaveHelpers', () => {
 
             const result = segments.map((s) => ({
                 text: s.text,
+                marked: s.marked.replace(/\0/g, '•'),
+                offset: s.offset,
                 atom: s.node.atom,
             }));
 
             expect(result).toEqual([
-                { text: '1', atom: v1 },
-                { text: '2', atom: i1 },
-                { text: '11', atom: v1 },
+                { text: '1', marked: '1', offset: 0, atom: v1 },
+                { text: '2', marked: '2••', offset: 0, atom: i1 },
+                { text: '11', marked: '11', offset: 1, atom: v1 },
             ]);
         });
 
@@ -400,12 +424,14 @@ describe('AuxWeaveHelpers', () => {
 
             const result = segments.map((s) => ({
                 text: s.text,
+                marked: s.marked.replace(/\0/g, '•'),
+                offset: s.offset,
                 atom: s.node.atom,
             }));
 
             expect(result).toEqual([
-                { text: '111', atom: v1 },
-                { text: '222', atom: i1 },
+                { text: '111', marked: '111', offset: 0, atom: v1 },
+                { text: '222', marked: '222', offset: 0, atom: i1 },
             ]);
         });
 
@@ -425,12 +451,14 @@ describe('AuxWeaveHelpers', () => {
 
             const result = segments.map((s) => ({
                 text: s.text,
+                marked: s.marked.replace(/\0/g, '•'),
+                offset: s.offset,
                 atom: s.node.atom,
             }));
 
             expect(result).toEqual([
-                { text: '222', atom: i1 },
-                { text: '111', atom: v1 },
+                { text: '222', marked: '222', offset: 0, atom: i1 },
+                { text: '111', marked: '111', offset: 0, atom: v1 },
             ]);
         });
 
@@ -450,13 +478,15 @@ describe('AuxWeaveHelpers', () => {
 
             const result = segments.map((s) => ({
                 text: s.text,
+                marked: s.marked.replace(/\0/g, '•'),
+                offset: s.offset,
                 atom: s.node.atom,
             }));
 
             expect(result).toEqual([
-                { text: '1', atom: v1 },
-                { text: '222', atom: i1 },
-                { text: '11', atom: v1 },
+                { text: '1', marked: '1', offset: 0, atom: v1 },
+                { text: '222', marked: '222', offset: 0, atom: i1 },
+                { text: '11', marked: '11', offset: 1, atom: v1 },
             ]);
         });
 
@@ -477,15 +507,17 @@ describe('AuxWeaveHelpers', () => {
 
             const result = segments.map((s) => ({
                 text: s.text,
+                marked: s.marked.replace(/\0/g, '•'),
+                offset: s.offset,
                 atom: s.node.atom,
             }));
 
             expect(result).toEqual([
-                { text: '1', atom: v1 },
-                { text: '222', atom: i1 },
-                { text: '1', atom: v1 },
-                { text: '333', atom: i2 },
-                { text: '1', atom: v1 },
+                { text: '1', marked: '1', offset: 0, atom: v1 },
+                { text: '222', marked: '222', offset: 0, atom: i1 },
+                { text: '1', marked: '1', offset: 1, atom: v1 },
+                { text: '333', marked: '333', offset: 0, atom: i2 },
+                { text: '1', marked: '1', offset: 2, atom: v1 },
             ]);
         });
 
@@ -517,15 +549,17 @@ describe('AuxWeaveHelpers', () => {
 
             const result = segments.map((s) => ({
                 text: s.text,
+                marked: s.marked.replace(/\0/g, '•'),
+                offset: s.offset,
                 atom: s.node.atom,
             }));
 
             expect(result).toEqual([
-                { text: '22', atom: i1 },
-                { text: '44', atom: i3 },
-                { text: '1', atom: v1 },
-                { text: '333', atom: i2 },
-                { text: '1', atom: v1 },
+                { text: '22', marked: '22', offset: 0, atom: i1 },
+                { text: '44', marked: '44•', offset: 0, atom: i3 },
+                { text: '1', marked: '1•', offset: 0, atom: v1 },
+                { text: '333', marked: '333', offset: 0, atom: i2 },
+                { text: '1', marked: '1', offset: 2, atom: v1 },
             ]);
         });
 
@@ -563,15 +597,17 @@ describe('AuxWeaveHelpers', () => {
 
             const result = segments.map((s) => ({
                 text: s.text,
+                marked: s.marked.replace(/\0/g, '•'),
+                offset: s.offset,
                 atom: s.node.atom,
             }));
 
             expect(result).toEqual([
-                { text: '22', atom: i1 },
-                { text: '44', atom: i3 },
-                { text: '1', atom: v1 },
-                { text: '333', atom: i2 },
-                { text: '1', atom: v1 },
+                { text: '22', marked: '22', offset: 0, atom: i1 },
+                { text: '44', marked: '44•', offset: 0, atom: i3 },
+                { text: '1', marked: '1•', offset: 0, atom: v1 },
+                { text: '333', marked: '333', offset: 0, atom: i2 },
+                { text: '1', marked: '1', offset: 2, atom: v1 },
             ]);
             expect(state).toEqual({
                 test: createBot('test', {
