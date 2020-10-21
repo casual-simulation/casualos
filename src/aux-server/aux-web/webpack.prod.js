@@ -16,7 +16,7 @@ function productionBaseConfig() {
         mode: 'production',
         devtool: 'source-map',
         output: {
-            filename: pathData => {
+            filename: (pathData) => {
                 return pathData.chunk.name === 'deno'
                     ? '[name].js'
                     : '[name].[contenthash].js';
@@ -40,7 +40,7 @@ function productionBaseConfig() {
                 },
                 {
                     test: /\.m?js/,
-                    include: /(astring|lru\-cache|yallist|monaco\-editor)/, // NPM modules that use ES6 and need to be transpiled
+                    include: /(astring|lru\-cache|yallist)/, // NPM modules that use ES6 and need to be transpiled
                     use: {
                         loader: 'babel-loader',
                         options: {
