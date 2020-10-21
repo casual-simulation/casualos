@@ -149,38 +149,241 @@ describe('AuxWeaveHelpers', () => {
         const v1 = atom(atomId('a', 3), t1, value('111'));
         const i1 = atom(atomId('a', 4), v1, insertOp(0, '222'));
         const i2 = atom(atomId('a', 5), v1, insertOp(2, '333'));
-        // value: 22211333
+        // value: 222113331
+        const d1 = atom(atomId('a', 6), v1, deleteOp(1, 2));
+        const d2 = atom(atomId('a', 7), i1, deleteOp(1, 2));
+        const d3 = atom(atomId('a', 8), i2, deleteOp(1, 2));
+        // value: 221331
 
-        const cases = [
-            // [timestamp, index, expectedAtom, expectedIndex]
-            [3, 0, v1, 0] as const,
-            [3, 1, v1, 1] as const,
-            [4, 0, i1, 0] as const,
-            [4, 1, i1, 1] as const,
-            [4, 3, i1, 3] as const,
-            [4, 4, v1, 1] as const,
-            [5, 0, i1, 0] as const,
-            [5, 1, i1, 1] as const,
-            [5, 3, i1, 3] as const,
-            [5, 5, v1, 3] as const,
-            [5, 6, i2, 1] as const,
-            [5, 7, i2, 2] as const,
-        ];
-        it('should find the insert atom that the given index is pointing to', () => {
-            weave.insert(b1);
-            weave.insert(t1);
-            weave.insert(v1);
-            weave.insert(i1);
-            weave.insert(i2);
+        const i3 = atom(atomId('b', 4), v1, insertOp(1, '444'));
+        // value: 221334441
+
+        // value: 1•1
+        ///
+
+        it('should be able to insert into a value', () => {
+            insertAtoms(b1, t1, v1);
 
             const valueNode = weave.getNode(v1.id);
 
-            for (let [timestamp, index, expectedAtom, expectedIndex] of cases) {
-                const result = findEditPosition(valueNode, timestamp, index);
-                expect(result.node.atom).toBe(expectedAtom);
-                expect(result.index).toBe(expectedIndex);
-            }
+            const result = findEditPosition(
+                valueNode,
+                {
+                    a: 3,
+                },
+                2
+            );
+            expect(result.node.atom).toBe(v1);
+            expect(result.index).toBe(2);
         });
+
+        it('should be able to insert into an insert added at the beginning of a value', () => {
+            insertAtoms(b1, t1, v1, i1);
+
+            const valueNode = weave.getNode(v1.id);
+
+            const result = findEditPosition(
+                valueNode,
+                {
+                    a: 4,
+                },
+                2
+            );
+            expect(result.node.atom).toBe(i1);
+            expect(result.index).toBe(2);
+        });
+
+        it('should be able to insert into a value at a time before an insert', () => {
+            insertAtoms(b1, t1, v1, i1);
+
+            const valueNode = weave.getNode(v1.id);
+
+            const result = findEditPosition(
+                valueNode,
+                {
+                    a: 3,
+                },
+                2
+            );
+            expect(result.node.atom).toBe(v1);
+            expect(result.index).toBe(2);
+        });
+
+        it('should be able to insert into an insert added at the end of a value', () => {
+            insertAtoms(b1, t1, v1, i2);
+
+            const valueNode = weave.getNode(v1.id);
+
+            const result = findEditPosition(
+                valueNode,
+                {
+                    a: 5,
+                },
+                3
+            );
+            expect(result.node.atom).toBe(i2);
+            expect(result.index).toBe(1);
+        });
+
+        it('should be able to insert between a value and insert added at the end of the value', () => {
+            insertAtoms(b1, t1, v1, i2);
+
+            const valueNode = weave.getNode(v1.id);
+
+            const result = findEditPosition(
+                valueNode,
+                {
+                    a: 5,
+                },
+                2
+            );
+            expect(result.node.atom).toBe(v1);
+            expect(result.index).toBe(2);
+        });
+
+        it('should be able to insert between a value and insert added at the beginning of the value', () => {
+            insertAtoms(b1, t1, v1, i1);
+
+            const valueNode = weave.getNode(v1.id);
+
+            const result = findEditPosition(
+                valueNode,
+                {
+                    a: 5,
+                },
+                3
+            );
+            expect(result.node.atom).toBe(i1);
+            expect(result.index).toBe(3);
+        });
+
+        it('should be able to insert between a value and inserts surrounding it', () => {
+            insertAtoms(b1, t1, v1, i1, i2);
+
+            const valueNode = weave.getNode(v1.id);
+
+            const result = findEditPosition(
+                valueNode,
+                {
+                    a: 5,
+                },
+                4
+            );
+            expect(result.node.atom).toBe(v1);
+            expect(result.index).toBe(1);
+        });
+
+        it('should be able to insert between a value and inserts surrounding it', () => {
+            insertAtoms(b1, t1, v1, i1, i2);
+
+            const valueNode = weave.getNode(v1.id);
+
+            const result = findEditPosition(
+                valueNode,
+                {
+                    a: 5,
+                },
+                4
+            );
+            expect(result.node.atom).toBe(v1);
+            expect(result.index).toBe(1);
+        });
+
+        it('should be able to insert a value after a deleted character', () => {
+            insertAtoms(b1, t1, v1, d1);
+
+            const valueNode = weave.getNode(v1.id);
+
+            const result = findEditPosition(
+                valueNode,
+                {
+                    a: 8,
+                },
+                2
+            );
+            expect(result.node.atom).toBe(v1);
+            expect(result.index).toBe(3);
+        });
+
+        it('should be able to insert a value into another site insert', () => {
+            insertAtoms(b1, t1, v1, i3);
+
+            const valueNode = weave.getNode(v1.id);
+
+            const result = findEditPosition(
+                valueNode,
+                {
+                    a: 8,
+                    b: 4,
+                },
+                2
+            );
+            expect(result.node.atom).toBe(i3);
+            expect(result.index).toBe(1);
+        });
+
+        it('should ignore sites that are not included in the given version', () => {
+            insertAtoms(b1, t1, v1, i3);
+
+            const valueNode = weave.getNode(v1.id);
+
+            const result = findEditPosition(
+                valueNode,
+                {
+                    a: 8,
+                },
+                2
+            );
+            expect(result.node.atom).toBe(v1);
+            expect(result.index).toBe(2);
+        });
+
+        const cases = [
+            // ["time+atom(index)", timestamp, index, expectedAtom, expectedIndex]
+            ['3+v1(0)', 3, 0, v1, 0] as const,
+            ['3+v1(1)', 3, 1, v1, 1] as const,
+            ['4+i1(0)', 4, 0, i1, 0] as const,
+            ['4+i1(1)', 4, 1, i1, 1] as const,
+            ['4+i1(3)', 4, 3, i1, 3] as const,
+            ['4+v1(1)', 4, 4, v1, 1] as const,
+            ['5+i1(0)', 5, 0, i1, 0] as const,
+            ['5+i1(1)', 5, 1, i1, 1] as const,
+            ['5+i1(3)', 5, 3, i1, 3] as const,
+            ['5+v1(2)', 5, 5, v1, 2] as const,
+            ['5+v1(3)', 5, 9, v1, 3] as const,
+            ['5+i2(1)', 5, 6, i2, 1] as const,
+            ['5+i2(2)', 5, 7, i2, 2] as const,
+        ];
+
+        describe.each(cases)(
+            '%s',
+            (desc, timestamp, index, expectedAtom, expectedIndex) => {
+                it('should find the insert atom that the given index is pointing to', () => {
+                    insertAtoms(b1, t1, v1, i1, i2);
+
+                    const valueNode = weave.getNode(v1.id);
+
+                    const result = findEditPosition(
+                        valueNode,
+                        {
+                            a: timestamp,
+                        },
+                        index
+                    );
+                    expect(result.node.atom).toBe(expectedAtom);
+                    expect(result.index).toBe(expectedIndex);
+                });
+            }
+        );
+
+        function insertAtoms(...atoms: Atom<AuxOp>[]) {
+            for (let atom of atoms) {
+                const result = weave.insert(atom);
+                if (result.type !== 'atom_added') {
+                    throw new Error('Unable to add atom: ' + result.type);
+                }
+            }
+        }
     });
 
     describe('calculateOrderedEdits()', () => {
