@@ -18,6 +18,7 @@ import {
     removeAtoms,
     AtomCardinality,
     first,
+    calculateTimeFromId,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxOp,
@@ -59,6 +60,7 @@ import {
     findBotNodes,
     findValueNodeByValue,
     findTagMaskNodes,
+    findEditPosition,
 } from './AuxWeaveHelpers';
 import { Action } from '@casual-simulation/causal-trees';
 
@@ -261,7 +263,7 @@ export function applyEvents(
             if (!currentVal || val !== currentVal.atom.value.value) {
                 let valueResult: AuxResult;
                 if (isTagEdit(val)) {
-                    let editTime = val.timestamp;
+                    const version = val.version;
                     valueResult = auxResultIdentity();
                     for (let ops of val.operations) {
                         let index = 0;
@@ -269,9 +271,20 @@ export function applyEvents(
                             if (op.type === 'preserve') {
                                 index += op.count;
                             } else if (op.type === 'insert') {
+                                const editPos = findEditPosition(
+                                    currentVal,
+                                    version,
+                                    index
+                                );
+                                if (!editPos) {
+                                    console.warn(
+                                        '[AuxCausalTree2] Unable to find edit position for insert. This likely means that the given edit version is incorrect.'
+                                    );
+                                    break;
+                                }
                                 const insertResult = addAtom(
-                                    currentVal.atom,
-                                    insertOp(index, op.text)
+                                    editPos.node.atom,
+                                    insertOp(editPos.index, op.text)
                                 );
                                 valueResult = mergeAuxResults(
                                     valueResult,
@@ -279,9 +292,23 @@ export function applyEvents(
                                 );
                                 index += op.text.length;
                             } else if (op.type === 'delete') {
+                                const editPos = findEditPosition(
+                                    currentVal,
+                                    version,
+                                    index
+                                );
+                                if (!editPos) {
+                                    console.warn(
+                                        '[AuxCausalTree2] Unable to find edit position for delete.  This likely means that the given edit version is incorrect.'
+                                    );
+                                    break;
+                                }
                                 const deleteResult = addAtom(
-                                    currentVal.atom,
-                                    deleteOp(index, index + op.count)
+                                    editPos.node.atom,
+                                    deleteOp(
+                                        editPos.index,
+                                        editPos.index + op.count
+                                    )
                                 );
                                 valueResult = mergeAuxResults(
                                     valueResult,
@@ -664,14 +691,41 @@ export function applyAtoms(
 ) {
     let update: PartialBotsState = {};
     let results = [] as WeaveResult[];
+    // if (atoms) {
+    //     insertAtoms(tree, atoms, results);
+    // }
+    // if (removedAtoms) {
+    //     removeAtoms(tree, removedAtoms, results);
+    // }
+    // for (let result of results) {
+    //     reducer(tree.weave, result, update, space);
+    // }
+
     if (atoms) {
-        insertAtoms(tree, atoms, results);
+        for (let atom of atoms) {
+            const result = tree.weave.insert(atom);
+            results.push(result);
+            reducer(tree.weave, result, update, space);
+            const added = addedAtom(result);
+            if (added) {
+                tree.site.time = calculateTimeFromId(
+                    tree.site.id,
+                    tree.site.time,
+                    added.id.site,
+                    added.id.timestamp
+                );
+            }
+        }
     }
     if (removedAtoms) {
-        removeAtoms(tree, removedAtoms, results);
-    }
-    for (let result of results) {
-        reducer(tree.weave, result, update, space);
+        for (let hash of removedAtoms) {
+            const node = tree.weave.getNodeByHash(hash);
+            if (node) {
+                const result = tree.weave.remove(node.atom);
+                results.push(result);
+                reducer(tree.weave, result, update, space);
+            }
+        }
     }
     const prevState = tree.state;
     const finalState = apply(prevState, update);

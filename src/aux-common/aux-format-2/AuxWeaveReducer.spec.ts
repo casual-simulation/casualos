@@ -1228,7 +1228,7 @@ describe('AuxWeaveReducer', () => {
                     expect(update).toEqual({
                         ['test']: {
                             tags: {
-                                abc: edit(4, preserve(1), insert('ghi')),
+                                abc: edit({ a: 4 }, preserve(1), insert('ghi')),
                             },
                         },
                     });
@@ -1272,7 +1272,7 @@ describe('AuxWeaveReducer', () => {
                     expect(update).toEqual({
                         ['test']: {
                             tags: {
-                                abc: edit(5, preserve(2), insert('222')),
+                                abc: edit({ a: 5 }, preserve(2), insert('222')),
                             },
                         },
                     });
@@ -1325,7 +1325,7 @@ describe('AuxWeaveReducer', () => {
                     expect(update).toEqual({
                         ['test']: {
                             tags: {
-                                abc: edit(5, preserve(1), insert('222')),
+                                abc: edit({ a: 5 }, preserve(1), insert('222')),
                             },
                         },
                     });
@@ -1369,7 +1369,7 @@ describe('AuxWeaveReducer', () => {
                     expect(update).toEqual({
                         ['test']: {
                             tags: {
-                                abc: edit(4, preserve(4), insert('111')),
+                                abc: edit({ a: 4 }, preserve(4), insert('111')),
                             },
                         },
                     });
@@ -1404,7 +1404,11 @@ describe('AuxWeaveReducer', () => {
                     expect(update).toEqual({
                         ['test']: {
                             tags: {
-                                abc: edit(5, preserve(1), insert('111111')),
+                                abc: edit(
+                                    { a: 5 },
+                                    preserve(1),
+                                    insert('111111')
+                                ),
                             },
                         },
                     });
@@ -1461,7 +1465,7 @@ describe('AuxWeaveReducer', () => {
                     expect(update).toEqual({
                         ['test']: {
                             tags: {
-                                abc: edit(7, preserve(5), insert('333')),
+                                abc: edit({ a: 7 }, preserve(5), insert('333')),
                             },
                         },
                     });
@@ -1496,7 +1500,7 @@ describe('AuxWeaveReducer', () => {
                     expect(update).toEqual({
                         ['test']: {
                             tags: {
-                                abc: edit(5, preserve(2), del(2)),
+                                abc: edit({ a: 5 }, preserve(2), del(2)),
                             },
                         },
                     });
@@ -1540,7 +1544,7 @@ describe('AuxWeaveReducer', () => {
                     expect(update).toEqual({
                         ['test']: {
                             tags: {
-                                abc: edit(5, preserve(4), del(2)),
+                                abc: edit({ a: 5 }, preserve(4), del(2)),
                             },
                         },
                     });
@@ -1584,7 +1588,7 @@ describe('AuxWeaveReducer', () => {
                     expect(update).toEqual({
                         ['test']: {
                             tags: {
-                                abc: edit(5, preserve(1), del(1)),
+                                abc: edit({ a: 5 }, preserve(1), del(1)),
                             },
                         },
                     });
@@ -1628,7 +1632,7 @@ describe('AuxWeaveReducer', () => {
                     expect(update).toEqual({
                         ['test']: {
                             tags: {
-                                abc: edit(4, preserve(1), del(1)),
+                                abc: edit({ a: 4 }, preserve(1), del(1)),
                             },
                         },
                     });
@@ -1720,7 +1724,7 @@ describe('AuxWeaveReducer', () => {
                     expect(update).toEqual({
                         ['test']: {
                             tags: {
-                                abc: edit(6, preserve(1), del(1)),
+                                abc: edit({ a: 6 }, preserve(1), del(1)),
                             },
                         },
                     });
@@ -1769,7 +1773,11 @@ describe('AuxWeaveReducer', () => {
                     expect(update).toEqual({
                         ['test']: {
                             tags: {
-                                abc: edit(6, preserve(2), insert('22222')),
+                                abc: edit(
+                                    { a: 6 },
+                                    preserve(2),
+                                    insert('22222')
+                                ),
                             },
                         },
                     });
@@ -1827,7 +1835,11 @@ describe('AuxWeaveReducer', () => {
                     expect(update).toEqual({
                         ['test']: {
                             tags: {
-                                abc: edit(6, preserve(2), insert('22222')),
+                                abc: edit(
+                                    { a: 6 },
+                                    preserve(2),
+                                    insert('22222')
+                                ),
                             },
                         },
                     });
@@ -1867,7 +1879,7 @@ describe('AuxWeaveReducer', () => {
                     expect(update).toEqual({
                         ['test']: {
                             tags: {
-                                abc: edit(6, preserve(1), insert('222')),
+                                abc: edit({ a: 6 }, preserve(1), insert('222')),
                             },
                         },
                     });
@@ -1925,7 +1937,7 @@ describe('AuxWeaveReducer', () => {
                     expect(update).toEqual({
                         ['test']: {
                             tags: {
-                                abc: edit(6, preserve(2), insert('222')),
+                                abc: edit({ a: 6 }, preserve(2), insert('222')),
                             },
                         },
                     });
@@ -1977,7 +1989,7 @@ describe('AuxWeaveReducer', () => {
                         ['test']: {
                             tags: {
                                 abc: edits(
-                                    5,
+                                    { a: 5 },
                                     [preserve(1), insert('111')],
                                     [preserve(1), insert('222')]
                                 ),
@@ -2023,7 +2035,7 @@ describe('AuxWeaveReducer', () => {
                         ['test']: {
                             tags: {
                                 abc: edits(
-                                    5,
+                                    { a: 5 },
                                     [preserve(1), del(1)],
                                     [preserve(1), del(1)]
                                 ),
@@ -2078,7 +2090,7 @@ describe('AuxWeaveReducer', () => {
                         ['test']: {
                             tags: {
                                 abc: edits(
-                                    5,
+                                    { a: 5 },
                                     [preserve(1), del(1)],
                                     [preserve(1), insert('111')]
                                 ),
@@ -2091,6 +2103,80 @@ describe('AuxWeaveReducer', () => {
                             id: 'test',
                             tags: {
                                 abc: 'd111f',
+                            },
+                        },
+                    });
+                });
+
+                it('should handle multiple overlapping inserts in the same update', () => {
+                    const bot1 = atom(atomId('b', 100), null, bot('test'));
+                    const tag1 = atom(atomId('b', 101), bot1, tag('tag1'));
+                    const val1 = atom(atomId('b', 102), tag1, value('val1A'));
+
+                    const insert1 = atom(
+                        atomId('b', 103),
+                        val1,
+                        insertOp(1, '!!!')
+                    );
+                    // After: v!!!al1A
+
+                    const insert2 = atom(
+                        atomId('b', 104),
+                        insert1,
+                        insertOp(1, '@@@')
+                    );
+                    // After: v!@@@!!al1A
+
+                    const insert3 = atom(
+                        atomId('b', 105),
+                        val1,
+                        insertOp(0, '###')
+                    );
+                    // After: ###v!@@@!!al1A
+
+                    state = add(bot1, tag1, val1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert1),
+                        undefined,
+                        space
+                    );
+
+                    let update2 = reduce(
+                        weave,
+                        weave.insert(insert2),
+                        update,
+                        space
+                    );
+
+                    let update3 = reduce(
+                        weave,
+                        weave.insert(insert3),
+                        update,
+                        space
+                    );
+
+                    state = apply(state, update3);
+
+                    expect(update3).toEqual({
+                        ['test']: {
+                            tags: {
+                                tag1: edits(
+                                    { b: 105 },
+                                    [preserve(1), insert('!!!')],
+                                    [preserve(2), insert('@@@')],
+                                    [preserve(0), insert('###')]
+                                ),
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                tag1: '###v!@@@!!al1A',
                             },
                         },
                     });

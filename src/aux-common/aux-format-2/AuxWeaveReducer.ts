@@ -303,7 +303,7 @@ function insertAtomAddedReducer(
                     [tagName]: mergeEdits(
                         possibleEdit,
                         edit(
-                            atom.id.timestamp,
+                            { [atom.id.site]: atom.id.timestamp },
                             preserve(count),
                             insert(op.text)
                         )
@@ -316,7 +316,7 @@ function insertAtomAddedReducer(
             [id]: {
                 tags: {
                     [tagName]: edit(
-                        atom.id.timestamp,
+                        { [atom.id.site]: atom.id.timestamp },
                         preserve(count),
                         insert(op.text)
                     ),
@@ -391,7 +391,7 @@ function deleteTextReducer(
                         [tagName]: mergeEdits(
                             possibleEdit,
                             edit(
-                                atom.id.timestamp,
+                                { [atom.id.site]: atom.id.timestamp },
                                 preserve(count),
                                 del(length)
                             )
@@ -404,7 +404,7 @@ function deleteTextReducer(
                 [id]: {
                     tags: {
                         [tagName]: edit(
-                            atom.id.timestamp,
+                            { [atom.id.site]: atom.id.timestamp },
                             preserve(count),
                             del(length)
                         ),
@@ -946,11 +946,6 @@ function deleteBot(
     id: string,
     state: PartialBotsState
 ): PartialBotsState {
-    let nodes = [...findBotNodes(weave, id)];
-    if (nodes.length > 0) {
-        return state;
-    }
-
     lodashMerge(state, {
         [id]: null,
     });

@@ -25,6 +25,7 @@ import reducer from './AuxWeaveReducer';
 import isEqual from 'lodash/isEqual';
 import { splice } from '../utils';
 import { sortBy } from 'lodash';
+import { VersionVector } from './AuxStateHelpers';
 
 /**
  * Finds the first weave node that defines a bot with the given ID.
@@ -156,7 +157,7 @@ export function findEditPosition(
         );
     }
 
-    const children = [value, ...iterateChildren(value)];
+    const children = [value, ...iterateCausalGroup(value)];
     const filtered = children.filter((c) => {
         const timestamp = version[c.atom.id.site] || -1;
         return c.atom.id.timestamp <= timestamp;
@@ -274,13 +275,6 @@ export function calculateOrderedEdits(
             node: s.node,
         }))
         .filter((s) => s.text.length > 0);
-}
-
-/**
- * Defines an interface that represents a map of site IDs to timestamps.
- */
-export interface VersionVector {
-    [site: string]: number;
 }
 
 /**

@@ -8,6 +8,7 @@ import {
 } from '../bots/Bot';
 import { merge, splice } from '../utils';
 import { hasValue, isBot } from '../bots/BotCalculations';
+import { sortBy } from 'lodash';
 
 /**
  * The name of the property that indicates an object represents a tag edit.
@@ -19,10 +20,13 @@ export const TAG_EDIT_NAME = '\u0011tag_edit';
 /**
  * Creates a tag edit using the given list of operations.
  */
-export function edit(timestamp: number, ...operations: TagEditOp[]): TagEdit {
+export function edit(
+    version: VersionVector,
+    ...operations: TagEditOp[]
+): TagEdit {
     return {
         [TAG_EDIT_NAME]: true,
-        timestamp,
+        version,
         operations: [operations],
     };
 }
@@ -31,12 +35,12 @@ export function edit(timestamp: number, ...operations: TagEditOp[]): TagEdit {
  * Creates a tag edit using the given list of operations.
  */
 export function edits(
-    timestamp: number,
+    version: VersionVector,
     ...operations: TagEditOp[][]
 ): TagEdit {
     return {
         [TAG_EDIT_NAME]: true,
-        timestamp,
+        version,
         operations,
     };
 }
@@ -48,7 +52,7 @@ export function edits(
  */
 export function mergeEdits(first: TagEdit, second: TagEdit): TagEdit {
     return edits(
-        Math.max(first.timestamp, second.timestamp),
+        mergeVersions(first.version, second.version),
         ...first.operations,
         ...second.operations
     );
@@ -96,6 +100,25 @@ export function isTagEdit(value: any): value is TagEdit {
 }
 
 /**
+ * Merges the two version vectors, taking the latest timestamp from each.
+ * @param first The first.
+ * @param second The second.
+ */
+export function mergeVersions(
+    first: VersionVector,
+    second: VersionVector
+): VersionVector {
+    let final = {
+        ...first,
+    };
+    for (let site in second) {
+        final[site] = Math.max(final[site], second[site]);
+    }
+
+    return final;
+}
+
+/**
  * Defines an interface that represents a tag edit.
  */
 export interface TagEdit {
@@ -104,12 +127,19 @@ export interface TagEdit {
     /**
      * The timestamp that the edit should be made at.
      */
-    timestamp: number;
+    version: VersionVector;
 
     /**
      * The operations that are part of the edit.
      */
     operations: TagEditOp[][];
+}
+
+/**
+ * Defines an interface that represents a map of site IDs to timestamps.
+ */
+export interface VersionVector {
+    [site: string]: number;
 }
 
 export type TagEditOp = TagPreserveOp | TagInsertOp | TagDeleteOp;

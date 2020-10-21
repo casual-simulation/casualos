@@ -730,32 +730,13 @@ describe('AuxCausalTree2', () => {
                     bot1B,
                     tag1B,
                     val1B,
-                    del1B,
                 ]));
+
+                ({ tree } = applyAtoms(tree, [del1B]));
 
                 expect(tree.state).toEqual({
                     test: createBot('test', {
                         abc: 'def',
-                    }),
-                    test2: createBot('test2', {
-                        tag1: 'val1A',
-                    }),
-                });
-
-                ({ tree, updates } = applyEvents(tree, [
-                    botUpdated('test2', {
-                        tags: {
-                            tag1: 'new',
-                        },
-                    }),
-                ]));
-
-                expect(tree.state).toEqual({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                    test2: createBot('test2', {
-                        tag1: 'new',
                     }),
                 });
             });
@@ -864,7 +845,7 @@ describe('AuxCausalTree2', () => {
                 ({ tree, updates, result } = applyEvents(tree, [
                     botUpdated('test', {
                         tags: {
-                            abc: edit(1, insert('ghi')),
+                            abc: edit({ a: 3 }, insert('ghi')),
                         },
                     }),
                 ]));
@@ -877,7 +858,7 @@ describe('AuxCausalTree2', () => {
                 expect(result.update).toEqual({
                     test: {
                         tags: {
-                            abc: edit(4, preserve(0), insert('ghi')),
+                            abc: edit({ a: 4 }, preserve(0), insert('ghi')),
                         },
                     },
                 });
@@ -934,7 +915,7 @@ describe('AuxCausalTree2', () => {
                 ({ tree, updates, result } = applyEvents(tree, [
                     botUpdated('test2', {
                         tags: {
-                            tag1: edit(104, preserve(3), insert('ghi')),
+                            tag1: edit({ b: 104 }, preserve(3), insert('ghi')),
                         },
                     }),
                 ]));
@@ -950,27 +931,27 @@ describe('AuxCausalTree2', () => {
                 expect(result.update).toEqual({
                     test2: {
                         tags: {
-                            tag1: edit(106, preserve(6), insert('ghi')),
+                            tag1: edit({ a: 107 }, preserve(6), insert('ghi')),
                         },
                     },
                 });
 
                 const insert4 = atom(
-                    atomId('a', 106),
+                    atomId('a', 107),
                     insert2,
                     insertOp(1, 'ghi')
                 );
                 const botAtoms = [
                     ...iterateCausalGroup(tree.weave.getNode(bot1A.id)),
-                ];
+                ].map((n) => n.atom);
 
                 expect(botAtoms).toEqual([
                     tag1A,
                     val1A,
-                    insert4,
                     insert3,
-                    insert2,
                     insert1,
+                    insert2,
+                    insert4,
                 ]);
             });
         });
