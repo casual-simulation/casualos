@@ -66,10 +66,12 @@ import { Game } from '../Game';
 import { GameObject } from '../GameObject';
 import { FrustumHelper } from '../helpers/FrustumHelper';
 import HelixUrl from '../../public/meshes/dna_form.glb';
+import EggUrl from '../../public/meshes/egg.glb';
 
 const gltfPool = getGLTFPool('main');
 
-export class BotShapeDecorator extends AuxBot3DDecoratorBase
+export class BotShapeDecorator
+    extends AuxBot3DDecoratorBase
     implements IMeshDecorator {
     private _shape: BotShape = null;
     private _subShape: BotSubShape = null;
@@ -480,6 +482,8 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
             this._createFrustum();
         } else if (this._shape === 'helix') {
             this._createHelix();
+        } else if (this._shape === 'egg') {
+            this._createEgg();
         }
 
         this.onMeshUpdated.invoke(this);
@@ -642,6 +646,15 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         this.mesh = this.scene.children[0] as Mesh;
         let material = baseAuxMeshMaterial();
         this.mesh.material = material;
+        this._updateColor(null);
+    }
+
+    private async _createEgg() {
+        this.stroke = null;
+        this.mesh = null;
+        this._canHaveStroke = false;
+        await this._loadGLTF(EggUrl, false);
+        this.mesh = this.scene.children[0] as Mesh;
         this._updateColor(null);
     }
 }

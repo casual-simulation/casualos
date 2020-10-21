@@ -404,6 +404,7 @@ export type BotShape =
     | 'iframe'
     | 'frustum'
     | 'helix'
+    | 'egg'
     | 'nothing';
 
 /**
