@@ -5,7 +5,7 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 
 const loader = new GLTFLoader();
 const draco = new DRACOLoader();
-draco.setDecoderPath('/gltf-draco');
+draco.setDecoderPath('/gltf-draco/');
 loader.setDRACOLoader(draco);
 
 const legacy = new LegacyGLTFLoader();
@@ -62,6 +62,11 @@ function _loadGLTF(
     loader: GLTFLoader | LegacyGLTFLoader
 ): Promise<GLTF> {
     return new Promise((resolve, reject) => {
-        loader.load(url, gltf => resolve(gltf), null, err => reject(err));
+        loader.load(
+            url,
+            (gltf) => resolve(gltf),
+            null,
+            (err) => reject(err)
+        );
     });
 }
