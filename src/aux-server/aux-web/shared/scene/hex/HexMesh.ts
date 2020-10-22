@@ -130,7 +130,7 @@ export function createHexMeshGeometry(
     size: number,
     height: number
 ): BufferGeometry {
-    const verts = hex(size);
+    const verts = hex(size / Math.sqrt(3));
     const shape = new Shape(verts);
     const geometry = new ExtrudeBufferGeometry(shape, {
         depth: height,
@@ -138,6 +138,7 @@ export function createHexMeshGeometry(
         bevelEnabled: false,
     });
     geometry.rotateX(-90 * (Math.PI / 180));
+    geometry.translate(0, -height * 0.5, 0);
 
     return geometry;
 }

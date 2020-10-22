@@ -67,6 +67,7 @@ import { GameObject } from '../GameObject';
 import { FrustumHelper } from '../helpers/FrustumHelper';
 import HelixUrl from '../../public/meshes/dna_form.glb';
 import EggUrl from '../../public/meshes/egg.glb';
+import { Axial, HexMesh } from '../hex';
 
 const gltfPool = getGLTFPool('main');
 
@@ -484,6 +485,8 @@ export class BotShapeDecorator
             this._createHelix();
         } else if (this._shape === 'egg') {
             this._createEgg();
+        } else if (this._shape === 'hex') {
+            this._createHex();
         }
 
         this.onMeshUpdated.invoke(this);
@@ -656,6 +659,20 @@ export class BotShapeDecorator
         await this._loadGLTF(EggUrl, false);
         this.mesh = this.scene.children[0] as Mesh;
         this._updateColor(null);
+    }
+
+    private async _createHex() {
+        this.mesh = this.collider = new HexMesh(
+            new Axial(0, 0),
+            1,
+            1,
+            baseAuxMeshMaterial()
+        );
+        this.container.add(this.mesh);
+        this.bot3D.colliders.push(this.collider);
+        // Stroke
+        this.stroke = null;
+        this._canHaveStroke = false;
     }
 }
 
