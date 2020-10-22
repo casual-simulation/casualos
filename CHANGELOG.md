@@ -9,6 +9,10 @@
 -   Added the `egg` form for bots.
     -   Displays the bot as an egg like how ab-1 appears as an egg before being activated.
 
+### :bug: Bug Fixes
+
+-   Fixed Draco compression support.
+
 ## V1.2.18
 
 #### Date: 10/20/2020
