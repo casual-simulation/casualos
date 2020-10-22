@@ -20,12 +20,12 @@ import {
     idEquals,
     AtomId,
     atom,
+    VersionVector,
 } from '@casual-simulation/causal-trees/core2';
 import reducer from './AuxWeaveReducer';
 import isEqual from 'lodash/isEqual';
 import { splice } from '../utils';
 import { sortBy } from 'lodash';
-import { VersionVector } from './AuxStateHelpers';
 
 /**
  * Finds the first weave node that defines a bot with the given ID.

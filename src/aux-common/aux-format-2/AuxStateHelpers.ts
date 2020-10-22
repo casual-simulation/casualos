@@ -9,6 +9,7 @@ import {
 import { merge, splice } from '../utils';
 import { hasValue, isBot } from '../bots/BotCalculations';
 import { sortBy } from 'lodash';
+import { VersionVector } from '@casual-simulation/causal-trees';
 
 /**
  * The name of the property that indicates an object represents a tag edit.
@@ -133,13 +134,6 @@ export interface TagEdit {
      * The operations that are part of the edit.
      */
     operations: TagEditOp[][];
-}
-
-/**
- * Defines an interface that represents a map of site IDs to timestamps.
- */
-export interface VersionVector {
-    [site: string]: number;
 }
 
 export type TagEditOp = TagPreserveOp | TagInsertOp | TagDeleteOp;

@@ -8,8 +8,9 @@ import {
 import {
     CausalRepoClient,
     CausalRepoCommit,
+    VersionVector,
 } from '@casual-simulation/causal-trees/core2';
-import { Observable, Subscription, Subject } from 'rxjs';
+import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import {
     BotAction,
@@ -61,6 +62,7 @@ export class RemoteCausalRepoHistoryPartitionImpl
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
     protected _onStateUpdated = new Subject<StateUpdatedEvent>();
+    private _onVersionUpdated = new BehaviorSubject<VersionVector>({});
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -99,6 +101,10 @@ export class RemoteCausalRepoHistoryPartitionImpl
         return this._onStateUpdated.pipe(
             startWith(stateUpdatedEvent(this.state))
         );
+    }
+
+    get onVersionUpdated(): Observable<VersionVector> {
+        return this._onVersionUpdated;
     }
 
     get onError(): Observable<any> {

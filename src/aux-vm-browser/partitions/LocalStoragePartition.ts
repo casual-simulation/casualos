@@ -24,9 +24,19 @@ import {
     BotTagMasks,
     BotTags,
 } from '@casual-simulation/aux-common';
-import { StatusUpdate, Action } from '@casual-simulation/causal-trees';
+import {
+    StatusUpdate,
+    Action,
+    VersionVector,
+} from '@casual-simulation/causal-trees';
 import flatMap from 'lodash/flatMap';
-import { Subject, Subscription, Observable, fromEventPattern } from 'rxjs';
+import {
+    Subject,
+    Subscription,
+    Observable,
+    fromEventPattern,
+    BehaviorSubject,
+} from 'rxjs';
 import { startWith, filter, map } from 'rxjs/operators';
 import pickBy from 'lodash/pickBy';
 import union from 'lodash/union';
@@ -40,6 +50,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
     protected _onStateUpdated = new Subject<StateUpdatedEvent>();
+    protected _onVersionUpdated = new BehaviorSubject<VersionVector>({});
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -80,6 +91,10 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
 
     get onStatusUpdated(): Observable<StatusUpdate> {
         return this._onStatusUpdated;
+    }
+
+    get onVersionUpdated(): Observable<VersionVector> {
+        return this._onVersionUpdated;
     }
 
     unsubscribe() {

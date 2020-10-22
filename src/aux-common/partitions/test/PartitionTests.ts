@@ -10,7 +10,7 @@ import {
     stateUpdatedEvent,
 } from '../../bots';
 import { Subscription, never } from 'rxjs';
-import { StatusUpdate } from '@casual-simulation/causal-trees';
+import { StatusUpdate, VersionVector } from '@casual-simulation/causal-trees';
 import { waitAsync } from '../../test/TestHelpers';
 import {
     first,
@@ -20,7 +20,7 @@ import {
     bufferCount,
     skip,
 } from 'rxjs/operators';
-import { del, edit, insert } from '../../aux-format-2';
+import { del, edit, insert, preserve } from '../../aux-format-2';
 
 export function testPartitionImplementation(
     createPartition: () => Promise<AuxPartition>
@@ -31,6 +31,7 @@ export function testPartitionImplementation(
     let updated: UpdatedBot[];
     let statuses: StatusUpdate[];
     let updates: StateUpdatedEvent[];
+    let version: VersionVector;
     let sub: Subscription;
     beforeEach(async () => {
         sub = new Subscription();
@@ -56,6 +57,7 @@ export function testPartitionImplementation(
                 .pipe(skip(1))
                 .subscribe((u) => updates.push(u))
         );
+        sub.add(partition.onVersionUpdated.subscribe((v) => (version = v)));
 
         sub.add(
             partition.onStatusUpdated.subscribe((update) =>
@@ -633,10 +635,11 @@ export function testPartitionImplementation(
 
                 await waitAsync();
 
+                const editVersion = { ...version };
                 await partition.applyEvents([
                     botUpdated('test', {
                         tags: {
-                            abc: edit(1, insert('ghi')),
+                            abc: edit(editVersion, insert('ghi')),
                         },
                     }),
                 ]);
@@ -646,19 +649,11 @@ export function testPartitionImplementation(
                         abc: 'ghidef',
                     }),
                 });
-                expect(updated).toEqual([
-                    {
-                        bot: createBot('test', {
-                            abc: 'ghidef',
-                        }),
-                        tags: ['abc'],
-                    },
-                ]);
                 expect(updates.slice(1)).toEqual([
                     stateUpdatedEvent({
                         test: {
                             tags: {
-                                abc: edit(1, insert('ghi')),
+                                abc: edit(version, insert('ghi')),
                             },
                         },
                     }),
@@ -676,10 +671,11 @@ export function testPartitionImplementation(
 
                 await waitAsync();
 
+                const editVersion = { ...version };
                 await partition.applyEvents([
                     botUpdated('test', {
                         tags: {
-                            abc: edit(1, del(2)),
+                            abc: edit(editVersion, del(2)),
                         },
                     }),
                 ]);
@@ -689,19 +685,11 @@ export function testPartitionImplementation(
                         abc: 'f',
                     }),
                 });
-                expect(updated).toEqual([
-                    {
-                        bot: createBot('test', {
-                            abc: 'f',
-                        }),
-                        tags: ['abc'],
-                    },
-                ]);
                 expect(updates.slice(1)).toEqual([
                     stateUpdatedEvent({
                         test: {
                             tags: {
-                                abc: edit(1, del(2)),
+                                abc: edit(version, del(2)),
                             },
                         },
                     }),
@@ -894,7 +882,7 @@ export function testPartitionImplementation(
                         botUpdated('test', {
                             masks: {
                                 testSpace: {
-                                    abc: edit(1, insert('ghi')),
+                                    abc: edit(version, insert('ghi')),
                                 },
                             },
                         }),
@@ -917,7 +905,7 @@ export function testPartitionImplementation(
                             test: {
                                 masks: {
                                     testSpace: {
-                                        abc: edit(1, insert('ghi')),
+                                        abc: edit(version, insert('ghi')),
                                     },
                                 },
                             },
@@ -942,7 +930,7 @@ export function testPartitionImplementation(
                         botUpdated('test', {
                             masks: {
                                 testSpace: {
-                                    abc: edit(1, del(2)),
+                                    abc: edit(version, del(2)),
                                 },
                             },
                         }),
@@ -965,7 +953,7 @@ export function testPartitionImplementation(
                             test: {
                                 masks: {
                                     testSpace: {
-                                        abc: edit(1, del(2)),
+                                        abc: edit(version, del(2)),
                                     },
                                 },
                             },

@@ -20,6 +20,7 @@ import {
     CommitData,
     atomMap,
     calculateCommitDiff,
+    VersionVector,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxCausalTree,
@@ -28,7 +29,7 @@ import {
     BotStateUpdates,
     applyAtoms,
 } from '../aux-format-2';
-import { Observable, Subscription, Subject } from 'rxjs';
+import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import { startWith, first } from 'rxjs/operators';
 import {
     BotAction,
@@ -91,6 +92,7 @@ export class RemoteCausalRepoPartitionImpl
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
     protected _onStateUpdated = new Subject<StateUpdatedEvent>();
+    protected _onVersionUpdated = new BehaviorSubject<VersionVector>({});
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -141,6 +143,10 @@ export class RemoteCausalRepoPartitionImpl
         return this._onStateUpdated.pipe(
             startWith(stateUpdatedEvent(this._tree.state))
         );
+    }
+
+    get onVersionUpdated(): Observable<VersionVector> {
+        return this._onVersionUpdated;
     }
 
     get onError(): Observable<any> {
@@ -652,6 +658,7 @@ export class RemoteCausalRepoPartitionImpl
             update.updatedBots.length > 0
         ) {
             this._onStateUpdated.next(update);
+            this._onVersionUpdated.next(this._tree.version);
         }
     }
 }

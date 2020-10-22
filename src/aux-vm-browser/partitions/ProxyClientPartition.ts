@@ -16,8 +16,9 @@ import {
     DeviceAction,
     StatusUpdate,
     Action,
+    VersionVector,
 } from '@casual-simulation/causal-trees';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { wrap, proxy, releaseProxy, Remote } from 'comlink';
 import { startWith } from 'rxjs/operators';
 import values from 'lodash/values';
@@ -44,6 +45,7 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
     private _onBotsRemoved: Subject<string[]>;
     private _onBotsUpdated: Subject<UpdatedBot[]>;
     private _onStateUpdated: Subject<StateUpdatedEvent>;
+    private _onVersionUpdated: BehaviorSubject<VersionVector>;
     private _onError: Subject<any>;
     private _onEvents: Subject<Action[]>;
     private _onStatusUpdated: Subject<StatusUpdate>;
@@ -78,6 +80,9 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
             startWith(stateUpdatedEvent(this.state))
         );
     }
+    get onVersionUpdated(): Observable<VersionVector> {
+        return this._onVersionUpdated;
+    }
     get onError(): Observable<any> {
         return this._onError;
     }
@@ -99,6 +104,7 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
         this._onBotsRemoved = new Subject<string[]>();
         this._onBotsUpdated = new Subject<UpdatedBot[]>();
         this._onStateUpdated = new Subject<StateUpdatedEvent>();
+        this._onVersionUpdated = new BehaviorSubject<VersionVector>({});
         this._onError = new Subject<any>();
         this._onEvents = new Subject<Action[]>();
         this._onStatusUpdated = new Subject<StatusUpdate>();
@@ -115,6 +121,9 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
             proxy((error: any) => this._onError.next(error)),
             proxy((events: Action[]) => this._onEvents.next(events)),
             proxy((status: StatusUpdate) => this._onStatusUpdated.next(status)),
+            proxy((version: VersionVector) =>
+                this._onVersionUpdated.next(version)
+            ),
         ] as const;
 
         this._proxies = proxies;

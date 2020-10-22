@@ -20,8 +20,12 @@ import {
     PartialBotsState,
     BotSpace,
 } from '../bots';
-import { Observable, Subject } from 'rxjs';
-import { StatusUpdate, Action } from '@casual-simulation/causal-trees';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import {
+    StatusUpdate,
+    Action,
+    VersionVector,
+} from '@casual-simulation/causal-trees';
 import { startWith } from 'rxjs/operators';
 import flatMap from 'lodash/flatMap';
 import union from 'lodash/union';
@@ -50,6 +54,7 @@ class MemoryPartitionImpl implements MemoryPartition {
     private _onBotsRemoved = new Subject<string[]>();
     private _onBotsUpdated = new Subject<UpdatedBot[]>();
     private _onStateUpdated = new Subject<StateUpdatedEvent>();
+    private _onVersionUpdated = new BehaviorSubject<VersionVector>({});
     private _onError = new Subject<any>();
     private _onEvents = new Subject<Action[]>();
     private _onStatusUpdated = new Subject<StatusUpdate>();
@@ -79,6 +84,10 @@ class MemoryPartitionImpl implements MemoryPartition {
         return this._onStateUpdated.pipe(
             startWith(stateUpdatedEvent(this.state))
         );
+    }
+
+    get onVersionUpdated(): Observable<VersionVector> {
+        return this._onVersionUpdated;
     }
 
     get onError(): Observable<any> {

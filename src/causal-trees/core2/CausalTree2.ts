@@ -10,11 +10,19 @@ import {
 import { Atom, AtomCardinality } from './Atom2';
 
 /**
+ * Defines an interface that represents a map of site IDs to timestamps.
+ */
+export interface VersionVector {
+    [site: string]: number;
+}
+
+/**
  * Defines an interface for a casual tree that can be operated on.
  */
 export interface CausalTree<T> {
     weave: Weave<T>;
     site: SiteStatus;
+    version: VersionVector;
 }
 
 /**
@@ -33,6 +41,9 @@ export function tree<T>(id?: string, time?: number): CausalTree<T> {
     return {
         weave: new Weave(),
         site: newSite(id, time),
+        version: {
+            [id]: time,
+        },
     };
 }
 
@@ -56,6 +67,10 @@ export function insertAtoms<T, O extends T>(
                 tree.site.time,
                 added.id.site,
                 added.id.timestamp
+            );
+            tree.version[added.id.site] = Math.max(
+                added.id.timestamp,
+                tree.version[added.id.site] || 0
             );
         }
     }
@@ -140,7 +155,10 @@ export function removeAtom<T>(tree: CausalTree<T>, hash: string): TreeResult {
  * @param first The first tree result.
  * @param second The second tree result.
  */
-export function mergeResults(first: TreeResult, second: TreeResult) {
+export function mergeResults(
+    first: TreeResult,
+    second: TreeResult
+): TreeResult {
     return {
         results: [...first.results, ...second.results],
         newSite: mergeSites(first.newSite, second.newSite),
@@ -168,9 +186,19 @@ export function applyResult<T>(
     tree: CausalTree<T>,
     result: TreeResult
 ): CausalTree<T> {
+    for (let r of result.results) {
+        const added = addedAtom(r);
+        if (added) {
+            tree.version[added.id.site] = Math.max(
+                added.id.timestamp,
+                tree.version[added.id.site] || 0
+            );
+        }
+    }
     return {
         weave: tree.weave,
         site: result.newSite,
+        version: tree.version,
     };
 }
 

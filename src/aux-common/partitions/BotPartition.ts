@@ -11,7 +11,7 @@ import {
     BotPartitionConfig,
     SearchPartitionClientConfig,
 } from './AuxPartitionConfig';
-import { Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import {
     DeviceAction,
     StatusUpdate,
@@ -20,6 +20,7 @@ import {
     SESSION_ID_CLAIM,
     USER_ROLE,
     Action,
+    VersionVector,
 } from '@casual-simulation/causal-trees';
 import { startWith } from 'rxjs/operators';
 import flatMap from 'lodash/flatMap';
@@ -63,6 +64,7 @@ export class BotPartitionImpl implements BotPartition {
     private _onBotsRemoved = new Subject<string[]>();
     private _onBotsUpdated = new Subject<UpdatedBot[]>();
     private _onStateUpdated = new Subject<StateUpdatedEvent>();
+    private _onVersionUpdated = new BehaviorSubject<VersionVector>({});
     private _onError = new Subject<any>();
     private _onEvents = new Subject<Action[]>();
     private _onStatusUpdated = new Subject<StatusUpdate>();
@@ -95,6 +97,10 @@ export class BotPartitionImpl implements BotPartition {
         return this._onStateUpdated.pipe(
             startWith(stateUpdatedEvent(this.state))
         );
+    }
+
+    get onVersionUpdated(): Observable<VersionVector> {
+        return this._onVersionUpdated;
     }
 
     get onError(): Observable<any> {

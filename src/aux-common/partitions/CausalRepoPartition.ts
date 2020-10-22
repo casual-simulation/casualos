@@ -3,9 +3,10 @@ import {
     StatusUpdate,
     Action,
     RemoteActions,
+    VersionVector,
 } from '@casual-simulation/causal-trees';
 import { AuxCausalTree, auxTree, applyEvents } from '../aux-format-2';
-import { Observable, Subscription, Subject } from 'rxjs';
+import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import {
     CausalRepoPartition,
     AuxPartitionRealtimeStrategy,
@@ -51,6 +52,7 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
     protected _onStateUpdated = new Subject<StateUpdatedEvent>();
+    protected _onVersionUpdated = new BehaviorSubject<VersionVector>({});
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -81,6 +83,10 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
         return this._onStateUpdated.pipe(
             startWith(stateUpdatedEvent(this._tree.state))
         );
+    }
+
+    get onVersionUpdated(): Observable<VersionVector> {
+        return this._onVersionUpdated;
     }
 
     get onError(): Observable<any> {
@@ -204,6 +210,7 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
             update.updatedBots.length > 0
         ) {
             this._onStateUpdated.next(update);
+            this._onVersionUpdated.next(this._tree.version);
         }
 
         if (actions && actions.length > 0) {
