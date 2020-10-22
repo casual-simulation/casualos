@@ -1094,6 +1094,25 @@ export class PlayerGame extends Game {
                 this.renderer.domElement.style.backgroundColor = null;
             }
         }
+
+        const renderingSize = new Vector2();
+        this.renderer.getSize(renderingSize);
+
+        for (let [id, sim] of appManager.simulationManager.simulations) {
+            const player = sim.helper.userBot;
+            if (
+                player &&
+                (player.tags['pagePixelWidth'] !== renderingSize.x ||
+                    player.tags['pagePixelHeight'] !== renderingSize.y)
+            ) {
+                sim.helper.updateBot(player, {
+                    tags: {
+                        pagePixelWidth: renderingSize.x,
+                        pagePixelHeight: renderingSize.y,
+                    },
+                });
+            }
+        }
     }
 
     private _updateInventorySize() {
