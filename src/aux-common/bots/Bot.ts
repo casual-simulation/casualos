@@ -299,6 +299,8 @@ export interface BotTags {
     ['leftWristPortalConfigBot']?: string;
     ['rightWristPortalConfigBot']?: string;
     ['editingBot']?: string;
+    ['pagePixelWidth']?: number;
+    ['pagePixelHeight']?: number;
 
     // Admin channel task tags
     ['auxRunningTasks']?: boolean;
@@ -404,6 +406,7 @@ export type BotShape =
     | 'iframe'
     | 'frustum'
     | 'helix'
+    | 'egg'
     | 'nothing';
 
 /**
@@ -1251,6 +1254,8 @@ export const KNOWN_TAGS: string[] = [
     'inventoryCameraRotationOffsetX',
     'inventoryCameraRotationOffsetY',
     'inventoryCameraRotationOffsetZ',
+    'pagePixelWidth',
+    'pagePixelHeight',
 
     'mousePointerPositionX',
     'mousePointerPositionY',

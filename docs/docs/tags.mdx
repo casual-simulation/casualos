@@ -530,6 +530,12 @@ The shape that the bot should be displayed as.
   <PossibleValueCode value='helix'>
     A double helix mesh (like DNA).
   </PossibleValueCode>
+  <PossibleValueCode value='egg'>
+    A egg mesh.
+  </PossibleValueCode>
+  <PossibleValueCode value='hex'>
+    A hexagon mesh.
+  </PossibleValueCode>
   <PossibleValueCode id="iframe-form" value='iframe'>
     A webpage loaded into a 3D iframe. See <TagLink tag="formSubtype"/> for additional options.
   </PossibleValueCode>
@@ -1786,6 +1792,20 @@ Supports the following tags:
 - <TagLink tag='meetPortalStyle'/>
 
 Only available on the player bot.
+
+### `pagePixelWidth`
+
+The width of the page and inventory portals in pixels.
+
+Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
+Additionally, a device with a larger width than height does not necessarily mean that it is in landscape mode.
+
+### `pagePixelHeight`
+
+The height of the page and inventory portals in pixels.
+
+Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
+Additionally, a device with a larger height than width does not necessarily mean that it is in portrait mode.
 
 ### `pageCameraPositionX`
 

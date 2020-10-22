@@ -1,5 +1,22 @@
 # CasualOS Changelog
 
+## V1.2.19
+
+#### Date: 10/22/2020
+
+### :rocket: Improvements
+
+-   Added the `egg` form for bots.
+    -   Displays the bot as an egg like how ab-1 appears as an egg before being activated.
+-   Added the `hex` form for bots.
+    -   Displays the bot as a hexagon.
+-   Added the `pagePixelWidth` and `pagePixelHeight` tags to the player bot.
+    -   These indicate the size of the image rendered to the page portal in pixels.
+
+### :bug: Bug Fixes
+
+-   Fixed Draco compression support.
+
 ## V1.2.18
 
 #### Date: 10/20/2020
