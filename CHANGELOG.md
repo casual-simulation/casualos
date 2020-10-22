@@ -8,6 +8,10 @@
 
 -   Added the `egg` form for bots.
     -   Displays the bot as an egg like how ab-1 appears as an egg before being activated.
+-   Added the `hex` form for bots.
+    -   Displays the bot as a hexagon.
+-   Added the `pagePixelWidth` and `pagePixelHeight` tags to the player bot.
+    -   These indicate the size of the image rendered to the page portal in pixels.
 
 ### :bug: Bug Fixes
 
