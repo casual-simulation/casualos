@@ -47,6 +47,7 @@ import {
     isTagEdit,
     mergeEdits,
     preserve,
+    TagEditOp,
 } from './AuxStateHelpers';
 
 export const CERT_ID_NAMESPACE = 'a1307e2b-8d80-4945-9792-2cd483c45e24';
@@ -91,7 +92,7 @@ function atomAddedReducer(
     } else if (value.type === AuxOpType.Insert) {
         return insertAtomAddedReducer(weave, atom, value, state, space);
     } else if (value.type === AuxOpType.Delete) {
-        return deleteAtomAddedReducer(weave, atom, value, state);
+        return deleteAtomAddedReducer(weave, atom, value, state, space);
     } else if (value.type === AuxOpType.Certificate) {
         return certificateAtomAddedReducer(
             weave,
@@ -244,30 +245,43 @@ function insertAtomAddedReducer(
     state: PartialBotsState,
     space: string
 ) {
-    const { tag, bot, value } = getTextEditNodes(weave, atom);
+    const { tag: tagOrValue, bot: botOrTagMask, value } = getTextEditNodes(
+        weave,
+        atom
+    );
 
-    if (!tag) {
+    if (!tagOrValue) {
         return state;
     }
 
-    if (!bot) {
+    if (!botOrTagMask) {
         return state;
     }
 
-    if (bot.atom.value.type !== AuxOpType.Bot) {
+    if (botOrTagMask.atom.value.type === AuxOpType.TagMask) {
+        return insertTagMaskAtomAddedReducer(
+            weave,
+            atom,
+            op,
+            state,
+            space,
+            botOrTagMask as WeaveNode<TagMaskOp>,
+            tagOrValue
+        );
+    } else if (botOrTagMask.atom.value.type !== AuxOpType.Bot) {
         return state;
     }
 
-    if (tag.atom.value.type !== AuxOpType.Tag) {
+    const id = botOrTagMask.atom.value.id;
+
+    if (tagOrValue.atom.value.type !== AuxOpType.Tag) {
+        return state;
+    }
+    if (!hasValue(tagOrValue.atom.value.name)) {
         return state;
     }
 
-    if (!hasValue(tag.atom.value.name)) {
-        return state;
-    }
-
-    const tagName = tag.atom.value.name;
-    const id = bot.atom.value.id;
+    const tagName = tagOrValue.atom.value.name;
 
     const nodes = [value, ...iterateCausalGroup(value)];
     const edits = calculateOrderedEdits(nodes);
@@ -280,20 +294,11 @@ function insertAtomAddedReducer(
         count += edit.text.length;
     }
 
-    // The number of characters to preserve
-    // before the insert.
-    // let count = 0;
-    // for (let node of values) {
-    //     if (node.atom.value.type === AuxOpType.Insert) {
-    //         const { offset, overlap } = calculateSiblingOffset(
-    //             weave,
-    //             node,
-    //             node.atom.value.index,
-    //             node.atom.value.text.length
-    //         );
-    //         count += node.atom.value.index + offset;
-    //     }
-    // }
+    let ops = [] as TagEditOp[];
+    if (count > 0) {
+        ops.push(preserve(count));
+    }
+    ops.push(insert(op.text));
 
     const possibleEdit = state?.[id]?.tags?.[tagName];
     if (isTagEdit(possibleEdit)) {
@@ -302,11 +307,7 @@ function insertAtomAddedReducer(
                 tags: {
                     [tagName]: mergeEdits(
                         possibleEdit,
-                        edit(
-                            { [atom.id.site]: atom.id.timestamp },
-                            preserve(count),
-                            insert(op.text)
-                        )
+                        edit({ [atom.id.site]: atom.id.timestamp }, ...ops)
                     ),
                 },
             },
@@ -317,9 +318,81 @@ function insertAtomAddedReducer(
                 tags: {
                     [tagName]: edit(
                         { [atom.id.site]: atom.id.timestamp },
-                        preserve(count),
-                        insert(op.text)
+                        ...ops
                     ),
+                },
+            },
+        });
+    }
+
+    return state;
+}
+
+function insertTagMaskAtomAddedReducer(
+    weave: Weave<AuxOp>,
+    atom: Atom<AuxOp>,
+    op: InsertOp,
+    state: PartialBotsState,
+    space: string,
+    tagMask: WeaveNode<TagMaskOp>,
+    value: WeaveNode<AuxOp>
+) {
+    if (!hasValue(tagMask.atom.value.botId)) {
+        return state;
+    }
+
+    if (!hasValue(tagMask.atom.value.name)) {
+        return state;
+    }
+
+    const id = tagMask.atom.value.botId;
+    const tagName = tagMask.atom.value.name;
+
+    if (value.atom.value.type !== AuxOpType.Value) {
+        return state;
+    }
+
+    const nodes = [value, ...iterateCausalGroup(value)];
+    const edits = calculateOrderedEdits(nodes);
+
+    let count = 0;
+    for (let edit of edits) {
+        if (edit.node.atom === atom) {
+            break;
+        }
+        count += edit.text.length;
+    }
+
+    let ops = [] as TagEditOp[];
+    if (count > 0) {
+        ops.push(preserve(count));
+    }
+    ops.push(insert(op.text));
+
+    const possibleEdit = state?.[id]?.masks?.[space]?.[tagName];
+    if (isTagEdit(possibleEdit)) {
+        lodashMerge(state, {
+            [id]: {
+                masks: {
+                    [space]: {
+                        [tagName]: mergeEdits(
+                            possibleEdit,
+                            edit({ [atom.id.site]: atom.id.timestamp }, ...ops)
+                        ),
+                    },
+                },
+            },
+        });
+    } else {
+        lodashMerge(state, {
+            [id]: {
+                masks: {
+                    [space]: {
+                        [tagName]: edit(
+                            { [atom.id.site]: atom.id.timestamp },
+                            ...ops
+                        ),
+                    },
                 },
             },
         });
@@ -332,32 +405,51 @@ function deleteTextReducer(
     weave: Weave<AuxOp>,
     atom: Atom<AuxOp>,
     value: DeleteOp,
-    state: PartialBotsState
+    state: PartialBotsState,
+    space: string
 ) {
-    const { tag, bot, values } = getTextEditNodes(weave, atom);
+    const { tag: tagOrValue, bot: botOrTagMask, values } = getTextEditNodes(
+        weave,
+        atom
+    );
 
-    if (!tag) {
+    if (!tagOrValue) {
         return state;
     }
 
-    if (!bot) {
+    if (!botOrTagMask) {
         return state;
     }
 
-    if (bot.atom.value.type !== AuxOpType.Bot) {
+    if (botOrTagMask.atom.value.type === AuxOpType.TagMask) {
+        return deleteTagMaskTextReducer(
+            weave,
+            atom,
+            value,
+            state,
+            space,
+            botOrTagMask as WeaveNode<TagMaskOp>,
+            tagOrValue,
+            values
+        );
+    } else if (botOrTagMask.atom.value.type !== AuxOpType.Bot) {
         return state;
     }
 
-    if (tag.atom.value.type !== AuxOpType.Tag) {
+    if (botOrTagMask.atom.value.type !== AuxOpType.Bot) {
         return state;
     }
 
-    if (!hasValue(tag.atom.value.name)) {
+    if (tagOrValue.atom.value.type !== AuxOpType.Tag) {
         return state;
     }
 
-    const tagName = tag.atom.value.name;
-    const id = bot.atom.value.id;
+    if (!hasValue(tagOrValue.atom.value.name)) {
+        return state;
+    }
+
+    const tagName = tagOrValue.atom.value.name;
+    const id = botOrTagMask.atom.value.id;
 
     let count = 0;
     let length = value.end - value.start;
@@ -383,6 +475,12 @@ function deleteTextReducer(
     }
 
     if (length > 0) {
+        let ops = [] as TagEditOp[];
+        if (count > 0) {
+            ops.push(preserve(count));
+        }
+        ops.push(del(length));
+
         const possibleEdit = state?.[id]?.tags?.[tagName];
         if (isTagEdit(possibleEdit)) {
             lodashMerge(state, {
@@ -390,11 +488,7 @@ function deleteTextReducer(
                     tags: {
                         [tagName]: mergeEdits(
                             possibleEdit,
-                            edit(
-                                { [atom.id.site]: atom.id.timestamp },
-                                preserve(count),
-                                del(length)
-                            )
+                            edit({ [atom.id.site]: atom.id.timestamp }, ...ops)
                         ),
                     },
                 },
@@ -405,9 +499,99 @@ function deleteTextReducer(
                     tags: {
                         [tagName]: edit(
                             { [atom.id.site]: atom.id.timestamp },
-                            preserve(count),
-                            del(length)
+                            ...ops
                         ),
+                    },
+                },
+            });
+        }
+    }
+
+    return state;
+}
+
+function deleteTagMaskTextReducer(
+    weave: Weave<AuxOp>,
+    atom: Atom<AuxOp>,
+    op: DeleteOp,
+    state: PartialBotsState,
+    space: string,
+    tagMask: WeaveNode<TagMaskOp>,
+    value: WeaveNode<AuxOp>,
+    values: WeaveNode<AuxOp>[]
+) {
+    if (value.atom.value.type !== AuxOpType.Value) {
+        return state;
+    }
+
+    if (!hasValue(tagMask.atom.value.botId)) {
+        return state;
+    }
+
+    if (!hasValue(tagMask.atom.value.name)) {
+        return state;
+    }
+
+    const tagName = tagMask.atom.value.name;
+    const id = tagMask.atom.value.botId;
+
+    let count = 0;
+    let length = op.end - op.start;
+    for (let node of values) {
+        if (node.atom.value.type === AuxOpType.Insert) {
+            const { offset, overlap } = calculateSiblingOffset(
+                weave,
+                node,
+                node.atom.value.index,
+                node.atom.value.text.length
+            );
+            count += node.atom.value.index + offset;
+        } else if (node.atom.value.type === AuxOpType.Delete) {
+            const { offset, overlap } = calculateSiblingOffset(
+                weave,
+                node,
+                node.atom.value.start,
+                node.atom.value.end - node.atom.value.start
+            );
+            count = Math.max(0, count + node.atom.value.start + offset);
+            length -= overlap;
+        }
+    }
+
+    if (length > 0) {
+        let ops = [] as TagEditOp[];
+        if (count > 0) {
+            ops.push(preserve(count));
+        }
+        ops.push(del(length));
+
+        const possibleEdit = state?.[id]?.masks?.[space]?.[tagName];
+        if (isTagEdit(possibleEdit)) {
+            lodashMerge(state, {
+                [id]: {
+                    masks: {
+                        [space]: {
+                            [tagName]: mergeEdits(
+                                possibleEdit,
+                                edit(
+                                    { [atom.id.site]: atom.id.timestamp },
+                                    ...ops
+                                )
+                            ),
+                        },
+                    },
+                },
+            });
+        } else {
+            lodashMerge(state, {
+                [id]: {
+                    masks: {
+                        [space]: {
+                            [tagName]: edit(
+                                { [atom.id.site]: atom.id.timestamp },
+                                ...ops
+                            ),
+                        },
                     },
                 },
             });
@@ -508,10 +692,13 @@ function calculateSiblingOffset(
  */
 function getTextEditNodes(weave: Weave<AuxOp>, atom: Atom<AuxOp>) {
     const nodes = weave.referenceChain(atom.id);
+    const bot = nodes[nodes.length - 1];
     const value = nodes[nodes.length - 3];
     const tag = nodes[nodes.length - 2];
-    const bot = nodes[nodes.length - 1];
-    const values = nodes.slice(0, nodes.length - 2);
+    const values =
+        bot.atom.value.type === AuxOpType.Bot
+            ? nodes.slice(0, nodes.length - 2)
+            : nodes.slice(0, nodes.length - 1);
 
     return {
         tag,
@@ -574,7 +761,8 @@ function deleteAtomAddedReducer(
     weave: Weave<AuxOp>,
     atom: Atom<AuxOp>,
     value: DeleteOp,
-    state: PartialBotsState
+    state: PartialBotsState,
+    space: string
 ): PartialBotsState {
     const parent = weave.getNode(atom.cause);
 
@@ -588,7 +776,7 @@ function deleteAtomAddedReducer(
         parent.atom.value.type === AuxOpType.Insert ||
         parent.atom.value.type === AuxOpType.Value
     ) {
-        return deleteTextReducer(weave, atom, value, state);
+        return deleteTextReducer(weave, atom, value, state, space);
     }
 
     return state;

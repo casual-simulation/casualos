@@ -208,7 +208,7 @@ describe('AuxWeaveReducer', () => {
                 });
             });
 
-            it('should only delete a bot if all bot atoms are deleted', () => {
+            it('should only delete a bot if a bot atom is deleted', () => {
                 const bot1A = atom(atomId('b', 100), null, bot('test2'));
                 const tag1A = atom(atomId('b', 101), bot1A, tag('tag1'));
                 const val1A = atom(atomId('b', 102), tag1A, value('val1A'));
@@ -232,16 +232,7 @@ describe('AuxWeaveReducer', () => {
 
                 state = add(del1B);
 
-                expect(state).toEqual({
-                    ['test2']: {
-                        id: 'test2',
-                        tags: {
-                            // TODO: Fix so that it reverts to the first bot version
-                            // upon delete of the second bot version.
-                            tag1: 'val1B',
-                        },
-                    },
-                });
+                expect(state).toEqual({});
             });
 
             // TODO: Add support for deleting spans of text from values/inserts.
@@ -2166,7 +2157,7 @@ describe('AuxWeaveReducer', () => {
                                     { b: 105 },
                                     [preserve(1), insert('!!!')],
                                     [preserve(2), insert('@@@')],
-                                    [preserve(0), insert('###')]
+                                    [insert('###')]
                                 ),
                             },
                         },
@@ -2182,8 +2173,1137 @@ describe('AuxWeaveReducer', () => {
                     });
                 });
             });
+
+            describe('TagMask', () => {
+                beforeEach(() => {
+                    space = 'space';
+                });
+
+                it('should insert the given text into the tag value', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, 'ghi')
+                    );
+
+                    state = add(tag1, value1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert1),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edit(
+                                        { a: 4 },
+                                        preserve(1),
+                                        insert('ghi')
+                                    ),
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'dghief',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should correctly handle inserts on inserts', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '111')
+                    );
+                    const insert2 = atom(
+                        atomId('a', 5),
+                        insert1,
+                        insertOp(1, '222')
+                    );
+
+                    state = add(tag1, value1, insert1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert2),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edit(
+                                        { a: 5 },
+                                        preserve(2),
+                                        insert('222')
+                                    ),
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'd122211ef',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle inserts next to inserts', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '111')
+                    );
+                    const insert2 = atom(
+                        atomId('a', 5),
+                        value1,
+                        insertOp(1, '222')
+                    );
+
+                    state = add(tag1, value1, insert1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert2),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'd222111ef',
+                                },
+                            },
+                        },
+                    });
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edit(
+                                        { a: 5 },
+                                        preserve(1),
+                                        insert('222')
+                                    ),
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle sibling inserts added to the weave in reverse order', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '111')
+                    );
+                    const insert2 = atom(
+                        atomId('a', 5),
+                        value1,
+                        insertOp(1, '222')
+                    );
+
+                    state = add(tag1, value1, insert2);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert1),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'd222111ef',
+                                },
+                            },
+                        },
+                    });
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edit(
+                                        { a: 4 },
+                                        preserve(4),
+                                        insert('111')
+                                    ),
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle inserts after a delete', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const delete1 = atom(
+                        atomId('a', 4, 1),
+                        value1,
+                        deleteOp(1, 2)
+                    );
+                    const insert1 = atom(
+                        atomId('a', 5),
+                        value1,
+                        insertOp(1, '111111')
+                    );
+
+                    state = add(tag1, value1, delete1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert1),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edit(
+                                        { a: 5 },
+                                        preserve(1),
+                                        insert('111111')
+                                    ),
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'd111111f',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle inserts inside a delete', () => {
+                    const t1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+
+                    const v1 = atom(atomId('a', 3), t1, value('111'));
+                    // 111
+                    const d0 = atom(atomId('a', 4, 1), v1, deleteOp(1, 2));
+                    // 11
+                    const i1 = atom(atomId('a', 5), v1, insertOp(0, '222'));
+                    // 22211
+                    const d1 = atom(atomId('a', 6, 1), i1, deleteOp(2, 3));
+                    // 2211
+                    const i2 = atom(atomId('a', 7), v1, insertOp(2, '333'));
+                    // 2213331 - insert is in the middle of v1 because it should apply to "111" and not "11"
+                    const i3 = atom(atomId('a', 9), i1, insertOp(2, '444'));
+                    // 2244413331
+                    const d3 = atom(atomId('a', 10, 1), i3, deleteOp(2, 3));
+                    // 224413331
+
+                    state = add(t1, v1, d0, i1, d1, i3, d3);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(i2),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: '224413331',
+                                },
+                            },
+                        },
+                    });
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edit(
+                                        { a: 7 },
+                                        preserve(5),
+                                        insert('333')
+                                    ),
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle deletes on inserts', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '111')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 5, 1),
+                        insert1,
+                        deleteOp(1, 3)
+                    );
+
+                    state = add(tag1, value1, insert1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(delete1),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edit({ a: 5 }, preserve(2), del(2)),
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'd1ef',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle deletes next to inserts', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '111')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 5, 1),
+                        value1,
+                        deleteOp(1, 3)
+                    );
+
+                    state = add(tag1, value1, insert1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(delete1),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edit({ a: 5 }, preserve(4), del(2)),
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'd111',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle deletes next to deletes', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const delete1 = atom(
+                        atomId('a', 4, 1),
+                        value1,
+                        deleteOp(1, 2)
+                    );
+                    const delete2 = atom(
+                        atomId('a', 5, 1),
+                        value1,
+                        deleteOp(2, 3)
+                    );
+
+                    state = add(tag1, value1, delete1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(delete2),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edit({ a: 5 }, preserve(1), del(1)),
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'd',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle sibling deletes added to the weave in reverse order', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const delete1 = atom(
+                        atomId('a', 4, 1),
+                        value1,
+                        deleteOp(1, 2)
+                    );
+                    const delete2 = atom(
+                        atomId('a', 5, 1),
+                        value1,
+                        deleteOp(2, 3)
+                    );
+
+                    state = add(tag1, value1, delete2);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(delete1),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edit({ a: 4 }, preserve(1), del(1)),
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'd',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle deleting the same text twice', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '111')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 5, 1),
+                        insert1,
+                        deleteOp(1, 3)
+                    );
+                    const delete2 = atom(
+                        atomId('a', 6, 1),
+                        insert1,
+                        deleteOp(1, 3)
+                    );
+
+                    state = add(tag1, value1, insert1, delete1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(delete2),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(update).toEqual({});
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'd1ef',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle deleting the overlapping portions of text', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '11111')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 5, 1),
+                        insert1,
+                        deleteOp(0, 3)
+                    );
+                    const delete2 = atom(
+                        atomId('a', 6, 1),
+                        insert1,
+                        deleteOp(2, 4)
+                    );
+
+                    state = add(tag1, value1, insert1, delete1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(delete2),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edit({ a: 6 }, preserve(1), del(1)),
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'd1ef',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle inserts midway in deletes', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '111')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 5, 1),
+                        insert1,
+                        deleteOp(1, 3)
+                    );
+                    const insert2 = atom(
+                        atomId('a', 6),
+                        insert1,
+                        insertOp(2, '22222')
+                    );
+
+                    state = add(tag1, value1, insert1, delete1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert2),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edit(
+                                        { a: 6 },
+                                        preserve(2),
+                                        insert('22222')
+                                    ),
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'd122222ef',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle inserts that share an ending point with a delete', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '111')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 5, 1),
+                        insert1,
+                        deleteOp(1, 2)
+                    );
+                    const insert2 = atom(
+                        atomId('a', 6),
+                        insert1,
+                        insertOp(2, '22222')
+                    );
+
+                    state = add(tag1, value1, insert1, delete1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert2),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'd1222221ef',
+                                },
+                            },
+                        },
+                    });
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edit(
+                                        { a: 6 },
+                                        preserve(2),
+                                        insert('22222')
+                                    ),
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle inserts before deletes', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '111')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 5, 1),
+                        insert1,
+                        deleteOp(1, 3)
+                    );
+                    const insert2 = atom(
+                        atomId('a', 6),
+                        insert1,
+                        insertOp(0, '222')
+                    );
+
+                    state = add(tag1, value1, insert1, delete1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert2),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edit(
+                                        { a: 6 },
+                                        preserve(1),
+                                        insert('222')
+                                    ),
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'd2221ef',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle inserts when sibling inserts have deletions', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(0, '111')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 5, 1),
+                        insert1,
+                        deleteOp(1, 3)
+                    );
+                    const insert2 = atom(
+                        atomId('a', 6),
+                        value1,
+                        insertOp(1, '222')
+                    );
+
+                    state = add(tag1, value1, insert1, delete1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert2),
+                        undefined,
+                        space
+                    );
+
+                    state = apply(state, update);
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: '1d222ef',
+                                },
+                            },
+                        },
+                    });
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edit(
+                                        { a: 6 },
+                                        preserve(2),
+                                        insert('222')
+                                    ),
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle multiple inserts in the same update', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '111')
+                    );
+                    const insert2 = atom(
+                        atomId('a', 5),
+                        value1,
+                        insertOp(1, '222')
+                    );
+
+                    state = add(tag1, value1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert1),
+                        undefined,
+                        space
+                    );
+
+                    let update2 = reduce(
+                        weave,
+                        weave.insert(insert2),
+                        update,
+                        space
+                    );
+
+                    state = apply(state, update2);
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'd222111ef',
+                                },
+                            },
+                        },
+                    });
+
+                    expect(update2).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edits(
+                                        { a: 5 },
+                                        [preserve(1), insert('111')],
+                                        [preserve(1), insert('222')]
+                                    ),
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle multiple deletes in the same update', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const delete1 = atom(
+                        atomId('a', 4, 1),
+                        value1,
+                        deleteOp(1, 2)
+                    );
+                    const delete2 = atom(
+                        atomId('a', 5, 1),
+                        value1,
+                        deleteOp(2, 3)
+                    );
+
+                    state = add(tag1, value1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(delete1),
+                        undefined,
+                        space
+                    );
+
+                    let update2 = reduce(
+                        weave,
+                        weave.insert(delete2),
+                        update,
+                        space
+                    );
+
+                    state = apply(state, update2);
+
+                    expect(update2).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edits(
+                                        { a: 5 },
+                                        [preserve(1), del(1)],
+                                        [preserve(1), del(1)]
+                                    ),
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'd',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle inserts and deletes in the same update', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const delete1 = atom(
+                        atomId('a', 4, 1),
+                        value1,
+                        deleteOp(1, 2)
+                    );
+                    const insert1 = atom(
+                        atomId('a', 5),
+                        value1,
+                        insertOp(1, '111')
+                    );
+
+                    state = add(tag1, value1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(delete1),
+                        undefined,
+                        space
+                    );
+
+                    let update2 = reduce(
+                        weave,
+                        weave.insert(insert1),
+                        update,
+                        space
+                    );
+
+                    state = apply(state, update2);
+
+                    expect(update2).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edits(
+                                        { a: 5 },
+                                        [preserve(1), del(1)],
+                                        [preserve(1), insert('111')]
+                                    ),
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'd111f',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle multiple overlapping inserts in the same update', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'tag1')
+                    );
+                    const val1 = atom(atomId('b', 102), tag1, value('val1A'));
+
+                    const insert1 = atom(
+                        atomId('b', 103),
+                        val1,
+                        insertOp(1, '!!!')
+                    );
+                    // After: v!!!al1A
+
+                    const insert2 = atom(
+                        atomId('b', 104),
+                        insert1,
+                        insertOp(1, '@@@')
+                    );
+                    // After: v!@@@!!al1A
+
+                    const insert3 = atom(
+                        atomId('b', 105),
+                        val1,
+                        insertOp(0, '###')
+                    );
+                    // After: ###v!@@@!!al1A
+
+                    state = add(tag1, val1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert1),
+                        undefined,
+                        space
+                    );
+
+                    let update2 = reduce(
+                        weave,
+                        weave.insert(insert2),
+                        update,
+                        space
+                    );
+
+                    let update3 = reduce(
+                        weave,
+                        weave.insert(insert3),
+                        update,
+                        space
+                    );
+
+                    state = apply(state, update3);
+
+                    expect(update3).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    tag1: edits(
+                                        { b: 105 },
+                                        [preserve(1), insert('!!!')],
+                                        [preserve(2), insert('@@@')],
+                                        [insert('###')]
+                                    ),
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    tag1: '###v!@@@!!al1A',
+                                },
+                            },
+                        },
+                    });
+                });
+            });
         });
-        // TODO: Add support for inserts
     });
 
     describe('atom_removed', () => {

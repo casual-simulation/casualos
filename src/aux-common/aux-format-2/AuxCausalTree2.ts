@@ -35,6 +35,7 @@ import {
     tagMask,
     TagMaskOp,
     insertOp,
+    ValueOp,
 } from './AuxOpTypes';
 import { BotsState, PartialBotsState, BotTags } from '../bots/Bot';
 import reducer, { certificateId } from './AuxWeaveReducer';
@@ -240,6 +241,73 @@ export function applyEvents(
         return result;
     };
 
+    const updateTag = (
+        node: WeaveNode<TagOp | TagMaskOp>,
+        currentVal: WeaveNode<ValueOp>,
+        val: any
+    ) => {
+        let valueResult: AuxResult;
+        if (isTagEdit(val)) {
+            const version = val.version;
+            valueResult = auxResultIdentity();
+            for (let ops of val.operations) {
+                let index = 0;
+                for (let op of ops) {
+                    if (op.type === 'preserve') {
+                        index += op.count;
+                    } else if (op.type === 'insert') {
+                        const editPos = findEditPosition(
+                            currentVal,
+                            version,
+                            index
+                        );
+                        if (!editPos) {
+                            console.warn(
+                                '[AuxCausalTree2] Unable to find edit position for insert. This likely means that the given edit version is incorrect.'
+                            );
+                            break;
+                        }
+                        const insertResult = addAtom(
+                            editPos.node.atom,
+                            insertOp(editPos.index, op.text)
+                        );
+                        valueResult = mergeAuxResults(
+                            valueResult,
+                            insertResult
+                        );
+                        index += op.text.length;
+                    } else if (op.type === 'delete') {
+                        const editPos = findEditPosition(
+                            currentVal,
+                            version,
+                            index
+                        );
+                        if (!editPos) {
+                            console.warn(
+                                '[AuxCausalTree2] Unable to find edit position for delete.  This likely means that the given edit version is incorrect.'
+                            );
+                            break;
+                        }
+                        const deleteResult = addAtom(
+                            editPos.node.atom,
+                            deleteOp(editPos.index, editPos.index + op.count)
+                        );
+                        valueResult = mergeAuxResults(
+                            valueResult,
+                            deleteResult
+                        );
+
+                        // Increment the index because deletions do not affect the value node character indexes.
+                        index += op.count;
+                    }
+                }
+            }
+        } else {
+            valueResult = addAtom(node.atom, value(val));
+        }
+        return valueResult;
+    };
+
     const updateTags = (bot: WeaveNode<BotOp>, tags: BotTags) => {
         let result: AuxResult = auxResultIdentity();
         for (let key in tags) {
@@ -261,68 +329,7 @@ export function applyEvents(
 
             const currentVal = findValueNode(node);
             if (!currentVal || val !== currentVal.atom.value.value) {
-                let valueResult: AuxResult;
-                if (isTagEdit(val)) {
-                    const version = val.version;
-                    valueResult = auxResultIdentity();
-                    for (let ops of val.operations) {
-                        let index = 0;
-                        for (let op of ops) {
-                            if (op.type === 'preserve') {
-                                index += op.count;
-                            } else if (op.type === 'insert') {
-                                const editPos = findEditPosition(
-                                    currentVal,
-                                    version,
-                                    index
-                                );
-                                if (!editPos) {
-                                    console.warn(
-                                        '[AuxCausalTree2] Unable to find edit position for insert. This likely means that the given edit version is incorrect.'
-                                    );
-                                    break;
-                                }
-                                const insertResult = addAtom(
-                                    editPos.node.atom,
-                                    insertOp(editPos.index, op.text)
-                                );
-                                valueResult = mergeAuxResults(
-                                    valueResult,
-                                    insertResult
-                                );
-                                index += op.text.length;
-                            } else if (op.type === 'delete') {
-                                const editPos = findEditPosition(
-                                    currentVal,
-                                    version,
-                                    index
-                                );
-                                if (!editPos) {
-                                    console.warn(
-                                        '[AuxCausalTree2] Unable to find edit position for delete.  This likely means that the given edit version is incorrect.'
-                                    );
-                                    break;
-                                }
-                                const deleteResult = addAtom(
-                                    editPos.node.atom,
-                                    deleteOp(
-                                        editPos.index,
-                                        editPos.index + op.count
-                                    )
-                                );
-                                valueResult = mergeAuxResults(
-                                    valueResult,
-                                    deleteResult
-                                );
-
-                                // Increment the index because deletions do not affect the value node character indexes.
-                                index += op.count;
-                            }
-                        }
-                    }
-                } else {
-                    valueResult = addAtom(node.atom, value(val));
-                }
+                const valueResult = updateTag(node, currentVal, val);
                 result = mergeAuxResults(result, valueResult);
                 const newAtom = addedAtom(valueResult.results[0]);
                 if (newAtom) {
@@ -362,7 +369,7 @@ export function applyEvents(
 
             const currentVal = findValueNode(node);
             if (!currentVal || val !== currentVal.atom.value.value) {
-                const valueResult = addAtom(node.atom, value(val));
+                const valueResult = updateTag(node, currentVal, val);
                 result = mergeAuxResults(result, valueResult);
 
                 const newAtom = addedAtom(valueResult.results[0]);
@@ -713,6 +720,10 @@ export function applyAtoms(
                     tree.site.time,
                     added.id.site,
                     added.id.timestamp
+                );
+                tree.version[added.id.site] = Math.max(
+                    added.id.timestamp,
+                    tree.version[added.id.site] || 0
                 );
             }
         }

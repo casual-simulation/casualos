@@ -18,6 +18,7 @@ import {
     CertificateOp,
     signedCert,
     insertOp,
+    tagMask,
 } from './AuxOpTypes';
 import { createBot } from '../bots/BotCalculations';
 import {
@@ -858,7 +859,7 @@ describe('AuxCausalTree2', () => {
                 expect(result.update).toEqual({
                     test: {
                         tags: {
-                            abc: edit({ a: 4 }, preserve(0), insert('ghi')),
+                            abc: edit({ a: 4 }, insert('ghi')),
                         },
                     },
                 });
@@ -953,6 +954,81 @@ describe('AuxCausalTree2', () => {
                     insert2,
                     insert4,
                 ]);
+            });
+
+            it('should support inserting into a tag mask', () => {
+                let tag1 = atom(
+                    atomId('a', 4),
+                    null,
+                    tagMask('test1', 'other')
+                );
+                let val1 = atom(atomId('a', 5), tag1, value('xyz'));
+                let insert1 = atom(atomId('a', 6), val1, insertOp(0, 'ghi'));
+
+                ({ tree, updates, result } = applyEvents(
+                    tree,
+                    [
+                        botUpdated('test1', {
+                            masks: {
+                                space: {
+                                    other: 'xyz',
+                                },
+                            },
+                        }),
+                    ],
+                    'space'
+                ));
+
+                ({ tree, updates, result } = applyEvents(
+                    tree,
+                    [
+                        botUpdated('test1', {
+                            masks: {
+                                space: {
+                                    other: edit({ a: 5 }, insert('ghi')),
+                                },
+                            },
+                        }),
+                    ],
+                    'space'
+                ));
+
+                expect(tree.state).toEqual({
+                    test: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                    test1: {
+                        masks: {
+                            space: {
+                                other: 'ghixyz',
+                            },
+                        },
+                    },
+                });
+                expect(updates).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+                expect(result.update).toEqual({
+                    test1: {
+                        masks: {
+                            space: {
+                                other: edit({ a: 6 }, insert('ghi')),
+                            },
+                        },
+                    },
+                });
+
+                const tagNode = tree.weave.getNode(tag1.id);
+                const atoms = [tagNode, ...iterateCausalGroup(tagNode)].map(
+                    (n) => n.atom
+                );
+
+                expect(atoms).toEqual([tag1, val1, insert1]);
             });
         });
 
@@ -1318,17 +1394,17 @@ describe('AuxCausalTree2', () => {
                 value1,
             ]));
 
-            expect(tree).toEqual({
-                site: {
-                    id: 'a',
-                    time: 3,
-                },
-                weave: expect.anything(),
-                state: {
-                    bot1: createBot('bot1', {
-                        tag1: 'abc',
-                    }),
-                },
+            expect(tree.site).toEqual({
+                id: 'a',
+                time: 3,
+            });
+            expect(tree.version).toEqual({
+                a: 3,
+            });
+            expect(tree.state).toEqual({
+                bot1: createBot('bot1', {
+                    tag1: 'abc',
+                }),
             });
             expect(updates).toEqual({
                 addedBots: [
@@ -1462,21 +1538,21 @@ describe('AuxCausalTree2', () => {
                 'test'
             ));
 
-            expect(tree).toEqual({
-                site: {
-                    id: 'a',
-                    time: 3,
-                },
-                weave: expect.anything(),
-                state: {
-                    bot1: createBot(
-                        'bot1',
-                        {
-                            tag1: 'abc',
-                        },
-                        <any>'test'
-                    ),
-                },
+            expect(tree.site).toEqual({
+                id: 'a',
+                time: 3,
+            });
+            expect(tree.version).toEqual({
+                a: 3,
+            });
+            expect(tree.state).toEqual({
+                bot1: createBot(
+                    'bot1',
+                    {
+                        tag1: 'abc',
+                    },
+                    <any>'test'
+                ),
             });
             expect(updates).toEqual({
                 addedBots: [
@@ -1528,21 +1604,21 @@ describe('AuxCausalTree2', () => {
                 'test'
             ));
 
-            expect(tree).toEqual({
-                site: {
-                    id: 'a',
-                    time: 4,
-                },
-                weave: expect.anything(),
-                state: {
-                    bot1: createBot(
-                        'bot1',
-                        {
-                            tag1: 'def',
-                        },
-                        <any>'test'
-                    ),
-                },
+            expect(tree.site).toEqual({
+                id: 'a',
+                time: 4,
+            });
+            expect(tree.version).toEqual({
+                a: 4,
+            });
+            expect(tree.state).toEqual({
+                bot1: createBot(
+                    'bot1',
+                    {
+                        tag1: 'def',
+                    },
+                    <any>'test'
+                ),
             });
             expect(updates).toEqual({
                 addedBots: [],
