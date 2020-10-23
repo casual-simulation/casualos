@@ -8,6 +8,7 @@ import {
     remote,
     DeviceInfo,
     Action,
+    VersionVector,
 } from '@casual-simulation/causal-trees';
 import {
     createBot,
@@ -31,6 +32,9 @@ import {
     Bot,
     runScript,
     stateUpdatedEvent,
+    createCausalRepoPartition,
+    MemoryPartitionImpl,
+    MemoryPartitionStateConfig,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
@@ -366,6 +370,63 @@ describe('BaseAuxChannel', () => {
             await channel.initAndWait();
 
             expect(channel.runtime.forceSignedScripts).toBe(true);
+        });
+
+        it('should merge version vectors from different partitions', async () => {
+            let shared = new TestPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            let other = new TestPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            config = {
+                config: {
+                    version: 'v1.0.0',
+                    versionHash: 'hash',
+                },
+                partitions: {
+                    shared: <any>{
+                        type: 'test',
+                        partition: shared,
+                    },
+                    other: <any>{
+                        type: 'test',
+                        partition: other,
+                    },
+                },
+            };
+            channel = new AuxChannelImpl(user, device, config);
+
+            let versions = [] as VersionVector[];
+
+            await channel.initAndWait();
+
+            channel.onVersionUpdated.subscribe((v) => {
+                versions.push(v);
+            });
+
+            shared.onVersionUpdated.next({
+                a: 10,
+            });
+
+            other.onVersionUpdated.next({
+                b: 11,
+            });
+
+            shared.onVersionUpdated.next({
+                a: 10,
+                c: 20,
+            });
+
+            await waitAsync();
+
+            expect(versions).toEqual([
+                { a: 10 },
+                { a: 10, b: 11 },
+                { a: 10, b: 11, c: 20 },
+            ]);
         });
     });
 
@@ -948,7 +1009,29 @@ class AuxChannelImpl extends BaseAuxChannel {
         return createAuxPartition(
             config,
             (cfg) => createMemoryPartition(cfg),
-            (config) => createBotClientPartition(config)
+            (config) => createBotClientPartition(config),
+            (config) => createTestPartition(config)
         );
+    }
+}
+
+/**
+ * Attempts to create a MemoryPartition from the given config.
+ * @param config The config.
+ */
+export function createTestPartition(config: any): any {
+    if (config.type === 'test') {
+        return config.partition;
+    }
+    return undefined;
+}
+
+class TestPartition extends MemoryPartitionImpl {
+    get onVersionUpdated(): Subject<VersionVector> {
+        return super.onVersionUpdated as Subject<VersionVector>;
+    }
+
+    constructor(config: MemoryPartitionStateConfig) {
+        super(config);
     }
 }

@@ -113,7 +113,7 @@ export function mergeVersions(
         ...first,
     };
     for (let site in second) {
-        final[site] = Math.max(final[site], second[site]);
+        final[site] = Math.max(final[site] || 0, second[site] || 0);
     }
 
     return final;

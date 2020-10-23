@@ -49,7 +49,7 @@ export function createMemoryPartition(
     return undefined;
 }
 
-class MemoryPartitionImpl implements MemoryPartition {
+export class MemoryPartitionImpl implements MemoryPartition {
     private _onBotsAdded = new Subject<Bot[]>();
     private _onBotsRemoved = new Subject<string[]>();
     private _onBotsUpdated = new Subject<UpdatedBot[]>();
