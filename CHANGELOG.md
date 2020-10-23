@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.2.20
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added support for `@onPointerEnter`, `@onPointerExit`, `@onAnyBotPointerEnter` and `@onAnyBotPointerExit` for bots in the menu portal.
+
 ## V1.2.19
 
 #### Date: 10/22/2020
