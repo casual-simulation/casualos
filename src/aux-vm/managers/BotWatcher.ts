@@ -31,6 +31,7 @@ import {
     isTagEdit,
     TagEditOp,
 } from '@casual-simulation/aux-common/aux-format-2';
+import { VersionVector } from '@casual-simulation/causal-trees';
 
 /**
  * Defines an interface that contains information about an updated bot.
@@ -62,6 +63,7 @@ export class BotWatcher implements SubscriptionLike {
         string,
         { tag: string; space: string; subject: Subject<BotTagChange> }[]
     >;
+    private _lastVersion: VersionVector;
 
     closed: boolean = false;
 
@@ -98,6 +100,10 @@ export class BotWatcher implements SubscriptionLike {
         return this._botTagsUpdatedObservable;
     }
 
+    get latestVersion() {
+        return this._lastVersion;
+    }
+
     /**
      * Creates a new bot watcher.
      * @param helper The bot helper.
@@ -107,7 +113,8 @@ export class BotWatcher implements SubscriptionLike {
     constructor(
         helper: BotHelper,
         index: BotIndex,
-        stateUpdated: Observable<StateUpdatedEvent>
+        stateUpdated: Observable<StateUpdatedEvent>,
+        versionUpdated: Observable<VersionVector>
     ) {
         this._helper = helper;
         this._index = index;
@@ -116,6 +123,7 @@ export class BotWatcher implements SubscriptionLike {
         this._botsUpdatedObservable = new Subject<PrecalculatedBot[]>();
         this._botTagsUpdatedObservable = new Subject<UpdatedBotInfo[]>();
         this._botTagUpdatedObservables = new Map();
+        this._lastVersion = {};
 
         this._subs.push(
             stateUpdated
@@ -174,7 +182,8 @@ export class BotWatcher implements SubscriptionLike {
                                     observers,
                                     bot,
                                     u.tags,
-                                    null
+                                    null,
+                                    this._lastVersion
                                 );
                             }
 
@@ -190,7 +199,8 @@ export class BotWatcher implements SubscriptionLike {
                                         filtered,
                                         bot,
                                         u.masks[space],
-                                        space
+                                        space,
+                                        this._lastVersion
                                     );
                                 }
                             }
@@ -209,7 +219,13 @@ export class BotWatcher implements SubscriptionLike {
                         });
                     },
                     (err) => console.error(err)
-                )
+                ),
+            versionUpdated.subscribe(
+                (v) => {
+                    this._lastVersion = v;
+                },
+                (err) => console.error(err)
+            )
         );
     }
 
@@ -320,6 +336,7 @@ export class BotWatcher implements SubscriptionLike {
                     bot,
                     tag,
                     space,
+                    version: _this._lastVersion,
                 } as BotTagChange),
                 endWith(null as BotTagChange)
             );
@@ -339,7 +356,8 @@ function sendTagChangeEventsForTags(
     observers: BotTagObserver[],
     bot: PrecalculatedBot,
     tags: BotTags,
-    space: string
+    space: string,
+    latestVersion: VersionVector
 ) {
     for (let tag in tags) {
         let o = observers.find((a) => a.tag === tag && a.space === space);
@@ -355,6 +373,7 @@ function sendTagChangeEventsForTags(
                 tag: tag,
                 space: space,
                 operations: val.operations,
+                version: val.version,
             });
         } else {
             o.subject.next({
@@ -362,6 +381,7 @@ function sendTagChangeEventsForTags(
                 bot: bot,
                 tag: tag,
                 space: space,
+                version: latestVersion,
             });
         }
     }
@@ -398,6 +418,11 @@ export interface BotTagEdit {
     space: string;
 
     /**
+     * The version that the update occurred at.
+     */
+    version: VersionVector;
+
+    /**
      * The edit operations.
      */
     operations: TagEditOp[][];
@@ -418,6 +443,11 @@ export interface BotTagUpdate {
      * The tag that was changed.
      */
     tag: string;
+
+    /**
+     * The version that the update occurred at.
+     */
+    version: VersionVector;
 
     /**
      * The space that the tag is saved in.

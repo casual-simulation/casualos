@@ -34,7 +34,12 @@ describe('BotWatcher', () => {
 
         index = new BotIndex();
 
-        watcher = new BotWatcher(helper, index, vm.stateUpdated);
+        watcher = new BotWatcher(
+            helper,
+            index,
+            vm.stateUpdated,
+            vm.versionUpdated
+        );
     });
 
     it('should update the bot helper state', () => {
@@ -763,12 +768,14 @@ describe('BotWatcher', () => {
                     bot: createPrecalculatedBot('test', { test: 123 }),
                     tag: 'abc',
                     space: null,
+                    version: {},
                 },
                 {
                     type: 'update',
                     bot: createPrecalculatedBot('test', { abc: 'def' }),
                     tag: 'abc',
                     space: null,
+                    version: {},
                 },
             ]);
         });
@@ -800,12 +807,14 @@ describe('BotWatcher', () => {
                     bot: null,
                     tag: 'abc',
                     space: null,
+                    version: {},
                 },
                 {
                     type: 'update',
                     bot: createPrecalculatedBot('test', { abc: 'def' }),
                     tag: 'abc',
                     space: null,
+                    version: {},
                 },
             ]);
         });
@@ -831,6 +840,7 @@ describe('BotWatcher', () => {
                     bot: createPrecalculatedBot('test', { abc: 'def' }),
                     tag: 'abc',
                     space: null,
+                    version: {},
                 },
             ]);
         });
@@ -860,6 +870,7 @@ describe('BotWatcher', () => {
                     bot: createPrecalculatedBot('test', { abc: 'def' }),
                     tag: 'abc',
                     space: null,
+                    version: {},
                 },
                 null,
             ]);
@@ -897,6 +908,7 @@ describe('BotWatcher', () => {
                     bot: createPrecalculatedBot('test', { abc: 'def' }),
                     tag: 'abc',
                     space: null,
+                    version: {},
                 },
                 {
                     type: 'edit',
@@ -906,6 +918,7 @@ describe('BotWatcher', () => {
                     tag: 'abc',
                     space: null,
                     operations: [[preserve(1), insert('1'), del(1)]],
+                    version: {},
                 },
             ]);
         });
@@ -938,7 +951,12 @@ describe('BotWatcher', () => {
                 test: {
                     masks: {
                         shared: {
-                            abc: edit({}, preserve(1), insert('1'), del(1)),
+                            abc: edit(
+                                { a: 1 },
+                                preserve(1),
+                                insert('1'),
+                                del(1)
+                            ),
                         },
                     },
                     values: {
@@ -966,6 +984,7 @@ describe('BotWatcher', () => {
                     },
                     tag: 'abc',
                     space: 'shared',
+                    version: {},
                 },
                 {
                     type: 'edit',
@@ -985,6 +1004,7 @@ describe('BotWatcher', () => {
                     tag: 'abc',
                     space: 'shared',
                     operations: [[preserve(1), insert('1'), del(1)]],
+                    version: { a: 1 },
                 },
             ]);
         });
