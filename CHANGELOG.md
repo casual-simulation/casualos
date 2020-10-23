@@ -8,6 +8,10 @@
 
 -   Added support for `@onPointerEnter`, `@onPointerExit`, `@onAnyBotPointerEnter` and `@onAnyBotPointerExit` for bots in the menu portal.
 
+### :bug: Bug Fixes
+
+-   Fixed the multiline code editor to not clip tooltips and the autocomplete box.
+
 ## V1.2.19
 
 #### Date: 10/22/2020
