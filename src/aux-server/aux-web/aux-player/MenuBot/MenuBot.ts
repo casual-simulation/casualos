@@ -19,6 +19,11 @@ import {
     calculateNumericalTagValue,
     clamp,
     onPointerUpDownArg,
+    onPointerEnterExitArg,
+    ON_POINTER_ENTER,
+    ON_POINTER_EXIT,
+    ON_ANY_POINTER_EXIT,
+    ON_ANY_POINTER_ENTER,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
@@ -51,6 +56,7 @@ export default class MenuBot extends Vue {
     progressBarBackground: string = null;
 
     private _down: boolean = false;
+    private _hover: boolean = false;
 
     get hasProgress() {
         return hasValue(this.progress);
@@ -136,6 +142,48 @@ export default class MenuBot extends Vue {
             [this.item.bot],
             onPointerUpDownArg(this.item.bot, dimension)
         );
+    }
+
+    async mouseEnter() {
+        this._hover = true;
+        const simulation = _simulation(this.item);
+        const dimension = first(this.item.dimensions.values());
+        simulation.helper.transaction(
+            ...simulation.helper.actions([
+                {
+                    eventName: ON_POINTER_ENTER,
+                    bots: [this.item.bot],
+                    arg: onPointerEnterExitArg(this.item.bot, dimension),
+                },
+                {
+                    eventName: ON_ANY_POINTER_ENTER,
+                    bots: null,
+                    arg: onPointerEnterExitArg(this.item.bot, dimension),
+                },
+            ])
+        );
+    }
+
+    async mouseLeave() {
+        if (this._hover === true) {
+            this._hover = false;
+            const simulation = _simulation(this.item);
+            const dimension = first(this.item.dimensions.values());
+            simulation.helper.transaction(
+                ...simulation.helper.actions([
+                    {
+                        eventName: ON_POINTER_EXIT,
+                        bots: [this.item.bot],
+                        arg: onPointerEnterExitArg(this.item.bot, dimension),
+                    },
+                    {
+                        eventName: ON_ANY_POINTER_EXIT,
+                        bots: null,
+                        arg: onPointerEnterExitArg(this.item.bot, dimension),
+                    },
+                ])
+            );
+        }
     }
 
     async mouseUp() {
