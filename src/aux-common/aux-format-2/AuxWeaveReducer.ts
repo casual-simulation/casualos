@@ -287,11 +287,15 @@ function insertAtomAddedReducer(
     const edits = calculateOrderedEdits(nodes);
 
     let count = 0;
-    for (let edit of edits) {
-        if (edit.node.atom === atom) {
+
+    // NOTE: the variable cannot be named "edit" because
+    // then webpack will not compile the reference to th edit() function
+    // correctly.
+    for (let e of edits) {
+        if (e.node.atom === atom) {
             break;
         }
-        count += edit.text.length;
+        count += e.text.length;
     }
 
     let ops = [] as TagEditOp[];
@@ -356,11 +360,15 @@ function insertTagMaskAtomAddedReducer(
     const edits = calculateOrderedEdits(nodes);
 
     let count = 0;
-    for (let edit of edits) {
-        if (edit.node.atom === atom) {
+
+    // NOTE: the variable cannot be named "edit" because
+    // then webpack will not compile the reference to th edit() function
+    // correctly.
+    for (let e of edits) {
+        if (e.node.atom === atom) {
             break;
         }
-        count += edit.text.length;
+        count += e.text.length;
     }
 
     let ops = [] as TagEditOp[];
