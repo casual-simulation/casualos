@@ -18,7 +18,7 @@ import { calculateFormulaDefinitions } from './FormulaHelpers';
 import { libFileMap } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
 import { SimpleEditorModelResolverService } from 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
 import { SubscriptionLike, Subscription } from 'rxjs';
-import { skip, flatMap, filter, first, takeWhile } from 'rxjs/operators';
+import { skip, flatMap, filter, first, takeWhile, tap } from 'rxjs/operators';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import union from 'lodash/union';
@@ -31,6 +31,7 @@ import {
     preserve,
     TagEditOp,
 } from '@casual-simulation/aux-common/aux-format-2';
+import { VersionVector } from '@casual-simulation/causal-trees';
 
 export function setup() {
     // Tell monaco how to create the web workers
@@ -383,51 +384,68 @@ function watchModel(
         model: model,
         sub: sub,
     };
+    let lastVersion: VersionVector = simulation.watcher.latestVersion;
+    let applyingEdits: boolean = false;
 
     sub.add(
         simulation.watcher
             .botTagChanged(bot.id, tag, space)
             .pipe(
+                tap((update) => {
+                    lastVersion = update.version;
+                }),
                 skip(1),
                 takeWhile((update) => update !== null)
             )
             .subscribe((update) => {
                 bot = update.bot;
                 if (update.type === 'edit') {
-                    let index = 0;
-                    for (let op of update.operations) {
-                        if (op.type === 'preserve') {
-                            index += op.count;
-                        } else if (op.type === 'insert') {
-                            const pos = model.getPositionAt(index);
-                            const selection = new monaco.Selection(
-                                pos.lineNumber,
-                                pos.column,
-                                pos.lineNumber,
-                                pos.column
-                            );
-                            model.pushEditOperations(
-                                [],
-                                [{ range: selection, text: op.text }],
-                                () => null
-                            );
-                            index += op.text.length;
-                        } else if (op.type === 'delete') {
-                            const startPos = model.getPositionAt(index);
-                            const endPos = model.getPositionAt(
-                                index + op.count
-                            );
-                            const selection = new monaco.Selection(
-                                startPos.lineNumber,
-                                startPos.column,
-                                endPos.lineNumber,
-                                endPos.column
-                            );
-                            model.pushEditOperations(
-                                [],
-                                [{ range: selection, text: '' }],
-                                () => null
-                            );
+                    for (let ops of update.operations) {
+                        let index = 0;
+                        for (let op of ops) {
+                            if (op.type === 'preserve') {
+                                index += op.count;
+                            } else if (op.type === 'insert') {
+                                const pos = model.getPositionAt(index);
+                                const selection = new monaco.Selection(
+                                    pos.lineNumber,
+                                    pos.column,
+                                    pos.lineNumber,
+                                    pos.column
+                                );
+                                try {
+                                    applyingEdits = true;
+                                    model.pushEditOperations(
+                                        [],
+                                        [{ range: selection, text: op.text }],
+                                        () => null
+                                    );
+                                } finally {
+                                    applyingEdits = false;
+                                }
+                                index += op.text.length;
+                            } else if (op.type === 'delete') {
+                                const startPos = model.getPositionAt(index);
+                                const endPos = model.getPositionAt(
+                                    index + op.count
+                                );
+                                const selection = new monaco.Selection(
+                                    startPos.lineNumber,
+                                    startPos.column,
+                                    endPos.lineNumber,
+                                    endPos.column
+                                );
+                                try {
+                                    applyingEdits = true;
+                                    model.pushEditOperations(
+                                        [],
+                                        [{ range: selection, text: '' }],
+                                        () => null
+                                    );
+                                } finally {
+                                    applyingEdits = false;
+                                }
+                            }
                         }
                     }
                 } else {
@@ -449,43 +467,61 @@ function watchModel(
     );
 
     // TODO:
-    // sub.add(
-    //     toSubscription(
-    //         model.onDidChangeContent(async (e) => {
-    //             let operations = [] as TagEditOp[];
-    //             let index = 0;
-    //             for(let change of e.changes) {
-    //                 operations.push(
-    //                     preserve(change.rangeOffset - index),
-    //                     del(change.rangeLength),
-    //                     insert(change.text)
-    //                 );
-    //                 index += change.rangeLength;
-    //             }
-    //             await simulation.editBot(bot, tag, edit(...operations), space);
-    //         })
-    //     )
-    // );
-
     sub.add(
         toSubscription(
             model.onDidChangeContent(async (e) => {
-                if (e.isFlush) {
-                    return;
-                }
-                let val = model.getValue();
-                if (info.isFormula) {
-                    val = '=' + val;
-                } else if (info.isScript) {
-                    if (val.indexOf('@') !== 0) {
-                        val = '@' + val;
+                const info = models.get(model.uri.toString());
+                if (info.isFormula || info.isScript) {
+                    if (
+                        e.changes.every(
+                            (c) => c.rangeOffset === 0 && c.rangeLength === 1
+                        )
+                    ) {
+                        return;
                     }
                 }
-                updateLanguage(model, tag, val);
-                await simulation.editBot(bot, tag, val, space);
+                if (applyingEdits) {
+                    return;
+                }
+                let operations = [] as TagEditOp[];
+                let index = 0;
+                for (let change of e.changes) {
+                    operations.push(
+                        preserve(change.rangeOffset - index),
+                        del(change.rangeLength),
+                        insert(change.text)
+                    );
+                    index += change.rangeLength;
+                }
+                await simulation.editBot(
+                    bot,
+                    tag,
+                    edit(lastVersion, ...operations),
+                    space
+                );
             })
         )
     );
+
+    // sub.add(
+    //     toSubscription(
+    //         model.onDidChangeContent(async (e) => {
+    //             if (e.isFlush) {
+    //                 return;
+    //             }
+    //             let val = model.getValue();
+    //             if (info.isFormula) {
+    //                 val = '=' + val;
+    //             } else if (info.isScript) {
+    //                 if (val.indexOf('@') !== 0) {
+    //                     val = '@' + val;
+    //                 }
+    //             }
+    //             updateLanguage(model, tag, val);
+    //             await simulation.editBot(bot, tag, val, space);
+    //         })
+    //     )
+    // );
 
     sub.add(
         simulation.watcher.botsRemoved
