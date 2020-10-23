@@ -5064,7 +5064,7 @@ describe('AuxRuntime', () => {
                             test: {
                                 tags: {
                                     abc: edit(
-                                        1,
+                                        {},
                                         preserve(1),
                                         insert('1'),
                                         del(1)
@@ -5079,7 +5079,7 @@ describe('AuxRuntime', () => {
                             test: {
                                 tags: {
                                     abc: edit(
-                                        1,
+                                        {},
                                         preserve(1),
                                         insert('1'),
                                         del(1)
@@ -5109,7 +5109,7 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test: {
                                 tags: {
-                                    abc: edit(1, preserve(4), insert('+3')),
+                                    abc: edit({}, preserve(4), insert('+3')),
                                 },
                             },
                         })
@@ -5119,7 +5119,7 @@ describe('AuxRuntime', () => {
                         state: {
                             test: {
                                 tags: {
-                                    abc: edit(1, preserve(4), insert('+3')),
+                                    abc: edit({}, preserve(4), insert('+3')),
                                 },
                                 values: {
                                     abc: 6,
@@ -5785,7 +5785,7 @@ describe('AuxRuntime', () => {
                                     masks: {
                                         tempLocal: {
                                             abc: edit(
-                                                1,
+                                                {},
                                                 preserve(1),
                                                 insert('1'),
                                                 del(1)
@@ -5803,7 +5803,7 @@ describe('AuxRuntime', () => {
                                     masks: {
                                         tempLocal: {
                                             abc: edit(
-                                                1,
+                                                {},
                                                 preserve(1),
                                                 insert('1'),
                                                 del(1)
@@ -5843,7 +5843,7 @@ describe('AuxRuntime', () => {
                                     masks: {
                                         tempLocal: {
                                             abc: edit(
-                                                1,
+                                                {},
                                                 preserve(4),
                                                 insert('+3')
                                             ),
@@ -5860,7 +5860,7 @@ describe('AuxRuntime', () => {
                                     masks: {
                                         tempLocal: {
                                             abc: edit(
-                                                1,
+                                                {},
                                                 preserve(4),
                                                 insert('+3')
                                             ),
