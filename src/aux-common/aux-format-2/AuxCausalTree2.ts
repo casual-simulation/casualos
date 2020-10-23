@@ -256,6 +256,9 @@ export function applyEvents(
                     if (op.type === 'preserve') {
                         index += op.count;
                     } else if (op.type === 'insert') {
+                        if (op.text.length <= 0) {
+                            continue;
+                        }
                         const editPos = findEditPosition(
                             currentVal,
                             version,
@@ -277,6 +280,9 @@ export function applyEvents(
                         );
                         index += op.text.length;
                     } else if (op.type === 'delete') {
+                        if (op.count <= 0) {
+                            continue;
+                        }
                         const editPos = findEditPosition(
                             currentVal,
                             version,

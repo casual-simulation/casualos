@@ -41,7 +41,13 @@ import {
     revokeCertificate,
     stateUpdatedEvent,
 } from '../bots';
-import { BotStateUpdates, edit, insert, preserve } from './AuxStateHelpers';
+import {
+    BotStateUpdates,
+    del,
+    edit,
+    insert,
+    preserve,
+} from './AuxStateHelpers';
 import reducer, { CERTIFIED_SPACE, certificateId } from './AuxWeaveReducer';
 import { Action } from '@casual-simulation/causal-trees';
 
@@ -1029,6 +1035,95 @@ describe('AuxCausalTree2', () => {
                 );
 
                 expect(atoms).toEqual([tag1, val1, insert1]);
+            });
+
+            it('should support deleting text via a tag edit', () => {
+                let bot1 = atom(atomId('a', 1), null, bot('test'));
+                let tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                let val1 = atom(atomId('a', 3), tag1, value('def'));
+
+                let atoms = tree.weave.getAtoms();
+                expect(atoms).toEqual([bot1, tag1, val1]);
+
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit({ a: 3 }, del(1)),
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'ef',
+                    }),
+                });
+                expect(result.update).toEqual({
+                    test: {
+                        tags: {
+                            abc: edit({ a: 4 }, del(1)),
+                        },
+                    },
+                });
+
+                let delete1 = atom(atomId('a', 4), val1, deleteOp(0, 1));
+
+                atoms = tree.weave.getAtoms();
+                expect(atoms).toEqual([bot1, tag1, val1, delete1]);
+            });
+
+            it('should ignore deletes with 0 length', () => {
+                let bot1 = atom(atomId('a', 1), null, bot('test'));
+                let tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                let val1 = atom(atomId('a', 3), tag1, value('def'));
+
+                let atoms = tree.weave.getAtoms();
+                expect(atoms).toEqual([bot1, tag1, val1]);
+
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit({ a: 3 }, del(0)),
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                });
+                expect(result.update).toEqual({});
+
+                atoms = tree.weave.getAtoms();
+                expect(atoms).toEqual([bot1, tag1, val1]);
+            });
+
+            it('should ignore inserts with no content', () => {
+                let bot1 = atom(atomId('a', 1), null, bot('test'));
+                let tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                let val1 = atom(atomId('a', 3), tag1, value('def'));
+
+                let atoms = tree.weave.getAtoms();
+                expect(atoms).toEqual([bot1, tag1, val1]);
+
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit({ a: 3 }, insert('')),
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                });
+                expect(result.update).toEqual({});
+
+                atoms = tree.weave.getAtoms();
+                expect(atoms).toEqual([bot1, tag1, val1]);
             });
         });
 

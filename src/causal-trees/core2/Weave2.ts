@@ -736,6 +736,9 @@ export function* iterateReverse<T>(start: WeaveNode<T>) {
  * @param result The weave result.
  */
 export function addedAtom(result: WeaveResult): Atom<any> {
+    if (!result) {
+        return null;
+    }
     if (result.type === 'atom_added') {
         return result.atom;
     } else if (result.type === 'conflict') {
