@@ -28,10 +28,11 @@ import {
     del,
     edit,
     insert,
+    mergeVersions,
     preserve,
     TagEditOp,
 } from '@casual-simulation/aux-common/aux-format-2';
-import { VersionVector } from '@casual-simulation/causal-trees';
+import { CurrentVersion } from '@casual-simulation/causal-trees';
 
 export function setup() {
     // Tell monaco how to create the web workers
@@ -384,7 +385,7 @@ function watchModel(
         model: model,
         sub: sub,
     };
-    let lastVersion: VersionVector = simulation.watcher.latestVersion;
+    let lastVersion = simulation.watcher.latestVersion;
     let applyingEdits: boolean = false;
 
     sub.add(
@@ -392,7 +393,22 @@ function watchModel(
             .botTagChanged(bot.id, tag, space)
             .pipe(
                 tap((update) => {
-                    lastVersion = update.version;
+                    lastVersion.vector = mergeVersions(
+                        lastVersion.vector,
+                        update.version
+                    );
+                }),
+                filter((update) => {
+                    // Only allow updates that are not edits
+                    // or are not from the current site.
+                    // TODO: Improve to allow edits from the current site to be mixed with
+                    // edits from other sites.
+                    return (
+                        update.type !== 'edit' ||
+                        Object.keys(lastVersion.localSites).every(
+                            (site) => !hasValue(update.version[site])
+                        )
+                    );
                 }),
                 skip(1),
                 takeWhile((update) => update !== null)
@@ -401,7 +417,7 @@ function watchModel(
                 bot = update.bot;
                 if (update.type === 'edit') {
                     for (let ops of update.operations) {
-                        let index = 0;
+                        let index = info.isFormula || info.isScript ? -1 : 0;
                         for (let op of ops) {
                             if (op.type === 'preserve') {
                                 index += op.count;
@@ -485,9 +501,10 @@ function watchModel(
                 }
                 let operations = [] as TagEditOp[];
                 let index = 0;
+                let offset = info.isFormula || info.isScript ? 1 : 0;
                 for (let change of e.changes) {
                     operations.push(
-                        preserve(change.rangeOffset - index),
+                        preserve(change.rangeOffset - index + offset),
                         del(change.rangeLength),
                         insert(change.text)
                     );
@@ -496,7 +513,7 @@ function watchModel(
                 await simulation.editBot(
                     bot,
                     tag,
-                    edit(lastVersion, ...operations),
+                    edit(lastVersion.vector, ...operations),
                     space
                 );
             })
