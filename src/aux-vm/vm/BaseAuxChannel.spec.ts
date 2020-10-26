@@ -8,7 +8,7 @@ import {
     remote,
     DeviceInfo,
     Action,
-    VersionVector,
+    CurrentVersion,
 } from '@casual-simulation/causal-trees';
 import {
     createBot,
@@ -42,6 +42,7 @@ import uuid from 'uuid/v4';
 import merge from 'lodash/merge';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subject } from 'rxjs';
+import { cloneDeep } from 'lodash';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -399,33 +400,51 @@ describe('BaseAuxChannel', () => {
             };
             channel = new AuxChannelImpl(user, device, config);
 
-            let versions = [] as VersionVector[];
+            let versions = [] as CurrentVersion[];
 
             await channel.initAndWait();
 
             channel.onVersionUpdated.subscribe((v) => {
-                versions.push(v);
+                versions.push(cloneDeep(v));
             });
 
             shared.onVersionUpdated.next({
-                a: 10,
+                currentSite: 'a',
+                vector: {
+                    a: 10,
+                },
             });
 
             other.onVersionUpdated.next({
-                b: 11,
+                currentSite: null,
+                vector: {
+                    b: 11,
+                },
             });
 
             shared.onVersionUpdated.next({
-                a: 10,
-                c: 20,
+                currentSite: 'a',
+                vector: {
+                    a: 10,
+                    c: 20,
+                },
             });
 
             await waitAsync();
 
             expect(versions).toEqual([
-                { a: 10 },
-                { a: 10, b: 11 },
-                { a: 10, b: 11, c: 20 },
+                {
+                    currentSite: 'a',
+                    vector: { a: 10 },
+                },
+                {
+                    currentSite: 'a',
+                    vector: { a: 10, b: 11 },
+                },
+                {
+                    currentSite: 'a',
+                    vector: { a: 10, b: 11, c: 20 },
+                },
             ]);
         });
     });
@@ -1027,8 +1046,8 @@ export function createTestPartition(config: any): any {
 }
 
 class TestPartition extends MemoryPartitionImpl {
-    get onVersionUpdated(): Subject<VersionVector> {
-        return super.onVersionUpdated as Subject<VersionVector>;
+    get onVersionUpdated(): Subject<CurrentVersion> {
+        return super.onVersionUpdated as Subject<CurrentVersion>;
     }
 
     constructor(config: MemoryPartitionStateConfig) {

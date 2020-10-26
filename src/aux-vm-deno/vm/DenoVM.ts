@@ -23,7 +23,7 @@ import {
     StatusUpdate,
     remapProgressPercent,
     DeviceAction,
-    VersionVector,
+    CurrentVersion,
 } from '@casual-simulation/causal-trees';
 import { DenoWorker, polyfillMessageChannel } from 'deno-vm';
 import { URL } from 'url';
@@ -41,7 +41,7 @@ export class DenoVM implements AuxVM {
     private _deviceEvents: Subject<DeviceAction[]>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
-    private _versionUpdated: Subject<VersionVector>;
+    private _versionUpdated: Subject<CurrentVersion>;
     private _onError: Subject<AuxChannelErrorType>;
     private _config: AuxConfig;
     private _worker: DenoWorker;
@@ -63,7 +63,7 @@ export class DenoVM implements AuxVM {
         this._localEvents = new Subject<LocalActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
-        this._versionUpdated = new Subject<VersionVector>();
+        this._versionUpdated = new Subject<CurrentVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
     }
@@ -177,7 +177,7 @@ export class DenoVM implements AuxVM {
         return this._stateUpdated;
     }
 
-    get versionUpdated(): Observable<VersionVector> {
+    get versionUpdated(): Observable<CurrentVersion> {
         return this._versionUpdated;
     }
 

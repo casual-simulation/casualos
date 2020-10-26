@@ -2,8 +2,8 @@ import {
     User,
     StatusUpdate,
     Action,
-    RemoteActions,
-    VersionVector,
+    CurrentVersion,
+    treeVersion,
 } from '@casual-simulation/causal-trees';
 import { AuxCausalTree, auxTree, applyEvents } from '../aux-format-2';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
@@ -52,7 +52,7 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
     protected _onStateUpdated = new Subject<StateUpdatedEvent>();
-    protected _onVersionUpdated = new BehaviorSubject<VersionVector>({});
+    protected _onVersionUpdated: BehaviorSubject<CurrentVersion>;
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -85,7 +85,7 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
         );
     }
 
-    get onVersionUpdated(): Observable<VersionVector> {
+    get onVersionUpdated(): Observable<CurrentVersion> {
         return this._onVersionUpdated;
     }
 
@@ -123,6 +123,10 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
 
     constructor(user: User, config: CausalRepoPartitionConfig) {
         this.private = config.private || false;
+        this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
+            currentSite: this._tree.site.id,
+            vector: {},
+        });
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
@@ -210,7 +214,7 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
             update.updatedBots.length > 0
         ) {
             this._onStateUpdated.next(update);
-            this._onVersionUpdated.next(this._tree.version);
+            this._onVersionUpdated.next(treeVersion(this._tree));
         }
 
         if (actions && actions.length > 0) {

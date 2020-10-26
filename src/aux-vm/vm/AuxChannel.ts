@@ -8,7 +8,7 @@ import {
 import {
     StatusUpdate,
     DeviceAction,
-    VersionVector,
+    CurrentVersion,
 } from '@casual-simulation/causal-trees';
 import { AuxConfig } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
@@ -49,7 +49,7 @@ export interface AuxChannel extends SubscriptionLike {
     /**
      * The observable that should be triggered whenever the state version updated.
      */
-    onVersionUpdated: Observable<VersionVector>;
+    onVersionUpdated: Observable<CurrentVersion>;
 
     /**
      * The observable that should be triggered whenever the connection state changes.
@@ -73,7 +73,7 @@ export interface AuxChannel extends SubscriptionLike {
         onLocalEvents?: (events: LocalActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
-        onVersionUpdated?: (version: VersionVector) => void,
+        onVersionUpdated?: (version: CurrentVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
     ): Promise<void>;
@@ -90,7 +90,7 @@ export interface AuxChannel extends SubscriptionLike {
         onLocalEvents?: (events: LocalActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
-        onVersionUpdated?: (version: VersionVector) => void,
+        onVersionUpdated?: (version: CurrentVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
     ): Promise<void>;

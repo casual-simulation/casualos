@@ -24,7 +24,7 @@ import {
     StatusUpdate,
     remapProgressPercent,
     DeviceAction,
-    VersionVector,
+    CurrentVersion,
 } from '@casual-simulation/causal-trees';
 import Bowser from 'bowser';
 
@@ -37,7 +37,7 @@ export class AuxVMImpl implements AuxVM {
     private _deviceEvents: Subject<DeviceAction[]>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
-    private _versionUpdated: Subject<VersionVector>;
+    private _versionUpdated: Subject<CurrentVersion>;
     private _onError: Subject<AuxChannelErrorType>;
     private _config: AuxConfig;
     private _iframe: HTMLIFrameElement;
@@ -60,7 +60,7 @@ export class AuxVMImpl implements AuxVM {
         this._localEvents = new Subject<LocalActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
-        this._versionUpdated = new Subject<VersionVector>();
+        this._versionUpdated = new Subject<CurrentVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
     }
@@ -157,7 +157,7 @@ export class AuxVMImpl implements AuxVM {
         return this._stateUpdated;
     }
 
-    get versionUpdated(): Observable<VersionVector> {
+    get versionUpdated(): Observable<CurrentVersion> {
         return this._versionUpdated;
     }
 

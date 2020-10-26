@@ -10,6 +10,22 @@ import {
 import { Atom, AtomCardinality } from './Atom2';
 
 /**
+ * Defines an interface that represents the current version of a causal tree.
+ */
+export interface CurrentVersion {
+    /**
+     * The ID of the local site.
+     * Null if the local site does not have an ID.
+     */
+    currentSite: string | null;
+
+    /**
+     * The current version vector.
+     */
+    vector: VersionVector;
+}
+
+/**
  * Defines an interface that represents a map of site IDs to timestamps.
  */
 export interface VersionVector {
@@ -44,6 +60,17 @@ export function tree<T>(id?: string, time?: number): CausalTree<T> {
         version: {
             [id]: time,
         },
+    };
+}
+
+/**
+ * Gets the current version for the given tree.
+ * @param tree The tree.
+ */
+export function treeVersion<T>(tree: CausalTree<T>): CurrentVersion {
+    return {
+        currentSite: tree.site.id,
+        vector: tree.version,
     };
 }
 

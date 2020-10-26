@@ -12,7 +12,7 @@ import {
     User,
     Action,
     RemoteActions,
-    VersionVector,
+    CurrentVersion,
 } from '@casual-simulation/causal-trees';
 import { Observable, SubscriptionLike } from 'rxjs';
 
@@ -129,7 +129,7 @@ export interface AuxPartitionBase extends SubscriptionLike {
     /**
      * Gets an observable list that resolves whenever the partition state version is updated.
      */
-    onVersionUpdated: Observable<VersionVector>;
+    onVersionUpdated: Observable<CurrentVersion>;
 
     /**
      * Gets an observable list of errors from the partition.
@@ -159,7 +159,7 @@ export interface ProxyBridgePartition extends AuxPartitionBase {
         onError?: (error: any) => void,
         onEvents?: (actions: Action[]) => void,
         onStatusUpdated?: (status: StatusUpdate) => void,
-        onVersionUpdated?: (version: VersionVector) => void
+        onVersionUpdated?: (version: CurrentVersion) => void
     ): Promise<void>;
 
     setSpace(space: string): Promise<void>;

@@ -20,7 +20,8 @@ import {
     CommitData,
     atomMap,
     calculateCommitDiff,
-    VersionVector,
+    CurrentVersion,
+    treeVersion,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxCausalTree,
@@ -92,7 +93,7 @@ export class RemoteCausalRepoPartitionImpl
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
     protected _onStateUpdated = new Subject<StateUpdatedEvent>();
-    protected _onVersionUpdated = new BehaviorSubject<VersionVector>({});
+    protected _onVersionUpdated: BehaviorSubject<CurrentVersion>;
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -145,7 +146,7 @@ export class RemoteCausalRepoPartitionImpl
         );
     }
 
-    get onVersionUpdated(): Observable<VersionVector> {
+    get onVersionUpdated(): Observable<CurrentVersion> {
         return this._onVersionUpdated;
     }
 
@@ -199,6 +200,10 @@ export class RemoteCausalRepoPartitionImpl
         this._temporary = config.temporary;
         this._remoteEvents =
             'remoteEvents' in config ? config.remoteEvents : true;
+        this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
+            currentSite: this._tree.site.id,
+            vector: {},
+        });
 
         // static implies read only
         this._readOnly = config.readOnly || this._static || false;
@@ -658,7 +663,7 @@ export class RemoteCausalRepoPartitionImpl
             update.updatedBots.length > 0
         ) {
             this._onStateUpdated.next(update);
-            this._onVersionUpdated.next(this._tree.version);
+            this._onVersionUpdated.next(treeVersion(this._tree));
         }
     }
 }

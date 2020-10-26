@@ -18,7 +18,7 @@ import {
 import {
     StatusUpdate,
     DeviceAction,
-    VersionVector,
+    CurrentVersion,
 } from '@casual-simulation/causal-trees';
 import values from 'lodash/values';
 import union from 'lodash/union';
@@ -40,7 +40,7 @@ export class TestAuxVM implements AuxVM {
     localEvents: Observable<LocalActions[]>;
     deviceEvents: Observable<DeviceAction[]>;
     connectionStateChanged: Subject<StatusUpdate>;
-    versionUpdated: Subject<VersionVector>;
+    versionUpdated: Subject<CurrentVersion>;
     onError: Subject<AuxChannelErrorType>;
     grant: string;
     user: AuxUser;
@@ -72,7 +72,7 @@ export class TestAuxVM implements AuxVM {
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this.connectionStateChanged = new Subject<StatusUpdate>();
         this.onError = new Subject<AuxChannelErrorType>();
-        this.versionUpdated = new Subject<VersionVector>();
+        this.versionUpdated = new Subject<CurrentVersion>();
     }
 
     async shout(

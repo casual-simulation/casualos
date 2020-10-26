@@ -6,7 +6,7 @@ import {
     StatusUpdate,
     Action,
     RemoteActions,
-    VersionVector,
+    CurrentVersion,
 } from '@casual-simulation/causal-trees';
 import { Bot, UpdatedBot, BotAction, StateUpdatedEvent } from '../bots';
 import { Observable, Subscription } from 'rxjs';
@@ -42,7 +42,7 @@ export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
         return this._partition.onStatusUpdated;
     }
 
-    get onVersionUpdated(): Observable<VersionVector> {
+    get onVersionUpdated(): Observable<CurrentVersion> {
         return this._partition.onVersionUpdated;
     }
 
@@ -96,7 +96,7 @@ export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
         onError?: (error: any) => void,
         onEvents?: (actions: Action[]) => void,
         onStatusUpdated?: (status: StatusUpdate) => void,
-        onVersionUpdated?: (version: VersionVector) => void
+        onVersionUpdated?: (version: CurrentVersion) => void
     ): Promise<void> {
         if (onBotsAdded) {
             this._sub.add(

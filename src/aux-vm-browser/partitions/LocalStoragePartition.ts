@@ -27,7 +27,7 @@ import {
 import {
     StatusUpdate,
     Action,
-    VersionVector,
+    CurrentVersion,
 } from '@casual-simulation/causal-trees';
 import flatMap from 'lodash/flatMap';
 import {
@@ -50,7 +50,10 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
     protected _onStateUpdated = new Subject<StateUpdatedEvent>();
-    protected _onVersionUpdated = new BehaviorSubject<VersionVector>({});
+    protected _onVersionUpdated = new BehaviorSubject<CurrentVersion>({
+        currentSite: null,
+        vector: {},
+    });
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -93,7 +96,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
         return this._onStatusUpdated;
     }
 
-    get onVersionUpdated(): Observable<VersionVector> {
+    get onVersionUpdated(): Observable<CurrentVersion> {
         return this._onVersionUpdated;
     }
 

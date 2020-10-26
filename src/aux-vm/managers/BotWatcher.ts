@@ -31,7 +31,7 @@ import {
     isTagEdit,
     TagEditOp,
 } from '@casual-simulation/aux-common/aux-format-2';
-import { VersionVector } from '@casual-simulation/causal-trees';
+import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
 
 /**
  * Defines an interface that contains information about an updated bot.
@@ -63,7 +63,7 @@ export class BotWatcher implements SubscriptionLike {
         string,
         { tag: string; space: string; subject: Subject<BotTagChange> }[]
     >;
-    private _lastVersion: VersionVector;
+    private _lastVersion: CurrentVersion;
 
     closed: boolean = false;
 
@@ -114,7 +114,7 @@ export class BotWatcher implements SubscriptionLike {
         helper: BotHelper,
         index: BotIndex,
         stateUpdated: Observable<StateUpdatedEvent>,
-        versionUpdated: Observable<VersionVector>
+        versionUpdated: Observable<CurrentVersion>
     ) {
         this._helper = helper;
         this._index = index;
@@ -123,7 +123,10 @@ export class BotWatcher implements SubscriptionLike {
         this._botsUpdatedObservable = new Subject<PrecalculatedBot[]>();
         this._botTagsUpdatedObservable = new Subject<UpdatedBotInfo[]>();
         this._botTagUpdatedObservables = new Map();
-        this._lastVersion = {};
+        this._lastVersion = {
+            currentSite: null,
+            vector: {},
+        };
 
         this._subs.push(
             stateUpdated
@@ -183,7 +186,7 @@ export class BotWatcher implements SubscriptionLike {
                                     bot,
                                     u.tags,
                                     null,
-                                    this._lastVersion
+                                    this._lastVersion.vector
                                 );
                             }
 
@@ -200,7 +203,7 @@ export class BotWatcher implements SubscriptionLike {
                                         bot,
                                         u.masks[space],
                                         space,
-                                        this._lastVersion
+                                        this._lastVersion.vector
                                     );
                                 }
                             }
@@ -336,7 +339,7 @@ export class BotWatcher implements SubscriptionLike {
                     bot,
                     tag,
                     space,
-                    version: _this._lastVersion,
+                    version: _this._lastVersion.vector,
                 } as BotTagChange),
                 endWith(null as BotTagChange)
             );

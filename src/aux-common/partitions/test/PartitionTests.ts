@@ -10,7 +10,7 @@ import {
     stateUpdatedEvent,
 } from '../../bots';
 import { Subscription, never } from 'rxjs';
-import { StatusUpdate, VersionVector } from '@casual-simulation/causal-trees';
+import { CurrentVersion, StatusUpdate } from '@casual-simulation/causal-trees';
 import { waitAsync } from '../../test/TestHelpers';
 import {
     first,
@@ -31,7 +31,7 @@ export function testPartitionImplementation(
     let updated: UpdatedBot[];
     let statuses: StatusUpdate[];
     let updates: StateUpdatedEvent[];
-    let version: VersionVector;
+    let version: CurrentVersion;
     let sub: Subscription;
     beforeEach(async () => {
         sub = new Subscription();
@@ -635,7 +635,7 @@ export function testPartitionImplementation(
 
                 await waitAsync();
 
-                const editVersion = { ...version };
+                const editVersion = { ...version.vector };
                 await partition.applyEvents([
                     botUpdated('test', {
                         tags: {
@@ -653,7 +653,7 @@ export function testPartitionImplementation(
                     stateUpdatedEvent({
                         test: {
                             tags: {
-                                abc: edit(version, insert('ghi')),
+                                abc: edit(version.vector, insert('ghi')),
                             },
                         },
                     }),
@@ -671,7 +671,7 @@ export function testPartitionImplementation(
 
                 await waitAsync();
 
-                const editVersion = { ...version };
+                const editVersion = { ...version.vector };
                 await partition.applyEvents([
                     botUpdated('test', {
                         tags: {
@@ -689,7 +689,7 @@ export function testPartitionImplementation(
                     stateUpdatedEvent({
                         test: {
                             tags: {
-                                abc: edit(version, del(2)),
+                                abc: edit(version.vector, del(2)),
                             },
                         },
                     }),
@@ -882,7 +882,7 @@ export function testPartitionImplementation(
                         botUpdated('test', {
                             masks: {
                                 testSpace: {
-                                    abc: edit(version, insert('ghi')),
+                                    abc: edit(version.vector, insert('ghi')),
                                 },
                             },
                         }),
@@ -905,7 +905,10 @@ export function testPartitionImplementation(
                             test: {
                                 masks: {
                                     testSpace: {
-                                        abc: edit(version, insert('ghi')),
+                                        abc: edit(
+                                            version.vector,
+                                            insert('ghi')
+                                        ),
                                     },
                                 },
                             },
@@ -930,7 +933,7 @@ export function testPartitionImplementation(
                         botUpdated('test', {
                             masks: {
                                 testSpace: {
-                                    abc: edit(version, del(2)),
+                                    abc: edit(version.vector, del(2)),
                                 },
                             },
                         }),
@@ -953,7 +956,7 @@ export function testPartitionImplementation(
                             test: {
                                 masks: {
                                     testSpace: {
-                                        abc: edit(version, del(2)),
+                                        abc: edit(version.vector, del(2)),
                                     },
                                 },
                             },
