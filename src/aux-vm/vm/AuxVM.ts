@@ -10,7 +10,7 @@ import { Initable } from '../managers/Initable';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
 import { StoredAux } from '../StoredAux';
-import { ChannelActionResult } from './AuxChannel';
+import { ChannelActionResult, ChannelStateVersion } from './AuxChannel';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -39,7 +39,7 @@ export interface AuxVM extends Initable {
     /**
      * Gets the observable list of version updates from the simulation.
      */
-    versionUpdated: Observable<CurrentVersion>;
+    versionUpdated: Observable<ChannelStateVersion>;
 
     /**
      * Gets an observable that resolves whenever the connection state changes.

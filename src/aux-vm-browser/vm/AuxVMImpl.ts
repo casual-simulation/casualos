@@ -12,6 +12,7 @@ import {
     AuxVM,
     AuxUser,
     ChannelActionResult,
+    ChannelStateVersion,
 } from '@casual-simulation/aux-vm';
 import {
     AuxChannel,
@@ -37,7 +38,7 @@ export class AuxVMImpl implements AuxVM {
     private _deviceEvents: Subject<DeviceAction[]>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
-    private _versionUpdated: Subject<CurrentVersion>;
+    private _versionUpdated: Subject<ChannelStateVersion>;
     private _onError: Subject<AuxChannelErrorType>;
     private _config: AuxConfig;
     private _iframe: HTMLIFrameElement;
@@ -60,7 +61,7 @@ export class AuxVMImpl implements AuxVM {
         this._localEvents = new Subject<LocalActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
-        this._versionUpdated = new Subject<CurrentVersion>();
+        this._versionUpdated = new Subject<ChannelStateVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
     }
@@ -157,7 +158,7 @@ export class AuxVMImpl implements AuxVM {
         return this._stateUpdated;
     }
 
-    get versionUpdated(): Observable<CurrentVersion> {
+    get versionUpdated(): Observable<ChannelStateVersion> {
         return this._versionUpdated;
     }
 

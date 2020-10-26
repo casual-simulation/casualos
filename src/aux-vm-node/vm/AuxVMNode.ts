@@ -3,6 +3,7 @@ import {
     AuxChannelErrorType,
     StoredAux,
     ChannelActionResult,
+    ChannelStateVersion,
 } from '@casual-simulation/aux-vm';
 import { Observable, Subject } from 'rxjs';
 import {
@@ -15,7 +16,6 @@ import {
     LoadingProgressCallback,
     StatusUpdate,
     DeviceAction,
-    CurrentVersion,
 } from '@casual-simulation/causal-trees';
 import { AuxUser, BaseAuxChannel } from '@casual-simulation/aux-vm';
 
@@ -24,7 +24,7 @@ export class AuxVMNode implements AuxVM {
     private _localEvents: Subject<LocalActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
-    private _versionUpdated: Subject<CurrentVersion>;
+    private _versionUpdated: Subject<ChannelStateVersion>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _onError: Subject<AuxChannelErrorType>;
 
@@ -42,7 +42,7 @@ export class AuxVMNode implements AuxVM {
         return this._stateUpdated;
     }
 
-    get versionUpdated(): Observable<CurrentVersion> {
+    get versionUpdated(): Observable<ChannelStateVersion> {
         return this._versionUpdated;
     }
 
@@ -63,7 +63,7 @@ export class AuxVMNode implements AuxVM {
         this._localEvents = new Subject<LocalActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
-        this._versionUpdated = new Subject<CurrentVersion>();
+        this._versionUpdated = new Subject<ChannelStateVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
     }

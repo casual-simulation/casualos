@@ -43,6 +43,7 @@ import merge from 'lodash/merge';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subject } from 'rxjs';
 import { cloneDeep } from 'lodash';
+import { ChannelStateVersion } from './AuxChannel';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -400,7 +401,7 @@ describe('BaseAuxChannel', () => {
             };
             channel = new AuxChannelImpl(user, device, config);
 
-            let versions = [] as CurrentVersion[];
+            let versions = [] as ChannelStateVersion[];
 
             await channel.initAndWait();
 
@@ -416,7 +417,7 @@ describe('BaseAuxChannel', () => {
             });
 
             other.onVersionUpdated.next({
-                currentSite: null,
+                currentSite: 'b',
                 vector: {
                     b: 11,
                 },
@@ -434,15 +435,23 @@ describe('BaseAuxChannel', () => {
 
             expect(versions).toEqual([
                 {
-                    currentSite: 'a',
+                    localSites: {
+                        a: true,
+                    },
                     vector: { a: 10 },
                 },
                 {
-                    currentSite: 'a',
+                    localSites: {
+                        a: true,
+                        b: true,
+                    },
                     vector: { a: 10, b: 11 },
                 },
                 {
-                    currentSite: 'a',
+                    localSites: {
+                        a: true,
+                        b: true,
+                    },
                     vector: { a: 10, b: 11, c: 20 },
                 },
             ]);

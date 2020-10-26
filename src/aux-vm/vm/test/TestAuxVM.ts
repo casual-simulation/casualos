@@ -24,7 +24,7 @@ import values from 'lodash/values';
 import union from 'lodash/union';
 import { AuxUser } from '../../AuxUser';
 import { StoredAux } from '../../StoredAux';
-import { ChannelActionResult } from '../../vm';
+import { ChannelActionResult, ChannelStateVersion } from '../../vm';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -40,7 +40,7 @@ export class TestAuxVM implements AuxVM {
     localEvents: Observable<LocalActions[]>;
     deviceEvents: Observable<DeviceAction[]>;
     connectionStateChanged: Subject<StatusUpdate>;
-    versionUpdated: Subject<CurrentVersion>;
+    versionUpdated: Subject<ChannelStateVersion>;
     onError: Subject<AuxChannelErrorType>;
     grant: string;
     user: AuxUser;
@@ -72,7 +72,7 @@ export class TestAuxVM implements AuxVM {
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this.connectionStateChanged = new Subject<StatusUpdate>();
         this.onError = new Subject<AuxChannelErrorType>();
-        this.versionUpdated = new Subject<CurrentVersion>();
+        this.versionUpdated = new Subject<ChannelStateVersion>();
     }
 
     async shout(
