@@ -51,7 +51,6 @@ import {
     preserve,
     TagEditOp,
 } from './AuxStateHelpers';
-import { exist } from '@hapi/joi';
 
 export const CERT_ID_NAMESPACE = 'a1307e2b-8d80-4945-9792-2cd483c45e24';
 export const CERTIFIED_SPACE = 'certified';
