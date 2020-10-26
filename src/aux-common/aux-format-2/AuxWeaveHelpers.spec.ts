@@ -15,6 +15,8 @@ import {
     findBotNode,
     findEditPosition,
     calculateOrderedEdits,
+    TextSegment,
+    findMultipleEditPositions,
 } from './AuxWeaveHelpers';
 import { createBot } from '../bots';
 import reducer from './AuxWeaveReducer';
@@ -336,6 +338,49 @@ describe('AuxWeaveHelpers', () => {
             );
             expect(result.node.atom).toBe(v1);
             expect(result.index).toBe(2);
+        });
+
+        it('should return the index after a sequence of deleted characters', () => {
+            insertAtoms(b1, t1, v1, d1);
+
+            const valueNode = weave.getNode(v1.id);
+
+            const result = findEditPosition(
+                valueNode,
+                {
+                    a: 8,
+                    b: 4,
+                },
+                1
+            );
+            expect(result.node.atom).toBe(v1);
+            expect(result.index).toBe(2);
+        });
+
+        it('should return the list of edit positions when a delete spans multiple inserts', () => {
+            insertAtoms(b1, t1, v1, i1, i2);
+
+            const valueNode = weave.getNode(v1.id);
+
+            const result = findEditPosition(
+                valueNode,
+                {
+                    a: 8,
+                    b: 4,
+                },
+                0,
+                9
+            );
+            expect(Array.isArray(result)).toBe(true);
+            const mapped = result.map((r) => ({
+                atom: r.node.atom,
+                index: r.index,
+            }));
+            expect(mapped).toEqual([
+                { index: 0, count: 3, atom: v1 },
+                { index: 0, count: 3, atom: i1 },
+                { index: 0, count: 3, atom: i2 },
+            ]);
         });
 
         const cases = [
@@ -830,4 +875,97 @@ describe('AuxWeaveHelpers', () => {
             }
         }
     });
+
+    describe('findMultipleEditPositions()', () => {
+        it('should return the node and index that the deletes start at', () => {
+            const a1 = textSegment('a1', 'abcdef');
+
+            const positions = findMultipleEditPositions(0, 1, [a1]);
+
+            expect(positions).toEqual([
+                {
+                    index: 0,
+                    count: 1,
+                    node: 'a1',
+                },
+            ]);
+        });
+
+        it('should support covering multiple segments', () => {
+            const a1 = textSegment('a1', 'ab');
+            const a2 = textSegment('a2', 'cd');
+            const a3 = textSegment('a3', 'ef');
+
+            const positions = findMultipleEditPositions(0, 6, [a1, a2, a3]);
+
+            expect(positions).toEqual([
+                {
+                    index: 0,
+                    count: 2,
+                    node: 'a1',
+                },
+                {
+                    index: 0,
+                    count: 2,
+                    node: 'a2',
+                },
+                {
+                    index: 0,
+                    count: 2,
+                    node: 'a3',
+                },
+            ]);
+        });
+
+        it('should return the correct count for segments that have deleted characters between the start and end', () => {
+            const a1 = textSegment('a1', 'a•b');
+
+            const positions = findMultipleEditPositions(0, 2, [a1]);
+
+            expect(positions).toEqual([
+                {
+                    index: 0,
+                    count: 3,
+                    node: 'a1',
+                },
+            ]);
+        });
+
+        it('should handle deleting from segments that have some deleted characters', () => {
+            const a1 = textSegment('a1', '•ab');
+            const a2 = textSegment('a2', 'c•d');
+            const a3 = textSegment('a3', 'ef•');
+
+            const positions = findMultipleEditPositions(0, 6, [a1, a2, a3]);
+
+            expect(positions).toEqual([
+                {
+                    index: 0,
+                    count: 2,
+                    node: 'a1',
+                },
+                {
+                    index: 0,
+                    count: 3,
+                    node: 'a2',
+                },
+                {
+                    index: 0,
+                    count: 2,
+                    node: 'a3',
+                },
+            ]);
+        });
+    });
+
+    describe('findSingleEditPosition()', () => {});
 });
+
+function textSegment(id: string, text: string): TextSegment {
+    return {
+        text: text.replace(/•/g, ''),
+        marked: text.replace(/•/g, '\0'),
+        node: <any>id,
+        offset: 0,
+    };
+}

@@ -150,7 +150,37 @@ export function findEditPosition(
     value: WeaveNode<AuxOp>,
     version: VersionVector,
     index: number
-): EditPosition {
+): EditPosition;
+
+/**
+ * Finds the nodes and indexes at which the given edit should happen at.
+ * Useful for applying edits to a causal tree.
+ * @param value The value node.
+ * @param version The last timestamps that were available when the edit was made.
+ * @param index The index at which the edit should happen.
+ * @param deleteCount The number of characters that get deleted starting at the index.
+ */
+export function findEditPosition(
+    value: WeaveNode<AuxOp>,
+    version: VersionVector,
+    index: number,
+    deleteCount: number
+): EditPosition[];
+
+/**
+ * Finds the node and index at which the given edit should happen at.
+ * Useful for applying edits to a causal tree.
+ * @param value The value node.
+ * @param version The last timestamps that were available when the edit was made.
+ * @param index The index at which the edit should happen.
+ * @param deleteCount The number of characters that get deleted starting at the index.
+ */
+export function findEditPosition(
+    value: WeaveNode<AuxOp>,
+    version: VersionVector,
+    index: number,
+    deleteCount?: number
+): EditPosition | EditPosition[] {
     if (value.atom.value.type !== AuxOpType.Value) {
         throw new Error(
             'Invalid Argument. The weave node must be a value node.'
@@ -164,16 +194,99 @@ export function findEditPosition(
     });
     const edits = calculateOrderedEdits(filtered);
 
+    return findSingleEditPosition(index, edits);
+}
+
+/**
+ * Finds the list of edit positions that an edit at the given index and the given delete count should cover.
+ * @param index The index.
+ * @param deleteCount The delete count.
+ * @param edits The text segments.
+ */
+export function findMultipleEditPositions(
+    index: number,
+    deleteCount: number,
+    edits: TextSegment[]
+) {
+    let count = 0;
+    let positions = [] as EditPosition[];
+    let remaining = deleteCount;
+    for (let edit of edits) {
+        let reachedStart = count + edit.text.length >= index;
+        if (reachedStart) {
+            const relativeIndex = Math.abs(count - index);
+            const countUntilEnd = edit.text.length - relativeIndex;
+            const nodeDeleteCount = Math.min(countUntilEnd, remaining);
+            const textBefore = edit.marked.slice(0, relativeIndex);
+            const textAfter = edit.marked.slice(
+                relativeIndex,
+                edit.marked.length
+            );
+
+            let removedCharacterCount = 0;
+            let deleteCountOffset = 0;
+            for (let char of textBefore) {
+                if (char === '\0') {
+                    removedCharacterCount += 1;
+                }
+            }
+            let afterIndex = 0;
+            for (let char of textAfter) {
+                if (afterIndex >= nodeDeleteCount) {
+                    break;
+                }
+                if (char === '\0') {
+                    deleteCountOffset += 1;
+                } else {
+                    afterIndex += 1;
+                }
+            }
+
+            positions.push({
+                index: relativeIndex + removedCharacterCount + edit.offset,
+                count: nodeDeleteCount + deleteCountOffset,
+                node: edit.node,
+            });
+
+            remaining -= nodeDeleteCount;
+        } else {
+            count += edit.text.length;
+        }
+        if (remaining <= 0) {
+            break;
+        }
+    }
+
+    return positions;
+}
+
+/**
+ * Finds the single position that an edit at the given index should be added at.
+ * @param index The index.
+ * @param edits The edits.
+ */
+export function findSingleEditPosition(index: number, edits: TextSegment[]) {
     let count = 0;
     for (let edit of edits) {
         if (count + edit.text.length >= index) {
             const relativeIndex = Math.abs(count - index);
             const textBefore = edit.marked.slice(0, relativeIndex);
+            const textAfter = edit.marked.slice(
+                relativeIndex,
+                edit.marked.length
+            );
 
             let removedCharacterCount = 0;
             for (let char of textBefore) {
                 if (char === '\0') {
                     removedCharacterCount += 1;
+                }
+            }
+            for (let char of textAfter) {
+                if (char === '\0') {
+                    removedCharacterCount += 1;
+                } else {
+                    break;
                 }
             }
 
@@ -332,6 +445,7 @@ export interface TextSegmentInfo {
 export interface EditPosition {
     node: WeaveNode<AuxOp>;
     index: number;
+    count?: number;
 }
 
 // /**
