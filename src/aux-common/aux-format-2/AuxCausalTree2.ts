@@ -36,6 +36,7 @@ import {
     TagMaskOp,
     insertOp,
     ValueOp,
+    AuxOpType,
 } from './AuxOpTypes';
 import { BotsState, PartialBotsState, BotTags } from '../bots/Bot';
 import reducer, { certificateId } from './AuxWeaveReducer';
@@ -337,8 +338,10 @@ export function applyEvents(
             if (!currentVal || val !== currentVal.atom.value.value) {
                 const valueResult = updateTag(node, currentVal, val);
                 result = mergeAuxResults(result, valueResult);
-                const newAtom = addedAtom(valueResult.results[0]);
-                if (newAtom) {
+                const newAtom = addedAtom(valueResult.results[0]) as Atom<
+                    AuxOp
+                >;
+                if (newAtom && newAtom.value.type === AuxOpType.Value) {
                     const weaveResult = tree.weave.removeSiblingsBefore(
                         newAtom
                     );
@@ -379,7 +382,7 @@ export function applyEvents(
                 result = mergeAuxResults(result, valueResult);
 
                 const newAtom = addedAtom(valueResult.results[0]);
-                if (newAtom) {
+                if (newAtom && newAtom.value.type === AuxOpType.Value) {
                     const weaveResult = tree.weave.removeSiblingsBefore(
                         newAtom
                     );

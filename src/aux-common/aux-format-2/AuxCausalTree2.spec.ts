@@ -1125,6 +1125,141 @@ describe('AuxCausalTree2', () => {
                 atoms = tree.weave.getAtoms();
                 expect(atoms).toEqual([bot1, tag1, val1]);
             });
+
+            it('should not remove sibling inserts in tags because of garbage collection', () => {
+                const bot1A = atom(atomId('b', 100), null, bot('test2'));
+                const tag1A = atom(atomId('b', 101), bot1A, tag('tag1'));
+                const val1A = atom(atomId('b', 102), tag1A, value('val1A'));
+
+                const insert1 = atom(
+                    atomId('b', 103),
+                    val1A,
+                    insertOp(1, '!!!')
+                );
+                // After: v!!!al1A
+
+                // TODO: Improve applyAtoms to support inserts and deletes
+                // in new bots.
+                ({ tree } = applyAtoms(tree, [bot1A, tag1A, val1A]));
+
+                ({ tree } = applyAtoms(tree, [insert1]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                    test2: createBot('test2', {
+                        tag1: 'v!!!al1A',
+                    }),
+                });
+
+                // Insert "ghi" at index 5 when the text looks like "v!!!al1A".
+                // Should result with an edit that makes "v!!!aghil1A"
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botUpdated('test2', {
+                        tags: {
+                            tag1: edit({ b: 104 }, preserve(5), insert('ghi')),
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                    test2: createBot('test2', {
+                        tag1: 'v!!!aghil1A',
+                    }),
+                });
+                expect(result.update).toEqual({
+                    test2: {
+                        tags: {
+                            tag1: edit({ a: 105 }, preserve(5), insert('ghi')),
+                        },
+                    },
+                });
+
+                const insert4 = atom(
+                    atomId('a', 105),
+                    val1A,
+                    insertOp(2, 'ghi')
+                );
+                const botAtoms = [
+                    ...iterateCausalGroup(tree.weave.getNode(bot1A.id)),
+                ].map((n) => n.atom);
+
+                expect(botAtoms).toEqual([tag1A, val1A, insert4, insert1]);
+            });
+
+            it('should not remove sibling inserts in tag masks because of garbage collection', () => {
+                let tag1 = atom(
+                    atomId('a', 4),
+                    null,
+                    tagMask('test1', 'other')
+                );
+                let val1 = atom(atomId('a', 5), tag1, value('xyz'));
+                let insert1 = atom(atomId('a', 6), val1, insertOp(0, 'def'));
+
+                ({ tree, updates } = applyAtoms(
+                    tree,
+                    [tag1, val1, insert1],
+                    [],
+                    'space'
+                ));
+
+                ({ tree, updates, result } = applyEvents(
+                    tree,
+                    [
+                        botUpdated('test1', {
+                            masks: {
+                                space: {
+                                    other: edit({ a: 5 }, insert('ghi')),
+                                },
+                            },
+                        }),
+                    ],
+                    'space'
+                ));
+
+                expect(tree.state).toEqual({
+                    test: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                    test1: {
+                        masks: {
+                            space: {
+                                other: 'ghidefxyz',
+                            },
+                        },
+                    },
+                });
+                expect(updates).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+                expect(result.update).toEqual({
+                    test1: {
+                        masks: {
+                            space: {
+                                other: edit({ a: 7 }, insert('ghi')),
+                            },
+                        },
+                    },
+                });
+
+                let insert2 = atom(atomId('a', 7), val1, insertOp(0, 'ghi'));
+
+                const tagNode = tree.weave.getNode(tag1.id);
+                const atoms = [tagNode, ...iterateCausalGroup(tagNode)].map(
+                    (n) => n.atom
+                );
+
+                expect(atoms).toEqual([tag1, val1, insert2, insert1]);
+            });
         });
 
         describe('certificates', () => {
