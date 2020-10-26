@@ -1738,5 +1738,59 @@ describe('AuxCausalTree2', () => {
                 },
             ]);
         });
+
+        it('should support insert atoms on newly added bots', () => {
+            const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+            const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+            const value1 = atom(atomId('a', 3), tag1, value('abc'));
+            const insert1 = atom(atomId('a', 4), value1, insertOp(0, 'ghi'));
+
+            ({ tree, updates, results } = applyAtoms(tree, [
+                bot1,
+                tag1,
+                value1,
+                insert1,
+            ]));
+
+            expect(tree.site).toEqual({
+                id: 'a',
+                time: 4,
+            });
+            expect(tree.version).toEqual({
+                a: 4,
+            });
+            expect(tree.state).toEqual({
+                bot1: createBot('bot1', {
+                    tag1: 'ghiabc',
+                }),
+            });
+            expect(updates).toEqual({
+                addedBots: [
+                    createBot('bot1', {
+                        tag1: 'ghiabc',
+                    }),
+                ],
+                updatedBots: [],
+                removedBots: [],
+            });
+            expect(results).toEqual([
+                {
+                    type: 'atom_added',
+                    atom: bot1,
+                },
+                {
+                    type: 'atom_added',
+                    atom: tag1,
+                },
+                {
+                    type: 'atom_added',
+                    atom: value1,
+                },
+                {
+                    type: 'atom_added',
+                    atom: insert1,
+                },
+            ]);
+        });
     });
 });

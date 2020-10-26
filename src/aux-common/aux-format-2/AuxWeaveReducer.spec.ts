@@ -25,7 +25,7 @@ import {
     Weave,
 } from '@casual-simulation/causal-trees/core2';
 import reduce, { CERT_ID_NAMESPACE, CERTIFIED_SPACE } from './AuxWeaveReducer';
-import { BotsState } from '../bots/Bot';
+import { BotsState, PartialBotsState } from '../bots/Bot';
 import { apply, del, edit, edits, insert, preserve } from './AuxStateHelpers';
 import { isBot } from '../bots';
 import uuidv5 from 'uuid/v5';
@@ -2172,6 +2172,88 @@ describe('AuxWeaveReducer', () => {
                         },
                     });
                 });
+
+                it('should handle inserts in the same update as when the bot is created', () => {
+                    const bot1 = atom(atomId('b', 100), null, bot('test'));
+                    const tag1 = atom(atomId('b', 101), bot1, tag('tag1'));
+                    const val1 = atom(atomId('b', 102), tag1, value('val1A'));
+
+                    const insert1 = atom(
+                        atomId('b', 103),
+                        val1,
+                        insertOp(1, '!!!')
+                    );
+                    // After: v!!!al1A
+
+                    let update = {} as PartialBotsState;
+                    for (let atom of [bot1, tag1, val1, insert1]) {
+                        let u = reduce(
+                            weave,
+                            weave.insert(atom),
+                            update,
+                            space
+                        );
+                        state = apply(state, u);
+                    }
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                tag1: 'v!!!al1A',
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                tag1: 'v!!!al1A',
+                            },
+                        },
+                    });
+                });
+
+                it('should handle deletes in the same update as when the bot is created', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const delete1 = atom(
+                        atomId('a', 4, 1),
+                        value1,
+                        deleteOp(1, 2)
+                    );
+
+                    let update = {} as PartialBotsState;
+                    for (let atom of [bot1, tag1, value1, delete1]) {
+                        let u = reduce(
+                            weave,
+                            weave.insert(atom),
+                            update,
+                            space
+                        );
+                        state = apply(state, u);
+                    }
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: 'df',
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: 'df',
+                            },
+                        },
+                    });
+                });
             });
 
             describe('TagMask', () => {
@@ -3297,6 +3379,98 @@ describe('AuxWeaveReducer', () => {
                             masks: {
                                 [space]: {
                                     tag1: '###v!@@@!!al1A',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle inserts in the same update as when the bot is created', () => {
+                    const tag1 = atom(
+                        atomId('b', 101),
+                        null,
+                        tagMask('test', 'tag1')
+                    );
+                    const val1 = atom(atomId('b', 102), tag1, value('val1A'));
+
+                    const insert1 = atom(
+                        atomId('b', 103),
+                        val1,
+                        insertOp(1, '!!!')
+                    );
+                    // After: v!!!al1A
+
+                    let update = {} as PartialBotsState;
+                    for (let atom of [tag1, val1, insert1]) {
+                        let u = reduce(
+                            weave,
+                            weave.insert(atom),
+                            update,
+                            space
+                        );
+                        state = apply(state, u);
+                    }
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    tag1: 'v!!!al1A',
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    tag1: 'v!!!al1A',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle deletes in the same update as when the bot is created', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const delete1 = atom(
+                        atomId('a', 4, 1),
+                        value1,
+                        deleteOp(1, 2)
+                    );
+
+                    let update = {} as PartialBotsState;
+                    for (let atom of [tag1, value1, delete1]) {
+                        let u = reduce(
+                            weave,
+                            weave.insert(atom),
+                            update,
+                            space
+                        );
+                        state = apply(state, u);
+                    }
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'df',
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: 'df',
                                 },
                             },
                         },

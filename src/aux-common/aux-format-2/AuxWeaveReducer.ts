@@ -41,6 +41,8 @@ import {
 } from './AuxWeaveHelpers';
 import reverse from 'lodash/reverse';
 import {
+    apply,
+    applyEdit,
     del,
     edit,
     insert,
@@ -49,6 +51,7 @@ import {
     preserve,
     TagEditOp,
 } from './AuxStateHelpers';
+import { exist } from '@hapi/joi';
 
 export const CERT_ID_NAMESPACE = 'a1307e2b-8d80-4945-9792-2cd483c45e24';
 export const CERTIFIED_SPACE = 'certified';
@@ -304,26 +307,31 @@ function insertAtomAddedReducer(
     }
     ops.push(insert(op.text));
 
-    const possibleEdit = state?.[id]?.tags?.[tagName];
-    if (isTagEdit(possibleEdit)) {
+    const existingValue = state?.[id]?.tags?.[tagName];
+    if (isTagEdit(existingValue)) {
         lodashMerge(state, {
             [id]: {
                 tags: {
                     [tagName]: mergeEdits(
-                        possibleEdit,
+                        existingValue,
                         edit({ [atom.id.site]: atom.id.timestamp }, ...ops)
                     ),
                 },
             },
         });
     } else {
+        let tagEdit = edit({ [atom.id.site]: atom.id.timestamp }, ...ops);
+
+        let finalValue: any;
+        if (hasValue(existingValue)) {
+            finalValue = applyEdit(existingValue, tagEdit);
+        } else {
+            finalValue = tagEdit;
+        }
         lodashMerge(state, {
             [id]: {
                 tags: {
-                    [tagName]: edit(
-                        { [atom.id.site]: atom.id.timestamp },
-                        ...ops
-                    ),
+                    [tagName]: finalValue,
                 },
             },
         });
@@ -377,14 +385,14 @@ function insertTagMaskAtomAddedReducer(
     }
     ops.push(insert(op.text));
 
-    const possibleEdit = state?.[id]?.masks?.[space]?.[tagName];
-    if (isTagEdit(possibleEdit)) {
+    const existingValue = state?.[id]?.masks?.[space]?.[tagName];
+    if (isTagEdit(existingValue)) {
         lodashMerge(state, {
             [id]: {
                 masks: {
                     [space]: {
                         [tagName]: mergeEdits(
-                            possibleEdit,
+                            existingValue,
                             edit({ [atom.id.site]: atom.id.timestamp }, ...ops)
                         ),
                     },
@@ -392,14 +400,19 @@ function insertTagMaskAtomAddedReducer(
             },
         });
     } else {
+        let tagEdit = edit({ [atom.id.site]: atom.id.timestamp }, ...ops);
+
+        let finalValue: any;
+        if (hasValue(existingValue)) {
+            finalValue = applyEdit(existingValue, tagEdit);
+        } else {
+            finalValue = tagEdit;
+        }
         lodashMerge(state, {
             [id]: {
                 masks: {
                     [space]: {
-                        [tagName]: edit(
-                            { [atom.id.site]: atom.id.timestamp },
-                            ...ops
-                        ),
+                        [tagName]: finalValue,
                     },
                 },
             },
@@ -489,26 +502,32 @@ function deleteTextReducer(
         }
         ops.push(del(length));
 
-        const possibleEdit = state?.[id]?.tags?.[tagName];
-        if (isTagEdit(possibleEdit)) {
+        const existingValue = state?.[id]?.tags?.[tagName];
+        if (isTagEdit(existingValue)) {
             lodashMerge(state, {
                 [id]: {
                     tags: {
                         [tagName]: mergeEdits(
-                            possibleEdit,
+                            existingValue,
                             edit({ [atom.id.site]: atom.id.timestamp }, ...ops)
                         ),
                     },
                 },
             });
         } else {
+            const tagEdit = edit({ [atom.id.site]: atom.id.timestamp }, ...ops);
+
+            let finalValue: any;
+            if (hasValue(existingValue)) {
+                finalValue = applyEdit(existingValue, tagEdit);
+            } else {
+                finalValue = tagEdit;
+            }
+
             lodashMerge(state, {
                 [id]: {
                     tags: {
-                        [tagName]: edit(
-                            { [atom.id.site]: atom.id.timestamp },
-                            ...ops
-                        ),
+                        [tagName]: finalValue,
                     },
                 },
             });
@@ -573,14 +592,14 @@ function deleteTagMaskTextReducer(
         }
         ops.push(del(length));
 
-        const possibleEdit = state?.[id]?.masks?.[space]?.[tagName];
-        if (isTagEdit(possibleEdit)) {
+        const existingValue = state?.[id]?.masks?.[space]?.[tagName];
+        if (isTagEdit(existingValue)) {
             lodashMerge(state, {
                 [id]: {
                     masks: {
                         [space]: {
                             [tagName]: mergeEdits(
-                                possibleEdit,
+                                existingValue,
                                 edit(
                                     { [atom.id.site]: atom.id.timestamp },
                                     ...ops
@@ -591,14 +610,20 @@ function deleteTagMaskTextReducer(
                 },
             });
         } else {
+            const tagEdit = edit({ [atom.id.site]: atom.id.timestamp }, ...ops);
+
+            let finalValue: any;
+            if (hasValue(existingValue)) {
+                finalValue = applyEdit(existingValue, tagEdit);
+            } else {
+                finalValue = tagEdit;
+            }
+
             lodashMerge(state, {
                 [id]: {
                     masks: {
                         [space]: {
-                            [tagName]: edit(
-                                { [atom.id.site]: atom.id.timestamp },
-                                ...ops
-                            ),
+                            [tagName]: finalValue,
                         },
                     },
                 },
