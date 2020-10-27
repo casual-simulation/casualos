@@ -22,10 +22,8 @@ import {
     atom,
     VersionVector,
 } from '@casual-simulation/causal-trees/core2';
-import reducer from './AuxWeaveReducer';
 import isEqual from 'lodash/isEqual';
 import { splice } from '../utils';
-import { sortBy } from 'lodash';
 
 /**
  * Finds the first weave node that defines a bot with the given ID.
@@ -194,7 +192,11 @@ export function findEditPosition(
     });
     const edits = calculateOrderedEdits(filtered);
 
-    return findSingleEditPosition(index, edits);
+    if (typeof deleteCount === 'number') {
+        return [...findMultipleEditPositions(index, deleteCount, edits)];
+    } else {
+        return findSingleEditPosition(index, edits);
+    }
 }
 
 /**
@@ -203,13 +205,12 @@ export function findEditPosition(
  * @param deleteCount The delete count.
  * @param edits The text segments.
  */
-export function findMultipleEditPositions(
+export function* findMultipleEditPositions(
     index: number,
     deleteCount: number,
     edits: TextSegment[]
-) {
+): IterableIterator<EditPosition> {
     let count = 0;
-    let positions = [] as EditPosition[];
     let remaining = deleteCount;
     for (let edit of edits) {
         let reachedStart = count + edit.text.length >= index;
@@ -230,23 +231,37 @@ export function findMultipleEditPositions(
                     removedCharacterCount += 1;
                 }
             }
+
             let afterIndex = 0;
-            for (let char of textAfter) {
-                if (afterIndex >= nodeDeleteCount) {
-                    break;
-                }
-                if (char === '\0') {
-                    deleteCountOffset += 1;
+
+            // Count all the deleted characters immediately after
+            // the insert/delete point
+            for (; afterIndex < textAfter.length; afterIndex++) {
+                if (textAfter[afterIndex] === '\0') {
+                    removedCharacterCount += 1;
                 } else {
-                    afterIndex += 1;
+                    break;
                 }
             }
 
-            positions.push({
+            // Count all the deleted characters between the start point and end points
+            let extraCharactersIndex = 0;
+            for (; afterIndex < textAfter.length; afterIndex++) {
+                if (extraCharactersIndex >= nodeDeleteCount) {
+                    break;
+                }
+                if (textAfter[afterIndex] === '\0') {
+                    deleteCountOffset += 1;
+                } else {
+                    extraCharactersIndex += 1;
+                }
+            }
+
+            yield {
                 index: relativeIndex + removedCharacterCount + edit.offset,
                 count: nodeDeleteCount + deleteCountOffset,
                 node: edit.node,
-            });
+            };
 
             remaining -= nodeDeleteCount;
         } else {
@@ -256,8 +271,6 @@ export function findMultipleEditPositions(
             break;
         }
     }
-
-    return positions;
 }
 
 /**
@@ -266,39 +279,7 @@ export function findMultipleEditPositions(
  * @param edits The edits.
  */
 export function findSingleEditPosition(index: number, edits: TextSegment[]) {
-    let count = 0;
-    for (let edit of edits) {
-        if (count + edit.text.length >= index) {
-            const relativeIndex = Math.abs(count - index);
-            const textBefore = edit.marked.slice(0, relativeIndex);
-            const textAfter = edit.marked.slice(
-                relativeIndex,
-                edit.marked.length
-            );
-
-            let removedCharacterCount = 0;
-            for (let char of textBefore) {
-                if (char === '\0') {
-                    removedCharacterCount += 1;
-                }
-            }
-            for (let char of textAfter) {
-                if (char === '\0') {
-                    removedCharacterCount += 1;
-                } else {
-                    break;
-                }
-            }
-
-            return {
-                index: relativeIndex + removedCharacterCount + edit.offset,
-                node: edit.node,
-            };
-        }
-        count += edit.text.length;
-    }
-
-    return null;
+    return first(findMultipleEditPositions(index, 1, edits));
 }
 
 /**

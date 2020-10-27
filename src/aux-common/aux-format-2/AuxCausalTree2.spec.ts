@@ -45,6 +45,7 @@ import {
     BotStateUpdates,
     del,
     edit,
+    edits,
     insert,
     preserve,
 } from './AuxStateHelpers';
@@ -1066,10 +1067,197 @@ describe('AuxCausalTree2', () => {
                     },
                 });
 
-                let delete1 = atom(atomId('a', 4), val1, deleteOp(0, 1));
+                let delete1 = atom(atomId('a', 4, 1), val1, deleteOp(0, 1));
 
                 atoms = tree.weave.getAtoms();
                 expect(atoms).toEqual([bot1, tag1, val1, delete1]);
+            });
+
+            it('should support deleting text in a tag mask', () => {
+                let tag1 = atom(
+                    atomId('a', 4),
+                    null,
+                    tagMask('test1', 'other')
+                );
+                let val1 = atom(atomId('a', 5), tag1, value('xyz'));
+                let delete1 = atom(atomId('a', 6, 1), val1, deleteOp(0, 2));
+
+                ({ tree, updates, result } = applyEvents(
+                    tree,
+                    [
+                        botUpdated('test1', {
+                            masks: {
+                                space: {
+                                    other: 'xyz',
+                                },
+                            },
+                        }),
+                    ],
+                    'space'
+                ));
+
+                ({ tree, updates, result } = applyEvents(
+                    tree,
+                    [
+                        botUpdated('test1', {
+                            masks: {
+                                space: {
+                                    other: edit({ a: 5 }, del(2)),
+                                },
+                            },
+                        }),
+                    ],
+                    'space'
+                ));
+
+                expect(tree.state).toEqual({
+                    test: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                    test1: {
+                        masks: {
+                            space: {
+                                other: 'z',
+                            },
+                        },
+                    },
+                });
+                expect(updates).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+                expect(result.update).toEqual({
+                    test1: {
+                        masks: {
+                            space: {
+                                other: edit({ a: 6 }, del(2)),
+                            },
+                        },
+                    },
+                });
+
+                const tagNode = tree.weave.getNode(tag1.id);
+                const atoms = [tagNode, ...iterateCausalGroup(tagNode)].map(
+                    (n) => n.atom
+                );
+
+                expect(atoms).toEqual([tag1, val1, delete1]);
+            });
+
+            it('should support deleting text across multiple inserts', () => {
+                let bot1 = atom(atomId('a', 1), null, bot('test'));
+                let tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                let val1 = atom(atomId('a', 3), tag1, value('def'));
+                let insert1 = atom(atomId('a', 4), val1, insertOp(0, '111'));
+                let insert2 = atom(atomId('a', 5), val1, insertOp(2, '222'));
+                let delete2 = atom(atomId('a', 6, 1), insert1, deleteOp(0, 3));
+                let delete1 = atom(atomId('a', 7, 1), val1, deleteOp(0, 2));
+                let delete3 = atom(atomId('a', 8, 1), insert2, deleteOp(0, 3));
+                let delete4 = atom(atomId('a', 9, 1), val1, deleteOp(2, 3));
+
+                let atoms = tree.weave.getAtoms();
+                expect(atoms).toEqual([bot1, tag1, val1]);
+
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit({ a: 3 }, insert('111')),
+                        },
+                    }),
+                ]));
+
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit({ a: 3 }, preserve(2), insert('222')),
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: '111de222f',
+                    }),
+                });
+
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit({ a: 5 }, del(9)),
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: '',
+                    }),
+                });
+                expect(result.update).toEqual({
+                    test: {
+                        tags: {
+                            abc: edits(
+                                { a: 9 },
+                                [del(3)],
+                                [del(2)],
+                                [del(3)],
+                                [del(1)]
+                            ),
+                        },
+                    },
+                });
+
+                atoms = tree.weave.getAtoms();
+                expect(atoms).toEqual([
+                    bot1,
+                    tag1,
+                    val1,
+                    delete4,
+                    delete1,
+                    insert2,
+                    delete3,
+                    insert1,
+                    delete2,
+                ]);
+            });
+
+            it('should support inserts and deletes in the same edit', () => {
+                let bot1 = atom(atomId('a', 1), null, bot('test'));
+                let tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                let val1 = atom(atomId('a', 3), tag1, value('def'));
+                let delete1 = atom(atomId('a', 4, 1), val1, deleteOp(0, 2));
+                let insert1 = atom(atomId('a', 5), val1, insertOp(2, '111'));
+
+                let atoms = tree.weave.getAtoms();
+                expect(atoms).toEqual([bot1, tag1, val1]);
+
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit({ a: 3 }, del(2), insert('111')),
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: '111f',
+                    }),
+                });
+                expect(result.update).toEqual({
+                    test: {
+                        tags: {
+                            abc: edits({ a: 5 }, [del(2)], [insert('111')]),
+                        },
+                    },
+                });
+
+                atoms = tree.weave.getAtoms();
+                expect(atoms).toEqual([bot1, tag1, val1, delete1, insert1]);
             });
 
             it('should ignore deletes with 0 length', () => {

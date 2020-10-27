@@ -2044,6 +2044,62 @@ describe('AuxWeaveReducer', () => {
                     });
                 });
 
+                it('should handle multiple deletes that depend on each other in the same update', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(0, '111')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 5, 1),
+                        insert1,
+                        deleteOp(0, 3)
+                    );
+                    const delete2 = atom(
+                        atomId('a', 6, 1),
+                        value1,
+                        deleteOp(0, 3)
+                    );
+
+                    state = add(bot1, tag1, value1, insert1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(delete1),
+                        undefined,
+                        space
+                    );
+
+                    let update2 = reduce(
+                        weave,
+                        weave.insert(delete2),
+                        update,
+                        space
+                    );
+
+                    state = apply(state, update2);
+
+                    expect(update2).toEqual({
+                        ['test']: {
+                            tags: {
+                                abc: edits({ a: 6 }, [del(3)], [del(3)]),
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: '',
+                            },
+                        },
+                    });
+                });
+
                 it('should handle inserts and deletes in the same update', () => {
                     const bot1 = atom(atomId('a', 1), null, bot('test'));
                     const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
@@ -3238,6 +3294,68 @@ describe('AuxWeaveReducer', () => {
                             masks: {
                                 [space]: {
                                     abc: 'd',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle multiple deletes that depend on each other in the same update', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(0, '111')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 5, 1),
+                        insert1,
+                        deleteOp(0, 3)
+                    );
+                    const delete2 = atom(
+                        atomId('a', 6, 1),
+                        value1,
+                        deleteOp(0, 3)
+                    );
+
+                    state = add(tag1, value1, insert1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(delete1),
+                        undefined,
+                        space
+                    );
+
+                    let update2 = reduce(
+                        weave,
+                        weave.insert(delete2),
+                        update,
+                        space
+                    );
+
+                    state = apply(state, update2);
+
+                    expect(update2).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: edits({ a: 6 }, [del(3)], [del(3)]),
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: '',
                                 },
                             },
                         },

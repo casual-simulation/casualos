@@ -219,12 +219,13 @@ export function auxResultIdentity(): AuxResult {
  * @param actions The actions that should be applied.
  * @param space The space that new bots should be placed in.
  */
+// TODO: Cleanup this function. It creates way too many extra objects and doesn't manage the return data very well.
 export function applyEvents(
     tree: AuxCausalTree,
     actions: BotActions[],
     space?: string
 ) {
-    const addAtom = (
+    const addAtomToTree = (
         cause: Atom<AuxOp>,
         op: AuxOp,
         priority?: number,
@@ -247,12 +248,15 @@ export function applyEvents(
         currentVal: WeaveNode<ValueOp>,
         val: any
     ) => {
-        let valueResult: AuxResult;
+        // let valueResult: AuxResult;
         if (isTagEdit(val)) {
+            let update = {};
+            let updatedTree = tree as CausalTree<any>;
+            let results = [] as WeaveResult[];
             const version = val.version;
-            valueResult = auxResultIdentity();
             for (let ops of val.operations) {
                 let index = 0;
+                // let atoms = [] as Atom<AuxOp>[];
                 for (let op of ops) {
                     if (op.type === 'preserve') {
                         index += op.count;
@@ -272,13 +276,18 @@ export function applyEvents(
                             break;
                         }
                         const insertResult = addAtom(
+                            updatedTree,
                             editPos.node.atom,
                             insertOp(editPos.index, op.text)
                         );
-                        valueResult = mergeAuxResults(
-                            valueResult,
+                        updatedTree = applyTreeResult(
+                            updatedTree,
                             insertResult
                         );
+                        for (let result of insertResult.results) {
+                            update = reducer(tree.weave, result, update, space);
+                        }
+                        results.push(...insertResult.results);
                         index += op.text.length;
                     } else if (op.type === 'delete') {
                         if (op.count <= 0) {
@@ -287,32 +296,53 @@ export function applyEvents(
                         const editPos = findEditPosition(
                             currentVal,
                             version,
-                            index
+                            index,
+                            op.count
                         );
-                        if (!editPos) {
+                        if (!editPos || editPos.length <= 0) {
                             console.warn(
                                 '[AuxCausalTree2] Unable to find edit position for delete.  This likely means that the given edit version is incorrect.'
                             );
                             break;
                         }
-                        const deleteResult = addAtom(
-                            editPos.node.atom,
-                            deleteOp(editPos.index, editPos.index + op.count)
-                        );
-                        valueResult = mergeAuxResults(
-                            valueResult,
-                            deleteResult
-                        );
 
+                        for (let pos of editPos) {
+                            const deleteResult = addAtom(
+                                updatedTree,
+                                pos.node.atom,
+                                deleteOp(pos.index, pos.index + pos.count),
+                                1
+                            );
+                            updatedTree = applyTreeResult(
+                                updatedTree,
+                                deleteResult
+                            );
+                            for (let result of deleteResult.results) {
+                                update = reducer(
+                                    tree.weave,
+                                    result,
+                                    update,
+                                    space
+                                );
+                            }
+                            results.push(...deleteResult.results);
+                        }
                         // Increment the index because deletions do not affect the value node character indexes.
                         index += op.count;
                     }
                 }
             }
+
+            let auxResult: AuxResult = {
+                newSite: updatedTree.site,
+                results: results,
+                update: update,
+            };
+            tree = applyAuxResult(tree, auxResult);
+            return auxResult;
         } else {
-            valueResult = addAtom(node.atom, value(val));
+            return addAtomToTree(node.atom, value(val));
         }
-        return valueResult;
     };
 
     const updateTags = (bot: WeaveNode<BotOp>, tags: BotTags) => {
@@ -322,7 +352,7 @@ export function applyEvents(
             const val = tags[key];
             if (!node) {
                 // create new tag
-                const tagResult = addAtom(bot.atom, tag(key));
+                const tagResult = addAtomToTree(bot.atom, tag(key));
 
                 result = mergeAuxResults(result, tagResult);
 
@@ -364,7 +394,7 @@ export function applyEvents(
             const val = tags[key];
             if (!node) {
                 // create new tag
-                const tagResult = addAtom(null, tagMask(botId, key));
+                const tagResult = addAtomToTree(null, tagMask(botId, key));
 
                 result = mergeAuxResults(result, tagResult);
 
@@ -405,7 +435,7 @@ export function applyEvents(
     for (let event of actions) {
         let newResult: AuxResult = auxResultIdentity();
         if (event.type === 'add_bot') {
-            const botResult = addAtom(null, bot(event.id));
+            const botResult = addAtomToTree(null, bot(event.id));
 
             const botAtom = addedAtom(botResult.results[0]);
 
@@ -434,7 +464,7 @@ export function applyEvents(
             }
         } else if (event.type == 'remove_bot') {
             for (let node of findBotNodes(tree.weave, event.id)) {
-                newResult = addAtom(node.atom, deleteOp(), 1);
+                newResult = addAtomToTree(node.atom, deleteOp(), 1);
 
                 const newAtom = addedAtom(newResult.results[0]);
                 if (newAtom) {
@@ -463,7 +493,7 @@ export function applyEvents(
                     );
                     continue;
                 }
-                newResult = addAtom(null, certOp, undefined, {
+                newResult = addAtomToTree(null, certOp, undefined, {
                     group: 'certificates',
                     number: 1,
                 });
@@ -512,7 +542,7 @@ export function applyEvents(
                         );
                         continue;
                     }
-                    newResult = addAtom(signingBot.tags.atom, certOp);
+                    newResult = addAtomToTree(signingBot.tags.atom, certOp);
                     const newAtom = addedAtom(newResult.results[0]);
                     if (newAtom) {
                         const id = certificateId(newAtom);
@@ -600,7 +630,7 @@ export function applyEvents(
                     continue;
                 }
 
-                newResult = addAtom(signingBot.tags.atom, signOp);
+                newResult = addAtomToTree(signingBot.tags.atom, signOp);
                 const newAtom = addedAtom(newResult.results[0]);
                 if (newAtom) {
                     enqueueAsyncResult(returnActions, event, undefined);
@@ -657,7 +687,7 @@ export function applyEvents(
                     continue;
                 }
 
-                newResult = addAtom(signingBot.tags.atom, revokeOp);
+                newResult = addAtomToTree(signingBot.tags.atom, revokeOp);
                 const newAtom = addedAtom(newResult.results[0]);
                 if (newAtom) {
                     enqueueAsyncResult(returnActions, event, undefined);

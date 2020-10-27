@@ -11,6 +11,7 @@ import {
     AtomRemovedResult,
     iterateSiblings,
     iterateNewerSiblings,
+    idEquals,
 } from '@casual-simulation/causal-trees/core2';
 import {
     BotOp,
@@ -428,10 +429,12 @@ function deleteTextReducer(
     state: PartialBotsState,
     space: string
 ) {
-    const { tag: tagOrValue, bot: botOrTagMask, values } = getTextEditNodes(
-        weave,
-        atom
-    );
+    const {
+        tag: tagOrValue,
+        bot: botOrTagMask,
+        values,
+        value: valueNode,
+    } = getTextEditNodes(weave, atom);
 
     if (!tagOrValue) {
         return state;
@@ -471,28 +474,47 @@ function deleteTextReducer(
     const tagName = tagOrValue.atom.value.name;
     const id = botOrTagMask.atom.value.id;
 
+    const nodes = [valueNode, ...iterateCausalGroup(valueNode)];
+    const filtered = nodes.filter((n) => !idEquals(n.atom.id, atom.id));
+    const edits = calculateOrderedEdits(filtered);
+
     let count = 0;
-    let length = value.end - value.start;
-    for (let node of values) {
-        if (node.atom.value.type === AuxOpType.Insert) {
-            const { offset, overlap } = calculateSiblingOffset(
-                weave,
-                node,
-                node.atom.value.index,
-                node.atom.value.text.length
-            );
-            count += node.atom.value.index + offset;
-        } else if (node.atom.value.type === AuxOpType.Delete) {
-            const { offset, overlap } = calculateSiblingOffset(
-                weave,
-                node,
-                node.atom.value.start,
-                node.atom.value.end - node.atom.value.start
-            );
-            count = Math.max(0, count + node.atom.value.start + offset);
-            length -= overlap;
+    let length = 0;
+
+    // NOTE: the variable cannot be named "edit" because
+    // then webpack will not compile the reference to th edit() function
+    // correctly.
+    for (let e of edits) {
+        if (
+            idEquals(e.node.atom.id, atom.cause) &&
+            count + e.marked.length > value.start - e.offset
+        ) {
+            count -= e.offset;
+            for (
+                let i = 0;
+                i < e.marked.length && i < value.end - e.offset;
+                i++
+            ) {
+                const char = e.marked[i];
+                if (i >= value.start - e.offset) {
+                    if (char !== '\0') {
+                        length += 1;
+                    }
+                } else {
+                    if (char === '\0') {
+                        // Character has already been deleted
+                        // so we skip it.
+                        count -= 1;
+                    }
+                }
+            }
+
+            break;
         }
+        count += e.text.length;
     }
+
+    count += value.start;
 
     if (length > 0) {
         let ops = [] as TagEditOp[];
@@ -561,28 +583,43 @@ function deleteTagMaskTextReducer(
     const tagName = tagMask.atom.value.name;
     const id = tagMask.atom.value.botId;
 
+    const nodes = [value, ...iterateCausalGroup(value)];
+    const filtered = nodes.filter((n) => !idEquals(n.atom.id, atom.id));
+    const edits = calculateOrderedEdits(filtered);
+
     let count = 0;
-    let length = op.end - op.start;
-    for (let node of values) {
-        if (node.atom.value.type === AuxOpType.Insert) {
-            const { offset, overlap } = calculateSiblingOffset(
-                weave,
-                node,
-                node.atom.value.index,
-                node.atom.value.text.length
-            );
-            count += node.atom.value.index + offset;
-        } else if (node.atom.value.type === AuxOpType.Delete) {
-            const { offset, overlap } = calculateSiblingOffset(
-                weave,
-                node,
-                node.atom.value.start,
-                node.atom.value.end - node.atom.value.start
-            );
-            count = Math.max(0, count + node.atom.value.start + offset);
-            length -= overlap;
+    let length = 0;
+
+    // NOTE: the variable cannot be named "edit" because
+    // then webpack will not compile the reference to th edit() function
+    // correctly.
+    for (let e of edits) {
+        if (
+            idEquals(e.node.atom.id, atom.cause) &&
+            count + e.marked.length > op.start
+        ) {
+            count -= e.offset;
+            for (let i = 0; i < e.marked.length && i < op.end - e.offset; i++) {
+                const char = e.marked[i];
+                if (i >= op.start - e.offset) {
+                    if (char !== '\0') {
+                        length += 1;
+                    }
+                } else {
+                    if (char === '\0') {
+                        // Character has already been deleted
+                        // so we skip it.
+                        count -= 1;
+                    }
+                }
+            }
+
+            break;
         }
+        count += e.text.length;
     }
+
+    count += op.start;
 
     if (length > 0) {
         let ops = [] as TagEditOp[];
