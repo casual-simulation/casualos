@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V1.2.20
+
+#### Date: 10/27/2020
+
+### :rocket: Improvements
+
+-   Added support for `@onPointerEnter`, `@onPointerExit`, `@onAnyBotPointerEnter` and `@onAnyBotPointerExit` for bots in the menu portal.
+
+### :bug: Bug Fixes
+
+-   Fixed the multiline code editor to not clip tooltips and the autocomplete box.
+-   Fixed the menu portal to not break on Hololens (Servo-based browsers) when a progress bar is placed on a menu item.
+
 ## V1.2.19
 
 #### Date: 10/22/2020

@@ -5,6 +5,8 @@
         :style="style"
         @click="click()"
         @mousedown="mouseDown()"
+        @mouseenter="mouseEnter()"
+        @mouseleave="mouseLeave()"
     >
         <div
             class="menu-bot-text"

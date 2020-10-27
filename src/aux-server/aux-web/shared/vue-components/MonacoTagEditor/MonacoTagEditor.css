@@ -11,7 +11,6 @@
 
     /* Height is 100% the container minus the height of the breadcrumbs container */
     height: calc(100% - 23px);
-    overflow: hidden;
 }
 
 .editor-breadcrumbs {
