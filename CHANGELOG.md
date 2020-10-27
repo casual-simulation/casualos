@@ -11,6 +11,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed the multiline code editor to not clip tooltips and the autocomplete box.
+-   Fixed the menu portal to not break on Hololens (Servo-based browsers) when a progress bar is placed on a menu item.
 
 ## V1.2.19
 
