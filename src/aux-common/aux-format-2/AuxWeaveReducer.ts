@@ -39,6 +39,7 @@ import {
     calculateOrderedEdits,
     findBotNode,
     findBotNodes,
+    TextSegment,
 } from './AuxWeaveHelpers';
 import reverse from 'lodash/reverse';
 import {
@@ -478,45 +479,11 @@ function deleteTextReducer(
     const filtered = nodes.filter((n) => !idEquals(n.atom.id, atom.id));
     const edits = calculateOrderedEdits(filtered);
 
-    let count = 0;
-    let length = 0;
-
-    // NOTE: the variable cannot be named "edit" because
-    // then webpack will not compile the reference to th edit() function
-    // correctly.
-    for (let e of edits) {
-        if (
-            idEquals(e.node.atom.id, atom.cause) &&
-            count + e.marked.length > value.start - e.offset
-        ) {
-            count -= e.offset;
-            for (
-                let i = 0;
-                i < e.marked.length && i < value.end - e.offset;
-                i++
-            ) {
-                const char = e.marked[i];
-                if (i >= value.start - e.offset) {
-                    if (char !== '\0') {
-                        length += 1;
-                    }
-                } else {
-                    if (char === '\0') {
-                        // Character has already been deleted
-                        // so we skip it.
-                        count -= 1;
-                    }
-                }
-            }
-
-            break;
-        }
-        count += e.text.length;
-    }
-
-    count += value.start;
-
-    if (length > 0) {
+    for (let { count, length } of findDeletePoints(
+        edits,
+        atom as Atom<DeleteOp>,
+        value
+    )) {
         let ops = [] as TagEditOp[];
         if (count > 0) {
             ops.push(preserve(count));
@@ -587,41 +554,11 @@ function deleteTagMaskTextReducer(
     const filtered = nodes.filter((n) => !idEquals(n.atom.id, atom.id));
     const edits = calculateOrderedEdits(filtered);
 
-    let count = 0;
-    let length = 0;
-
-    // NOTE: the variable cannot be named "edit" because
-    // then webpack will not compile the reference to th edit() function
-    // correctly.
-    for (let e of edits) {
-        if (
-            idEquals(e.node.atom.id, atom.cause) &&
-            count + e.marked.length > op.start
-        ) {
-            count -= e.offset;
-            for (let i = 0; i < e.marked.length && i < op.end - e.offset; i++) {
-                const char = e.marked[i];
-                if (i >= op.start - e.offset) {
-                    if (char !== '\0') {
-                        length += 1;
-                    }
-                } else {
-                    if (char === '\0') {
-                        // Character has already been deleted
-                        // so we skip it.
-                        count -= 1;
-                    }
-                }
-            }
-
-            break;
-        }
-        count += e.text.length;
-    }
-
-    count += op.start;
-
-    if (length > 0) {
+    for (let { count, length } of findDeletePoints(
+        edits,
+        atom as Atom<DeleteOp>,
+        op
+    )) {
         let ops = [] as TagEditOp[];
         if (count > 0) {
             ops.push(preserve(count));
@@ -668,6 +605,69 @@ function deleteTagMaskTextReducer(
     }
 
     return state;
+}
+
+/**
+ * Finds all of the points that should be deleted for the given delete op and text segments.
+ * @param edits The edits.
+ * @param atom The delete atom.
+ * @param value The delete op.
+ */
+function* findDeletePoints(
+    edits: TextSegment[],
+    atom: Atom<DeleteOp>,
+    value: DeleteOp
+) {
+    let count = 0;
+    let length = 0;
+    let createdDelete = false;
+
+    // NOTE: the variable cannot be named "edit" because
+    // then webpack will not compile the reference to th edit() function
+    // correctly.
+    for (let e of edits) {
+        if (
+            idEquals(e.node.atom.id, atom.cause) &&
+            count + e.marked.length > value.start - e.offset
+        ) {
+            count -= e.offset;
+            for (
+                let i = 0;
+                i < e.marked.length && i < value.end - e.offset;
+                i++
+            ) {
+                const char = e.marked[i];
+                if (i >= value.start - e.offset) {
+                    if (char !== '\0') {
+                        length += 1;
+                    }
+                } else {
+                    if (char === '\0') {
+                        // Character has already been deleted
+                        // so we skip it.
+                        count -= 1;
+                    }
+                }
+            }
+
+            if (length > 0) {
+                if (!createdDelete) {
+                    count += value.start;
+                }
+
+                createdDelete = true;
+
+                yield {
+                    count,
+                    length,
+                };
+
+                length = 0;
+                count = 0;
+            }
+        }
+        count += e.text.length;
+    }
 }
 
 /**
