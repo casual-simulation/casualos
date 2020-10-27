@@ -193,7 +193,9 @@ export function findEditPosition(
     const edits = calculateOrderedEdits(filtered);
 
     if (typeof deleteCount === 'number') {
-        return [...findMultipleEditPositions(index, deleteCount, edits)];
+        return [
+            ...findMultipleEditPositions(index, deleteCount, edits, 'right'),
+        ];
     } else {
         return findSingleEditPosition(index, edits);
     }
@@ -204,19 +206,25 @@ export function findEditPosition(
  * @param index The index.
  * @param deleteCount The delete count.
  * @param edits The text segments.
+ * @param afinity Whether edits that fall directly between two segments should be associated with the left edit or the right edit.
  */
 export function* findMultipleEditPositions(
     index: number,
     deleteCount: number,
-    edits: TextSegment[]
+    edits: TextSegment[],
+    afinity: 'left' | 'right'
 ): IterableIterator<EditPosition> {
     let count = 0;
     let remaining = deleteCount;
     for (let edit of edits) {
-        let reachedStart = count + edit.text.length >= index;
+        let reachedStart =
+            afinity === 'left'
+                ? count + edit.text.length >= index
+                : count + edit.text.length > index;
         if (reachedStart) {
             const relativeIndex = Math.abs(count - index);
             const countUntilEnd = edit.text.length - relativeIndex;
+
             const nodeDeleteCount = Math.min(countUntilEnd, remaining);
             const textBefore = edit.marked.slice(0, relativeIndex);
             const textAfter = edit.marked.slice(
@@ -279,7 +287,7 @@ export function* findMultipleEditPositions(
  * @param edits The edits.
  */
 export function findSingleEditPosition(index: number, edits: TextSegment[]) {
-    return first(findMultipleEditPositions(index, 1, edits));
+    return first(findMultipleEditPositions(index, 1, edits, 'left'));
 }
 
 /**

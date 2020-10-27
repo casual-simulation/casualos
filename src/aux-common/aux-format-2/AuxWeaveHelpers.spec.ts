@@ -882,7 +882,9 @@ describe('AuxWeaveHelpers', () => {
         it('should return the node and index that the deletes start at', () => {
             const a1 = textSegment('a1', 'abcdef');
 
-            const positions = [...findMultipleEditPositions(0, 1, [a1])];
+            const positions = [
+                ...findMultipleEditPositions(0, 1, [a1], 'right'),
+            ];
 
             expect(positions).toEqual([
                 {
@@ -899,7 +901,7 @@ describe('AuxWeaveHelpers', () => {
             const a3 = textSegment('a3', 'ef');
 
             const positions = [
-                ...findMultipleEditPositions(0, 6, [a1, a2, a3]),
+                ...findMultipleEditPositions(0, 6, [a1, a2, a3], 'right'),
             ];
 
             expect(positions).toEqual([
@@ -924,7 +926,9 @@ describe('AuxWeaveHelpers', () => {
         it('should return the correct count for segments that have deleted characters between the start and end', () => {
             const a1 = textSegment('a1', 'a••b');
 
-            const positions = [...findMultipleEditPositions(0, 2, [a1])];
+            const positions = [
+                ...findMultipleEditPositions(0, 2, [a1], 'right'),
+            ];
 
             expect(positions).toEqual([
                 {
@@ -941,7 +945,7 @@ describe('AuxWeaveHelpers', () => {
             const a3 = textSegment('a3', 'ef•');
 
             const positions = [
-                ...findMultipleEditPositions(0, 6, [a1, a2, a3]),
+                ...findMultipleEditPositions(0, 6, [a1, a2, a3], 'right'),
             ];
 
             expect(positions).toEqual([
@@ -959,6 +963,43 @@ describe('AuxWeaveHelpers', () => {
                     index: 0,
                     count: 2,
                     node: 'a3',
+                },
+            ]);
+        });
+
+        it('should handle deleting from multiple segments when the start position happens to match the end of a segment', () => {
+            const a1 = textSegment('a1', 'a');
+            const a2 = textSegment('a2', 'b');
+            const a3 = textSegment('a3', 'c');
+            const a4 = textSegment('a4', 'd');
+            const a5 = textSegment('a5', 'e');
+            const a6 = textSegment('a6', 'f');
+            const a7 = textSegment('a7', 'g');
+
+            const positions = [
+                ...findMultipleEditPositions(
+                    2,
+                    3,
+                    [a1, a2, a3, a4, a5, a6, a7],
+                    'right'
+                ),
+            ];
+
+            expect(positions).toEqual([
+                {
+                    index: 0,
+                    count: 1,
+                    node: 'a3',
+                },
+                {
+                    index: 0,
+                    count: 1,
+                    node: 'a4',
+                },
+                {
+                    index: 0,
+                    count: 1,
+                    node: 'a5',
                 },
             ]);
         });
