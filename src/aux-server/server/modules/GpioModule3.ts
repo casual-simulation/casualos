@@ -7,7 +7,7 @@ import {
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
-    SerialCreateAction,
+    SerialConnectAction,
     SerialOpenAction,
     SerialUpdateAction,
     SerialWriteAction,
@@ -19,7 +19,6 @@ import {
     // SerialDrainAction,
     SerialPauseAction,
     SerialResumeAction,
-    ExecSyncAction,
     asyncResult,
     asyncError,
     hasValue,
@@ -27,6 +26,8 @@ import {
 import { Callback } from 'redis';
 const execSync = require('child_process').execSync;
 const SerialPort = require('serialport');
+
+let btSerial = new Map<string, typeof SerialPort>();
 
 /**
  * Defines an AuxModule that adds Serial functionality to the module.
@@ -43,8 +44,8 @@ export class GpioModule3 implements AuxModule2 {
             simulation.localEvents
                 .pipe(
                     flatMap(async event => {
-                        if (event.type === 'serial_create') {
-                            await this._serialCreate(simulation, event);
+                        if (event.type === 'serial_connect') {
+                            await this._serialConnect(simulation, event);
                         }
                         if (event.type === 'serial_open') {
                             await this._serialOpen(simulation, event);
@@ -79,9 +80,6 @@ export class GpioModule3 implements AuxModule2 {
                         if (event.type === 'serial_resume') {
                             await this._serialResume(simulation, event);
                         }
-                        if (event.type === 'exec_sync') {
-                            await this._execSync(simulation, event);
-                        }
                     })
                 )
                 .subscribe()
@@ -108,18 +106,22 @@ export class GpioModule3 implements AuxModule2 {
      *
      */
 
-    _serialCreate(simulation: Simulation, event: SerialCreateAction) {
+    _serialConnect(simulation: Simulation, event: SerialConnectAction) {
         try {
+            execSync('sudo bash /data/bt-serial ' + event.path);
+
             const port = new SerialPort(event.path, event.options, event.cb);
+
+            btSerial.set('Connection01', port);
 
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(
-                          port,
+                          undefined,
                           { sessionId: event.playerId },
                           event.taskId
                       )
-                    : asyncResult(event.taskId, port)
+                    : asyncResult(event.taskId, undefined)
             );
         } catch (error) {
             simulation.helper.transaction(
@@ -138,7 +140,7 @@ export class GpioModule3 implements AuxModule2 {
     }
     _serialOpen(simulation: Simulation, event: SerialOpenAction) {
         try {
-            const port = event.port;
+            const port = btSerial.get('Connection01');
             port.open();
 
             simulation.helper.transaction(
@@ -167,7 +169,7 @@ export class GpioModule3 implements AuxModule2 {
     }
     _serialUpdate(simulation: Simulation, event: SerialUpdateAction) {
         try {
-            const port = event.port;
+            const port = btSerial.get('Connection01');
             port.update(event.options, event.cb);
 
             simulation.helper.transaction(
@@ -196,7 +198,7 @@ export class GpioModule3 implements AuxModule2 {
     }
     _serialWrite(simulation: Simulation, event: SerialWriteAction) {
         try {
-            const port = event.port;
+            const port = btSerial.get('Connection01');
             port.write(event.data, event.encoding, event.cb);
 
             simulation.helper.transaction(
@@ -225,7 +227,7 @@ export class GpioModule3 implements AuxModule2 {
     }
     _serialRead(simulation: Simulation, event: SerialReadAction) {
         try {
-            const port = event.port;
+            const port = btSerial.get('Connection01');
             let data = port.read(event.size);
 
             simulation.helper.transaction(
@@ -254,7 +256,7 @@ export class GpioModule3 implements AuxModule2 {
     }
     _serialClose(simulation: Simulation, event: SerialCloseAction) {
         try {
-            const port = event.port;
+            const port = btSerial.get('Connection01');
             port.close(event.cb);
 
             simulation.helper.transaction(
@@ -391,7 +393,7 @@ export class GpioModule3 implements AuxModule2 {
     // }
     _serialPause(simulation: Simulation, event: SerialPauseAction) {
         try {
-            const port = event.port;
+            const port = btSerial.get('Connection01');
             port.pause();
 
             simulation.helper.transaction(
@@ -420,36 +422,8 @@ export class GpioModule3 implements AuxModule2 {
     }
     _serialResume(simulation: Simulation, event: SerialResumeAction) {
         try {
-            const port = event.port;
+            const port = btSerial.get('Connection01');
             port.resume();
-
-            simulation.helper.transaction(
-                hasValue(event.playerId)
-                    ? remoteResult(
-                          undefined,
-                          { sessionId: event.playerId },
-                          event.taskId
-                      )
-                    : asyncResult(event.taskId, undefined)
-            );
-        } catch (error) {
-            simulation.helper.transaction(
-                hasValue(event.playerId)
-                    ? remoteError(
-                          {
-                              error: 'failure',
-                              exception: error.toString(),
-                          },
-                          { sessionId: event.playerId },
-                          event.taskId
-                      )
-                    : asyncError(event.taskId, error)
-            );
-        }
-    }
-    _execSync(simulation: Simulation, event: ExecSyncAction) {
-        try {
-            execSync(event.command, event.options);
 
             simulation.helper.transaction(
                 hasValue(event.playerId)

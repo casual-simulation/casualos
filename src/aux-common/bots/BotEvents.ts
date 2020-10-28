@@ -144,7 +144,7 @@ export type AsyncActions =
     | RpioSPITransferAction
     | RpioSPIWriteAction
     | RpioSPIEndAction
-    | SerialCreateAction
+    | SerialConnectAction
     | SerialOpenAction
     | SerialUpdateAction
     | SerialWriteAction
@@ -156,7 +156,6 @@ export type AsyncActions =
     // | SerialDrainAction
     | SerialPauseAction
     | SerialResumeAction
-    | ExecSyncAction
     | CreateCertificateAction
     | SignTagAction
     | RevokeCertificateAction
@@ -1736,8 +1735,8 @@ export interface RpioSPIEndAction extends AsyncAction {
 /**
  *
  */
-export interface SerialCreateAction extends AsyncAction {
-    type: 'serial_create';
+export interface SerialConnectAction extends AsyncAction {
+    type: 'serial_connect';
 
     /**
      *
@@ -1759,22 +1758,12 @@ export interface SerialCreateAction extends AsyncAction {
  */
 export interface SerialOpenAction extends AsyncAction {
     type: 'serial_open';
-
-    /**
-     *
-     */
-    port: any;
 }
 /**
  *
  */
 export interface SerialUpdateAction extends AsyncAction {
     type: 'serial_update';
-
-    /**
-     *
-     */
-    port: any;
 
     /**
      *
@@ -1791,11 +1780,6 @@ export interface SerialUpdateAction extends AsyncAction {
  */
 export interface SerialWriteAction extends AsyncAction {
     type: 'serial_write';
-
-    /**
-     *
-     */
-    port: any;
 
     /**
      *
@@ -1821,11 +1805,6 @@ export interface SerialReadAction extends AsyncAction {
     /**
      *
      */
-    port: any;
-
-    /**
-     *
-     */
     size?: number;
 }
 /**
@@ -1837,11 +1816,6 @@ export interface SerialCloseAction extends AsyncAction {
     /**
      *
      */
-    port: any;
-
-    /**
-     *
-     */
     cb?: any;
 }
 /**
@@ -1849,36 +1823,18 @@ export interface SerialCloseAction extends AsyncAction {
  */
 // export interface SerialSetAction extends AsyncAction {
 //     type: 'serial_set';
-
-// /**
-//  *
-//  */
-// port: any;
-
 // }
 /**
  *
  */
 // export interface SerialGetAction extends AsyncAction {
 //     type: 'serial_get';
-
-// /**
-//  *
-//  */
-// port: any;
-
 // }
 /**
  *
  */
 // export interface SerialFlushAction extends AsyncAction {
 //     type: 'serial_flush';
-
-// /**
-//  *
-//  */
-// port: any;
-
 // /**
 //  *
 //  */
@@ -1889,12 +1845,6 @@ export interface SerialCloseAction extends AsyncAction {
  */
 // export interface SerialDrainAction extends AsyncAction {
 //     type: 'serial_drain';
-
-// /**
-//  *
-//  */
-// port: any;
-
 // /**
 //  *
 //  */
@@ -1905,38 +1855,12 @@ export interface SerialCloseAction extends AsyncAction {
  */
 export interface SerialPauseAction extends AsyncAction {
     type: 'serial_pause';
-
-    /**
-     *
-     */
-    port: any;
 }
 /**
  *
  */
 export interface SerialResumeAction extends AsyncAction {
     type: 'serial_resume';
-
-    /**
-     *
-     */
-    port: any;
-}
-/**
- *
- */
-export interface ExecSyncAction extends AsyncAction {
-    type: 'exec_sync';
-
-    /**
-     *
-     */
-    command: string;
-
-    /**
-     *
-     */
-    options?: object;
 }
 /**
  * Defines an event that sets some text on the user's clipboard.
@@ -3795,18 +3719,18 @@ export function rpioSPIEndPin(
  *
  * @param taskId The ID of the async task.
  */
-export function serialCreatePin(
+export function serialConnectPin(
     path: string,
     options?: object,
     cb?: any,
     taskId?: string | number,
     playerId?: string
-): SerialCreateAction {
+): SerialConnectAction {
     return {
         path,
         options,
         cb,
-        type: 'serial_create',
+        type: 'serial_connect',
         taskId,
         playerId,
     };
@@ -3817,12 +3741,10 @@ export function serialCreatePin(
  * @param taskId The ID of the async task.
  */
 export function serialOpenPin(
-    port: any,
     taskId?: string | number,
     playerId?: string
 ): SerialOpenAction {
     return {
-        port,
         type: 'serial_open',
         taskId,
         playerId,
@@ -3834,14 +3756,12 @@ export function serialOpenPin(
  * @param taskId The ID of the async task.
  */
 export function serialUpdatePin(
-    port: any,
     options: object,
     cb?: any,
     taskId?: string | number,
     playerId?: string
 ): SerialUpdateAction {
     return {
-        port,
         options,
         cb,
         type: 'serial_update',
@@ -3855,7 +3775,6 @@ export function serialUpdatePin(
  * @param taskId The ID of the async task.
  */
 export function serialWritePin(
-    port: any,
     data: string | number[],
     encoding?: string,
     cb?: any,
@@ -3863,7 +3782,6 @@ export function serialWritePin(
     playerId?: string
 ): SerialWriteAction {
     return {
-        port,
         data,
         encoding,
         cb,
@@ -3878,13 +3796,11 @@ export function serialWritePin(
  * @param taskId The ID of the async task.
  */
 export function serialReadPin(
-    port: any,
     size?: number,
     taskId?: string | number,
     playerId?: string
 ): SerialReadAction {
     return {
-        port,
         size,
         type: 'serial_read',
         taskId,
@@ -3897,13 +3813,11 @@ export function serialReadPin(
  * @param taskId The ID of the async task.
  */
 export function serialClosePin(
-    port: any,
     cb?: any,
     taskId?: string | number,
     playerId?: string
 ): SerialCloseAction {
     return {
-        port,
         cb,
         type: 'serial_close',
         taskId,
@@ -3976,12 +3890,10 @@ export function serialClosePin(
  * @param taskId The ID of the async task.
  */
 export function serialPausePin(
-    port: any,
     taskId?: string | number,
     playerId?: string
 ): SerialPauseAction {
     return {
-        port,
         type: 'serial_pause',
         taskId,
         playerId,
@@ -3993,32 +3905,11 @@ export function serialPausePin(
  * @param taskId The ID of the async task.
  */
 export function serialResumePin(
-    port: any,
     taskId?: string | number,
     playerId?: string
 ): SerialResumeAction {
     return {
-        port,
         type: 'serial_resume',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- *
- * @param taskId The ID of the async task.
- */
-export function execSyncPin(
-    command: string,
-    options?: object,
-    taskId?: string | number,
-    playerId?: string
-): ExecSyncAction {
-    return {
-        command,
-        options,
-        type: 'exec_sync',
         taskId,
         playerId,
     };

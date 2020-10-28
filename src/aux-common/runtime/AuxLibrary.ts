@@ -130,7 +130,7 @@ import {
     rpioSPITransferPin,
     rpioSPIWritePin,
     rpioSPIEndPin,
-    serialCreatePin,
+    serialConnectPin,
     serialOpenPin,
     serialUpdatePin,
     serialWritePin,
@@ -142,7 +142,6 @@ import {
     // serialDrainPin,
     serialPausePin,
     serialResumePin,
-    execSyncPin,
     Easing,
     LocalPositionTweenAction,
     LocalRotationTweenAction,
@@ -496,7 +495,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 rpioSPITransfer,
                 rpioSPIWrite,
                 rpioSPIEnd,
-                serialCreate,
+                serialConnect,
                 serialOpen,
                 serialUpdate,
                 serialWrite,
@@ -508,7 +507,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 // serialDrain,
                 serialPause,
                 serialResume,
-                execSync,
                 shell,
                 backupToGithub,
                 backupAsDownload,
@@ -2228,10 +2226,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      *
      */
-    function serialCreate(path: string, options?: object, cb?: any) {
+    function serialConnect(path: string, options?: object, cb?: any) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialCreatePin(path, options, cb),
+            serialConnectPin(path, options, cb),
             undefined,
             undefined,
             task.taskId
@@ -2242,10 +2240,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      *
      */
-    function serialOpen(port: any) {
+    function serialOpen() {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialOpenPin(port),
+            serialOpenPin(),
             undefined,
             undefined,
             task.taskId
@@ -2256,10 +2254,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      *
      */
-    function serialUpdate(port: any, options: object, cb?: any) {
+    function serialUpdate(options: object, cb?: any) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialUpdatePin(port, options, cb),
+            serialUpdatePin(options, cb),
             undefined,
             undefined,
             task.taskId
@@ -2270,15 +2268,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      *
      */
-    function serialWrite(
-        port: any,
-        data: string | number[],
-        encoding?: string,
-        cb?: any
-    ) {
+    function serialWrite(data: string | number[], encoding?: string, cb?: any) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialWritePin(port, data, encoding, cb),
+            serialWritePin(data, encoding, cb),
             undefined,
             undefined,
             task.taskId
@@ -2289,10 +2282,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      *
      */
-    function serialRead(port: any, size?: number) {
+    function serialRead(size?: number) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialReadPin(port, size),
+            serialReadPin(size),
             undefined,
             undefined,
             task.taskId
@@ -2303,10 +2296,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      *
      */
-    function serialClose(port: any, cb?: any) {
+    function serialClose(cb?: any) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialClosePin(port, cb),
+            serialClosePin(cb),
             undefined,
             undefined,
             task.taskId
@@ -2317,7 +2310,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      *
      */
-    // function serialSet(port: any) {
+    // function serialSet() {
     //     const task = context.createTask(true, true);
     //     const event = calcRemote(
     //         serialSetPin(port),
@@ -2331,7 +2324,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      *
      */
-    // function serialGet(port: any) {
+    // function serialGet() {
     //     const task = context.createTask(true, true);
     //     const event = calcRemote(
     //         serialGetPin(port),
@@ -2345,7 +2338,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      *
      */
-    // function serialFlush(port: any, cb?: any) {
+    // function serialFlush(, cb?: any) {
     //     const task = context.createTask(true, true);
     //     const event = calcRemote(
     //         serialFlushPin(port, cb),
@@ -2359,7 +2352,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      *
      */
-    // function serialDrain(port: any, cb?: any) {
+    // function serialDrain(, cb?: any) {
     //     const task = context.createTask(true, true);
     //     const event = calcRemote(
     //         serialDrainPin(port, cb),
@@ -2373,10 +2366,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      *
      */
-    function serialPause(port: any) {
+    function serialPause() {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialPausePin(port),
+            serialPausePin(),
             undefined,
             undefined,
             task.taskId
@@ -2387,24 +2380,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      *
      */
-    function serialResume(port: any) {
+    function serialResume() {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialResumePin(port),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     *
-     */
-    function execSync(command: string, options?: object) {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            execSyncPin(command, options),
+            serialResumePin(),
             undefined,
             undefined,
             task.taskId

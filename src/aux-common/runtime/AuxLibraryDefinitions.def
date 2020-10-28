@@ -3226,67 +3226,62 @@ declare global {
         /**
          * 
          */
-        serialCreate(path: string, options?: object, cb?: any): Promise<void>;
+        serialConnect(path: string, options?: object, cb?: any): Promise<void>;
         
         /**
          * 
          */
-        serialUpdate(port: any, options: object, cb?: any): Promise<void>;
+        serialUpdate(options: object, cb?: any): Promise<void>;
         
         /**
          * 
          */
-        serialOpen(port: any): Promise<void>;
+        serialOpen(): Promise<void>;
         
         /**
          * 
          */
-        serialWrite(port: any, data: string|number[], encoding?: string, cb?: any): Promise<void>;
+        serialWrite(data: string|number[], encoding?: string, cb?: any): Promise<void>;
         
         /**
          * 
          */
-        serialRead(port: any, size?: number): Promise<void>;
+        serialRead(size?: number): Promise<void>;
         
         /**
          * 
          */
-        serialClose(port: any, cb?: any): Promise<void>;
+        serialClose(cb?: any): Promise<void>;
         
         /**
          * 
          */
-        // serialSet(port: any): Promise<void>;
+        // serialSet(): Promise<void>;
         
         /**
          * 
          */
-        // serialGet(port: any): Promise<void>;
+        // serialGet(): Promise<void>;
         
         /**
          * 
          */
-        // serialFlush(port: any, cb?: any): Promise<void>;
+        // serialFlush(cb?: any): Promise<void>;
         
         /**
          * 
          */
-        // serialDrain(port: any, cb?: any): Promise<void>;
+        // serialDrain(cb?: any): Promise<void>;
         
         /**
          * 
          */
-        serialPause(port: any): Promise<void>;
+        serialPause(): Promise<void>;
         
         /**
          * 
          */
-        serialResume(port: any): Promise<void>;
-        
-        /**
-         * 
-         */
-        execSync(command: string, options?: object): Promise<void>;
+        serialResume(): Promise<void>;
         
         /**
          * Executes the given shell script on the server.
