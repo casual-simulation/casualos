@@ -19,6 +19,7 @@ import {
     AtomCardinality,
     first,
     calculateTimeFromId,
+    iterateChildren,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxOp,
@@ -368,7 +369,11 @@ export function applyEvents(
             }
 
             const currentVal = findValueNode(node);
-            if (!currentVal || val !== currentVal.atom.value.value) {
+            if (
+                !currentVal ||
+                val !== currentVal.atom.value.value ||
+                first(iterateChildren(currentVal)) !== undefined
+            ) {
                 const valueResult = updateTag(node, currentVal, val);
                 result = mergeAuxResults(result, valueResult);
                 const newAtom = addedAtom(valueResult.results[0]) as Atom<

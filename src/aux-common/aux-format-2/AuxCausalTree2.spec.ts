@@ -1470,6 +1470,56 @@ describe('AuxCausalTree2', () => {
 
                 expect(botAtoms).toEqual([tag1, val1, insert1]);
             });
+
+            it('should be able to reset a tag to its original value by setting it', () => {
+                let bot1 = atom(atomId('a', 1), null, bot('test'));
+                let tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                let val1 = atom(atomId('a', 3), tag1, value('def'));
+
+                // Insert "ghi" at index 3 when the text looks like "v!@@@!!al1A".
+                // Should result with an edit that makes "###v!@ghi@@!!al1A"
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit({}, preserve(3), insert('ghi')),
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'defghi',
+                    }),
+                });
+                expect(result.update).toEqual({
+                    test: {
+                        tags: {
+                            abc: edit({ a: 4 }, preserve(3), insert('ghi')),
+                        },
+                    },
+                });
+
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botUpdated('test', {
+                        tags: {
+                            abc: 'def',
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                });
+                expect(result.update).toEqual({
+                    test: {
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                });
+            });
         });
 
         describe('certificates', () => {
