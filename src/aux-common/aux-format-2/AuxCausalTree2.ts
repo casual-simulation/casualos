@@ -253,7 +253,10 @@ export function applyEvents(
             let update = {};
             let updatedTree = tree as CausalTree<any>;
             let results = [] as WeaveResult[];
-            const version = val.version;
+            const version = {
+                ...val.version,
+                [tree.site.id]: tree.site.time,
+            };
             for (let ops of val.operations) {
                 let index = 0;
                 // let atoms = [] as Atom<AuxOp>[];

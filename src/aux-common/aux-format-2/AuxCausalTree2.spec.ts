@@ -1152,31 +1152,17 @@ describe('AuxCausalTree2', () => {
                 let bot1 = atom(atomId('a', 1), null, bot('test'));
                 let tag1 = atom(atomId('a', 2), bot1, tag('abc'));
                 let val1 = atom(atomId('a', 3), tag1, value('def'));
-                let insert1 = atom(atomId('a', 4), val1, insertOp(0, '111'));
-                let insert2 = atom(atomId('a', 5), val1, insertOp(2, '222'));
-                let delete2 = atom(atomId('a', 6, 1), insert1, deleteOp(0, 3));
-                let delete1 = atom(atomId('a', 7, 1), val1, deleteOp(0, 2));
-                let delete3 = atom(atomId('a', 8, 1), insert2, deleteOp(0, 3));
-                let delete4 = atom(atomId('a', 9, 1), val1, deleteOp(2, 3));
+                let insert1 = atom(atomId('b', 4), val1, insertOp(0, '111'));
+                let insert2 = atom(atomId('b', 5), val1, insertOp(2, '222'));
+                let delete2 = atom(atomId('a', 7, 1), insert1, deleteOp(0, 3));
+                let delete1 = atom(atomId('a', 8, 1), val1, deleteOp(0, 2));
+                let delete3 = atom(atomId('a', 9, 1), insert2, deleteOp(0, 3));
+                let delete4 = atom(atomId('a', 10, 1), val1, deleteOp(2, 3));
 
                 let atoms = tree.weave.getAtoms();
                 expect(atoms).toEqual([bot1, tag1, val1]);
 
-                ({ tree, updates, result } = applyEvents(tree, [
-                    botUpdated('test', {
-                        tags: {
-                            abc: edit({ a: 3 }, insert('111')),
-                        },
-                    }),
-                ]));
-
-                ({ tree, updates, result } = applyEvents(tree, [
-                    botUpdated('test', {
-                        tags: {
-                            abc: edit({ a: 3 }, preserve(2), insert('222')),
-                        },
-                    }),
-                ]));
+                ({ tree, updates } = applyAtoms(tree, [insert1, insert2]));
 
                 expect(tree.state).toEqual({
                     test: createBot('test', {
@@ -1187,7 +1173,7 @@ describe('AuxCausalTree2', () => {
                 ({ tree, updates, result } = applyEvents(tree, [
                     botUpdated('test', {
                         tags: {
-                            abc: edit({ a: 5 }, del(9)),
+                            abc: edit({ b: 5 }, del(9)),
                         },
                     }),
                 ]));
@@ -1201,7 +1187,7 @@ describe('AuxCausalTree2', () => {
                     test: {
                         tags: {
                             abc: edits(
-                                { a: 9 },
+                                { a: 10 },
                                 [del(3)],
                                 [del(2)],
                                 [del(3)],
@@ -1381,12 +1367,12 @@ describe('AuxCausalTree2', () => {
 
             it('should not remove sibling inserts in tag masks because of garbage collection', () => {
                 let tag1 = atom(
-                    atomId('a', 4),
+                    atomId('b', 4),
                     null,
                     tagMask('test1', 'other')
                 );
-                let val1 = atom(atomId('a', 5), tag1, value('xyz'));
-                let insert1 = atom(atomId('a', 6), val1, insertOp(0, 'def'));
+                let val1 = atom(atomId('b', 5), tag1, value('xyz'));
+                let insert1 = atom(atomId('b', 6), val1, insertOp(0, 'def'));
 
                 ({ tree, updates } = applyAtoms(
                     tree,
@@ -1401,7 +1387,7 @@ describe('AuxCausalTree2', () => {
                         botUpdated('test1', {
                             masks: {
                                 space: {
-                                    other: edit({ a: 5 }, insert('ghi')),
+                                    other: edit({ b: 5 }, insert('ghi')),
                                 },
                             },
                         }),
@@ -1433,13 +1419,13 @@ describe('AuxCausalTree2', () => {
                     test1: {
                         masks: {
                             space: {
-                                other: edit({ a: 7 }, insert('ghi')),
+                                other: edit({ a: 8 }, insert('ghi')),
                             },
                         },
                     },
                 });
 
-                let insert2 = atom(atomId('a', 7), val1, insertOp(0, 'ghi'));
+                let insert2 = atom(atomId('a', 8), val1, insertOp(0, 'ghi'));
 
                 const tagNode = tree.weave.getNode(tag1.id);
                 const atoms = [tagNode, ...iterateCausalGroup(tagNode)].map(
@@ -1447,6 +1433,42 @@ describe('AuxCausalTree2', () => {
                 );
 
                 expect(atoms).toEqual([tag1, val1, insert2, insert1]);
+            });
+
+            it('should always use the latest local site timestamp for inserts', () => {
+                let bot1 = atom(atomId('a', 1), null, bot('test'));
+                let tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                let val1 = atom(atomId('a', 3), tag1, value('def'));
+
+                // Insert "ghi" at index 3 when the text looks like "v!@@@!!al1A".
+                // Should result with an edit that makes "###v!@ghi@@!!al1A"
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit({}, preserve(3), insert('ghi')),
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'defghi',
+                    }),
+                });
+                expect(result.update).toEqual({
+                    test: {
+                        tags: {
+                            abc: edit({ a: 4 }, preserve(3), insert('ghi')),
+                        },
+                    },
+                });
+
+                const insert1 = atom(atomId('a', 4), val1, insertOp(3, 'ghi'));
+                const botAtoms = [
+                    ...iterateCausalGroup(tree.weave.getNode(bot1.id)),
+                ].map((n) => n.atom);
+
+                expect(botAtoms).toEqual([tag1, val1, insert1]);
             });
         });
 
