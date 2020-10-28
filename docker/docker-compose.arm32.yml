@@ -20,6 +20,7 @@ services:
         volumes:
             - 'usb-drive:/usr/src/app/drives'
             - '/data/bt-serial:/data/bt-serial'
+            - '/dev/rfcomm0:/dev/rfcomm0'
     mongo:
         image: 'casualsimulation/rpi-mongodb3:latest'
         restart: always
