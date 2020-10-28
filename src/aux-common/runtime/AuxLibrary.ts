@@ -130,6 +130,19 @@ import {
     rpioSPITransferPin,
     rpioSPIWritePin,
     rpioSPIEndPin,
+    serialCreatePin,
+    serialOpenPin,
+    serialUpdatePin,
+    serialWritePin,
+    serialReadPin,
+    serialClosePin,
+    // serialSetPin,
+    // serialGetPin,
+    // serialFlushPin,
+    // serialDrainPin,
+    serialPausePin,
+    serialResumePin,
+    execSyncPin,
     Easing,
     LocalPositionTweenAction,
     LocalRotationTweenAction,
@@ -483,6 +496,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 rpioSPITransfer,
                 rpioSPIWrite,
                 rpioSPIEnd,
+                serialCreate,
+                serialOpen,
+                serialUpdate,
+                serialWrite,
+                serialRead,
+                serialClose,
+                // serialSet,
+                // serialGet,
+                // serialFlush,
+                // serialDrain,
+                serialPause,
+                serialResume,
+                execSync,
                 shell,
                 backupToGithub,
                 backupAsDownload,
@@ -2192,6 +2218,193 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             rpioSPIEndPin(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     *
+     */
+    function serialCreate(path: string, options?: object, cb?: any) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialCreatePin(path, options, cb),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     *
+     */
+    function serialOpen(port: any) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialOpenPin(port),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     *
+     */
+    function serialUpdate(port: any, options: object, cb?: any) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialUpdatePin(port, options, cb),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     *
+     */
+    function serialWrite(
+        port: any,
+        data: string | number[],
+        encoding?: string,
+        cb?: any
+    ) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialWritePin(port, data, encoding, cb),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     *
+     */
+    function serialRead(port: any, size?: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialReadPin(port, size),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     *
+     */
+    function serialClose(port: any, cb?: any) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialClosePin(port, cb),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     *
+     */
+    // function serialSet(port: any) {
+    //     const task = context.createTask(true, true);
+    //     const event = calcRemote(
+    //         serialSetPin(port),
+    //         undefined,
+    //         undefined,
+    //         task.taskId
+    //     );
+    //     return addAsyncAction(task, event);
+    // }
+
+    /**
+     *
+     */
+    // function serialGet(port: any) {
+    //     const task = context.createTask(true, true);
+    //     const event = calcRemote(
+    //         serialGetPin(port),
+    //         undefined,
+    //         undefined,
+    //         task.taskId
+    //     );
+    //     return addAsyncAction(task, event);
+    // }
+
+    /**
+     *
+     */
+    // function serialFlush(port: any, cb?: any) {
+    //     const task = context.createTask(true, true);
+    //     const event = calcRemote(
+    //         serialFlushPin(port, cb),
+    //         undefined,
+    //         undefined,
+    //         task.taskId
+    //     );
+    //     return addAsyncAction(task, event);
+    // }
+
+    /**
+     *
+     */
+    // function serialDrain(port: any, cb?: any) {
+    //     const task = context.createTask(true, true);
+    //     const event = calcRemote(
+    //         serialDrainPin(port, cb),
+    //         undefined,
+    //         undefined,
+    //         task.taskId
+    //     );
+    //     return addAsyncAction(task, event);
+    // }
+
+    /**
+     *
+     */
+    function serialPause(port: any) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialPausePin(port),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     *
+     */
+    function serialResume(port: any) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialResumePin(port),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     *
+     */
+    function execSync(command: string, options?: object) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            execSyncPin(command, options),
             undefined,
             undefined,
             task.taskId

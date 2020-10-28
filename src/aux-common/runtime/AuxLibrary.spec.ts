@@ -105,6 +105,19 @@ import {
     rpioSPITransferPin,
     rpioSPIWritePin,
     rpioSPIEndPin,
+    serialCreatePin,
+    serialOpenPin,
+    serialUpdatePin,
+    serialWritePin,
+    serialReadPin,
+    serialClosePin,
+    // serialSetPin,
+    // serialGetPin,
+    // serialFlushPin,
+    // serialDrainPin,
+    serialPausePin,
+    serialResumePin,
+    execSyncPin,
     createCertificate,
     signTag,
     revokeCertificate,
@@ -3335,6 +3348,325 @@ describe('AuxLibrary', () => {
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 library.api.server.rpioSPIEnd();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.serialCreate()', () => {
+            it('should send a SerialCreateAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.serialCreate(
+                    '/dev/ttyS0',
+                    { baudRate: 9600 }
+                );
+                const expected = remote(
+                    serialCreatePin('/dev/ttyS0', { baudRate: 9600 }),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.serialCreate('/dev/ttyS0', {
+                    baudRate: 9600,
+                });
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.serialOpen()', () => {
+            it('should send a SerialOpenAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.serialOpen(37);
+                const expected = remote(
+                    serialOpenPin(37),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.serialOpen(37);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.serialUpdate()', () => {
+            it('should send a SerialUpdateAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.serialUpdate(37, {
+                    baudRate: 9600,
+                });
+                const expected = remote(
+                    serialUpdatePin(37, { baudRate: 9600 }),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.serialUpdate(37, { baudRate: 9600 });
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.serialWrite()', () => {
+            it('should send a SerialWriteAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.serialWrite(
+                    37,
+                    'Hello World!',
+                    'utf8'
+                );
+                const expected = remote(
+                    serialWritePin(37, 'Hello World!', 'utf8'),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.serialWrite(37, 'Hello World!', 'utf8');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.serialRead()', () => {
+            it('should send a SerialReadAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.serialRead(37);
+                const expected = remote(
+                    serialReadPin(37),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.serialRead(37);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.serialClose()', () => {
+            it('should send a SerialCloseAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.serialClose(37);
+                const expected = remote(
+                    serialClosePin(37),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.serialClose(37);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        // describe('server.serialSet()', () => {
+        //     it('should send a SerialSetAction in a RemoteAction', () => {
+        //         uuidMock.mockReturnValueOnce('task1');
+        //         const action: any = library.api.server.serialSet();
+        //         const expected = remote(
+        //             serialSetPin(),
+        //             undefined,
+        //             undefined,
+        //             'task1'
+        //         );
+        //         expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+        //         expect(context.actions).toEqual([expected]);
+        //     });
+
+        //     it('should create tasks that can be resolved from a remote', () => {
+        //         uuidMock.mockReturnValueOnce('uuid');
+        //         library.api.server.serialSet();
+
+        //         const task = context.tasks.get('uuid');
+        //         expect(task.allowRemoteResolution).toBe(true);
+        //     });
+        // });
+
+        // describe('server.serialGet()', () => {
+        //     it('should send a SerialGetAction in a RemoteAction', () => {
+        //         uuidMock.mockReturnValueOnce('task1');
+        //         const action: any = library.api.server.serialGet();
+        //         const expected = remote(
+        //             serialGetPin(),
+        //             undefined,
+        //             undefined,
+        //             'task1'
+        //         );
+        //         expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+        //         expect(context.actions).toEqual([expected]);
+        //     });
+
+        //     it('should create tasks that can be resolved from a remote', () => {
+        //         uuidMock.mockReturnValueOnce('uuid');
+        //         library.api.server.serialGet();
+
+        //         const task = context.tasks.get('uuid');
+        //         expect(task.allowRemoteResolution).toBe(true);
+        //     });
+        // });
+
+        // describe('server.serialFlush()', () => {
+        //     it('should send a SerialFlushAction in a RemoteAction', () => {
+        //         uuidMock.mockReturnValueOnce('task1');
+        //         const action: any = library.api.server.serialFlush();
+        //         const expected = remote(
+        //             serialFlushPin(),
+        //             undefined,
+        //             undefined,
+        //             'task1'
+        //         );
+        //         expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+        //         expect(context.actions).toEqual([expected]);
+        //     });
+
+        //     it('should create tasks that can be resolved from a remote', () => {
+        //         uuidMock.mockReturnValueOnce('uuid');
+        //         library.api.server.serialFlush();
+
+        //         const task = context.tasks.get('uuid');
+        //         expect(task.allowRemoteResolution).toBe(true);
+        //     });
+        // });
+
+        // describe('server.serialDrain()', () => {
+        //     it('should send a SerialDrainAction in a RemoteAction', () => {
+        //         uuidMock.mockReturnValueOnce('task1');
+        //         const action: any = library.api.server.serialDrain();
+        //         const expected = remote(
+        //             serialDrainPin(),
+        //             undefined,
+        //             undefined,
+        //             'task1'
+        //         );
+        //         expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+        //         expect(context.actions).toEqual([expected]);
+        //     });
+
+        //     it('should create tasks that can be resolved from a remote', () => {
+        //         uuidMock.mockReturnValueOnce('uuid');
+        //         library.api.server.serialDrain();
+
+        //         const task = context.tasks.get('uuid');
+        //         expect(task.allowRemoteResolution).toBe(true);
+        //     });
+        // });
+
+        describe('server.serialPause()', () => {
+            it('should send a SerialPauseAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.serialPause(37);
+                const expected = remote(
+                    serialPausePin(37),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.serialPause(37);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.serialResume()', () => {
+            it('should send a SerialResumeAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.serialResume(37);
+                const expected = remote(
+                    serialResumePin(37),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.serialResume(37);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.execSync()', () => {
+            it('should send a ExecSyncAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.execSync(
+                    "echo 'Hellow World!'",
+                    { shell: '/bin/bash', stdio: 'inherit' }
+                );
+                const expected = remote(
+                    execSyncPin("echo 'Hellow World!'", {
+                        shell: '/bin/bash',
+                        stdio: 'inherit',
+                    }),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.execSync("echo 'Hellow World!'", {
+                    shell: '/bin/bash',
+                    stdio: 'inherit',
+                });
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);

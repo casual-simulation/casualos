@@ -3224,6 +3224,71 @@ declare global {
         rpioSPIEnd(): Promise<void>;
         
         /**
+         * 
+         */
+        serialCreate(path: string, options?: object, cb?: any): Promise<void>;
+        
+        /**
+         * 
+         */
+        serialUpdate(port: any, options: object, cb?: any): Promise<void>;
+        
+        /**
+         * 
+         */
+        serialOpen(port: any): Promise<void>;
+        
+        /**
+         * 
+         */
+        serialWrite(port: any, data: string|number[], encoding?: string, cb?: any): Promise<void>;
+        
+        /**
+         * 
+         */
+        serialRead(port: any, size?: number): Promise<void>;
+        
+        /**
+         * 
+         */
+        serialClose(port: any, cb?: any): Promise<void>;
+        
+        /**
+         * 
+         */
+        // serialSet(port: any): Promise<void>;
+        
+        /**
+         * 
+         */
+        // serialGet(port: any): Promise<void>;
+        
+        /**
+         * 
+         */
+        // serialFlush(port: any, cb?: any): Promise<void>;
+        
+        /**
+         * 
+         */
+        // serialDrain(port: any, cb?: any): Promise<void>;
+        
+        /**
+         * 
+         */
+        serialPause(port: any): Promise<void>;
+        
+        /**
+         * 
+         */
+        serialResume(port: any): Promise<void>;
+        
+        /**
+         * 
+         */
+        execSync(command: string, options?: object): Promise<void>;
+        
+        /**
          * Executes the given shell script on the server.
          * @param script The shell script that should be executed.
          */
