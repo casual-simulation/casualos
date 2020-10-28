@@ -19,7 +19,7 @@ services:
             UPSTREAM_DIRECTORY: 'https://auxplayer.com'
         volumes:
             - 'usb-drive:/usr/src/app/drives'
-            - '/data/bt-serial:data/bt-serial'
+            - '/data/bt-serial:/data/bt-serial'
     mongo:
         image: 'casualsimulation/rpi-mongodb3:latest'
         restart: always
