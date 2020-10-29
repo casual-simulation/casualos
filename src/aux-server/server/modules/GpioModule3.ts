@@ -108,7 +108,7 @@ export class GpioModule3 implements AuxModule2 {
 
     _serialConnect(simulation: Simulation, event: SerialConnectAction) {
         try {
-            execSync('sudo bash /data/bt-serial ' + event.path);
+            // execSync('sudo bash /data/bt-serial ' + event.path);
 
             const port = new SerialPort(event.path, event.options, event.cb);
 
