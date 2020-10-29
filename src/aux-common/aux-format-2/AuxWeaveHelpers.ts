@@ -304,9 +304,11 @@ export function findSingleEditPosition(index: number, edits: TextSegment[]) {
  * Calculates the list of ordered edits for the given value node.
  * This iterates each insert op and delete op and returns a list of text segments that have been derived from the value.
  * @param nodes The list of nodes that the edits should be calculated from.
+ * @param preserveEmptyEdits Whether to preserve empty edits in the output list.
  */
 export function calculateOrderedEdits(
-    nodes: WeaveNode<AuxOp>[]
+    nodes: WeaveNode<AuxOp>[],
+    preserveEmptyEdits: boolean = false
 ): TextSegment[] {
     let segments = [] as TextSegmentInfo[];
 
@@ -386,7 +388,7 @@ export function calculateOrderedEdits(
             offset: s.offset,
             node: s.node,
         }))
-        .filter((s) => s.text.length > 0);
+        .filter((s) => preserveEmptyEdits || s.text.length > 0);
 }
 
 /**

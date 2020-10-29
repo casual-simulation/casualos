@@ -2482,6 +2482,80 @@ describe('AuxWeaveReducer', () => {
                         },
                     });
                 });
+
+                it('should handle deletes for a value that had a slice completely deleted', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                    const value1 = atom(atomId('a', 3), tag1, value('111'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '2')
+                    );
+                    const insert2 = atom(
+                        atomId('a', 5),
+                        value1,
+                        insertOp(2, '3')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 6, 1),
+                        value1,
+                        deleteOp(1, 2)
+                    );
+                    const delete2 = atom(
+                        atomId('a', 7, 1),
+                        value1,
+                        deleteOp(2, 3)
+                    );
+
+                    let update = {} as PartialBotsState;
+                    for (let atom of [
+                        bot1,
+                        tag1,
+                        value1,
+                        insert1,
+                        insert2,
+                        delete1,
+                    ]) {
+                        let u = reduce(
+                            weave,
+                            weave.insert(atom),
+                            update,
+                            space
+                        );
+                        state = apply(state, u);
+                    }
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: '1231',
+                            },
+                        },
+                    });
+
+                    let u = reduce(weave, weave.insert(delete2), update, space);
+                    state = apply(state, u);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: '123',
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: '123',
+                            },
+                        },
+                    });
+                });
             });
 
             describe('TagMask', () => {

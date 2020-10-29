@@ -477,7 +477,7 @@ function deleteTextReducer(
 
     const nodes = [valueNode, ...iterateCausalGroup(valueNode)];
     const filtered = nodes.filter((n) => !idEquals(n.atom.id, atom.id));
-    const edits = calculateOrderedEdits(filtered);
+    const edits = calculateOrderedEdits(filtered, true);
 
     let ops = [] as TagEditOp[];
     for (let { count, length } of findDeletePoints(
@@ -647,7 +647,7 @@ export function* findDeletePoints(
         if (idEquals(e.node.atom.id, atom.cause)) {
             // We also only care about edits that this atom affects.
             // Basically we want to filter out all edits that the delete doesn't contain.
-            if (nodeCount + e.marked.length > value.start - e.offset) {
+            if (nodeCount + e.marked.length > value.start) {
                 // Go through each character in the edit and determine
                 // if it should be deleted or if it has already been deleted.
                 for (
@@ -698,7 +698,7 @@ export function* findDeletePoints(
                 }
             }
 
-            nodeCount += e.text.length;
+            nodeCount += e.marked.length;
         }
 
         // If we created a delete point in this round then
