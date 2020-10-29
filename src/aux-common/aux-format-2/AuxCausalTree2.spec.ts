@@ -1559,14 +1559,16 @@ describe('AuxCausalTree2', () => {
                 });
             });
 
-            describe.only('fuzzing', () => {
+            describe('fuzzing', () => {
                 faker.seed(95423);
 
-                const cases = generateRandomEditCases(10);
+                const cases = generateRandomEditCases(25);
 
-                describe.each(cases.slice(1 + 3))(
+                describe.each(cases)(
                     '%s -> %s',
                     (startText, endText, intermediateTexts, edits) => {
+                        const space = 'space';
+
                         it('should be able to apply the given edits to produce the final text', () => {
                             let tree = auxTree('a');
 
@@ -1581,7 +1583,6 @@ describe('AuxCausalTree2', () => {
                             for (let i = 0; i < edits.length; i++) {
                                 let edit = edits[i];
                                 let str = intermediateTexts[i];
-                                let original = tree.state.test.tags.abc;
 
                                 ({ tree, updates, result } = applyEvents(tree, [
                                     botUpdated('test', {
@@ -1590,10 +1591,6 @@ describe('AuxCausalTree2', () => {
                                         },
                                     }),
                                 ]));
-
-                                if (tree.state.test.tags.abc !== str) {
-                                    debugger;
-                                }
 
                                 expect(tree.state).toEqual({
                                     test: createBot('test', {
