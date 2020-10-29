@@ -1,3 +1,7 @@
 .monaco-editor .rename-box {
     top: 0;
 }
+
+.monaco-editor .monaco-hover {
+    top: 0;
+}
