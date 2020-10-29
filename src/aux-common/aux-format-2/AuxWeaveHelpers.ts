@@ -352,14 +352,36 @@ export function calculateOrderedEdits(
                 totalLength: atomValue.text.length,
             };
             let count = 0;
-            let lastCause = 0;
+            let lastCausalGroupIndex = 0;
+            let isInCausalGroup = false;
+            let lastCauseTime = -1;
             let added = false;
             for (let i = 0; i < segments.length; i++) {
                 const lastSegment = segments[i];
+
                 if (!idEquals(lastSegment.node.atom.id, node.atom.cause)) {
+                    if (isInCausalGroup) {
+                        // We know that we are outside the last causal group
+                        // because every child/grandchild of the cause must have a timestamp
+                        // higher than the cause timestamp.
+                        // So if we run across a segment with a timestamp less than the cause time
+                        // then we are outside the causal group.
+                        if (
+                            lastSegment.node.atom.id.timestamp < lastCauseTime
+                        ) {
+                            isInCausalGroup = false;
+                        } else {
+                            // if we are still in the causal group, then we can count the current
+                            // index as the last causal group point.
+                            lastCausalGroupIndex = i;
+                        }
+                    }
                     continue;
                 }
-                lastCause = i;
+                isInCausalGroup = true;
+                lastCauseTime = lastSegment.node.atom.id.timestamp;
+                lastCausalGroupIndex = i;
+
                 if (atomValue.index <= 0) {
                     segments.splice(i, 0, segment);
                     added = true;
@@ -389,7 +411,7 @@ export function calculateOrderedEdits(
                 count += lastSegment.text.length;
             }
             if (!added) {
-                segments.splice(lastCause + 1, 0, segment);
+                segments.splice(lastCausalGroupIndex + 1, 0, segment);
             }
         } else if (atomValue.type === AuxOpType.Delete) {
             let lastSegment = segments.find((s) =>

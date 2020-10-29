@@ -788,6 +788,67 @@ describe('AuxWeaveHelpers', () => {
             ]);
         });
 
+        it('should support sibling inserts that are right next to each other', () => {
+            const b1 = atom(atomId('a', 1), null, bot('test'));
+            const t1 = atom(atomId('a', 2), b1, tag('abc'));
+
+            const v1 = atom(atomId('a', 3), t1, value('111'));
+            const i1 = atom(atomId('a', 4), v1, insertOp(3, '222'));
+            const i2 = atom(atomId('a', 5), v1, insertOp(3, '333'));
+
+            insert(b1, t1, v1, i1, i2);
+
+            const valueNode = weave.getNode(v1.id);
+            const nodes = [valueNode, ...iterateCausalGroup(valueNode)];
+
+            const segments = calculateOrderedEdits(nodes);
+
+            const result = segments.map((s) => ({
+                text: s.text,
+                marked: s.marked.replace(/\0/g, '•'),
+                offset: s.offset,
+                atom: s.node.atom,
+            }));
+
+            expect(result).toEqual([
+                { text: '111', marked: '111', offset: 0, atom: v1 },
+                { text: '333', marked: '333', offset: 0, atom: i2 },
+                { text: '222', marked: '222', offset: 0, atom: i1 },
+            ]);
+        });
+
+        it('should support inserts that are between other inserts', () => {
+            const b1 = atom(atomId('a', 1), null, bot('test'));
+            const t1 = atom(atomId('a', 2), b1, tag('abc'));
+
+            const v1 = atom(atomId('a', 3), t1, value('111'));
+            const i1 = atom(atomId('a', 4), v1, insertOp(2, '222'));
+            const i2 = atom(atomId('a', 5), v1, insertOp(3, '333'));
+            const i3 = atom(atomId('a', 6), i1, insertOp(3, '444'));
+
+            insert(b1, t1, v1, i1, i2, i3);
+
+            const valueNode = weave.getNode(v1.id);
+            const nodes = [valueNode, ...iterateCausalGroup(valueNode)];
+
+            const segments = calculateOrderedEdits(nodes);
+
+            const result = segments.map((s) => ({
+                text: s.text,
+                marked: s.marked.replace(/\0/g, '•'),
+                offset: s.offset,
+                atom: s.node.atom,
+            }));
+
+            expect(result).toEqual([
+                { text: '11', marked: '11', offset: 0, atom: v1 },
+                { text: '222', marked: '222', offset: 0, atom: i1 },
+                { text: '444', marked: '444', offset: 0, atom: i3 },
+                { text: '1', marked: '1', offset: 2, atom: v1 },
+                { text: '333', marked: '333', offset: 0, atom: i2 },
+            ]);
+        });
+
         it('should split inserts and deletes into a sequence of edits', () => {
             const b1 = atom(atomId('a', 1), null, bot('test'));
             const t1 = atom(atomId('a', 2), b1, tag('abc'));
