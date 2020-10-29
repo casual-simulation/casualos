@@ -138,7 +138,10 @@ export default class MonacoTagEditor extends Vue {
         this._sub.add(
             appManager.whileLoggedIn((user, sim) => {
                 this._simulation = sim;
-                const sub = watchSimulation(sim);
+                const sub = watchSimulation(
+                    sim,
+                    () => (<MonacoEditor>this.$refs?.editor).editor
+                );
 
                 const sub2 = sim.watcher.botsDiscovered
                     .pipe(
@@ -260,7 +263,13 @@ export default class MonacoTagEditor extends Vue {
         const space = this.space;
 
         const oldModel = this._model;
-        this._model = loadModel(this._simulation, bot, tag, space);
+        this._model = loadModel(
+            this._simulation,
+            bot,
+            tag,
+            space,
+            () => (<MonacoEditor>this.$refs?.editor).editor
+        );
         if (
             oldModel &&
             oldModel !== this._model &&

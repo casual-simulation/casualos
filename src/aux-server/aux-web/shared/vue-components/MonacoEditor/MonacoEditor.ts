@@ -11,6 +11,10 @@ export default class MonacoEditor extends Vue {
     private _model: monaco.editor.ITextModel;
     private _resizeObserver: import('@juggle/resize-observer').ResizeObserver;
 
+    get editor() {
+        return this._editor;
+    }
+
     constructor() {
         super();
     }

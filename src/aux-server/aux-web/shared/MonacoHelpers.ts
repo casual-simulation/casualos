@@ -127,7 +127,10 @@ export function setActiveModel(model: monaco.editor.ITextModel) {
  * Watches the given simulation for changes and updates the corresponding models.
  * @param simulation The simulation to watch.
  */
-export function watchSimulation(simulation: BrowserSimulation) {
+export function watchSimulation(
+    simulation: BrowserSimulation,
+    getEditor: () => monaco.editor.IEditor
+) {
     let sub = simulation.watcher.botsDiscovered
         .pipe(flatMap((f) => f))
         .subscribe((f) => {
@@ -136,7 +139,7 @@ export function watchSimulation(simulation: BrowserSimulation) {
                     shouldKeepModelWithTagLoaded(tag) ||
                     isFormula(f.tags[tag])
                 ) {
-                    loadModel(simulation, f, tag, null);
+                    loadModel(simulation, f, tag, null, getEditor);
                 }
             }
         });
@@ -180,7 +183,13 @@ export function watchSimulation(simulation: BrowserSimulation) {
                         for (let tag of result.references[id]) {
                             const bot = simulation.helper.botsState[id];
                             // TODO: Support references to tag masks
-                            let m = loadModel(simulation, bot, tag, null);
+                            let m = loadModel(
+                                simulation,
+                                bot,
+                                tag,
+                                null,
+                                getEditor
+                            );
                             locations.push(
                                 ...m
                                     .findMatches(
@@ -305,7 +314,8 @@ export function loadModel(
     simulation: BrowserSimulation,
     bot: Bot,
     tag: string,
-    space: string
+    space: string,
+    getEditor: () => monaco.editor.IEditor
 ) {
     const uri = getModelUri(bot, tag, space);
     let model = monaco.editor.getModel(uri);
@@ -317,7 +327,7 @@ export function loadModel(
             uri
         );
 
-        watchModel(simulation, model, bot, tag, space);
+        watchModel(simulation, model, bot, tag, space, getEditor);
     }
 
     return model;
@@ -373,7 +383,8 @@ function watchModel(
     model: monaco.editor.ITextModel,
     bot: Bot,
     tag: string,
-    space: string
+    space: string,
+    getEditor: () => monaco.editor.IEditor
 ) {
     let sub = new Subscription();
     let info: ModelInfo = {
@@ -416,6 +427,8 @@ function watchModel(
             .subscribe((update) => {
                 bot = update.bot;
                 if (update.type === 'edit') {
+                    const userSelections = getEditor()?.getSelections();
+
                     for (let ops of update.operations) {
                         let index = info.isFormula || info.isScript ? -1 : 0;
                         for (let op of ops) {
