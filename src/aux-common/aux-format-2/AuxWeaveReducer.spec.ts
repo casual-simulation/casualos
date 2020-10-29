@@ -2355,6 +2355,133 @@ describe('AuxWeaveReducer', () => {
                         },
                     });
                 });
+
+                it('should handle deletes for a value that was split by multiple inserts', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '111')
+                    );
+                    const insert2 = atom(
+                        atomId('a', 5),
+                        value1,
+                        insertOp(2, '222')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 6, 1),
+                        value1,
+                        deleteOp(0, 3)
+                    );
+
+                    let update = {} as PartialBotsState;
+                    for (let atom of [bot1, tag1, value1, insert1, insert2]) {
+                        let u = reduce(
+                            weave,
+                            weave.insert(atom),
+                            update,
+                            space
+                        );
+                        state = apply(state, u);
+                    }
+
+                    let u = reduce(weave, weave.insert(delete1), update, space);
+                    state = apply(state, u);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: '111222',
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: '111222',
+                            },
+                        },
+                    });
+                });
+
+                it('should handle deletes for a value that is partially deleted and was split by an insert', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                    const value1 = atom(atomId('a', 3), tag1, value('111111'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(5, '222')
+                    );
+                    const insert2 = atom(
+                        atomId('a', 5),
+                        value1,
+                        insertOp(0, '3')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 6, 1),
+                        value1,
+                        deleteOp(2, 3)
+                    );
+                    const delete2 = atom(
+                        atomId('a', 7, 1),
+                        value1,
+                        deleteOp(5, 6)
+                    );
+
+                    let update = {} as PartialBotsState;
+                    for (let atom of [
+                        bot1,
+                        tag1,
+                        value1,
+                        insert1,
+                        insert2,
+                        delete1,
+                    ]) {
+                        let u = reduce(
+                            weave,
+                            weave.insert(atom),
+                            update,
+                            space
+                        );
+                        state = apply(state, u);
+                    }
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: '311112221',
+                            },
+                        },
+                    });
+
+                    let u = reduce(weave, weave.insert(delete2), update, space);
+                    state = apply(state, u);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: '31111222',
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: '31111222',
+                            },
+                        },
+                    });
+                });
             });
 
             describe('TagMask', () => {
@@ -3684,6 +3811,143 @@ describe('AuxWeaveReducer', () => {
                             masks: {
                                 [space]: {
                                     abc: '111',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle deletes for a value that was split by multiple inserts', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '111')
+                    );
+                    const insert2 = atom(
+                        atomId('a', 5),
+                        value1,
+                        insertOp(2, '222')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 6, 1),
+                        value1,
+                        deleteOp(0, 3)
+                    );
+
+                    let update = {} as PartialBotsState;
+                    for (let atom of [tag1, value1, insert1, insert2]) {
+                        let u = reduce(
+                            weave,
+                            weave.insert(atom),
+                            update,
+                            space
+                        );
+                        state = apply(state, u);
+                    }
+
+                    let u = reduce(weave, weave.insert(delete1), update, space);
+                    state = apply(state, u);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: '111222',
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: '111222',
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should handle deletes for a value that is partially deleted and was split by an insert', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('111111'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(5, '222')
+                    );
+                    const insert2 = atom(
+                        atomId('a', 5),
+                        value1,
+                        insertOp(0, '3')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 6, 1),
+                        value1,
+                        deleteOp(2, 3)
+                    );
+                    const delete2 = atom(
+                        atomId('a', 7, 1),
+                        value1,
+                        deleteOp(5, 6)
+                    );
+
+                    let update = {} as PartialBotsState;
+                    for (let atom of [
+                        tag1,
+                        value1,
+                        insert1,
+                        insert2,
+                        delete1,
+                    ]) {
+                        let u = reduce(
+                            weave,
+                            weave.insert(atom),
+                            update,
+                            space
+                        );
+                        state = apply(state, u);
+                    }
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: '311112221',
+                                },
+                            },
+                        },
+                    });
+
+                    let u = reduce(weave, weave.insert(delete2), update, space);
+                    state = apply(state, u);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: '31111222',
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: '31111222',
                                 },
                             },
                         },

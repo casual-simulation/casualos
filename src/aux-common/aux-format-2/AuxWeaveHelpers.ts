@@ -192,6 +192,13 @@ export function findEditPosition(
     });
     const edits = calculateOrderedEdits(filtered);
 
+    if (edits.length <= 0 && typeof deleteCount === 'undefined') {
+        return {
+            index: 0,
+            node: value,
+        };
+    }
+
     if (typeof deleteCount === 'number') {
         return [
             ...findMultipleEditPositions(index, deleteCount, edits, 'right'),
@@ -222,6 +229,8 @@ export function* findMultipleEditPositions(
                 ? count + edit.text.length >= index
                 : count + edit.text.length > index;
         if (reachedStart) {
+            // const numAlreadyDeleted = deleteCount - remaining;
+            // const finalIndex = Math.max(index - numAlreadyDeleted, 0);
             const relativeIndex = Math.abs(count - index);
             const countUntilEnd = edit.text.length - relativeIndex;
 
@@ -272,6 +281,7 @@ export function* findMultipleEditPositions(
             };
 
             remaining -= nodeDeleteCount;
+            count += relativeIndex;
         } else {
             count += edit.text.length;
         }

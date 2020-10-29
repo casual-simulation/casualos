@@ -307,6 +307,23 @@ describe('AuxWeaveHelpers', () => {
             expect(result.index).toBe(3);
         });
 
+        it('should be able to insert into an empty value', () => {
+            const v1 = atom(atomId('a', 3), t1, value(''));
+            insertAtoms(b1, t1, v1);
+
+            const valueNode = weave.getNode(v1.id);
+
+            const result = findEditPosition(
+                valueNode,
+                {
+                    a: 5,
+                },
+                0
+            );
+            expect(result.node.atom).toBe(v1);
+            expect(result.index).toBe(0);
+        });
+
         it('should be able to insert a value into another site insert', () => {
             insertAtoms(b1, t1, v1, i3);
 
@@ -1000,6 +1017,40 @@ describe('AuxWeaveHelpers', () => {
                     index: 0,
                     count: 1,
                     node: 'a5',
+                },
+            ]);
+        });
+
+        it('should handle deleting from multiple segments when the start position happens to in the middle of a segment', () => {
+            const a1 = textSegment('a1', 'abcd');
+            const a2 = textSegment('a2', 'efgh');
+            const a3 = textSegment('a3', 'ijklmnop');
+            const a4 = textSegment('a4', 'qrstuv');
+
+            const positions = [
+                ...findMultipleEditPositions(2, 20, [a1, a2, a3, a4], 'right'),
+            ];
+
+            expect(positions).toEqual([
+                {
+                    index: 2,
+                    count: 2,
+                    node: 'a1',
+                },
+                {
+                    index: 0,
+                    count: 4,
+                    node: 'a2',
+                },
+                {
+                    index: 0,
+                    count: 8,
+                    node: 'a3',
+                },
+                {
+                    index: 0,
+                    count: 6,
+                    node: 'a4',
                 },
             ]);
         });

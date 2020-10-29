@@ -479,17 +479,19 @@ function deleteTextReducer(
     const filtered = nodes.filter((n) => !idEquals(n.atom.id, atom.id));
     const edits = calculateOrderedEdits(filtered);
 
+    let ops = [] as TagEditOp[];
     for (let { count, length } of findDeletePoints(
         edits,
         atom as Atom<DeleteOp>,
         value
     )) {
-        let ops = [] as TagEditOp[];
         if (count > 0) {
             ops.push(preserve(count));
         }
         ops.push(del(length));
+    }
 
+    if (ops.length > 0) {
         const existingValue = state?.[id]?.tags?.[tagName];
         if (isTagEdit(existingValue)) {
             lodashMerge(state, {
@@ -554,17 +556,19 @@ function deleteTagMaskTextReducer(
     const filtered = nodes.filter((n) => !idEquals(n.atom.id, atom.id));
     const edits = calculateOrderedEdits(filtered);
 
+    let ops = [] as TagEditOp[];
     for (let { count, length } of findDeletePoints(
         edits,
         atom as Atom<DeleteOp>,
         op
     )) {
-        let ops = [] as TagEditOp[];
         if (count > 0) {
             ops.push(preserve(count));
         }
         ops.push(del(length));
+    }
 
+    if (ops.length > 0) {
         const existingValue = state?.[id]?.masks?.[space]?.[tagName];
         if (isTagEdit(existingValue)) {
             lodashMerge(state, {
@@ -613,60 +617,96 @@ function deleteTagMaskTextReducer(
  * @param atom The delete atom.
  * @param value The delete op.
  */
-function* findDeletePoints(
+export function* findDeletePoints(
     edits: TextSegment[],
     atom: Atom<DeleteOp>,
     value: DeleteOp
 ) {
+    // The total number of characters that we have processed.
+    // Used to determine where the final delete point should be.
     let count = 0;
+
+    // The number of charactesr that we have processed
+    // for the delete atom's cause.
+    // Used to determine if the delete applies to an edit.
+    let nodeCount = 0;
+
+    // The number of characters that should be deleted.
     let length = 0;
+
+    // Whether we have created a delete point during the calculation.
     let createdDelete = false;
 
     // NOTE: the variable cannot be named "edit" because
     // then webpack will not compile the reference to th edit() function
     // correctly.
     for (let e of edits) {
-        if (
-            idEquals(e.node.atom.id, atom.cause) &&
-            count + e.marked.length > value.start - e.offset
-        ) {
-            count -= e.offset;
-            for (
-                let i = 0;
-                i < e.marked.length && i < value.end - e.offset;
-                i++
-            ) {
-                const char = e.marked[i];
-                if (i >= value.start - e.offset) {
-                    if (char !== '\0') {
-                        length += 1;
+        let removedText = false;
+
+        // We only care about edits that this delete is acting on.
+        if (idEquals(e.node.atom.id, atom.cause)) {
+            // We also only care about edits that this atom affects.
+            // Basically we want to filter out all edits that the delete doesn't contain.
+            if (nodeCount + e.marked.length > value.start - e.offset) {
+                // Go through each character in the edit and determine
+                // if it should be deleted or if it has already been deleted.
+                for (
+                    let i = 0;
+                    i < e.marked.length && i < value.end - e.offset;
+                    i++
+                ) {
+                    const char = e.marked[i];
+                    if (i >= value.start - e.offset) {
+                        if (char !== '\0') {
+                            // the character has not been deleted
+                            // and is in the delete atom range so
+                            // we make sure to delete it.
+                            length += 1;
+                        }
+                    } else {
+                        if (char === '\0') {
+                            // Character is before where the edit takes place
+                            // and has already been deleted so we adjust
+                            // the edit point.
+                            count -= 1;
+                        }
                     }
-                } else {
-                    if (char === '\0') {
-                        // Character has already been deleted
-                        // so we skip it.
-                        count -= 1;
+                }
+
+                if (length > 0) {
+                    if (!createdDelete) {
+                        // Take into account the starting point of the delete
+                        // and the offset.
+                        // Future delete points do not need this
+                        // because all delete atoms represent a contigious
+                        // range relative to the cause atom.
+                        // As a result, all subsequent delete points
+                        // will start at the same point that the edit starts.
+                        count += value.start - e.offset;
                     }
+
+                    createdDelete = true;
+                    removedText = true;
+
+                    yield {
+                        count,
+                        length,
+                    };
+
+                    length = 0;
+                    count = 0;
                 }
             }
 
-            if (length > 0) {
-                if (!createdDelete) {
-                    count += value.start;
-                }
-
-                createdDelete = true;
-
-                yield {
-                    count,
-                    length,
-                };
-
-                length = 0;
-                count = 0;
-            }
+            nodeCount += e.text.length;
         }
-        count += e.text.length;
+
+        // If we created a delete point in this round then
+        // we should not count the node text that the delete
+        // was created for.
+        if (!removedText) {
+            count += e.text.length;
+        }
     }
 }
 
