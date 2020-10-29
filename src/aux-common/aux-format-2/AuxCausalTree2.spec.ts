@@ -1605,6 +1605,63 @@ describe('AuxCausalTree2', () => {
                                 }),
                             });
                         });
+
+                        it('should be able to apply the given edit to tag masks', () => {
+                            let tree = auxTree('a');
+
+                            ({ tree } = applyEvents(
+                                tree,
+                                [
+                                    botUpdated('test', {
+                                        masks: {
+                                            [space]: {
+                                                abc: startText,
+                                            },
+                                        },
+                                    }),
+                                ],
+                                space
+                            ));
+
+                            for (let i = 0; i < edits.length; i++) {
+                                let edit = edits[i];
+                                let str = intermediateTexts[i];
+
+                                ({ tree, updates, result } = applyEvents(
+                                    tree,
+                                    [
+                                        botUpdated('test', {
+                                            masks: {
+                                                [space]: {
+                                                    abc: edit,
+                                                },
+                                            },
+                                        }),
+                                    ],
+                                    space
+                                ));
+
+                                expect(tree.state).toEqual({
+                                    test: {
+                                        masks: {
+                                            [space]: {
+                                                abc: str,
+                                            },
+                                        },
+                                    },
+                                });
+                            }
+
+                            expect(tree.state).toEqual({
+                                test: {
+                                    masks: {
+                                        [space]: {
+                                            abc: endText,
+                                        },
+                                    },
+                                },
+                            });
+                        });
                     }
                 );
             });
