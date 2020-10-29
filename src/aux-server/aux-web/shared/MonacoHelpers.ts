@@ -470,14 +470,19 @@ function watchModel(
                     }
                     let script = getScript(bot, tag, space);
                     let value = model.getValue();
-                    if (script !== value) {
-                        model.setValue(script);
+                    try {
+                        applyingEdits = true;
+                        if (script !== value) {
+                            model.setValue(script);
+                        }
+                        updateLanguage(
+                            model,
+                            tag,
+                            getTagValueForSpace(bot, tag, space)
+                        );
+                    } finally {
+                        applyingEdits = false;
                     }
-                    updateLanguage(
-                        model,
-                        tag,
-                        getTagValueForSpace(bot, tag, space)
-                    );
                 }
             })
     );
