@@ -234,20 +234,42 @@ export function* findMultipleEditPositions(
             const relativeIndex = Math.abs(count - index);
             const countUntilEnd = edit.text.length - relativeIndex;
 
+            // TODO: Reconcile the relative index of the edit text and
+            // the index that is needed inside the marked text.
+            let relativeIndexOffset = 0;
+            for (
+                let i = 0, b = 0;
+                i < relativeIndex && b < edit.marked.length;
+
+            ) {
+                let normalChar = edit.text[i];
+                let markedChar = edit.marked[b];
+
+                if (normalChar === markedChar) {
+                    i += 1;
+                } else {
+                    relativeIndexOffset += 1;
+                }
+
+                b += 1;
+            }
+
+            const finalOffset = relativeIndex + relativeIndexOffset;
+
             const nodeDeleteCount = Math.min(countUntilEnd, remaining);
-            const textBefore = edit.marked.slice(0, relativeIndex);
+            // const textBefore = edit.marked.slice(0, finalOffset);
             const textAfter = edit.marked.slice(
-                relativeIndex,
+                finalOffset,
                 edit.marked.length
             );
 
             let removedCharacterCount = 0;
             let deleteCountOffset = 0;
-            for (let char of textBefore) {
-                if (char === '\0') {
-                    removedCharacterCount += 1;
-                }
-            }
+            // for (let char of textBefore) {
+            //     if (char === '\0') {
+            //         removedCharacterCount += 1;
+            //     }
+            // }
 
             let afterIndex = 0;
 
@@ -275,7 +297,7 @@ export function* findMultipleEditPositions(
             }
 
             yield {
-                index: relativeIndex + removedCharacterCount + edit.offset,
+                index: finalOffset + removedCharacterCount + edit.offset,
                 count: nodeDeleteCount + deleteCountOffset,
                 node: edit.node,
             };

@@ -42,15 +42,19 @@ import {
     stateUpdatedEvent,
 } from '../bots';
 import {
+    applyEdit,
     BotStateUpdates,
     del,
     edit,
     edits,
     insert,
     preserve,
+    TagEdit,
+    TagEditOp,
 } from './AuxStateHelpers';
 import reducer, { CERTIFIED_SPACE, certificateId } from './AuxWeaveReducer';
 import { Action } from '@casual-simulation/causal-trees';
+import faker from 'faker';
 
 const keypair1 =
     'vK1.X9EJQT0znVqXj7D0kRyLSF1+F5u2bT7xKunF/H/SUxU=.djEueE1FL0VkOU1VanNaZGEwUDZ3cnlicjF5bnExZFptVzcubkxrNjV4ckdOTlM3Si9STGQzbGUvbUUzUXVEdmlCMWQucWZocVJQT21KeEhMbXVUWThORGwvU0M0dGdOdUVmaDFlcFdzMndYUllHWWxRZWpJRWthb1dJNnVZdXdNMFJVUTFWamkyc3JwMUpFTWJobk5sZ2Y2d01WTzRyTktDaHpwcUZGbFFnTUg0ZVU9';
@@ -1520,6 +1524,148 @@ describe('AuxCausalTree2', () => {
                     },
                 });
             });
+
+            it('should be able to insert into a tag that has an empty string', () => {
+                let tree = auxTree('a');
+
+                ({ tree } = applyEvents(tree, [
+                    botAdded(
+                        createBot('test', {
+                            abc: '',
+                        })
+                    ),
+                ]));
+
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit({}, insert('def')),
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                });
+
+                expect(result.update).toEqual({
+                    test: {
+                        tags: {
+                            abc: edit({ a: 4 }, insert('def')),
+                        },
+                    },
+                });
+            });
+
+            describe.only('fuzzing', () => {
+                faker.seed(95423);
+
+                const cases = generateRandomEditCases(10);
+
+                describe.each(cases.slice(1 + 3))(
+                    '%s -> %s',
+                    (startText, endText, intermediateTexts, edits) => {
+                        it('should be able to apply the given edits to produce the final text', () => {
+                            let tree = auxTree('a');
+
+                            ({ tree } = applyEvents(tree, [
+                                botAdded(
+                                    createBot('test', {
+                                        abc: startText,
+                                    })
+                                ),
+                            ]));
+
+                            for (let i = 0; i < edits.length; i++) {
+                                let edit = edits[i];
+                                let str = intermediateTexts[i];
+                                let original = tree.state.test.tags.abc;
+
+                                ({ tree, updates, result } = applyEvents(tree, [
+                                    botUpdated('test', {
+                                        tags: {
+                                            abc: edit,
+                                        },
+                                    }),
+                                ]));
+
+                                if (tree.state.test.tags.abc !== str) {
+                                    debugger;
+                                }
+
+                                expect(tree.state).toEqual({
+                                    test: createBot('test', {
+                                        abc: str,
+                                    }),
+                                });
+                            }
+
+                            expect(tree.state).toEqual({
+                                test: createBot('test', {
+                                    abc: endText,
+                                }),
+                            });
+                        });
+                    }
+                );
+            });
+
+            function generateRandomEditCases(
+                count: number
+            ): [string, string, string[], TagEdit[]][] {
+                // Generate a bunch of
+                let cases = [] as [string, string, string[], TagEdit[]][];
+                for (let i = 0; i < count; i++) {
+                    const startText = faker.lorem.sentence();
+                    const editCount = faker.random.number({
+                        min: 1,
+                        max: startText.length,
+                    });
+                    let edits = [] as TagEdit[];
+                    let strings = [] as string[];
+                    let currentText = startText;
+
+                    for (let b = 0; b < editCount; b++) {
+                        const shouldInsert = faker.random.boolean();
+                        let tagEdit: TagEdit;
+                        if (shouldInsert || currentText.length <= 0) {
+                            const preserveCount = faker.random.number({
+                                min: 0,
+                                max: currentText.length,
+                            });
+                            const newText = faker.lorem.word();
+                            tagEdit = edit(
+                                {},
+                                preserve(preserveCount),
+                                insert(newText)
+                            );
+                        } else {
+                            const preserveCount = faker.random.number({
+                                min: 0,
+                                max: currentText.length - 1,
+                            });
+                            const deleteCount = faker.random.number({
+                                min: 1,
+                                max: currentText.length - preserveCount,
+                            });
+                            tagEdit = edit(
+                                {},
+                                preserve(preserveCount),
+                                del(deleteCount)
+                            );
+                        }
+                        edits.push(tagEdit);
+                        currentText = applyEdit(currentText, tagEdit);
+                        strings.push(currentText);
+                    }
+
+                    cases.push([startText, currentText, strings, edits]);
+                }
+
+                return cases;
+            }
         });
 
         describe('certificates', () => {
