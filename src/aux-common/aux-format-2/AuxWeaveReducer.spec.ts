@@ -4027,6 +4027,85 @@ describe('AuxWeaveReducer', () => {
                         },
                     });
                 });
+
+                it('should handle deletes for a value that had a slice completely deleted', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('111'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, '2')
+                    );
+                    const insert2 = atom(
+                        atomId('a', 5),
+                        value1,
+                        insertOp(2, '3')
+                    );
+                    const delete1 = atom(
+                        atomId('a', 6, 1),
+                        value1,
+                        deleteOp(1, 2)
+                    );
+                    const delete2 = atom(
+                        atomId('a', 7, 1),
+                        value1,
+                        deleteOp(2, 3)
+                    );
+
+                    let update = {} as PartialBotsState;
+                    for (let atom of [
+                        tag1,
+                        value1,
+                        insert1,
+                        insert2,
+                        delete1,
+                    ]) {
+                        let u = reduce(
+                            weave,
+                            weave.insert(atom),
+                            update,
+                            space
+                        );
+                        state = apply(state, u);
+                    }
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: '1231',
+                                },
+                            },
+                        },
+                    });
+
+                    let u = reduce(weave, weave.insert(delete2), update, space);
+                    state = apply(state, u);
+
+                    expect(update).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: '123',
+                                },
+                            },
+                        },
+                    });
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    abc: '123',
+                                },
+                            },
+                        },
+                    });
+                });
             });
         });
     });

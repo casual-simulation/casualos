@@ -554,7 +554,7 @@ function deleteTagMaskTextReducer(
 
     const nodes = [value, ...iterateCausalGroup(value)];
     const filtered = nodes.filter((n) => !idEquals(n.atom.id, atom.id));
-    const edits = calculateOrderedEdits(filtered);
+    const edits = calculateOrderedEdits(filtered, true);
 
     let ops = [] as TagEditOp[];
     for (let { count, length } of findDeletePoints(
