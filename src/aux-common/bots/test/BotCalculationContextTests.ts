@@ -910,6 +910,7 @@ export function botCalculationContextTests(
             ['egg'],
             ['helix'],
             ['hex'],
+            ['cursor'],
         ];
         const tagCases = ['auxForm', 'form'];
 

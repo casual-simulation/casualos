@@ -8,6 +8,13 @@ import {
     isScript,
     hasValue,
     getTagValueForSpace,
+    calculateBotValue,
+    BotsState,
+    calculateBooleanTagValue,
+    isBotInDimension,
+    getBotShape,
+    getActiveObjects,
+    calculateNumericalTagValue,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
 import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
@@ -17,14 +24,26 @@ import JsonWorker from 'worker-loader!monaco-editor/esm/vs/language/json/json.wo
 import { calculateFormulaDefinitions } from './FormulaHelpers';
 import { libFileMap } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
 import { SimpleEditorModelResolverService } from 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
-import { SubscriptionLike, Subscription } from 'rxjs';
-import { skip, flatMap, filter, first, takeWhile, tap } from 'rxjs/operators';
+import { SubscriptionLike, Subscription, Observable, NEVER, merge } from 'rxjs';
+import {
+    skip,
+    flatMap,
+    filter,
+    first,
+    takeWhile,
+    tap,
+    switchMap,
+    map,
+    scan,
+    delay,
+} from 'rxjs/operators';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import union from 'lodash/union';
 import sortBy from 'lodash/sortBy';
 import { propertyInsertText } from './CompletionHelpers';
 import {
+    bot,
     del,
     edit,
     insert,
@@ -295,24 +314,135 @@ export function watchEditor(
     simulation: Simulation,
     editor: monaco.editor.ICodeEditor
 ): Subscription {
-    return toSubscription(
-        editor.onDidChangeCursorSelection((e) => {
-            const model = editor.getModel();
-            const info = models.get(model.uri.toString());
-            const startIndex = model.getOffsetAt(
-                e.selection.getStartPosition()
-            );
-            const endIndex = model.getOffsetAt(e.selection.getEndPosition());
+    const modelChangeObservable = new Observable<
+        monaco.editor.IModelChangedEvent
+    >((sub) => {
+        return toSubscription(editor.onDidChangeModel((e) => sub.next(e)));
+    });
 
-            let offset = info?.isScript || info?.isFormula ? 1 : 0;
-            simulation.helper.updateBot(simulation.helper.userBot, {
-                tags: {
-                    cursorStartIndex: offset + startIndex,
-                    cursorEndIndex: offset + endIndex,
-                },
-            });
-        })
+    const decorators = modelChangeObservable.pipe(
+        delay(100),
+        switchMap((e) => {
+            const info = models.get(e.newModelUrl.toString());
+            if (!info) {
+                console.warn(
+                    `[MonacoHelpers] Cannot watch model (${e.newModelUrl.toString()}) cursor bots.`
+                );
+                return NEVER;
+            }
+
+            const dimension = `${info.botId}.${info.tag}`;
+
+            const botEvents = merge(
+                simulation.watcher.botsDiscovered.pipe(
+                    map((bots) => ({ type: 'added_or_updated', bots } as const))
+                ),
+                simulation.watcher.botsUpdated.pipe(
+                    map((bots) => ({ type: 'added_or_updated', bots } as const))
+                ),
+                simulation.watcher.botsRemoved.pipe(
+                    map((ids) => ({ type: 'removed', ids } as const))
+                )
+            );
+
+            const dimensionStates = botEvents.pipe(
+                scan((state, event) => {
+                    if (event.type === 'added_or_updated') {
+                        for (let bot of event.bots) {
+                            if (
+                                isBotInDimension(null, bot, dimension) ===
+                                    true &&
+                                getBotShape(null, bot) === 'cursor'
+                            ) {
+                                state[bot.id] = bot;
+                            }
+                        }
+                    } else {
+                        for (let id of event.ids) {
+                            delete state[id];
+                        }
+                    }
+                    return state;
+                }, {} as BotsState)
+            );
+
+            const botDecorators = dimensionStates.pipe(
+                map((state) => {
+                    let decorators = [] as monaco.editor.IModelDeltaDecoration[];
+                    let offset = info?.isScript || info?.isFormula ? 1 : 0;
+                    for (let bot of getActiveObjects(state)) {
+                        const cursorStart = calculateNumericalTagValue(
+                            null,
+                            bot,
+                            `${dimension}Start`,
+                            0
+                        );
+                        const cursorEnd = calculateNumericalTagValue(
+                            null,
+                            bot,
+                            `${dimension}End`,
+                            0
+                        );
+                        const startPosition = info.model.getPositionAt(
+                            cursorStart - offset
+                        );
+                        const endPosition = info.model.getPositionAt(
+                            cursorEnd - offset
+                        );
+                        const range = new monaco.Range(
+                            startPosition.lineNumber,
+                            startPosition.column,
+                            endPosition.lineNumber,
+                            endPosition.column
+                        );
+                        decorators.push({
+                            range,
+                            options: {
+                                className: 'bot-cursor',
+                            },
+                        });
+                    }
+
+                    return decorators;
+                })
+            );
+
+            return botDecorators;
+        }),
+
+        scan((ids, decorators) => {
+            return editor.getModel().deltaDecorations(ids, decorators);
+        }, [] as string[])
     );
+
+    const sub = new Subscription();
+
+    sub.add(decorators.subscribe());
+
+    sub.add(
+        toSubscription(
+            editor.onDidChangeCursorSelection((e) => {
+                const model = editor.getModel();
+                const info = models.get(model.uri.toString());
+                const startIndex = model.getOffsetAt(
+                    e.selection.getStartPosition()
+                );
+                const endIndex = model.getOffsetAt(
+                    e.selection.getEndPosition()
+                );
+
+                let offset = info?.isScript || info?.isFormula ? 1 : 0;
+                simulation.helper.updateBot(simulation.helper.userBot, {
+                    tags: {
+                        cursorStartIndex: offset + startIndex,
+                        cursorEndIndex: offset + endIndex,
+                    },
+                });
+            })
+        )
+    );
+
+    return sub;
 }
 
 /**

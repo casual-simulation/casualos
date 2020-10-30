@@ -70,3 +70,4 @@
 </template>
 <script src="./MonacoTagEditor.ts"></script>
 <style src="./MonacoTagEditor.css" scoped></style>
+<style src="./MonacoTagEditorUnscoped.css"></style>

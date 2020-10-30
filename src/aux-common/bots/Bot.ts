@@ -409,6 +409,8 @@ export type BotShape =
     | 'frustum'
     | 'helix'
     | 'egg'
+    | 'hex'
+    | 'cursor'
     | 'nothing';
 
 /**
