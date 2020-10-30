@@ -109,7 +109,7 @@ export class GpioModule3 implements AuxModule2 {
     _serialConnect(simulation: Simulation, event: SerialConnectAction) {
         try {
             execSync(
-                'curl -X POST -H "Content-Type: text/plain" --data "connect" $(ip route show | awk "/default/ {print $3}"):8090/post'
+                'curl -X POST -H "Content-Type: text/plain" --data "connect" $(ip route show | awk \'/default/ {print $3}\'):8090/post'
             );
 
             const port = new SerialPort(event.path, event.options, event.cb);
