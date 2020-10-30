@@ -427,7 +427,20 @@ function watchModel(
             .subscribe((update) => {
                 bot = update.bot;
                 if (update.type === 'edit') {
-                    const userSelections = getEditor()?.getSelections();
+                    const userSelections = getEditor()?.getSelections() || [];
+                    const selectionPositions = userSelections.map(
+                        (s) =>
+                            [
+                                new monaco.Position(
+                                    s.startLineNumber,
+                                    s.startColumn
+                                ),
+                                new monaco.Position(
+                                    s.endLineNumber,
+                                    s.endColumn
+                                ),
+                            ] as [monaco.Position, monaco.Position]
+                    );
 
                     for (let ops of update.operations) {
                         let index = info.isFormula || info.isScript ? -1 : 0;
@@ -442,6 +455,7 @@ function watchModel(
                                     pos.lineNumber,
                                     pos.column
                                 );
+
                                 try {
                                     applyingEdits = true;
                                     model.pushEditOperations(
@@ -452,7 +466,16 @@ function watchModel(
                                 } finally {
                                     applyingEdits = false;
                                 }
+
                                 index += op.text.length;
+
+                                const endPos = model.getPositionAt(index);
+
+                                offsetSelections(
+                                    pos,
+                                    endPos,
+                                    selectionPositions
+                                );
                             } else if (op.type === 'delete') {
                                 const startPos = model.getPositionAt(index);
                                 const endPos = model.getPositionAt(
@@ -474,9 +497,28 @@ function watchModel(
                                 } finally {
                                     applyingEdits = false;
                                 }
+
+                                // Start and end positions are switched
+                                // so that deltas are negative
+                                offsetSelections(
+                                    endPos,
+                                    startPos,
+                                    selectionPositions
+                                );
                             }
                         }
                     }
+
+                    const finalSelections = selectionPositions.map(
+                        ([start, end]) =>
+                            new monaco.Selection(
+                                start.lineNumber,
+                                start.column,
+                                end.lineNumber,
+                                end.column
+                            )
+                    );
+                    getEditor()?.setSelections(finalSelections);
                 } else {
                     if (model === activeModel) {
                         return;
@@ -572,6 +614,43 @@ function watchModel(
     models.set(model.uri.toString(), info);
     updateDecorators(model, info, getTagValueForSpace(bot, tag, space));
     subs.push(sub);
+}
+
+function offsetSelections(
+    startPos: monaco.Position,
+    endPos: monaco.Position,
+    selectionPositions: [monaco.Position, monaco.Position][]
+) {
+    for (let selections of selectionPositions) {
+        const selectionStart = selections[0];
+        const selectionEnd = selections[1];
+        const startBefore = selectionStart.isBefore(startPos);
+        const endAfter = startPos.isBefore(selectionEnd);
+
+        // Selection does not start before edit position.
+        // We should offset the selection start by how much
+        // the edit changes
+        if (!startBefore) {
+            if (selectionStart.lineNumber === startPos.lineNumber) {
+                selections[0] = selectionStart.delta(
+                    endPos.lineNumber - startPos.lineNumber,
+                    endPos.column - startPos.column
+                );
+            }
+        }
+
+        // Selection ends after edit position.
+        // We should offset the selection end by how much
+        // the edit changes
+        if (endAfter) {
+            if (selectionEnd.lineNumber === startPos.lineNumber) {
+                selections[1] = selectionEnd.delta(
+                    endPos.lineNumber - startPos.lineNumber,
+                    endPos.column - startPos.column
+                );
+            }
+        }
+    }
 }
 
 function updateLanguage(
