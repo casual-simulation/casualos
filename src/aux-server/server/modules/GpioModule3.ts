@@ -108,7 +108,9 @@ export class GpioModule3 implements AuxModule2 {
 
     _serialConnect(simulation: Simulation, event: SerialConnectAction) {
         try {
-            // execSync('sudo bash /data/bt-serial ' + event.path);
+            execSync(
+                'curl -X POST -H "Content-Type: text/plain" --data "connect" http://localhost:8090/post'
+            );
 
             const port = new SerialPort(event.path, event.options, event.cb);
 
@@ -142,16 +144,17 @@ export class GpioModule3 implements AuxModule2 {
         try {
             const port = btSerial.get('Connection01');
             port.open();
-
-            simulation.helper.transaction(
-                hasValue(event.playerId)
-                    ? remoteResult(
-                          undefined,
-                          { sessionId: event.playerId },
-                          event.taskId
-                      )
-                    : asyncResult(event.taskId, undefined)
-            );
+            port.on('open', () => {
+                simulation.helper.transaction(
+                    hasValue(event.playerId)
+                        ? remoteResult(
+                              undefined,
+                              { sessionId: event.playerId },
+                              event.taskId
+                          )
+                        : asyncResult(event.taskId, undefined)
+                );
+            });
         } catch (error) {
             simulation.helper.transaction(
                 hasValue(event.playerId)
