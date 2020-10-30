@@ -299,6 +299,8 @@ export interface BotTags {
     ['leftWristPortalConfigBot']?: string;
     ['rightWristPortalConfigBot']?: string;
     ['editingBot']?: string;
+    cursorStartIndex?: number;
+    cursorEndIndex?: number;
     ['pagePixelWidth']?: number;
     ['pagePixelHeight']?: number;
 
@@ -1292,6 +1294,8 @@ export const KNOWN_TAGS: string[] = [
 
     'editingBot',
     'editingTag',
+    'cursorStartIndex',
+    'cursorEndIndex',
 
     'portalColor',
     'portalLocked',

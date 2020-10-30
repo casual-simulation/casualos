@@ -24,6 +24,8 @@ import {
     unloadModel,
     watchSimulation,
     setActiveModel,
+    toSubscription,
+    watchEditor,
 } from '../../MonacoHelpers';
 import * as monaco from '../../MonacoLibs';
 import { filter, tap } from 'rxjs/operators';
@@ -121,6 +123,10 @@ export default class MonacoTagEditor extends Vue {
         return false;
     }
 
+    get editor() {
+        return (<MonacoEditor>this.$refs?.editor).editor;
+    }
+
     constructor() {
         super();
         this.scriptErrors = [];
@@ -138,10 +144,7 @@ export default class MonacoTagEditor extends Vue {
         this._sub.add(
             appManager.whileLoggedIn((user, sim) => {
                 this._simulation = sim;
-                const sub = watchSimulation(
-                    sim,
-                    () => (<MonacoEditor>this.$refs?.editor).editor
-                );
+                const sub = watchSimulation(sim, () => this.editor);
 
                 const sub2 = sim.watcher.botsDiscovered
                     .pipe(
@@ -194,6 +197,10 @@ export default class MonacoTagEditor extends Vue {
 
     mounted() {
         this._updateModel();
+    }
+
+    onEditorMounted(editor: monaco.editor.IStandaloneCodeEditor) {
+        this._sub.add(watchEditor(this._simulation, editor));
     }
 
     destroyed() {

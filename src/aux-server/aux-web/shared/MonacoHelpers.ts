@@ -129,7 +129,7 @@ export function setActiveModel(model: monaco.editor.ITextModel) {
  */
 export function watchSimulation(
     simulation: BrowserSimulation,
-    getEditor: () => monaco.editor.IEditor
+    getEditor: () => monaco.editor.ICodeEditor
 ) {
     let sub = simulation.watcher.botsDiscovered
         .pipe(flatMap((f) => f))
@@ -291,6 +291,30 @@ export function watchSimulation(
     return sub;
 }
 
+export function watchEditor(
+    simulation: Simulation,
+    editor: monaco.editor.ICodeEditor
+): Subscription {
+    return toSubscription(
+        editor.onDidChangeCursorSelection((e) => {
+            const model = editor.getModel();
+            const info = models.get(model.uri.toString());
+            const startIndex = model.getOffsetAt(
+                e.selection.getStartPosition()
+            );
+            const endIndex = model.getOffsetAt(e.selection.getEndPosition());
+
+            let offset = info?.isScript || info?.isFormula ? 1 : 0;
+            simulation.helper.updateBot(simulation.helper.userBot, {
+                tags: {
+                    cursorStartIndex: offset + startIndex,
+                    cursorEndIndex: offset + endIndex,
+                },
+            });
+        })
+    );
+}
+
 /**
  * Clears the currently loaded models.
  */
@@ -315,7 +339,7 @@ export function loadModel(
     bot: Bot,
     tag: string,
     space: string,
-    getEditor: () => monaco.editor.IEditor
+    getEditor: () => monaco.editor.ICodeEditor
 ) {
     const uri = getModelUri(bot, tag, space);
     let model = monaco.editor.getModel(uri);
@@ -384,7 +408,7 @@ function watchModel(
     bot: Bot,
     tag: string,
     space: string,
-    getEditor: () => monaco.editor.IEditor
+    getEditor: () => monaco.editor.ICodeEditor
 ) {
     let sub = new Subscription();
     let info: ModelInfo = {
@@ -769,6 +793,6 @@ export function getScript(bot: Bot, tag: string, space: string) {
     }
 }
 
-function toSubscription(disposable: monaco.IDisposable) {
+export function toSubscription(disposable: monaco.IDisposable) {
     return new Subscription(() => disposable.dispose());
 }

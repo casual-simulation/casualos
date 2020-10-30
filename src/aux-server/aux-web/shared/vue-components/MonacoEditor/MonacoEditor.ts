@@ -65,6 +65,7 @@ export default class MonacoEditor extends Vue {
         });
         this._applyViewZones();
         this._watchSizeChanges();
+        this.$emit('editorMounted', this._editor);
     }
 
     private async _watchSizeChanges() {

@@ -59,7 +59,12 @@
                     </li>
                 </ul>
             </div>
-            <monaco-editor ref="editor" @focus="editorFocused" @blur="editorBlured"></monaco-editor>
+            <monaco-editor
+                ref="editor"
+                @focus="editorFocused"
+                @blur="editorBlured"
+                @editorMounted="onEditorMounted"
+            ></monaco-editor>
         </div>
     </div>
 </template>
