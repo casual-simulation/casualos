@@ -1,3 +1,21 @@
 .bot-cursor {
     background-color: rgba(255, 0, 0, 0.5);
 }
+
+.bot-cursor-notch {
+    position: absolute;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.1);
+    border-width: 2px 0 2px 2px;
+    height: 100%;
+}
+
+/* .bot-cursor-notch::after {
+    position: absolute;
+    content: ' ';
+    border-color: orange;
+    border: 3px solid;
+    border-radius: 4px;
+    left: -4px;
+    top: -5px;
+} */

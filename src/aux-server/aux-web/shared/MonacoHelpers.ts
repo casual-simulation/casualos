@@ -15,6 +15,7 @@ import {
     getBotShape,
     getActiveObjects,
     calculateNumericalTagValue,
+    calculateStringTagValue,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
 import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
@@ -52,6 +53,41 @@ import {
     TagEditOp,
 } from '@casual-simulation/aux-common/aux-format-2';
 import { CurrentVersion } from '@casual-simulation/causal-trees';
+import { sha256 as hashSha256 } from 'hash.js';
+import { Color } from 'three';
+
+let cursorColors = document.createElement('style');
+document.body.appendChild(cursorColors);
+
+let availableColors = new Map<string, string>();
+let stylesheet = '';
+
+function createColorClass(color: Color): [string, string] {
+    const hex = color.getHexString();
+    return [
+        `bot-cursor-color-${hex}`,
+        `.bot-cursor-color-${hex} {
+        background-color: rgba(${color.r * 255}, ${color.g * 255}, ${
+            color.b * 255
+        }, 0.5);
+    }`,
+    ];
+}
+
+function getColorClass(color: string): string {
+    const c = new Color(color);
+    const hex = c.getHexString();
+    if (availableColors.has(hex)) {
+        return availableColors.get(hex);
+    } else {
+        const [colorClass, colorStyle] = createColorClass(c);
+        stylesheet += '\n' + colorStyle;
+        cursorColors.innerHTML = stylesheet;
+        availableColors.set(hex, colorClass);
+
+        return colorClass;
+    }
+}
 
 export function setup() {
     // Tell monaco how to create the web workers
@@ -310,6 +346,8 @@ export function watchSimulation(
     return sub;
 }
 
+const DECORATOR_OWNER_ID: number = 9731;
+
 export function watchEditor(
     simulation: Simulation,
     editor: monaco.editor.ICodeEditor
@@ -395,10 +433,32 @@ export function watchEditor(
                             endPosition.lineNumber,
                             endPosition.column
                         );
+
+                        let beforeContentClassName: string;
+                        let afterContentClassName: string;
+
+                        const color = calculateStringTagValue(
+                            null,
+                            bot,
+                            'color',
+                            'black'
+                        );
+                        const colorClass = getColorClass(color);
+
+                        if (cursorStart < cursorEnd) {
+                            beforeContentClassName = null;
+                            afterContentClassName = `bot-cursor-notch ${colorClass}`;
+                        } else {
+                            beforeContentClassName = 'bot-cursor-notch';
+                            afterContentClassName = null;
+                        }
+
                         decorators.push({
                             range,
                             options: {
-                                className: 'bot-cursor',
+                                className: `bot-cursor ${colorClass}`,
+                                beforeContentClassName,
+                                afterContentClassName,
                             },
                         });
                     }
