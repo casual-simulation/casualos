@@ -106,6 +106,7 @@ import {
     rpioSPIWritePin,
     rpioSPIEndPin,
     serialConnectPin,
+    serialStreamPin,
     serialOpenPin,
     serialUpdatePin,
     serialWritePin,
@@ -3375,6 +3376,29 @@ describe('AuxLibrary', () => {
                 library.api.server.serialConnect('/dev/ttyS0', {
                     baudRate: 9600,
                 });
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.serialStream()', () => {
+            it('should send a SerialStreamAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.serialStream();
+                const expected = remote(
+                    serialStreamPin(),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.serialStream();
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);

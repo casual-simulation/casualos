@@ -132,6 +132,7 @@ import {
     rpioSPIEndPin,
     serialConnectPin,
     serialOpenPin,
+    serialStreamPin,
     serialUpdatePin,
     serialWritePin,
     serialReadPin,
@@ -496,6 +497,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 rpioSPIWrite,
                 rpioSPIEnd,
                 serialConnect,
+                serialStream,
                 serialOpen,
                 serialUpdate,
                 serialWrite,
@@ -2230,6 +2232,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             serialConnectPin(path, options, cb),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     *
+     */
+    function serialStream() {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialStreamPin(),
             undefined,
             undefined,
             task.taskId

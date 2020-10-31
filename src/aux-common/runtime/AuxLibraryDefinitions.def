@@ -3231,12 +3231,17 @@ declare global {
         /**
          * 
          */
-        serialUpdate(options: object, cb?: any): Promise<void>;
-        
+        serialStream(): Promise<void>;
+
         /**
          * 
          */
         serialOpen(): Promise<void>;
+
+        /**
+         * 
+         */
+        serialUpdate(options: object, cb?: any): Promise<void>;
         
         /**
          * 

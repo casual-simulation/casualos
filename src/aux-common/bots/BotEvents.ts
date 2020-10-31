@@ -145,6 +145,7 @@ export type AsyncActions =
     | RpioSPIWriteAction
     | RpioSPIEndAction
     | SerialConnectAction
+    | SerialStreamAction
     | SerialOpenAction
     | SerialUpdateAction
     | SerialWriteAction
@@ -1752,6 +1753,12 @@ export interface SerialConnectAction extends AsyncAction {
      *
      */
     cb?: any;
+}
+/**
+ *
+ */
+export interface SerialStreamAction extends AsyncAction {
+    type: 'serial_stream';
 }
 /**
  *
@@ -3731,6 +3738,21 @@ export function serialConnectPin(
         options,
         cb,
         type: 'serial_connect',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ *
+ * @param taskId The ID of the async task.
+ */
+export function serialStreamPin(
+    taskId?: string | number,
+    playerId?: string
+): SerialStreamAction {
+    return {
+        type: 'serial_stream',
         taskId,
         playerId,
     };

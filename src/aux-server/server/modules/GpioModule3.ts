@@ -8,6 +8,7 @@ import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
     SerialConnectAction,
+    SerialStreamAction,
     SerialOpenAction,
     SerialUpdateAction,
     SerialWriteAction,
@@ -47,6 +48,9 @@ export class GpioModule3 implements AuxModule2 {
                     flatMap(async event => {
                         if (event.type === 'serial_connect') {
                             await this._serialConnect(simulation, event);
+                        }
+                        if (event.type === 'serial_stream') {
+                            await this._serialStream(simulation, event);
                         }
                         if (event.type === 'serial_open') {
                             await this._serialOpen(simulation, event);
@@ -114,26 +118,58 @@ export class GpioModule3 implements AuxModule2 {
                 'curl -X POST -H "Content-Type: text/plain" --data "connect" $(ip route show | awk \'/default/ {print $3}\'):8090/post'
             );
 
+            const port = new SerialPort(event.path, event.options, event.cb);
+            btSerial.set('Connection01', port);
+
+            port.on('open', () => {
+                simulation.helper.transaction(
+                    hasValue(event.playerId)
+                        ? remoteResult(
+                              undefined,
+                              { sessionId: event.playerId },
+                              event.taskId
+                          )
+                        : asyncResult(event.taskId, undefined)
+                );
+            });
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _serialStream(simulation: Simulation, event: SerialConnectAction) {
+        try {
+            const port = btSerial.get('Connection01');
+
             // Use a `\r\n` as a line terminator
             const parser = new parsers.Readline({
                 delimiter: '\r\n',
             });
 
-            const port = new SerialPort(event.path, event.options, event.cb);
-            btSerial.set('Connection01', port);
-
             port.pipe(parser);
-            parser.on('data', console.log);
+            parser.on('data', (data: string) => {
+                console.log(data);
 
-            simulation.helper.transaction(
-                hasValue(event.playerId)
-                    ? remoteResult(
-                          undefined,
-                          { sessionId: event.playerId },
-                          event.taskId
-                      )
-                    : asyncResult(event.taskId, undefined)
-            );
+                simulation.helper.transaction(
+                    hasValue(event.playerId)
+                        ? remoteResult(
+                              console.log(data),
+                              { sessionId: event.playerId },
+                              event.taskId
+                          )
+                        : asyncResult(event.taskId, console.log(data))
+                );
+            });
         } catch (error) {
             simulation.helper.transaction(
                 hasValue(event.playerId)
@@ -183,6 +219,8 @@ export class GpioModule3 implements AuxModule2 {
         try {
             const port = btSerial.get('Connection01');
             port.update(event.options, event.cb);
+
+            btSerial.set('Connection01', port);
 
             simulation.helper.transaction(
                 hasValue(event.playerId)
@@ -242,6 +280,8 @@ export class GpioModule3 implements AuxModule2 {
             const port = btSerial.get('Connection01');
             let data = port.read(event.size);
 
+            // port.on('data', );
+
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(
@@ -270,16 +310,17 @@ export class GpioModule3 implements AuxModule2 {
         try {
             const port = btSerial.get('Connection01');
             port.close(event.cb);
-
-            simulation.helper.transaction(
-                hasValue(event.playerId)
-                    ? remoteResult(
-                          undefined,
-                          { sessionId: event.playerId },
-                          event.taskId
-                      )
-                    : asyncResult(event.taskId, undefined)
-            );
+            port.on('close', () => {
+                simulation.helper.transaction(
+                    hasValue(event.playerId)
+                        ? remoteResult(
+                              undefined,
+                              { sessionId: event.playerId },
+                              event.taskId
+                          )
+                        : asyncResult(event.taskId, undefined)
+                );
+            });
         } catch (error) {
             simulation.helper.transaction(
                 hasValue(event.playerId)
