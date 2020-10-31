@@ -26,6 +26,7 @@ import {
 import { Callback } from 'redis';
 const execSync = require('child_process').execSync;
 const SerialPort = require('serialport');
+const parsers = SerialPort.parsers;
 
 let btSerial = new Map<string, typeof SerialPort>();
 
@@ -108,13 +109,21 @@ export class GpioModule3 implements AuxModule2 {
 
     _serialConnect(simulation: Simulation, event: SerialConnectAction) {
         try {
+            // Complete the bluetooth connection before opening it up
             execSync(
                 'curl -X POST -H "Content-Type: text/plain" --data "connect" $(ip route show | awk \'/default/ {print $3}\'):8090/post'
             );
 
-            const port = new SerialPort(event.path, event.options, event.cb);
+            // Use a `\r\n` as a line terminator
+            const parser = new parsers.Readline({
+                delimiter: '\r\n',
+            });
 
+            const port = new SerialPort(event.path, event.options, event.cb);
             btSerial.set('Connection01', port);
+
+            port.pipe(parser);
+            parser.on('data', console.log);
 
             simulation.helper.transaction(
                 hasValue(event.playerId)
