@@ -147,7 +147,7 @@ export class GpioModule3 implements AuxModule2 {
             );
         }
     }
-    _serialStream(simulation: Simulation, event: SerialConnectAction) {
+    _serialStream(simulation: Simulation, event: SerialStreamAction) {
         try {
             const port = btSerial.get('Connection01');
 
