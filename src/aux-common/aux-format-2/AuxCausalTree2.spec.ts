@@ -1563,8 +1563,9 @@ describe('AuxCausalTree2', () => {
                 faker.seed(95423);
 
                 const cases = generateRandomEditCases(25);
+                const paragraphCases = generateRandomEditParagraphCases(5);
 
-                describe.each(cases)(
+                describe.each([...cases, ...paragraphCases])(
                     '%s -> %s',
                     (startText, endText, intermediateTexts, edits) => {
                         const space = 'space';
@@ -1690,6 +1691,61 @@ describe('AuxCausalTree2', () => {
                                 max: currentText.length,
                             });
                             const newText = faker.lorem.word();
+                            tagEdit = edit(
+                                {},
+                                preserve(preserveCount),
+                                insert(newText)
+                            );
+                        } else {
+                            const preserveCount = faker.random.number({
+                                min: 0,
+                                max: currentText.length - 1,
+                            });
+                            const deleteCount = faker.random.number({
+                                min: 1,
+                                max: currentText.length - preserveCount,
+                            });
+                            tagEdit = edit(
+                                {},
+                                preserve(preserveCount),
+                                del(deleteCount)
+                            );
+                        }
+                        edits.push(tagEdit);
+                        currentText = applyEdit(currentText, tagEdit);
+                        strings.push(currentText);
+                    }
+
+                    cases.push([startText, currentText, strings, edits]);
+                }
+
+                return cases;
+            }
+
+            function generateRandomEditParagraphCases(
+                count: number
+            ): [string, string, string[], TagEdit[]][] {
+                // Generate a bunch of
+                let cases = [] as [string, string, string[], TagEdit[]][];
+                for (let i = 0; i < count; i++) {
+                    const startText = faker.lorem.paragraph(4);
+                    const editCount = faker.random.number({
+                        min: 1,
+                        max: startText.length,
+                    });
+                    let edits = [] as TagEdit[];
+                    let strings = [] as string[];
+                    let currentText = startText;
+
+                    for (let b = 0; b < editCount; b++) {
+                        const shouldInsert = faker.random.boolean();
+                        let tagEdit: TagEdit;
+                        if (shouldInsert || currentText.length <= 0) {
+                            const preserveCount = faker.random.number({
+                                min: 0,
+                                max: currentText.length,
+                            });
+                            const newText = faker.lorem.sentence();
                             tagEdit = edit(
                                 {},
                                 preserve(preserveCount),
