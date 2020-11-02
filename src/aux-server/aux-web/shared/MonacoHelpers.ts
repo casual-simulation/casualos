@@ -16,6 +16,7 @@ import {
     getActiveObjects,
     calculateNumericalTagValue,
     calculateStringTagValue,
+    calculateFormattedBotValue,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
 import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
@@ -53,40 +54,105 @@ import {
     TagEditOp,
 } from '@casual-simulation/aux-common/aux-format-2';
 import { CurrentVersion } from '@casual-simulation/causal-trees';
-import { sha256 as hashSha256 } from 'hash.js';
 import { Color } from 'three';
+import { sha256 } from 'hash.js';
+import { invertColor } from './scene/ColorUtils';
 
 let cursorColors = document.createElement('style');
 document.body.appendChild(cursorColors);
 
 let availableColors = new Map<string, string>();
+let availableLabels = new Map<string, HTMLStyleElement>();
 let stylesheet = '';
 
-function createColorClass(color: Color): [string, string] {
-    const hex = color.getHexString();
+function createColorClass(
+    name: string,
+    backgroundColor: Color,
+    alpha: number
+): [string, string] {
     return [
-        `bot-cursor-color-${hex}`,
-        `.bot-cursor-color-${hex} {
-        background-color: rgba(${color.r * 255}, ${color.g * 255}, ${
-            color.b * 255
-        }, 0.5);
-    }`,
+        name,
+        `.${name} {
+        background-color: rgba(${backgroundColor.r * 255}, ${
+            backgroundColor.g * 255
+        }, ${backgroundColor.b * 255}, ${alpha});
+    }
+    
+    .${name}::after {
+        border-color: rgba(${backgroundColor.r * 255}, ${
+            backgroundColor.g * 255
+        }, ${backgroundColor.b * 255}, ${alpha});
+    }
+    `,
     ];
 }
 
-function getColorClass(color: string): string {
+function createHoverClass(
+    name: string,
+    backgroundColor: Color,
+    foregroundColor: Color,
+    label: string
+): string {
+    return `.${name}:hover::after {
+        content: '${label}';
+        background-color: rgb(${backgroundColor.r * 255}, ${
+        backgroundColor.g * 255
+    }, ${backgroundColor.b * 255});
+        color: rgb(${foregroundColor.r * 255}, ${foregroundColor.g * 255}, ${
+        foregroundColor.b * 255
+    });
+    }`;
+}
+
+function getColorClass(
+    prefix: string,
+    color: string,
+    alpha: number = 0.5
+): string {
     const c = new Color(color);
     const hex = c.getHexString();
-    if (availableColors.has(hex)) {
-        return availableColors.get(hex);
+    const name = prefix + hex;
+    if (availableColors.has(name)) {
+        return availableColors.get(name);
     } else {
-        const [colorClass, colorStyle] = createColorClass(c);
+        const [colorClass, colorStyle] = createColorClass(name, c, alpha);
         stylesheet += '\n' + colorStyle;
         cursorColors.innerHTML = stylesheet;
-        availableColors.set(hex, colorClass);
+        availableColors.set(name, colorClass);
 
         return colorClass;
     }
+}
+
+function getLabelStyle(name: string): HTMLStyleElement {
+    if (availableLabels.has(name)) {
+        return availableLabels.get(name);
+    } else {
+        const style = document.createElement('style');
+        document.body.appendChild(style);
+        availableLabels.set(name, style);
+        return style;
+    }
+}
+
+function getLabelClass(
+    prefix: string,
+    id: string,
+    foregroundColor: string,
+    backgroundColor: string,
+    label: string
+): string {
+    const foreground = new Color(foregroundColor);
+    const background = new Color(backgroundColor);
+    const name = prefix + id;
+    const styleElement = getLabelStyle(name);
+
+    const style = createHoverClass(name, background, foreground, label);
+    if (styleElement.innerHTML !== style) {
+        styleElement.innerHTML = style;
+    }
+
+    return name;
 }
 
 export function setup() {
@@ -360,6 +426,7 @@ export function watchEditor(
 
     const decorators = modelChangeObservable.pipe(
         delay(100),
+        filter((e) => !!e.newModelUrl),
         switchMap((e) => {
             const info = models.get(e.newModelUrl.toString());
             if (!info) {
@@ -443,13 +510,50 @@ export function watchEditor(
                             'color',
                             'black'
                         );
-                        const colorClass = getColorClass(color);
+                        const colorClass = getColorClass(
+                            'bot-cursor-color-',
+                            color,
+                            0.1
+                        );
+                        const notchColorClass = getColorClass(
+                            'bot-notch-cursor-color-',
+                            color,
+                            1
+                        );
+
+                        const label = calculateFormattedBotValue(
+                            null,
+                            bot,
+                            'auxLabel'
+                        );
+
+                        const inverseColor = invertColor(
+                            new Color(color).getHexString(),
+                            true
+                        );
+                        const labelForeground = calculateStringTagValue(
+                            null,
+                            bot,
+                            'labelColor',
+                            inverseColor
+                        );
+
+                        let labelClass = '';
+                        if (hasValue(label)) {
+                            labelClass = getLabelClass(
+                                'bot-notch-label',
+                                bot.id,
+                                labelForeground,
+                                color,
+                                label
+                            );
+                        }
 
                         if (cursorStart < cursorEnd) {
                             beforeContentClassName = null;
-                            afterContentClassName = `bot-cursor-notch ${colorClass}`;
+                            afterContentClassName = `bot-cursor-notch ${notchColorClass} ${labelClass}`;
                         } else {
-                            beforeContentClassName = 'bot-cursor-notch';
+                            beforeContentClassName = `bot-cursor-notch ${notchColorClass} ${labelClass}`;
                             afterContentClassName = null;
                         }
 
