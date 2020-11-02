@@ -601,6 +601,7 @@ export function watchEditor(
             editor.onDidChangeCursorSelection((e) => {
                 const model = editor.getModel();
                 const info = models.get(model.uri.toString());
+                const dir = e.selection.getDirection();
                 const startIndex = model.getOffsetAt(
                     e.selection.getStartPosition()
                 );
@@ -608,11 +609,20 @@ export function watchEditor(
                     e.selection.getEndPosition()
                 );
 
-                let offset = info?.isScript || info?.isFormula ? 1 : 0;
+                const offset = info?.isScript || info?.isFormula ? 1 : 0;
+                let finalStartIndex = offset + startIndex;
+                let finalEndIndex = offset + endIndex;
+
+                if (dir === monaco.SelectionDirection.RTL) {
+                    const temp = finalStartIndex;
+                    finalStartIndex = finalEndIndex;
+                    finalEndIndex = temp;
+                }
+
                 simulation.helper.updateBot(simulation.helper.userBot, {
                     tags: {
-                        cursorStartIndex: offset + startIndex,
-                        cursorEndIndex: offset + endIndex,
+                        cursorStartIndex: finalStartIndex,
+                        cursorEndIndex: finalEndIndex,
                     },
                 });
             })
