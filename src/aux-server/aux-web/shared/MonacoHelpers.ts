@@ -70,20 +70,18 @@ function createColorClass(
     backgroundColor: Color,
     alpha: number
 ): [string, string] {
+    const bRed = backgroundColor.r * 255;
+    const bGreen = backgroundColor.g * 255;
+    const bBlue = backgroundColor.b * 255;
     return [
         name,
         `.${name} {
-        background-color: rgba(${backgroundColor.r * 255}, ${
-            backgroundColor.g * 255
-        }, ${backgroundColor.b * 255}, ${alpha});
+        background-color: rgba(${bRed}, ${bGreen}, ${bBlue}, ${alpha});
     }
     
     .${name}::after {
-        border-color: rgba(${backgroundColor.r * 255}, ${
-            backgroundColor.g * 255
-        }, ${backgroundColor.b * 255}, ${alpha});
-    }
-    `,
+        border-color: rgba(${bRed}, ${bGreen}, ${bBlue}, ${alpha});
+    }`,
     ];
 }
 
@@ -93,14 +91,28 @@ function createHoverClass(
     foregroundColor: Color,
     label: string
 ): string {
+    const bRed = backgroundColor.r * 255;
+    const bGreen = backgroundColor.g * 255;
+    const bBlue = backgroundColor.b * 255;
+    const fRed = foregroundColor.r * 255;
+    const fGreen = foregroundColor.g * 255;
+    const fBlue = foregroundColor.b * 255;
     return `.${name}:hover::after {
         content: '${label}';
-        background-color: rgb(${backgroundColor.r * 255}, ${
-        backgroundColor.g * 255
-    }, ${backgroundColor.b * 255});
-        color: rgb(${foregroundColor.r * 255}, ${foregroundColor.g * 255}, ${
-        foregroundColor.b * 255
-    });
+        background-color: rgb(${bRed}, ${bGreen}, ${bBlue});
+        color: rgb(${fRed}, ${fGreen}, ${fBlue});
+        background-color: #000;
+        color: #fff;
+        border-width: 0;
+        border-radius: 0;
+        font-size: 12px;
+        line-height: 12px;
+        padding: 1px;
+        left: -2px;
+        top: -13px;
+        overflow: hidden;
+        width: auto;
+        height: auto;
     }`;
 }
 

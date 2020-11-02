@@ -20,18 +20,3 @@
     left: -4px;
     top: -5px;
 }
-
-.bot-cursor-notch:hover::after {
-    background-color: #000;
-    color: #fff;
-    border-width: 0;
-    border-radius: 0;
-    font-size: 12px;
-    line-height: 12px;
-    padding: 1px;
-    left: -2px;
-    top: -13px;
-    overflow: hidden;
-    width: auto;
-    height: auto;
-}
