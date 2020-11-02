@@ -64,6 +64,7 @@ export interface ClientConfig {
 export interface MongoDbConfig {
     url: string;
     useNewUrlParser: boolean;
+    useUnifiedTopology?: boolean;
 }
 
 export type CassandraDBConfig =
