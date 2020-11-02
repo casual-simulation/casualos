@@ -48,6 +48,7 @@ import {
     bot,
     del,
     edit,
+    edits,
     insert,
     mergeVersions,
     preserve,
@@ -889,21 +890,22 @@ function watchModel(
                 if (applyingEdits) {
                     return;
                 }
-                let operations = [] as TagEditOp[];
+                let operations = [] as TagEditOp[][];
                 let index = 0;
                 let offset = info.isFormula || info.isScript ? 1 : 0;
-                for (let change of e.changes) {
-                    operations.push(
+                const changes = sortBy(e.changes, (c) => c.rangeOffset);
+                for (let change of changes) {
+                    operations.push([
                         preserve(change.rangeOffset - index + offset),
                         del(change.rangeLength),
-                        insert(change.text)
-                    );
+                        insert(change.text),
+                    ]);
                     index += change.rangeLength;
                 }
                 await simulation.editBot(
                     bot,
                     tag,
-                    edit(lastVersion.vector, ...operations),
+                    edits(lastVersion.vector, ...operations),
                     space
                 );
             })
