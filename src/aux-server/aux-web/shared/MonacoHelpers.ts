@@ -744,6 +744,7 @@ function watchModel(
         simulation.watcher
             .botTagChanged(bot.id, tag, space)
             .pipe(
+                takeWhile((update) => update !== null),
                 tap((update) => {
                     lastVersion.vector = mergeVersions(
                         lastVersion.vector,
@@ -762,8 +763,7 @@ function watchModel(
                         )
                     );
                 }),
-                skip(1),
-                takeWhile((update) => update !== null)
+                skip(1)
             )
             .subscribe((update) => {
                 bot = update.bot;
