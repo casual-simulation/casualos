@@ -158,17 +158,16 @@ export class GpioModule3 implements AuxModule2 {
 
             port.pipe(parser);
             parser.on('data', (data: string) => {
-                console.log(data);
-
-                simulation.helper.transaction(
-                    hasValue(event.playerId)
-                        ? remoteResult(
-                              console.log(data),
-                              { sessionId: event.playerId },
-                              event.taskId
-                          )
-                        : asyncResult(event.taskId, console.log(data))
-                );
+                simulation.helper.shout('myScript', null, data);
+                // simulation.helper.transaction(
+                //     hasValue(event.playerId)
+                //         ? remoteResult(
+                //               data,
+                //               { sessionId: event.playerId },
+                //               event.taskId
+                //           )
+                //         : asyncResult(event.taskId, data)
+                // );
             });
         } catch (error) {
             simulation.helper.transaction(
