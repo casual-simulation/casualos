@@ -46,7 +46,7 @@
         "colors": "1.4.0",
         "commander": "4.0.1",
         "inquirer": "7.1.0",
-        "mongodb": "3.2.3"
+        "mongodb": "3.6.2"
     },
     "devDependencies": {
         "hard-source-webpack-plugin": "0.13.1",

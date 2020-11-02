@@ -93,7 +93,7 @@
         "lodash": "4.17.19",
         "mime": "2.4.6",
         "monaco-editor": "0.21.2",
-        "mongodb": "3.2.3",
+        "mongodb": "3.6.2",
         "offline-plugin": "^5.0.6",
         "onoff": "6.0.0",
         "quagga": "0.12.1",
