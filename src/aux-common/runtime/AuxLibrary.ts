@@ -2226,7 +2226,38 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Establish the connection to the bluetooth serial device
+     * @param path The device path. Example: /dev/rfcomm0
+     * @param options
+     * {boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
      *
+     * {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
+     *
+     * {number} [dataBits=8] Must be one of these: 8, 7, 6, or 5.
+     *
+     * {number} [highWaterMark=65536] The size of the read and write buffers defaults to 64k.
+     *
+     * {boolean} [lock=true] Prevent other processes from opening the port. Windows does not currently support `false`.
+     *
+     * {number} [stopBits=1] Must be one of these: 1 or 2.
+     *
+     * {string} [parity=none] Must be one of these: 'none', 'even', 'mark', 'odd', 'space'.
+     *
+     * {boolean} [rtscts=false] flow control setting
+     *
+     * {boolean} [xon=false] flow control setting
+     *
+     * {boolean} [xoff=false] flow control setting
+     *
+     * {boolean} [xany=false] flow control setting
+     *
+     * {object=} bindingOptions sets binding-specific options
+     *
+     * {Binding=} Binding The hardware access binding. `Bindings` are how Node-Serialport talks to the underlying system. Will default to the static property `Serialport.Binding`.
+     *
+     * {number} [bindingOptions.vmin=1] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
+     *
+     * {number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
      */
     function serialConnect(path: string, options?: object, cb?: any) {
         const task = context.createTask(true, true);
@@ -2240,7 +2271,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     *
+     * Parses and returns the serial stream to the event tag 'onSerialData'.
      */
     function serialStream() {
         const task = context.createTask(true, true);
@@ -2254,7 +2285,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     *
+     * Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
      */
     function serialOpen() {
         const task = context.createTask(true, true);
@@ -2268,7 +2299,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     *
+     * Updates the SerialPort object with a new baudRate.
+     * @param options {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
+     * @param cb
      */
     function serialUpdate(options: object, cb?: any) {
         const task = context.createTask(true, true);
@@ -2282,7 +2315,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     *
+     * Writes the provided data/command to the device
+     * @param data The data/command to send
+     * @param encoding The encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
+     * @param cb
+     * @param taskId The ID of the async task.
      */
     function serialWrite(data: string | number[], encoding?: string, cb?: any) {
         const task = context.createTask(true, true);
@@ -2296,7 +2333,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     *
+     * Request a number of bytes from the SerialPort.
+     * @param size Specify how many bytes of data to return, if available.
+     * @param taskId The ID of the async task.
      */
     function serialRead(size?: number) {
         const task = context.createTask(true, true);
@@ -2310,7 +2349,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     *
+     * Closes an open connection.
+     * @param cb
+     * @param taskId The ID of the async task.
      */
     function serialClose(cb?: any) {
         const task = context.createTask(true, true);
@@ -2380,7 +2421,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     // }
 
     /**
-     *
+     * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
      */
     function serialPause() {
         const task = context.createTask(true, true);
@@ -2394,7 +2435,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     *
+     * Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
      */
     function serialResume() {
         const task = context.createTask(true, true);
