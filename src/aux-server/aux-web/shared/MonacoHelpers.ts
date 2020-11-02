@@ -102,8 +102,6 @@ function createHoverClass(
         content: '${label}';
         background-color: rgb(${bRed}, ${bGreen}, ${bBlue});
         color: rgb(${fRed}, ${fGreen}, ${fBlue});
-        background-color: #000;
-        color: #fff;
         border-width: 0;
         border-radius: 0;
         font-size: 12px;
