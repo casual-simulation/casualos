@@ -38,6 +38,8 @@ import {
     map,
     scan,
     delay,
+    takeUntil,
+    debounceTime,
 } from 'rxjs/operators';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
@@ -56,7 +58,6 @@ import {
 } from '@casual-simulation/aux-common/aux-format-2';
 import { CurrentVersion } from '@casual-simulation/causal-trees';
 import { Color } from 'three';
-import { sha256 } from 'hash.js';
 import { invertColor } from './scene/ColorUtils';
 
 let cursorColors = document.createElement('style');
@@ -438,15 +439,10 @@ export function watchEditor(
     const decorators = modelChangeObservable.pipe(
         delay(100),
         filter((e) => !!e.newModelUrl),
-        switchMap((e) => {
-            const info = models.get(e.newModelUrl.toString());
-            if (!info) {
-                console.warn(
-                    `[MonacoHelpers] Cannot watch model (${e.newModelUrl.toString()}) cursor bots.`
-                );
-                return NEVER;
-            }
-
+        map((e) => models.get(e.newModelUrl.toString())),
+        filter((info) => !!info),
+        filter((info) => !info.model.isDisposed()),
+        switchMap((info) => {
             const dimension = `${info.botId}.${info.tag}`;
 
             const botEvents = merge(
@@ -482,7 +478,9 @@ export function watchEditor(
                 }, {} as BotsState)
             );
 
-            const botDecorators = dimensionStates.pipe(
+            const debouncedStates = dimensionStates.pipe(debounceTime(75));
+
+            const botDecorators = debouncedStates.pipe(
                 map((state) => {
                     let decorators = [] as monaco.editor.IModelDeltaDecoration[];
                     let offset = info?.isScript || info?.isFormula ? 1 : 0;
@@ -582,7 +580,11 @@ export function watchEditor(
                 })
             );
 
-            return botDecorators;
+            const onModelWillDispose = new Observable<void>((sub) => {
+                info.model.onWillDispose(() => sub.next());
+            });
+
+            return botDecorators.pipe(takeUntil(onModelWillDispose));
         }),
 
         scan((ids, decorators) => {
