@@ -82,7 +82,7 @@ export class MongoDBRepoStore implements CausalRepoStore {
             .toArray();
 
         return sitelog.map(
-            ref =>
+            (ref) =>
                 ({
                     type: 'sitelog',
                     branch: ref.branch,
@@ -113,7 +113,7 @@ export class MongoDBRepoStore implements CausalRepoStore {
             .toArray();
 
         return reflog.map(
-            ref =>
+            (ref) =>
                 ({
                     type: 'reflog',
                     branch: ref.branch,
@@ -147,13 +147,7 @@ export class MongoDBRepoStore implements CausalRepoStore {
             objects,
         };
 
-        await this._indexes.updateOne(
-            { _id: index },
-            {
-                $set: idx,
-            },
-            { upsert: true }
-        );
+        await this._indexes.replaceOne({ _id: index }, idx, { upsert: true });
         await this.storeObjects(head, objects);
     }
 
@@ -166,7 +160,7 @@ export class MongoDBRepoStore implements CausalRepoStore {
                 _id: { $in: keys },
             })
             .sort({ 'atom.id.timestamp': 1 })
-            .map(a => a.object)
+            .map((a) => a.object)
             .toArray();
         return objs;
     }
@@ -190,7 +184,7 @@ export class MongoDBRepoStore implements CausalRepoStore {
         head: string,
         objects: CausalRepoObject[]
     ): Promise<void> {
-        const mongoObjects: MongoDBObject[] = objects.map(o => ({
+        const mongoObjects: MongoDBObject[] = objects.map((o) => ({
             _id: getObjectHash(o),
             object: o,
         }));
@@ -200,10 +194,8 @@ export class MongoDBRepoStore implements CausalRepoStore {
         }
 
         let op = this._objects.initializeUnorderedBulkOp();
-        mongoObjects.forEach(o => {
-            op.find({ _id: o._id })
-                .upsert()
-                .updateOne(o);
+        mongoObjects.forEach((o) => {
+            op.find({ _id: o._id }).upsert().replaceOne(o);
         });
 
         try {
@@ -245,15 +237,9 @@ export class MongoDBRepoStore implements CausalRepoStore {
      * @param head The branch to save.
      */
     async saveBranch(head: CausalRepoBranch): Promise<void> {
-        const result = await this._heads.updateOne(
-            { name: head.name },
-            {
-                $set: head,
-            },
-            {
-                upsert: true,
-            }
-        );
+        const result = await this._heads.replaceOne({ name: head.name }, head, {
+            upsert: true,
+        });
         if (result.modifiedCount > 0 || result.upsertedCount > 0) {
             const ref = reflog(head);
             await this._reflog.insertOne(ref);
@@ -277,7 +263,7 @@ export function handleMongoDBDuplicateErrors(err: any) {
         const errors = (<any>err).writeErrors as MongoError[];
         let valid = false;
         if (errors && Array.isArray(errors)) {
-            if (errors.every(e => e.code === MONGO_CODE_DUPLICATE_OBJECT)) {
+            if (errors.every((e) => e.code === MONGO_CODE_DUPLICATE_OBJECT)) {
                 // If every error is a duplicate, then ignore the error
                 valid = true;
             }
