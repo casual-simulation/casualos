@@ -258,6 +258,18 @@ export function applyEvents(
                 ...val.version,
                 [tree.site.id]: tree.site.time,
             };
+
+            if (!currentVal) {
+                const valueResult = addAtom(updatedTree, node.atom, value(''));
+                updatedTree = applyTreeResult(updatedTree, valueResult);
+                const newAtom = addedAtom(valueResult.results[0]);
+                currentVal = updatedTree.weave.getNode(newAtom.id);
+                for (let result of valueResult.results) {
+                    update = reducer(updatedTree.weave, result, update, space);
+                }
+                results.push(...valueResult.results);
+            }
+
             for (let ops of val.operations) {
                 let index = 0;
                 // let atoms = [] as Atom<AuxOp>[];
@@ -289,7 +301,12 @@ export function applyEvents(
                             insertResult
                         );
                         for (let result of insertResult.results) {
-                            update = reducer(tree.weave, result, update, space);
+                            update = reducer(
+                                updatedTree.weave,
+                                result,
+                                update,
+                                space
+                            );
                         }
                         results.push(...insertResult.results);
                         index += op.text.length;
@@ -323,7 +340,7 @@ export function applyEvents(
                             );
                             for (let result of deleteResult.results) {
                                 update = reducer(
-                                    tree.weave,
+                                    updatedTree.weave,
                                     result,
                                     update,
                                     space
@@ -415,7 +432,11 @@ export function applyEvents(
             }
 
             const currentVal = findValueNode(node);
-            if (!currentVal || val !== currentVal.atom.value.value) {
+            if (
+                !currentVal ||
+                val !== currentVal.atom.value.value ||
+                first(iterateChildren(currentVal)) !== undefined
+            ) {
                 const valueResult = updateTag(node, currentVal, val);
                 result = mergeAuxResults(result, valueResult);
 

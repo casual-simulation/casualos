@@ -22,6 +22,50 @@ describe('AuxStateHelpers', () => {
                 const final = apply(current, update);
                 expect(final).toEqual(update);
             });
+
+            it('should support tag edits on new bots', () => {
+                const current = {};
+                const update = {
+                    test: {
+                        tags: {
+                            abc: edit({}, insert('def')),
+                        },
+                    },
+                };
+
+                const final = apply(current, update);
+                expect(final).toEqual({
+                    test: {
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                });
+            });
+
+            it('should support tag mask edits on new bots', () => {
+                const current = {};
+                const update = {
+                    test: {
+                        masks: {
+                            space: {
+                                abc: edit({}, insert('def')),
+                            },
+                        },
+                    },
+                };
+
+                const final = apply(current, update);
+                expect(final).toEqual({
+                    test: {
+                        masks: {
+                            space: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                });
+            });
         });
 
         describe('updated bots', () => {

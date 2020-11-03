@@ -193,6 +193,7 @@ export function apply<T extends BotsState, U extends PartialBotsState>(
         }
 
         let bot = updatedState[id] as Bot | PrecalculatedBot;
+        let isNewBot = !(id in state);
         if (!bot) {
             bot = Object.assign({}, update[id]) as any;
             updatedState[id] = bot as any;
@@ -208,7 +209,10 @@ export function apply<T extends BotsState, U extends PartialBotsState>(
             for (let tag in botUpdate.tags) {
                 let val = botUpdate.tags[tag];
                 if (isTagEdit(val)) {
-                    bot.tags[tag] = applyEdit(bot.tags[tag], val);
+                    bot.tags[tag] = applyEdit(
+                        isNewBot ? '' : bot.tags[tag],
+                        val
+                    );
                 } else {
                     bot.tags[tag] = val;
                 }
@@ -238,7 +242,7 @@ export function apply<T extends BotsState, U extends PartialBotsState>(
                     let val = tags[tag];
                     if (isTagEdit(val)) {
                         bot.masks[space][tag] = applyEdit(
-                            bot.masks[space][tag],
+                            isNewBot ? '' : bot.masks[space][tag],
                             val
                         );
                     } else {

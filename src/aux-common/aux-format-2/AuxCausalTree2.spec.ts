@@ -881,6 +881,89 @@ describe('AuxCausalTree2', () => {
                 expect(atoms).toEqual([bot1, tag1, val1, insert1]);
             });
 
+            it('should support inserting into a new tag', () => {
+                tree = auxTree('a');
+
+                let bot1 = atom(atomId('a', 1), null, bot('test'));
+
+                ({ tree } = applyAtoms(tree, [bot1]));
+
+                let atoms = tree.weave.getAtoms();
+                expect(atoms).toEqual([bot1]);
+
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit({ a: 3 }, insert('ghi')),
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'ghi',
+                    }),
+                });
+                expect(result.update).toEqual({
+                    test: {
+                        tags: {
+                            abc: edit({ a: 4 }, insert('ghi')),
+                        },
+                    },
+                });
+
+                let tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                let val1 = atom(atomId('a', 3), tag1, value(''));
+                let insert1 = atom(atomId('a', 4), val1, insertOp(0, 'ghi'));
+
+                atoms = tree.weave.getAtoms();
+                expect(atoms).toEqual([bot1, tag1, val1, insert1]);
+            });
+
+            it('should support inserting into a new tag mask', () => {
+                tree = auxTree('a');
+
+                ({ tree, updates, result } = applyEvents(
+                    tree,
+                    [
+                        botUpdated('test', {
+                            masks: {
+                                space: {
+                                    abc: edit({ a: 3 }, insert('ghi')),
+                                },
+                            },
+                        }),
+                    ],
+                    'space'
+                ));
+
+                expect(tree.state).toEqual({
+                    test: {
+                        masks: {
+                            space: {
+                                abc: 'ghi',
+                            },
+                        },
+                    },
+                });
+                expect(result.update).toEqual({
+                    test: {
+                        masks: {
+                            space: {
+                                abc: edit({ a: 3 }, insert('ghi')),
+                            },
+                        },
+                    },
+                });
+
+                let tag1 = atom(atomId('a', 1), null, tagMask('test', 'abc'));
+                let val1 = atom(atomId('a', 2), tag1, value(''));
+                let insert1 = atom(atomId('a', 3), val1, insertOp(0, 'ghi'));
+
+                const atoms = tree.weave.getAtoms();
+                expect(atoms).toEqual([tag1, val1, insert1]);
+            });
+
             it('should support inserting text with a specific timestamp', () => {
                 const bot1A = atom(atomId('b', 100), null, bot('test2'));
                 const tag1A = atom(atomId('b', 101), bot1A, tag('tag1'));
