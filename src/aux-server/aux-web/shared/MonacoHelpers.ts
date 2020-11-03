@@ -467,6 +467,8 @@ export function watchEditor(
                                 getBotShape(null, bot) === 'cursor'
                             ) {
                                 state[bot.id] = bot;
+                            } else {
+                                delete state[bot.id];
                             }
                         }
                     } else {
