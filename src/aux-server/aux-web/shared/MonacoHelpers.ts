@@ -916,6 +916,7 @@ function watchModel(
                         insert(change.text),
                     ]);
                     index += change.rangeLength;
+                    offset += change.text.length;
                 }
                 await simulation.editBot(
                     bot,
