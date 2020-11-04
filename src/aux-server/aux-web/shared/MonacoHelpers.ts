@@ -574,6 +574,9 @@ export function watchEditor(
                                 className: `bot-cursor ${colorClass}`,
                                 beforeContentClassName,
                                 afterContentClassName,
+                                stickiness:
+                                    monaco.editor.TrackedRangeStickiness
+                                        .GrowsOnlyWhenTypingAfter,
                             },
                         });
                     }
