@@ -1642,6 +1642,49 @@ describe('AuxCausalTree2', () => {
                 });
             });
 
+            it('should apply multiple edit sequences in order', () => {
+                let tree = auxTree('a');
+                const script = `abcdefghijklmnopqrstuvwxyz`;
+
+                ({ tree } = applyEvents(tree, [
+                    botAdded(
+                        createBot('test', {
+                            abc: script,
+                        })
+                    ),
+                ]));
+
+                ({ tree, result } = applyEvents(tree, [
+                    botUpdated('test', {
+                        tags: {
+                            abc: edits(
+                                {},
+                                [preserve(3), del(3)],
+                                [preserve(6), del(3)]
+                            ),
+                        },
+                    }),
+                ]));
+
+                expect(result.update).toEqual({
+                    test: {
+                        tags: {
+                            abc: edits(
+                                { a: 5 },
+                                [preserve(3), del(3)],
+                                [preserve(6), del(3)]
+                            ),
+                        },
+                    },
+                });
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'abcghimnopqrstuvwxyz',
+                    }),
+                });
+            });
+
             describe('fuzzing', () => {
                 faker.seed(95423);
 

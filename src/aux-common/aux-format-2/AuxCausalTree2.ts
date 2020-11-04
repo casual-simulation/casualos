@@ -352,6 +352,8 @@ export function applyEvents(
                         index += op.count;
                     }
                 }
+
+                version[updatedTree.site.id] = updatedTree.site.time;
             }
 
             let auxResult: AuxResult = {

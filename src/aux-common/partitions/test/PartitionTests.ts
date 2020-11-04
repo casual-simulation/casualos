@@ -20,7 +20,7 @@ import {
     bufferCount,
     skip,
 } from 'rxjs/operators';
-import { del, edit, insert, preserve } from '../../aux-format-2';
+import { del, edit, edits, insert, preserve } from '../../aux-format-2';
 
 export function testPartitionImplementation(
     createPartition: () => Promise<AuxPartition>
@@ -690,6 +690,94 @@ export function testPartitionImplementation(
                         test: {
                             tags: {
                                 abc: edit(version.vector, del(2)),
+                            },
+                        },
+                    }),
+                ]);
+            });
+
+            it('should support deletes in multiple edit sequences', async () => {
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test', {
+                            abc: 'abcdefghijklmnop',
+                        })
+                    ),
+                ]);
+
+                await waitAsync();
+
+                const editVersion = { ...version.vector };
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        tags: {
+                            abc: edits(
+                                editVersion,
+                                [preserve(3), del(3)],
+                                [preserve(6), del(3)]
+                            ),
+                        },
+                    }),
+                ]);
+
+                expect(partition.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'abcghimnop',
+                    }),
+                });
+                expect(updates.slice(1)).toEqual([
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                abc: edits(
+                                    version.vector,
+                                    [preserve(3), del(3)],
+                                    [preserve(6), del(3)]
+                                ),
+                            },
+                        },
+                    }),
+                ]);
+            });
+
+            it('should support inserts in multiple edit sequences', async () => {
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test', {
+                            abc: 'abcdef',
+                        })
+                    ),
+                ]);
+
+                await waitAsync();
+
+                const editVersion = { ...version.vector };
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        tags: {
+                            abc: edits(
+                                editVersion,
+                                [preserve(3), insert('123')],
+                                [preserve(9), insert('456')]
+                            ),
+                        },
+                    }),
+                ]);
+
+                expect(partition.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'abc123def456',
+                    }),
+                });
+                expect(updates.slice(1)).toEqual([
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                abc: edits(
+                                    version.vector,
+                                    [preserve(3), insert('123')],
+                                    [preserve(9), insert('456')]
+                                ),
                             },
                         },
                     }),
