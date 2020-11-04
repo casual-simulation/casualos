@@ -63,14 +63,14 @@ export default class PlayerHome extends Vue {
 
     @Watch('query')
     async onQueryChanged() {
-        const story = this.query['story'] as (string | string[]);
+        const story = this.query['story'] as string | string[];
         await this._setStory(story);
         for (let [sim, sub] of this._simulations) {
             getUserBotAsync(sim).subscribe(
-                bot => {
+                (bot) => {
                     this._updatePlayerTags(sim, bot);
                 },
-                err => console.error(err)
+                (err) => console.error(err)
             );
         }
     }
@@ -79,10 +79,10 @@ export default class PlayerHome extends Vue {
     async onUrlChanged() {
         for (let [sim, sub] of this._simulations) {
             getUserBotAsync(sim).subscribe(
-                bot => {
+                (bot) => {
                     this._updateUrlTag(sim, bot);
                 },
-                err => console.error(err)
+                (err) => console.error(err)
             );
         }
     }
@@ -95,12 +95,12 @@ export default class PlayerHome extends Vue {
         this.isLoading = true;
         this._simulations = new Map();
 
-        appManager.simulationManager.simulationAdded.subscribe(sim => {
+        appManager.simulationManager.simulationAdded.subscribe((sim) => {
             const sub = this._setupSimulation(sim);
             this._simulations.set(sim, sub);
         });
 
-        appManager.simulationManager.simulationRemoved.subscribe(sim => {
+        appManager.simulationManager.simulationRemoved.subscribe((sim) => {
             let sub = this._simulations.get(sim);
             if (sub) {
                 sub.unsubscribe();
@@ -109,7 +109,7 @@ export default class PlayerHome extends Vue {
 
         if (this.query) {
             // On first load check the story and load a default
-            let story = this.query['story'] as (string | string[]);
+            let story = this.query['story'] as string | string[];
             if (!hasValue(story)) {
                 // Generate a random story name
                 const randomName: string = uniqueNamesGenerator(namesConfig);
@@ -129,7 +129,7 @@ export default class PlayerHome extends Vue {
     private _setupSimulation(sim: BrowserSimulation): Subscription {
         let setInitialValues = false;
         return userBotTagsChanged(sim).subscribe(
-            update => {
+            (update) => {
                 if (!setInitialValues) {
                     setInitialValues = true;
                     this._updatePlayerTags(sim, update.bot);
@@ -149,12 +149,23 @@ export default class PlayerHome extends Vue {
                                 this._setStory(story);
                             }
                         }
+
+                        if (update.tags.has('pageTitle')) {
+                            // Title changed - update it
+                            const title = calculateStringTagValue(
+                                null,
+                                update.bot,
+                                'pageTitle',
+                                'auxPlayer'
+                            );
+                            document.title = title;
+                        }
                     }
                 }
 
                 this._sendPortalChangedEvents(sim, update);
             },
-            err => console.log(err)
+            (err) => console.log(err)
         );
     }
 
@@ -201,7 +212,7 @@ export default class PlayerHome extends Vue {
     private async _loadPrimarySimulation(newStory: string) {
         const sim = await appManager.setPrimarySimulation(newStory);
         sim.connection.syncStateChanged
-            .pipe(first(synced => synced))
+            .pipe(first((synced) => synced))
             .subscribe(() => {
                 this.isLoading = false;
             });

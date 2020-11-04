@@ -1260,6 +1260,7 @@ export const KNOWN_TAGS: string[] = [
     'inventoryCameraRotationOffsetZ',
     'pagePixelWidth',
     'pagePixelHeight',
+    'pageTitle',
 
     'mousePointerPositionX',
     'mousePointerPositionY',
