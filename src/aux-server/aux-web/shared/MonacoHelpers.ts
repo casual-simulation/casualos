@@ -424,8 +424,6 @@ export function watchSimulation(
     return sub;
 }
 
-const DECORATOR_OWNER_ID: number = 9731;
-
 export function watchEditor(
     simulation: Simulation,
     editor: monaco.editor.ICodeEditor
@@ -888,7 +886,6 @@ function watchModel(
             })
     );
 
-    // TODO:
     sub.add(
         toSubscription(
             model.onDidChangeContent(async (e) => {
