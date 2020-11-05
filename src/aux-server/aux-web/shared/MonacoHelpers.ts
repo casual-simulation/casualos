@@ -925,26 +925,6 @@ function watchModel(
         )
     );
 
-    // sub.add(
-    //     toSubscription(
-    //         model.onDidChangeContent(async (e) => {
-    //             if (e.isFlush) {
-    //                 return;
-    //             }
-    //             let val = model.getValue();
-    //             if (info.isFormula) {
-    //                 val = '=' + val;
-    //             } else if (info.isScript) {
-    //                 if (val.indexOf('@') !== 0) {
-    //                     val = '@' + val;
-    //                 }
-    //             }
-    //             updateLanguage(model, tag, val);
-    //             await simulation.editBot(bot, tag, val, space);
-    //         })
-    //     )
-    // );
-
     sub.add(
         simulation.watcher.botsRemoved
             .pipe(

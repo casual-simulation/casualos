@@ -272,7 +272,6 @@ export function applyEvents(
 
             for (let ops of val.operations) {
                 let index = 0;
-                // let atoms = [] as Atom<AuxOp>[];
                 for (let op of ops) {
                     if (op.type === 'preserve') {
                         index += op.count;
@@ -768,15 +767,6 @@ export function applyAtoms(
 ) {
     let update: PartialBotsState = {};
     let results = [] as WeaveResult[];
-    // if (atoms) {
-    //     insertAtoms(tree, atoms, results);
-    // }
-    // if (removedAtoms) {
-    //     removeAtoms(tree, removedAtoms, results);
-    // }
-    // for (let result of results) {
-    //     reducer(tree.weave, result, update, space);
-    // }
 
     if (atoms) {
         for (let atom of atoms) {
@@ -816,22 +806,3 @@ export function applyAtoms(
 
     return { tree, updates, results, update };
 }
-
-// /**
-//  * Removes the given atoms from the given tree.
-//  * Returns the new tree and a list of updates that occurred.
-//  * @param tree The tree.
-//  * @param hashes The atom hashes to remove.
-//  */
-// export function removeAtoms(tree: AuxCausalTree, hashes: string[]) {
-//     const prevState = tree.state;
-//     let result = auxResultIdentity();
-//     for (let hash of hashes) {
-//         const removeResult = removeAuxAtom(tree, hash);
-//         tree = applyAuxResult(tree, removeResult);
-//         result = mergeAuxResults(result, removeResult);
-//     }
-//     const updates = stateUpdates(prevState, result.update);
-
-//     return { tree, updates, result };
-// }

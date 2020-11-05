@@ -229,8 +229,6 @@ export function* findMultipleEditPositions(
                 ? count + edit.text.length >= index
                 : count + edit.text.length > index;
         if (reachedStart) {
-            // const numAlreadyDeleted = deleteCount - remaining;
-            // const finalIndex = Math.max(index - numAlreadyDeleted, 0);
             const relativeIndex = Math.abs(count - index);
             const countUntilEnd = edit.text.length - relativeIndex;
 
@@ -257,7 +255,6 @@ export function* findMultipleEditPositions(
             const finalOffset = relativeIndex + relativeIndexOffset;
 
             const nodeDeleteCount = Math.min(countUntilEnd, remaining);
-            // const textBefore = edit.marked.slice(0, finalOffset);
             const textAfter = edit.marked.slice(
                 finalOffset,
                 edit.marked.length
@@ -265,11 +262,6 @@ export function* findMultipleEditPositions(
 
             let removedCharacterCount = 0;
             let deleteCountOffset = 0;
-            // for (let char of textBefore) {
-            //     if (char === '\0') {
-            //         removedCharacterCount += 1;
-            //     }
-            // }
 
             let afterIndex = 0;
 
