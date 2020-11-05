@@ -65,6 +65,8 @@ describe('BotHelper', () => {
                     tags: {
                         editingBot: 'test',
                         editingTag: 'abc',
+                        cursorStartIndex: null,
+                        cursorEndIndex: null,
                     },
                 }),
             ]);

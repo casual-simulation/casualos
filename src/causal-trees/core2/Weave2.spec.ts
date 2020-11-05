@@ -7,6 +7,7 @@ import {
     iterateSiblings,
     AtomRemovedResult,
     addedAtom,
+    iterateNewerSiblings,
 } from './Weave2';
 import { atom, atomId, Atom } from './Atom2';
 import { createAtom } from './SiteStatus';
@@ -781,6 +782,105 @@ describe('Weave2', () => {
 
             const rootNode = weave.getNode(root.id);
             const nodes = [...iterateSiblings(rootNode)];
+
+            expect(nodes.map((n) => n.atom)).toEqual([]);
+        });
+    });
+
+    describe('iterateNewerSiblings()', () => {
+        let weave: Weave<any>;
+        beforeEach(() => {
+            weave = new Weave();
+        });
+
+        it('should return the siblings of the given node that were added to the weave after it', () => {
+            const root = atom(atomId('a', 0), null, {});
+            const a1 = atom(atomId('a', 1), root, {});
+            const a2 = atom(atomId('a', 2), root, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+            const a4 = atom(atomId('a', 4), a1, {});
+            const a5 = atom(atomId('a', 5), root, {});
+            const a6 = atom(atomId('a', 6), a5, {});
+
+            weave.insert(root);
+            weave.insert(a1);
+            weave.insert(a2);
+            weave.insert(a3);
+            weave.insert(a4);
+            weave.insert(a5);
+            weave.insert(a6);
+
+            const a2Node = weave.getNode(a2.id);
+            const nodes = [...iterateNewerSiblings(a2Node)];
+
+            expect(nodes.map((n) => n.atom)).toEqual([a5]);
+        });
+
+        it('should exclude cousin atoms', () => {
+            const root = atom(atomId('a', 0), null, {});
+            const a1 = atom(atomId('a', 1), root, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a1, {});
+            const a4 = atom(atomId('a', 4), root, {});
+            const a5 = atom(atomId('a', 5), a4, {});
+            const a6 = atom(atomId('a', 6), a4, {});
+
+            weave.insert(root);
+            weave.insert(a1);
+            weave.insert(a2);
+            weave.insert(a3);
+            weave.insert(a4);
+            weave.insert(a5);
+            weave.insert(a6);
+
+            const a2Node = weave.getNode(a2.id);
+            const nodes = [...iterateNewerSiblings(a2Node)];
+
+            expect(nodes.map((n) => n.atom)).toEqual([a3]);
+        });
+
+        it('should exclude cousin atoms with the same timestamp', () => {
+            const root = atom(atomId('a', 0), null, {});
+            const a1 = atom(atomId('a', 1), root, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a1, {});
+            const b1 = atom(atomId('b', 1), root, {});
+            const b2 = atom(atomId('b', 2), b1, {});
+            const b3 = atom(atomId('b', 3), b1, {});
+
+            weave.insert(root);
+            weave.insert(a1);
+            weave.insert(a2);
+            weave.insert(a3);
+            weave.insert(b1);
+            weave.insert(b2);
+            weave.insert(b3);
+
+            const a2Node = weave.getNode(a2.id);
+            const nodes = [...iterateNewerSiblings(a2Node)];
+
+            expect(nodes.map((n) => n.atom)).toEqual([a3]);
+        });
+
+        it('should work with root atoms', () => {
+            const root = atom(atomId('a', 0), null, {});
+            const a1 = atom(atomId('a', 1), root, {});
+            const a2 = atom(atomId('a', 2), root, {});
+            const root2 = atom(atomId('b', 3), null, {});
+            const b4 = atom(atomId('b', 4), root2, {});
+            const b5 = atom(atomId('b', 5), root2, {});
+            const b6 = atom(atomId('b', 6), b5, {});
+
+            weave.insert(root);
+            weave.insert(a1);
+            weave.insert(a2);
+            weave.insert(root2);
+            weave.insert(b4);
+            weave.insert(b5);
+            weave.insert(b6);
+
+            const rootNode = weave.getNode(root.id);
+            const nodes = [...iterateNewerSiblings(rootNode)];
 
             expect(nodes.map((n) => n.atom)).toEqual([]);
         });

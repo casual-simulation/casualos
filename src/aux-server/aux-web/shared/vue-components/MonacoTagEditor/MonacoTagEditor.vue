@@ -59,9 +59,15 @@
                     </li>
                 </ul>
             </div>
-            <monaco-editor ref="editor" @focus="editorFocused" @blur="editorBlured"></monaco-editor>
+            <monaco-editor
+                ref="editor"
+                @focus="editorFocused"
+                @blur="editorBlured"
+                @editorMounted="onEditorMounted"
+            ></monaco-editor>
         </div>
     </div>
 </template>
 <script src="./MonacoTagEditor.ts"></script>
 <style src="./MonacoTagEditor.css" scoped></style>
+<style src="./MonacoTagEditorUnscoped.css"></style>

@@ -244,6 +244,8 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
             tags: {
                 editingBot: bot.id,
                 editingTag: tag,
+                cursorStartIndex: null,
+                cursorEndIndex: null,
             },
         });
     }

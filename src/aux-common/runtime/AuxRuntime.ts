@@ -81,6 +81,7 @@ import {
 } from './AuxRealtimeEditModeProvider';
 import { forOwn, merge } from 'lodash';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
+import { applyEdit, isTagEdit } from '../aux-format-2';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -902,9 +903,16 @@ export class AuxRuntime
                 for (let tag in u.tags) {
                     const tagValue = u.tags[tag];
                     if (hasValue(tagValue) || tagValue === null) {
-                        compiled.tags[tag] = tagValue;
-                        updatedTags.add(tag);
+                        if (isTagEdit(tagValue)) {
+                            compiled.tags[tag] = applyEdit(
+                                compiled.tags[tag],
+                                tagValue
+                            );
+                        } else {
+                            compiled.tags[tag] = tagValue;
+                        }
                         partial.tags[tag] = tagValue;
+                        updatedTags.add(tag);
                     }
                 }
             }
@@ -930,6 +938,11 @@ export class AuxRuntime
 
                             if (tagValue === null) {
                                 delete compiled.masks[space][tag];
+                            } else if (isTagEdit(tagValue)) {
+                                compiled.masks[space][tag] = applyEdit(
+                                    compiled.masks[space][tag],
+                                    tagValue
+                                );
                             } else {
                                 compiled.masks[space][tag] = tagValue;
                             }

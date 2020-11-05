@@ -8,6 +8,7 @@ import {
     remote,
     DeviceInfo,
     Action,
+    CurrentVersion,
 } from '@casual-simulation/causal-trees';
 import {
     createBot,
@@ -31,6 +32,9 @@ import {
     Bot,
     runScript,
     stateUpdatedEvent,
+    createCausalRepoPartition,
+    MemoryPartitionImpl,
+    MemoryPartitionStateConfig,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
@@ -38,6 +42,8 @@ import uuid from 'uuid/v4';
 import merge from 'lodash/merge';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subject } from 'rxjs';
+import { cloneDeep } from 'lodash';
+import { ChannelStateVersion } from './AuxChannel';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -366,6 +372,89 @@ describe('BaseAuxChannel', () => {
             await channel.initAndWait();
 
             expect(channel.runtime.forceSignedScripts).toBe(true);
+        });
+
+        it('should merge version vectors from different partitions', async () => {
+            let shared = new TestPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            let other = new TestPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            config = {
+                config: {
+                    version: 'v1.0.0',
+                    versionHash: 'hash',
+                },
+                partitions: {
+                    shared: <any>{
+                        type: 'test',
+                        partition: shared,
+                    },
+                    other: <any>{
+                        type: 'test',
+                        partition: other,
+                    },
+                },
+            };
+            channel = new AuxChannelImpl(user, device, config);
+
+            let versions = [] as ChannelStateVersion[];
+
+            await channel.initAndWait();
+
+            channel.onVersionUpdated.subscribe((v) => {
+                versions.push(cloneDeep(v));
+            });
+
+            shared.onVersionUpdated.next({
+                currentSite: 'a',
+                vector: {
+                    a: 10,
+                },
+            });
+
+            other.onVersionUpdated.next({
+                currentSite: 'b',
+                vector: {
+                    b: 11,
+                },
+            });
+
+            shared.onVersionUpdated.next({
+                currentSite: 'a',
+                vector: {
+                    a: 10,
+                    c: 20,
+                },
+            });
+
+            await waitAsync();
+
+            expect(versions).toEqual([
+                {
+                    localSites: {
+                        a: true,
+                    },
+                    vector: { a: 10 },
+                },
+                {
+                    localSites: {
+                        a: true,
+                        b: true,
+                    },
+                    vector: { a: 10, b: 11 },
+                },
+                {
+                    localSites: {
+                        a: true,
+                        b: true,
+                    },
+                    vector: { a: 10, b: 11, c: 20 },
+                },
+            ]);
         });
     });
 
@@ -948,7 +1037,29 @@ class AuxChannelImpl extends BaseAuxChannel {
         return createAuxPartition(
             config,
             (cfg) => createMemoryPartition(cfg),
-            (config) => createBotClientPartition(config)
+            (config) => createBotClientPartition(config),
+            (config) => createTestPartition(config)
         );
+    }
+}
+
+/**
+ * Attempts to create a MemoryPartition from the given config.
+ * @param config The config.
+ */
+export function createTestPartition(config: any): any {
+    if (config.type === 'test') {
+        return config.partition;
+    }
+    return undefined;
+}
+
+class TestPartition extends MemoryPartitionImpl {
+    get onVersionUpdated(): Subject<CurrentVersion> {
+        return super.onVersionUpdated as Subject<CurrentVersion>;
+    }
+
+    constructor(config: MemoryPartitionStateConfig) {
+        super(config);
     }
 }

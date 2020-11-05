@@ -35,7 +35,7 @@ import {
     StateUpdatedEvent,
 } from '../bots';
 import { OtherPlayersRepoPartitionConfig } from './AuxPartitionConfig';
-import { bot, tag, value, del, tagMask } from '../aux-format-2';
+import { bot, tag, value, deleteOp, tagMask } from '../aux-format-2';
 import { waitAsync, wait } from '../test/TestHelpers';
 import { takeWhile, bufferCount, skip } from 'rxjs/operators';
 
@@ -441,7 +441,7 @@ describe('OtherPlayersPartition', () => {
                 const bot1 = atom(atomId('device1', 1), null, bot('test1'));
                 const tag1 = atom(atomId('device1', 2), bot1, tag('abc'));
                 const value1 = atom(atomId('device1', 3), tag1, value('def'));
-                const del1 = atom(atomId('device1', 4), bot1, del());
+                const del1 = atom(atomId('device1', 4), bot1, deleteOp());
 
                 addAtoms.next({
                     branch: 'testBranch-player-device1SessionId',

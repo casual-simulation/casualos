@@ -1,4 +1,4 @@
-import { BotWatcher, UpdatedBotInfo } from './BotWatcher';
+import { BotTagChange, BotWatcher, UpdatedBotInfo } from './BotWatcher';
 import {
     createPrecalculatedBot,
     PrecalculatedBot,
@@ -6,11 +6,18 @@ import {
     BotIndex,
     Bot,
     BotIndexEvent,
+    stateUpdatedEvent,
 } from '@casual-simulation/aux-common';
 import { BotHelper } from './BotHelper';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { skip } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
+import {
+    del,
+    edit,
+    insert,
+    preserve,
+} from '@casual-simulation/aux-common/aux-format-2';
 
 describe('BotWatcher', () => {
     let vm: TestAuxVM;
@@ -27,7 +34,12 @@ describe('BotWatcher', () => {
 
         index = new BotIndex();
 
-        watcher = new BotWatcher(helper, index, vm.stateUpdated);
+        watcher = new BotWatcher(
+            helper,
+            index,
+            vm.stateUpdated,
+            vm.versionUpdated
+        );
     });
 
     it('should update the bot helper state', () => {
@@ -132,7 +144,7 @@ describe('BotWatcher', () => {
     it('should batch index updates', async () => {
         let updates = [] as BotIndexEvent[][];
 
-        index.events.subscribe(e => updates.push(e));
+        index.events.subscribe((e) => updates.push(e));
 
         const test = createPrecalculatedBot('test', {
             abc: 'def',
@@ -238,10 +250,43 @@ describe('BotWatcher', () => {
         });
     });
 
+    it('should handle tag edits', () => {
+        const state = {
+            test: createPrecalculatedBot('test', {
+                abc: 'def',
+            }),
+        };
+        vm.sendState({
+            state: state,
+            addedBots: ['test'],
+            updatedBots: [],
+            removedBots: [],
+        });
+
+        vm.sendState(
+            stateUpdatedEvent({
+                test: {
+                    tags: {
+                        abc: edit({}, preserve(1), insert('p')),
+                    },
+                    values: {
+                        abc: 'dpef',
+                    },
+                },
+            })
+        );
+
+        expect(helper.botsState).toEqual({
+            test: createPrecalculatedBot('test', {
+                abc: 'dpef',
+            }),
+        });
+    });
+
     describe('botsDiscovered', () => {
         it('should resolve with the added bots', async () => {
             let bots: PrecalculatedBot[] = [];
-            watcher.botsDiscovered.subscribe(f => bots.push(...f));
+            watcher.botsDiscovered.subscribe((f) => bots.push(...f));
 
             let state = {
                 test: createPrecalculatedBot('test'),
@@ -270,7 +315,7 @@ describe('BotWatcher', () => {
             });
 
             let bots: PrecalculatedBot[] = [];
-            watcher.botsDiscovered.subscribe(f => bots.push(...f));
+            watcher.botsDiscovered.subscribe((f) => bots.push(...f));
 
             expect(bots).toEqual([state['test'], state['test2']]);
         });
@@ -298,7 +343,7 @@ describe('BotWatcher', () => {
             });
 
             let bots: PrecalculatedBot[] = [];
-            watcher.botsDiscovered.subscribe(f => bots.push(...f));
+            watcher.botsDiscovered.subscribe((f) => bots.push(...f));
 
             expect(bots).toEqual([state['test']]);
         });
@@ -307,7 +352,7 @@ describe('BotWatcher', () => {
     describe('botsRemoved', () => {
         it('should resolve with the removed bot IDs', async () => {
             let bots: string[] = [];
-            watcher.botsRemoved.subscribe(f => bots.push(...f));
+            watcher.botsRemoved.subscribe((f) => bots.push(...f));
 
             vm.sendState({
                 state: {},
@@ -323,7 +368,7 @@ describe('BotWatcher', () => {
     describe('botsUpdated', () => {
         it('should resolve with the updated bots', async () => {
             let bots: PrecalculatedBot[] = [];
-            watcher.botsUpdated.subscribe(f => bots.push(...f));
+            watcher.botsUpdated.subscribe((f) => bots.push(...f));
 
             let state = {
                 test: createPrecalculatedBot('test'),
@@ -341,7 +386,7 @@ describe('BotWatcher', () => {
 
         it('should omit tags that are null', async () => {
             let bots: PrecalculatedBot[] = [];
-            watcher.botsUpdated.subscribe(f => bots.push(...f));
+            watcher.botsUpdated.subscribe((f) => bots.push(...f));
 
             vm.sendState({
                 state: {
@@ -389,7 +434,7 @@ describe('BotWatcher', () => {
             });
 
             let bots: UpdatedBotInfo[] = [];
-            watcher.botTagsUpdated.subscribe(f => bots.push(...f));
+            watcher.botTagsUpdated.subscribe((f) => bots.push(...f));
 
             let state: any = {
                 test: {
@@ -434,7 +479,7 @@ describe('BotWatcher', () => {
             });
 
             let bots: PrecalculatedBot[] = [];
-            watcher.botChanged('test').subscribe(f => bots.push(f));
+            watcher.botChanged('test').subscribe((f) => bots.push(f));
 
             let secondState = {
                 test: createPrecalculatedBot('test', { abc: 'def' }),
@@ -463,7 +508,7 @@ describe('BotWatcher', () => {
             });
 
             let bots: PrecalculatedBot[] = [];
-            watcher.botChanged('test').subscribe(f => bots.push(f));
+            watcher.botChanged('test').subscribe((f) => bots.push(f));
 
             let secondState: PrecalculatedBotsState = {
                 test: null,
@@ -480,7 +525,7 @@ describe('BotWatcher', () => {
 
         it('should resolve with the bot when it is added', async () => {
             let bots: PrecalculatedBot[] = [];
-            watcher.botChanged('test').subscribe(f => bots.push(f));
+            watcher.botChanged('test').subscribe((f) => bots.push(f));
 
             let state = {
                 test: createPrecalculatedBot('test'),
@@ -516,9 +561,10 @@ describe('BotWatcher', () => {
 
             let bots: Bot[] = [];
             let err: any;
-            watcher
-                .botChanged('test')
-                .subscribe(f => bots.push(f), e => (err = e));
+            watcher.botChanged('test').subscribe(
+                (f) => bots.push(f),
+                (e) => (err = e)
+            );
 
             let secondState = {};
             vm.sendState({
@@ -549,7 +595,7 @@ describe('BotWatcher', () => {
             });
 
             let bots: UpdatedBotInfo[] = [];
-            watcher.botTagsChanged('test').subscribe(f => bots.push(f));
+            watcher.botTagsChanged('test').subscribe((f) => bots.push(f));
 
             let secondState = {
                 test: createPrecalculatedBot('test', {
@@ -590,7 +636,7 @@ describe('BotWatcher', () => {
             });
 
             let bots: UpdatedBotInfo[] = [];
-            watcher.botTagsChanged('test').subscribe(f => bots.push(f));
+            watcher.botTagsChanged('test').subscribe((f) => bots.push(f));
 
             let secondState: PrecalculatedBotsState = {
                 test: null,
@@ -623,7 +669,7 @@ describe('BotWatcher', () => {
             });
 
             let bots: UpdatedBotInfo[] = [];
-            watcher.botTagsChanged('test').subscribe(f => bots.push(f));
+            watcher.botTagsChanged('test').subscribe((f) => bots.push(f));
 
             let secondState: PrecalculatedBotsState = {
                 test: createPrecalculatedBot('test'),
@@ -656,9 +702,10 @@ describe('BotWatcher', () => {
 
             let bots: UpdatedBotInfo[] = [];
             let err: any;
-            watcher
-                .botTagsChanged('test')
-                .subscribe(f => bots.push(f), e => (err = e));
+            watcher.botTagsChanged('test').subscribe(
+                (f) => bots.push(f),
+                (e) => (err = e)
+            );
 
             let secondState = {};
             vm.sendState({
@@ -672,6 +719,294 @@ describe('BotWatcher', () => {
 
             expect(bots).toEqual([]);
             expect(err).toBeFalsy();
+        });
+    });
+
+    describe('botTagChanged()', () => {
+        it('should return an observable that resolves with the tag that changed on a bot', async () => {
+            let state = {
+                test: createPrecalculatedBot('test', { test: 123 }),
+                test2: createPrecalculatedBot('test2'),
+            };
+            vm.sendState({
+                state: state,
+                addedBots: ['test', 'test2'],
+                updatedBots: [],
+                removedBots: [],
+            });
+
+            let changes: BotTagChange[] = [];
+            watcher
+                .botTagChanged('test', 'abc')
+                .subscribe((f) => changes.push(f));
+
+            let secondUpdate = stateUpdatedEvent({
+                test: {
+                    tags: {
+                        abc: 'def',
+                        test: null,
+                    },
+                    values: {
+                        abc: 'def',
+                        test: null,
+                    },
+                },
+                test2: {
+                    tags: {
+                        ghi: 'jfk',
+                    },
+                    values: {
+                        ghi: 'jfk',
+                    },
+                },
+            });
+            vm.sendState(secondUpdate);
+
+            expect(changes).toEqual([
+                {
+                    type: 'update',
+                    bot: createPrecalculatedBot('test', { test: 123 }),
+                    tag: 'abc',
+                    space: null,
+                    version: {},
+                },
+                {
+                    type: 'update',
+                    bot: createPrecalculatedBot('test', { abc: 'def' }),
+                    tag: 'abc',
+                    space: null,
+                    version: {},
+                },
+            ]);
+        });
+
+        it('should return an observable that resolves when the bot is added', async () => {
+            let state = {};
+            vm.sendState({
+                state: state,
+                addedBots: [],
+                updatedBots: [],
+                removedBots: [],
+            });
+
+            let changes: BotTagChange[] = [];
+            watcher
+                .botTagChanged('test', 'abc')
+                .subscribe((f) => changes.push(f));
+
+            let secondUpdate = stateUpdatedEvent({
+                test: createPrecalculatedBot('test', {
+                    abc: 'def',
+                }),
+            });
+            vm.sendState(secondUpdate);
+
+            expect(changes).toEqual([
+                {
+                    type: 'update',
+                    bot: null,
+                    tag: 'abc',
+                    space: null,
+                    version: {},
+                },
+                {
+                    type: 'update',
+                    bot: createPrecalculatedBot('test', { abc: 'def' }),
+                    tag: 'abc',
+                    space: null,
+                    version: {},
+                },
+            ]);
+        });
+
+        it('should return an observable that resolves with the current tag value', async () => {
+            let state = {};
+            vm.sendState(
+                stateUpdatedEvent({
+                    test: createPrecalculatedBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            let changes: BotTagChange[] = [];
+            watcher
+                .botTagChanged('test', 'abc')
+                .subscribe((f) => changes.push(f));
+
+            expect(changes).toEqual([
+                {
+                    type: 'update',
+                    bot: createPrecalculatedBot('test', { abc: 'def' }),
+                    tag: 'abc',
+                    space: null,
+                    version: {},
+                },
+            ]);
+        });
+
+        it('should return an observable that resolves with null when the bot is deleted', async () => {
+            vm.sendState(
+                stateUpdatedEvent({
+                    test: createPrecalculatedBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            let changes: BotTagChange[] = [];
+            watcher
+                .botTagChanged('test', 'abc')
+                .subscribe((f) => changes.push(f));
+
+            let secondUpdate = stateUpdatedEvent({
+                test: null,
+            });
+            vm.sendState(secondUpdate);
+
+            expect(changes).toEqual([
+                {
+                    type: 'update',
+                    bot: createPrecalculatedBot('test', { abc: 'def' }),
+                    tag: 'abc',
+                    space: null,
+                    version: {},
+                },
+                null,
+            ]);
+        });
+
+        it('should return an observable that resolves with edits for the tag', async () => {
+            vm.sendState(
+                stateUpdatedEvent({
+                    test: createPrecalculatedBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            let changes: BotTagChange[] = [];
+            watcher
+                .botTagChanged('test', 'abc')
+                .subscribe((f) => changes.push(f));
+
+            let secondUpdate = stateUpdatedEvent({
+                test: {
+                    tags: {
+                        abc: edit({}, preserve(1), insert('1'), del(1)),
+                    },
+                    values: {
+                        abc: 'd1f',
+                    },
+                },
+            });
+            vm.sendState(secondUpdate);
+
+            expect(changes).toEqual([
+                {
+                    type: 'update',
+                    bot: createPrecalculatedBot('test', { abc: 'def' }),
+                    tag: 'abc',
+                    space: null,
+                    version: {},
+                },
+                {
+                    type: 'edit',
+                    bot: createPrecalculatedBot('test', {
+                        abc: 'd1f',
+                    }),
+                    tag: 'abc',
+                    space: null,
+                    operations: [[preserve(1), insert('1'), del(1)]],
+                    version: {},
+                },
+            ]);
+        });
+
+        it('should support edits on tag masks', async () => {
+            vm.sendState(
+                stateUpdatedEvent({
+                    test: {
+                        id: 'test',
+                        precalculated: true,
+                        tags: {},
+                        masks: {
+                            shared: {
+                                abc: 'def',
+                            },
+                        },
+                        values: {
+                            abc: 'def',
+                        },
+                    },
+                })
+            );
+
+            let changes: BotTagChange[] = [];
+            watcher
+                .botTagChanged('test', 'abc', 'shared')
+                .subscribe((f) => changes.push(f));
+
+            let secondUpdate = stateUpdatedEvent({
+                test: {
+                    masks: {
+                        shared: {
+                            abc: edit(
+                                { a: 1 },
+                                preserve(1),
+                                insert('1'),
+                                del(1)
+                            ),
+                        },
+                    },
+                    values: {
+                        abc: 'd1f',
+                    },
+                },
+            });
+            vm.sendState(secondUpdate);
+
+            expect(changes).toEqual([
+                {
+                    type: 'update',
+                    bot: {
+                        id: 'test',
+                        precalculated: true,
+                        tags: {},
+                        masks: {
+                            shared: {
+                                abc: 'def',
+                            },
+                        },
+                        values: {
+                            abc: 'def',
+                        },
+                    },
+                    tag: 'abc',
+                    space: 'shared',
+                    version: {},
+                },
+                {
+                    type: 'edit',
+                    bot: {
+                        id: 'test',
+                        precalculated: true,
+                        tags: {},
+                        masks: {
+                            shared: {
+                                abc: 'd1f',
+                            },
+                        },
+                        values: {
+                            abc: 'd1f',
+                        },
+                    },
+                    tag: 'abc',
+                    space: 'shared',
+                    operations: [[preserve(1), insert('1'), del(1)]],
+                    version: { a: 1 },
+                },
+            ]);
         });
     });
 });

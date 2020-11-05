@@ -5,7 +5,12 @@ import {
     BotDependentInfo,
     ActionResult,
 } from '@casual-simulation/aux-common';
-import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
+import {
+    StatusUpdate,
+    DeviceAction,
+    CurrentVersion,
+    VersionVector,
+} from '@casual-simulation/causal-trees';
 import { AuxConfig } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
@@ -20,6 +25,23 @@ export interface AuxStatic {
      * Creates a new AUX using the given config.
      */
     new (defaultHost: string, user: AuxUser, config: AuxConfig): AuxChannel;
+}
+
+/**
+ * Defines an interface that represents the state version of a aux channel.
+ */
+export interface ChannelStateVersion {
+    /**
+     * A map of local site IDs.
+     */
+    localSites: {
+        [id: string]: boolean;
+    };
+
+    /**
+     * The current version vector.
+     */
+    vector: VersionVector;
 }
 
 /**
@@ -43,6 +65,11 @@ export interface AuxChannel extends SubscriptionLike {
     onStateUpdated: Observable<StateUpdatedEvent>;
 
     /**
+     * The observable that should be triggered whenever the state version updated.
+     */
+    onVersionUpdated: Observable<ChannelStateVersion>;
+
+    /**
      * The observable that should be triggered whenever the connection state changes.
      */
     onConnectionStateChanged: Observable<StatusUpdate>;
@@ -64,6 +91,7 @@ export interface AuxChannel extends SubscriptionLike {
         onLocalEvents?: (events: LocalActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
+        onVersionUpdated?: (version: ChannelStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
     ): Promise<void>;
@@ -80,6 +108,7 @@ export interface AuxChannel extends SubscriptionLike {
         onLocalEvents?: (events: LocalActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
+        onVersionUpdated?: (version: ChannelStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
     ): Promise<void>;

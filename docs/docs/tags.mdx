@@ -539,6 +539,11 @@ The shape that the bot should be displayed as.
   <PossibleValueCode id="iframe-form" value='iframe'>
     A webpage loaded into a 3D iframe. See <TagLink tag="formSubtype"/> for additional options.
   </PossibleValueCode>
+  <PossibleValueCode value='cursor'>
+    The bot will appear as a cursor in the multi-line editor.
+    You also need to place the bot in the same dimension that the tag portal uses
+    for the cursor to appear.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `formSubtype`
@@ -905,6 +910,28 @@ The Z (yaw) rotation in radians that the bot should be rotated by.
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
     Specifies the Z rotation of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]Start`
+
+The selection start index for cursor bots that are in the multi-line editor (tag portal/sheet portal).
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the index at which the cursor selection starts. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]End`
+
+The selection end index for cursor bots that are in the multi-line editor (tag portal/sheet portal).
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the index at which the cursor selection ends. (Default is 0)
   </PossibleValue>
 </PossibleValuesTable>
 
@@ -2211,6 +2238,18 @@ The URL that is currently specified in the tab.
   </PossibleValue>
 </PossibleValuesTable>
 
+### `pageTitle`
+
+The title that should be displayed on the web browser tab.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValue value='Any String'>
+    The title that should be displayed.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `editingBot`
 
 <Badges>
@@ -2227,6 +2266,34 @@ Only available on the player bot.
 </Badges>
 
 The tag that the user is currently editing.
+Only available on the player bot.
+
+### `cursorStartIndex`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The selection start index of the player's cursor in the current <TagLink tag='editingTag'/>.
+
+Note that when <TagLink tag='cursorStartIndex'/> is larger than <TagLink tag='cursorEndIndex'/> it means 
+that the player has selected text from the right to the left.
+This is important because text will always be inserted at <TagLink tag='cursorEndIndex'/>.
+
+Only available on the player bot.
+
+### `cursorEndIndex`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The selection end index of the player's cursor in the current <TagLink tag='editingTag'/>.
+
+Note that when <TagLink tag='cursorEndIndex'/> is smaller than <TagLink tag='cursorStartIndex'/> it means 
+that the player has selected text from the right to the left.
+This is important because text will always be inserted at <TagLink tag='cursorEndIndex'/>.
+
 Only available on the player bot.
 
 ## Hidden Tags

@@ -237,7 +237,7 @@ export function value(value: any): ValueOp {
  * @param index The index to insert the text at.
  * @param text The text to insert.
  */
-export function insert(index: number, text: string): InsertOp {
+export function insertOp(index: number, text: string): InsertOp {
     return op<InsertOp>(AuxOpType.Insert, {
         index,
         text,
@@ -248,7 +248,7 @@ export function insert(index: number, text: string): InsertOp {
  * Creates a delete op.
  * @param index The index to insert the text at.
  */
-export function del(start?: number, end?: number): DeleteOp {
+export function deleteOp(start?: number, end?: number): DeleteOp {
     return op<DeleteOp>(AuxOpType.Delete, {
         start,
         end,

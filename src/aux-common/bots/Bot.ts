@@ -299,6 +299,8 @@ export interface BotTags {
     ['leftWristPortalConfigBot']?: string;
     ['rightWristPortalConfigBot']?: string;
     ['editingBot']?: string;
+    cursorStartIndex?: number;
+    cursorEndIndex?: number;
     ['pagePixelWidth']?: number;
     ['pagePixelHeight']?: number;
 
@@ -407,6 +409,8 @@ export type BotShape =
     | 'frustum'
     | 'helix'
     | 'egg'
+    | 'hex'
+    | 'cursor'
     | 'nothing';
 
 /**
@@ -1256,6 +1260,7 @@ export const KNOWN_TAGS: string[] = [
     'inventoryCameraRotationOffsetZ',
     'pagePixelWidth',
     'pagePixelHeight',
+    'pageTitle',
 
     'mousePointerPositionX',
     'mousePointerPositionY',
@@ -1292,6 +1297,8 @@ export const KNOWN_TAGS: string[] = [
 
     'editingBot',
     'editingTag',
+    'cursorStartIndex',
+    'cursorEndIndex',
 
     'portalColor',
     'portalLocked',

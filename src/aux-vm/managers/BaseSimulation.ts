@@ -110,7 +110,7 @@ export class BaseSimulation implements Simulation {
     }
 
     get localEvents() {
-        return this._vm.localEvents.pipe(flatMap(e => e));
+        return this._vm.localEvents.pipe(flatMap((e) => e));
     }
 
     get onError(): Observable<AuxChannelErrorType> {
@@ -118,7 +118,7 @@ export class BaseSimulation implements Simulation {
     }
 
     get deviceEvents() {
-        return this._vm.deviceEvents.pipe(flatMap(e => e));
+        return this._vm.deviceEvents.pipe(flatMap((e) => e));
     }
 
     /**
@@ -205,7 +205,7 @@ export class BaseSimulation implements Simulation {
         // during initialization.
         this._initBotWatcher();
         this._subscriptions.push(
-            this._vm.connectionStateChanged.subscribe(s => {
+            this._vm.connectionStateChanged.subscribe((s) => {
                 if (s.type === 'message') {
                     console.log(`[${s.source}] ${s.message}`);
                 }
@@ -223,7 +223,8 @@ export class BaseSimulation implements Simulation {
         this._watcher = new BotWatcher(
             this._helper,
             this._index,
-            this._vm.stateUpdated
+            this._vm.stateUpdated,
+            this._vm.versionUpdated
         );
     }
 
@@ -237,7 +238,7 @@ export class BaseSimulation implements Simulation {
     public unsubscribe() {
         this._setStatus('Dispose');
         this.closed = true;
-        this._subscriptions.forEach(s => s.unsubscribe());
+        this._subscriptions.forEach((s) => s.unsubscribe());
         this._subscriptions = [];
     }
 }
