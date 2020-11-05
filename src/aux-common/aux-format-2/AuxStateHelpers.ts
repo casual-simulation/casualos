@@ -10,6 +10,7 @@ import { merge, splice } from '../utils';
 import { hasValue, isBot } from '../bots/BotCalculations';
 import { sortBy } from 'lodash';
 import { VersionVector } from '@casual-simulation/causal-trees';
+import { convertToString } from './AuxWeaveHelpers';
 
 /**
  * The name of the property that indicates an object represents a tag edit.
@@ -432,21 +433,17 @@ export function updates(
  * @param edit The edit that should be applied.
  */
 export function applyEdit(value: any, edit: TagEdit): any {
-    if (!hasValue(value)) {
-        value = '';
-    }
-    if (typeof value === 'string') {
-        for (let ops of edit.operations) {
-            let index = 0;
-            for (let op of ops) {
-                if (op.type === 'preserve') {
-                    index += op.count;
-                } else if (op.type === 'insert') {
-                    value = splice(value, index, 0, op.text);
-                    index += op.text.length;
-                } else {
-                    value = splice(value, index, op.count, '');
-                }
+    value = convertToString(value);
+    for (let ops of edit.operations) {
+        let index = 0;
+        for (let op of ops) {
+            if (op.type === 'preserve') {
+                index += op.count;
+            } else if (op.type === 'insert') {
+                value = splice(value, index, 0, op.text);
+                index += op.text.length;
+            } else {
+                value = splice(value, index, op.count, '');
             }
         }
     }

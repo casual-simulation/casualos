@@ -783,6 +783,56 @@ export function testPartitionImplementation(
                     }),
                 ]);
             });
+
+            const valueCases = [
+                [
+                    'numbers',
+                    123,
+                    edit({}, preserve(1), insert('abc')),
+                    '1abc23',
+                ],
+                [
+                    'booleans',
+                    true,
+                    edit({}, preserve(1), insert('abc')),
+                    'tabcrue',
+                ],
+                [
+                    'objects',
+                    { prop: 'yes' },
+                    edit({}, preserve(1), insert('abc')),
+                    '{abc"prop":"yes"}',
+                ],
+            ];
+
+            it.each(valueCases)(
+                'should support %s',
+                async (desc, initial, edit, expected) => {
+                    await partition.applyEvents([
+                        botAdded(
+                            createBot('test', {
+                                abc: initial,
+                            })
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    await partition.applyEvents([
+                        botUpdated('test', {
+                            tags: {
+                                abc: edit,
+                            },
+                        }),
+                    ]);
+
+                    expect(partition.state).toEqual({
+                        test: createBot('test', {
+                            abc: expected,
+                        }),
+                    });
+                }
+            );
         });
 
         describe('TagMasks', () => {

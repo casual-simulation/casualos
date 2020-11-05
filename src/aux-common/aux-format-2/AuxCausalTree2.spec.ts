@@ -1685,6 +1685,56 @@ describe('AuxCausalTree2', () => {
                 });
             });
 
+            const valueCases = [
+                [
+                    'numbers',
+                    123,
+                    edit({}, preserve(1), insert('abc')),
+                    '1abc23',
+                ],
+                [
+                    'booleans',
+                    true,
+                    edit({}, preserve(1), insert('abc')),
+                    'tabcrue',
+                ],
+                [
+                    'objects',
+                    { prop: 'yes' },
+                    edit({}, preserve(1), insert('abc')),
+                    '{abc"prop":"yes"}',
+                ],
+            ];
+
+            it.each(valueCases)(
+                'should support %s',
+                (desc, initialValue, edit, expected) => {
+                    let tree = auxTree('a');
+
+                    ({ tree } = applyEvents(tree, [
+                        botAdded(
+                            createBot('test', {
+                                abc: initialValue,
+                            })
+                        ),
+                    ]));
+
+                    ({ tree } = applyEvents(tree, [
+                        botUpdated('test', {
+                            tags: {
+                                abc: edit,
+                            },
+                        }),
+                    ]));
+
+                    expect(tree.state).toEqual({
+                        test: createBot('test', {
+                            abc: expected,
+                        }),
+                    });
+                }
+            );
+
             describe('fuzzing', () => {
                 faker.seed(95423);
 

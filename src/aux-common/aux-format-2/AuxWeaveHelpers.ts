@@ -24,6 +24,7 @@ import {
 } from '@casual-simulation/causal-trees/core2';
 import isEqual from 'lodash/isEqual';
 import { splice } from '../utils';
+import { hasValue } from '../bots/BotCalculations';
 
 /**
  * Finds the first weave node that defines a bot with the given ID.
@@ -329,8 +330,9 @@ export function calculateOrderedEdits(
     for (let node of nodes) {
         const atomValue = node.atom.value;
         if (atomValue.type === AuxOpType.Value) {
+            let text = convertToString(atomValue.value);
             let segment: TextSegmentInfo = {
-                text: atomValue.value,
+                text: text,
                 node: node as WeaveNode<ValueOp>,
                 offset: 0,
                 totalLength: atomValue.value.length,
@@ -425,6 +427,19 @@ export function calculateOrderedEdits(
             node: s.node,
         }))
         .filter((s) => preserveEmptyEdits || s.text.length > 0);
+}
+
+export function convertToString(value: any): string {
+    if (!hasValue(value)) {
+        return '';
+    }
+    if (typeof value === 'string') {
+        return value;
+    } else if (typeof value !== 'object' && value !== undefined) {
+        return value.toString();
+    } else {
+        return JSON.stringify(value);
+    }
 }
 
 /**

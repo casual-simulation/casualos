@@ -992,6 +992,24 @@ describe('AuxStateHelpers', () => {
                 edit({ a: 1 }, preserve(1), del(1)),
                 'ac',
             ],
+            [
+                'should be able insert into a number',
+                123,
+                edit({ a: 1 }, preserve(1), insert('abc')),
+                '1abc23',
+            ],
+            [
+                'should be able insert into a boolean',
+                false,
+                edit({ a: 1 }, preserve(1), insert('abc')),
+                'fabcalse',
+            ],
+            [
+                'should be able insert into an object',
+                { prop: 'yes' },
+                edit({ a: 1 }, preserve(1), insert('abc')),
+                '{abc"prop":"yes"}',
+            ],
         ];
 
         it.each(editCases)('%s', (desc, start, edits, expected) => {
