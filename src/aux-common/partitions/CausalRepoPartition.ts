@@ -1,10 +1,8 @@
+import { User, StatusUpdate, Action } from '@casual-simulation/causal-trees';
 import {
-    User,
-    StatusUpdate,
-    Action,
     CurrentVersion,
     treeVersion,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/causal-trees/core2';
 import { AuxCausalTree, auxTree, applyEvents } from '../aux-format-2';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import {
