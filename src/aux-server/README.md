@@ -83,6 +83,7 @@ The AUX Server Docker image can be configured using the following environment va
 
 -   `MONGO_URL`: The [MongoDB Connection String](https://docs.mongodb.com/manual/reference/connection-string/) that the server should use to connect to MongoDB for storage. (REQUIRED)
 -   `MONGO_USE_NEW_URL_PARSER` - Whether to use the [new MongoDB URL parser](https://stackoverflow.com/q/50448272/1832856). (Defaults to false)
+-   `MONGO_USE_UNIFIED_TOPOLOGY` - Whether to enable the new unified topology layer. (Defaults to false)
 -   `REDIS_HOST`: The hostname of the Redis instance that the server should connect to. (If not specified then Redis support will be disabled)
 -   `REDIS_PORT`: The port number that the server should connect to on the Redis host.
 -   `NODE_PORT`: The port number that the server should listen on.

@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.2.21
+
+#### Date: 11/5/2020
+
+### :rocket: Improvements
+
+-   Updated the MongoDB driver to v3.6.2 and added the `MONGO_USE_UNIFIED_TOPOLOGY` environment variable to control whether the driver uses the new unified topology layer.
+
 ## V1.2.20
 
 #### Date: 10/27/2020

@@ -451,6 +451,7 @@ export class Server {
 
         this._mongoClient = await connect(this._config.mongodb.url, {
             useNewUrlParser: this._config.mongodb.useNewUrlParser,
+            useUnifiedTopology: !!this._config.mongodb.useUnifiedTopology,
         } as MongoClientOptions);
         if (this._config.cassandradb) {
             console.log('[Server] Using CassandraDB');

@@ -1,6 +1,12 @@
 import * as path from 'path';
 import * as process from 'process';
-import { Config, CassandraDBConfig, CommonCassandraDBConfig } from './config';
+import {
+    Config,
+    CassandraDBConfig,
+    CommonCassandraDBConfig,
+    MongoDBCaualReposConfig,
+    MongoDbConfig,
+} from './config';
 import { CassandraDBCausalReposConfig } from '@casual-simulation/causal-tree-store-cassandradb';
 import playerConfig from './player.config';
 
@@ -106,6 +112,15 @@ const gpio = process.env.GPIO === 'true' || false;
 
 const debug = process.env.DEBUG === 'true';
 
+const mongodb: MongoDbConfig = {
+    url: process.env.MONGO_URL,
+    useNewUrlParser: !!process.env.MONGO_USE_NEW_URL_PARSER,
+};
+
+if ('MONGO_USE_UNIFIED_TOPOLOGY' in process.env) {
+    mongodb.useUnifiedTopology = !!process.env.MONGO_USE_UNIFIED_TOPOLOGY;
+}
+
 const config: Config = {
     socket: {
         pingInterval: 25000,
@@ -116,10 +131,7 @@ const config: Config = {
     httpPort: httpPort,
     tls: null,
     player: playerConfig,
-    mongodb: {
-        url: process.env.MONGO_URL,
-        useNewUrlParser: !!process.env.MONGO_USE_NEW_URL_PARSER,
-    },
+    mongodb: mongodb,
     cassandradb: cassandradb,
     redis: redisHost
         ? {
