@@ -7,8 +7,18 @@ import {
     createAtom,
     iterateCausalGroup,
     Atom,
+    WeaveNode,
 } from '@casual-simulation/causal-trees/core2';
-import { AuxOp, bot, tag, value, deleteOp, insertOp } from './AuxOpTypes';
+import {
+    AuxOp,
+    bot,
+    tag,
+    value,
+    deleteOp,
+    insertOp,
+    tagMask,
+    ValueOp,
+} from './AuxOpTypes';
 import {
     findTagNode,
     findValueNode,
@@ -17,6 +27,7 @@ import {
     calculateOrderedEdits,
     TextSegment,
     findMultipleEditPositions,
+    calculateFinalEditValue,
 } from './AuxWeaveHelpers';
 import { createBot } from '../bots';
 import reducer from './AuxWeaveReducer';
@@ -942,6 +953,80 @@ describe('AuxWeaveHelpers', () => {
                     abc: '224413331',
                 }),
             });
+        });
+
+        function insert(...atoms: Atom<AuxOp>[]) {
+            for (let atom of atoms) {
+                const result = weave.insert(atom);
+                if (result.type !== 'atom_added') {
+                    throw new Error(
+                        'Unable to add atom to weave: ' + result.type
+                    );
+                }
+            }
+        }
+    });
+
+    describe('calculateFinalEditValue()', () => {
+        let weave: Weave<AuxOp>;
+
+        beforeEach(() => {
+            weave = new Weave();
+        });
+
+        it('should calculate the final text value for tags', () => {
+            const b1 = atom(atomId('a', 1), null, bot('test'));
+            const t1 = atom(atomId('a', 2), b1, tag('abc'));
+
+            const v1 = atom(atomId('a', 3), t1, value('111'));
+            // 111
+            const d0 = atom(atomId('a', 4, 1), v1, deleteOp(1, 2));
+            // 11
+            const i1 = atom(atomId('a', 5), v1, insertOp(0, '222'));
+            // 22211
+            const d1 = atom(atomId('a', 6, 1), i1, deleteOp(2, 3));
+            // 2211
+            const i2 = atom(atomId('a', 7), v1, insertOp(2, '333'));
+            // 2213331 - insert is in the middle of v1 because it should apply to "111" and not "11"
+            const i3 = atom(atomId('a', 9), i1, insertOp(2, '444'));
+            // 2244413331
+            const d3 = atom(atomId('a', 10, 1), i3, deleteOp(2, 3));
+            // 224413331
+
+            insert(b1, t1, v1, d0, i1, d1, i2, i3, d3);
+
+            const result = calculateFinalEditValue(
+                weave.getNode(v1.id) as WeaveNode<ValueOp>
+            );
+
+            expect(result).toEqual('224413331');
+        });
+
+        it('should calculate the final text value for tag masks', () => {
+            const t1 = atom(atomId('a', 2), null, tagMask('test', 'abc'));
+
+            const v1 = atom(atomId('a', 3), t1, value('111'));
+            // 111
+            const d0 = atom(atomId('a', 4, 1), v1, deleteOp(1, 2));
+            // 11
+            const i1 = atom(atomId('a', 5), v1, insertOp(0, '222'));
+            // 22211
+            const d1 = atom(atomId('a', 6, 1), i1, deleteOp(2, 3));
+            // 2211
+            const i2 = atom(atomId('a', 7), v1, insertOp(2, '333'));
+            // 2213331 - insert is in the middle of v1 because it should apply to "111" and not "11"
+            const i3 = atom(atomId('a', 9), i1, insertOp(2, '444'));
+            // 2244413331
+            const d3 = atom(atomId('a', 10, 1), i3, deleteOp(2, 3));
+            // 224413331
+
+            insert(t1, v1, d0, i1, d1, i2, i3, d3);
+
+            const result = calculateFinalEditValue(
+                weave.getNode(v1.id) as WeaveNode<ValueOp>
+            );
+
+            expect(result).toEqual('224413331');
         });
 
         function insert(...atoms: Atom<AuxOp>[]) {

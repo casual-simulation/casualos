@@ -115,6 +115,7 @@ export class RemoteCausalRepoPartitionImpl
     private _tree: AuxCausalTree = auxTree();
     private _client: CausalRepoClient;
     private _synced: boolean;
+    private _gotInitialAtoms: boolean = false;
 
     private: boolean;
 
@@ -573,6 +574,7 @@ export class RemoteCausalRepoPartitionImpl
 
                             // Re-create the tree (and therefore weave) to reset the cardinality rules.
                             this._tree = auxTree();
+                            this._gotInitialAtoms = false;
                             this._applyAtoms(event.atoms, []);
                         }
                     },
@@ -599,8 +601,10 @@ export class RemoteCausalRepoPartitionImpl
             this._tree,
             atoms,
             removedAtoms,
-            this.space
+            this.space,
+            !this._gotInitialAtoms
         );
+        this._gotInitialAtoms = true;
         this._tree = tree;
         this._sendUpdates(updates, stateUpdatedEvent(update));
     }

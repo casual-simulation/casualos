@@ -2619,5 +2619,65 @@ describe('AuxCausalTree2', () => {
                 },
             ]);
         });
+
+        it('should correctly load tag edits on the initial load', () => {
+            const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+            const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+            const value1 = atom(atomId('a', 3), tag1, value('abc'));
+            const insert1 = atom(atomId('a', 4), value1, insertOp(0, 'ghi'));
+            const delete1 = atom(atomId('a', 5), value1, deleteOp(0, 1));
+
+            ({ tree, updates, results } = applyAtoms(
+                tree,
+                [bot1, tag1, value1, insert1, delete1],
+                [],
+                undefined,
+                true
+            ));
+
+            expect(tree.site).toEqual({
+                id: 'a',
+                time: 5,
+            });
+            expect(tree.version).toEqual({
+                a: 5,
+            });
+            expect(tree.state).toEqual({
+                bot1: createBot('bot1', {
+                    tag1: 'ghibc',
+                }),
+            });
+            expect(updates).toEqual({
+                addedBots: [
+                    createBot('bot1', {
+                        tag1: 'ghibc',
+                    }),
+                ],
+                updatedBots: [],
+                removedBots: [],
+            });
+            expect(results).toEqual([
+                {
+                    type: 'atom_added',
+                    atom: bot1,
+                },
+                {
+                    type: 'atom_added',
+                    atom: tag1,
+                },
+                {
+                    type: 'atom_added',
+                    atom: value1,
+                },
+                {
+                    type: 'atom_added',
+                    atom: insert1,
+                },
+                {
+                    type: 'atom_added',
+                    atom: delete1,
+                },
+            ]);
+        });
     });
 });

@@ -2556,6 +2556,74 @@ describe('AuxWeaveReducer', () => {
                         },
                     });
                 });
+
+                it('should skip inserts if it is the initial update', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const insert1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        insertOp(1, 'ghi')
+                    );
+
+                    state = add(bot1, tag1, value1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(insert1),
+                        undefined,
+                        space,
+                        true
+                    );
+
+                    state = apply(state, update);
+
+                    expect(update).toEqual({});
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: 'def',
+                            },
+                        },
+                    });
+                });
+
+                it('should skip deletes if it is the initial update', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const delete1 = atom(
+                        atomId('a', 4),
+                        value1,
+                        deleteOp(1, 2)
+                    );
+
+                    state = add(bot1, tag1, value1);
+
+                    let update = reduce(
+                        weave,
+                        weave.insert(delete1),
+                        undefined,
+                        space,
+                        true
+                    );
+
+                    state = apply(state, update);
+
+                    expect(update).toEqual({});
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                abc: 'def',
+                            },
+                        },
+                    });
+                });
             });
 
             describe('TagMask', () => {

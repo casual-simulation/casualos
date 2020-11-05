@@ -63,17 +63,19 @@ export const CERTIFIED_SPACE = 'certified';
  * @param result The result from the weave.
  * @param state The object that the updates should be stored in. Use this when batching updates to reduce intermediate object allocations.
  * @param space The space that new bots should use.
+ * @param initial Whether this is the initial update for the weave. Used to skip expensive inserts/deletes during the first load.
  */
 export default function reducer(
     weave: Weave<AuxOp>,
     result: WeaveResult,
     state: PartialBotsState = {},
-    space?: string
+    space?: string,
+    initial: boolean = false
 ): PartialBotsState {
     if (result.type === 'atom_added') {
-        return atomAddedReducer(weave, result, state, space);
+        return atomAddedReducer(weave, result, state, space, initial);
     } else if (result.type === 'conflict') {
-        return conflictReducer(weave, result, state);
+        return conflictReducer(weave, result, state, space, initial);
     } else if (result.type === 'atom_removed') {
         return atomRemovedReducer(weave, result, state);
     }
@@ -84,7 +86,8 @@ function atomAddedReducer(
     weave: Weave<AuxOp>,
     result: AtomAddedResult,
     state: PartialBotsState,
-    space?: string
+    space: string,
+    initial: boolean
 ): PartialBotsState {
     const atom: Atom<AuxOp> = result.atom;
     const value: AuxOp = atom.value;
@@ -93,9 +96,9 @@ function atomAddedReducer(
         return botAtomAddedReducer(atom, value, state, space);
     } else if (value.type === AuxOpType.Value) {
         return valueAtomAddedReducer(weave, atom, value, state, space);
-    } else if (value.type === AuxOpType.Insert) {
+    } else if (value.type === AuxOpType.Insert && !initial) {
         return insertAtomAddedReducer(weave, atom, value, state, space);
-    } else if (value.type === AuxOpType.Delete) {
+    } else if (value.type === AuxOpType.Delete && !initial) {
         return deleteAtomAddedReducer(weave, atom, value, state, space);
     } else if (value.type === AuxOpType.Certificate) {
         return certificateAtomAddedReducer(
@@ -799,7 +802,7 @@ function calculateSiblingOffset(
  * Gets the weave nodes needed for a text edit.
  * Returns the bot node, tag node, and value/insert nodes.
  */
-function getTextEditNodes(weave: Weave<AuxOp>, atom: Atom<AuxOp>) {
+export function getTextEditNodes(weave: Weave<AuxOp>, atom: Atom<AuxOp>) {
     const nodes = weave.referenceChain(atom.id);
     const bot = nodes[nodes.length - 1];
     const value = nodes[nodes.length - 3];
@@ -1164,7 +1167,9 @@ function deleteBotReducer(
 function conflictReducer(
     weave: Weave<AuxOp>,
     result: AtomConflictResult,
-    state: PartialBotsState
+    state: PartialBotsState,
+    space: string,
+    initial: boolean
 ): PartialBotsState {
     if (!result.loserRef) {
         return state;
@@ -1216,7 +1221,9 @@ function conflictReducer(
             type: 'atom_added',
             atom: result.winner,
         },
-        update
+        update,
+        space,
+        initial
     );
 
     return update;

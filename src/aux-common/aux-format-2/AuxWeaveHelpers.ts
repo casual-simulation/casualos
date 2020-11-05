@@ -429,6 +429,17 @@ export function calculateOrderedEdits(
         .filter((s) => preserveEmptyEdits || s.text.length > 0);
 }
 
+/**
+ * Calculates the final text value for the given value node.
+ * @param weave The weave.
+ * @param value The value node.
+ */
+export function calculateFinalEditValue(value: WeaveNode<ValueOp>): string {
+    const children = [value, ...iterateCausalGroup(value)];
+    const edits = calculateOrderedEdits(children);
+    return edits.map((e) => e.text).join('');
+}
+
 export function convertToString(value: any): string {
     if (!hasValue(value)) {
         return '';

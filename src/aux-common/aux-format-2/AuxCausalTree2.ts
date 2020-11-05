@@ -38,9 +38,11 @@ import {
     insertOp,
     ValueOp,
     AuxOpType,
+    InsertOp,
+    DeleteOp,
 } from './AuxOpTypes';
 import { BotsState, PartialBotsState, BotTags } from '../bots/Bot';
-import reducer, { certificateId } from './AuxWeaveReducer';
+import reducer, { certificateId, getTextEditNodes } from './AuxWeaveReducer';
 import { merge } from '../utils';
 import {
     apply,
@@ -64,8 +66,10 @@ import {
     findValueNodeByValue,
     findTagMaskNodes,
     findEditPosition,
+    calculateFinalEditValue,
 } from './AuxWeaveHelpers';
 import { Action } from '@casual-simulation/causal-trees';
+import lodashMerge from 'lodash/merge';
 
 /**
  * Defines an interface that represents the state of a causal tree that contains AUX state.
@@ -758,21 +762,27 @@ export function applyEvents(
  * @param atoms The atoms.
  * @param removedAtoms The atoms that were removed.
  * @param space The space that the bots should have.
+ * @param delta Whether the atoms are the initial atoms being added to the tree.
  */
 export function applyAtoms(
     tree: AuxCausalTree,
     atoms?: Atom<AuxOp>[],
     removedAtoms?: string[],
-    space?: string
+    space?: string,
+    initial: boolean = false
 ) {
     let update: PartialBotsState = {};
     let results = [] as WeaveResult[];
+    let editedTags = new Map<
+        string,
+        [string, string, boolean, WeaveNode<ValueOp>]
+    >();
 
     if (atoms) {
         for (let atom of atoms) {
             const result = tree.weave.insert(atom);
             results.push(result);
-            reducer(tree.weave, result, update, space);
+            reducer(tree.weave, result, update, space, initial);
             const added = addedAtom(result);
             if (added) {
                 tree.site.time = calculateTimeFromId(
@@ -785,6 +795,56 @@ export function applyAtoms(
                     added.id.timestamp,
                     tree.version[added.id.site] || 0
                 );
+
+                // If this is the initial load then
+                // we should check the added atoms to see if
+                // there are any inserts that we need to resolve the final value of later.
+                if (initial) {
+                    if (atom.value.type === AuxOpType.Insert) {
+                        const {
+                            botId,
+                            tag,
+                            isTagMask,
+                            value,
+                        } = getBotIdAndTagNameForEdit(
+                            tree.weave,
+                            atom as Atom<InsertOp>
+                        );
+
+                        if (!!botId && !!tag) {
+                            editedTags.set(`${botId}.${tag}`, [
+                                botId,
+                                tag,
+                                isTagMask,
+                                value,
+                            ]);
+                        }
+                    } else if (atom.value.type === AuxOpType.Delete) {
+                        const parent = tree.weave.getNode(atom.cause);
+                        if (
+                            parent.atom.value.type === AuxOpType.Insert ||
+                            parent.atom.value.type === AuxOpType.Value
+                        ) {
+                            const {
+                                botId,
+                                tag,
+                                isTagMask,
+                                value,
+                            } = getBotIdAndTagNameForEdit(
+                                tree.weave,
+                                atom as Atom<DeleteOp>
+                            );
+                            if (!!botId && !!tag) {
+                                editedTags.set(`${botId}.${tag}`, [
+                                    botId,
+                                    tag,
+                                    isTagMask,
+                                    value,
+                                ]);
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -794,10 +854,36 @@ export function applyAtoms(
             if (node) {
                 const result = tree.weave.remove(node.atom);
                 results.push(result);
-                reducer(tree.weave, result, update, space);
+                reducer(tree.weave, result, update, space, initial);
             }
         }
     }
+
+    // Resolve the final value of the edited tags.
+    for (let [id, tag, isTagMask, value] of editedTags.values()) {
+        const finalValue = calculateFinalEditValue(value);
+
+        if (isTagMask) {
+            lodashMerge(update, {
+                [id]: {
+                    masks: {
+                        [space]: {
+                            [tag]: finalValue,
+                        },
+                    },
+                },
+            });
+        } else {
+            lodashMerge(update, {
+                [id]: {
+                    tags: {
+                        [tag]: finalValue,
+                    },
+                },
+            });
+        }
+    }
+
     const prevState = tree.state;
     const finalState = apply(prevState, update);
     const updates = stateUpdates(prevState, update);
@@ -805,4 +891,35 @@ export function applyAtoms(
     tree.state = finalState;
 
     return { tree, updates, results, update };
+}
+
+function getBotIdAndTagNameForEdit(
+    weave: Weave<AuxOp>,
+    atom: Atom<InsertOp | DeleteOp>
+) {
+    const { tag: tagOrValue, bot: botOrTagMask, value } = getTextEditNodes(
+        weave,
+        atom
+    );
+
+    let botId: string;
+    let tag: string;
+    let isTagMask: boolean = false;
+    if (botOrTagMask.atom.value.type === AuxOpType.Bot) {
+        botId = botOrTagMask.atom.value.id;
+        if (tagOrValue.atom.value.type === AuxOpType.Tag) {
+            tag = tagOrValue.atom.value.name;
+        }
+    } else if (botOrTagMask.atom.value.type === AuxOpType.TagMask) {
+        botId = botOrTagMask.atom.value.botId;
+        tag = botOrTagMask.atom.value.name;
+        isTagMask = true;
+    }
+
+    return {
+        botId,
+        tag,
+        isTagMask,
+        value: value as WeaveNode<ValueOp>,
+    };
 }
