@@ -229,6 +229,17 @@ def PublishDocker() {
         # /usr/local/bin/docker push casualsimulation/aux-proxy:latest
         # /usr/local/bin/docker push casualsimulation/aux-redirector:latest
         """
+    } else {
+        sh """#!/bin/bash
+        set -e
+        . ~/.bashrc
+        
+        echo "Publishing the latest tags...."
+        # /usr/local/bin/docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+        # /usr/local/bin/docker push casualsimulation/aux:alpha
+        # /usr/local/bin/docker push casualsimulation/aux-proxy:alpha
+        # /usr/local/bin/docker push casualsimulation/aux-redirector:alpha
+        """
     }
 }
 
@@ -244,6 +255,8 @@ def PublishDockerArm32() {
 
     if (env.BRANCH_NAME == params.MAIN_BRANCH) {
         sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:latest"
+    } else {
+        sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:alpha"
     }
 }
 
