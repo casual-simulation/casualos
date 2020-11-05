@@ -15,6 +15,10 @@ pipeline {
         AUX_GIT_REPO_NAME = 'casualos'
     }
 
+    parameters {
+        string(name: 'MAIN_BRANCH', defaultValue: 'master', description: 'The main branch that should be used to determine if the current build is the latest production release.')
+    }
+
     tools {
         nodejs('Node10.13.0')
     }
@@ -210,12 +214,22 @@ def PublishDocker() {
     echo "Publishing the x64 Docker Image...."
     /usr/local/bin/docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
     /usr/local/bin/docker push casualsimulation/aux:${gitTag}
-    /usr/local/bin/docker push casualsimulation/aux:latest
     /usr/local/bin/docker push casualsimulation/aux-proxy:${gitTag}
-    /usr/local/bin/docker push casualsimulation/aux-proxy:latest
     /usr/local/bin/docker push casualsimulation/aux-redirector:${gitTag}
-    /usr/local/bin/docker push casualsimulation/aux-redirector:latest
     """
+
+    if (env.BRANCH_NAME == params.MAIN_BRANCH) {
+        sh """#!/bin/bash
+        set -e
+        . ~/.bashrc
+        
+        echo "Publishing the latest tags...."
+        # /usr/local/bin/docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+        # /usr/local/bin/docker push casualsimulation/aux:latest
+        # /usr/local/bin/docker push casualsimulation/aux-proxy:latest
+        # /usr/local/bin/docker push casualsimulation/aux-redirector:latest
+        """
+    }
 }
 
 def PublishDockerArm32() {
@@ -226,7 +240,11 @@ def PublishDockerArm32() {
     remote.allowAnyHosts = true
     remote.identityFile = RPI_SSH_KEY_FILE
 
-    sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:${gitTag} && docker push ${DOCKER_ARM32_TAG}:latest"
+    sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:${gitTag}"
+
+    if (env.BRANCH_NAME == params.MAIN_BRANCH) {
+        sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:latest"
+    }
 }
 
 def Cleanup() {
