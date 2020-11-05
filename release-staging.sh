@@ -2,4 +2,4 @@
 
 set -e
 
-./script/release-patch.sh staging
+./script/release-patch.sh staging "$BUILD_NUMBER"

@@ -3,6 +3,7 @@
 set -e
 
 TARGET_BRANCH="$1"
+BUILD_NUMBER="$2"
 
 # Step 1: Checkout develop
 git checkout develop
@@ -23,7 +24,7 @@ git reset "origin/$TARGET_BRANCH" --hard
 git merge develop --no-ff
 
 # 5. Get version
-VERSION=$(./next_version.sh)
+VERSION=$(./next_version.sh "${BUILD_NUMBER}")
 
 # 6/ Run `lerna version` specify patch
 lerna version "$VERSION" --yes --no-push
