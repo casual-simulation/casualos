@@ -2,4 +2,4 @@
 
 set -e
 
-./script/release-patch.sh master "$BUILD_NUMBER"
+./script/release-patch.sh master
