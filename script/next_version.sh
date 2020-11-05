@@ -12,5 +12,5 @@ BUILD_NUMBER="$1"
 if [ -z "${BUILD_NUMBER}" ]; then
     echo "${CURRENT_VERSION}"
 else
-    echo "${CURRENT_VERSION}-alpha${BUILD_NUMBER}"
+    echo "${CURRENT_VERSION}-alpha.${BUILD_NUMBER}"
 fi
