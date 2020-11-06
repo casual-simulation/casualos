@@ -197,13 +197,16 @@ def PublishDocs() {
 }
 
 def CreateGithubRelease() {
-    sh """#!/bin/bash
-    set -e
-    . ~/.bashrc
-    echo \$(pwd)
-    CHANGELOG=\$(./script/most_recent_changelog.sh)
-    node ./src/make-github-release/bin/make-github-release.js release --owner "${AUX_GIT_REPO_OWNER}" --repo ${AUX_GIT_REPO_NAME} --text \"\${CHANGELOG}\" --auth ${GITHUB_RELEASE_TOKEN}
-    """
+    // Only create a Github release for main branch builds
+    if (env.BRANCH_NAME == params.MAIN_BRANCH) {
+        sh """#!/bin/bash
+        set -e
+        . ~/.bashrc
+        echo \$(pwd)
+        CHANGELOG=\$(./script/most_recent_changelog.sh)
+        node ./src/make-github-release/bin/make-github-release.js release --owner "${AUX_GIT_REPO_OWNER}" --repo ${AUX_GIT_REPO_NAME} --text \"\${CHANGELOG}\" --auth ${GITHUB_RELEASE_TOKEN}
+        """
+    }
 }
 
 def PublishDocker() {
