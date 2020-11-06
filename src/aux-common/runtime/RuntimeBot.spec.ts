@@ -12,6 +12,7 @@ import {
     SET_TAG_MASK_SYMBOL,
     CLEAR_TAG_MASKS_SYMBOL,
     isRuntimeBot,
+    EDIT_TAG_SYMBOL,
 } from '../bots';
 import { AuxGlobalContext, MemoryGlobalContext } from './AuxGlobalContext';
 import {
@@ -24,6 +25,14 @@ import { TestScriptBotFactory } from './test/TestScriptBotFactory';
 import { createCompiledBot, CompiledBot } from './CompiledBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
+import {
+    applyEdit,
+    del,
+    edit,
+    insert,
+    isTagEdit,
+    preserve,
+} from '../aux-format-2';
 
 describe('RuntimeBot', () => {
     let precalc: CompiledBot;
@@ -54,8 +63,15 @@ describe('RuntimeBot', () => {
         };
         updateTagMock = jest.fn();
         updateTagMock.mockImplementation((bot, tag, value) => {
-            bot.values[tag] = value;
-            bot.tags[tag] = value;
+            if (isTagEdit(value)) {
+                bot.values[tag] = bot.tags[tag] = applyEdit(
+                    bot.tags[tag],
+                    value
+                );
+            } else {
+                bot.values[tag] = value;
+                bot.tags[tag] = value;
+            }
             return RealtimeEditMode.Immediate;
         });
 
@@ -68,7 +84,14 @@ describe('RuntimeBot', () => {
                 if (!bot.masks[space]) {
                     bot.masks[space] = {};
                 }
-                bot.masks[space][tag] = value;
+                if (isTagEdit(value)) {
+                    bot.masks[space][tag] = applyEdit(
+                        bot.masks[space][tag],
+                        value
+                    );
+                } else {
+                    bot.masks[space][tag] = value;
+                }
             }
             return RealtimeEditMode.Immediate;
         });
@@ -109,6 +132,14 @@ describe('RuntimeBot', () => {
             notifyChange: notifyChangeMock,
             updateTagMask: updateTagMaskMock,
             getTagMask: getTagMaskMock,
+            currentVersion: {
+                localSites: {},
+                vector: {
+                    a: 1,
+                    b: 2,
+                    c: 3,
+                },
+            },
         };
         context = new MemoryGlobalContext(
             version,
@@ -717,6 +748,52 @@ describe('RuntimeBot', () => {
 
             expect(script.changes).toEqual({});
             expect(script.maskChanges).toEqual({});
+        });
+    });
+
+    describe('edit_tag', () => {
+        it('should support editing normal tags', () => {
+            script[EDIT_TAG_SYMBOL]('abc', null, [
+                preserve(1),
+                insert('111'),
+                del(1),
+            ]);
+
+            expect(script.tags.abc).toEqual('d111f');
+            expect(script.raw.abc).toEqual('d111f');
+            expect(script.changes.abc).toEqual(
+                edit(
+                    manager.currentVersion.vector,
+                    preserve(1),
+                    insert('111'),
+                    del(1)
+                )
+            );
+        });
+
+        it('should support editing tag masks', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 'def', 'local');
+            script[CLEAR_CHANGES_SYMBOL]();
+
+            script[EDIT_TAG_SYMBOL]('abc', 'local', [
+                preserve(1),
+                insert('111'),
+                del(1),
+            ]);
+
+            expect(script.masks.abc).toEqual('d111f');
+            expect(script.raw.abc).toEqual('def');
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: edit(
+                        manager.currentVersion.vector,
+                        preserve(1),
+                        insert('111'),
+                        del(1)
+                    ),
+                },
+            });
         });
     });
 });

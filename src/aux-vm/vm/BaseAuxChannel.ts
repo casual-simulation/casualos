@@ -424,13 +424,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             partition.onVersionUpdated
                 .pipe(
                     tap((v) => {
-                        if (v.currentSite) {
-                            this._version.localSites[v.currentSite] = true;
-                        }
-                        this._version.vector = mergeVersions(
-                            this._version.vector,
-                            v.vector
-                        );
+                        this._version = this._runtime.versionUpdated(v);
                         this._onVersionUpdated.next(this._version);
                     })
                 )

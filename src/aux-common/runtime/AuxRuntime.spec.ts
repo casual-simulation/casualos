@@ -8466,6 +8466,63 @@ describe('AuxRuntime', () => {
         });
     });
 
+    describe('updateTag()', () => {
+        it('should set the tag value on the bot', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            runtime.updateTag(bot, 'abc', 99);
+
+            expect(bot.tags.abc).toEqual(99);
+            expect(bot.values.abc).toEqual(99);
+            expect(runtime.getValue(bot, 'abc')).toEqual(99);
+        });
+
+        it('should be able to remove the tag by setting it to null', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            runtime.updateTag(bot, 'abc', null);
+
+            expect(bot.tags.abc).toBe(null);
+            expect(bot.values.abc).toBe(null);
+            expect(runtime.getValue(bot, 'abc')).toBe(null);
+        });
+
+        it('should support tag edits', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            runtime.updateTag(
+                bot,
+                'abc',
+                edit({}, preserve(1), insert('1'), del(1))
+            );
+
+            expect(bot.tags.abc).toEqual('d1f');
+            expect(bot.values.abc).toEqual('d1f');
+            expect(runtime.getValue(bot, 'abc')).toEqual('d1f');
+        });
+    });
+
     describe('unsubscribe()', () => {
         it('should cancel any scheduled tasks', () => {
             const test = jest.fn();

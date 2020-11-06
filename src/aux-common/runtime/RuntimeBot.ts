@@ -1,3 +1,4 @@
+import { edit, TagEditOp } from '../aux-format-2';
 import {
     BotSpace,
     BotTags,
@@ -20,8 +21,10 @@ import {
     SET_TAG_MASK_SYMBOL,
     CLEAR_TAG_MASKS_SYMBOL,
     CompiledBotListener,
+    EDIT_TAG_SYMBOL,
 } from '../bots';
 import { CompiledBot } from './CompiledBot';
+import { RuntimeStateVersion } from './RuntimeStateVersion';
 
 /**
  * Defines an interface that contains runtime bots state.
@@ -263,6 +266,7 @@ export function createRuntimeBot(
         [CLEAR_CHANGES_SYMBOL]: null,
         [SET_TAG_MASK_SYMBOL]: null,
         [CLEAR_TAG_MASKS_SYMBOL]: null,
+        [EDIT_TAG_SYMBOL]: null,
     };
 
     Object.defineProperty(script, CLEAR_CHANGES_SYMBOL, {
@@ -311,6 +315,23 @@ export function createRuntimeBot(
                         script[SET_TAG_MASK_SYMBOL](tag, null, space);
                     }
                 }
+            }
+        },
+        configurable: false,
+        enumerable: false,
+        writable: false,
+    });
+
+    Object.defineProperty(script, EDIT_TAG_SYMBOL, {
+        value: (tag: string, space: string, ops: TagEditOp[]) => {
+            if (tag in constantTags) {
+                return;
+            }
+            const e = edit(manager.currentVersion.vector, ...ops);
+            if (hasValue(space)) {
+                script[SET_TAG_MASK_SYMBOL](tag, e, space);
+            } else {
+                script.tags[tag] = e;
             }
         },
         configurable: false,
@@ -421,6 +442,11 @@ export interface RuntimeBotInterface extends RuntimeBatcher {
      * @param signature The tag.
      */
     getSignature(bot: CompiledBot, signature: string): string;
+
+    /**
+     * Gets the current version that the interface is at.
+     */
+    currentVersion: RuntimeStateVersion;
 }
 
 /**
