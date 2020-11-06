@@ -3,6 +3,7 @@ import {
     BotAction,
     StateUpdatedEvent,
     BotDependentInfo,
+    RuntimeStateVersion,
 } from '@casual-simulation/aux-common';
 import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
 import { Observable } from 'rxjs';
@@ -10,7 +11,7 @@ import { Initable } from '../managers/Initable';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
 import { StoredAux } from '../StoredAux';
-import { ChannelActionResult, ChannelStateVersion } from './AuxChannel';
+import { ChannelActionResult } from './AuxChannel';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -39,7 +40,7 @@ export interface AuxVM extends Initable {
     /**
      * Gets the observable list of version updates from the simulation.
      */
-    versionUpdated: Observable<ChannelStateVersion>;
+    versionUpdated: Observable<RuntimeStateVersion>;
 
     /**
      * Gets an observable that resolves whenever the connection state changes.

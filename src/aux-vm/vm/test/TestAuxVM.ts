@@ -14,6 +14,7 @@ import {
     StateUpdatedEvent,
     BotDependentInfo,
     AuxRuntime,
+    RuntimeStateVersion,
 } from '@casual-simulation/aux-common';
 import {
     StatusUpdate,
@@ -24,7 +25,7 @@ import values from 'lodash/values';
 import union from 'lodash/union';
 import { AuxUser } from '../../AuxUser';
 import { StoredAux } from '../../StoredAux';
-import { ChannelActionResult, ChannelStateVersion } from '../../vm';
+import { ChannelActionResult } from '../../vm';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -40,7 +41,7 @@ export class TestAuxVM implements AuxVM {
     localEvents: Observable<LocalActions[]>;
     deviceEvents: Observable<DeviceAction[]>;
     connectionStateChanged: Subject<StatusUpdate>;
-    versionUpdated: Subject<ChannelStateVersion>;
+    versionUpdated: Subject<RuntimeStateVersion>;
     onError: Subject<AuxChannelErrorType>;
     grant: string;
     user: AuxUser;
@@ -72,7 +73,7 @@ export class TestAuxVM implements AuxVM {
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this.connectionStateChanged = new Subject<StatusUpdate>();
         this.onError = new Subject<AuxChannelErrorType>();
-        this.versionUpdated = new Subject<ChannelStateVersion>();
+        this.versionUpdated = new Subject<RuntimeStateVersion>();
     }
 
     async shout(

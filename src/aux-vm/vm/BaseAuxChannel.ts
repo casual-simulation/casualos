@@ -1,10 +1,6 @@
 import { Subject, SubscriptionLike } from 'rxjs';
 import { tap, first } from 'rxjs/operators';
-import {
-    AuxChannel,
-    ChannelActionResult,
-    ChannelStateVersion,
-} from './AuxChannel';
+import { AuxChannel, ChannelActionResult } from './AuxChannel';
 import { AuxUser } from '../AuxUser';
 import {
     LocalActions,
@@ -25,6 +21,7 @@ import {
     hasValue,
     asyncResult,
     addDebugApi,
+    RuntimeStateVersion,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
@@ -61,13 +58,13 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _hasRegisteredSubs: boolean;
     private _eventBuffer: BotAction[];
     private _hasInitialState: boolean;
-    private _version: ChannelStateVersion;
+    private _version: RuntimeStateVersion;
 
     private _user: AuxUser;
     private _onLocalEvents: Subject<LocalActions[]>;
     private _onDeviceEvents: Subject<DeviceAction[]>;
     private _onStateUpdated: Subject<StateUpdatedEvent>;
-    private _onVersionUpdated: Subject<ChannelStateVersion>;
+    private _onVersionUpdated: Subject<RuntimeStateVersion>;
     private _onConnectionStateChanged: Subject<StatusUpdate>;
     private _onError: Subject<AuxChannelErrorType>;
 
@@ -112,7 +109,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onLocalEvents = new Subject<LocalActions[]>();
         this._onDeviceEvents = new Subject<DeviceAction[]>();
         this._onStateUpdated = new Subject<StateUpdatedEvent>();
-        this._onVersionUpdated = new Subject<ChannelStateVersion>();
+        this._onVersionUpdated = new Subject<RuntimeStateVersion>();
         this._onConnectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
         this._eventBuffer = [];
@@ -154,7 +151,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onLocalEvents?: (events: LocalActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
-        onVersionUpdated?: (version: ChannelStateVersion) => void,
+        onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
     ): Promise<void> {
@@ -186,7 +183,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onLocalEvents?: (events: LocalActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
-        onVersionUpdated?: (version: ChannelStateVersion) => void,
+        onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
     ) {
