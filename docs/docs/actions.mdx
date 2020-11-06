@@ -3261,7 +3261,7 @@ await server.serialConnect("/dev/rfcomm0", {
 Parses and returns the serial stream to the event tag 'onSerialData'.
 The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
 
-Shouts data to the onSerialData event tag.
+Shouts data to the onStreamData event tag.
 
 #### Examples:
 
@@ -3271,7 +3271,7 @@ Shouts data to the onSerialData event tag.
 await server.serialConnect("/dev/rfcomm0", {
   baudRate: 9600,
 });
-await server.serialStream();
+server.serialStream();
 ```
 
 2. In the second tag, see the data update. This must be an 'onSerialData' event tag.
