@@ -96,7 +96,7 @@ import mime from 'mime';
 import sortBy from 'lodash/sortBy';
 import { GpioModule } from './modules/GpioModule';
 import { GpioModule2 } from './modules/GpioModule2';
-import { GpioModule3 } from './modules/GpioModule3';
+import { SerialModule } from './modules/SerialModule';
 import { MongoDBStageStore } from './mongodb/MongoDBStageStore';
 
 const connect = pify(MongoClient.connect);
@@ -966,7 +966,7 @@ export class Server {
         const setupChannel = this._createSetupChannelModule();
         const webhooks = this._createWebhooksClient();
         const gpioModules = this._config.gpio
-            ? [new GpioModule(), new GpioModule2(), new GpioModule3()]
+            ? [new GpioModule(), new GpioModule2(), new SerialModule()]
             : [];
         const manager = new AuxCausalRepoManager(
             serverUser,

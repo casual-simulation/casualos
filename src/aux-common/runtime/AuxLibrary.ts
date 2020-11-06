@@ -137,10 +137,6 @@ import {
     serialWritePin,
     serialReadPin,
     serialClosePin,
-    // serialSetPin,
-    // serialGetPin,
-    // serialFlushPin,
-    // serialDrainPin,
     serialPausePin,
     serialResumePin,
     Easing,
@@ -503,10 +499,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 serialWrite,
                 serialRead,
                 serialClose,
-                // serialSet,
-                // serialGet,
-                // serialFlush,
-                // serialDrain,
                 serialPause,
                 serialResume,
                 shell,
@@ -2363,62 +2355,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         );
         return addAsyncAction(task, event);
     }
-
-    /**
-     *
-     */
-    // function serialSet() {
-    //     const task = context.createTask(true, true);
-    //     const event = calcRemote(
-    //         serialSetPin(port),
-    //         undefined,
-    //         undefined,
-    //         task.taskId
-    //     );
-    //     return addAsyncAction(task, event);
-    // }
-
-    /**
-     *
-     */
-    // function serialGet() {
-    //     const task = context.createTask(true, true);
-    //     const event = calcRemote(
-    //         serialGetPin(port),
-    //         undefined,
-    //         undefined,
-    //         task.taskId
-    //     );
-    //     return addAsyncAction(task, event);
-    // }
-
-    /**
-     *
-     */
-    // function serialFlush(, cb?: any) {
-    //     const task = context.createTask(true, true);
-    //     const event = calcRemote(
-    //         serialFlushPin(port, cb),
-    //         undefined,
-    //         undefined,
-    //         task.taskId
-    //     );
-    //     return addAsyncAction(task, event);
-    // }
-
-    /**
-     *
-     */
-    // function serialDrain(, cb?: any) {
-    //     const task = context.createTask(true, true);
-    //     const event = calcRemote(
-    //         serialDrainPin(port, cb),
-    //         undefined,
-    //         undefined,
-    //         task.taskId
-    //     );
-    //     return addAsyncAction(task, event);
-    // }
 
     /**
      * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.

@@ -14,10 +14,6 @@ import {
     SerialWriteAction,
     SerialReadAction,
     SerialCloseAction,
-    // SerialSetAction,
-    // SerialGetAction,
-    // SerialFlushAction,
-    // SerialDrainAction,
     SerialPauseAction,
     SerialResumeAction,
     asyncResult,
@@ -34,7 +30,7 @@ let btSerial = new Map<string, typeof SerialPort>();
 /**
  * Defines an AuxModule that adds Serial functionality to the module.
  */
-export class GpioModule3 implements AuxModule2 {
+export class SerialModule implements AuxModule2 {
     constructor() {}
 
     setChannelManager() {}
@@ -67,18 +63,6 @@ export class GpioModule3 implements AuxModule2 {
                         if (event.type === 'serial_close') {
                             await this._serialClose(simulation, event);
                         }
-                        // if (event.type === 'serial_set') {
-                        //     await this._serialSet(simulation, event);
-                        // }
-                        // if (event.type === 'serial_get') {
-                        //     await this._serialGet(simulation, event);
-                        // }
-                        // if (event.type === 'serial_flush') {
-                        //     await this._serialFlush(simulation, event);
-                        // }
-                        // if (event.type === 'serial_drain') {
-                        //     await this._serialDrain(simulation, event);
-                        // }
                         if (event.type === 'serial_pause') {
                             await this._serialPause(simulation, event);
                         }
@@ -132,7 +116,7 @@ export class GpioModule3 implements AuxModule2 {
     }
     _serialStream(simulation: Simulation, event: SerialStreamAction) {
         try {
-            // TODO: Pass an event name and a conneciton name
+            // TODO: Pass an event name and a connection name
             const port = btSerial.get('Connection01');
 
             // Use a `\r\n` as a line terminator
@@ -313,114 +297,6 @@ export class GpioModule3 implements AuxModule2 {
             );
         }
     }
-    // _serialSet(simulation: Simulation, event: SerialSetAction) {
-    //     try {
-
-    //         simulation.helper.transaction(
-    //             hasValue(event.playerId)
-    //                 ? remoteResult(
-    //                       undefined,
-    //                       { sessionId: event.playerId },
-    //                       event.taskId
-    //                   )
-    //                 : asyncResult(event.taskId, undefined)
-    //         );
-    //     } catch (error) {
-    //         simulation.helper.transaction(
-    //             hasValue(event.playerId)
-    //                 ? remoteError(
-    //                       {
-    //                           error: 'failure',
-    //                           exception: error.toString(),
-    //                       },
-    //                       { sessionId: event.playerId },
-    //                       event.taskId
-    //                   )
-    //                 : asyncError(event.taskId, error)
-    //         );
-    //     }
-    // }
-    // _serialGet(simulation: Simulation, event: SerialGetAction) {
-    //     try {
-
-    //         simulation.helper.transaction(
-    //             hasValue(event.playerId)
-    //                 ? remoteResult(
-    //                       undefined,
-    //                       { sessionId: event.playerId },
-    //                       event.taskId
-    //                   )
-    //                 : asyncResult(event.taskId, undefined)
-    //         );
-    //     } catch (error) {
-    //         simulation.helper.transaction(
-    //             hasValue(event.playerId)
-    //                 ? remoteError(
-    //                       {
-    //                           error: 'failure',
-    //                           exception: error.toString(),
-    //                       },
-    //                       { sessionId: event.playerId },
-    //                       event.taskId
-    //                   )
-    //                 : asyncError(event.taskId, error)
-    //         );
-    //     }
-    // }
-    // _serialFlush(simulation: Simulation, event: SerialFlushAction) {
-    //     try {
-
-    //         simulation.helper.transaction(
-    //             hasValue(event.playerId)
-    //                 ? remoteResult(
-    //                       undefined,
-    //                       { sessionId: event.playerId },
-    //                       event.taskId
-    //                   )
-    //                 : asyncResult(event.taskId, undefined)
-    //         );
-    //     } catch (error) {
-    //         simulation.helper.transaction(
-    //             hasValue(event.playerId)
-    //                 ? remoteError(
-    //                       {
-    //                           error: 'failure',
-    //                           exception: error.toString(),
-    //                       },
-    //                       { sessionId: event.playerId },
-    //                       event.taskId
-    //                   )
-    //                 : asyncError(event.taskId, error)
-    //         );
-    //     }
-    // }
-    // _serialDrain(simulation: Simulation, event: SerialDrainAction) {
-    //     try {
-
-    //         simulation.helper.transaction(
-    //             hasValue(event.playerId)
-    //                 ? remoteResult(
-    //                       undefined,
-    //                       { sessionId: event.playerId },
-    //                       event.taskId
-    //                   )
-    //                 : asyncResult(event.taskId, undefined)
-    //         );
-    //     } catch (error) {
-    //         simulation.helper.transaction(
-    //             hasValue(event.playerId)
-    //                 ? remoteError(
-    //                       {
-    //                           error: 'failure',
-    //                           exception: error.toString(),
-    //                       },
-    //                       { sessionId: event.playerId },
-    //                       event.taskId
-    //                   )
-    //                 : asyncError(event.taskId, error)
-    //         );
-    //     }
-    // }
     _serialPause(simulation: Simulation, event: SerialPauseAction) {
         try {
             const port = btSerial.get('Connection01');

@@ -151,10 +151,6 @@ export type AsyncActions =
     | SerialWriteAction
     | SerialReadAction
     | SerialCloseAction
-    // | SerialSetAction
-    // | SerialGetAction
-    // | SerialFlushAction
-    // | SerialDrainAction
     | SerialPauseAction
     | SerialResumeAction
     | CreateCertificateAction
@@ -1848,38 +1844,6 @@ export interface SerialCloseAction extends AsyncAction {
      */
     cb?: any;
 }
-/**
- *
- */
-// export interface SerialSetAction extends AsyncAction {
-//     type: 'serial_set';
-// }
-/**
- *
- */
-// export interface SerialGetAction extends AsyncAction {
-//     type: 'serial_get';
-// }
-/**
- *
- */
-// export interface SerialFlushAction extends AsyncAction {
-//     type: 'serial_flush';
-// /**
-//  *
-//  */
-// cb?: any;
-// }
-/**
- *
- */
-// export interface SerialDrainAction extends AsyncAction {
-//     type: 'serial_drain';
-// /**
-//  *
-//  */
-// cb?: any;
-// }
 /**
  * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
  */
@@ -3908,66 +3872,6 @@ export function serialClosePin(
         playerId,
     };
 }
-
-/**
- *
- * @param taskId The ID of the async task.
- */
-// export function serialSetPin(
-//     taskId?: string | number,
-//     playerId?: string
-// ): SerialSetAction {
-//     return {
-//         type: 'serial_set',
-//         taskId,
-//         playerId,
-//     };
-// }
-
-/**
- *
- * @param taskId The ID of the async task.
- */
-// export function serialGetPin(
-//     taskId?: string | number,
-//     playerId?: string
-// ): SerialGetAction {
-//     return {
-//         type: 'serial_get',
-//         taskId,
-//         playerId,
-//     };
-// }
-
-/**
- *
- * @param taskId The ID of the async task.
- */
-// export function serialFlushPin(
-//     taskId?: string | number,
-//     playerId?: string
-//     ): SerialFlushAction {
-//         return {
-//             type: 'serial_flush',
-//             taskId,
-//             playerId,
-//         };
-//     }
-
-/**
- *
- * @param taskId The ID of the async task.
- */
-// export function serialDrainPin(
-//         taskId?: string | number,
-//         playerId?: string
-//     ): SerialDrainAction {
-//         return {
-//             type: 'serial_drain',
-//             taskId,
-//             playerId,
-//         };
-//     }
 
 /**
  * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.

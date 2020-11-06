@@ -3300,26 +3300,6 @@ declare global {
         serialClose(cb?: any): Promise<void>;
         
         /**
-         * 
-         */
-        // serialSet(): Promise<void>;
-        
-        /**
-         * 
-         */
-        // serialGet(): Promise<void>;
-        
-        /**
-         * 
-         */
-        // serialFlush(cb?: any): Promise<void>;
-        
-        /**
-         * 
-         */
-        // serialDrain(cb?: any): Promise<void>;
-        
-        /**
          * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
          */
         serialPause(): Promise<void>;
