@@ -133,9 +133,9 @@ def BuildDocker() {
     
     echo "Building..."
 
-    /usr/local/bin/docker build -t "casualsimulation/aux:${gitTag}" -t "casualsimulation/aux:latest" .
-    /usr/local/bin/docker build -t "casualsimulation/aux-proxy:${gitTag}" -t "casualsimulation/aux-proxy:latest" ./src/aux-proxy
-    /usr/local/bin/docker build -t "casualsimulation/aux-redirector:${gitTag}" -t "casualsimulation/aux-redirector:latest" ./src/aux-redirector
+    /usr/local/bin/docker build -t "casualsimulation/aux:${gitTag}" -t "casualsimulation/aux:latest" -t "casualsimulation/aux:alpha" .
+    /usr/local/bin/docker build -t "casualsimulation/aux-proxy:${gitTag}" -t "casualsimulation/aux-proxy:latest" -t "casualsimulation/aux-proxy:alpha" ./src/aux-proxy
+    /usr/local/bin/docker build -t "casualsimulation/aux-redirector:${gitTag}" -t "casualsimulation/aux-redirector:latest" -t "casualsimulation/aux-redirector:alpha" ./src/aux-redirector
     """
 }
 
@@ -156,7 +156,7 @@ def BuildDockerArm32() {
     remote.identityFile = RPI_SSH_KEY_FILE
 
     sshPut remote: remote, from: './temp/output.tar.gz', into: '/home/pi'
-    sshCommand remote: remote, command: "cd /home/pi; mkdir -p output; tar xzf ./output.tar.gz -C output; cd output; docker build -t ${DOCKER_ARM32_TAG}:${gitTag} -t ${DOCKER_ARM32_TAG}:latest -f Dockerfile.arm32 ."
+    sshCommand remote: remote, command: "cd /home/pi; mkdir -p output; tar xzf ./output.tar.gz -C output; cd output; docker build -t ${DOCKER_ARM32_TAG}:${gitTag} -t ${DOCKER_ARM32_TAG}:latest -t ${DOCKER_ARM32_TAG}:alpha -f Dockerfile.arm32 ."
     
 }
 
@@ -224,21 +224,21 @@ def PublishDocker() {
         . ~/.bashrc
         
         echo "Publishing the latest tags...."
-        # /usr/local/bin/docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-        # /usr/local/bin/docker push casualsimulation/aux:latest
-        # /usr/local/bin/docker push casualsimulation/aux-proxy:latest
-        # /usr/local/bin/docker push casualsimulation/aux-redirector:latest
+        /usr/local/bin/docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+        /usr/local/bin/docker push casualsimulation/aux:latest
+        /usr/local/bin/docker push casualsimulation/aux-proxy:latest
+        /usr/local/bin/docker push casualsimulation/aux-redirector:latest
         """
     } else {
         sh """#!/bin/bash
         set -e
         . ~/.bashrc
         
-        echo "Publishing the latest tags...."
-        # /usr/local/bin/docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-        # /usr/local/bin/docker push casualsimulation/aux:alpha
-        # /usr/local/bin/docker push casualsimulation/aux-proxy:alpha
-        # /usr/local/bin/docker push casualsimulation/aux-redirector:alpha
+        echo "Publishing the alpha tags...."
+        /usr/local/bin/docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+        /usr/local/bin/docker push casualsimulation/aux:alpha
+        /usr/local/bin/docker push casualsimulation/aux-proxy:alpha
+        /usr/local/bin/docker push casualsimulation/aux-redirector:alpha
         """
     }
 }
