@@ -5213,9 +5213,9 @@ describe('AuxLibrary', () => {
             const result = library.api.insertTagMaskText(
                 bot1,
                 'abc',
-                'local',
                 0,
-                'hello'
+                'hello',
+                'local'
             );
 
             expect(result).toEqual('hello');
@@ -5235,9 +5235,9 @@ describe('AuxLibrary', () => {
             const result = library.api.insertTagMaskText(
                 bot2,
                 'abc',
-                'local',
                 0,
-                '123'
+                '123',
+                'local'
             );
 
             expect(result).toEqual('123hello');
@@ -5257,9 +5257,9 @@ describe('AuxLibrary', () => {
             const result = library.api.insertTagMaskText(
                 bot2,
                 'abc',
-                'local',
                 2,
-                '123'
+                '123',
+                'local'
             );
 
             expect(result).toEqual('he123llo');
@@ -5279,9 +5279,9 @@ describe('AuxLibrary', () => {
             const result = library.api.insertTagMaskText(
                 bot2,
                 'abc',
-                'local',
                 5,
-                '123'
+                '123',
+                'local'
             );
 
             expect(result).toEqual('hello123');
@@ -5301,9 +5301,9 @@ describe('AuxLibrary', () => {
             const result = library.api.insertTagMaskText(
                 bot2,
                 'abc',
-                'local',
                 -1,
-                '123'
+                '123',
+                'local'
             );
 
             expect(result).toEqual('hell123o');
@@ -5323,9 +5323,9 @@ describe('AuxLibrary', () => {
             const result = library.api.insertTagMaskText(
                 bot1,
                 'abc',
-                'local',
                 -1,
-                '123'
+                '123',
+                'local'
             );
 
             expect(result).toEqual('123');
@@ -5345,9 +5345,9 @@ describe('AuxLibrary', () => {
             const result = library.api.insertTagMaskText(
                 bot2,
                 'abc',
-                'local',
                 7,
-                '123'
+                '123',
+                'local'
             );
 
             expect(result).toEqual('hello123');

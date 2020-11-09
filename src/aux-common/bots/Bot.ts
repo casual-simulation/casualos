@@ -28,9 +28,14 @@ export const GET_TAG_MASK_SYMBOL = Symbol('get_tag_mask');
 export const CLEAR_TAG_MASKS_SYMBOL = Symbol('clear_tag_masks');
 
 /**
- * Defines a symbol that is used to edit a tag or tag mask.
+ * Defines a symbol that is used to edit a tag.
  */
 export const EDIT_TAG_SYMBOL = Symbol('edit_tag');
+
+/**
+ * Defines a symbol that is used to edit a  tag mask.
+ */
+export const EDIT_TAG_MASK_SYMBOL = Symbol('edit_tag_mask');
 
 /**
  * Defines an interface for a bot in a script/formula.
@@ -98,9 +103,18 @@ export interface RuntimeBot {
     [CLEAR_TAG_MASKS_SYMBOL]: (space?: string) => any;
 
     /**
-     * A functino that can manipulate a tag or tag mask using the given edit operations.
+     * A function that can manipulate a tag using the given edit operations.
      */
-    [EDIT_TAG_SYMBOL]: (tag: string, space: string, ops: TagEditOp[]) => any;
+    [EDIT_TAG_SYMBOL]: (tag: string, ops: TagEditOp[]) => any;
+
+    /**
+     * A function that can manipulate a tag mask using the given edit operations.
+     */
+    [EDIT_TAG_MASK_SYMBOL]: (
+        tag: string,
+        ops: TagEditOp[],
+        space: string
+    ) => any;
 }
 
 /**

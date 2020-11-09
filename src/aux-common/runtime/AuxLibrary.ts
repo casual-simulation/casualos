@@ -153,6 +153,7 @@ import {
     getBotScale,
     EDIT_TAG_SYMBOL,
     BotSpace,
+    EDIT_TAG_MASK_SYMBOL,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -3503,7 +3504,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             index += currentValue.length;
         }
         index = Math.max(0, Math.min(index, currentValue.length));
-        bot[EDIT_TAG_SYMBOL](tag, null, [preserve(index), insert(text)]);
+        bot[EDIT_TAG_SYMBOL](tag, [preserve(index), insert(text)]);
         return bot.raw[tag];
     }
 
@@ -3512,23 +3513,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Returns the resulting raw tag mask value.
      * @param bot The bot that should be edited.
      * @param tag The tag that should be edited.
-     * @param space The space that the tag exists in.
      * @param index The index that the text should be inserted at.
      * @param text The text that should be inserted.
+     * @param space The space that the tag exists in. If not specified then the tempLocal space will be used.
      */
     function insertTagMaskText(
         bot: RuntimeBot,
         tag: string,
-        space: BotSpace,
         index: number,
-        text: string
+        text: string,
+        space?: BotSpace
     ): string {
         const currentValue = convertToString(bot.masks[tag]);
         if (index < 0) {
             index += currentValue.length;
         }
         index = Math.max(0, Math.min(index, currentValue.length));
-        bot[EDIT_TAG_SYMBOL](tag, space, [preserve(index), insert(text)]);
+        bot[EDIT_TAG_MASK_SYMBOL](tag, [preserve(index), insert(text)], space);
         return bot.masks[tag];
     }
 
@@ -3553,7 +3554,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         index = Math.max(0, Math.min(index, currentValue.length));
         count = Math.min(count, currentValue.length - index);
         if (count > 0) {
-            bot[EDIT_TAG_SYMBOL](tag, null, [preserve(index), del(count)]);
+            bot[EDIT_TAG_SYMBOL](tag, [preserve(index), del(count)]);
         }
         return bot.raw[tag] || '';
     }

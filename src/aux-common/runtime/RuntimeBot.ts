@@ -29,6 +29,7 @@ import {
     CLEAR_TAG_MASKS_SYMBOL,
     CompiledBotListener,
     EDIT_TAG_SYMBOL,
+    EDIT_TAG_MASK_SYMBOL,
 } from '../bots';
 import { CompiledBot } from './CompiledBot';
 import { RuntimeStateVersion } from './RuntimeStateVersion';
@@ -274,6 +275,7 @@ export function createRuntimeBot(
         [SET_TAG_MASK_SYMBOL]: null,
         [CLEAR_TAG_MASKS_SYMBOL]: null,
         [EDIT_TAG_SYMBOL]: null,
+        [EDIT_TAG_MASK_SYMBOL]: null,
     };
 
     Object.defineProperty(script, CLEAR_CHANGES_SYMBOL, {
@@ -330,16 +332,38 @@ export function createRuntimeBot(
     });
 
     Object.defineProperty(script, EDIT_TAG_SYMBOL, {
-        value: (tag: string, space: string, ops: TagEditOp[]) => {
+        value: (tag: string, ops: TagEditOp[]) => {
             if (tag in constantTags) {
                 return;
             }
             const e = edit(manager.currentVersion.vector, ...ops);
-            if (hasValue(space)) {
-                script[SET_TAG_MASK_SYMBOL](tag, e, space);
-            } else {
-                script.tags[tag] = e;
+            script.tags[tag] = e;
+        },
+        configurable: false,
+        enumerable: false,
+        writable: false,
+    });
+
+    Object.defineProperty(script, EDIT_TAG_MASK_SYMBOL, {
+        value: (tag: string, ops: TagEditOp[], space?: string) => {
+            if (tag in constantTags) {
+                return;
             }
+            const e = edit(manager.currentVersion.vector, ...ops);
+            if (!hasValue(space)) {
+                const availableSpaces = getTagMaskSpaces(bot, tag);
+                if (availableSpaces.length <= 0) {
+                    space = DEFAULT_TAG_MASK_SPACE;
+                } else {
+                    for (let possibleSpace of TAG_MASK_SPACE_PRIORITIES) {
+                        if (availableSpaces.indexOf(possibleSpace) >= 0) {
+                            space = possibleSpace;
+                            break;
+                        }
+                    }
+                }
+            }
+            script[SET_TAG_MASK_SYMBOL](tag, e, space);
         },
         configurable: false,
         enumerable: false,
