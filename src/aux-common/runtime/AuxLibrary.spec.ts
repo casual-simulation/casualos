@@ -5364,6 +5364,108 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('deleteTagText()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+
+            bot2.tags.abc = 'hello';
+            bot2[CLEAR_CHANGES_SYMBOL]();
+        });
+
+        it('should do nothing if the tag doesnt exist', () => {
+            const result = library.api.deleteTagText(bot1, 'abc', 0, 2);
+
+            expect(result).toEqual('');
+            expect(bot1.tags.abc).toBeUndefined();
+            expect(bot1.raw.abc).toBeUndefined();
+            expect(bot1.changes).toEqual({});
+        });
+
+        it('should delete the text from the start of the given tag', () => {
+            const result = library.api.deleteTagText(bot2, 'abc', 0, 2);
+
+            expect(result).toEqual('llo');
+            expect(bot2.tags.abc).toEqual('llo');
+            expect(bot2.raw.abc).toEqual('llo');
+            expect(bot2.changes).toEqual({
+                abc: edit(
+                    testScriptBotInterface.currentVersion.vector,
+                    preserve(0),
+                    del(2)
+                ),
+            });
+        });
+
+        it('should insert the text into the middle of the given tag', () => {
+            const result = library.api.deleteTagText(bot2, 'abc', 2, 2);
+
+            expect(result).toEqual('heo');
+            expect(bot2.tags.abc).toEqual('heo');
+            expect(bot2.raw.abc).toEqual('heo');
+            expect(bot2.changes).toEqual({
+                abc: edit(
+                    testScriptBotInterface.currentVersion.vector,
+                    preserve(2),
+                    del(2)
+                ),
+            });
+        });
+
+        it('should delete the text from the end of the given tag', () => {
+            const result = library.api.deleteTagText(bot2, 'abc', 3, 2);
+
+            expect(result).toEqual('hel');
+            expect(bot2.tags.abc).toEqual('hel');
+            expect(bot2.raw.abc).toEqual('hel');
+            expect(bot2.changes).toEqual({
+                abc: edit(
+                    testScriptBotInterface.currentVersion.vector,
+                    preserve(3),
+                    del(2)
+                ),
+            });
+        });
+
+        it('should allow negative numbers to delete from the end of the string', () => {
+            const result = library.api.deleteTagText(bot2, 'abc', -2, 2);
+
+            expect(result).toEqual('hel');
+            expect(bot2.tags.abc).toEqual('hel');
+            expect(bot2.raw.abc).toEqual('hel');
+            expect(bot2.changes).toEqual({
+                abc: edit(
+                    testScriptBotInterface.currentVersion.vector,
+                    preserve(3),
+                    del(2)
+                ),
+            });
+        });
+
+        it('should do nothing when using negative numbers to delete from the end of the string when the current tag value is empty', () => {
+            const result = library.api.deleteTagText(bot1, 'abc', -1, 1);
+
+            expect(result).toEqual('');
+            expect(bot1.tags.abc).toBeUndefined();
+            expect(bot1.raw.abc).toBeUndefined();
+            expect(bot1.changes).toEqual({});
+        });
+
+        it('should clamp to the end of the string', () => {
+            const result = library.api.deleteTagText(bot2, 'abc', 7, 1);
+
+            expect(result).toEqual('hello');
+            expect(bot2.tags.abc).toEqual('hello');
+            expect(bot2.raw.abc).toEqual('hello');
+            expect(bot2.changes).toEqual({});
+        });
+    });
+
     describe('removeTags()', () => {
         let bot1: RuntimeBot;
         let bot2: RuntimeBot;

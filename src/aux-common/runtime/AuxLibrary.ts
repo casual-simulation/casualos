@@ -175,7 +175,7 @@ import {
     verify as realVerify,
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
-import { convertToString, insert, preserve } from '../aux-format-2';
+import { convertToString, del, insert, preserve } from '../aux-format-2';
 import { Euler, Vector3, Plane, Ray } from 'three';
 import { Runtime } from 'inspector';
 
@@ -375,6 +375,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             clearTagMasks,
             insertTagText,
             insertTagMaskText,
+            deleteTagText,
             removeTags,
             renameTag,
             applyMod,
@@ -3529,6 +3530,32 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         index = Math.max(0, Math.min(index, currentValue.length));
         bot[EDIT_TAG_SYMBOL](tag, space, [preserve(index), insert(text)]);
         return bot.masks[tag];
+    }
+
+    /**
+     * Deletes the specified number of characters from the given tag.
+     * Returns the resulting raw tag value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be deleted at.
+     * @param count The number of characters to delete.
+     */
+    function deleteTagText(
+        bot: RuntimeBot,
+        tag: string,
+        index: number,
+        count: number
+    ): string {
+        const currentValue = convertToString(bot.raw[tag]);
+        if (index < 0) {
+            index += currentValue.length;
+        }
+        index = Math.max(0, Math.min(index, currentValue.length));
+        count = Math.min(count, currentValue.length - index);
+        if (count > 0) {
+            bot[EDIT_TAG_SYMBOL](tag, null, [preserve(index), del(count)]);
+        }
+        return bot.raw[tag] || '';
     }
 
     /**
