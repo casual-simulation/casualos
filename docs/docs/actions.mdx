@@ -3224,7 +3224,7 @@ server.rpioSPIEnd();
 
 ### `server.serialConnect()`
 
-Establish the connection to the bluetooth serial device
+Establish the connection to the bluetooth serial device. Currently only one device is supported at a time.
 The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves on the 'open' event.
