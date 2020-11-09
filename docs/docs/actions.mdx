@@ -3820,12 +3820,12 @@ The **fourth parameter** is the string of text that should be inserted.
 #### Examples:
 
 1. Add some text to the end of a tag.
-```
+```typescript
 insertTagText(bot, "myTag", tags.myTag.length, "xyz");
 ```
 
 2. Add some text to the beginning of a tag.
-```
+```typescript
 insertTagText(bot, "myTag", 0, "abc");
 ```
 
@@ -3850,12 +3850,12 @@ The **fifth parameter** is the space that the tag mask is in. If omitted, then t
 #### Examples:
 
 1. Add some text to the end of a tag mask.
-```
+```typescript
 insertTagMaskText(bot, "myTag", tags.myTag.length, "xyz");
 ```
 
 2. Add some text to the beginning of a tag mask that is in the `local` space.
-```
+```typescript
 insertTagMaskText(bot, "myTag", 0, "abc", "local");
 ```
 
@@ -3876,12 +3876,12 @@ The **fourth parameter** is the number of characters that should be deleted.
 #### Examples:
 
 1. Delete the last two characters from a tag.
-```
+```typescript
 deleteTagText(bot, "myTag", tags.myTag.length - 2, 2);
 ```
 
 2. Delete the first 3 characters from a tag.
-```
+```typescript
 deleteTagText(bot, "myTag", 0, 3);
 ```
 
@@ -3906,12 +3906,12 @@ The **fifth parameter** is the space that the tag mask is in. If omitted, then t
 #### Examples:
 
 1. Delete the last two characters from a tag mask.
-```
+```typescript
 deleteTagText(bot, "myTag", tags.myTag.length - 2, 2);
 ```
 
 2. Delete the first 3 characters from a tag mask in the `local` space.
-```
+```typescript
 deleteTagText(bot, "myTag", 0, 3, "local");
 ```
 
