@@ -32,11 +32,21 @@ export class WebXRControllerMesh implements SubscriptionLike {
 
     controller: MotionController;
     inputSource: XRInputSource;
+
+    /**
+     * The group that contains all the 3D objects.
+     * Does not get updated but instead exists to act as proper container for the meshes.
+     */
     group: Group;
 
-    private _mesh: Group;
+    /**
+     * The container for the mesh and pointer objects.
+     * Gets updated with the actual pointer positions.
+     */
+    mesh: Group;
+
     private _scene: Group;
-    private _root: Object3D;
+    private _sceneRoot: Object3D;
     private _nodes: Map<string, Object3D>;
     private _pointer: PointerRay3D;
     private _dummy: Object3D;
@@ -45,13 +55,13 @@ export class WebXRControllerMesh implements SubscriptionLike {
         this.inputSource = inputSource;
         this._nodes = new Map();
         this.group = new Group();
-        this._mesh = new Group();
+        this.mesh = new Group();
         this._pointer = new PointerRay3D();
         this._dummy = new Object3D();
 
-        this.group.add(this._mesh);
+        this.group.add(this.mesh);
         this.group.add(this._dummy);
-        this._mesh.add(this._pointer);
+        this.mesh.add(this._pointer);
     }
 
     async init(controller: MotionController) {
@@ -61,9 +71,9 @@ export class WebXRControllerMesh implements SubscriptionLike {
         }
         const gltf = await pool.loadGLTF(this.controller.assetUrl);
         this._scene = gltf.scene;
-        this._root = this._scene;
+        this._sceneRoot = this._scene;
 
-        this._mesh.add(this._root);
+        this.mesh.add(this._sceneRoot);
         this._addTouchDots();
         this._findNodes();
     }
@@ -80,11 +90,11 @@ export class WebXRControllerMesh implements SubscriptionLike {
             inputSource.targetRaySpace,
             referenceSpace
         );
-        copyPose(gripPose, this._mesh);
+        copyPose(gripPose, this.mesh);
 
         this._updateMotionControllerModel(gripPose);
         this._updatePointer(rayPose);
-        this._mesh.updateMatrixWorld();
+        this.mesh.updateMatrixWorld();
     }
 
     /**
@@ -165,7 +175,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
             if (touchPointNodeName) {
                 this._nodes.set(
                     touchPointNodeName,
-                    this._root.getObjectByName(touchPointNodeName)
+                    this._sceneRoot.getObjectByName(touchPointNodeName)
                 );
             }
 
@@ -182,8 +192,12 @@ export class WebXRControllerMesh implements SubscriptionLike {
                     valueNodeProperty ===
                     Constants.VisualResponseProperty.TRANSFORM
                 ) {
-                    const minNode = this._root.getObjectByName(minNodeName);
-                    const maxNode = this._root.getObjectByName(maxNodeName);
+                    const minNode = this._sceneRoot.getObjectByName(
+                        minNodeName
+                    );
+                    const maxNode = this._sceneRoot.getObjectByName(
+                        maxNodeName
+                    );
 
                     // If the extents cannot be found, skip this animation
                     if (minNode) {
@@ -205,7 +219,9 @@ export class WebXRControllerMesh implements SubscriptionLike {
                 }
 
                 // If the target node cannot be found, skip this animation
-                const valueNode = this._root.getObjectByName(valueNodeName);
+                const valueNode = this._sceneRoot.getObjectByName(
+                    valueNodeName
+                );
                 if (valueNode) {
                     this._nodes.set(valueNodeName, valueNode);
                 } else {
@@ -224,7 +240,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
             // Find the touchpads
             if (component.type === Constants.ComponentType.TOUCHPAD) {
                 // Find the node to attach the touch dot.
-                const touchPointRoot = this._root.getObjectByName(
+                const touchPointRoot = this._sceneRoot.getObjectByName(
                     component.touchPointNodeName
                 );
                 if (!touchPointRoot) {

@@ -8,8 +8,9 @@ import {
 import {
     CausalRepoClient,
     CausalRepoCommit,
+    CurrentVersion,
 } from '@casual-simulation/causal-trees/core2';
-import { Observable, Subscription, Subject } from 'rxjs';
+import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import {
     BotAction,
@@ -23,6 +24,8 @@ import {
     asyncResult,
     hasValue,
     asyncError,
+    StateUpdatedEvent,
+    stateUpdatedEvent,
 } from '../bots';
 import {
     PartitionConfig,
@@ -58,6 +61,11 @@ export class RemoteCausalRepoHistoryPartitionImpl
     protected _onBotsAdded = new Subject<Bot[]>();
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
+    protected _onStateUpdated = new Subject<StateUpdatedEvent>();
+    private _onVersionUpdated = new BehaviorSubject<CurrentVersion>({
+        currentSite: null,
+        vector: {},
+    });
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -90,6 +98,16 @@ export class RemoteCausalRepoHistoryPartitionImpl
 
     get onBotsUpdated(): Observable<UpdatedBot[]> {
         return this._onBotsUpdated;
+    }
+
+    get onStateUpdated(): Observable<StateUpdatedEvent> {
+        return this._onStateUpdated.pipe(
+            startWith(stateUpdatedEvent(this.state))
+        );
+    }
+
+    get onVersionUpdated(): Observable<CurrentVersion> {
+        return this._onVersionUpdated;
     }
 
     get onError(): Observable<any> {
@@ -165,7 +183,7 @@ export class RemoteCausalRepoHistoryPartitionImpl
                                 ]);
                             }
                         },
-                        err => {
+                        (err) => {
                             if (hasValue(event.taskId)) {
                                 this._onEvents.next([
                                     asyncError(event.taskId, err),
@@ -185,7 +203,7 @@ export class RemoteCausalRepoHistoryPartitionImpl
 
     connect(): void {
         this._sub.add(
-            this._client.connection.connectionState.subscribe(state => {
+            this._client.connection.connectionState.subscribe((state) => {
                 const connected = state.connected;
                 this._onStatusUpdated.next({
                     type: 'connection',
@@ -211,7 +229,7 @@ export class RemoteCausalRepoHistoryPartitionImpl
         );
 
         this._sub.add(
-            this._client.watchCommits(this._branch).subscribe(event => {
+            this._client.watchCommits(this._branch).subscribe((event) => {
                 if (!this._synced) {
                     this._updateSynced(true);
                 }
@@ -230,24 +248,34 @@ export class RemoteCausalRepoHistoryPartitionImpl
     }
 
     private _addCommits(commits: CausalRepoCommit[]) {
-        const newBots = commits.map(c => this._makeBot(c));
+        const newBots = commits.map((c) => this._makeBot(c));
 
         let nextState = {
             ...this._state,
         };
+        let update = {} as BotsState;
 
         this._commits.push(...reverse(commits));
         for (let bot of newBots) {
             bot.tags.historyY = -this._commits.findIndex(
-                c => c.hash === bot.tags.markHash
+                (c) => c.hash === bot.tags.markHash
             );
             nextState[bot.id] = bot;
+            update[bot.id] = bot;
         }
 
         this._state = nextState;
 
         if (newBots.length > 0) {
             this._onBotsAdded.next(newBots);
+        }
+        let event = stateUpdatedEvent(update);
+        if (
+            event.addedBots.length > 0 ||
+            event.removedBots.length > 0 ||
+            event.updatedBots.length > 0
+        ) {
+            this._onStateUpdated.next(event);
         }
     }
 

@@ -41,6 +41,8 @@ import {
     DEFAULT_MEET_PORTAL_ANCHOR_POINT,
     BotSignatures,
     DEFAULT_TAG_PORTAL_ANCHOR_POINT,
+    TAG_MASK_SPACE_PRIORITIES,
+    RuntimeBot,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -66,6 +68,7 @@ import { merge, shortUuid } from '../utils';
 import differenceBy from 'lodash/differenceBy';
 import maxBy from 'lodash/maxBy';
 import { BotObjectsContext } from './BotObjectsContext';
+import { intersectionBy, unionBy } from 'lodash';
 
 export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
 
@@ -177,7 +180,7 @@ export function filterBotsBySelection<TBot extends Bot>(
     bots: TBot[],
     selectionId: string
 ) {
-    return bots.filter(f => {
+    return bots.filter((f) => {
         if (f.id === selectionId) {
             return true;
         }
@@ -233,61 +236,66 @@ export function isBotFocusable(calc: BotCalculationContext, bot: Bot): boolean {
  * in this list.
  * @param extraTags The list of tags that should not be removed from the
  * output list.
+ * @param allowedTags The list of tags that should be allowed in the output list.
  */
 export function botTags(
     bots: Bot[],
     currentTags: string[],
     extraTags: string[],
-    tagWhitelist: (string | boolean)[][] = []
-) {
-    const botTags = flatMap(bots, f => keys(f.tags));
-    const tagsToKeep = union(botTags, extraTags);
-    const allTags = union(currentTags, tagsToKeep);
-
-    const onlyTagsToKeep = intersection(allTags, tagsToKeep);
-
-    let allInactive = true;
-
-    // if there is a blacklist index and the  first index [all] is not selected
-    if (tagWhitelist != undefined && tagWhitelist.length > 0) {
-        let filteredTags: string[] = [];
-
-        for (let i = tagWhitelist.length - 1; i >= 0; i--) {
-            if (tagWhitelist[i][1]) {
-                allInactive = false;
-            }
+    allowedTags: string[] = null
+): { tag: string; space: string }[] {
+    const botTags = flatMap(bots, (f) => keys(f.tags)).map(
+        (t) => ({ tag: t, space: null as string } as const)
+    );
+    const botMasks = flatMap(bots, (b) => {
+        if (!b.masks) {
+            return [];
         }
-
-        if (!allInactive) {
-            for (let i = tagWhitelist.length - 1; i >= 0; i--) {
-                if (!tagWhitelist[i][1]) {
-                    for (let j = 2; j < tagWhitelist[i].length; j++) {
-                        for (let k = onlyTagsToKeep.length - 1; k >= 0; k--) {
-                            if (
-                                onlyTagsToKeep[k] === <string>tagWhitelist[i][j]
-                            ) {
-                                onlyTagsToKeep.splice(k, 1);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            const initialTags = onlyTagsToKeep.filter(t => !isHiddenTag(t));
-            return initialTags;
+        let tags = [] as { tag: string; space: string }[];
+        for (let space in b.masks) {
+            let spaceTags = keys(b.masks[space]).map(
+                (k) =>
+                    ({
+                        tag: k,
+                        space: space,
+                    } as const)
+            );
+            tags.push(...spaceTags);
         }
+        return tags;
+    });
+    const allBotTags = unionBy(botTags, botMasks, tagComparer);
 
-        return onlyTagsToKeep;
-    } else {
-        return onlyTagsToKeep;
+    const extraTagPairs = extraTags.map(
+        (t) => ({ tag: t, space: null as string } as const)
+    );
+    const currentTagPairs = currentTags.map(
+        (t) => ({ tag: t, space: null as string } as const)
+    );
+
+    const tagsToKeep = unionBy(allBotTags, extraTagPairs, tagComparer);
+    const allTags = unionBy(currentTagPairs, tagsToKeep, tagComparer);
+
+    const onlyTagsToKeep = intersectionBy(allTags, tagsToKeep, tagComparer);
+
+    if (allowedTags) {
+        const allowedTagsSet = new Set(allowedTags);
+        return onlyTagsToKeep.filter((t) => allowedTagsSet.has(t.tag));
+    }
+
+    return onlyTagsToKeep;
+
+    function tagComparer(tagPair: { tag: string; space: string }) {
+        return `${tagPair.tag}.${!tagPair.space ? 'null' : tagPair.space}`;
     }
 }
 
 export function getAllBotTags(bots: Bot[], includeHidden: boolean) {
-    const botTags = flatMap(bots, f => keys(f.tags));
+    const botTags = flatMap(bots, (f) => keys(f.tags));
 
-    const nonHiddenTags = botTags.filter(t => includeHidden || !isHiddenTag(t));
+    const nonHiddenTags = botTags.filter(
+        (t) => includeHidden || !isHiddenTag(t)
+    );
 
     return nonHiddenTags;
 }
@@ -303,7 +311,7 @@ export function botsFromShortIds(
     shortIds: string[]
 ): Bot[] {
     var matches: Bot[] = [];
-    shortIds.forEach(shortId => {
+    shortIds.forEach((shortId) => {
         var bot = this.botFromShortId(bots, shortId);
         if (bot) matches.push(bot);
     });
@@ -360,6 +368,26 @@ export function isHiddenTag(tag: string): boolean {
     return /^_/.test(tag) || /(\w+)\._/.test(tag);
 }
 
+/**
+ * Determines if the given bot is a runtime bot.
+ * @param bot The bot to check.
+ */
+export function isRuntimeBot(bot: any): bot is RuntimeBot {
+    if (!!bot && typeof bot === 'object') {
+        return (
+            !!bot.id &&
+            typeof bot.tags === 'object' &&
+            typeof bot.raw === 'object' &&
+            typeof bot.masks === 'object' &&
+            typeof bot.tags.toJSON === 'function' &&
+            typeof bot.listeners === 'object' &&
+            typeof bot.changes === 'object' &&
+            typeof bot.maskChanges === 'object'
+        );
+    }
+    return false;
+}
+
 export function isPrecalculated(
     bot: Object | PrecalculatedBot
 ): bot is PrecalculatedBot {
@@ -412,6 +440,8 @@ function calculateBotTagValue(
         return getBotSpace(object);
     } else if (isPrecalculated(object)) {
         return object.values[tag];
+    } else if (isRuntimeBot(object)) {
+        return object.tags[tag];
     } else {
         return calculateValue(object, tag, object.tags[tag]);
     }
@@ -462,7 +492,7 @@ export function parseScript(value: unknown): string | null {
 export function containsFormula(value: string): boolean {
     return (
         isFormula(value) ||
-        (isArray(value) && some(parseArray(value), v => isFormula(v)))
+        (isArray(value) && some(parseArray(value), (v) => isFormula(v)))
     );
 }
 
@@ -485,7 +515,7 @@ export function parseArray(value: string): string[] {
     var array: string[] = value.slice(1, value.length - 1).split(',');
     if (array && array.length > 0 && array[0].length > 0) {
         // trim all entries.
-        return array.map(s => {
+        return array.map((s) => {
             return s.trim();
         });
     } else {
@@ -566,7 +596,7 @@ export function doBotsAppearEqual(
     }
 
     const tags = union(keys(first.tags), keys(second.tags));
-    const usableTags = tags.filter(t => !isTagWellKnown(t));
+    const usableTags = tags.filter((t) => !isTagWellKnown(t));
 
     let allEqual = true;
     for (let t of usableTags) {
@@ -690,8 +720,10 @@ export function botsInDimension(
     calc: BotCalculationContext,
     dimension: string
 ): Bot[] {
-    const bots = calc.objects.filter(f => isBotInDimension(calc, f, dimension));
-    return sortBy(bots, f => botDimensionSortOrder(calc, f, dimension));
+    const bots = calc.objects.filter((f) =>
+        isBotInDimension(calc, f, dimension)
+    );
+    return sortBy(bots, (f) => botDimensionSortOrder(calc, f, dimension));
 }
 
 /**
@@ -818,8 +850,16 @@ export function removeBotFromMenu(
  * @param bot
  */
 export function tagsOnBot(bot: PartialBot): string[] {
-    let tags = keys(bot.tags);
-    return tags;
+    let tags = new Set(keys(bot.tags));
+    if (bot.masks) {
+        for (let space in bot.masks) {
+            let k = keys(bot.masks[space]);
+            for (let key of k) {
+                tags.add(key);
+            }
+        }
+    }
+    return [...tags.values()];
 }
 
 /**
@@ -961,7 +1001,7 @@ export function calculateStateDiff(
 
     const ids = union(keys(prev), keys(current));
 
-    ids.forEach(id => {
+    ids.forEach((id) => {
         const prevVal = prev[id];
         const currVal = current[id];
 
@@ -1148,7 +1188,11 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         shape === 'mesh' ||
         shape === 'iframe' ||
         shape === 'nothing' ||
-        shape === 'frustum'
+        shape === 'frustum' ||
+        shape === 'helix' ||
+        shape === 'egg' ||
+        shape === 'hex' ||
+        shape === 'cursor'
     ) {
         return shape;
     }
@@ -1286,31 +1330,29 @@ export function getBotAnchorPoint(
     bot: Bot
 ): BotAnchorPoint {
     const mode = <BotAnchorPoint>calculateBotValue(calc, bot, 'auxAnchorPoint');
+    return calculateAnchorPoint(mode);
+}
 
-    if (Array.isArray(mode)) {
-        if (mode.length >= 3 && mode.every(v => typeof v === 'number')) {
-            return mode;
+/**
+ * Ensures that the given bot anchor point value is valid by converting the given value to a valid anchor point value.
+ * @param value The value.
+ */
+export function calculateAnchorPoint(value: BotAnchorPoint) {
+    if (Array.isArray(value)) {
+        if (value.length >= 3 && value.every((v) => typeof v === 'number')) {
+            return value;
         }
-    } else if (possibleAnchorPoints.has(mode)) {
-        return mode;
+    } else if (possibleAnchorPoints.has(value)) {
+        return value;
     }
     return DEFAULT_ANCHOR_POINT;
 }
 
 /**
- * Gets the anchor point offset for the bot in AUX coordinates.
- * @param calc The calculation context.
- * @param bot The bot.
+ * Calculates the 3D offset of the anchor point.
+ * @param point The anchor point.
  */
-export function getAnchorPointOffset(
-    calc: BotCalculationContext,
-    bot: Bot
-): {
-    x: number;
-    y: number;
-    z: number;
-} {
-    const point = getBotAnchorPoint(calc, bot);
+export function calculateAnchorPointOffset(point: BotAnchorPoint) {
     if (typeof point === 'string') {
         let offset = {
             x: 0,
@@ -1346,6 +1388,23 @@ export function getAnchorPointOffset(
     }
 }
 
+/**
+ * Gets the anchor point offset for the bot in AUX coordinates.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getAnchorPointOffset(
+    calc: BotCalculationContext,
+    bot: Bot
+): {
+    x: number;
+    y: number;
+    z: number;
+} {
+    const point = getBotAnchorPoint(calc, bot);
+    return calculateAnchorPointOffset(point);
+}
+
 const possibleMeetPortalAnchorPoints = new Set([
     'fullscreen',
     'top',
@@ -1372,7 +1431,7 @@ export function getBotMeetPortalAnchorPoint(
     );
 
     if (Array.isArray(mode)) {
-        if (mode.every(v => ['string', 'number'].indexOf(typeof v) >= 0)) {
+        if (mode.every((v) => ['string', 'number'].indexOf(typeof v) >= 0)) {
             let result = mode.slice(0, 4);
             while (result.length < 4) {
                 result.push(0);
@@ -1399,7 +1458,7 @@ export function getBotTagPortalAnchorPoint(
     );
 
     if (Array.isArray(mode)) {
-        if (mode.every(v => ['string', 'number'].indexOf(typeof v) >= 0)) {
+        if (mode.every((v) => ['string', 'number'].indexOf(typeof v) >= 0)) {
             let result = mode.slice(0, 4);
             while (result.length < 4) {
                 result.push(0);
@@ -1732,6 +1791,18 @@ export function getBotDragMode(
 }
 
 /**
+ * Gets the ID of the bot that the given bot should be transformed by.
+ * @param calc The bot calculation context.
+ * @param bot The bot to check.
+ */
+export function getBotTransformer(
+    calc: BotCalculationContext,
+    bot: Bot
+): string {
+    return calculateStringTagValue(calc, bot, 'transformer', null);
+}
+
+/**
  * Gets whether the given bot is stackable.
  * @param calc The calculation context.
  * @param bot The bot to check.
@@ -1905,7 +1976,7 @@ export function getBuilderDimensionGrid(
 ): { [key: string]: number } {
     const tags = tagsOnBot(bot);
     const gridTags = tags.filter(
-        t =>
+        (t) =>
             t.indexOf('auxDimensionConfig.surface.grid.') === 0 &&
             t.indexOf(':') > 0
     );
@@ -2001,12 +2072,10 @@ export function objectsAtDimensionGridPosition(
                 [true, position.x, position.y],
                 [undefined, 0, 0]
             );
-            return <Bot[]>(
-                sortBy(
-                    botsAtPosition,
-                    o => getBotIndex(calc, o, dimension),
-                    o => o.id
-                )
+            return <Bot[]>sortBy(
+                botsAtPosition,
+                (o) => getBotIndex(calc, o, dimension),
+                (o) => o.id
             );
         },
         dimension,
@@ -2032,7 +2101,7 @@ export function calculateBotDragStackPosition(
     const objs = differenceBy(
         objectsAtDimensionGridPosition(calc, dimension, gridPosition),
         bots,
-        f => f.id
+        (f) => f.id
     );
 
     const canMerge = canMergeBots(calc, objs, bots);
@@ -2084,9 +2153,9 @@ export function nextAvailableObjectIndex(
     bots: (Bot | BotTags)[],
     objs: Bot[]
 ): number {
-    const except = differenceBy(objs, bots, f => f.id);
+    const except = differenceBy(objs, bots, (f) => f.id);
 
-    const indexes = except.map(o => ({
+    const indexes = except.map((o) => ({
         object: o,
         index: getBotIndex(calc, o, dimension),
     }));
@@ -2094,7 +2163,7 @@ export function nextAvailableObjectIndex(
     // TODO: Improve to handle other scenarios like:
     // - Reordering objects
     // - Filling in gaps that can be made by moving bots from the center of the list
-    const maxIndex = maxBy(indexes, i => i.index);
+    const maxIndex = maxBy(indexes, (i) => i.index);
     let nextIndex = 0;
     if (maxIndex) {
         nextIndex = maxIndex.index + 1;
@@ -2109,7 +2178,7 @@ export function nextAvailableObjectIndex(
  * @param workspaceId The ID of the workspace that the objects need to be on,
  */
 export function objectsAtWorkspace(objects: Object[], workspaceId: string) {
-    return objects.filter(o => {
+    return objects.filter((o) => {
         return o.tags._workspace === workspaceId;
     });
 }
@@ -2132,7 +2201,7 @@ export function duplicateBot(
     let copy = cloneDeep(bot);
     const tags = tagsOnBot(copy);
     const tagsToRemove = filterWellKnownAndDimensionTags(calc, tags);
-    tagsToRemove.forEach(t => {
+    tagsToRemove.forEach((t) => {
         delete copy.tags[t];
     });
 
@@ -2152,7 +2221,7 @@ export function filterWellKnownAndDimensionTags(
     tags: string[]
 ) {
     const contextsToRemove = getDimensions(calc);
-    const tagsToRemove = tags.filter(t =>
+    const tagsToRemove = tags.filter((t) =>
         isWellKnownOrDimension(t, contextsToRemove)
     );
     return tagsToRemove;
@@ -2163,7 +2232,7 @@ export function filterWellKnownAndDimensionTags(
  * @param calc The bot calculation context.
  */
 export function getDimensions(calc: BotCalculationContext) {
-    return union(...calc.objects.map(o => getBotConfigDimensions(calc, o)));
+    return union(...calc.objects.map((o) => getBotConfigDimensions(calc, o)));
 }
 
 /**
@@ -2172,7 +2241,7 @@ export function getDimensions(calc: BotCalculationContext) {
  * @param dimensions The dimensions to check the tag against.
  */
 export function isWellKnownOrDimension(tag: string, dimensions: string[]): any {
-    return isTagWellKnown(tag) || dimensions.some(c => tag.indexOf(c) === 0);
+    return isTagWellKnown(tag) || dimensions.some((c) => tag.indexOf(c) === 0);
 }
 
 /**
@@ -2448,7 +2517,7 @@ export function getBotChannel(
  * @param id The ID to search for.
  */
 export function getChannelBotById(calc: BotCalculationContext, id: string) {
-    const bots = calc.objects.filter(o => {
+    const bots = calc.objects.filter((o) => {
         return (
             isBotInDimension(calc, o, 'aux.channels') &&
             calculateBotValue(calc, o, 'story') === id
@@ -2545,7 +2614,7 @@ export function isUserActive(calc: BotCalculationContext, bot: Bot) {
 function _parseFilterValue(value: string): any {
     if (isArray(value)) {
         const split = parseArray(value);
-        return split.map(v => _parseFilterValue(v));
+        return split.map((v) => _parseFilterValue(v));
     } else if (isNumber(value)) {
         return parseFloat(value);
     } else if (value === 'true') {
@@ -2566,7 +2635,7 @@ export function formatValue(value: any): string {
         if (!value) {
             return null;
         } else if (Array.isArray(value)) {
-            return `[${value.map(v => formatValue(v)).join(',')}]`;
+            return `[${value.map((v) => formatValue(v)).join(',')}]`;
         } else if (value instanceof Error) {
             return value.toString();
         } else {
@@ -2596,7 +2665,7 @@ export function calculateValue(
 ): any {
     if (isArray(formula)) {
         const split = parseArray(formula);
-        return split.map(s => calculateValue(object, tag, s.trim()));
+        return split.map((s) => calculateValue(object, tag, s.trim()));
     } else if (isNumber(formula)) {
         return parseFloat(formula);
     } else if (formula === 'true') {
@@ -2624,4 +2693,163 @@ export function getOriginalObject(obj: any): any {
         return obj[ORIGINAL_OBJECT];
     }
     return obj;
+}
+
+export function getMaskSpaces(bot: Bot): string[] {
+    if (!bot.masks) {
+        return [];
+    }
+    return Object.keys(bot.masks);
+}
+
+/**
+ * Gets the list of spaces that the given tag mask exists in.
+ * @param bot The bot.
+ * @param tag The tag.
+ */
+export function getTagMaskSpaces(bot: Bot, tag: string): string[] {
+    if (!bot.masks) {
+        return [];
+    }
+    let spaces = [] as string[];
+    for (let space in bot.masks) {
+        if (!bot.masks[space]) {
+            continue;
+        }
+        if (tag in bot.masks[space]) {
+            spaces.push(space);
+        }
+    }
+
+    return spaces;
+}
+
+/**
+ * Gets the list of tags that are tag masks on the given bot.
+ * @param bot The bot.
+ */
+export function tagMasksOnBot(bot: Bot): string[] {
+    if (!bot.masks) {
+        return [];
+    }
+    let tags = new Set<string>();
+    for (let space in bot.masks) {
+        for (let tag in bot.masks[space]) {
+            tags.add(tag);
+        }
+    }
+
+    return [...tags.values()];
+}
+
+/**
+ * Gets the value of the given tag mask in the given space.
+ * @param bot The bot.
+ * @param space The space that the tag mask is in.
+ * @param tag The tag.
+ */
+export function getTagMask(bot: Bot, space: string, tag: string): any {
+    if (!bot.masks) {
+        return undefined;
+    }
+    if (!bot.masks[space]) {
+        return undefined;
+    }
+    return bot.masks[space][tag];
+}
+
+/**
+ * Determines whether the given bot has a tag or mask for the given tag.
+ * @param bot The bot.
+ * @param tag The tag.
+ */
+export function hasTagOrMask(bot: Bot, tag: string): boolean {
+    let hasTag = hasValue(bot.tags[tag]);
+    if (hasTag) {
+        return true;
+    }
+    if (bot.masks) {
+        for (let space in bot.masks) {
+            if (hasValue(bot.masks[space][tag])) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+/**
+ * Determines if the given bot has a mask for the given tag.
+ * @param bot The bot.
+ * @param tag The tag.
+ */
+export function hasMaskForTag(bot: Bot, tag: string): boolean {
+    for (let space in bot.masks) {
+        if (hasValue(bot.masks[space][tag])) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Gets the tag value for the given space.
+ * If the space is null, then the tag value is retrieved from the tags.
+ * If the space is specified, then the tag value is retrieved from the corresponding tag masks.
+ * @param bot The bot.
+ * @param tag The tag.
+ * @param space The space.
+ */
+export function getTagValueForSpace(bot: Bot, tag: string, space: string): any {
+    if (hasValue(space)) {
+        return bot.masks?.[space]?.[tag];
+    } else {
+        return bot.tags[tag];
+    }
+}
+
+/**
+ * Gets the first space that the given tag exists in.
+ * If the tag has a value in a tag mask, then the space that the mask exists in is returned.
+ * If the tag does not have a value in a tag mask, then null is returned.
+ * @param bot The bot.
+ * @param tag The tag.
+ */
+export function getSpaceForTag(bot: Bot, tag: string): string {
+    for (let space of TAG_MASK_SPACE_PRIORITIES) {
+        if (hasValue(bot.masks?.[space]?.[tag])) {
+            return space;
+        }
+    }
+    return null;
+}
+
+/**
+ * Calculates the bot update that is needed to set the given tag in the given space to the given value.
+ * If the given space is null, then the tag will be set in the bot'ss tags.
+ * If the given space has a value, then the tag will be set as a tag mask in the given space.
+ * @param tag The tag to change.
+ * @param value The value to set.
+ * @param space The space.
+ */
+export function getUpdateForTagAndSpace(
+    tag: string,
+    value: any,
+    space: string
+): Partial<Bot> {
+    if (hasValue(space)) {
+        return {
+            masks: {
+                [space]: {
+                    [tag]: value,
+                },
+            },
+        };
+    } else {
+        return {
+            tags: {
+                [tag]: value,
+            },
+        };
+    }
 }

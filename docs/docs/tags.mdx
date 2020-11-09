@@ -527,8 +527,22 @@ The shape that the bot should be displayed as.
   <PossibleValueCode value='frustum'>
     A camera frustum mesh.
   </PossibleValueCode>
+  <PossibleValueCode value='helix'>
+    A double helix mesh (like DNA).
+  </PossibleValueCode>
+  <PossibleValueCode value='egg'>
+    A egg mesh.
+  </PossibleValueCode>
+  <PossibleValueCode value='hex'>
+    A hexagon mesh.
+  </PossibleValueCode>
   <PossibleValueCode id="iframe-form" value='iframe'>
     A webpage loaded into a 3D iframe. See <TagLink tag="formSubtype"/> for additional options.
+  </PossibleValueCode>
+  <PossibleValueCode value='cursor'>
+    The bot will appear as a cursor in the multi-line editor.
+    You also need to place the bot in the same dimension that the tag portal uses
+    for the cursor to appear.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -564,6 +578,9 @@ When <TagLink tag='form'/> is set to `mesh` and <TagLink tag='formSubtype'/> is 
 When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `html`, the address should be the HTML that should be displayed.
 
 When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
+
+When the bot is in the menu portal, this is the URL of the image that should be shown on the menu item.
+If the given value is not a URL, then the specified [Material Icon](https://material.io/resources/icons/?style=baseline) will be shown.
 
 ### `formAnimation`
 
@@ -749,6 +766,50 @@ When the minimum LOD is exited the <TagLink tag='@onMinLODExit'/> listener is tr
   </PossibleValue>
 </PossibleValuesTable>
 
+### `transformer`
+
+The ID of the bot that should transform this bot in the page and inventory portals.
+When the transformer bot and this bot are in the same dimension, this bot will inherit the position and rotation of the transformer bot.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The bot is positioned on the grid. (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The bot is positioned on the bot with the given ID.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `menuItemStyle`
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the menu item.
+Only applies to bots that are being shown in the menu portal.
+
+This is useful for positioning and styling the item in ways that are not possible using normal tags.
+Overridden by conflicting properties like <TagLink tag='color'/> or <TagLink tag='labelColor'/>.
+
+When setting this tag via the sheet, it is useful to utilize formulas to ensure that the resulting value is considered an object.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the menu item.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Round the top corners of the menu bot.
+```typescript
+=({
+    'border-radius': '8px 8px 0 0',
+    'margin-top': '8px'
+})
+```
+
 ## Dimension Tags
 
 ### `[dimension]`
@@ -849,6 +910,28 @@ The Z (yaw) rotation in radians that the bot should be rotated by.
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
     Specifies the Z rotation of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]Start`
+
+The selection start index for cursor bots that are in the multi-line editor (tag portal/sheet portal).
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the index at which the cursor selection starts. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]End`
+
+The selection end index for cursor bots that are in the multi-line editor (tag portal/sheet portal).
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the index at which the cursor selection ends. (Default is 0)
   </PossibleValue>
 </PossibleValuesTable>
 
@@ -1349,6 +1432,66 @@ The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the
   </PossibleValue>
 </PossibleValuesTable>
 
+### `sheetPortalShowButton`
+
+Whether the sheet portal should show a button that allows a custom action.
+When set to true, the button will be displayed in the lower right hand corner of the sheet portal.
+
+Clicking the button will trigger a <TagLink tag='@onClick'/> on the sheet portal config bot.
+If there is no `@onClick`, then the sheet portal will be closed.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The button is shown. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+      No button is shown.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `sheetPortalButtonIcon`
+
+The [Material Icon](https://material.io/resources/icons/?style=baseline) that should be shown on the sheet portal button.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='web_asset'>
+    The Web Asset icon. (Default)
+  </PossibleValue>
+  <PossibleValue value='Any Material Icon'>
+    See <a href='https://material.io/resources/icons/?style=baseline'>https://material.io/resources/icons/?style=baseline</a>.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `sheetPortalButtonHint`
+
+The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the sheet portal button.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='Page Portal'>
+    "Page Portal" (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The text that should be displayed as a hint when the user hovers their mouse over the button.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `sheetPortalAllowedTags`
+
+The list of tags that should be allowed in the sheet portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    All tags are allowed. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Array'>
+    Only the specified tags can be shown in the sheet portal.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ## History Tags
 
 History tags are tags that are automatically applied to bots in the `history` space.
@@ -1676,6 +1819,20 @@ Supports the following tags:
 - <TagLink tag='meetPortalStyle'/>
 
 Only available on the player bot.
+
+### `pagePixelWidth`
+
+The width of the page and inventory portals in pixels.
+
+Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
+Additionally, a device with a larger width than height does not necessarily mean that it is in landscape mode.
+
+### `pagePixelHeight`
+
+The height of the page and inventory portals in pixels.
+
+Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
+Additionally, a device with a larger height than width does not necessarily mean that it is in portrait mode.
 
 ### `pageCameraPositionX`
 
@@ -2081,15 +2238,19 @@ The URL that is currently specified in the tab.
   </PossibleValue>
 </PossibleValuesTable>
 
-## Hidden Tags
+### `pageTitle`
 
-Hidden tags are tags that are hidden in the sheet by default.
+The title that should be displayed on the web browser tab.
 
-<Alert type='info'>
-  You can make your own hidden tags by adding a `_` (underscore) to the start of the tag.
-</Alert>
+#### Possible values are:
 
-### `_editingBot`
+<PossibleValuesTable>
+  <PossibleValue value='Any String'>
+    The title that should be displayed.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `editingBot`
 
 <Badges>
   <UserBotBadge/>
@@ -2097,3 +2258,48 @@ Hidden tags are tags that are hidden in the sheet by default.
 
 The ID of the bot that the user is currently editing.
 Only available on the player bot.
+
+### `editingTag`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The tag that the user is currently editing.
+Only available on the player bot.
+
+### `cursorStartIndex`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The selection start index of the player's cursor in the current <TagLink tag='editingTag'/>.
+
+Note that when <TagLink tag='cursorStartIndex'/> is larger than <TagLink tag='cursorEndIndex'/> it means 
+that the player has selected text from the right to the left.
+This is important because text will always be inserted at <TagLink tag='cursorEndIndex'/>.
+
+Only available on the player bot.
+
+### `cursorEndIndex`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The selection end index of the player's cursor in the current <TagLink tag='editingTag'/>.
+
+Note that when <TagLink tag='cursorEndIndex'/> is smaller than <TagLink tag='cursorStartIndex'/> it means 
+that the player has selected text from the right to the left.
+This is important because text will always be inserted at <TagLink tag='cursorEndIndex'/>.
+
+Only available on the player bot.
+
+## Hidden Tags
+
+Hidden tags are tags that are hidden in the sheet by default.
+
+<Alert type='info'>
+  You can make your own hidden tags by adding a `_` (underscore) to the start of the tag.
+</Alert>

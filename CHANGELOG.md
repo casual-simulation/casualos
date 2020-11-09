@@ -1,5 +1,182 @@
 # CasualOS Changelog
 
+## V1.3.0
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added multi-user text editing.
+    -   Work on shared bots when editing a tag value with the multi-line editor.
+-   Added the cursor bot form.
+    -   Used to add a cursor indicator to the multi-line editor.
+    -   Works by setting the `form` tag to "cursor" and placing the bot in the corresponding tag portal dimension.
+        -   For example, to put a cursor in the multi-line editor for the `test` tag on a bot you would set `{targetBot.id}.test` to true.
+    -   Supported tags are:
+        -   `color` - Specifies the color of the cursor.
+        -   `label` - Specifies a label that should appear on the cursor when the mouse is hovering over it.
+        -   `labelColor` - Specifies the color of the text in the cursor label.
+        -   `{dimension}Start` - Specifies the index at which the cursor selection starts (Mirrors `cursorStartIndex` from the player bot).
+        -   `{dimension}End` - Specifies the index at which the cursor selection ends (Mirrors `cursorEndIndex` from the player bot).
+-   Added the `pageTitle`, `cursorStartIndex`, and `cursorEndIndex` tags to the player bot.
+    -   `pageTitle` is used to set the title of the current browser tab.
+    -   `cursorStartIndex` contains the starting index of the player's text selection inside the multi-line editor.
+    -   `cursorEndIndex` contains the ending index of the player's text selection inside the multi-line editor.
+    -   Note that when `cursorStartIndex` is larger than `cursorEndIndex` it means that the player has selected text from the right to the left. This is important because text will always be inserted at `cursorEndIndex`.
+
+## V1.2.21
+
+#### Date: 11/5/2020
+
+### :rocket: Improvements
+
+-   Updated the MongoDB driver to v3.6.2 and added the `MONGO_USE_UNIFIED_TOPOLOGY` environment variable to control whether the driver uses the new unified topology layer.
+
+## V1.2.20
+
+#### Date: 10/27/2020
+
+### :rocket: Improvements
+
+-   Added support for `@onPointerEnter`, `@onPointerExit`, `@onAnyBotPointerEnter` and `@onAnyBotPointerExit` for bots in the menu portal.
+
+### :bug: Bug Fixes
+
+-   Fixed the multiline code editor to not clip tooltips and the autocomplete box.
+-   Fixed the menu portal to not break on Hololens (Servo-based browsers) when a progress bar is placed on a menu item.
+
+## V1.2.19
+
+#### Date: 10/22/2020
+
+### :rocket: Improvements
+
+-   Added the `egg` form for bots.
+    -   Displays the bot as an egg like how ab-1 appears as an egg before being activated.
+-   Added the `hex` form for bots.
+    -   Displays the bot as a hexagon.
+-   Added the `pagePixelWidth` and `pagePixelHeight` tags to the player bot.
+    -   These indicate the size of the image rendered to the page portal in pixels.
+
+### :bug: Bug Fixes
+
+-   Fixed Draco compression support.
+
+## V1.2.18
+
+#### Date: 10/20/2020
+
+### :bug: Bug Fixes
+
+-   Fixed the code editor.
+
+## V1.2.17
+
+#### Date: 10/20/2020
+
+### :rocket: Improvements
+
+-   Improved bots in the menu portal to support additional tags.
+    -   Added the ability to change the height of menu items by using `scale` and `scaleY`.
+    -   Added the ability to set an icon for a menu item by using the `formAddress` tag.
+    -   Added the ability to set arbitrary CSS styles on a menu bot by using the `menuItemStyle` tag.
+        -   This lets you use margins and borders to indicate grouping.
+    -   Added the ability to show a pie-chart progress bar on a menu item by using the `progressBar` tags.
+    -   Added the ability to use `@onPointerUp` and `@onPointerDown` for menu.
+
+## V1.2.16
+
+#### Date: 10/16/2020
+
+### :rocket: Improvements
+
+-   Added the `transformer` tag.
+    -   When set to a bot ID, the bot will inherit the position, rotation, and scale of the specified bot inside the page portal.
+    -   This produces a "parenting" effect that is common in most 3D graphics engines.
+
+## V1.2.15
+
+#### Date: 10/12/2020
+
+### :rocket: Improvements
+
+-   Added the `experiment.getAnchorPointPosition()` and `math.getAnchorPointOffset()` functions.
+    -   These are useful for determining where a bot would be placed if it had a particular anchor point.
+    -   See the [docs](https://docs.casualsimulation.com/docs/actions) for more info.
+
+## V1.2.14
+
+#### Date: 10/7/2020
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where calling `server.setupStory()` twice with the same story name would cause the story to be setup twice.
+-   Fixed an issue where bots would be incorrectly removed from the menu portal if they existed in both the old and new dimensions.
+-   Greatly reduced the number of scenarios where formulas would be recalculated after any change.
+
+## V1.2.13
+
+#### Date: 9/24/2020
+
+### :boom: Breaking Changes
+
+-   Renamed the `_editingBot` tag to `editingBot`.
+
+### :rocket: Improvements
+
+-   sheetPortal Improvements
+    -   Added the `@onSheetTagClick` listener which is triggered when a tag name is clicked.
+    -   Added the `@onSheetBotIDClick` listener which is triggered when a Bot ID is clicked.
+    -   Added the `@onSheetBotClick` listener which is triggered when a bot visualization is clicked in the sheet.
+    -   Added the `sheetPortalShowButton` config bot tag to control whether the button in the bottom right corner of the sheet is shown.
+    -   Added the `sheetPortalButtonIcon` config bot tag to control the icon on the button in the bottom right corner of the sheet.
+    -   Added the `sheetPortalButtonHint` config bot tag to control the tooltip on the button in the bottom right corner of the sheet.
+    -   Added the `sheetPortalAllowedTags` config bot tag to control which tags are allowed to be shown and edited in the sheet portal.
+    -   Swapped the position of the new bot and new tag buttons in the sheet.
+    -   Added the `editingTag` tag which contains the tag that the player is currently editing.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where cells in the sheet portal would not cover the entire cell area.
+-   Fixed an issue where `clearTagMasks()` would error if given a bot that had no tag masks.
+
+## V1.2.12
+
+#### Date: 9/22/2020
+
+### :rocket: Improvements
+
+-   Added the `helix` form.
+    -   Displays a DNA strand mesh whose color can be customized.
+-   Added tag masks.
+    -   Tag masks are special tags that can live in a separate space from their bot.
+    -   This makes it possible to create a temporary tag on a shared bot.
+    -   Tag masks do not replace tags. Instead, they exist in addition to normal tags and can be used to temporarily hide a normal tag value.
+    -   Like bots, tag masks live in a space. This means that a bot can have multiple masks for a particular tag. Currently the supported spaces are:
+        -   `tempLocal`
+        -   `local`
+        -   `player`/`otherPlayers`
+        -   `shared`
+    -   New scripting features:
+        -   All bots now have a `masks` property which works like `tags` except that it creates tag masks in the `tempLocal` space.
+        -   All scripts also have a `masks` property which is a shortcut for `bot.masks`.
+        -   `setTagMask(bot, tag, value, space?)` is a new function that is able to set the value of a tag mask on the given bot and in the given space. See the documentation for more info.
+        -   `clearTagMasks(bot, space?)` is a new function that is able to clear all the tag masks in the given space from a given bot. See the documentation for more info.
+    -   Example use cases:
+        -   Local click/hover states.
+        -   Animations.
+        -   Storing decrypted data.
+
+### :100: Other Changes
+
+-   Pinned the Deno version to `v1.4` so that we can decide when to adopt future Deno updates.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `server.setupStory()` would load a simulation and never dispose it.
+-   Fixed an issue where wrist portals were not being anchored properly.
+-   Fixed an issue where pressing enter to make a new tag would put a new line in the current tag value.
+
 ## V1.2.11
 
 #### Date: 9/9/2020

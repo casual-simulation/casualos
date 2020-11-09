@@ -33,6 +33,16 @@ import {
     ON_BOT_CHANGED_ACTION_NAME,
     ON_ANY_BOTS_CHANGED_ACTION_NAME,
     BotSpace,
+    getTagMask,
+    hasTagOrMask,
+    ON_STORY_STREAM_LOST_ACTION_NAME,
+    PartialBot,
+    updatedBot,
+    TAG_MASK_SPACE_PRIORITIES,
+    BotTagMasks,
+    RuntimeBot,
+    CLEAR_CHANGES_SYMBOL,
+    CompiledBotListener,
 } from '../bots';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -44,21 +54,18 @@ import {
     isInContext,
 } from './AuxGlobalContext';
 import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
-import { DependencyManager, BotDependentInfo } from './DependencyManager';
+import {
+    DependencyManager,
+    BotDependentInfo,
+    mergeDependents,
+} from './DependencyManager';
 import {
     RuntimeBotInterface,
     RuntimeBotFactory,
     createRuntimeBot,
-    RuntimeBot,
     RealtimeEditMode,
-    CLEAR_CHANGES_SYMBOL,
-    isRuntimeBot,
 } from './RuntimeBot';
-import {
-    CompiledBot,
-    CompiledBotsState,
-    CompiledBotListener,
-} from './CompiledBot';
+import { CompiledBot, CompiledBotsState } from './CompiledBot';
 import sortBy from 'lodash/sortBy';
 import transform from 'lodash/transform';
 import { BatchingZoneSpec } from './BatchingZoneSpec';
@@ -72,8 +79,9 @@ import {
     SpaceRealtimeEditModeMap,
     DefaultRealtimeEditModeProvider,
 } from './AuxRealtimeEditModeProvider';
-import { forOwn } from 'lodash';
+import { forOwn, merge } from 'lodash';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
+import { applyEdit, isTagEdit } from '../aux-format-2';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -84,6 +92,7 @@ import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 export class AuxRuntime
     implements RuntimeBotInterface, RuntimeBotFactory, SubscriptionLike {
     private _compiledState: CompiledBotsState = {};
+    private _existingMasks: { [id: string]: BotTagMasks } = {};
     private _compiler = new AuxCompiler();
     private _dependencies = new DependencyManager();
     private _onActions: Subject<BotAction[]>;
@@ -91,6 +100,7 @@ export class AuxRuntime
 
     private _actionBatch: BotAction[] = [];
     private _errorBatch: ScriptError[] = [];
+    private _runFormulas: boolean = true;
 
     private _userId: string;
     private _zone: Zone;
@@ -116,6 +126,20 @@ export class AuxRuntime
 
     get context() {
         return this._globalContext;
+    }
+
+    /**
+     * Gets whether to compile and run formulas.
+     */
+    get runFormulas(): boolean {
+        return this._runFormulas;
+    }
+
+    /**
+     * Sets whether to compile and run formulas.
+     */
+    set runFormulas(value: boolean) {
+        this._runFormulas = value;
     }
 
     /**
@@ -455,6 +479,7 @@ export class AuxRuntime
     /**
      * Signals to the runtime that the given bots were added.
      * @param bots The bots.
+     * @deprecated Use stateUpdated() instead.
      */
     botsAdded(bots: Bot[]): StateUpdatedEvent {
         let update = {
@@ -464,62 +489,134 @@ export class AuxRuntime
             removedBots: [],
         } as StateUpdatedEvent;
 
-        let newBots = [] as [CompiledBot, PrecalculatedBot][];
-        let newBotIDs = new Set<string>();
+        const { newBotIDs, newBots, changes } = this._addBotsToState(
+            bots,
+            update
+        );
 
-        for (let bot of bots) {
-            const existing = this._compiledState[bot.id];
-            if (!!existing) {
-                removeFromContext(this._globalContext, existing.script);
-                delete this._compiledState[bot.id];
-
-                const index = newBots.findIndex(([b]) => b === existing);
-                if (index >= 0) {
-                    newBots.splice(index, 1);
-                    update.addedBots.splice(index, 1);
-                }
-            }
-
-            let newBot: CompiledBot = this._createCompiledBot(bot, false);
-
-            let precalculated: PrecalculatedBot = {
-                id: bot.id,
-                precalculated: true,
-                tags: bot.tags,
-                values: {},
-            };
-
-            if (hasValue(bot.space)) {
-                newBot.space = bot.space;
-                precalculated.space = bot.space;
-            }
-
-            if (hasValue(bot.signatures)) {
-                precalculated.signatures = bot.signatures;
-            }
-            newBots.push([newBot, precalculated]);
-            newBotIDs.add(newBot.id);
-            update.state[bot.id] = precalculated;
-            update.addedBots.push(bot.id);
-        }
-
-        for (let [bot, precalculated] of newBots) {
-            let tags = Object.keys(bot.compiledValues);
-            for (let tag of tags) {
-                precalculated.values[tag] = convertToCopiableValue(
-                    this._updateTag(bot, tag, true)
-                );
-            }
-        }
-
-        const changes = this._dependencies.addBots(bots);
         this._updateDependentBots(changes, update, newBotIDs);
+        this._sendOnBotsAddedShouts(newBots, update);
 
+        return update;
+    }
+
+    /**
+     * Signals to the runtime that the given bots were removed.
+     * @param botIds The IDs of the bots that were removed.
+     * @deprecated Use stateUpdated() instead.
+     */
+    botsRemoved(botIds: string[]): StateUpdatedEvent {
+        let update = {
+            state: {},
+            addedBots: [],
+            updatedBots: [],
+            removedBots: [],
+        } as StateUpdatedEvent;
+
+        const { changes } = this._removeBotsFromState(botIds, update);
+        this._updateDependentBots(changes, update, new Set());
+
+        this._sendOnBotsRemovedShouts(botIds);
+
+        return update;
+    }
+
+    /**
+     * Signals to the runtime that the given bots were updated.
+     * @param updates The bot updates.
+     * @deprecated Use stateUpdated() instead.
+     */
+    botsUpdated(updates: UpdatedBot[]): StateUpdatedEvent {
+        let update = {
+            state: {},
+            addedBots: [],
+            updatedBots: [],
+            removedBots: [],
+        } as StateUpdatedEvent;
+
+        const { changes } = this._updateBotsInState(updates, update);
+        this._updateDependentBots(changes, update, new Set());
+
+        this._sendOnBotsChangedShouts(updates);
+
+        return update;
+    }
+
+    /**
+     * Signals to the runtime that the bots state has been updated.
+     * @param update The bot state update.
+     */
+    stateUpdated(update: StateUpdatedEvent): StateUpdatedEvent {
+        let nextUpdate = {
+            state: {},
+            addedBots: [],
+            updatedBots: [],
+            removedBots: [],
+        } as StateUpdatedEvent;
+
+        let changes = {} as BotDependentInfo;
+        let newBotIds = null as Set<string>;
+        let newBots = null as [CompiledBot, PrecalculatedBot][];
+        let updates = null as UpdatedBot[];
         if (update.addedBots.length > 0) {
+            const {
+                newBots: addedNewBots,
+                newBotIDs: addedBotIds,
+                changes: addBotChanges,
+            } = this._addBotsToState(
+                update.addedBots.map((id) => update.state[id] as Bot),
+                nextUpdate
+            );
+
+            newBotIds = addedBotIds;
+            newBots = addedNewBots;
+            changes = mergeDependents(changes, addBotChanges);
+        }
+
+        if (update.removedBots.length > 0) {
+            const { changes: removeBotChanges } = this._removeBotsFromState(
+                update.removedBots,
+                nextUpdate
+            );
+            changes = mergeDependents(changes, removeBotChanges);
+        }
+
+        if (update.updatedBots.length > 0) {
+            updates = update.updatedBots.map((id) => {
+                const partial = update.state[id];
+                const current = this.currentState[id];
+                if (!current) {
+                    return null;
+                }
+                return updatedBot(partial, current);
+            });
+
+            const { changes: updateBotChanges } = this._updateBotsWithState(
+                update,
+                updates,
+                nextUpdate
+            );
+            changes = merge(changes, updateBotChanges);
+        }
+
+        this._updateDependentBots(changes, nextUpdate, newBotIds || new Set());
+
+        this._sendOnBotsAddedShouts(newBots, nextUpdate);
+        this._sendOnBotsRemovedShouts(update.removedBots);
+        this._sendOnBotsChangedShouts(updates);
+
+        return nextUpdate;
+    }
+
+    private _sendOnBotsAddedShouts(
+        newBots: [CompiledBot, PrecalculatedBot][],
+        nextUpdate: StateUpdatedEvent
+    ) {
+        if (newBots && nextUpdate.addedBots.length > 0) {
             try {
                 this._shout(
                     ON_BOT_ADDED_ACTION_NAME,
-                    update.addedBots,
+                    nextUpdate.addedBots,
                     undefined,
                     true,
                     false
@@ -541,35 +638,9 @@ export class AuxRuntime
                 }
             }
         }
-
-        return update;
     }
 
-    /**
-     * Signals to the runtime that the given bots were removed.
-     * @param botIds The IDs of the bots that were removed.
-     */
-    botsRemoved(botIds: string[]): StateUpdatedEvent {
-        let update = {
-            state: {},
-            addedBots: [],
-            updatedBots: [],
-            removedBots: [],
-        } as StateUpdatedEvent;
-
-        for (let id of botIds) {
-            const bot = this._compiledState[id];
-            if (bot) {
-                removeFromContext(this._globalContext, bot.script);
-            }
-            delete this._compiledState[id];
-            update.state[id] = null;
-            update.removedBots.push(id);
-        }
-
-        const changes = this._dependencies.removeBots(botIds);
-        this._updateDependentBots(changes, update, new Set());
-
+    private _sendOnBotsRemovedShouts(botIds: string[]) {
         if (botIds.length > 0) {
             try {
                 this._shout(
@@ -589,23 +660,133 @@ export class AuxRuntime
                 }
             }
         }
-
-        return update;
     }
 
-    /**
-     * Signals to the runtime that the given bots were updated.
-     * @param updates The bot updates.
-     */
-    botsUpdated(updates: UpdatedBot[]): StateUpdatedEvent {
-        let update = {
-            state: {},
-            addedBots: [],
-            updatedBots: [],
-            removedBots: [],
-        } as StateUpdatedEvent;
+    private _sendOnBotsChangedShouts(updates: UpdatedBot[]) {
+        if (updates && updates.length > 0) {
+            try {
+                for (let update of updates) {
+                    if (!update) {
+                        continue;
+                    }
+                    this._shout(
+                        ON_BOT_CHANGED_ACTION_NAME,
+                        [update.bot.id],
+                        {
+                            tags: update.tags,
+                        },
+                        true,
+                        false
+                    );
+                }
+                this._shout(
+                    ON_ANY_BOTS_CHANGED_ACTION_NAME,
+                    null,
+                    updates,
+                    true,
+                    false
+                );
+            } catch (err) {
+                if (!(err instanceof RanOutOfEnergyError)) {
+                    throw err;
+                } else {
+                    console.warn(err);
+                }
+            }
+        }
+    }
 
+    private _addBotsToState(bots: Bot[], nextUpdate: StateUpdatedEvent) {
+        let newBots = [] as [CompiledBot, PrecalculatedBot][];
+        let newBotIDs = new Set<string>();
+
+        for (let bot of bots) {
+            const existing = this._compiledState[bot.id];
+            if (!!existing) {
+                removeFromContext(this._globalContext, existing.script);
+                delete this._compiledState[bot.id];
+
+                const index = newBots.findIndex(([b]) => b === existing);
+                if (index >= 0) {
+                    newBots.splice(index, 1);
+                    nextUpdate.addedBots.splice(index, 1);
+                }
+            }
+
+            let newBot: CompiledBot = this._createCompiledBot(bot, false);
+
+            let precalculated: PrecalculatedBot = {
+                id: bot.id,
+                precalculated: true,
+                tags: bot.tags,
+                values: {},
+            };
+
+            if (hasValue(bot.space)) {
+                newBot.space = bot.space;
+                precalculated.space = bot.space;
+            }
+
+            if (hasValue(bot.signatures)) {
+                precalculated.signatures = bot.signatures;
+            }
+            if (hasValue(newBot.masks)) {
+                precalculated.masks = newBot.masks;
+            }
+            newBots.push([newBot, precalculated]);
+            newBotIDs.add(newBot.id);
+            nextUpdate.state[bot.id] = precalculated;
+            nextUpdate.addedBots.push(bot.id);
+        }
+
+        for (let [bot, precalculated] of newBots) {
+            let tags = Object.keys(bot.compiledValues);
+            for (let tag of tags) {
+                precalculated.values[tag] = convertToCopiableValue(
+                    this._updateTag(bot, tag, true)
+                );
+            }
+        }
+
+        const changes = this._dependencies.addBots(bots);
+
+        return {
+            newBotIDs,
+            newBots,
+            changes,
+        };
+    }
+
+    private _removeBotsFromState(
+        botIds: string[],
+        nextUpdate: StateUpdatedEvent
+    ) {
+        for (let id of botIds) {
+            const bot = this._compiledState[id];
+            if (bot) {
+                removeFromContext(this._globalContext, bot.script);
+            }
+            delete this._compiledState[id];
+            nextUpdate.state[id] = null;
+            nextUpdate.removedBots.push(id);
+        }
+
+        const changes = this._dependencies.removeBots(botIds);
+
+        return {
+            changes,
+        };
+    }
+
+    private _updateBotsInState(
+        updates: UpdatedBot[],
+        nextUpdate: StateUpdatedEvent
+    ) {
         for (let u of updates) {
+            if (!u) {
+                continue;
+            }
+
             // 1. get compiled bot
             let compiled = this._compiledState[u.bot.id];
 
@@ -614,15 +795,45 @@ export class AuxRuntime
             }
 
             // 2. update
-            this._compileTags(u.tags, compiled, u.bot);
+            let updates = this._compileTags(u.tags, compiled, u.bot);
 
             // 3. convert to precalculated
             let partial = {
                 tags: {},
                 values: {},
             } as Partial<PrecalculatedBot>;
-            for (let tag of u.tags) {
-                partial.tags[tag] = u.bot.tags[tag];
+            if (u.bot.masks) {
+                partial.masks = {};
+            }
+
+            for (let [space, tag] of updates) {
+                if (space) {
+                    if (u.bot.masks) {
+                        for (let space in u.bot.masks) {
+                            if (hasValue(u.bot.masks[space][tag])) {
+                                if (!partial.masks[space]) {
+                                    partial.masks[space] = {};
+                                }
+                                partial.masks[space][tag] =
+                                    u.bot.masks[space][tag];
+                            }
+                        }
+                    }
+                } else if (space === undefined) {
+                    if (compiled.masks) {
+                        for (let space in compiled.masks) {
+                            if (hasValue(compiled.masks[space][tag])) {
+                                if (!partial.masks[space]) {
+                                    partial.masks[space] = {};
+                                }
+                                partial.masks[space][tag] = null;
+                                delete compiled.masks[space][tag];
+                            }
+                        }
+                    }
+                } else {
+                    partial.tags[tag] = u.bot.tags[tag];
+                }
             }
 
             if (u.signatures) {
@@ -650,40 +861,151 @@ export class AuxRuntime
                 }
             }
 
-            update.state[u.bot.id] = <any>partial;
+            nextUpdate.state[u.bot.id] = <any>partial;
         }
 
         const changes = this._dependencies.updateBots(updates);
-        this._updateDependentBots(changes, update, new Set());
+        return {
+            changes,
+        };
+    }
 
-        try {
-            for (let update of updates) {
-                this._shout(
-                    ON_BOT_CHANGED_ACTION_NAME,
-                    [update.bot.id],
-                    {
-                        tags: update.tags,
-                    },
-                    true,
-                    false
-                );
+    private _updateBotsWithState(
+        update: StateUpdatedEvent,
+        updates: UpdatedBot[],
+        nextUpdate: StateUpdatedEvent
+    ) {
+        for (let id of update.updatedBots) {
+            if (!id) {
+                continue;
             }
-            this._shout(
-                ON_ANY_BOTS_CHANGED_ACTION_NAME,
-                null,
-                updates,
-                true,
-                false
-            );
-        } catch (err) {
-            if (!(err instanceof RanOutOfEnergyError)) {
-                throw err;
-            } else {
-                console.warn(err);
+            const u = update.state[id];
+
+            // 1. get compiled bot
+            let compiled = this._compiledState[id];
+
+            if (!compiled) {
+                // buffer tag masks
+                if (u.masks) {
+                    const existing = this._existingMasks[id] || {};
+                    this._existingMasks[id] = merge(existing, u.masks);
+                }
+                continue;
             }
+
+            let partial = {
+                tags: {},
+                values: {},
+            } as Partial<PrecalculatedBot>;
+
+            let updatedTags = new Set<string>();
+            if (u.tags) {
+                for (let tag in u.tags) {
+                    const tagValue = u.tags[tag];
+                    if (hasValue(tagValue) || tagValue === null) {
+                        if (isTagEdit(tagValue)) {
+                            compiled.tags[tag] = applyEdit(
+                                compiled.tags[tag],
+                                tagValue
+                            );
+                        } else {
+                            compiled.tags[tag] = tagValue;
+                        }
+                        partial.tags[tag] = tagValue;
+                        updatedTags.add(tag);
+                    }
+                }
+            }
+
+            if (u.masks) {
+                for (let space in u.masks) {
+                    const tags = u.masks[space];
+                    for (let tag in tags) {
+                        const tagValue = u.masks[space][tag];
+                        if (hasValue(tagValue) || tagValue === null) {
+                            if (!compiled.masks) {
+                                compiled.masks = {};
+                            }
+                            if (!compiled.masks[space]) {
+                                compiled.masks[space] = {};
+                            }
+                            if (!partial.masks) {
+                                partial.masks = {};
+                            }
+                            if (!partial.masks[space]) {
+                                partial.masks[space] = {};
+                            }
+
+                            if (tagValue === null) {
+                                delete compiled.masks[space][tag];
+                            } else if (isTagEdit(tagValue)) {
+                                compiled.masks[space][tag] = applyEdit(
+                                    compiled.masks[space][tag],
+                                    tagValue
+                                );
+                            } else {
+                                compiled.masks[space][tag] = tagValue;
+                            }
+                            updatedTags.add(tag);
+                            partial.masks[space][tag] = tagValue;
+                        }
+                    }
+                }
+            }
+
+            for (let tag of updatedTags) {
+                let hasMask = false;
+                if (compiled.masks) {
+                    for (let space of TAG_MASK_SPACE_PRIORITIES) {
+                        const tagValue = compiled.masks[space]?.[tag];
+                        if (hasValue(tagValue)) {
+                            this._compileTagValue(compiled, tag, tagValue);
+                            hasMask = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!hasMask) {
+                    const tagValue = compiled.tags[tag];
+                    if (hasValue(tagValue) || tagValue === null) {
+                        this._compileTagValue(compiled, tag, tagValue);
+                    }
+                }
+            }
+
+            if (u.signatures) {
+                if (!compiled.signatures) {
+                    compiled.signatures = {};
+                }
+                partial.signatures = {};
+                for (let sig in u.signatures) {
+                    const val = !!u.signatures
+                        ? u.signatures[sig] || null
+                        : null;
+                    const current = compiled.signatures[sig];
+                    compiled.signatures[sig] = val;
+                    partial.signatures[sig] = val;
+
+                    if (!val && current) {
+                        this._compileTag(
+                            compiled,
+                            current,
+                            compiled.tags[current]
+                        );
+                    } else if (val && !current) {
+                        this._compileTag(compiled, val, compiled.tags[val]);
+                    }
+                }
+            }
+
+            nextUpdate.state[id] = <any>partial;
         }
 
-        return update;
+        const changes = this._dependencies.updateBots(updates);
+        return {
+            changes,
+        };
     }
 
     notifyChange(): void {
@@ -795,22 +1117,33 @@ export class AuxRuntime
         const actions = this._globalContext.dequeueActions();
         const updatedBots = [...this._updatedBots.values()];
         const updates = updatedBots
-            .filter(bot => {
+            .filter((bot) => {
                 return (
-                    Object.keys(bot.changes).length > 0 &&
+                    (Object.keys(bot.changes).length > 0 ||
+                        Object.keys(bot.maskChanges).length > 0) &&
                     !this._newBots.has(bot.id) &&
                     isInContext(this._globalContext, bot)
                 );
             })
-            .map(bot =>
-                botUpdated(bot.id, {
-                    tags: { ...bot.changes },
-                })
-            );
+            .map((bot) => {
+                let update = {} as PartialBot;
+                if (Object.keys(bot.changes).length > 0) {
+                    update.tags = { ...bot.changes };
+                }
+                if (Object.keys(bot.maskChanges).length > 0) {
+                    update.masks = {};
+                    for (let space in bot.maskChanges) {
+                        update.masks[space] = {
+                            ...bot.maskChanges[space],
+                        };
+                    }
+                }
+                return botUpdated(bot.id, update);
+            });
         for (let bot of updatedBots) {
             bot[CLEAR_CHANGES_SYMBOL]();
         }
-        const sortedUpdates = sortBy(updates, u => u.id);
+        const sortedUpdates = sortBy(updates, (u) => u.id);
         this._updatedBots.clear();
         this._newBots.clear();
         actions.push(...sortedUpdates);
@@ -838,8 +1171,8 @@ export class AuxRuntime
             }
             const tags = updated[botId];
             for (let tag of tags) {
-                const originalTag = originalBot.tags[tag];
-                if (hasValue(originalTag)) {
+                let hasTag = hasTagOrMask(originalBot, tag);
+                if (hasTag) {
                     botUpdate.values[tag] = convertToCopiableValue(
                         this._updateTag(originalBot, tag, true)
                     );
@@ -857,10 +1190,16 @@ export class AuxRuntime
         }
     }
 
-    private _compileTags(tags: string[], compiled: CompiledBot, bot: Bot) {
+    private _compileTags(
+        tags: string[],
+        compiled: CompiledBot,
+        bot: Bot
+    ): [string, string][] {
+        let updates = [] as [string, string][];
         for (let tag of tags) {
-            this._compileTag(compiled, tag, bot.tags[tag]);
+            updates.push(this._compileTagOrMask(compiled, bot, tag));
         }
+        return updates;
     }
 
     private _createCompiledBot(bot: Bot, fromFactory: boolean): CompiledBot {
@@ -878,6 +1217,36 @@ export class AuxRuntime
         }
         if (hasValue(bot.signatures)) {
             compiledBot.signatures = bot.signatures;
+        }
+
+        // Copy existing tag masks to the new bot
+        if (!fromFactory && this._existingMasks[bot.id]) {
+            const existing = this._existingMasks[bot.id];
+            delete this._existingMasks[bot.id];
+            for (let space in existing) {
+                if (!bot.masks) {
+                    bot.masks = {};
+                }
+                for (let tag in existing[space]) {
+                    if (hasValue(bot.masks?.[space]?.[tag])) {
+                        continue;
+                    }
+                    if (!bot.masks[space]) {
+                        bot.masks[space] = {};
+                    }
+                    bot.masks[space][tag] = existing[space][tag];
+                }
+            }
+        }
+
+        // Copy the new bot tag masks to the compiled bot
+        if (hasValue(bot.masks)) {
+            compiledBot.masks = {};
+            for (let space in bot.masks) {
+                compiledBot.masks[space] = {
+                    ...bot.masks[space],
+                };
+            }
         }
         compiledBot.script = this._createRuntimeBot(compiledBot);
         const tags = tagsOnBot(compiledBot);
@@ -917,6 +1286,50 @@ export class AuxRuntime
         return bot.tags[tag];
     }
 
+    updateTagMask(
+        bot: CompiledBot,
+        tag: string,
+        spaces: string[],
+        value: any
+    ): RealtimeEditMode {
+        if (this._globalContext.allowsEditing) {
+            let updated = false;
+            for (let space of spaces) {
+                const mode = this._editModeProvider.getEditMode(space);
+                if (mode === RealtimeEditMode.Immediate) {
+                    if (!bot.masks) {
+                        bot.masks = {};
+                    }
+                    if (!bot.masks[space]) {
+                        bot.masks[space] = {};
+                    }
+                    bot.masks[space][tag] = value;
+                    updated = true;
+                }
+            }
+            if (updated) {
+                this._compileTagOrMask(bot, bot, tag);
+                this._updatedBots.set(bot.id, bot.script);
+                this.notifyChange();
+            }
+
+            return RealtimeEditMode.Immediate;
+        }
+
+        return RealtimeEditMode.None;
+    }
+
+    getTagMask(bot: CompiledBot, tag: string): RealtimeEditMode {
+        for (let space of TAG_MASK_SPACE_PRIORITIES) {
+            const tagValue = bot.masks?.[space]?.[tag];
+            if (hasValue(tagValue)) {
+                return tagValue;
+            }
+        }
+
+        return undefined;
+    }
+
     getListener(bot: CompiledBot, tag: string): CompiledBotListener {
         const listener = bot.listeners[tag];
         if (listener) {
@@ -938,7 +1351,9 @@ export class AuxRuntime
         const compiled = newBot.compiledValues[tag];
         try {
             const value = (newBot.values[tag] =
-                typeof compiled === 'function' ? compiled() : compiled);
+                this._runFormulas && typeof compiled === 'function'
+                    ? compiled()
+                    : compiled);
 
             if (
                 isScript(value) &&
@@ -960,9 +1375,61 @@ export class AuxRuntime
         }
     }
 
-    private _compileTag(bot: CompiledBot, tag: string, tagValue: any) {
-        bot.tags[tag] = tagValue;
+    private _compileTagOrMask(
+        bot: CompiledBot,
+        existingBot: Bot,
+        tag: string
+    ): [string, string] {
+        let hadMask = false;
+        if (existingBot.masks) {
+            for (let space of TAG_MASK_SPACE_PRIORITIES) {
+                const tagValue = existingBot.masks[space]?.[tag];
+                if (hasValue(tagValue)) {
+                    if (!bot.masks) {
+                        bot.masks = {};
+                    }
+                    if (!bot.masks[space]) {
+                        bot.masks[space] = {};
+                    }
+                    bot.masks[space][tag] = tagValue;
+                    this._compileTagValue(bot, tag, tagValue);
+                    return [space, tag];
+                } else if (hasValue(bot.masks?.[space]?.[tag])) {
+                    // Indicate that there used to be a value for the tag mask
+                    // but it has been removed.
+                    hadMask = true;
+                    break;
+                }
+            }
+        }
+        const tagValue = existingBot.tags[tag];
+        if (hasValue(tagValue) || tagValue === null) {
+            bot.tags[tag] = tagValue;
+            this._compileTagValue(bot, tag, tagValue);
+            if (hadMask) {
+                return [undefined, tag];
+            } else {
+                return [null, tag];
+            }
+        }
 
+        // Undefined means that a tag mask was removed.
+        return [undefined, tag];
+    }
+
+    private _compileTag(bot: CompiledBot, tag: string, tagValue: any) {
+        if (bot.masks) {
+            for (let space of TAG_MASK_SPACE_PRIORITIES) {
+                if (hasValue(bot.masks[space]?.[tag])) {
+                    return;
+                }
+            }
+        }
+        bot.tags[tag] = tagValue;
+        this._compileTagValue(bot, tag, tagValue);
+    }
+
+    private _compileTagValue(bot: CompiledBot, tag: string, tagValue: any) {
         let { value, listener } = this._compileValue(bot, tag, tagValue);
         if (listener) {
             bot.listeners[tag] = listener;
@@ -986,7 +1453,7 @@ export class AuxRuntime
         listener: AuxCompiledScript;
     } {
         let listener: AuxCompiledScript;
-        if (isFormula(value)) {
+        if (isFormula(value) && this._runFormulas) {
             try {
                 value = this._compile(bot, tag, value, {
                     allowsEditing: false,
@@ -1014,7 +1481,7 @@ export class AuxRuntime
             // Note: Don't name isFormula because then webpack will be
             // confused and decide to not import the isFormula function above
             let isAFormula = false;
-            const values = split.map(s => {
+            const values = split.map((s) => {
                 const result = this._compileValue(bot, tag, s.trim());
                 if (typeof result.value === 'function') {
                     isAFormula = true;
@@ -1025,12 +1492,12 @@ export class AuxRuntime
             if (isAFormula) {
                 // TODO: Add the proper metadata for formulas in array elements
                 value = <any>(() => {
-                    return values.map(v =>
+                    return values.map((v) =>
                         typeof v.value === 'function' ? v.value() : v.value
                     );
                 });
             } else {
-                value = values.map(v => v.value);
+                value = values.map((v) => v.value);
             }
         }
 
@@ -1062,7 +1529,7 @@ export class AuxRuntime
                 creator: null as RuntimeBot,
                 config: null as RuntimeBot,
             },
-            before: ctx => {
+            before: (ctx) => {
                 // if (!options.allowsEditing) {
                 //     ctx.wasEditable = ctx.global.allowsEditing;
                 //     ctx.global.allowsEditing = false;
@@ -1131,13 +1598,14 @@ export class AuxRuntime
                 tagName: tag,
             },
             variables: {
-                this: ctx => (ctx.bot ? ctx.bot.script : null),
-                bot: ctx => (ctx.bot ? ctx.bot.script : null),
-                tags: ctx => (ctx.bot ? ctx.bot.script.tags : null),
-                raw: ctx => (ctx.bot ? ctx.bot.script.raw : null),
-                creator: ctx => ctx.creator,
-                config: ctx => ctx.config,
-                configTag: ctx =>
+                this: (ctx) => (ctx.bot ? ctx.bot.script : null),
+                bot: (ctx) => (ctx.bot ? ctx.bot.script : null),
+                tags: (ctx) => (ctx.bot ? ctx.bot.script.tags : null),
+                raw: (ctx) => (ctx.bot ? ctx.bot.script.raw : null),
+                masks: (ctx) => (ctx.bot ? ctx.bot.script.masks : null),
+                creator: (ctx) => ctx.creator,
+                config: (ctx) => ctx.config,
+                configTag: (ctx) =>
                     ctx.config ? ctx.config.tags[ctx.tag] : null,
             },
             arguments: [['that', 'data']],
@@ -1181,7 +1649,7 @@ export class AuxRuntime
         if (isBot(value)) {
             return this._globalContext.state[value.id] || value;
         } else if (Array.isArray(value) && value.some(isBot)) {
-            let arr = value.map(b =>
+            let arr = value.map((b) =>
                 isBot(b) ? this._globalContext.state[b.id] || b : b
             );
             (<any>arr)[ORIGINAL_OBJECT] = value;
@@ -1223,7 +1691,7 @@ export class AuxRuntime
                 const result = [] as any[];
                 map.set(value, result);
                 result.push(
-                    ...value.map(v =>
+                    ...value.map((v) =>
                         this._mapBotsToRuntimeBotsCore(v, depth + 1, map)
                     )
                 );

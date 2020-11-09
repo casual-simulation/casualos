@@ -1,9 +1,12 @@
-import { appManager } from '../shared/AppManager';
 import { Subscription, Subject, SubscriptionLike } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
 import sortBy from 'lodash/sortBy';
 import { DimensionItem } from './DimensionItem';
-import { Simulation, BotDimensionsUpdate } from '@casual-simulation/aux-vm';
+import {
+    Simulation,
+    BotDimensionsUpdate,
+    SimulationManager,
+} from '@casual-simulation/aux-vm';
 import {
     getBotIndex,
     Bot,
@@ -36,18 +39,21 @@ export class ItemDimension implements SubscriptionLike {
      */
     private _botItemMap: Map<string, DimensionItem> = new Map();
 
-    constructor(dimensionTags: string[]) {
+    constructor(
+        simulationManager: SimulationManager<Simulation>,
+        dimensionTags: string[]
+    ) {
         this._dimensionTags = dimensionTags;
         this._sub = new Subscription();
 
         this._sub.add(
-            appManager.simulationManager.simulationAdded
-                .pipe(tap(sim => this._onSimulationAdded(sim)))
+            simulationManager.simulationAdded
+                .pipe(tap((sim) => this._onSimulationAdded(sim)))
                 .subscribe()
         );
         this._sub.add(
-            appManager.simulationManager.simulationRemoved
-                .pipe(tap(sim => this._onSimulationRemoved(sim)))
+            simulationManager.simulationRemoved
+                .pipe(tap((sim) => this._onSimulationRemoved(sim)))
                 .subscribe()
         );
     }
@@ -71,7 +77,7 @@ export class ItemDimension implements SubscriptionLike {
         sub.add(
             sim.dimensions
                 .watchDimensions(...this._dimensionTags)
-                .pipe(tap(update => this._updateMenuDimensions(sim, update)))
+                .pipe(tap((update) => this._updateMenuDimensions(sim, update)))
                 .subscribe()
         );
     }
@@ -115,7 +121,14 @@ export class ItemDimension implements SubscriptionLike {
                 if (list.size === 0) {
                     let bots = this._getBotsInDimension(event.dimension);
                     for (let id of bots) {
-                        this._botItemMap.delete(id);
+                        const item = this._botItemMap.get(id);
+                        if (item && item.dimensions.has(event.dimension)) {
+                            if (item.dimensions.size <= 1) {
+                                this._botItemMap.delete(id);
+                            } else {
+                                item.dimensions.delete(event.dimension);
+                            }
+                        }
                     }
                     bots.clear();
                 }
@@ -170,7 +183,7 @@ export class ItemDimension implements SubscriptionLike {
 
         if (hasUpdate) {
             let menu = [...this._botItemMap.values()];
-            let sorted = sortBy(menu, i =>
+            let sorted = sortBy(menu, (i) =>
                 this._menuItemIndex(updates.calc, i)
             );
             this.items = sorted;

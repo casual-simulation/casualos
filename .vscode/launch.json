@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch Chrome",
+            "request": "launch",
+            "type": "pwa-chrome",
+            "url": "http://player.localhost:3000",
+            "webRoot": "${workspaceFolder}/src/aux-server"
+        },
+        {
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
@@ -47,7 +54,7 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Debug Web Build",
+            "name": "Debug Webpack",
             "program": "${workspaceFolder}/node_modules/webpack/bin/webpack",
             "runtimeArgs": ["--max_old_space_size=4096"],
             "args": ["--config", "src/aux-server/aux-web/webpack.prod.js"]

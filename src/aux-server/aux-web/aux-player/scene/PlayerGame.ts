@@ -52,8 +52,6 @@ import {
 } from '../../shared/scene/CameraRigFactory';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { AuxBotVisualizer } from '../../shared/scene/AuxBotVisualizer';
-import { ItemDimension } from '../ItemDimension';
-import { DimensionItem } from '../DimensionItem';
 import {
     getBotsStateFromStoredAux,
     Simulation,
@@ -312,8 +310,8 @@ export class PlayerGame extends Game {
         return this.inventoryCameraRig;
     }
     findBotsById(id: string): AuxBotVisualizer[] {
-        return flatMap(this.playerSimulations, s => s.bots).filter(
-            b => b.bot.id === id
+        return flatMap(this.playerSimulations, (s) => s.bots).filter(
+            (b) => b.bot.id === id
         );
     }
     setGridsVisible(visible: boolean): void {
@@ -346,7 +344,7 @@ export class PlayerGame extends Game {
      * @param sim The simulation to find a simulation 3d for.
      */
     findInventorySimulation3D(sim: Simulation): InventorySimulation3D {
-        return this.inventorySimulations.find(s => s.simulation === sim);
+        return this.inventorySimulations.find((s) => s.simulation === sim);
     }
 
     /**
@@ -354,7 +352,7 @@ export class PlayerGame extends Game {
      * @param sim The simulation to find a simulation 3d for.
      */
     findPlayerSimulation3D(sim: Simulation): PlayerPageSimulation3D {
-        return this.playerSimulations.find(s => s.simulation === sim);
+        return this.playerSimulations.find((s) => s.simulation === sim);
     }
 
     dispose(): void {
@@ -369,13 +367,13 @@ export class PlayerGame extends Game {
             appManager.simulationManager.simulationAdded
                 .pipe(
                     mergeMap(
-                        sim =>
+                        (sim) =>
                             sim.connection.syncStateChanged.pipe(
-                                first(sync => sync)
+                                first((sync) => sync)
                             ),
                         (sim, sync) => sim
                     ),
-                    tap(sim => {
+                    tap((sim) => {
                         this.simulationAdded(sim);
                     })
                 )
@@ -385,7 +383,7 @@ export class PlayerGame extends Game {
         this.subs.push(
             appManager.simulationManager.simulationRemoved
                 .pipe(
-                    tap(sim => {
+                    tap((sim) => {
                         this.simulationRemoved(sim);
                     })
                 )
@@ -425,7 +423,7 @@ export class PlayerGame extends Game {
         this.inventoryScene.add(inventorySim3D);
 
         this.subs.push(
-            playerSim3D.simulation.localEvents.subscribe(e => {
+            playerSim3D.simulation.localEvents.subscribe((e) => {
                 if (e.type === 'go_to_dimension') {
                     this.resetCameras();
                     playerSim3D.simulation.helper.updateBot(
@@ -499,7 +497,7 @@ export class PlayerGame extends Game {
                 enqueueAsyncResult(list, event, event.soundID, false);
                 sim.helper.transaction(...list);
             },
-            err => {
+            (err) => {
                 let list = [] as BotAction[];
                 enqueueAsyncError(list, event, err);
                 sim.helper.transaction(...list);
@@ -516,7 +514,7 @@ export class PlayerGame extends Game {
                 enqueueAsyncResult(list, event, null, false);
                 sim.helper.transaction(...list);
             },
-            err => {
+            (err) => {
                 let list = [] as BotAction[];
                 enqueueAsyncError(list, event, err);
                 sim.helper.transaction(...list);
@@ -536,11 +534,11 @@ export class PlayerGame extends Game {
         // Remove Player Simulation
         //
         const playerSimIndex = this.playerSimulations.findIndex(
-            s => s.simulation.id === sim.id
+            (s) => s.simulation.id === sim.id
         );
         if (playerSimIndex >= 0) {
             const removed = this.playerSimulations.splice(playerSimIndex, 1);
-            removed.forEach(s => {
+            removed.forEach((s) => {
                 s.onBotAdded.removeListener(this.onBotAdded.invoke);
                 s.onBotRemoved.removeListener(this.onBotRemoved.invoke);
                 s.onBotUpdated.removeListener(this.onBotUpdated.invoke);
@@ -553,12 +551,12 @@ export class PlayerGame extends Game {
         // Remove Inventory Simulation
         //
         const invSimIndex = this.inventorySimulations.findIndex(
-            s => s.simulation.id == sim.id
+            (s) => s.simulation.id == sim.id
         );
 
         if (invSimIndex >= 0) {
             const removed = this.inventorySimulations.splice(invSimIndex, 1);
-            removed.forEach(s => {
+            removed.forEach((s) => {
                 s.onBotAdded.removeListener(this.onBotAdded.invoke);
                 s.onBotRemoved.removeListener(this.onBotRemoved.invoke);
                 s.onBotUpdated.removeListener(this.onBotUpdated.invoke);
@@ -569,7 +567,7 @@ export class PlayerGame extends Game {
     }
 
     resetCameras() {
-        this.interaction.cameraRigControllers.forEach(controller => {
+        this.interaction.cameraRigControllers.forEach((controller) => {
             if (controller.rig.name != 'inventory') controller.controls.reset();
         });
     }
@@ -1021,7 +1019,7 @@ export class PlayerGame extends Game {
         }
 
         const mainControls = this.interaction.cameraRigControllers.find(
-            c => c.rig.name === this.mainCameraRig.name
+            (c) => c.rig.name === this.mainCameraRig.name
         );
 
         if (mainControls) {
@@ -1094,6 +1092,25 @@ export class PlayerGame extends Game {
                 this.renderer.domElement.style.backgroundColor = '#000';
             } else {
                 this.renderer.domElement.style.backgroundColor = null;
+            }
+        }
+
+        const renderingSize = new Vector2();
+        this.renderer.getSize(renderingSize);
+
+        for (let [id, sim] of appManager.simulationManager.simulations) {
+            const player = sim.helper.userBot;
+            if (
+                player &&
+                (player.tags['pagePixelWidth'] !== renderingSize.x ||
+                    player.tags['pagePixelHeight'] !== renderingSize.y)
+            ) {
+                sim.helper.updateBot(player, {
+                    tags: {
+                        pagePixelWidth: renderingSize.x,
+                        pagePixelHeight: renderingSize.y,
+                    },
+                });
             }
         }
     }
@@ -1202,7 +1219,7 @@ export class PlayerGame extends Game {
         if (!this.setupDelay) {
             if (this.invController == null) {
                 this.invController = this.interaction.cameraRigControllers.find(
-                    c => c.rig.name === cameraRig.name
+                    (c) => c.rig.name === cameraRig.name
                 );
             }
 

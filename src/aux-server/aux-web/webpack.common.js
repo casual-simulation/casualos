@@ -195,7 +195,7 @@ function baseConfig() {
                     use: 'exports-loader?vg=vg',
                 },
                 {
-                    test: /\.(png|jpg|gif|gltf|webp)$/,
+                    test: /\.(png|jpg|gif|gltf|glb|webp)$/,
                     use: [
                         {
                             loader: 'file-loader',

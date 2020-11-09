@@ -1,10 +1,18 @@
-import { BotsState, BotAction, Bot, UpdatedBot } from '../bots';
+import {
+    BotsState,
+    BotAction,
+    Bot,
+    UpdatedBot,
+    PartialBotsState,
+    StateUpdatedEvent,
+} from '../bots';
 import {
     StatusUpdate,
     RemoteAction,
     User,
     Action,
     RemoteActions,
+    CurrentVersion,
 } from '@casual-simulation/causal-trees';
 import { Observable, SubscriptionLike } from 'rxjs';
 
@@ -114,6 +122,16 @@ export interface AuxPartitionBase extends SubscriptionLike {
     onBotsUpdated: Observable<UpdatedBot[]>;
 
     /**
+     * Gets an observable list that resolves whenever the partition state is updated.
+     */
+    onStateUpdated: Observable<StateUpdatedEvent>;
+
+    /**
+     * Gets an observable list that resolves whenever the partition state version is updated.
+     */
+    onVersionUpdated: Observable<CurrentVersion>;
+
+    /**
      * Gets an observable list of errors from the partition.
      */
     onError: Observable<any>;
@@ -137,10 +155,14 @@ export interface ProxyBridgePartition extends AuxPartitionBase {
         onBotsAdded?: (bot: Bot[]) => void,
         onBotsRemoved?: (bot: string[]) => void,
         onBotsUpdated?: (bots: UpdatedBot[]) => void,
+        onStateUpdated?: (state: StateUpdatedEvent) => void,
         onError?: (error: any) => void,
         onEvents?: (actions: Action[]) => void,
-        onStatusUpdated?: (status: StatusUpdate) => void
+        onStatusUpdated?: (status: StatusUpdate) => void,
+        onVersionUpdated?: (version: CurrentVersion) => void
     ): Promise<void>;
+
+    setSpace(space: string): Promise<void>;
 }
 
 /**

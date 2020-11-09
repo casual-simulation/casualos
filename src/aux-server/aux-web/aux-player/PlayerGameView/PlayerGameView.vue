@@ -5,17 +5,15 @@
         <div class="ui-container">
             <div class="toolbar menu">
                 <div>
-                    <md-card v-if="menu.length > 0" class="menu-layout md-dense">
-                        <md-list class="md-dense">
-                            <menu-bot
-                                v-for="(item, index) in menu"
-                                :key="item.bot.id"
-                                :item="item"
-                                :index="index"
-                            >
-                            </menu-bot>
-                        </md-list>
-                    </md-card>
+                    <md-list class="md-dense">
+                        <menu-bot
+                            v-for="(item, index) in menu"
+                            :key="item.bot.id"
+                            :item="item"
+                            :index="index"
+                        >
+                        </menu-bot>
+                    </md-list>
                 </div>
             </div>
 

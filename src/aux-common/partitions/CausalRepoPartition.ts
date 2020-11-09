@@ -1,6 +1,10 @@
 import { User, StatusUpdate, Action } from '@casual-simulation/causal-trees';
+import {
+    CurrentVersion,
+    treeVersion,
+} from '@casual-simulation/causal-trees/core2';
 import { AuxCausalTree, auxTree, applyEvents } from '../aux-format-2';
-import { Observable, Subscription, Subject } from 'rxjs';
+import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import {
     CausalRepoPartition,
     AuxPartitionRealtimeStrategy,
@@ -18,6 +22,8 @@ import {
     CreateCertificateAction,
     SignTagAction,
     RevokeCertificateAction,
+    StateUpdatedEvent,
+    stateUpdatedEvent,
 } from '../bots';
 import {
     PartitionConfig,
@@ -43,6 +49,8 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
     protected _onBotsAdded = new Subject<Bot[]>();
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
+    protected _onStateUpdated = new Subject<StateUpdatedEvent>();
+    protected _onVersionUpdated: BehaviorSubject<CurrentVersion>;
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -67,6 +75,16 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
 
     get onBotsUpdated(): Observable<UpdatedBot[]> {
         return this._onBotsUpdated;
+    }
+
+    get onStateUpdated(): Observable<StateUpdatedEvent> {
+        return this._onStateUpdated.pipe(
+            startWith(stateUpdatedEvent(this._tree.state))
+        );
+    }
+
+    get onVersionUpdated(): Observable<CurrentVersion> {
+        return this._onVersionUpdated;
     }
 
     get onError(): Observable<any> {
@@ -103,10 +121,14 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
 
     constructor(user: User, config: CausalRepoPartitionConfig) {
         this.private = config.private || false;
+        this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
+            currentSite: this._tree.site.id,
+            vector: {},
+        });
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
-        const finalEvents = flatMap(events, e => {
+        const finalEvents = flatMap(events, (e) => {
             if (e.type === 'apply_state') {
                 return breakIntoIndividualEvents(this.state, e);
             } else if (
@@ -159,9 +181,10 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
             | UpdateBotAction
             | CreateCertificateAction
             | SignTagAction
-            | RevokeCertificateAction)[]
+            | RevokeCertificateAction
+        )[]
     ) {
-        let { tree, updates, actions } = applyEvents(
+        let { tree, updates, actions, result } = applyEvents(
             this._tree,
             events,
             this.space
@@ -176,11 +199,20 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
         }
         if (updates.updatedBots.length > 0) {
             this._onBotsUpdated.next(
-                updates.updatedBots.map(u => ({
+                updates.updatedBots.map((u) => ({
                     bot: <any>u.bot,
                     tags: [...u.tags.values()],
                 }))
             );
+        }
+        let update = stateUpdatedEvent(result.update);
+        if (
+            update.addedBots.length > 0 ||
+            update.removedBots.length > 0 ||
+            update.updatedBots.length > 0
+        ) {
+            this._onStateUpdated.next(update);
+            this._onVersionUpdated.next(treeVersion(this._tree));
         }
 
         if (actions && actions.length > 0) {

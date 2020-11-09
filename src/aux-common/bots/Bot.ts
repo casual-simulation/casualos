@@ -6,6 +6,104 @@ export type Object = Bot;
 export type Workspace = Bot;
 
 /**
+ * Defines a symbol that is used to clear changes on a runtime bot.
+ */
+export const CLEAR_CHANGES_SYMBOL = Symbol('clear_changes');
+
+/**
+ * Defines a symbol that is used to set a tag mask on a runtime bot.
+ */
+export const SET_TAG_MASK_SYMBOL = Symbol('set_tag_mask');
+
+/**
+ * Defines a symbol that is used to get a tag mask on a runtime bot.
+ */
+export const GET_TAG_MASK_SYMBOL = Symbol('get_tag_mask');
+
+/**
+ * Defines a symbol that is used to get all the tag masks on a runtime bot.
+ */
+export const CLEAR_TAG_MASKS_SYMBOL = Symbol('clear_tag_masks');
+
+/**
+ * Defines an interface for a bot in a script/formula.
+ *
+ * The difference between this and Bot is that the tags
+ * are calculated values and raw is the original tag values.
+ *
+ * i.e. tags will evaluate formulas while raw will return the formula scripts themselves.
+ */
+export interface RuntimeBot {
+    id: string;
+    space?: BotSpace;
+
+    /**
+     * The calculated tag values.
+     * This lets you get the calculated values from formulas.
+     */
+    tags: ScriptTags;
+
+    /**
+     * The raw tag values. This lets you get the raw script text from formulas.
+     */
+    raw: BotTags;
+
+    /**
+     * The tag masks that have been applied to this bot.
+     */
+    masks: BotTags;
+
+    /**
+     * The changes that have been made to the bot.
+     */
+    changes: BotTags;
+
+    /**
+     * The tag mask changes that have been made to the bot.
+     */
+    maskChanges: BotTagMasks;
+
+    /**
+     * The signatures that are on the bot.
+     */
+    signatures: BotSignatures;
+
+    /**
+     * The calculated listener functions.
+     * This lets you get the compiled listener functions.
+     */
+    listeners: CompiledBotListeners;
+
+    /**
+     * A function that can clear all the changes from the runtime bot.
+     */
+    [CLEAR_CHANGES_SYMBOL]: () => void;
+
+    /**
+     * A function that can set a tag mask on the bot.
+     */
+    [SET_TAG_MASK_SYMBOL]: (tag: string, value: any, space?: string) => void;
+
+    /**
+     * A function that can clear the tag masks from the bot.
+     * @param space The space that the masks should be cleared from. If not specified then all tag masks in all spaces will be cleared.
+     */
+    [CLEAR_TAG_MASKS_SYMBOL]: (space?: string) => any;
+}
+
+/**
+ * An interface that maps tag names to compiled listener functions.
+ */
+export interface CompiledBotListeners {
+    [tag: string]: CompiledBotListener;
+}
+
+/**
+ * The type of a compiled bot listener.
+ */
+export type CompiledBotListener = (arg?: any) => any;
+
+/**
  * Defines an interface for a bot that is precalculated.
  */
 export interface PrecalculatedBot extends Bot {
@@ -50,11 +148,30 @@ export interface Bot {
      * The set of signatures that the bot contains.
      */
     signatures?: BotSignatures;
+
+    /**
+     * The set of tag masks that have been applied to the bot.
+     */
+    masks?: BotTagMasks;
 }
 
+/**
+ * Defines an interface that indicates a bot was updated.
+ */
 export interface UpdatedBot {
+    /**
+     * The updated bot.
+     */
     bot: Bot;
+
+    /**
+     * The tags that were updated on the bot.
+     */
     tags: string[];
+
+    /**
+     * The signatures that were updated on the bot.
+     */
     signatures?: string[];
 }
 
@@ -109,6 +226,20 @@ export interface ScriptTags extends PrecalculatedTags {
  */
 export interface BotSignatures {
     [hash: string]: string;
+}
+
+/**
+ * Defines an interface for a map of tag masks to tag names.
+ *
+ * Tag masks are special tags that can exist in a different space from the bot they are applied to.
+ * This makes it possible to have some local-only data applied to a shared bot for example.
+ *
+ * The actual data structure is similar to the bot tags structure except that tags are additionally
+ * split by the space that they originated from. This makes it possible to identify which space a tag came from and also
+ * prevents cross-space conflicts.
+ */
+export interface BotTagMasks {
+    [space: string]: BotTags;
 }
 
 export interface BotTags {
@@ -167,7 +298,11 @@ export interface BotTags {
     ['menuPortalConfigBot']?: string;
     ['leftWristPortalConfigBot']?: string;
     ['rightWristPortalConfigBot']?: string;
-    ['_editingBot']?: string;
+    ['editingBot']?: string;
+    cursorStartIndex?: number;
+    cursorEndIndex?: number;
+    ['pagePixelWidth']?: number;
+    ['pagePixelHeight']?: number;
 
     // Admin channel task tags
     ['auxRunningTasks']?: boolean;
@@ -272,6 +407,10 @@ export type BotShape =
     | 'mesh'
     | 'iframe'
     | 'frustum'
+    | 'helix'
+    | 'egg'
+    | 'hex'
+    | 'cursor'
     | 'nothing';
 
 /**
@@ -630,6 +769,36 @@ export const BOOTSTRAP_PARTITION_ID = 'bootstrap';
 export const OTHER_PLAYERS_PARTITION_ID = 'otherPlayers';
 
 /**
+ * The space that tag masks get placed in by default.
+ */
+export const DEFAULT_TAG_MASK_SPACE: BotSpace = 'tempLocal';
+
+/**
+ * The list of spaces that tag masks should be prioritized by.
+ * Listed in reverse order of where they actually end up applied.
+ */
+export const TAG_MASK_SPACE_PRIORITIES_REVERSE = [
+    'admin',
+    'shared',
+    'otherPlayers',
+    'player',
+    'local',
+    'tempLocal',
+] as BotSpace[];
+
+/**
+ * The list of spaces that tag masks should be prioritized by.
+ */
+export const TAG_MASK_SPACE_PRIORITIES = [
+    'tempLocal',
+    'local',
+    'player',
+    'otherPlayers',
+    'shared',
+    'admin',
+] as BotSpace[];
+
+/**
  * The name of the branch that contains admin space.
  */
 export const ADMIN_BRANCH_NAME = '$admin';
@@ -973,6 +1142,21 @@ export const ON_BOT_CHANGED_ACTION_NAME = 'onBotChanged';
 export const ON_ANY_BOTS_CHANGED_ACTION_NAME = 'onAnyBotsChanged';
 
 /**
+ * The name of the event that is triggered when a tag is clicked in the sheet.
+ */
+export const ON_SHEET_TAG_CLICK = 'onSheetTagClick';
+
+/**
+ * The name of the event that is triggered when a Bot's ID is clicked in the sheet.
+ */
+export const ON_SHEET_BOT_ID_CLICK = 'onSheetBotIDClick';
+
+/**
+ * The name of the event that is triggered when a Bot is clicked in the sheet.
+ */
+export const ON_SHEET_BOT_CLICK = 'onSheetBotClick';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -996,11 +1180,16 @@ export const TAG_PORTAL: string = 'tagPortal';
 export const DATA_PORTAL: string = 'dataPortal';
 
 /**
+ * The name of the sheet portal.
+ */
+export const SHEET_PORTAL: string = 'sheetPortal';
+
+/**
  * The list of all portal tags.
  */
 export const KNOWN_PORTALS: string[] = [
     'pagePortal',
-    'sheetPortal',
+    SHEET_PORTAL,
     'inventoryPortal',
     'menuPortal',
     'leftWristPortal',
@@ -1069,6 +1258,9 @@ export const KNOWN_TAGS: string[] = [
     'inventoryCameraRotationOffsetX',
     'inventoryCameraRotationOffsetY',
     'inventoryCameraRotationOffsetZ',
+    'pagePixelWidth',
+    'pagePixelHeight',
+    'pageTitle',
 
     'mousePointerPositionX',
     'mousePointerPositionY',
@@ -1103,7 +1295,10 @@ export const KNOWN_TAGS: string[] = [
     'rightPointer_squeeze',
     'forceSignedScripts',
 
-    '_editingBot',
+    'editingBot',
+    'editingTag',
+    'cursorStartIndex',
+    'cursorEndIndex',
 
     'portalColor',
     'portalLocked',
@@ -1137,6 +1332,10 @@ export const KNOWN_TAGS: string[] = [
     'tagPortalShowButton',
     'tagPortalButtonIcon',
     'tagPortalButtonHint',
+    'sheetPortalShowButton',
+    'sheetPortalButtonIcon',
+    'sheetPortalButtonHint',
+    'sheetPortalAllowedTags',
 
     'color',
     'creator',
@@ -1180,6 +1379,8 @@ export const KNOWN_TAGS: string[] = [
     'minLODThreshold',
     'pointable',
     'focusable',
+    'transformer',
+    'menuItemStyle',
 
     'taskOutput',
     'taskError',
@@ -1289,6 +1490,10 @@ export const KNOWN_TAGS: string[] = [
 
     ON_BOT_CHANGED_ACTION_NAME,
     ON_ANY_BOTS_CHANGED_ACTION_NAME,
+
+    ON_SHEET_TAG_CLICK,
+    ON_SHEET_BOT_ID_CLICK,
+    ON_SHEET_BOT_CLICK,
 ];
 
 export function onClickArg(face: string, dimension: string) {
@@ -1382,6 +1587,13 @@ export function onLODArg(bot: Bot, dimension: string) {
 }
 
 export function onPointerEnterExitArg(bot: Bot, dimension: string) {
+    return {
+        bot,
+        dimension,
+    };
+}
+
+export function onPointerUpDownArg(bot: Bot, dimension: string) {
     return {
         bot,
         dimension,

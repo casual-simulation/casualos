@@ -1786,6 +1786,11 @@ declare interface Bot {
     tags: BotTags;
 
     /**
+     * The tag masks that are applied to the bot.
+     */
+    masks: BotTags;
+
+    /**
      * The raw tag values that the bot contains.
      * If you want to access the script code for a formula, use this.
      * Otherwise, use the tags property.
@@ -1796,7 +1801,27 @@ declare interface Bot {
      * The tags that have been changed on this bot.
      */
     changes: BotTags;
+
+    /**
+     * The tag masks that have been changed on this bot.
+     */
+    maskChanges: {
+        [space: string]: BotTags;
+    };
 }
+
+/**
+ * Defines the possible bot anchor points.
+ */
+declare type BotAnchorPoint =
+    | 'top'
+    | 'front'
+    | 'back'
+    | 'left'
+    | 'right'
+    | 'bottom'
+    | 'center'
+    | [number, number, number];
 
 /**
  * Defines an interface for the state that an AUX bot can contain.
@@ -2409,6 +2434,26 @@ declare global {
      * setTag(this, "color", "green");
      */
     function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any;
+
+    /**
+     * Sets the value of the given tag mask in the given bot.
+     * @param bot The bot.
+     * @param tag The tag to set.
+     * @param value The value to set.
+     * @param space The space that the tag mask should be placed in. If not specified, then the tempLocal space will be used.
+     * 
+     * @example
+     * // Set a bot's color to "green".
+     * setTagMask(this, "color", "green")
+     */
+    function setTagMask(bot: Bot | Bot[], tag: string, value: any, space?: BotSpace): any;
+
+    /**
+     * Clears the tag masks from the given bot.
+     * @param bot The bot or bots that the tag masks should be cleared from.
+     * @param space The space that the tag masks should be cleared from. If not specified, then all spaces will be cleared.
+     */
+    function clearTagMasks(bot: Bot | Bot[], space?: BotSpace): void;
 
     /**
      * Creates a mod from declareed mod data.
@@ -3538,6 +3583,13 @@ declare global {
          * @param direction The direction that the ray is pointing.
          */
         intersectPlane(origin: Point3D, direction: Point3D): Point3D;
+
+        /**
+         * Gets the position offset for the given bot anchor point.
+         * This is useful for doing custom math using anchor points.
+         * @param anchorPoint The anchor point to get the offset for.
+         */
+        getAnchorPointOffset(anchorPoint: BotAnchorPoint): Point3D;
     };
 
     // @ts-ignore: Ignore redeclaration
@@ -3738,5 +3790,17 @@ declare global {
             rotation: { x?: number, y?: number, z?: number },
             options?: TweenOptions
         ): LocalRotationTweenAction;
+
+        /**
+         * Gets the position that the center of the given bot would placed at if the bot was using the given anchor point.
+         * @param bot The bot.
+         * @param dimension The dimension to get the position of.
+         * @param anchorPoint The anchor point.
+         */
+        getAnchorPointPosition(
+            bot: Bot,
+            dimension: string,
+            anchorPoint: BotAnchorPoint
+        ): {x: number, y: number, z: number};
     };
 }

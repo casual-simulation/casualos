@@ -643,16 +643,15 @@ export function nth<T>(iterator: IterableIterator<T>, item: number) {
 }
 
 /**
- * Iterates all of the children of the given node.
+ * Iterates all of the direct children of the given node.
  * @param parent The node.
  */
 export function* iterateChildren<T>(parent: WeaveNode<T>) {
     const firstChild = first(iterateCausalGroup(parent));
     if (firstChild) {
         yield firstChild;
+        yield* iterateSiblings(firstChild);
     }
-
-    yield* iterateSiblings(firstChild);
 }
 
 /**
@@ -661,6 +660,26 @@ export function* iterateChildren<T>(parent: WeaveNode<T>) {
  */
 export function* iterateSiblings<T>(start: WeaveNode<T>) {
     for (let node of iterateFrom(start.next)) {
+        if (idEquals(node.atom.cause, start.atom.cause)) {
+            yield node;
+        }
+        if (
+            node.atom.cause !== null &&
+            start.atom.cause !== null &&
+            node.atom.cause.timestamp < start.atom.cause.timestamp
+        ) {
+            break;
+        }
+    }
+}
+
+/**
+ * Iterates all of the sibling nodes that occur before the given node.
+ * Iterated in reverse order from the oldest to the newest.
+ * @param start The start node.
+ */
+export function* iterateNewerSiblings<T>(start: WeaveNode<T>) {
+    for (let node of iterateReverse(start.prev)) {
         if (idEquals(node.atom.cause, start.atom.cause)) {
             yield node;
         }
@@ -700,11 +719,26 @@ export function* iterateFrom<T>(start: WeaveNode<T>) {
 }
 
 /**
+ * Iterates all of the nodes before this node to the beginning of the linked list.
+ * @param start The node to start from.
+ */
+export function* iterateReverse<T>(start: WeaveNode<T>) {
+    let current = start;
+    while (current) {
+        yield current;
+        current = current.prev;
+    }
+}
+
+/**
  * Calculates the atom that was added to the tree from the given result.
  * Returns null if no atom was added.
  * @param result The weave result.
  */
 export function addedAtom(result: WeaveResult): Atom<any> {
+    if (!result) {
+        return null;
+    }
     if (result.type === 'atom_added') {
         return result.atom;
     } else if (result.type === 'conflict') {

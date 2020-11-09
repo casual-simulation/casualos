@@ -10,6 +10,7 @@ import { Game } from '../../shared/scene/Game';
 import { map, tap, combineLatest } from 'rxjs/operators';
 import { DimensionItem } from '../DimensionItem';
 import { ItemDimension } from '../ItemDimension';
+import { appManager } from '../../shared/AppManager';
 
 @Component({
     components: {
@@ -59,16 +60,18 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             this._game
                 .watchCameraRigDistanceSquared(this._game.inventoryCameraRig)
                 .pipe(
-                    map(distSqr => distSqr >= 75),
-                    tap(visible => (this.showInventoryCameraHome = visible))
+                    map((distSqr) => distSqr >= 75),
+                    tap((visible) => (this.showInventoryCameraHome = visible))
                 )
                 .subscribe()
         );
 
-        let menuContext = new ItemDimension(['menuPortal']);
+        let menuContext = new ItemDimension(appManager.simulationManager, [
+            'menuPortal',
+        ]);
         this._subscriptions.push(menuContext);
         this._subscriptions.push(
-            menuContext.itemsUpdated.subscribe(items => (this.menu = items))
+            menuContext.itemsUpdated.subscribe((items) => (this.menu = items))
         );
 
         if (this._game.inventoryViewport) {
@@ -86,13 +89,13 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             this._subscriptions.push(
                 this._game.inventoryViewport.onUpdated
                     .pipe(
-                        map(viewport => ({
+                        map((viewport) => ({
                             bottom: viewport.y + 'px',
                             left: viewport.x + 'px',
                             width: viewport.width + 'px',
                             height: viewport.height + 'px',
                         })),
-                        tap(style => {
+                        tap((style) => {
                             this.inventoryViewportStyle = style;
                         })
                     )
@@ -118,7 +121,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                             width: main.width + 'px',
                             height: main.height - inventory.height + 'px',
                         })),
-                        tap(style => {
+                        tap((style) => {
                             this.mainViewportStyle = style;
                         })
                     )

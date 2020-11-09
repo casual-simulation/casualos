@@ -15,6 +15,10 @@ pipeline {
         AUX_GIT_REPO_NAME = 'casualos'
     }
 
+    parameters {
+        string(name: 'MAIN_BRANCH', defaultValue: 'master', description: 'The main branch that should be used to determine if the current build is the latest production release.')
+    }
+
     tools {
         nodejs('Node10.13.0')
     }
@@ -129,9 +133,9 @@ def BuildDocker() {
     
     echo "Building..."
 
-    /usr/local/bin/docker build -t "casualsimulation/aux:${gitTag}" -t "casualsimulation/aux:latest" .
-    /usr/local/bin/docker build -t "casualsimulation/aux-proxy:${gitTag}" -t "casualsimulation/aux-proxy:latest" ./src/aux-proxy
-    /usr/local/bin/docker build -t "casualsimulation/aux-redirector:${gitTag}" -t "casualsimulation/aux-redirector:latest" ./src/aux-redirector
+    /usr/local/bin/docker build -t "casualsimulation/aux:${gitTag}" -t "casualsimulation/aux:latest" -t "casualsimulation/aux:alpha" .
+    /usr/local/bin/docker build -t "casualsimulation/aux-proxy:${gitTag}" -t "casualsimulation/aux-proxy:latest" -t "casualsimulation/aux-proxy:alpha" ./src/aux-proxy
+    /usr/local/bin/docker build -t "casualsimulation/aux-redirector:${gitTag}" -t "casualsimulation/aux-redirector:latest" -t "casualsimulation/aux-redirector:alpha" ./src/aux-redirector
     """
 }
 
@@ -152,7 +156,7 @@ def BuildDockerArm32() {
     remote.identityFile = RPI_SSH_KEY_FILE
 
     sshPut remote: remote, from: './temp/output.tar.gz', into: '/home/pi'
-    sshCommand remote: remote, command: "cd /home/pi; mkdir -p output; tar xzf ./output.tar.gz -C output; cd output; docker build -t ${DOCKER_ARM32_TAG}:${gitTag} -t ${DOCKER_ARM32_TAG}:latest -f Dockerfile.arm32 ."
+    sshCommand remote: remote, command: "cd /home/pi; mkdir -p output; tar xzf ./output.tar.gz -C output; cd output; docker build -t ${DOCKER_ARM32_TAG}:${gitTag} -t ${DOCKER_ARM32_TAG}:latest -t ${DOCKER_ARM32_TAG}:alpha -f Dockerfile.arm32 ."
     
 }
 
@@ -193,13 +197,16 @@ def PublishDocs() {
 }
 
 def CreateGithubRelease() {
-    sh """#!/bin/bash
-    set -e
-    . ~/.bashrc
-    echo \$(pwd)
-    CHANGELOG=\$(./script/most_recent_changelog.sh)
-    node ./src/make-github-release/bin/make-github-release.js release --owner "${AUX_GIT_REPO_OWNER}" --repo ${AUX_GIT_REPO_NAME} --text \"\${CHANGELOG}\" --auth ${GITHUB_RELEASE_TOKEN}
-    """
+    // Only create a Github release for main branch builds
+    if (env.BRANCH_NAME == params.MAIN_BRANCH) {
+        sh """#!/bin/bash
+        set -e
+        . ~/.bashrc
+        echo \$(pwd)
+        CHANGELOG=\$(./script/most_recent_changelog.sh)
+        node ./src/make-github-release/bin/make-github-release.js release --owner "${AUX_GIT_REPO_OWNER}" --repo ${AUX_GIT_REPO_NAME} --text \"\${CHANGELOG}\" --auth ${GITHUB_RELEASE_TOKEN}
+        """
+    }
 }
 
 def PublishDocker() {
@@ -210,12 +217,33 @@ def PublishDocker() {
     echo "Publishing the x64 Docker Image...."
     /usr/local/bin/docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
     /usr/local/bin/docker push casualsimulation/aux:${gitTag}
-    /usr/local/bin/docker push casualsimulation/aux:latest
     /usr/local/bin/docker push casualsimulation/aux-proxy:${gitTag}
-    /usr/local/bin/docker push casualsimulation/aux-proxy:latest
     /usr/local/bin/docker push casualsimulation/aux-redirector:${gitTag}
-    /usr/local/bin/docker push casualsimulation/aux-redirector:latest
     """
+
+    if (env.BRANCH_NAME == params.MAIN_BRANCH) {
+        sh """#!/bin/bash
+        set -e
+        . ~/.bashrc
+        
+        echo "Publishing the latest tags...."
+        /usr/local/bin/docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+        /usr/local/bin/docker push casualsimulation/aux:latest
+        /usr/local/bin/docker push casualsimulation/aux-proxy:latest
+        /usr/local/bin/docker push casualsimulation/aux-redirector:latest
+        """
+    } else {
+        sh """#!/bin/bash
+        set -e
+        . ~/.bashrc
+        
+        echo "Publishing the alpha tags...."
+        /usr/local/bin/docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+        /usr/local/bin/docker push casualsimulation/aux:alpha
+        /usr/local/bin/docker push casualsimulation/aux-proxy:alpha
+        /usr/local/bin/docker push casualsimulation/aux-redirector:alpha
+        """
+    }
 }
 
 def PublishDockerArm32() {
@@ -226,7 +254,13 @@ def PublishDockerArm32() {
     remote.allowAnyHosts = true
     remote.identityFile = RPI_SSH_KEY_FILE
 
-    sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:${gitTag} && docker push ${DOCKER_ARM32_TAG}:latest"
+    sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:${gitTag}"
+
+    if (env.BRANCH_NAME == params.MAIN_BRANCH) {
+        sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:latest"
+    } else {
+        sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:alpha"
+    }
 }
 
 def Cleanup() {

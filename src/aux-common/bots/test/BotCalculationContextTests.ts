@@ -505,7 +505,7 @@ export function botCalculationContextTests(
     describe('isUserActive()', () => {
         const tags = ['auxPlayerActive', 'playerActive'];
 
-        describe.each(tags)('%s', tag => {
+        describe.each(tags)('%s', (tag) => {
             it(`should return true if the ${tag} tag is true`, () => {
                 dateNowMock.mockReturnValue(1000 * 60 + 999);
                 const bot1 = createBot(undefined, {
@@ -907,6 +907,10 @@ export function botCalculationContextTests(
             ['iframe'],
             ['nothing'],
             ['frustum'],
+            ['egg'],
+            ['helix'],
+            ['hex'],
+            ['cursor'],
         ];
         const tagCases = ['auxForm', 'form'];
 
@@ -2191,9 +2195,11 @@ export function botCalculationContextTests(
             });
 
             const calc = createPrecalculatedContext([thisBot]);
-            const result = isBotInDimension(calc, thisBot, <any>(
-                new String('dimension')
-            ));
+            const result = isBotInDimension(
+                calc,
+                thisBot,
+                <any>new String('dimension')
+            );
 
             expect(result).toBe(true);
         });

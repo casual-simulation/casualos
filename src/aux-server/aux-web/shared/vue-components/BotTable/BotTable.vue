@@ -13,6 +13,14 @@
                         <div v-show="!isMakingNewTag">
                             <!-- keep place here so it shows up as empty-->
                             <md-button
+                                v-if="!isSearch && showNewBot"
+                                class="md-icon-button create-bot"
+                                @click="createBot()"
+                            >
+                                <cube-icon></cube-icon>
+                                <md-tooltip>Create Empty Bot</md-tooltip>
+                            </md-button>
+                            <md-button
                                 v-show="hasBots"
                                 class="md-icon-button"
                                 @click="openNewTag()"
@@ -29,14 +37,6 @@
                                     <img alt="Add Tag" src="../../public/icons/tag-add.png" />
                                 </picture>
                                 <md-tooltip>Add Tag</md-tooltip>
-                            </md-button>
-                            <md-button
-                                v-if="!isSearch && showNewBot"
-                                class="md-icon-button create-bot"
-                                @click="createBot()"
-                            >
-                                <cube-icon></cube-icon>
-                                <md-tooltip>Create Empty Bot</md-tooltip>
                             </md-button>
                         </div>
                     </div>
@@ -58,7 +58,7 @@
 
                     <!-- Other tags -->
                     <div
-                        v-for="(tag, index) in tags"
+                        v-for="({ tag, space }, index) in tags"
                         :key="index"
                         class="bot-cell header"
                         @click="searchForTag(tag)"
@@ -66,15 +66,15 @@
                         <bot-tag
                             ref="tags"
                             :tag="tag"
-                            :isScript="isTagOnlyScripts(tag)"
-                            :isFormula="isTagOnlyFormulas(tag)"
+                            :isScript="isTagOnlyScripts(tag, space)"
+                            :isFormula="isTagOnlyFormulas(tag, space)"
                             :allowCloning="true"
                         ></bot-tag>
 
                         <!-- Show X button for tags that don't have values or tags that are hidden -->
                         <md-button
                             class="remove-tag md-icon-button md-dense"
-                            v-if="!tagHasValue(tag) || isHiddenTag(tag)"
+                            v-if="!tagHasValue(tag, space) || isHiddenTag(tag)"
                             @click="removeTag(tag)"
                         >
                             <md-icon>close</md-icon>
@@ -96,7 +96,7 @@
                                 ref="tags"
                                 :allowCloning="true"
                                 :createMod="true"
-                                @click="selectBot(bot)"
+                                @click="botClicked(bot)"
                             >
                             </mini-bot>
                         </div>
@@ -110,6 +110,7 @@
                             :allowCloning="true"
                             :shortID="getShortId(bot)"
                             class="bot-cell header"
+                            @click="botIDClick"
                         >
                         </bot-id>
 
@@ -124,7 +125,7 @@
 
                         <!-- Bot Tags -->
                         <div
-                            v-for="(tag, tagIndex) in tags"
+                            v-for="({ tag, space }, tagIndex) in tags"
                             :key="`${bot.id}-${tagIndex}`"
                             class="bot-cell value"
                             :class="getTagCellClass(bot, tag)"
@@ -134,9 +135,10 @@
                                 :readOnly="readOnly || isBotReadOnly(bot)"
                                 :bot="bot"
                                 :tag="tag"
-                                :updateTime="updateTime"
+                                :space="space"
+                                :alwaysShowRealValue="shouldShowRealValue(tag, space, tagIndex)"
                                 @tagChanged="onTagChanged"
-                                @focusChanged="onTagFocusChanged(bot, tag, $event)"
+                                @focusChanged="onTagFocusChanged(bot, tag, space, $event)"
                             ></bot-value>
                         </div>
 
@@ -165,9 +167,9 @@
                 </div>
             </div>
             <div class="bot-table-middle">
-                <md-button class="md-fab exit-sheet" @click="exitSheet()">
-                    <md-icon>web_asset</md-icon>
-                    <md-tooltip>Page Portal</md-tooltip>
+                <md-button v-if="showExitSheet" class="md-fab exit-sheet" @click="exitSheet()">
+                    <md-icon>{{ finalExitSheetIcon }}</md-icon>
+                    <md-tooltip>{{ finalExitSheetHint }}</md-tooltip>
                 </md-button>
             </div>
             <tag-value-editor-wrapper v-if="focusedBot && focusedTag && !isBotReadOnly(focusedBot)">
@@ -175,6 +177,7 @@
                     ref="multilineEditor"
                     :bot="focusedBot"
                     :tag="focusedTag"
+                    :space="focusedSpace"
                     :showDesktopEditor="!isMobile()"
                 ></tag-value-editor>
             </tag-value-editor-wrapper>

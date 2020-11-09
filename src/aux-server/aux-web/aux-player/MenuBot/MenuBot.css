@@ -3,4 +3,28 @@
     white-space: normal;
     font-size: 16px;
     flex: 1 1 auto;
+    line-height: 24px;
+}
+
+.menu-bot.md-list-item > .md-list-item-button {
+    height: 100%;
+}
+
+.menu-bot .md-icon.md-theme-default {
+    color: inherit;
+}
+
+.menu-bot-icon {
+    display: inline;
+}
+
+.menu-bot-icon {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+}
+
+.menu-bot-progress {
+    float: right;
 }

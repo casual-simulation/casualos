@@ -205,7 +205,7 @@ export function createCubeStrokeGeometry(): BufferGeometry {
         6,
         7,
     ];
-    const lines: number[] = flatMap(indicies, i => verticies[i]);
+    const lines: number[] = flatMap(indicies, (i) => verticies[i]);
     const array = new Float32Array(lines);
     geo.setAttribute('position', new BufferAttribute(array, 3));
 
@@ -277,7 +277,7 @@ export function convertToBox2(box3: Box3): Box2 {
 export function setLayer(obj: Object3D, layer: number, children?: boolean) {
     obj.layers.set(layer);
     if (children) {
-        obj.traverse(child => {
+        obj.traverse((child) => {
             child.layers.set(layer);
         });
     }
@@ -296,7 +296,7 @@ export function setLayerMask(
 ) {
     obj.layers.mask = layerMask;
     if (children) {
-        obj.traverse(child => {
+        obj.traverse((child) => {
             child.layers.mask = layerMask;
         });
     }
@@ -370,7 +370,7 @@ export function isTransparent(color: string): boolean {
 export function disposeMaterial(material: Material | Material[]) {
     if (!material) return;
     if (Array.isArray(material)) {
-        material.forEach(m => m.dispose());
+        material.forEach((m) => m.dispose());
     } else {
         material.dispose();
     }
@@ -435,7 +435,7 @@ export function disposeGroup(group: Group) {
     if (!group) {
         return;
     }
-    group.traverse(obj => disposeObject3D(obj));
+    group.traverse((obj) => disposeObject3D(obj));
 }
 
 /**
@@ -715,4 +715,26 @@ export function percentOfScreen(
     } else {
         return 0;
     }
+}
+
+/**
+ * Safely sets the parent of the given object to the given parent by ensuring that there are no infinite cycles.
+ * Returns whether the object was able to be parented.
+ * @param obj The object whose parent should be set.
+ * @param parent The parent.
+ */
+export function safeSetParent(obj: Object3D, parent: Object3D): boolean {
+    let grandparent = parent;
+    while (grandparent) {
+        if (grandparent === obj) {
+            return false;
+        }
+        grandparent = grandparent.parent;
+    }
+
+    if (obj.parent) {
+        obj.parent.remove(obj);
+    }
+    parent.add(obj);
+    return true;
 }

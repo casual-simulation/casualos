@@ -31,6 +31,7 @@ export interface BrowserSimulation extends RemoteSimulation {
      * @param bot The bot to update.
      * @param tag The tag to update.
      * @param value The value that the tag should be set to.
+     * @param space The space that the tag should be set in. If specified, then the tag mask in the given space will be set to the given value.
      */
-    editBot(bot: Bot, tag: string, value: any): Promise<void>;
+    editBot(bot: Bot, tag: string, value: any, space?: string): Promise<void>;
 }

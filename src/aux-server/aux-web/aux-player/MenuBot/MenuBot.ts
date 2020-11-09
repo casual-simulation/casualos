@@ -14,13 +14,28 @@ import {
     ANY_CLICK_ACTION_NAME,
     onAnyClickArg,
     hasValue,
+    getBotScale,
+    calculateStringTagValue,
+    calculateNumericalTagValue,
+    clamp,
+    onPointerUpDownArg,
+    onPointerEnterExitArg,
+    ON_POINTER_ENTER,
+    ON_POINTER_EXIT,
+    ON_ANY_POINTER_EXIT,
+    ON_ANY_POINTER_ENTER,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
 import { first } from '@casual-simulation/causal-trees';
+import { safeParseURL } from '../PlayerUtils';
+import PieProgress from '../../shared/vue-components/PieProgress/PieProgress';
+import { Input } from '../../shared/scene/Input';
 
 @Component({
-    components: {},
+    components: {
+        'pie-progress': PieProgress,
+    },
 })
 export default class MenuBot extends Vue {
     @Prop() item: DimensionItem;
@@ -32,6 +47,32 @@ export default class MenuBot extends Vue {
     labelColor: string = '#000';
     labelAlign: BotLabelAlignment = 'center';
     backgroundColor: string = '#FFF';
+    scaleY: number = 1;
+    extraStyle: Object = {};
+    icon: string = null;
+    iconIsURL: boolean = false;
+    progress: number = null;
+    progressBarForeground: string = null;
+    progressBarBackground: string = null;
+
+    private _down: boolean = false;
+    private _hover: boolean = false;
+
+    get hasProgress() {
+        return hasValue(this.progress);
+    }
+
+    get hasIcon() {
+        return hasValue(this.icon);
+    }
+
+    get style(): any {
+        return {
+            ...this.extraStyle,
+            'background-color': this.backgroundColor,
+            height: this.scaleY * 40 + 'px',
+        };
+    }
 
     @Watch('item')
     private async _botChanged(item: DimensionItem) {
@@ -41,10 +82,19 @@ export default class MenuBot extends Vue {
             this._updateLabel(calc, item.bot);
             this._updateColor(calc, item.bot);
             this._updateAlignment(calc, item.bot);
+            this._updateScale(calc, item.bot);
+            this._updateStyle(calc, item.bot);
+            this._updateIcon(calc, item.bot);
+            this._updateProgress(calc, item.bot);
         } else {
             this.label = '';
             this.labelColor = '#000';
             this.backgroundColor = '#FFF';
+            this.scaleY = 1;
+            this.extraStyle = {};
+            this.icon = null;
+            this.iconIsURL = false;
+            this.progress = null;
         }
     }
 
@@ -54,6 +104,17 @@ export default class MenuBot extends Vue {
 
     mounted() {
         this._botChanged(this.item);
+        this.mouseUp = this.mouseUp.bind(this);
+        this.touchStart = this.touchStart.bind(this);
+        this.touchEnd = this.touchEnd.bind(this);
+        this.touchCancel = this.touchCancel.bind(this);
+        window.addEventListener('mouseup', this.mouseUp);
+        window.addEventListener('touchstart', this.touchStart);
+    }
+
+    beforeDestroy() {
+        window.removeEventListener('mouseup', this.mouseUp);
+        window.removeEventListener('touchstart', this.touchStart);
     }
 
     async click() {
@@ -69,6 +130,97 @@ export default class MenuBot extends Vue {
             null,
             onAnyClickArg(null, dimension, this.item.bot)
         );
+    }
+
+    async mouseDown() {
+        this._down = true;
+
+        const simulation = _simulation(this.item);
+        const dimension = first(this.item.dimensions.values());
+        simulation.helper.action(
+            'onPointerDown',
+            [this.item.bot],
+            onPointerUpDownArg(this.item.bot, dimension)
+        );
+    }
+
+    async mouseEnter() {
+        this._hover = true;
+        const simulation = _simulation(this.item);
+        const dimension = first(this.item.dimensions.values());
+        simulation.helper.transaction(
+            ...simulation.helper.actions([
+                {
+                    eventName: ON_POINTER_ENTER,
+                    bots: [this.item.bot],
+                    arg: onPointerEnterExitArg(this.item.bot, dimension),
+                },
+                {
+                    eventName: ON_ANY_POINTER_ENTER,
+                    bots: null,
+                    arg: onPointerEnterExitArg(this.item.bot, dimension),
+                },
+            ])
+        );
+    }
+
+    async mouseLeave() {
+        if (this._hover === true) {
+            this._hover = false;
+            const simulation = _simulation(this.item);
+            const dimension = first(this.item.dimensions.values());
+            simulation.helper.transaction(
+                ...simulation.helper.actions([
+                    {
+                        eventName: ON_POINTER_EXIT,
+                        bots: [this.item.bot],
+                        arg: onPointerEnterExitArg(this.item.bot, dimension),
+                    },
+                    {
+                        eventName: ON_ANY_POINTER_EXIT,
+                        bots: null,
+                        arg: onPointerEnterExitArg(this.item.bot, dimension),
+                    },
+                ])
+            );
+        }
+    }
+
+    async mouseUp() {
+        if (this._down === true) {
+            this._down = false;
+            const simulation = _simulation(this.item);
+            const dimension = first(this.item.dimensions.values());
+            simulation.helper.action(
+                'onPointerUp',
+                [this.item.bot],
+                onPointerUpDownArg(this.item.bot, dimension)
+            );
+        }
+    }
+
+    async touchStart(event: TouchEvent) {
+        const isForThisElement = Input.isEventForAnyElement(event, [this.$el]);
+        if (isForThisElement) {
+            event.target.addEventListener('touchend', this.touchEnd);
+            event.target.addEventListener('touchcancel', this.touchCancel);
+
+            this.mouseDown();
+        }
+    }
+
+    touchEnd(event: TouchEvent) {
+        event.target.removeEventListener('touchend', this.touchEnd);
+        event.target.removeEventListener('touchcancel', this.touchCancel);
+
+        this.mouseUp();
+    }
+
+    touchCancel(event: TouchEvent) {
+        event.target.removeEventListener('touchend', this.touchEnd);
+        event.target.removeEventListener('touchcancel', this.touchCancel);
+
+        this.mouseUp();
     }
 
     private _updateColor(calc: BotCalculationContext, bot: Bot) {
@@ -96,6 +248,54 @@ export default class MenuBot extends Vue {
 
     private _updateAlignment(calc: BotCalculationContext, bot: Bot) {
         this.labelAlign = getBotLabelAlignment(calc, bot);
+    }
+
+    private _updateScale(calc: BotCalculationContext, bot: Bot) {
+        const scale = getBotScale(calc, bot, 1);
+        this.scaleY = scale.y;
+    }
+
+    private _updateStyle(calc: BotCalculationContext, bot: Bot) {
+        let style = calculateBotValue(calc, bot, 'menuItemStyle');
+        if (typeof style !== 'object') {
+            style = null;
+        }
+        this.extraStyle = style || {};
+    }
+
+    private _updateIcon(calc: BotCalculationContext, bot: Bot) {
+        const icon = calculateStringTagValue(calc, bot, 'auxFormAddress', null);
+        this.icon = icon;
+        this.iconIsURL = !!safeParseURL(icon);
+    }
+
+    private _updateProgress(calc: BotCalculationContext, bot: Bot) {
+        let progress = calculateNumericalTagValue(
+            calc,
+            bot,
+            'auxProgressBar',
+            null
+        );
+
+        this.progress = hasValue(progress) ? clamp(progress, 0, 1) : null;
+
+        let colorTagValue: any = calculateBotValue(
+            calc,
+            bot,
+            'auxProgressBarColor'
+        );
+        let bgColorTagValue: any = calculateBotValue(
+            calc,
+            bot,
+            'auxProgressBarBackgroundColor'
+        );
+
+        this.progressBarForeground = hasValue(colorTagValue)
+            ? colorTagValue
+            : '#000';
+        this.progressBarBackground = hasValue(bgColorTagValue)
+            ? bgColorTagValue
+            : '#fff';
     }
 }
 

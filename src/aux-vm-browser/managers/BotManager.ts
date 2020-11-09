@@ -19,6 +19,8 @@ import {
     PLAYER_PARTITION_ID,
     OTHER_PLAYERS_PARTITION_ID,
     BOOTSTRAP_PARTITION_ID,
+    getTagValueForSpace,
+    getUpdateForTagAndSpace,
 } from '@casual-simulation/aux-common';
 
 import {
@@ -70,7 +72,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         return <Observable<ConsoleMessages>>(
             this._vm.connectionStateChanged.pipe(
                 filter(
-                    m =>
+                    (m) =>
                         m.type === 'log' ||
                         m.type === 'error' ||
                         m.type === 'warn'
@@ -89,7 +91,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             id,
             config,
             createPartitions(),
-            config => new AuxVMImpl(user, config)
+            (config) => new AuxVMImpl(user, config)
         );
         this.helper.userId = user ? user.id : null;
 
@@ -153,17 +155,25 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         }
     }
 
-    async editBot(bot: Bot | BotTags, tag: string, value: any): Promise<void> {
-        const val = this.helper.botsState[bot.id].tags[tag];
+    async editBot(
+        bot: Bot | BotTags,
+        tag: string,
+        value: any,
+        space: string = null
+    ): Promise<void> {
+        const val = getTagValueForSpace(
+            this.helper.botsState[bot.id],
+            tag,
+            space
+        );
         if (val === value) {
             return;
         }
         if (isBot(bot) && bot.id !== 'empty' && bot.id !== 'mod') {
-            await this.helper.updateBot(bot, {
-                tags: {
-                    [tag]: value,
-                },
-            });
+            await this.helper.updateBot(
+                bot,
+                getUpdateForTagAndSpace(tag, value, space)
+            );
         }
     }
 

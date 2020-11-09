@@ -11,7 +11,7 @@ import {
     BotPartitionConfig,
     SearchPartitionClientConfig,
 } from './AuxPartitionConfig';
-import { Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import {
     DeviceAction,
     StatusUpdate,
@@ -20,6 +20,7 @@ import {
     SESSION_ID_CLAIM,
     USER_ROLE,
     Action,
+    CurrentVersion,
 } from '@casual-simulation/causal-trees';
 import { startWith } from 'rxjs/operators';
 import flatMap from 'lodash/flatMap';
@@ -40,6 +41,8 @@ import {
     BotsState,
     asyncResult,
     ClearSpaceAction,
+    StateUpdatedEvent,
+    stateUpdatedEvent,
 } from '../bots';
 import values from 'lodash/values';
 
@@ -60,6 +63,11 @@ export class BotPartitionImpl implements BotPartition {
     private _onBotsAdded = new Subject<Bot[]>();
     private _onBotsRemoved = new Subject<string[]>();
     private _onBotsUpdated = new Subject<UpdatedBot[]>();
+    private _onStateUpdated = new Subject<StateUpdatedEvent>();
+    private _onVersionUpdated = new BehaviorSubject<CurrentVersion>({
+        currentSite: null,
+        vector: {},
+    });
     private _onError = new Subject<any>();
     private _onEvents = new Subject<Action[]>();
     private _onStatusUpdated = new Subject<StatusUpdate>();
@@ -88,6 +96,16 @@ export class BotPartitionImpl implements BotPartition {
         return this._onBotsUpdated;
     }
 
+    get onStateUpdated(): Observable<StateUpdatedEvent> {
+        return this._onStateUpdated.pipe(
+            startWith(stateUpdatedEvent(this.state))
+        );
+    }
+
+    get onVersionUpdated(): Observable<CurrentVersion> {
+        return this._onVersionUpdated;
+    }
+
     get onError(): Observable<any> {
         return this._onError;
     }
@@ -111,7 +129,7 @@ export class BotPartitionImpl implements BotPartition {
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
-        let finalEvents = flatMap(events, e => {
+        let finalEvents = flatMap(events, (e) => {
             if (e.type === 'apply_state') {
                 return breakIntoIndividualEvents(this.state, e);
             } else if (e.type === 'add_bot') {
@@ -165,6 +183,7 @@ export class BotPartitionImpl implements BotPartition {
         events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
     ) {
         let added = [] as Bot[];
+
         for (let event of events) {
             if (event.type === 'add_bot') {
                 added.push(event.bot);
@@ -178,15 +197,32 @@ export class BotPartitionImpl implements BotPartition {
 
     private async _loadBots(event: LoadBotsAction) {
         const bots = await this._client.lookupBots(this._story, event.tags);
-        const sorted = sortBy(bots, b => b.id);
+        const sorted = sortBy(bots, (b) => b.id);
 
         if (bots.length > 0) {
+            let update = {
+                state: {},
+                addedBots: [],
+                removedBots: [],
+                updatedBots: [],
+            } as StateUpdatedEvent;
             this.state = Object.assign({}, this.state);
             for (let bot of sorted) {
                 bot.space = <any>this.space;
                 this.state[bot.id] = bot;
+
+                update.addedBots.push(bot.id);
+                update.state[bot.id] = bot;
             }
             this._onBotsAdded.next(sorted);
+
+            if (
+                update.addedBots.length > 0 ||
+                update.removedBots.length > 0 ||
+                update.updatedBots.length > 0
+            ) {
+                this._onStateUpdated.next(update);
+            }
         }
 
         if (hasValue(event.taskId)) {
@@ -197,10 +233,31 @@ export class BotPartitionImpl implements BotPartition {
     private async _clearBots(event: ClearSpaceAction) {
         await this._client.clearBots(this._story);
 
-        const ids = sortBy(values(this.state).map(b => b.id));
+        const ids = sortBy(values(this.state).map((b) => b.id));
         this.state = {};
 
-        this._onBotsRemoved.next(ids);
+        if (ids.length > 0) {
+            this._onBotsRemoved.next(ids);
+
+            let update = {
+                state: {},
+                addedBots: [],
+                removedBots: ids,
+                updatedBots: [],
+            } as StateUpdatedEvent;
+
+            for (let id of ids) {
+                update.state[id] = null;
+            }
+
+            if (
+                update.addedBots.length > 0 ||
+                update.removedBots.length > 0 ||
+                update.updatedBots.length > 0
+            ) {
+                this._onStateUpdated.next(update);
+            }
+        }
 
         if (hasValue(event.taskId)) {
             this._onEvents.next([asyncResult(event.taskId, undefined)]);

@@ -6,8 +6,9 @@ import {
     StatusUpdate,
     Action,
     RemoteActions,
+    CurrentVersion,
 } from '@casual-simulation/causal-trees';
-import { Bot, UpdatedBot, BotAction } from '../bots';
+import { Bot, UpdatedBot, BotAction, StateUpdatedEvent } from '../bots';
 import { Observable, Subscription } from 'rxjs';
 
 export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
@@ -28,6 +29,9 @@ export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
     get onBotsUpdated(): Observable<UpdatedBot[]> {
         return this._partition.onBotsUpdated;
     }
+    get onStateUpdated(): Observable<StateUpdatedEvent> {
+        return this._partition.onStateUpdated;
+    }
     get onError(): Observable<any> {
         return this._partition.onError;
     }
@@ -36,6 +40,10 @@ export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
     }
     get onStatusUpdated(): Observable<StatusUpdate> {
         return this._partition.onStatusUpdated;
+    }
+
+    get onVersionUpdated(): Observable<CurrentVersion> {
+        return this._partition.onVersionUpdated;
     }
 
     get space(): string {
@@ -84,38 +92,60 @@ export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
         onBotsAdded?: (bot: Bot[]) => void,
         onBotsRemoved?: (bot: string[]) => void,
         onBotsUpdated?: (bots: UpdatedBot[]) => void,
+        onStateUpdated?: (update: StateUpdatedEvent) => void,
         onError?: (error: any) => void,
         onEvents?: (actions: Action[]) => void,
-        onStatusUpdated?: (status: StatusUpdate) => void
+        onStatusUpdated?: (status: StatusUpdate) => void,
+        onVersionUpdated?: (version: CurrentVersion) => void
     ): Promise<void> {
         if (onBotsAdded) {
             this._sub.add(
-                this.onBotsAdded.subscribe(bots => onBotsAdded(bots))
+                this.onBotsAdded.subscribe((bots) => onBotsAdded(bots))
             );
         }
         if (onBotsRemoved) {
             this._sub.add(
-                this.onBotsRemoved.subscribe(bots => onBotsRemoved(bots))
+                this.onBotsRemoved.subscribe((bots) => onBotsRemoved(bots))
             );
         }
         if (onBotsUpdated) {
             this._sub.add(
-                this.onBotsUpdated.subscribe(bots => onBotsUpdated(bots))
+                this.onBotsUpdated.subscribe((bots) => onBotsUpdated(bots))
+            );
+        }
+        if (onStateUpdated) {
+            this._sub.add(
+                this.onStateUpdated.subscribe((update) =>
+                    onStateUpdated(update)
+                )
             );
         }
         if (onError) {
-            this._sub.add(this.onError.subscribe(err => onError(err)));
+            this._sub.add(this.onError.subscribe((err) => onError(err)));
         }
         if (onEvents) {
-            this._sub.add(this.onEvents.subscribe(events => onEvents(events)));
+            this._sub.add(
+                this.onEvents.subscribe((events) => onEvents(events))
+            );
         }
         if (onStatusUpdated) {
             this._sub.add(
-                this.onStatusUpdated.subscribe(status =>
+                this.onStatusUpdated.subscribe((status) =>
                     onStatusUpdated(status)
                 )
             );
         }
+        if (onVersionUpdated) {
+            this._sub.add(
+                this.onVersionUpdated.subscribe((version) =>
+                    onVersionUpdated(version)
+                )
+            );
+        }
+    }
+
+    async setSpace(space: string) {
+        this._partition.space = space;
     }
 
     get closed(): boolean {

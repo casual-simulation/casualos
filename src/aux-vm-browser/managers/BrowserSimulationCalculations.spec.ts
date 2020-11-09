@@ -42,7 +42,12 @@ describe('BrowserSimulationCalculations', () => {
         helper = new BotHelper(vm);
         helper.userId = userId;
         index = new BotIndex();
-        watcher = new BotWatcher(helper, index, vm.stateUpdated);
+        watcher = new BotWatcher(
+            helper,
+            index,
+            vm.stateUpdated,
+            vm.versionUpdated
+        );
     });
 
     describe('userBotChangedCore()', () => {
@@ -77,7 +82,7 @@ describe('BrowserSimulationCalculations', () => {
             let update: UpdatedBotInfo = null;
             userBotChangedCore(login, watcher)
                 .pipe(first())
-                .subscribe(u => (update = u));
+                .subscribe((u) => (update = u));
 
             await helper.createBot(userId, {
                 test: 'abc',
@@ -107,7 +112,7 @@ describe('BrowserSimulationCalculations', () => {
             let update: UpdatedBotInfo = null;
             userBotChangedCore(login, watcher)
                 .pipe(first())
-                .subscribe(u => (update = u));
+                .subscribe((u) => (update = u));
 
             vm.connectionStateChanged.next({
                 type: 'authentication',
@@ -181,7 +186,7 @@ describe('BrowserSimulationCalculations', () => {
                 watcher,
                 helper,
                 'auxPortal'
-            ).subscribe(bot => (update = bot));
+            ).subscribe((bot) => (update = bot));
 
             await helper.createBot(userId, {
                 auxPortalConfigBot: 'test',
@@ -221,7 +226,7 @@ describe('BrowserSimulationCalculations', () => {
                 watcher,
                 helper,
                 'auxPortal'
-            ).subscribe(bot => (update = bot));
+            ).subscribe((bot) => (update = bot));
 
             await helper.createBot(userId, {
                 auxPortalConfigBot: 'test',

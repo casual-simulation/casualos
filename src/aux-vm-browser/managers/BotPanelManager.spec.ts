@@ -26,7 +26,12 @@ describe('BotPanelManager', () => {
         helper.userId = userId;
         index = new BotIndex();
 
-        watcher = new BotWatcher(helper, index, vm.stateUpdated);
+        watcher = new BotWatcher(
+            helper,
+            index,
+            vm.stateUpdated,
+            vm.versionUpdated
+        );
 
         await vm.sendEvents([
             botAdded(
@@ -42,7 +47,7 @@ describe('BotPanelManager', () => {
     describe('botsUpdated', () => {
         it('should resolve whenever a bot in the given dimension updates', async () => {
             let bots: PrecalculatedBot[];
-            manager.botsUpdated.subscribe(e => {
+            manager.botsUpdated.subscribe((e) => {
                 bots = e.bots;
             });
 
@@ -77,7 +82,7 @@ describe('BotPanelManager', () => {
 
         it('should resolve with no bots when there is no user', async () => {
             let bots: PrecalculatedBot[];
-            manager.botsUpdated.subscribe(e => {
+            manager.botsUpdated.subscribe((e) => {
                 bots = e.bots;
             });
 
@@ -101,7 +106,7 @@ describe('BotPanelManager', () => {
         it('should include all bots when the dimension is set to true', async () => {
             manager = new BotPanelManager(watcher, helper, false);
             let bots: PrecalculatedBot[];
-            manager.botsUpdated.subscribe(e => {
+            manager.botsUpdated.subscribe((e) => {
                 bots = e.bots;
             });
 
@@ -129,7 +134,7 @@ describe('BotPanelManager', () => {
         it('should include all bots when the dimension is set to id', async () => {
             manager = new BotPanelManager(watcher, helper, false);
             let bots: PrecalculatedBot[];
-            manager.botsUpdated.subscribe(e => {
+            manager.botsUpdated.subscribe((e) => {
                 bots = e.bots;
             });
 
@@ -156,7 +161,7 @@ describe('BotPanelManager', () => {
 
         it('should update when the user bot changes the viewed dimension', async () => {
             let bots: PrecalculatedBot[];
-            manager.botsUpdated.subscribe(e => {
+            manager.botsUpdated.subscribe((e) => {
                 bots = e.bots;
             });
 
@@ -184,7 +189,7 @@ describe('BotPanelManager', () => {
 
         it('should indicate whether the portal has a value', async () => {
             let hasPortal: boolean;
-            manager.botsUpdated.subscribe(e => {
+            manager.botsUpdated.subscribe((e) => {
                 hasPortal = e.hasPortal;
             });
 
@@ -222,7 +227,7 @@ describe('BotPanelManager', () => {
 
         it('should indicate the dimension that the portal is using', async () => {
             let dimension: string;
-            manager.botsUpdated.subscribe(e => {
+            manager.botsUpdated.subscribe((e) => {
                 dimension = e.dimension;
             });
 
@@ -261,7 +266,7 @@ describe('BotPanelManager', () => {
         it('should indicate that a single bot is selected', async () => {
             let isSingleBot = false;
             let bots: PrecalculatedBot[];
-            manager.botsUpdated.subscribe(e => {
+            manager.botsUpdated.subscribe((e) => {
                 isSingleBot = e.isSingleBot;
                 bots = e.bots;
             });

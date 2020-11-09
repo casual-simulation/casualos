@@ -55,6 +55,7 @@ import {
     setColor,
     buildSRGBColor,
     calculateScale,
+    baseAuxMeshMaterial,
 } from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -64,10 +65,14 @@ import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
 import { Game } from '../Game';
 import { GameObject } from '../GameObject';
 import { FrustumHelper } from '../helpers/FrustumHelper';
+import HelixUrl from '../../public/meshes/dna_form.glb';
+import EggUrl from '../../public/meshes/egg.glb';
+import { Axial, HexMesh } from '../hex';
 
 const gltfPool = getGLTFPool('main');
 
-export class BotShapeDecorator extends AuxBot3DDecoratorBase
+export class BotShapeDecorator
+    extends AuxBot3DDecoratorBase
     implements IMeshDecorator {
     private _shape: BotShape = null;
     private _subShape: BotSubShape = null;
@@ -476,6 +481,12 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
             this._canHaveStroke = false;
         } else if (this._shape === 'frustum') {
             this._createFrustum();
+        } else if (this._shape === 'helix') {
+            this._createHelix();
+        } else if (this._shape === 'egg') {
+            this._createEgg();
+        } else if (this._shape === 'hex') {
+            this._createHex();
         }
 
         this.onMeshUpdated.invoke(this);
@@ -626,6 +637,40 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     private _createFrustum() {
         this.mesh = new FrustumHelper();
         this.container.add(this.mesh);
+        this.stroke = null;
+        this._canHaveStroke = false;
+    }
+
+    private async _createHelix() {
+        this.stroke = null;
+        this.mesh = null;
+        this._canHaveStroke = false;
+        await this._loadGLTF(HelixUrl, false);
+        this.mesh = this.scene.children[0] as Mesh;
+        let material = baseAuxMeshMaterial();
+        this.mesh.material = material;
+        this._updateColor(null);
+    }
+
+    private async _createEgg() {
+        this.stroke = null;
+        this.mesh = null;
+        this._canHaveStroke = false;
+        await this._loadGLTF(EggUrl, false);
+        this.mesh = this.scene.children[0] as Mesh;
+        this._updateColor(null);
+    }
+
+    private async _createHex() {
+        this.mesh = this.collider = new HexMesh(
+            new Axial(0, 0),
+            1,
+            1,
+            baseAuxMeshMaterial()
+        );
+        this.container.add(this.mesh);
+        this.bot3D.colliders.push(this.collider);
+        // Stroke
         this.stroke = null;
         this._canHaveStroke = false;
     }

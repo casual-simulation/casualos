@@ -20,6 +20,8 @@ import {
     CommitData,
     atomMap,
     calculateCommitDiff,
+    CurrentVersion,
+    treeVersion,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxCausalTree,
@@ -28,7 +30,7 @@ import {
     BotStateUpdates,
     applyAtoms,
 } from '../aux-format-2';
-import { Observable, Subscription, Subject } from 'rxjs';
+import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import { startWith, first } from 'rxjs/operators';
 import {
     BotAction,
@@ -54,6 +56,8 @@ import {
     SignTagAction,
     RevokeCertificateAction,
     SetSpacePasswordAction,
+    StateUpdatedEvent,
+    stateUpdatedEvent,
 } from '../bots';
 import flatMap from 'lodash/flatMap';
 import {
@@ -88,6 +92,8 @@ export class RemoteCausalRepoPartitionImpl
     protected _onBotsAdded = new Subject<Bot[]>();
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
+    protected _onStateUpdated = new Subject<StateUpdatedEvent>();
+    protected _onVersionUpdated: BehaviorSubject<CurrentVersion>;
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -109,6 +115,7 @@ export class RemoteCausalRepoPartitionImpl
     private _tree: AuxCausalTree = auxTree();
     private _client: CausalRepoClient;
     private _synced: boolean;
+    private _gotInitialAtoms: boolean = false;
 
     private: boolean;
 
@@ -132,6 +139,16 @@ export class RemoteCausalRepoPartitionImpl
 
     get onBotsUpdated(): Observable<UpdatedBot[]> {
         return this._onBotsUpdated;
+    }
+
+    get onStateUpdated(): Observable<StateUpdatedEvent> {
+        return this._onStateUpdated.pipe(
+            startWith(stateUpdatedEvent(this._tree.state))
+        );
+    }
+
+    get onVersionUpdated(): Observable<CurrentVersion> {
+        return this._onVersionUpdated;
     }
 
     get onError(): Observable<any> {
@@ -184,6 +201,10 @@ export class RemoteCausalRepoPartitionImpl
         this._temporary = config.temporary;
         this._remoteEvents =
             'remoteEvents' in config ? config.remoteEvents : true;
+        this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
+            currentSite: this._tree.site.id,
+            vector: {},
+        });
 
         // static implies read only
         this._readOnly = config.readOnly || this._static || false;
@@ -209,7 +230,7 @@ export class RemoteCausalRepoPartitionImpl
                                     ]);
                                 }
                             },
-                            err => {
+                            (err) => {
                                 if (hasValue(event.taskId)) {
                                     this._onEvents.next([
                                         asyncError(event.taskId, err),
@@ -232,15 +253,15 @@ export class RemoteCausalRepoPartitionImpl
                 } else if (event.event.type === 'get_player_count') {
                     const action = <GetPlayerCountAction>event.event;
                     this._client.devices(action.story).subscribe(
-                        e => {
+                        (e) => {
                             const devices = e.devices.filter(
-                                d => d.claims[USERNAME_CLAIM] !== 'Server'
+                                (d) => d.claims[USERNAME_CLAIM] !== 'Server'
                             );
                             this._onEvents.next([
                                 asyncResult(event.taskId, devices.length),
                             ]);
                         },
-                        err => {
+                        (err) => {
                             this._onEvents.next([
                                 asyncError(event.taskId, err),
                             ]);
@@ -250,15 +271,15 @@ export class RemoteCausalRepoPartitionImpl
                     const action = <GetStoriesAction>event.event;
                     if (action.includeStatuses) {
                         this._client.branchesStatus().subscribe(
-                            e => {
+                            (e) => {
                                 this._onEvents.next([
                                     asyncResult(
                                         event.taskId,
                                         e.branches
                                             .filter(
-                                                b => !b.branch.startsWith('$')
+                                                (b) => !b.branch.startsWith('$')
                                             )
-                                            .map(b => ({
+                                            .map((b) => ({
                                                 story: b.branch,
                                                 lastUpdateTime:
                                                     b.lastUpdateTime,
@@ -266,7 +287,7 @@ export class RemoteCausalRepoPartitionImpl
                                     ),
                                 ]);
                             },
-                            err => {
+                            (err) => {
                                 this._onEvents.next([
                                     asyncError(event.taskId, err),
                                 ]);
@@ -274,17 +295,17 @@ export class RemoteCausalRepoPartitionImpl
                         );
                     } else {
                         this._client.branches().subscribe(
-                            e => {
+                            (e) => {
                                 this._onEvents.next([
                                     asyncResult(
                                         event.taskId,
                                         e.branches.filter(
-                                            b => !b.startsWith('$')
+                                            (b) => !b.startsWith('$')
                                         )
                                     ),
                                 ]);
                             },
-                            err => {
+                            (err) => {
                                 this._onEvents.next([
                                     asyncError(event.taskId, err),
                                 ]);
@@ -309,7 +330,7 @@ export class RemoteCausalRepoPartitionImpl
             for (let i = 0; i < events.length; i++) {
                 const event = events[i];
                 if (event.type === 'unlock_space') {
-                    this._unlockSpace(event.password).then(async unlocked => {
+                    this._unlockSpace(event.password).then(async (unlocked) => {
                         if (unlocked) {
                             const extraEvents = await this.applyEvents(
                                 events.slice(i + 1)
@@ -347,7 +368,8 @@ export class RemoteCausalRepoPartitionImpl
             | UpdateBotAction
             | CreateCertificateAction
             | SignTagAction
-            | RevokeCertificateAction)[];
+            | RevokeCertificateAction
+        )[];
         for (let e of events) {
             if (e.type === 'apply_state') {
                 finalEvents.push(...breakIntoIndividualEvents(this.state, e));
@@ -425,7 +447,7 @@ export class RemoteCausalRepoPartitionImpl
      */
     private _requestBranch() {
         this._client.getBranch(this._branch).subscribe(
-            atoms => {
+            (atoms) => {
                 this._onStatusUpdated.next({
                     type: 'connection',
                     connected: true,
@@ -448,7 +470,7 @@ export class RemoteCausalRepoPartitionImpl
                     this._watchBranch();
                 }
             },
-            err => this._onError.next(err)
+            (err) => this._onError.next(err)
         );
     }
 
@@ -462,7 +484,7 @@ export class RemoteCausalRepoPartitionImpl
         this._watchingBranch = true;
         this._sub.add(
             this._client.connection.connectionState.subscribe(
-                state => {
+                (state) => {
                     const connected = state.connected;
                     this._onStatusUpdated.next({
                         type: 'connection',
@@ -483,7 +505,7 @@ export class RemoteCausalRepoPartitionImpl
                         this._updateSynced(false);
                     }
                 },
-                err => this._onError.next(err)
+                (err) => this._onError.next(err)
             )
         );
         this._sub.add(
@@ -494,7 +516,7 @@ export class RemoteCausalRepoPartitionImpl
                     siteId: this._tree.site.id,
                 })
                 .subscribe(
-                    event => {
+                    (event) => {
                         if (!this._synced) {
                             this._updateSynced(true);
                         }
@@ -547,15 +569,16 @@ export class RemoteCausalRepoPartitionImpl
                             // TODO: improve so that the updates are merged but the same effect is achieved.
                             const currentAtoms = this._tree.weave
                                 .getAtoms()
-                                .map(a => a.hash);
+                                .map((a) => a.hash);
                             this._applyAtoms([], currentAtoms);
 
                             // Re-create the tree (and therefore weave) to reset the cardinality rules.
                             this._tree = auxTree();
+                            this._gotInitialAtoms = false;
                             this._applyAtoms(event.atoms, []);
                         }
                     },
-                    err => this._onError.next(err)
+                    (err) => this._onError.next(err)
                 )
         );
     }
@@ -571,19 +594,19 @@ export class RemoteCausalRepoPartitionImpl
     private _applyAtoms(atoms: Atom<any>[], removedAtoms: string[]) {
         if (this._tree.weave.roots.length === 0 && atoms) {
             console.log(
-                `[RemoteCausalRepoPartition] [${this.space}] Got ${
-                    atoms.length
-                } atoms!`
+                `[RemoteCausalRepoPartition] [${this.space}] Got ${atoms.length} atoms!`
             );
         }
-        let { tree, updates } = applyAtoms(
+        let { tree, updates, update } = applyAtoms(
             this._tree,
             atoms,
             removedAtoms,
-            this.space
+            this.space,
+            !this._gotInitialAtoms
         );
+        this._gotInitialAtoms = true;
         this._tree = tree;
-        this._sendUpdates(updates);
+        this._sendUpdates(updates, stateUpdatedEvent(update));
     }
 
     private _applyEvents(
@@ -593,7 +616,8 @@ export class RemoteCausalRepoPartitionImpl
             | UpdateBotAction
             | CreateCertificateAction
             | SignTagAction
-            | RevokeCertificateAction)[]
+            | RevokeCertificateAction
+        )[]
     ) {
         let { tree, updates, result, actions } = applyEvents(
             this._tree,
@@ -602,7 +626,7 @@ export class RemoteCausalRepoPartitionImpl
         );
         this._tree = tree;
 
-        this._sendUpdates(updates);
+        this._sendUpdates(updates, stateUpdatedEvent(result.update));
 
         if (this._readOnly) {
             return;
@@ -619,7 +643,7 @@ export class RemoteCausalRepoPartitionImpl
         }
     }
 
-    private _sendUpdates(updates: BotStateUpdates) {
+    private _sendUpdates(updates: BotStateUpdates, update: StateUpdatedEvent) {
         if (updates.addedBots.length > 0) {
             this._onBotsAdded.next(updates.addedBots);
         }
@@ -628,7 +652,7 @@ export class RemoteCausalRepoPartitionImpl
         }
         if (updates.updatedBots.length > 0) {
             this._onBotsUpdated.next(
-                updates.updatedBots.map(u => ({
+                updates.updatedBots.map((u) => ({
                     bot: <any>u.bot,
                     tags: [...u.tags.values()],
                     signatures: u.signatures
@@ -636,6 +660,14 @@ export class RemoteCausalRepoPartitionImpl
                         : undefined,
                 }))
             );
+        }
+        if (
+            update.addedBots.length > 0 ||
+            update.removedBots.length > 0 ||
+            update.updatedBots.length > 0
+        ) {
+            this._onStateUpdated.next(update);
+            this._onVersionUpdated.next(treeVersion(this._tree));
         }
     }
 }

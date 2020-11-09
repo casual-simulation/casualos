@@ -12,6 +12,7 @@ import {
     AuxVM,
     AuxUser,
     ChannelActionResult,
+    ChannelStateVersion,
 } from '@casual-simulation/aux-vm';
 import {
     AuxChannel,
@@ -40,6 +41,7 @@ export class DenoVM implements AuxVM {
     private _deviceEvents: Subject<DeviceAction[]>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
+    private _versionUpdated: Subject<ChannelStateVersion>;
     private _onError: Subject<AuxChannelErrorType>;
     private _config: AuxConfig;
     private _worker: DenoWorker;
@@ -61,6 +63,7 @@ export class DenoVM implements AuxVM {
         this._localEvents = new Subject<LocalActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
+        this._versionUpdated = new Subject<ChannelStateVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
     }
@@ -89,11 +92,12 @@ export class DenoVM implements AuxVM {
             progress: 0.1,
         });
 
+        const debug = !!this._config.config.debug;
         this._worker = new DenoWorker(
             new URL('http://localhost:3000/deno.js'),
             {
-                logStderr: false,
-                logStdout: false,
+                logStderr: debug,
+                logStdout: debug,
                 permissions: {
                     allowNet: true,
                 },
@@ -118,37 +122,40 @@ export class DenoVM implements AuxVM {
         console.log('[DenoVM] Creating VM...');
         let workerID = workerCount + 1;
         workerCount += 1;
-        this._worker.stdout.setEncoding('utf-8');
-        this._worker.stdout.on('data', (data: string) => {
-            let lines = data.split('\n');
-            let prefixed = lines
-                .filter(line => line.length > 0)
-                .map(line => `[deno${workerID}] ` + line);
-            let combined = prefixed.join('\n');
-            console.log(combined);
-        });
-        this._worker.stderr.setEncoding('utf-8');
-        this._worker.stderr.on('data', (data: string) => {
-            let lines = data.split('\n');
-            let prefixed = lines
-                .filter(line => line.length > 0)
-                .map(line => `[deno${workerID}] ` + line);
-            let combined = prefixed.join('\n');
-            console.log(combined);
-        });
+        if (!debug) {
+            this._worker.stdout.setEncoding('utf-8');
+            this._worker.stdout.on('data', (data: string) => {
+                let lines = data.split('\n');
+                let prefixed = lines
+                    .filter((line) => line.length > 0)
+                    .map((line) => `[deno${workerID}] ` + line);
+                let combined = prefixed.join('\n');
+                console.log(combined);
+            });
+            this._worker.stderr.setEncoding('utf-8');
+            this._worker.stderr.on('data', (data: string) => {
+                let lines = data.split('\n');
+                let prefixed = lines
+                    .filter((line) => line.length > 0)
+                    .map((line) => `[deno${workerID}] ` + line);
+                let combined = prefixed.join('\n');
+                console.log(combined);
+            });
+        }
 
         const wrapper = wrap<AuxStatic>(<Endpoint>(<any>this._worker));
         this._proxy = await new wrapper(null, this._initialUser, this._config);
 
         let statusMapper = remapProgressPercent(0.2, 1);
         return await this._proxy.initAndWait(
-            proxy(events => this._localEvents.next(events)),
-            proxy(events => this._deviceEvents.next(events)),
-            proxy(state => this._stateUpdated.next(state)),
-            proxy(state =>
+            proxy((events) => this._localEvents.next(events)),
+            proxy((events) => this._deviceEvents.next(events)),
+            proxy((state) => this._stateUpdated.next(state)),
+            proxy((version) => this._versionUpdated.next(version)),
+            proxy((state) =>
                 this._connectionStateChanged.next(statusMapper(state))
             ),
-            proxy(err => this._onError.next(err))
+            proxy((err) => this._onError.next(err))
         );
     }
 
@@ -168,6 +175,10 @@ export class DenoVM implements AuxVM {
      */
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
+    }
+
+    get versionUpdated(): Observable<ChannelStateVersion> {
+        return this._versionUpdated;
     }
 
     async setUser(user: AuxUser): Promise<void> {

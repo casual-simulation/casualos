@@ -3755,6 +3755,54 @@ The **second parameter** is the tag that should be retrieved.
 const color = getTag(this, "#color");
 ```
 
+### `setTagMask(bot, tag, value, space?)`
+
+Sets the given tag mask to the given value on the given bot or list of bots.
+If a space is specified, then the tag mask will be set inside that space.
+
+The **first parameter** is the bot or list of bots that the tag mask should be set on.
+
+The **second parameter** is the tag that should be changed.
+
+The **third parameter** is the value that should be placed into the tag(s).
+
+The **fourth parameter** is optional and is the space that the tag mask should exist in.
+If omitted, then the tag mask will be created in the `tempLocal` space.
+
+#### Examples:
+
+1. Set a bot's <TagLink tag='color'/> to `green`.
+```typescript
+setTagMask(this, "#color", "green");
+```
+
+2. Set a bot's <TagLink tag='color'/> to `green` in the `local` space.
+```typescript
+setTagMask(this, "#color", "green", "local");
+```
+
+### `clearTagMasks(bot, space?)`
+
+Clears the tag masks on the given bot or list of bots.
+If a space is specified, then only the tag masks in that space will be deleted.
+
+The **first parameter** is the bot or list of bots that the tag mask should be set on.
+
+The **fourth parameter** is optional and is the space that the tag mask should exist in.
+If omitted, then the tag masks in all spaces will be deleted.
+
+#### Examples:
+
+1. Clear all tag masks on a bot.
+```typescript
+clearTagMasks(this);
+```
+
+2. Clear all tag masks in the local space/
+```typescript
+clearTagMasks(this, "local");
+```
+
 ## Math Actions
 
 ### `math.sum(list)`
@@ -3914,6 +3962,21 @@ const pointerRotation = player.getPointerRotation('mouse');
 const pointerDirection = math.getForwardDirection(pointerRotation);
 const groundPoint = math.intersectPlane(pointerPosition, pointerDirection);
 player.toast(groundPoint);
+```
+
+### `math.getAnchorPointOffset(anchorPoint)`
+
+Calculates the 3D position offset for the given anchor point and returns it.
+This is essentially <ActionLink action='experiment.getAnchorPointPosition(bot, dimension, anchorPoint)'/> but without the bot's position/scale applied.
+
+The **first parameter** is the anchor point that should be calculated. Can be any valid <TagLink tag="anchorPoint"/> value.
+
+#### Examples:
+
+1. Calculate the anchor point offset for "bottom".
+```typescript
+const offset = math.getAnchorPointOffset("bottom");
+player.toast(offset);
 ```
 
 ## Crypto Actions
@@ -4584,6 +4647,59 @@ experiment.localRotationTween(
             mode: 'inout'
         }
     });
+```
+
+### `experiment.getAnchorPointPosition(bot, dimension, anchorPoint)`
+
+Gets the absolute position in the given dimension that the center of the given bot would be placed at if the bot was using the given anchor point.
+
+The **first parameter** is the bot that the anchor point position should be calculated for.
+
+The **second parameter** is the dimension that the anchor point position should be calculated in.
+
+The **third parameter** is the anchor point that should be calculated. Can be any valid <TagLink tag="anchorPoint"/> value.
+
+#### Examples:
+
+1. Get the top anchor point of the current bot in the "home" dimension.
+```typescript
+const point = experiment.getAnchorPointPosition(bot, "home", "top");
+player.toast(point);
+```
+
+2. Get the back right anchor point of the current bot in the "home" dimension.
+```typescript
+const point = experiment.getAnchorPointPosition(bot, "home", [ 0.5, -0.5, 0 ]);
+player.toast(point);
+```
+
+3. Place bots at each of the anchor points.
+```typescript
+let points = [
+    'top',
+    'bottom',
+    'front',
+    'back',
+    'left',
+    'right',
+    'center',
+];
+
+for(let point of points) {
+    let pos = experiment.getAnchorPointPosition(bot, player.getCurrentDimension(), point);
+    create({
+        space: 'player',
+        color: 'green',
+        [player.getCurrentDimension()]: true,
+        [player.getCurrentDimension() + "X"]: pos.x,
+        [player.getCurrentDimension() + "Y"]: pos.y,
+        [player.getCurrentDimension() + "Z"]: pos.z,
+        positioningMode: 'absolute',
+        anchorPoint: 'center',
+        targetAnchorPoint: point,
+        scale: 0.1,
+    });
+}
 ```
 
 [listen-tag]: docs/listen-tags

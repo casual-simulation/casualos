@@ -105,6 +105,14 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
             anchorPointOffset.y
         );
 
+        // The transform container gets the same position as the display but
+        // with the anchor point multiplied by 2.
+        // This is so that the "grid" for the bot is placed on the bot
+        // instead of inside the bot.
+        this.bot3D.transformContainer.position
+            .copy(this.bot3D.display.position)
+            .multiplyScalar(2);
+
         const userDimension = this.bot3D.dimension;
         if (userDimension) {
             const currentGridPos = getBotPosition(
@@ -140,7 +148,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                         this.bot3D.dimension,
                         this._lastPos
                     );
-                    ids.push(...objectsAtLastPosition.map(b => b.id));
+                    ids.push(...objectsAtLastPosition.map((b) => b.id));
                 }
                 if (currentGridPos) {
                     const objectsAtCurrentPosition = objectsAtDimensionGridPosition(
@@ -148,7 +156,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                         this.bot3D.dimension,
                         currentGridPos
                     );
-                    ids.push(...objectsAtCurrentPosition.map(b => b.id));
+                    ids.push(...objectsAtCurrentPosition.map((b) => b.id));
                 }
 
                 this.bot3D.dimensionGroup.simulation3D.ensureUpdate(ids);
@@ -186,7 +194,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 this._lastPos
             );
             this.bot3D.dimensionGroup.simulation3D.ensureUpdate(
-                objectsAtPosition.map(f => f.id)
+                objectsAtPosition.map((f) => f.id)
             );
         }
     }
@@ -205,9 +213,9 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
     ): boolean {
         return (
             !this._lastPos ||
-            (currentGridPos.x !== this._lastPos.x ||
-                currentGridPos.y !== this._lastPos.y ||
-                currentGridPos.z !== this._lastPos.z) ||
+            currentGridPos.x !== this._lastPos.x ||
+            currentGridPos.y !== this._lastPos.y ||
+            currentGridPos.z !== this._lastPos.z ||
             this._lastSortOrder !== currentSortOrder
         );
     }
@@ -407,7 +415,7 @@ function getEasing(easing: Easing): any {
 
 function resolveEaseType(
     mode: EaseMode,
-    val: (typeof TWEEN.Easing.Circular) | typeof TWEEN.Easing.Linear
+    val: typeof TWEEN.Easing.Circular | typeof TWEEN.Easing.Linear
 ): any {
     if ('None' in val) {
         return val.None;
@@ -445,7 +453,7 @@ export function calculateObjectPositionInGrid(
 
     let totalScales = 0;
 
-    if (!isBotStackable(context, bot.bot)) {
+    if (!bot.isOnGrid || !isBotStackable(context, bot.bot)) {
         totalScales = 0;
     } else {
         const objectsAtPosition = objectsAtDimensionGridPosition(

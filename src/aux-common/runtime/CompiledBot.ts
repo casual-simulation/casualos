@@ -5,9 +5,10 @@ import {
     BotSpace,
     hasValue,
     BotSignatures,
+    CompiledBotListeners,
+    RuntimeBot,
 } from '../bots';
 import uuid from 'uuid/v4';
-import { RuntimeBot } from './RuntimeBot';
 
 // Types of bots
 // 1. Raw bot - original data
@@ -45,18 +46,6 @@ export interface CompiledBot extends PrecalculatedBot {
      */
     script: RuntimeBot;
 }
-
-/**
- * An interface that maps tag names to compiled listener functions.
- */
-export interface CompiledBotListeners {
-    [tag: string]: CompiledBotListener;
-}
-
-/**
- * The type of a compiled bot listener.
- */
-export type CompiledBotListener = (arg?: any) => any;
 
 /**
  * An interface that maps tag names to the compiled values for a bot.

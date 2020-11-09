@@ -2,8 +2,8 @@ FROM node:12
 
 WORKDIR /usr/src/app
 
-# Install Deno
-RUN curl -fsSL https://deno.land/x/install/install.sh | sh
+# Install Deno Version v1.4.0
+RUN curl -fsSL https://deno.land/x/install/install.sh | sh -s v1.4.0
 
 COPY ./src/aux-server/package*.json ./
 

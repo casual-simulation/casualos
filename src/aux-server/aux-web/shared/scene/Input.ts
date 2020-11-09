@@ -198,7 +198,7 @@ export class Input {
         if (otherViewports && isOnViewport) {
             // Make sure that there are no other view ports that are overlapping this one.
             const viewportsToTest = otherViewports.filter(
-                v => v.layer >= viewport.layer && v !== viewport
+                (v) => v.layer >= viewport.layer && v !== viewport
             );
 
             for (let i = 0; i < viewportsToTest.length; i++) {
@@ -245,7 +245,7 @@ export class Input {
         element: HTMLElement
     ): boolean {
         let elements = document.elementsFromPoint(clientPos.x, clientPos.y);
-        return some(elements, e => e === element);
+        return some(elements, (e) => e === element);
     }
 
     constructor(game: Game) {
@@ -379,7 +379,7 @@ export class Input {
      */
     public isMouseButtonDownOnAnyElements(elements: HTMLElement[]): boolean {
         const downElement = this._targetData.inputDown;
-        const matchingElement = elements.find(e =>
+        const matchingElement = elements.find((e) =>
             Input.isElementContainedByOrEqual(downElement, e)
         );
         return !!matchingElement;
@@ -410,7 +410,7 @@ export class Input {
      */
     public isMouseFocusingOnAnyElements(elements: HTMLElement[]): boolean {
         const overElement = this._targetData.inputOver;
-        const matchingElement = elements.find(e =>
+        const matchingElement = elements.find((e) =>
             Input.isElementContainedByOrEqual(overElement, e)
         );
         return !!matchingElement;
@@ -441,7 +441,7 @@ export class Input {
      * @param event The event.
      * @param elements The elements.
      */
-    public isEventForAnyElement(
+    public static isEventForAnyElement(
         event: MouseEvent | TouchEvent,
         elements: HTMLElement[]
     ): boolean {
@@ -455,7 +455,7 @@ export class Input {
             );
         }
 
-        const matchingElement = elements.find(e =>
+        const matchingElement = elements.find((e) =>
             Input.isElementContainedByOrEqual(el, e)
         );
         return !!matchingElement;
@@ -1035,7 +1035,7 @@ export class Input {
             this._inputType = InputType.Mouse;
         if (this._inputType != InputType.Mouse) return;
 
-        if (this.isEventForAnyElement(event, this.htmlElements)) {
+        if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
 
@@ -1070,7 +1070,7 @@ export class Input {
             this._inputType = InputType.Mouse;
         if (this._inputType != InputType.Mouse) return;
 
-        if (this.isEventForAnyElement(event, this.htmlElements)) {
+        if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
 
@@ -1102,7 +1102,7 @@ export class Input {
             this._inputType = InputType.Mouse;
         if (this._inputType != InputType.Mouse) return;
 
-        if (this.isEventForAnyElement(event, this.htmlElements)) {
+        if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
 
@@ -1138,7 +1138,7 @@ export class Input {
             this._inputType = InputType.Mouse;
         if (this._inputType != InputType.Mouse) return;
 
-        if (this.isEventForAnyElement(event, this.htmlElements)) {
+        if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
 
@@ -1253,17 +1253,11 @@ export class Input {
         if (this.debugLevel >= 2) {
             if (wheelFrame.ctrl) {
                 console.log(
-                    `wheel w/ ctrl fireOnFrame: ${
-                        wheelFrame.moveFrame
-                    }, delta: (${wheelFrame.delta.x}, ${wheelFrame.delta.y}, ${
-                        wheelFrame.delta.z
-                    })`
+                    `wheel w/ ctrl fireOnFrame: ${wheelFrame.moveFrame}, delta: (${wheelFrame.delta.x}, ${wheelFrame.delta.y}, ${wheelFrame.delta.z})`
                 );
             } else {
                 console.log(
-                    `wheel fireOnFrame: ${wheelFrame.moveFrame}, delta: (${
-                        wheelFrame.delta.x
-                    }, ${wheelFrame.delta.y}, ${wheelFrame.delta.z})`
+                    `wheel fireOnFrame: ${wheelFrame.moveFrame}, delta: (${wheelFrame.delta.x}, ${wheelFrame.delta.y}, ${wheelFrame.delta.z})`
                 );
             }
         }
@@ -1273,6 +1267,11 @@ export class Input {
         if (this._inputType == InputType.Undefined)
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
+
+        // Ignore all touches on elements that are not in the HTML elements list
+        if (!Input.isEventForAnyElement(event, this.htmlElements)) {
+            return;
+        }
 
         const count = this._touchListenerCounts.get(event.target) || 0;
         if (count === 0) {
@@ -1300,9 +1299,7 @@ export class Input {
             }
         }
 
-        if (this.isEventForAnyElement(event, this.htmlElements)) {
-            event.preventDefault();
-        }
+        event.preventDefault();
 
         // For the touchstart event, it is a list of the touch points that became active with the current event.
         let changed = event.changedTouches;
@@ -1351,7 +1348,7 @@ export class Input {
         if (this._inputType != InputType.Touch) return;
 
         event.stopImmediatePropagation();
-        if (this.isEventForAnyElement(event, this.htmlElements)) {
+        if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
 
@@ -1361,7 +1358,7 @@ export class Input {
         for (let i = 0; i < changed.length; i++) {
             let touch = changed.item(i);
 
-            let existingTouch = find(this._touchData, d => {
+            let existingTouch = find(this._touchData, (d) => {
                 return d.identifier === touch.identifier;
             });
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
@@ -1418,9 +1415,7 @@ export class Input {
 
             if (this.debugLevel >= 1) {
                 console.log(
-                    `removing ${count} (${
-                        event.changedTouches.length
-                    }) touch listeners for `,
+                    `removing ${count} (${event.changedTouches.length}) touch listeners for `,
                     event.target
                 );
             }
@@ -1438,7 +1433,7 @@ export class Input {
             }
         }
 
-        if (this.isEventForAnyElement(event, this.htmlElements)) {
+        if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
 
@@ -1453,7 +1448,7 @@ export class Input {
                 HTMLElement
             >document.elementFromPoint(touch.clientX, touch.clientY);
 
-            let existingTouch = find(this._touchData, d => {
+            let existingTouch = find(this._touchData, (d) => {
                 return d.identifier === touch.identifier;
             });
             existingTouch.state.setUpFrame(this.time.frameCount);
@@ -1520,7 +1515,7 @@ export class Input {
             // Handle a canceled touche the same as a touch end.
             let touch = changed.item(i);
 
-            let existingTouch = find(this._touchData, d => {
+            let existingTouch = find(this._touchData, (d) => {
                 return d.identifier === touch.identifier;
             });
             existingTouch.state.setUpFrame(this.time.frameCount);
@@ -1549,7 +1544,7 @@ export class Input {
     private _handleInputSourcesUpdated(event: XRInputSourcesChangeEvent) {
         for (let source of event.added) {
             let controller = this._controllerData.find(
-                c => c.inputSource === source
+                (c) => c.inputSource === source
             );
             if (!controller) {
                 controller = {
@@ -1567,7 +1562,7 @@ export class Input {
         }
         for (let source of event.removed) {
             const index = this._controllerData.findIndex(
-                c => c.inputSource === source
+                (c) => c.inputSource === source
             );
             if (index >= 0) {
                 const removed = this._controllerData.splice(index, 1);
@@ -1595,7 +1590,7 @@ export class Input {
             this._inputType = InputType.Controller;
         if (this._inputType != InputType.Controller) return;
         const controller = this._controllerData.find(
-            c => c.inputSource === event.inputSource
+            (c) => c.inputSource === event.inputSource
         );
         if (!controller) {
             return;
@@ -1622,7 +1617,7 @@ export class Input {
             this._inputType = InputType.Controller;
         if (this._inputType != InputType.Controller) return;
         const controller = this._controllerData.find(
-            c => c.inputSource === event.inputSource
+            (c) => c.inputSource === event.inputSource
         );
         if (!controller) {
             return;
@@ -1652,7 +1647,7 @@ export class Input {
             this._inputType = InputType.Controller;
         if (this._inputType != InputType.Controller) return;
         const controller = this._controllerData.find(
-            c => c.inputSource === event.inputSource
+            (c) => c.inputSource === event.inputSource
         );
         if (!controller) {
             return;
@@ -1679,7 +1674,7 @@ export class Input {
             this._inputType = InputType.Controller;
         if (this._inputType != InputType.Controller) return;
         const controller = this._controllerData.find(
-            c => c.inputSource === event.inputSource
+            (c) => c.inputSource === event.inputSource
         );
         if (!controller) {
             return;

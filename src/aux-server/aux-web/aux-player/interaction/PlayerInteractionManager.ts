@@ -28,6 +28,8 @@ import {
     calculateNumericalTagValue,
     getBotPosition,
     isBot,
+    addDebugApi,
+    onPointerUpDownArg,
 } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
@@ -72,10 +74,18 @@ import { PlayerModDragOperation } from './DragOperation/PlayerModDragOperation';
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
     protected _game: PlayerGame;
+    private _disablePlayerBotTags: boolean;
 
     constructor(game: PlayerGame) {
         super(game);
         let calc = appManager.simulationManager.primary.helper.createContext();
+
+        addDebugApi('disablePlayerBotTags', (disable: boolean) => {
+            if (typeof disable === 'undefined') {
+                disable = true;
+            }
+            this._disablePlayerBotTags = disable;
+        });
     }
 
     protected _updateAdditionalNormalInputs(input: Input) {
@@ -195,7 +205,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         if (this._draggableGroupsDirty) {
             const contexts = flatMap(
                 this._game.getSimulations(),
-                s => s.dimensions
+                (s) => s.dimensions
             );
             // Sort between inventory colliders and other colliders.
             let inventoryColliders: Object3D[] = [];
@@ -206,7 +216,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     const colliders = (dimension instanceof DimensionGroup3D
                         ? dimension.colliders
                         : []
-                    ).filter(c => !!c);
+                    ).filter((c) => !!c);
 
                     if (dimension instanceof InventoryContextGroup3D) {
                         inventoryColliders.push(...colliders);
@@ -277,17 +287,25 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     }
 
     handlePointerDown(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {
-        simulation.helper.action('onPointerDown', [bot], {
-            dimension: [...bot3D.dimensionGroup.dimensions.values()][0],
-            bot: bot,
-        });
+        simulation.helper.action(
+            'onPointerDown',
+            [bot],
+            onPointerUpDownArg(
+                bot,
+                [...bot3D.dimensionGroup.dimensions.values()][0]
+            )
+        );
     }
 
     handlePointerUp(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {
-        simulation.helper.action('onPointerUp', [bot], {
-            dimension: [...bot3D.dimensionGroup.dimensions.values()][0],
-            bot: bot,
-        });
+        simulation.helper.action(
+            'onPointerUp',
+            [bot],
+            onPointerUpDownArg(
+                bot,
+                [...bot3D.dimensionGroup.dimensions.values()][0]
+            )
+        );
     }
 
     handleFocusEnter(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {
@@ -326,7 +344,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         const sim = <PlayerPageSimulation3D>(
             this._game
                 .getSimulations()
-                .find(sim3D => sim3D instanceof PlayerPageSimulation3D)
+                .find((sim3D) => sim3D instanceof PlayerPageSimulation3D)
         );
         if (sim) {
             return sim.grid3D;
@@ -383,53 +401,77 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             }
             const [portal, gridScale] = portalInfoForSim(sim);
 
-            rig.cameraParent.position.set(
+            const targetXPos =
                 calculateNumericalTagValue(
                     null,
                     userBot,
                     `${portal}CameraPositionOffsetX`,
                     0
-                ) * gridScale,
+                ) * gridScale;
+            const targetYPos =
                 calculateNumericalTagValue(
                     null,
                     userBot,
                     `${portal}CameraPositionOffsetZ`,
                     0
-                ) * gridScale,
+                ) * gridScale;
+            const targetZPos =
                 calculateNumericalTagValue(
                     null,
                     userBot,
                     `${portal}CameraPositionOffsetY`,
                     0
-                ) * -gridScale
+                ) * -gridScale;
+
+            const targetXRot = calculateNumericalTagValue(
+                null,
+                userBot,
+                `${portal}CameraRotationOffsetX`,
+                0
             );
-            rig.cameraParent.rotation.set(
-                calculateNumericalTagValue(
-                    null,
-                    userBot,
-                    `${portal}CameraRotationOffsetX`,
-                    0
-                ),
-                calculateNumericalTagValue(
-                    null,
-                    userBot,
-                    `${portal}CameraRotationOffsetZ`,
-                    0
-                ),
-                calculateNumericalTagValue(
-                    null,
-                    userBot,
-                    `${portal}CameraRotationOffsetY`,
-                    0
-                )
+            const targetYRot = calculateNumericalTagValue(
+                null,
+                userBot,
+                `${portal}CameraRotationOffsetZ`,
+                0
             );
-            rig.cameraParent.updateMatrixWorld();
+            const targetZRot = calculateNumericalTagValue(
+                null,
+                userBot,
+                `${portal}CameraRotationOffsetY`,
+                0
+            );
+
+            if (
+                rig.cameraParent.position.x !== targetXPos ||
+                rig.cameraParent.position.y !== targetYPos ||
+                rig.cameraParent.position.z !== targetZPos ||
+                rig.cameraParent.rotation.x !== targetXRot ||
+                rig.cameraParent.rotation.y !== targetYRot ||
+                rig.cameraParent.rotation.z !== targetZRot
+            ) {
+                rig.cameraParent.position.set(
+                    targetXPos,
+                    targetYPos,
+                    targetZPos
+                );
+                rig.cameraParent.rotation.set(
+                    targetXRot,
+                    targetYRot,
+                    targetZRot
+                );
+                rig.cameraParent.updateMatrixWorld();
+            }
         }
     }
 
     // This function is kinda the worst but should be fine
     // as long as performance doesn't become an issue.
     protected _updatePlayerBotTags() {
+        if (this._disablePlayerBotTags) {
+            return;
+        }
+
         const input = this._game.getInput();
         const pagePos = this._game.getInput().getMousePagePos();
         const draggableGroups = this.getDraggableGroups();
@@ -439,7 +481,9 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             'keyboard',
             'mousePointer',
             'touch',
-            ...input.controllers.map(c => `${c.inputSource.handedness}Pointer`),
+            ...input.controllers.map(
+                (c) => `${c.inputSource.handedness}Pointer`
+            ),
         ];
 
         let inputUpdate = {

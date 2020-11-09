@@ -83,6 +83,7 @@ The AUX Server Docker image can be configured using the following environment va
 
 -   `MONGO_URL`: The [MongoDB Connection String](https://docs.mongodb.com/manual/reference/connection-string/) that the server should use to connect to MongoDB for storage. (REQUIRED)
 -   `MONGO_USE_NEW_URL_PARSER` - Whether to use the [new MongoDB URL parser](https://stackoverflow.com/q/50448272/1832856). (Defaults to false)
+-   `MONGO_USE_UNIFIED_TOPOLOGY` - Whether to enable the new unified topology layer. (Defaults to false)
 -   `REDIS_HOST`: The hostname of the Redis instance that the server should connect to. (If not specified then Redis support will be disabled)
 -   `REDIS_PORT`: The port number that the server should connect to on the Redis host.
 -   `NODE_PORT`: The port number that the server should listen on.
@@ -94,6 +95,7 @@ The AUX Server Docker image can be configured using the following environment va
 -   `SANDBOX_TYPE`: The type of sandboxing that should be used to separate AUX Scripts from the host environment. Possible options are `none` and `deno`. `none` provides no sandboxing and therefore no security guarentees. `deno` uses the [Deno](https://deno.land/) runtime. Defaults to `none` while the sandbox is in testing.
 -   `STAGE_TYPE`: The type of stage store that should be used for atoms that have not yet been committed. Possible options are `mongodb` and `redis`. `mongodb` uses MongoDB to store atoms while `redis` uses Redis. Note that `redis` is not persistent which makes data loss more likely. Defaults to `redis`.
 -   `GPIO`: Whether to enable GPIO support. Enabled by default on ARM. Disabled by default otherwise.
+-   `DEBUG`: Whether to enable debug mode. Setting this to `true` will enable some more debug logs, particularly for Deno.
 
 ## Security Note
 

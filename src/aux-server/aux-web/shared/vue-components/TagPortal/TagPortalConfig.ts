@@ -118,7 +118,7 @@ export class TagPortalConfig implements SubscriptionLike {
         this._simulation = simulation;
         this._sub = watchPortalConfigBot(simulation, portalTag)
             .pipe(
-                tap(update => {
+                tap((update) => {
                     const bot = update;
                     this._configBot = bot;
 
@@ -136,6 +136,8 @@ export class TagPortalConfig implements SubscriptionLike {
     protected _clearPortalValues() {
         this._style = null;
         this._showButton = null;
+        this._buttonIcon = null;
+        this._buttonHint = null;
         this._updated.next();
     }
 

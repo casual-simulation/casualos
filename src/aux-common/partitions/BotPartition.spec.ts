@@ -10,9 +10,11 @@ import {
     Bot,
     clearSpace,
     asyncResult,
+    StateUpdatedEvent,
 } from '../bots';
 import { waitAsync } from '../test/TestHelpers';
 import { Action } from '@casual-simulation/causal-trees';
+import { skip } from 'rxjs/operators';
 
 describe('BotPartition', () => {
     let client: MemoryBotClient;
@@ -121,7 +123,11 @@ describe('BotPartition', () => {
             ]);
 
             let bots = [] as Bot[];
-            subject.onBotsAdded.subscribe(b => bots.push(...b));
+            let updates = [] as StateUpdatedEvent[];
+            subject.onBotsAdded.subscribe((b) => bots.push(...b));
+            subject.onStateUpdated
+                .pipe(skip(1))
+                .subscribe((u) => updates.push(u));
 
             await subject.applyEvents([
                 loadBots(<any>'space', [
@@ -155,6 +161,23 @@ describe('BotPartition', () => {
                     test: true,
                 }),
             });
+            expect(updates).toEqual([
+                {
+                    state: {
+                        test1: createBot('test1', {
+                            abc: 'def',
+                            test: true,
+                        }),
+                        test2: createBot('test2', {
+                            num: 123,
+                            test: true,
+                        }),
+                    },
+                    addedBots: ['test1', 'test2'],
+                    removedBots: [],
+                    updatedBots: [],
+                },
+            ]);
         });
 
         it('should emit a async result with the loaded bots', async () => {
@@ -174,7 +197,7 @@ describe('BotPartition', () => {
             ]);
 
             let events = [] as Action[];
-            subject.onEvents.subscribe(e => events.push(...e));
+            subject.onEvents.subscribe((e) => events.push(...e));
 
             await subject.applyEvents([
                 loadBots(
@@ -227,7 +250,7 @@ describe('BotPartition', () => {
             ]);
 
             let bots = [] as Bot[];
-            subject.onBotsAdded.subscribe(b => bots.push(...b));
+            subject.onBotsAdded.subscribe((b) => bots.push(...b));
 
             await subject.applyEvents([
                 loadBots(<any>'space', [
@@ -298,7 +321,8 @@ describe('BotPartition', () => {
             ]);
 
             let removed = [] as string[];
-            subject.onBotsRemoved.subscribe(b => removed.push(...b));
+            let updates = [] as StateUpdatedEvent[];
+            subject.onBotsRemoved.subscribe((b) => removed.push(...b));
 
             await subject.applyEvents([
                 loadBots(<any>'space', [
@@ -308,6 +332,10 @@ describe('BotPartition', () => {
                     },
                 ]),
             ]);
+
+            subject.onStateUpdated
+                .pipe(skip(1))
+                .subscribe((u) => updates.push(u));
 
             await subject.applyEvents([clearSpace(<any>'space')]);
 
@@ -319,6 +347,17 @@ describe('BotPartition', () => {
             // Should emit them in order of ID
             expect(removed).toEqual(['test1', 'test2']);
             expect(subject.state).toEqual({});
+            expect(updates).toEqual([
+                {
+                    state: {
+                        test1: null,
+                        test2: null,
+                    },
+                    addedBots: [],
+                    removedBots: ['test1', 'test2'],
+                    updatedBots: [],
+                },
+            ]);
         });
 
         it('should emit a async result when the bots are cleared', async () => {
@@ -338,7 +377,7 @@ describe('BotPartition', () => {
             ]);
 
             let events = [] as Action[];
-            subject.onEvents.subscribe(e => events.push(...e));
+            subject.onEvents.subscribe((e) => events.push(...e));
 
             await subject.applyEvents([clearSpace(<any>'space', 99)]);
 

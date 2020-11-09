@@ -28,3 +28,16 @@ export function doesBotDefinePlayerDimension(
         matchFound: dimensions.indexOf(dimension) >= 0,
     };
 }
+
+/**
+ * Safely parses the given URL.
+ * If the given URL is invalid, null will be returned. Otherwise, the parsed URL object will be returned.
+ * @param url The URL to parse.
+ */
+export function safeParseURL(url: string): URL {
+    try {
+        return new URL(url);
+    } catch (err) {
+        return null;
+    }
+}

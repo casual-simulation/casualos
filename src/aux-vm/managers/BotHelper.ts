@@ -22,6 +22,7 @@ import {
     CREATE_ACTION_NAME,
     CREATE_ANY_ACTION_NAME,
     BotSpace,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import { BaseHelper } from './BaseHelper';
 import { AuxVM } from '../vm/AuxVM';
@@ -126,7 +127,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
         const calc = this.createContext();
         const events = calculateDestroyBotEvents(calc, bot);
         await this.transaction(...events);
-        return events.some(e => e.type === 'remove_bot' && e.id === bot.id);
+        return events.some((e) => e.type === 'remove_bot' && e.id === bot.id);
     }
 
     /**
@@ -148,8 +149,8 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     actions(
         actions: { eventName: string; bots: Bot[]; arg?: any }[]
     ): ShoutAction[] {
-        return actions.map(b => {
-            const botIds = b.bots ? b.bots.map(f => f.id) : null;
+        return actions.map((b) => {
+            const botIds = b.bots ? b.bots.map((f) => f.id) : null;
             const actionData = action(b.eventName, botIds, this.userId, b.arg);
             return actionData;
         });
@@ -162,7 +163,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * @param arg The argument that should be passed to the event handlers.
      */
     async action(eventName: string, bots: Bot[], arg?: any): Promise<void> {
-        const botIds = bots ? bots.map(f => f.id) : null;
+        const botIds = bots ? bots.map((f) => f.id) : null;
         const actionData = action(eventName, botIds, this.userId, arg);
         await this._vm.sendEvents([actionData]);
     }
@@ -175,10 +176,14 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      */
     async shout(
         eventName: string,
-        bots: Bot[],
+        bots: (Bot | string)[],
         arg?: any
     ): Promise<ChannelActionResult> {
-        const botIds = bots ? bots.map(f => f.id) : null;
+        const botIds = bots
+            ? bots
+                  .filter((b) => hasValue(b))
+                  .map((f) => (typeof f === 'object' ? f.id : f))
+            : null;
         return await this._vm.shout(eventName, botIds, arg);
     }
 
@@ -234,10 +239,13 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * Sets the bot that the user is editing.
      * @param bot The bot.
      */
-    setEditingBot(bot: Bot) {
+    setEditingBot(bot: Bot, tag: string) {
         return this.updateBot(this.userBot, {
             tags: {
-                _editingBot: bot.id,
+                editingBot: bot.id,
+                editingTag: tag,
+                cursorStartIndex: null,
+                cursorEndIndex: null,
             },
         });
     }

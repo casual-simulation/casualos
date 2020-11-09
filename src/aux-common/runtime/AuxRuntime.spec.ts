@@ -68,6 +68,8 @@ import {
     asyncResult,
     asyncError,
     getPlayerCount,
+    stateUpdatedEvent,
+    DEFAULT_TAG_MASK_SPACE,
 } from '../bots';
 import uuid from 'uuid/v4';
 import { waitAsync } from '../test/TestHelpers';
@@ -88,7 +90,7 @@ import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
 import { DeepObjectError } from './Utils';
-import { tagValueHash } from '../aux-format-2';
+import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -139,11 +141,11 @@ describe('AuxRuntime', () => {
         errors = [];
         allErrors = [];
 
-        runtime.onActions.subscribe(a => {
+        runtime.onActions.subscribe((a) => {
             events.push(a);
             allEvents.push(...a);
         });
-        runtime.onErrors.subscribe(e => {
+        runtime.onErrors.subscribe((e) => {
             errors.push(e);
             allErrors.push(...e);
         });
@@ -157,15 +159,11 @@ describe('AuxRuntime', () => {
         let updates = [] as StateUpdatedEvent[];
 
         let subs = [
-            memory.onBotsAdded
+            memory.onStateUpdated
                 .pipe(skip(1))
-                .subscribe(added => updates.push(runtime.botsAdded(added))),
-            memory.onBotsRemoved.subscribe(removed =>
-                updates.push(runtime.botsRemoved(removed))
-            ),
-            memory.onBotsUpdated.subscribe(updated =>
-                updates.push(runtime.botsUpdated(updated))
-            ),
+                .subscribe((update) =>
+                    updates.push(runtime.stateUpdated(update))
+                ),
         ];
 
         try {
@@ -910,6 +908,50 @@ describe('AuxRuntime', () => {
                 });
             });
         });
+
+        describe('masks', () => {
+            it('should add the masks to the precalculated bot', () => {
+                const update = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        masks: {
+                            shared: {
+                                abc: 123,
+                                def: 456,
+                            },
+                        },
+                    },
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            id: 'test',
+                            precalculated: true,
+                            tags: {
+                                abc: 'def',
+                            },
+                            values: {
+                                abc: 123,
+                                def: 456,
+                            },
+                            masks: {
+                                shared: {
+                                    abc: 123,
+                                    def: 456,
+                                },
+                            },
+                        },
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+        });
     });
 
     describe('botsRemoved()', () => {
@@ -1330,6 +1372,46 @@ describe('AuxRuntime', () => {
             ]);
         });
 
+        it('should handle removing tags', () => {
+            const update1 = runtime.botsAdded([
+                {
+                    id: 'test',
+                    space: 'shared',
+                    tags: {
+                        abc: 123,
+                    },
+                },
+            ]);
+
+            const update2 = runtime.botsUpdated([
+                {
+                    bot: <any>{
+                        id: 'test',
+                        tags: {
+                            abc: null,
+                        },
+                    },
+                    tags: ['abc'],
+                },
+            ]);
+
+            expect(update2).toEqual({
+                state: {
+                    test: {
+                        tags: {
+                            abc: null,
+                        },
+                        values: {
+                            abc: null,
+                        },
+                    },
+                },
+                addedBots: [],
+                removedBots: [],
+                updatedBots: ['test'],
+            });
+        });
+
         describe('numbers', () => {
             it('should calculate number values', () => {
                 runtime.botsAdded([
@@ -1703,6 +1785,57 @@ describe('AuxRuntime', () => {
 
                 const result = runtime.shout('test', ['thisBot']);
                 expect(result.actions).toEqual([toast('different')]);
+            });
+
+            it('should support calculating tag masks that depend on all other bots', () => {
+                runtime.botsAdded([
+                    {
+                        id: 'test',
+                        tags: {},
+                        masks: {
+                            tempLocal: {
+                                numBots: '=getBots().length',
+                            },
+                        },
+                    },
+                    createBot('test2', {
+                        num: 123,
+                    }),
+                ]);
+
+                const update = runtime.botsUpdated([
+                    {
+                        bot: {
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                tempLocal: {
+                                    numBots: '=getBots().length + 1',
+                                },
+                            },
+                        },
+                        tags: ['numBots'],
+                    },
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            masks: {
+                                tempLocal: {
+                                    numBots: '=getBots().length + 1',
+                                },
+                            },
+                            tags: {},
+                            values: {
+                                numBots: 3,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
             });
         });
 
@@ -2169,6 +2302,3580 @@ describe('AuxRuntime', () => {
                     addedBots: [],
                     removedBots: [],
                     updatedBots: ['test'],
+                });
+            });
+        });
+
+        describe('masks', () => {
+            it('should handle adding masks', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        space: 'shared',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {
+                                abc: 'def',
+                            },
+                            masks: {
+                                shared: {
+                                    def: 123,
+                                },
+                            },
+                        },
+                        tags: ['def'],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {},
+                            values: {
+                                def: 123,
+                            },
+                            masks: {
+                                shared: {
+                                    def: 123,
+                                },
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should use the mask value for the tag value', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        space: 'shared',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {
+                                abc: 'def',
+                            },
+                            masks: {
+                                tempLocal: {
+                                    abc: 123,
+                                },
+                            },
+                        },
+                        tags: ['abc'],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {},
+                            values: {
+                                abc: 123,
+                            },
+                            masks: {
+                                tempLocal: {
+                                    abc: 123,
+                                },
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should prefer tempLocal tag masks over local ones for values', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        space: 'shared',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {
+                                abc: 'def',
+                            },
+                            masks: {
+                                local: {
+                                    abc: 456,
+                                },
+                                tempLocal: {
+                                    abc: 123,
+                                },
+                            },
+                        },
+                        tags: ['abc'],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {},
+                            values: {
+                                abc: 123,
+                            },
+                            masks: {
+                                tempLocal: {
+                                    abc: 123,
+                                },
+                                local: {
+                                    abc: 456,
+                                },
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should be able calculate formulas in tag masks', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        space: 'shared',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {
+                                abc: 'def',
+                            },
+                            masks: {
+                                tempLocal: {
+                                    abc: '=2 + 4',
+                                },
+                            },
+                        },
+                        tags: ['abc'],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {},
+                            values: {
+                                abc: 6,
+                            },
+                            masks: {
+                                tempLocal: {
+                                    abc: '=2 + 4',
+                                },
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should handle removing tag masks', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        space: 'shared',
+                        tags: {},
+                        masks: {
+                            shared: {
+                                abc: 123,
+                            },
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                shared: {},
+                            },
+                        },
+                        tags: ['abc'],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                abc: null,
+                            },
+                            values: {
+                                abc: null,
+                            },
+                            masks: {
+                                shared: {
+                                    abc: null,
+                                },
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should handle removing multiple tag masks', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        space: 'shared',
+                        tags: {},
+                        masks: {
+                            shared: {
+                                abc: 123,
+                            },
+                            tempLocal: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                shared: {},
+                                tempLocal: {},
+                            },
+                        },
+                        tags: ['abc'],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                abc: null,
+                            },
+                            values: {
+                                abc: null,
+                            },
+                            masks: {
+                                shared: {
+                                    abc: null,
+                                },
+                                tempLocal: {
+                                    abc: null,
+                                },
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            // Not supported with botsUpdated().
+            // the provided arguments don't specify whether a tag or a mask is being updated
+            // so there is no reasonable way to tell if one or both were.
+            it.skip('should be able to update normal tags that are hidden by masks', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        space: 'shared',
+                        tags: {
+                            abc: 'def',
+                        },
+                        masks: {
+                            tempLocal: {
+                                abc: 123,
+                            },
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {
+                                abc: 'ghi',
+                            },
+                            masks: {
+                                tempLocal: {
+                                    abc: 123,
+                                },
+                            },
+                        },
+                        tags: ['abc'],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                abc: 'ghi',
+                            },
+                            values: {
+                                abc: 123,
+                            },
+                            masks: {},
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should fall back to the tag value when a tag mask is deleted', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        space: 'shared',
+                        tags: {
+                            abc: 'def',
+                        },
+                        masks: {
+                            shared: {
+                                abc: 123,
+                            },
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {
+                                abc: 'def',
+                            },
+                            masks: {
+                                shared: {},
+                            },
+                        },
+                        tags: ['abc'],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {},
+                            values: {
+                                abc: 'def',
+                            },
+                            masks: {
+                                shared: {
+                                    abc: null,
+                                },
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+        });
+    });
+
+    describe('stateUpdated()', () => {
+        describe('added bots', () => {
+            it('should return a state update for the new bot', () => {
+                const update = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            num: 123,
+                        }),
+                    })
+                );
+
+                expect(update).toEqual({
+                    state: {
+                        test: createPrecalculatedBot('test', {
+                            abc: 'def',
+                        }),
+                        test2: createPrecalculatedBot('test2', {
+                            num: 123,
+                        }),
+                    },
+                    addedBots: ['test', 'test2'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
+            it('should return a state update that ignores bots added in a previous update', () => {
+                const update1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const update2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            num: 123,
+                        }),
+                    })
+                );
+
+                expect(update2).toEqual({
+                    state: {
+                        test2: createPrecalculatedBot('test2', {
+                            num: 123,
+                        }),
+                    },
+                    addedBots: ['test2'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
+            it('should overwrite bots with the same ID', () => {
+                const update1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const update2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 123,
+                        }),
+                    })
+                );
+
+                expect(update2).toEqual({
+                    state: {
+                        test: createPrecalculatedBot('test', {
+                            abc: 123,
+                        }),
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
+            it('should include the space the bot was in', () => {
+                const update = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot(
+                            'test',
+                            {
+                                abc: 'def',
+                            },
+                            'history'
+                        ),
+                    })
+                );
+
+                expect(update).toEqual({
+                    state: {
+                        test: createPrecalculatedBot(
+                            'test',
+                            {
+                                abc: 'def',
+                            },
+                            undefined,
+                            'history'
+                        ),
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
+            it('should not modify the given bot in scripts', async () => {
+                const bot = createBot('test1', {
+                    update: `@tags.abc = "def"`,
+                });
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: bot,
+                    })
+                );
+                runtime.shout('update');
+                await waitAsync();
+                expect(bot).toEqual(
+                    createBot('test1', {
+                        update: `@tags.abc = "def"`,
+                    })
+                );
+            });
+
+            it('should overwrite the existing bot with the new bot', () => {
+                const update1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const update2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'ghi',
+                        }),
+                    })
+                );
+
+                expect(update1).toEqual({
+                    state: {
+                        test1: createPrecalculatedBot('test1', {
+                            abc: 'def',
+                        }),
+                    },
+                    addedBots: ['test1'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+
+                expect(update2).toEqual({
+                    state: {
+                        test1: createPrecalculatedBot('test1', {
+                            abc: 'ghi',
+                        }),
+                    },
+                    addedBots: ['test1'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
+            it('should not add the bot to the runtime twice', () => {
+                const update1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+
+                        test2: createBot('test2', {
+                            value: '=getBots("abc","def").length',
+                        }),
+                    })
+                );
+
+                const update2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                expect(update1).toEqual({
+                    state: {
+                        test1: createPrecalculatedBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createPrecalculatedBot(
+                            'test2',
+                            {
+                                value: 1,
+                            },
+                            {
+                                value: '=getBots("abc","def").length',
+                            }
+                        ),
+                    },
+                    addedBots: ['test1', 'test2'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+
+                expect(update2).toEqual({
+                    state: {
+                        test1: createPrecalculatedBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: {
+                            values: {
+                                value: 1,
+                            },
+                        },
+                    },
+                    addedBots: ['test1'],
+                    removedBots: [],
+                    updatedBots: ['test2'],
+                });
+            });
+
+            describe('numbers', () => {
+                it('should calculate number values', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                num: '123.145',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    num: 123.145,
+                                },
+                                {
+                                    num: '123.145',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should handle numbers that start with a dot', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                num: '.145',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    num: 0.145,
+                                },
+                                {
+                                    num: '.145',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+            });
+
+            describe('booleans', () => {
+                it('should calculate boolean values', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: 'true',
+                                value2: 'false',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    value1: true,
+                                    value2: false,
+                                },
+                                {
+                                    value1: 'true',
+                                    value2: 'false',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+            });
+
+            describe('arrays', () => {
+                it('should calculate array values', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value: '[true, false, hello, 1.23, .35]',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    value: [true, false, 'hello', 1.23, 0.35],
+                                },
+                                {
+                                    value: '[true, false, hello, 1.23, .35]',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should upgrade the tag to a formula if it contains a formula', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value: '[true, false, ="hello", 1.23, .35]',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    value: [true, false, 'hello', 1.23, 0.35],
+                                },
+                                {
+                                    value: '[true, false, ="hello", 1.23, .35]',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+            });
+
+            describe('dependencies', () => {
+                it('should support calculating tags that depend on all other bots', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                numBots: '=getBots().length',
+                            }),
+                            test2: createBot('test2', {
+                                num: 123,
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    numBots: 2,
+                                },
+                                {
+                                    numBots: '=getBots().length',
+                                }
+                            ),
+                            test2: createPrecalculatedBot('test2', {
+                                num: 123,
+                            }),
+                        },
+                        addedBots: ['test', 'test2'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should support calculating tags that depend on the ID tag', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                numBots: '=getBots("id", "test2").length',
+                            }),
+                            test2: createBot('test2', {
+                                num: 123,
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    numBots: 1,
+                                },
+                                {
+                                    numBots: '=getBots("id", "test2").length',
+                                }
+                            ),
+                            test2: createPrecalculatedBot('test2', {
+                                num: 123,
+                            }),
+                        },
+                        addedBots: ['test', 'test2'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should automatically re-calculate tags that depend on all other bots', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                numBots: '=getBots().length',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                num: 123,
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                values: {
+                                    numBots: 2,
+                                },
+                            },
+                            test2: createPrecalculatedBot('test2', {
+                                num: 123,
+                            }),
+                        },
+                        addedBots: ['test2'],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should automatically re-calculate tags that depend on the new bot', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                numBots: '=getBots("num").length',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                num: 123,
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                values: {
+                                    numBots: 1,
+                                },
+                            },
+                            test2: createPrecalculatedBot('test2', {
+                                num: 123,
+                            }),
+                        },
+                        addedBots: ['test2'],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+            });
+
+            describe('onBotAdded', () => {
+                it('should send a onBotAdded event to the bots that were added', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onBotAdded: `@player.toast("Added 1!")`,
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                                onBotAdded: `@player.toast("Added 2!")`,
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                            }),
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [toast('Added 1!'), toast('Added 2!')],
+                    ]);
+                });
+
+                it('should send a onBotAdded event after the bots were added', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onBotAdded: `@player.toast(getBots('abc', 'ghi').length + 10)`,
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                                onBotAdded: `@player.toast(getBots('abc', 'def').length + 20)`,
+                            }),
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast(11), toast(21)]]);
+                });
+
+                it('should not include an argument', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onBotAdded: `@player.toast(that)`,
+                            }),
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast(undefined)]]);
+                });
+
+                it('should not be triggered from create()', async () => {
+                    uuidMock.mockReturnValueOnce('uuid1');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                create: `@create({
+                                onBotAdded: '@player.toast("hit")'
+                            })`,
+                            }),
+                        })
+                    );
+
+                    runtime.shout('create');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('uuid1', {
+                                    creator: 'test1',
+                                    onBotAdded: '@player.toast("hit")',
+                                })
+                            ),
+                        ],
+                    ]);
+                });
+
+                it('should not reset the context energy', async () => {
+                    runtime.context.energy = 3;
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onBotAdded: `@player.toast("Added 1!")`,
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                                onBotAdded: `@player.toast("Added 2!")`,
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                            }),
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(runtime.context.energy).toBe(2);
+                });
+
+                it('should not crash when running out of energy', async () => {
+                    runtime.context.energy = 1;
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onBotAdded: `@player.toast("Added 1!")`,
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                                onBotAdded: `@player.toast("Added 2!")`,
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                            }),
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(runtime.context.energy).toBe(0);
+                });
+            });
+
+            describe('onAnyBotsAdded', () => {
+                it('should send a onAnyBotsAdded event with all the bots that were added', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onAnyBotsAdded: `@player.toast(that.bots.length)`,
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                            }),
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast(3)]]);
+                });
+
+                it('should send a onAnyBotsAdded to all bots', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onAnyBotsAdded: `@player.toast(that.bots.length)`,
+                            }),
+                        })
+                    );
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                            }),
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast(1)], [toast(2)]]);
+                });
+
+                it('should allow updating the bots', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onAnyBotsAdded: `@for(let b of that.bots) { b.tags.hit = true; }`,
+                            }),
+                        })
+                    );
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                            }),
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botUpdated('test1', {
+                                tags: {
+                                    hit: true,
+                                },
+                            }),
+                        ],
+                        [
+                            botUpdated('test2', {
+                                tags: {
+                                    hit: true,
+                                },
+                            }),
+                            botUpdated('test3', {
+                                tags: {
+                                    hit: true,
+                                },
+                            }),
+                        ],
+                    ]);
+                });
+
+                it('should not reset the context energy', async () => {
+                    runtime.context.energy = 3;
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onAnyBotsAdded: `@player.toast("Added 1!")`,
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                                onAnyBotsAdded: `@player.toast("Added 2!")`,
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                            }),
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(runtime.context.energy).toBe(2);
+                });
+
+                it('should not crash when running out of energy', async () => {
+                    runtime.context.energy = 1;
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onAnyBotsAdded: `@player.toast("Added 1!")`,
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                                onAnyBotsAdded: `@player.toast("Added 2!")`,
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                            }),
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(runtime.context.energy).toBe(0);
+                });
+            });
+
+            describe('signatures', () => {
+                it('should add the signatures to the precalculated bot', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                signatures: {
+                                    [tagValueHash('test', 'abc', 'def')]: 'abc',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                id: 'test',
+                                precalculated: true,
+                                tags: {
+                                    abc: 'def',
+                                },
+                                values: {
+                                    abc: 'def',
+                                },
+                                signatures: {
+                                    [tagValueHash('test', 'abc', 'def')]: 'abc',
+                                },
+                            },
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+            });
+
+            describe('masks', () => {
+                it('should add the masks to the precalculated bot', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                masks: {
+                                    shared: {
+                                        abc: 123,
+                                        def: 456,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                id: 'test',
+                                precalculated: true,
+                                tags: {
+                                    abc: 'def',
+                                },
+                                values: {
+                                    abc: 123,
+                                    def: 456,
+                                },
+                                masks: {
+                                    shared: {
+                                        abc: 123,
+                                        def: 456,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+            });
+        });
+
+        describe('removed bots', () => {
+            it('should return a state update for the removed bots', () => {
+                const update1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            num: 123,
+                        }),
+                        test3: createBot('test3', {
+                            value: true,
+                        }),
+                        test4: createBot('test4', {
+                            tag1: 'test',
+                            tag2: 'other',
+                        }),
+                    })
+                );
+
+                const update2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: null,
+                        test2: null,
+                    })
+                );
+
+                expect(update2).toEqual({
+                    state: {
+                        test: null,
+                        test2: null,
+                    },
+                    addedBots: [],
+                    removedBots: ['test', 'test2'],
+                    updatedBots: [],
+                });
+            });
+
+            it('should support deletes for bots that dont exist', () => {
+                const update1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: null,
+                    })
+                );
+
+                expect(update1).toEqual({
+                    state: {
+                        test1: null,
+                    },
+                    addedBots: [],
+                    removedBots: ['test1'],
+                    updatedBots: [],
+                });
+            });
+
+            describe('dependencies', () => {
+                it('should support calculating tags that depend on all other bots', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                numBots: '=getBots().length',
+                            }),
+                            test2: createBot('test2', {
+                                num: 123,
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({ test2: null })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                values: {
+                                    numBots: 1,
+                                },
+                            },
+                            test2: null,
+                        },
+                        addedBots: [],
+                        removedBots: ['test2'],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should support calculating tags that depend on the ID tag', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                numBots: '=getBots("id", "test2").length',
+                            }),
+                            test2: createBot('test2', {
+                                num: 123,
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({ test2: null })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                values: {
+                                    numBots: 0,
+                                },
+                            },
+                            test2: null,
+                        },
+                        addedBots: [],
+                        removedBots: ['test2'],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should automatically re-calculate tags when a dependent tag was added to a bot', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                numBots: '=getBots("num").length',
+                            }),
+                            test2: createBot('test2', {
+                                num: 123,
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: null,
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                values: {
+                                    numBots: 0,
+                                },
+                            },
+                            test2: null,
+                        },
+                        addedBots: [],
+                        removedBots: ['test2'],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should support removing bots that trigger dependency updates for a tag that was updated in a script but was not yet propogated through the partition', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                progressBar: '=tags.health/100',
+                                health: 100,
+                                clear: '@tags.progressBar = ""',
+                            }),
+                            test2: createBot('test2', {
+                                health: 101,
+                            }),
+                        })
+                    );
+
+                    // Script runs and updates the
+                    // runtime bot.
+                    // Dependency graph is not updated yet.
+                    runtime.shout('clear');
+
+                    // Bot removed operation happens which checks the dependency graph.
+                    // The system sees that 'test' should have the progressBar tag recalculated.
+                    // The problem is that the progressBar tag has been changed and no longer has a value
+                    // which caused an error before this test was written.
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: null,
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                values: {
+                                    progressBar: null,
+                                },
+                            },
+                            test2: null,
+                        },
+                        addedBots: [],
+                        removedBots: ['test2'],
+                        updatedBots: ['test'],
+                    });
+                });
+            });
+
+            describe('onAnyBotsRemoved', () => {
+                it('should send a onAnyBotsRemoved event with the bot IDs that were removed', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                onAnyBotsRemoved: `@player.toast(that.botIDs)`,
+                            }),
+                        })
+                    );
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: null,
+                            test2: null,
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast(['test1', 'test2'])]]);
+                });
+
+                it('should be sent after the bot is removed from the runtime', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                                onAnyBotsRemoved: `@player.toast(getBots('abc').length)`,
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                onAnyBotsRemoved: `@player.toast(getBots('abc').length + 10)`,
+                            }),
+                        })
+                    );
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: null,
+                            test2: null,
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast(11)]]);
+                });
+
+                it('should not be triggered from destroy()', async () => {
+                    uuidMock.mockReturnValueOnce('uuid1');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                destroy: `@destroy(this)`,
+                                onBotDestroyed: `@player.toast("Hit")`,
+                            }),
+                        })
+                    );
+
+                    runtime.shout('destroy');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[botRemoved('test1')]]);
+                });
+
+                it('should not reset the context energy', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                onAnyBotsRemoved: `@player.toast(that.botIDs)`,
+                            }),
+                        })
+                    );
+
+                    runtime.context.energy = 2;
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: null,
+                            test2: null,
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(runtime.context.energy).toBe(1);
+                });
+
+                it('should not crash when running out of energy', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                onAnyBotsRemoved: `@player.toast(that.botIDs)`,
+                            }),
+                        })
+                    );
+
+                    runtime.context.energy = 1;
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: null,
+                            test2: null,
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(runtime.context.energy).toBe(0);
+                });
+            });
+        });
+
+        describe('updated bots', () => {
+            it('should return a state update for the updated bot', () => {
+                const update1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            num: 123,
+                        }),
+                        test3: createBot('test3', {
+                            value: true,
+                        }),
+                        test4: createBot('test4', {
+                            tag1: 'test',
+                            tag2: 'other',
+                        }),
+                    })
+                );
+
+                const update2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                other: true,
+                            },
+                        },
+                        test2: {
+                            tags: {
+                                num: 456,
+                            },
+                        },
+                    })
+                );
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                other: true,
+                            },
+                            values: {
+                                other: true,
+                            },
+                        },
+                        test2: {
+                            tags: {
+                                num: 456,
+                            },
+                            values: {
+                                num: 456,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test', 'test2'],
+                });
+            });
+
+            it('should re-compile changed formulas', () => {
+                const update1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            num: '=123',
+                        }),
+                    })
+                );
+
+                const update2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: {
+                            tags: {
+                                num: '=456',
+                            },
+                        },
+                    })
+                );
+
+                expect(update2).toEqual({
+                    state: {
+                        test2: {
+                            tags: {
+                                num: '=456',
+                            },
+                            values: {
+                                num: 456,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test2'],
+                });
+            });
+
+            it('should ignore updates for bots that dont exist', () => {
+                const update1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: {
+                            tags: {
+                                num: '=456',
+                            },
+                        },
+                    })
+                );
+
+                expect(update1).toEqual({
+                    state: {},
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
+            it('should update raw tags', () => {
+                const update1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                            script: '@create(bot)',
+                        }),
+                    })
+                );
+
+                const update2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                other: true,
+                            },
+                        },
+                    })
+                );
+
+                uuidMock.mockReturnValueOnce('test2');
+                const result = runtime.shout('script');
+
+                expect(result.actions).toEqual([
+                    botAdded(
+                        createBot('test2', {
+                            abc: 'def',
+                            script: '@create(bot)',
+                            creator: 'test',
+                            other: true,
+                        })
+                    ),
+                ]);
+            });
+
+            it('should handle removing tags', () => {
+                const update1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            id: 'test',
+                            space: 'shared',
+                            tags: {
+                                abc: 123,
+                            },
+                        },
+                    })
+                );
+
+                const update2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                abc: null,
+                            },
+                        },
+                    })
+                );
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                abc: null,
+                            },
+                            values: {
+                                abc: null,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            describe('numbers', () => {
+                it('should calculate number values', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                num: '123.145',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    num: '145.123',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    num: '145.123',
+                                },
+                                values: {
+                                    num: 145.123,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should handle numbers that start with a dot', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                num: '145',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    num: '.145',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    num: '.145',
+                                },
+                                values: {
+                                    num: 0.145,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+            });
+
+            describe('booleans', () => {
+                it('should calculate boolean values', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: 'true',
+                                value2: 'false',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    value1: 'false',
+                                    value2: 'true',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    value1: 'false',
+                                    value2: 'true',
+                                },
+                                values: {
+                                    value1: false,
+                                    value2: true,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+            });
+
+            describe('arrays', () => {
+                it('should calculate array values', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value: '[true, false, hello, 1.23, .35]',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    value: '[false, true, 1.23, hello]',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    value: '[false, true, 1.23, hello]',
+                                },
+                                values: {
+                                    value: [false, true, 1.23, 'hello'],
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should recalculate the array when the formula changes', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value: '[true, false, ="hello", 1.23, .35]',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    value: '[false, true, 1.23, ="hello1"]',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    value: '[false, true, 1.23, ="hello1"]',
+                                },
+                                values: {
+                                    value: [false, true, 1.23, 'hello1'],
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+            });
+
+            describe('dependencies', () => {
+                it('should support calculating tags that depend on all other bots', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                numBots: '=getBots().length',
+                            }),
+                            test2: createBot('test2', {
+                                num: 123,
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    numBots: '=getBots().length + 1',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    numBots: '=getBots().length + 1',
+                                },
+                                values: {
+                                    numBots: 3,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should support calculating tags that depend on the ID tag', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                numBots: '=getBots("id", "test2").length',
+                            }),
+                            test2: createBot('test2', {
+                                num: 123,
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    numBots:
+                                        '=getBots("id", "test2").length + 1',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    numBots:
+                                        '=getBots("id", "test2").length + 1',
+                                },
+                                values: {
+                                    numBots: 2,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should automatically re-calculate tags when a dependent tag was added to a bot', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                numBots: '=getBots("num").length',
+                            }),
+                            test2: createBot('test2', {}),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: {
+                                tags: {
+                                    num: 123,
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                values: {
+                                    numBots: 1,
+                                },
+                            },
+                            test2: {
+                                tags: {
+                                    num: 123,
+                                },
+                                values: {
+                                    num: 123,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test2', 'test'],
+                    });
+                });
+
+                it('should recalculate formulas that depend on configTag', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            thisBot: createBot('thisBot', {
+                                configBot: 'thatBot',
+                                test: `=configTag`,
+                            }),
+                            thatBot: createBot('thatBot', {
+                                test: '@player.toast("hello")',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            thatBot: {
+                                tags: {
+                                    test: '@player.toast("different")',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            thisBot: {
+                                values: {
+                                    test: '@player.toast("different")',
+                                },
+                            },
+                            thatBot: {
+                                tags: {
+                                    test: '@player.toast("different")',
+                                },
+                                values: {
+                                    test: '@player.toast("different")',
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['thatBot', 'thisBot'],
+                    });
+                });
+
+                it('should recompile functions that depend on configTag', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            thisBot: createBot('thisBot', {
+                                configBot: 'thatBot',
+                                test: `=configTag`,
+                            }),
+                            thatBot: createBot('thatBot', {
+                                test: '@player.toast("hello")',
+                            }),
+                        })
+                    );
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            thatBot: {
+                                tags: {
+                                    test: '@player.toast("different")',
+                                },
+                            },
+                        })
+                    );
+
+                    const result = runtime.shout('test', ['thisBot']);
+                    expect(result.actions).toEqual([toast('different')]);
+                });
+
+                it('should recompile functions that depend on a tag', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            thisBot: createBot('thisBot', {
+                                test: `="@" + tags.script`,
+                                script: `player.toast("hello");`,
+                            }),
+                        })
+                    );
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            thisBot: {
+                                tags: {
+                                    script: `player.toast("different");`,
+                                },
+                            },
+                        })
+                    );
+
+                    const result = runtime.shout('test', ['thisBot']);
+                    expect(result.actions).toEqual([toast('different')]);
+                });
+
+                it('should support calculating tag masks that depend on all other bots', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    tempLocal: {
+                                        numBots: '=getBots().length',
+                                    },
+                                },
+                            },
+                            test2: createBot('test2', {
+                                num: 123,
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    tempLocal: {
+                                        numBots: '=getBots().length + 1',
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                masks: {
+                                    tempLocal: {
+                                        numBots: '=getBots().length + 1',
+                                    },
+                                },
+                                tags: {},
+                                values: {
+                                    numBots: 3,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+            });
+
+            describe('onBotChanged', () => {
+                it('should send a onBotChanged event to the bots that were changed', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onBotChanged: `@player.toast("Changed 1!")`,
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                                onBotChanged: `@player.toast("Changed 2!")`,
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                            }),
+                        })
+                    );
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: {
+                                tags: {
+                                    abc: 'def1',
+                                },
+                            },
+                            test2: {
+                                tags: {
+                                    abc: 'ghi1',
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [toast('Changed 1!')],
+                        [toast('Changed 2!')],
+                    ]);
+                });
+
+                it('should be sent after the bot has been updated', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onBotChanged: `@player.toast(getBots('zzz').length)`,
+                            }),
+                        })
+                    );
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: {
+                                tags: {
+                                    zzz: 'aaa',
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast(1)]]);
+                });
+
+                it('should send the tags that were updated', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onBotChanged: `@player.toast(that)`,
+                            }),
+                        })
+                    );
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: {
+                                tags: {
+                                    abc: 'def1',
+                                    zzz: 'aaa',
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            toast({
+                                tags: ['abc', 'zzz'],
+                            }),
+                        ],
+                    ]);
+                });
+
+                it('should not reset the context energy', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onBotChanged: `@player.toast("Changed 1!")`,
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                                onBotChanged: `@player.toast("Changed 2!")`,
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                            }),
+                        })
+                    );
+
+                    runtime.context.energy = 3;
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: {
+                                tags: {
+                                    abc: 'def1',
+                                },
+                            },
+                            test2: {
+                                tags: {
+                                    abc: 'ghi1',
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    // One separate shout per individual bot listener
+                    expect(runtime.context.energy).toBe(1);
+                });
+
+                it('should not crash when running out of energy', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onBotChanged: `@player.toast("Changed 1!")`,
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                                onBotChanged: `@player.toast("Changed 2!")`,
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                            }),
+                        })
+                    );
+
+                    runtime.context.energy = 1;
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: {
+                                tags: {
+                                    abc: 'def1',
+                                },
+                            },
+                            test2: {
+                                tags: {
+                                    abc: 'ghi1',
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    // One separate shout per individual bot listener
+                    expect(runtime.context.energy).toBe(0);
+                });
+            });
+
+            describe('onAnyBotsChanged', () => {
+                it('should send a onAnyBotsChanged event with the bots that were changed', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onAnyBotsChanged: `@player.toast(that)`,
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                            }),
+                        })
+                    );
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test3: {
+                                tags: {
+                                    abc: 'def1',
+                                },
+                            },
+                            test2: {
+                                tags: {
+                                    '123': '456',
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            toast([
+                                {
+                                    bot: expect.any(Object),
+                                    tags: ['abc'],
+                                },
+                                {
+                                    bot: expect.any(Object),
+                                    tags: ['123'],
+                                },
+                            ]),
+                        ],
+                    ]);
+                });
+
+                it('should be able to update bots that were updated', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onAnyBotsChanged: `@that[0].bot.tags.abc = true;`,
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                            }),
+                        })
+                    );
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test3: {
+                                tags: {
+                                    abc: 'def1',
+                                },
+                            },
+                            test2: {
+                                tags: {
+                                    '123': '456',
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botUpdated('test3', {
+                                tags: {
+                                    abc: true,
+                                },
+                            }),
+                        ],
+                    ]);
+                });
+
+                it('should not reset the context energy', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onAnyBotsChanged: `@player.toast("Changed 1!")`,
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                                onAnyBotsChanged: `@player.toast("Changed 2!")`,
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                            }),
+                        })
+                    );
+
+                    runtime.context.energy = 2;
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: {
+                                tags: {
+                                    abc: 'def1',
+                                },
+                            },
+                            test2: {
+                                tags: {
+                                    abc: 'ghi1',
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    // One shout for all listeners
+                    expect(runtime.context.energy).toBe(1);
+                });
+
+                it('should not crash when running out of energy', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                onAnyBotsChanged: `@player.toast("Changed 1!")`,
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                                onAnyBotsChanged: `@player.toast("Changed 2!")`,
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                            }),
+                        })
+                    );
+
+                    runtime.context.energy = 1;
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: {
+                                tags: {
+                                    abc: 'def1',
+                                },
+                            },
+                            test2: {
+                                tags: {
+                                    abc: 'ghi1',
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(runtime.context.energy).toBe(0);
+                });
+            });
+
+            describe('signatures', () => {
+                it('should handle new bots with signatures', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                signatures: {
+                                    [tagValueHash('test', 'abc', 'def')]: 'abc',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update1).toEqual({
+                        state: {
+                            test: {
+                                id: 'test',
+                                precalculated: true,
+                                tags: {
+                                    abc: 'def',
+                                },
+                                values: {
+                                    abc: 'def',
+                                },
+                                signatures: {
+                                    [tagValueHash('test', 'abc', 'def')]: 'abc',
+                                },
+                            },
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should handle adding signatures', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                tags: {
+                                    abc: 'def',
+                                },
+                            },
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                signatures: {
+                                    [tagValueHash('test', 'abc', 'def')]: 'abc',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {},
+                                values: {},
+                                signatures: {
+                                    [tagValueHash('test', 'abc', 'def')]: 'abc',
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should handle removing signatures', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                signatures: {
+                                    [tagValueHash('test', 'abc', 'def')]: 'abc',
+                                },
+                            },
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                signatures: {
+                                    [tagValueHash('test', 'abc', 'def')]: null,
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {},
+                                values: {},
+                                signatures: {
+                                    [tagValueHash('test', 'abc', 'def')]: null,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+            });
+
+            describe('edits', () => {
+                it('should support edits on a tag', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    abc: edit(
+                                        {},
+                                        preserve(1),
+                                        insert('1'),
+                                        del(1)
+                                    ),
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    abc: edit(
+                                        {},
+                                        preserve(1),
+                                        insert('1'),
+                                        del(1)
+                                    ),
+                                },
+                                values: {
+                                    abc: 'd1f',
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should support edits on a formula', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: '=1+2',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    abc: edit({}, preserve(4), insert('+3')),
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    abc: edit({}, preserve(4), insert('+3')),
+                                },
+                                values: {
+                                    abc: 6,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+            });
+
+            describe('masks', () => {
+                it('should handle adding masks', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                            },
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    shared: {
+                                        def: 123,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {},
+                                values: {
+                                    def: 123,
+                                },
+                                masks: {
+                                    shared: {
+                                        def: 123,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should use the mask value for the tag value', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                            },
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    tempLocal: {
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {},
+                                values: {
+                                    abc: 123,
+                                },
+                                masks: {
+                                    tempLocal: {
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should prefer tempLocal tag masks over local ones for values', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                            },
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    local: {
+                                        abc: 456,
+                                    },
+                                    tempLocal: {
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {},
+                                values: {
+                                    abc: 123,
+                                },
+                                masks: {
+                                    tempLocal: {
+                                        abc: 123,
+                                    },
+                                    local: {
+                                        abc: 456,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should be able calculate formulas in tag masks', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                            },
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    tempLocal: {
+                                        abc: '=2 + 4',
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {},
+                                values: {
+                                    abc: 6,
+                                },
+                                masks: {
+                                    tempLocal: {
+                                        abc: '=2 + 4',
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should handle removing tag masks', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    shared: {
+                                        abc: null,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    abc: null,
+                                },
+                                values: {
+                                    abc: null,
+                                },
+                                masks: {
+                                    shared: {
+                                        abc: null,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should handle removing multiple tag masks', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 123,
+                                    },
+                                    tempLocal: {
+                                        abc: 'def',
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    shared: {
+                                        abc: null,
+                                    },
+                                    tempLocal: {
+                                        abc: null,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    abc: null,
+                                },
+                                values: {
+                                    abc: null,
+                                },
+                                masks: {
+                                    shared: {
+                                        abc: null,
+                                    },
+                                    tempLocal: {
+                                        abc: null,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should be able to update normal tags that are hidden by masks', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                masks: {
+                                    tempLocal: {
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    abc: 'ghi',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    abc: 'ghi',
+                                },
+                                values: {
+                                    abc: 123,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should be able to update tag masks without affecting the tag', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                masks: {
+                                    tempLocal: {
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    tempLocal: {
+                                        abc: 12,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {},
+                                masks: {
+                                    tempLocal: {
+                                        abc: 12,
+                                    },
+                                },
+                                values: {
+                                    abc: 12,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should fall back to the tag value when a tag mask is deleted', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                masks: {
+                                    shared: {
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    shared: {
+                                        abc: null,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {},
+                                values: {
+                                    abc: 'def',
+                                },
+                                masks: {
+                                    shared: {
+                                        abc: null,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should buffer tag masks that are added before the corresponding bot is added', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    shared: {
+                                        def: 123,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update1).toEqual({
+                        state: {},
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                id: 'test',
+                                precalculated: true,
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                values: {
+                                    abc: 'def',
+                                    def: 123,
+                                },
+                                masks: {
+                                    shared: {
+                                        def: 123,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should not allow buffered tag masks to overwrite tag masks that are specified when the bot is added', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    shared: {
+                                        def: 123,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update1).toEqual({
+                        state: {},
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                masks: {
+                                    shared: {
+                                        def: 987,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                id: 'test',
+                                precalculated: true,
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                values: {
+                                    abc: 'def',
+                                    def: 987,
+                                },
+                                masks: {
+                                    shared: {
+                                        def: 987,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should merge buffered tag masks with tag masks that are specified when the bot is added', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    shared: {
+                                        def: 123,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update1).toEqual({
+                        state: {},
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                masks: {
+                                    tempLocal: {
+                                        custom: true,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                id: 'test',
+                                precalculated: true,
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                values: {
+                                    abc: 'def',
+                                    def: 123,
+                                    custom: true,
+                                },
+                                masks: {
+                                    shared: {
+                                        def: 123,
+                                    },
+                                    tempLocal: {
+                                        custom: true,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                describe('edits', () => {
+                    it('should support edits on a tag mask', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    space: 'shared',
+                                    tags: {},
+                                    masks: {
+                                        tempLocal: {
+                                            abc: 'def',
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        tempLocal: {
+                                            abc: edit(
+                                                {},
+                                                preserve(1),
+                                                insert('1'),
+                                                del(1)
+                                            ),
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {},
+                                    masks: {
+                                        tempLocal: {
+                                            abc: edit(
+                                                {},
+                                                preserve(1),
+                                                insert('1'),
+                                                del(1)
+                                            ),
+                                        },
+                                    },
+                                    values: {
+                                        abc: 'd1f',
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                        });
+                    });
+
+                    it('should support edits on a formula', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    space: 'shared',
+                                    tags: {},
+                                    masks: {
+                                        tempLocal: {
+                                            abc: '=1+2',
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        tempLocal: {
+                                            abc: edit(
+                                                {},
+                                                preserve(4),
+                                                insert('+3')
+                                            ),
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {},
+                                    masks: {
+                                        tempLocal: {
+                                            abc: edit(
+                                                {},
+                                                preserve(4),
+                                                insert('+3')
+                                            ),
+                                        },
+                                    },
+                                    values: {
+                                        abc: 6,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                        });
+                    });
                 });
             });
         });
@@ -3424,6 +7131,59 @@ describe('AuxRuntime', () => {
                 ]);
             });
 
+            it('should be able to update tag masks which get accepted to the partition', async () => {
+                uuidMock.mockReturnValue('uuid');
+                memory.space = DEFAULT_TAG_MASK_SPACE;
+                const bot = createBot('test1', {
+                    update: `@bot.masks.abc = "def"`,
+                });
+                runtime.botsAdded([bot]);
+                await memory.applyEvents([botAdded(bot)]);
+                runtime.shout('update');
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botUpdated('test1', {
+                            masks: {
+                                [DEFAULT_TAG_MASK_SPACE]: {
+                                    abc: 'def',
+                                },
+                            },
+                        }),
+                    ],
+                ]);
+
+                const updates = await captureUpdates(async () => {
+                    for (let e of events) {
+                        await memory.applyEvents(e);
+                    }
+                    await waitAsync();
+                });
+
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            test1: {
+                                values: {
+                                    abc: 'def',
+                                },
+                                tags: {},
+                                masks: {
+                                    [DEFAULT_TAG_MASK_SPACE]: {
+                                        abc: 'def',
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test1'],
+                    },
+                ]);
+            });
+
             it('should be able to update formulas which get accepted to the partition', async () => {
                 uuidMock.mockReturnValue('uuid');
                 const bot = createBot('test1', {
@@ -3886,6 +7646,31 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            it('should define a masks variable that equals this.masks', () => {
+                const update = runtime.botsAdded([
+                    createBot('test', {
+                        formula: '=masks === this.masks',
+                    }),
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: createPrecalculatedBot(
+                            'test',
+                            {
+                                formula: true,
+                            },
+                            {
+                                formula: '=masks === this.masks',
+                            }
+                        ),
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
             it.skip('should define a creator variable which is the bot that created this', () => {
                 runtime.botsAdded([createBot('test', {})]);
 
@@ -3980,6 +7765,95 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            describe('masks', () => {
+                it('should contain tag mask values', () => {
+                    const update = runtime.botsAdded([
+                        {
+                            id: 'test',
+                            tags: {
+                                formula: '=this.masks.num1 + this.masks.num2',
+                            },
+                            masks: {
+                                tempLocal: {
+                                    num1: '123',
+                                    num2: '456',
+                                },
+                            },
+                        },
+                    ]);
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                id: 'test',
+                                precalculated: true,
+                                tags: {
+                                    formula:
+                                        '=this.masks.num1 + this.masks.num2',
+                                },
+                                values: {
+                                    formula: '123456',
+                                    num1: 123,
+                                    num2: 456,
+                                },
+                                masks: {
+                                    tempLocal: {
+                                        num1: '123',
+                                        num2: '456',
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should be able to use tag mask values for tags', () => {
+                    const update = runtime.botsAdded([
+                        {
+                            id: 'test',
+                            tags: {
+                                formula: '=this.tags.num1 + this.tags.num2',
+                            },
+                            masks: {
+                                tempLocal: {
+                                    num1: '123',
+                                    num2: '456',
+                                },
+                            },
+                        },
+                    ]);
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                id: 'test',
+                                precalculated: true,
+                                tags: {
+                                    formula: '=this.tags.num1 + this.tags.num2',
+                                },
+                                values: {
+                                    formula: 123 + 456,
+                                    num1: 123,
+                                    num2: 456,
+                                },
+                                masks: {
+                                    tempLocal: {
+                                        num1: '123',
+                                        num2: '456',
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+            });
+
             describe('this', () => {
                 it('should have an ID property', () => {
                     const update = runtime.botsAdded([
@@ -4038,7 +7912,10 @@ describe('AuxRuntime', () => {
             });
         });
 
-        const quoteCases = [['‘', '’'], ['“', '”']];
+        const quoteCases = [
+            ['‘', '’'],
+            ['“', '”'],
+        ];
 
         it.each(quoteCases)(
             'should support curly quotes by converting them to normal quotes',
@@ -4223,7 +8100,7 @@ describe('AuxRuntime', () => {
 
         it('should prevent scheduling tasks while in a formula', async () => {
             const test = jest.fn();
-            runtime = new AuxRuntime(version, auxDevice, ctx => ({
+            runtime = new AuxRuntime(version, auxDevice, (ctx) => ({
                 api: {
                     ...createDefaultLibrary(ctx).api,
                     test,
@@ -4446,7 +8323,7 @@ describe('AuxRuntime', () => {
             ]);
             let provider = new DefaultRealtimeEditModeProvider(map);
             runtime = new AuxRuntime(version, auxDevice, undefined, provider);
-            runtime.onActions.subscribe(a => events.push(a));
+            runtime.onActions.subscribe((a) => events.push(a));
 
             uuidMock.mockReturnValueOnce('uuid').mockReturnValueOnce('uuid2');
             runtime.botsAdded([
@@ -4507,7 +8384,7 @@ describe('AuxRuntime', () => {
                 getEditMode: jest.fn(),
             };
             runtime = new AuxRuntime(version, auxDevice, undefined, provider);
-            runtime.onActions.subscribe(a => {
+            runtime.onActions.subscribe((a) => {
                 allEvents.push(...a);
             });
 
@@ -4595,7 +8472,7 @@ describe('AuxRuntime', () => {
             runtime = new AuxRuntime(
                 version,
                 auxDevice,
-                context => ({
+                (context) => ({
                     api: {
                         ...createDefaultLibrary(context).api,
                         test: test,
@@ -4631,7 +8508,7 @@ describe('AuxRuntime', () => {
     it('should not leak zones to callbacks', async () => {
         let root = Zone.root;
         const zones = [] as Zone[];
-        runtime.onActions.subscribe(e => {
+        runtime.onActions.subscribe((e) => {
             zones.push(Zone.current);
         });
         runtime.botsAdded([
@@ -4667,11 +8544,11 @@ describe('AuxRuntime', () => {
             errors = [];
             allErrors = [];
 
-            runtime.onActions.subscribe(a => {
+            runtime.onActions.subscribe((a) => {
                 events.push(a);
                 allEvents.push(...a);
             });
-            runtime.onErrors.subscribe(e => {
+            runtime.onErrors.subscribe((e) => {
                 errors.push(e);
                 allErrors.push(...e);
             });
@@ -8103,11 +11980,11 @@ describe('original action tests', () => {
             ]);
         });
 
-        const portalCases = [...KNOWN_PORTALS.map(p => [p])];
+        const portalCases = [...KNOWN_PORTALS.map((p) => [p])];
 
         it.each(portalCases)(
             'should return 1 when the dimension is in the %s portal',
-            portal => {
+            (portal) => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -10794,7 +14671,11 @@ describe('original action tests', () => {
         });
     });
 
-    const nonStringScriptCases = [['true', true], ['false', false], ['0', 0]];
+    const nonStringScriptCases = [
+        ['true', true],
+        ['false', false],
+        ['0', 0],
+    ];
     it.each(nonStringScriptCases)(
         'should include scripts that are formulas but return %s',
         (val, expected) => {
@@ -10829,7 +14710,7 @@ describe('original action tests', () => {
 
     it.each(nullScriptCases)(
         'should skip scripts that are formulas but return %s',
-        val => {
+        (val) => {
             expect.assertions(2);
 
             const state: BotsState = {

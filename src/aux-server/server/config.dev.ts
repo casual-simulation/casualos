@@ -57,6 +57,7 @@ const config: Config = {
     drives: path.resolve(__dirname, '..', '..', 'drives'),
     sandbox: 'deno',
     gpio: true,
+    debug: false,
 };
 
 export default config;
