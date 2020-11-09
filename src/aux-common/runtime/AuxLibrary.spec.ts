@@ -141,6 +141,7 @@ import uuid from 'uuid/v4';
 import {
     TestScriptBotFactory,
     createDummyRuntimeBot,
+    testScriptBotInterface,
 } from './test/TestScriptBotFactory';
 import { RuntimeBatcher } from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
@@ -148,7 +149,7 @@ import { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
 import { decryptV1, keypair } from '@casual-simulation/crypto';
 import { CERTIFIED_SPACE } from '../aux-format-2/AuxWeaveReducer';
-import { tagValueHash } from '../aux-format-2';
+import { edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { RanOutOfEnergyError } from './AuxResults';
 
 const uuidMock: jest.Mock = <any>uuid;
@@ -5090,6 +5091,13 @@ describe('AuxLibrary', () => {
             expect(result).toEqual('hello');
             expect(bot1.tags.abc).toEqual('hello');
             expect(bot1.raw.abc).toEqual('hello');
+            expect(bot1.changes).toEqual({
+                abc: edit(
+                    testScriptBotInterface.currentVersion.vector,
+                    preserve(0),
+                    insert('hello')
+                ),
+            });
         });
 
         it('should insert the text into the start of the given tag', () => {
@@ -5100,6 +5108,13 @@ describe('AuxLibrary', () => {
             expect(result).toEqual('123hello');
             expect(bot1.tags.abc).toEqual('123hello');
             expect(bot1.raw.abc).toEqual('123hello');
+            expect(bot1.changes).toEqual({
+                abc: edit(
+                    testScriptBotInterface.currentVersion.vector,
+                    preserve(0),
+                    insert('123')
+                ),
+            });
         });
 
         it('should insert the text into the middle of the given tag', () => {
@@ -5110,6 +5125,13 @@ describe('AuxLibrary', () => {
             expect(result).toEqual('he123llo');
             expect(bot1.tags.abc).toEqual('he123llo');
             expect(bot1.raw.abc).toEqual('he123llo');
+            expect(bot1.changes).toEqual({
+                abc: edit(
+                    testScriptBotInterface.currentVersion.vector,
+                    preserve(2),
+                    insert('123')
+                ),
+            });
         });
 
         it('should insert the text into the end of the given tag', () => {
@@ -5120,6 +5142,13 @@ describe('AuxLibrary', () => {
             expect(result).toEqual('hello123');
             expect(bot1.tags.abc).toEqual('hello123');
             expect(bot1.raw.abc).toEqual('hello123');
+            expect(bot1.changes).toEqual({
+                abc: edit(
+                    testScriptBotInterface.currentVersion.vector,
+                    preserve(5),
+                    insert('123')
+                ),
+            });
         });
 
         it('should allow negative numbers to insert from the end of the string', () => {
@@ -5130,6 +5159,30 @@ describe('AuxLibrary', () => {
             expect(result).toEqual('hell123o');
             expect(bot1.tags.abc).toEqual('hell123o');
             expect(bot1.raw.abc).toEqual('hell123o');
+            expect(bot1.changes).toEqual({
+                abc: edit(
+                    testScriptBotInterface.currentVersion.vector,
+                    preserve(4),
+                    insert('123')
+                ),
+            });
+        });
+
+        it('should allow negative numbers to insert from the end of the string when the current tag value is empty', () => {
+            bot1.tags.abc = '';
+
+            const result = library.api.insertTagText(bot1, 'abc', -1, '123');
+
+            expect(result).toEqual('123');
+            expect(bot1.tags.abc).toEqual('123');
+            expect(bot1.raw.abc).toEqual('123');
+            expect(bot1.changes).toEqual({
+                abc: edit(
+                    testScriptBotInterface.currentVersion.vector,
+                    preserve(0),
+                    insert('123')
+                ),
+            });
         });
 
         it('should clamp to the end of the string', () => {
@@ -5140,6 +5193,191 @@ describe('AuxLibrary', () => {
             expect(result).toEqual('hello123');
             expect(bot1.tags.abc).toEqual('hello123');
             expect(bot1.raw.abc).toEqual('hello123');
+            expect(bot1.changes).toEqual({
+                abc: edit(
+                    testScriptBotInterface.currentVersion.vector,
+                    preserve(5),
+                    insert('123')
+                ),
+            });
+        });
+    });
+
+    describe('insertTagMaskText()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should create the tag with the given text if it does not exist', () => {
+            const result = library.api.insertTagMaskText(
+                bot1,
+                'abc',
+                'local',
+                0,
+                'hello'
+            );
+
+            expect(result).toEqual('hello');
+            expect(bot1.masks.abc).toEqual('hello');
+            expect(bot1.maskChanges).toEqual({
+                local: {
+                    abc: edit(
+                        testScriptBotInterface.currentVersion.vector,
+                        preserve(0),
+                        insert('hello')
+                    ),
+                },
+            });
+        });
+
+        it('should insert the text into the start of the given tag', () => {
+            library.api.setTagMask(bot1, 'abc', 'hello', 'local');
+
+            const result = library.api.insertTagMaskText(
+                bot1,
+                'abc',
+                'local',
+                0,
+                '123'
+            );
+
+            expect(result).toEqual('123hello');
+            expect(bot1.masks.abc).toEqual('123hello');
+            expect(bot1.maskChanges).toEqual({
+                local: {
+                    abc: edit(
+                        testScriptBotInterface.currentVersion.vector,
+                        preserve(0),
+                        insert('123')
+                    ),
+                },
+            });
+        });
+
+        it('should insert the text into the middle of the given tag', () => {
+            library.api.setTagMask(bot1, 'abc', 'hello', 'local');
+
+            const result = library.api.insertTagMaskText(
+                bot1,
+                'abc',
+                'local',
+                2,
+                '123'
+            );
+
+            expect(result).toEqual('he123llo');
+            expect(bot1.masks.abc).toEqual('he123llo');
+            expect(bot1.maskChanges).toEqual({
+                local: {
+                    abc: edit(
+                        testScriptBotInterface.currentVersion.vector,
+                        preserve(2),
+                        insert('123')
+                    ),
+                },
+            });
+        });
+
+        it('should insert the text into the end of the given tag', () => {
+            library.api.setTagMask(bot1, 'abc', 'hello', 'local');
+
+            const result = library.api.insertTagMaskText(
+                bot1,
+                'abc',
+                'local',
+                5,
+                '123'
+            );
+
+            expect(result).toEqual('hello123');
+            expect(bot1.masks.abc).toEqual('hello123');
+            expect(bot1.maskChanges).toEqual({
+                local: {
+                    abc: edit(
+                        testScriptBotInterface.currentVersion.vector,
+                        preserve(5),
+                        insert('123')
+                    ),
+                },
+            });
+        });
+
+        it('should allow negative numbers to insert from the end of the string', () => {
+            library.api.setTagMask(bot1, 'abc', 'hello', 'local');
+
+            const result = library.api.insertTagMaskText(
+                bot1,
+                'abc',
+                'local',
+                -1,
+                '123'
+            );
+
+            expect(result).toEqual('hell123o');
+            expect(bot1.masks.abc).toEqual('hell123o');
+            expect(bot1.maskChanges).toEqual({
+                local: {
+                    abc: edit(
+                        testScriptBotInterface.currentVersion.vector,
+                        preserve(4),
+                        insert('123')
+                    ),
+                },
+            });
+        });
+
+        it('should allow negative numbers to insert from the end of the string when the current tag value is empty', () => {
+            library.api.setTagMask(bot1, 'abc', '', 'local');
+
+            const result = library.api.insertTagMaskText(
+                bot1,
+                'abc',
+                'local',
+                -1,
+                '123'
+            );
+
+            expect(result).toEqual('123');
+            expect(bot1.masks.abc).toEqual('123');
+            expect(bot1.maskChanges).toEqual({
+                local: {
+                    abc: edit(
+                        testScriptBotInterface.currentVersion.vector,
+                        preserve(0),
+                        insert('123')
+                    ),
+                },
+            });
+        });
+
+        it('should clamp to the end of the string', () => {
+            library.api.setTagMask(bot1, 'abc', 'hello', 'local');
+
+            const result = library.api.insertTagMaskText(
+                bot1,
+                'abc',
+                'local',
+                7,
+                '123'
+            );
+
+            expect(result).toEqual('hello123');
+            expect(bot1.masks.abc).toEqual('hello123');
+            expect(bot1.maskChanges).toEqual({
+                local: {
+                    abc: edit(
+                        testScriptBotInterface.currentVersion.vector,
+                        preserve(5),
+                        insert('123')
+                    ),
+                },
+            });
         });
     });
 

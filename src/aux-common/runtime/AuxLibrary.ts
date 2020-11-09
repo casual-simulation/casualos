@@ -152,6 +152,7 @@ import {
     CLEAR_TAG_MASKS_SYMBOL,
     getBotScale,
     EDIT_TAG_SYMBOL,
+    BotSpace,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -176,6 +177,7 @@ import {
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, insert, preserve } from '../aux-format-2';
 import { Euler, Vector3, Plane, Ray } from 'three';
+import { Runtime } from 'inspector';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -372,6 +374,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             setTagMask,
             clearTagMasks,
             insertTagText,
+            insertTagMaskText,
             removeTags,
             renameTag,
             applyMod,
@@ -3494,12 +3497,37 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         index: number,
         text: string
     ): string {
-        while (index < 0) {
-            const currentValue = bot.raw[tag];
-            index += convertToString(currentValue).length;
+        const currentValue = convertToString(bot.raw[tag]);
+        if (index < 0) {
+            index += currentValue.length;
         }
+        index = Math.max(0, Math.min(index, currentValue.length));
         bot[EDIT_TAG_SYMBOL](tag, null, [preserve(index), insert(text)]);
         return bot.raw[tag];
+    }
+
+    /**
+     * Inserts the given text into the given tag and space at the given index.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param space The space that the tag exists in.
+     * @param index The index that the text should be inserted at.
+     * @param text The text that should be inserted.
+     */
+    function insertTagMaskText(
+        bot: RuntimeBot,
+        tag: string,
+        space: BotSpace,
+        index: number,
+        text: string
+    ): string {
+        const currentValue = convertToString(bot.masks[tag]);
+        if (index < 0) {
+            index += currentValue.length;
+        }
+        index = Math.max(0, Math.min(index, currentValue.length));
+        bot[EDIT_TAG_SYMBOL](tag, space, [preserve(index), insert(text)]);
+        return bot.masks[tag];
     }
 
     /**
