@@ -5466,6 +5466,176 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('deleteTagMaskText()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+
+            library.api.setTagMask(bot2, 'abc', 'hello', 'local');
+            bot2[CLEAR_CHANGES_SYMBOL]();
+        });
+
+        it('should do nothing if the tag doesnt exist', () => {
+            const result = library.api.deleteTagMaskText(
+                bot1,
+                'abc',
+                0,
+                2,
+                'local'
+            );
+
+            expect(result).toEqual('');
+            expect(bot1.masks.abc).toBeUndefined();
+            expect(bot1.maskChanges).toEqual({});
+        });
+
+        it('should delete the text from the start of the given tag', () => {
+            const result = library.api.deleteTagMaskText(
+                bot2,
+                'abc',
+                0,
+                2,
+                'local'
+            );
+
+            expect(result).toEqual('llo');
+            expect(bot2.masks.abc).toEqual('llo');
+            expect(bot2.maskChanges).toEqual({
+                local: {
+                    abc: edit(
+                        testScriptBotInterface.currentVersion.vector,
+                        preserve(0),
+                        del(2)
+                    ),
+                },
+            });
+        });
+
+        it('should insert the text into the middle of the given tag', () => {
+            const result = library.api.deleteTagMaskText(
+                bot2,
+                'abc',
+                2,
+                2,
+                'local'
+            );
+
+            expect(result).toEqual('heo');
+            expect(bot2.masks.abc).toEqual('heo');
+            expect(bot2.maskChanges).toEqual({
+                local: {
+                    abc: edit(
+                        testScriptBotInterface.currentVersion.vector,
+                        preserve(2),
+                        del(2)
+                    ),
+                },
+            });
+        });
+
+        it('should delete the text from the end of the given tag', () => {
+            const result = library.api.deleteTagMaskText(
+                bot2,
+                'abc',
+                3,
+                2,
+                'local'
+            );
+
+            expect(result).toEqual('hel');
+            expect(bot2.masks.abc).toEqual('hel');
+            expect(bot2.maskChanges).toEqual({
+                local: {
+                    abc: edit(
+                        testScriptBotInterface.currentVersion.vector,
+                        preserve(3),
+                        del(2)
+                    ),
+                },
+            });
+        });
+
+        it('should allow negative numbers to delete from the end of the string', () => {
+            const result = library.api.deleteTagMaskText(
+                bot2,
+                'abc',
+                -2,
+                2,
+                'local'
+            );
+
+            expect(result).toEqual('hel');
+            expect(bot2.masks.abc).toEqual('hel');
+            expect(bot2.maskChanges).toEqual({
+                local: {
+                    abc: edit(
+                        testScriptBotInterface.currentVersion.vector,
+                        preserve(3),
+                        del(2)
+                    ),
+                },
+            });
+        });
+
+        it('should be able to delete from the specified space when a higher priority tag is available', () => {
+            library.api.setTagMask(bot2, 'abc', 'wrong', 'tempLocal');
+            bot2[CLEAR_CHANGES_SYMBOL]();
+
+            const result = library.api.deleteTagMaskText(
+                bot2,
+                'abc',
+                3,
+                2,
+                'local'
+            );
+
+            expect(result).toEqual('wrong');
+            expect(bot2.masks.abc).toEqual('wrong');
+            expect(bot2.maskChanges).toEqual({
+                local: {
+                    abc: edit(
+                        testScriptBotInterface.currentVersion.vector,
+                        preserve(3),
+                        del(2)
+                    ),
+                },
+            });
+        });
+
+        it('should do nothing when using negative numbers to delete from the end of the string when the current tag value is empty', () => {
+            const result = library.api.deleteTagMaskText(
+                bot1,
+                'abc',
+                -1,
+                1,
+                'local'
+            );
+
+            expect(result).toEqual('');
+            expect(bot1.masks.abc).toBeUndefined();
+            expect(bot1.maskChanges).toEqual({});
+        });
+
+        it('should clamp to the end of the string', () => {
+            const result = library.api.deleteTagMaskText(
+                bot2,
+                'abc',
+                7,
+                1,
+                'local'
+            );
+
+            expect(result).toEqual('hello');
+            expect(bot2.masks.abc).toEqual('hello');
+            expect(bot2.maskChanges).toEqual({});
+        });
+    });
+
     describe('removeTags()', () => {
         let bot1: RuntimeBot;
         let bot2: RuntimeBot;

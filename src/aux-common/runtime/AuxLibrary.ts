@@ -377,6 +377,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             insertTagText,
             insertTagMaskText,
             deleteTagText,
+            deleteTagMaskText,
             removeTags,
             renameTag,
             applyMod,
@@ -3557,6 +3558,38 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             bot[EDIT_TAG_SYMBOL](tag, [preserve(index), del(count)]);
         }
         return bot.raw[tag] || '';
+    }
+
+    /**
+     * Deletes the specified number of characters from the given tag mask.
+     * Returns the resulting raw tag mask value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be deleted at.
+     * @param count The number of characters to delete.
+     * @param space The space that the tag mask exists in. If not specified then the tempLocal space will be used.
+     */
+    function deleteTagMaskText(
+        bot: RuntimeBot,
+        tag: string,
+        index: number,
+        count: number,
+        space?: string
+    ): string {
+        const currentValue = convertToString(bot.masks[tag]);
+        if (index < 0) {
+            index += currentValue.length;
+        }
+        index = Math.max(0, Math.min(index, currentValue.length));
+        count = Math.min(count, currentValue.length - index);
+        if (count > 0) {
+            bot[EDIT_TAG_MASK_SYMBOL](
+                tag,
+                [preserve(index), del(count)],
+                space
+            );
+        }
+        return bot.masks[tag] || '';
     }
 
     /**
