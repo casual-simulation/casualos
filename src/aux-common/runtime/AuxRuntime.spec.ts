@@ -8521,6 +8521,30 @@ describe('AuxRuntime', () => {
             expect(bot.values.abc).toEqual('d1f');
             expect(runtime.getValue(bot, 'abc')).toEqual('d1f');
         });
+
+        it('should support multiple tag edits in a row', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            let bot = runtime.currentState['test'];
+            runtime.updateTag(
+                bot,
+                'abc',
+                edit({}, preserve(1), insert('1'), del(1))
+            );
+
+            bot = runtime.currentState['test'];
+            runtime.updateTag(bot, 'abc', edit({}, preserve(0), del(1)));
+
+            expect(bot.tags.abc).toEqual('1f');
+            expect(bot.values.abc).toEqual('1f');
+            expect(runtime.getValue(bot, 'abc')).toEqual('1f');
+        });
     });
 
     describe('unsubscribe()', () => {

@@ -29,6 +29,7 @@ import {
     applyEdit,
     del,
     edit,
+    edits,
     insert,
     isTagEdit,
     preserve,
@@ -791,6 +792,59 @@ describe('RuntimeBot', () => {
                         preserve(1),
                         insert('111'),
                         del(1)
+                    ),
+                },
+            });
+        });
+
+        it('should support multiple tag edits in a row', () => {
+            script[EDIT_TAG_SYMBOL]('abc', null, [
+                preserve(1),
+                insert('111'),
+                del(1),
+            ]);
+
+            script[EDIT_TAG_SYMBOL]('abc', null, [
+                preserve(2),
+                insert('2'),
+                del(1),
+            ]);
+
+            expect(script.tags.abc).toEqual('d121f');
+            expect(script.raw.abc).toEqual('d121f');
+            expect(script.changes.abc).toEqual(
+                edits(
+                    manager.currentVersion.vector,
+                    [preserve(1), insert('111'), del(1)],
+                    [preserve(2), insert('2'), del(1)]
+                )
+            );
+        });
+
+        it('should support multiple tag mask edits in a row', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 'def', 'local');
+            script[CLEAR_CHANGES_SYMBOL]();
+
+            script[EDIT_TAG_SYMBOL]('abc', 'local', [
+                preserve(1),
+                insert('111'),
+                del(1),
+            ]);
+
+            script[EDIT_TAG_SYMBOL]('abc', 'local', [
+                preserve(2),
+                insert('2'),
+                del(1),
+            ]);
+
+            expect(script.masks.abc).toEqual('d121f');
+            expect(script.raw.abc).toEqual('def');
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: edits(
+                        manager.currentVersion.vector,
+                        [preserve(1), insert('111'), del(1)],
+                        [preserve(2), insert('2'), del(1)]
                     ),
                 },
             });

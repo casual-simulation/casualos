@@ -1,4 +1,4 @@
-import { edit, TagEditOp } from '../aux-format-2';
+import { edit, isTagEdit, mergeEdits, TagEditOp } from '../aux-format-2';
 import {
     BotSpace,
     BotTags,
@@ -95,9 +95,9 @@ export function createRuntimeBot(
             const mode = manager.updateTag(bot, key, value);
             if (mode === RealtimeEditMode.Immediate) {
                 rawTags[key] = value;
-                changedRawTags[key] = value;
+                changeTag(key, value);
             } else if (mode === RealtimeEditMode.Delayed) {
-                changedRawTags[key] = value;
+                changeTag(key, value);
             }
             return true;
         },
@@ -109,9 +109,9 @@ export function createRuntimeBot(
             const mode = manager.updateTag(bot, key, value);
             if (mode === RealtimeEditMode.Immediate) {
                 rawTags[key] = value;
-                changedRawTags[key] = value;
+                changeTag(key, value);
             } else if (mode === RealtimeEditMode.Delayed) {
-                changedRawTags[key] = value;
+                changeTag(key, value);
             }
             return true;
         },
@@ -141,9 +141,9 @@ export function createRuntimeBot(
             const mode = manager.updateTag(bot, key, value);
             if (mode === RealtimeEditMode.Immediate) {
                 rawTags[key] = value;
-                changedRawTags[key] = value;
+                changeTag(key, value);
             } else if (mode === RealtimeEditMode.Delayed) {
-                changedRawTags[key] = value;
+                changeTag(key, value);
             }
             return true;
         },
@@ -155,9 +155,9 @@ export function createRuntimeBot(
             const mode = manager.updateTag(bot, key, value);
             if (mode === RealtimeEditMode.Immediate) {
                 rawTags[key] = value;
-                changedRawTags[key] = value;
+                changeTag(key, value);
             } else if (mode === RealtimeEditMode.Delayed) {
-                changedRawTags[key] = value;
+                changeTag(key, value);
             }
             return true;
         },
@@ -368,10 +368,27 @@ export function createRuntimeBot(
 
     return script;
 
-    function changeTagMask(tag: string, value: string, spaces: string[]) {
+    function changeTag(tag: string, value: any) {
+        if (isTagEdit(value)) {
+            const currentValue = changedRawTags[tag];
+            if (isTagEdit(currentValue)) {
+                changedRawTags[tag] = mergeEdits(currentValue, value);
+                return;
+            }
+        }
+        changedRawTags[tag] = value;
+    }
+
+    function changeTagMask(tag: string, value: any, spaces: string[]) {
         for (let space of spaces) {
             if (!changedMasks[space]) {
                 changedMasks[space] = {};
+            }
+            if (isTagEdit(value)) {
+                const currentValue = changedMasks[space][tag];
+                if (isTagEdit(currentValue)) {
+                    value = mergeEdits(currentValue, value);
+                }
             }
             changedMasks[space][tag] = value;
         }

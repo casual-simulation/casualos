@@ -102,4 +102,9 @@ export const testScriptBotInterface: RuntimeBotInterface = {
         }
         return RealtimeEditMode.Immediate;
     },
+
+    currentVersion: {
+        localSites: {},
+        vector: {},
+    },
 };
