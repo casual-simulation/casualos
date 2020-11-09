@@ -35,6 +35,7 @@ import {
     createCausalRepoPartition,
     MemoryPartitionImpl,
     MemoryPartitionStateConfig,
+    RuntimeStateVersion,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
@@ -43,7 +44,6 @@ import merge from 'lodash/merge';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subject } from 'rxjs';
 import { cloneDeep } from 'lodash';
-import { ChannelStateVersion } from './AuxChannel';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -401,7 +401,7 @@ describe('BaseAuxChannel', () => {
             };
             channel = new AuxChannelImpl(user, device, config);
 
-            let versions = [] as ChannelStateVersion[];
+            let versions = [] as RuntimeStateVersion[];
 
             await channel.initAndWait();
 

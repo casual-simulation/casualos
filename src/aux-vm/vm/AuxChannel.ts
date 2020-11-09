@@ -4,6 +4,7 @@ import {
     StateUpdatedEvent,
     BotDependentInfo,
     ActionResult,
+    RuntimeStateVersion,
 } from '@casual-simulation/aux-common';
 import {
     StatusUpdate,
@@ -25,23 +26,6 @@ export interface AuxStatic {
      * Creates a new AUX using the given config.
      */
     new (defaultHost: string, user: AuxUser, config: AuxConfig): AuxChannel;
-}
-
-/**
- * Defines an interface that represents the state version of a aux channel.
- */
-export interface ChannelStateVersion {
-    /**
-     * A map of local site IDs.
-     */
-    localSites: {
-        [id: string]: boolean;
-    };
-
-    /**
-     * The current version vector.
-     */
-    vector: VersionVector;
 }
 
 /**
@@ -67,7 +51,7 @@ export interface AuxChannel extends SubscriptionLike {
     /**
      * The observable that should be triggered whenever the state version updated.
      */
-    onVersionUpdated: Observable<ChannelStateVersion>;
+    onVersionUpdated: Observable<RuntimeStateVersion>;
 
     /**
      * The observable that should be triggered whenever the connection state changes.
@@ -91,7 +75,7 @@ export interface AuxChannel extends SubscriptionLike {
         onLocalEvents?: (events: LocalActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
-        onVersionUpdated?: (version: ChannelStateVersion) => void,
+        onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
     ): Promise<void>;
@@ -108,7 +92,7 @@ export interface AuxChannel extends SubscriptionLike {
         onLocalEvents?: (events: LocalActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
-        onVersionUpdated?: (version: ChannelStateVersion) => void,
+        onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
     ): Promise<void>;

@@ -23,6 +23,11 @@
     -   `cursorStartIndex` contains the starting index of the player's text selection inside the multi-line editor.
     -   `cursorEndIndex` contains the ending index of the player's text selection inside the multi-line editor.
     -   Note that when `cursorStartIndex` is larger than `cursorEndIndex` it means that the player has selected text from the right to the left. This is important because text will always be inserted at `cursorEndIndex`.
+-   Added the `insertTagText()`, `deleteTagText()`, `insertTagMaskText()`, and `deleteTagMaskText()` functions to allow scripts to work with multi-user text editing.
+    -   `insertTagText(bot, tag, index, text)` inserts the given text at the index into the given tag on the given bot.
+    -   `insertTagMaskText(bot, tag, index, text, space?)` inserts the given text at the index into the tag and bot. Optionally accepts the space of the tag mask.
+    -   `deleteTagText(bot, tag, index, deleteCount)` deletes the given number of characters at the index from the tag and bot.
+    -   `deleteTagMaskText(bot, tag, index, deleteCount, space?)` deletes the given number of characters at the index from the tag and bot. Optionally accepts the space of the tag mask.
 
 ## V1.2.21
 

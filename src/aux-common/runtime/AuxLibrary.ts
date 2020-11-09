@@ -151,6 +151,9 @@ import {
     SET_TAG_MASK_SYMBOL,
     CLEAR_TAG_MASKS_SYMBOL,
     getBotScale,
+    EDIT_TAG_SYMBOL,
+    BotSpace,
+    EDIT_TAG_MASK_SYMBOL,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -173,7 +176,9 @@ import {
     verify as realVerify,
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
+import { convertToString, del, insert, preserve } from '../aux-format-2';
 import { Euler, Vector3, Plane, Ray } from 'three';
+import { Runtime } from 'inspector';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -369,6 +374,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             setTag,
             setTagMask,
             clearTagMasks,
+            insertTagText,
+            insertTagMaskText,
+            deleteTagText,
+            deleteTagMaskText,
             removeTags,
             renameTag,
             applyMod,
@@ -3475,6 +3484,112 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else if (bot && isRuntimeBot(bot)) {
             bot[CLEAR_TAG_MASKS_SYMBOL](space);
         }
+    }
+
+    /**
+     * Inserts the given text into the given tag at the given index.
+     * Returns the resulting raw tag value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be inserted at.
+     * @param text The text that should be inserted.
+     */
+    function insertTagText(
+        bot: RuntimeBot,
+        tag: string,
+        index: number,
+        text: string
+    ): string {
+        const currentValue = convertToString(bot.raw[tag]);
+        if (index < 0) {
+            index += currentValue.length;
+        }
+        index = Math.max(0, Math.min(index, currentValue.length));
+        bot[EDIT_TAG_SYMBOL](tag, [preserve(index), insert(text)]);
+        return bot.raw[tag];
+    }
+
+    /**
+     * Inserts the given text into the given tag and space at the given index.
+     * Returns the resulting raw tag mask value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be inserted at.
+     * @param text The text that should be inserted.
+     * @param space The space that the tag exists in. If not specified then the tempLocal space will be used.
+     */
+    function insertTagMaskText(
+        bot: RuntimeBot,
+        tag: string,
+        index: number,
+        text: string,
+        space?: BotSpace
+    ): string {
+        const currentValue = convertToString(bot.masks[tag]);
+        if (index < 0) {
+            index += currentValue.length;
+        }
+        index = Math.max(0, Math.min(index, currentValue.length));
+        bot[EDIT_TAG_MASK_SYMBOL](tag, [preserve(index), insert(text)], space);
+        return bot.masks[tag];
+    }
+
+    /**
+     * Deletes the specified number of characters from the given tag.
+     * Returns the resulting raw tag value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be deleted at.
+     * @param count The number of characters to delete.
+     */
+    function deleteTagText(
+        bot: RuntimeBot,
+        tag: string,
+        index: number,
+        count: number
+    ): string {
+        const currentValue = convertToString(bot.raw[tag]);
+        if (index < 0) {
+            index += currentValue.length;
+        }
+        index = Math.max(0, Math.min(index, currentValue.length));
+        count = Math.min(count, currentValue.length - index);
+        if (count > 0) {
+            bot[EDIT_TAG_SYMBOL](tag, [preserve(index), del(count)]);
+        }
+        return bot.raw[tag] || '';
+    }
+
+    /**
+     * Deletes the specified number of characters from the given tag mask.
+     * Returns the resulting raw tag mask value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be deleted at.
+     * @param count The number of characters to delete.
+     * @param space The space that the tag mask exists in. If not specified then the tempLocal space will be used.
+     */
+    function deleteTagMaskText(
+        bot: RuntimeBot,
+        tag: string,
+        index: number,
+        count: number,
+        space?: string
+    ): string {
+        const currentValue = convertToString(bot.masks[tag]);
+        if (index < 0) {
+            index += currentValue.length;
+        }
+        index = Math.max(0, Math.min(index, currentValue.length));
+        count = Math.min(count, currentValue.length - index);
+        if (count > 0) {
+            bot[EDIT_TAG_MASK_SYMBOL](
+                tag,
+                [preserve(index), del(count)],
+                space
+            );
+        }
+        return bot.masks[tag] || '';
     }
 
     /**

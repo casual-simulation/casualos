@@ -11,6 +11,7 @@ import {
     hasTagOrMask,
     getTagValueForSpace,
     hasValue,
+    RuntimeStateVersion,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable, SubscriptionLike, never } from 'rxjs';
 import {
@@ -31,8 +32,7 @@ import {
     isTagEdit,
     TagEditOp,
 } from '@casual-simulation/aux-common/aux-format-2';
-import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
-import { ChannelStateVersion } from '../vm/AuxChannel';
+import { VersionVector } from '@casual-simulation/causal-trees';
 
 /**
  * Defines an interface that contains information about an updated bot.
@@ -64,7 +64,7 @@ export class BotWatcher implements SubscriptionLike {
         string,
         { tag: string; space: string; subject: Subject<BotTagChange> }[]
     >;
-    private _lastVersion: ChannelStateVersion;
+    private _lastVersion: RuntimeStateVersion;
 
     closed: boolean = false;
 
@@ -115,7 +115,7 @@ export class BotWatcher implements SubscriptionLike {
         helper: BotHelper,
         index: BotIndex,
         stateUpdated: Observable<StateUpdatedEvent>,
-        versionUpdated: Observable<ChannelStateVersion>
+        versionUpdated: Observable<RuntimeStateVersion>
     ) {
         this._helper = helper;
         this._index = index;
