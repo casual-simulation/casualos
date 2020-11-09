@@ -3508,6 +3508,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Inserts the given text into the given tag and space at the given index.
+     * Returns the resulting raw tag mask value.
      * @param bot The bot that should be edited.
      * @param tag The tag that should be edited.
      * @param space The space that the tag exists in.

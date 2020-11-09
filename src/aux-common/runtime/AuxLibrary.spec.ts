@@ -130,6 +130,7 @@ import {
     calculateAnchorPointOffset,
     RuntimeBot,
     SET_TAG_MASK_SYMBOL,
+    CLEAR_CHANGES_SYMBOL,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -149,7 +150,7 @@ import { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
 import { decryptV1, keypair } from '@casual-simulation/crypto';
 import { CERTIFIED_SPACE } from '../aux-format-2/AuxWeaveReducer';
-import { edit, insert, preserve, tagValueHash } from '../aux-format-2';
+import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { RanOutOfEnergyError } from './AuxResults';
 
 const uuidMock: jest.Mock = <any>uuid;
@@ -5083,6 +5084,9 @@ describe('AuxLibrary', () => {
             bot2 = createDummyRuntimeBot('test2');
 
             addToContext(context, bot1, bot2);
+
+            bot2.tags.abc = 'hello';
+            bot2[CLEAR_CHANGES_SYMBOL]();
         });
 
         it('should create the tag with the given text if it does not exist', () => {
@@ -5101,14 +5105,12 @@ describe('AuxLibrary', () => {
         });
 
         it('should insert the text into the start of the given tag', () => {
-            bot1.tags.abc = 'hello';
-
-            const result = library.api.insertTagText(bot1, 'abc', 0, '123');
+            const result = library.api.insertTagText(bot2, 'abc', 0, '123');
 
             expect(result).toEqual('123hello');
-            expect(bot1.tags.abc).toEqual('123hello');
-            expect(bot1.raw.abc).toEqual('123hello');
-            expect(bot1.changes).toEqual({
+            expect(bot2.tags.abc).toEqual('123hello');
+            expect(bot2.raw.abc).toEqual('123hello');
+            expect(bot2.changes).toEqual({
                 abc: edit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(0),
@@ -5118,14 +5120,12 @@ describe('AuxLibrary', () => {
         });
 
         it('should insert the text into the middle of the given tag', () => {
-            bot1.tags.abc = 'hello';
-
-            const result = library.api.insertTagText(bot1, 'abc', 2, '123');
+            const result = library.api.insertTagText(bot2, 'abc', 2, '123');
 
             expect(result).toEqual('he123llo');
-            expect(bot1.tags.abc).toEqual('he123llo');
-            expect(bot1.raw.abc).toEqual('he123llo');
-            expect(bot1.changes).toEqual({
+            expect(bot2.tags.abc).toEqual('he123llo');
+            expect(bot2.raw.abc).toEqual('he123llo');
+            expect(bot2.changes).toEqual({
                 abc: edit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(2),
@@ -5135,14 +5135,12 @@ describe('AuxLibrary', () => {
         });
 
         it('should insert the text into the end of the given tag', () => {
-            bot1.tags.abc = 'hello';
-
-            const result = library.api.insertTagText(bot1, 'abc', 5, '123');
+            const result = library.api.insertTagText(bot2, 'abc', 5, '123');
 
             expect(result).toEqual('hello123');
-            expect(bot1.tags.abc).toEqual('hello123');
-            expect(bot1.raw.abc).toEqual('hello123');
-            expect(bot1.changes).toEqual({
+            expect(bot2.tags.abc).toEqual('hello123');
+            expect(bot2.raw.abc).toEqual('hello123');
+            expect(bot2.changes).toEqual({
                 abc: edit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(5),
@@ -5152,14 +5150,12 @@ describe('AuxLibrary', () => {
         });
 
         it('should allow negative numbers to insert from the end of the string', () => {
-            bot1.tags.abc = 'hello';
-
-            const result = library.api.insertTagText(bot1, 'abc', -1, '123');
+            const result = library.api.insertTagText(bot2, 'abc', -1, '123');
 
             expect(result).toEqual('hell123o');
-            expect(bot1.tags.abc).toEqual('hell123o');
-            expect(bot1.raw.abc).toEqual('hell123o');
-            expect(bot1.changes).toEqual({
+            expect(bot2.tags.abc).toEqual('hell123o');
+            expect(bot2.raw.abc).toEqual('hell123o');
+            expect(bot2.changes).toEqual({
                 abc: edit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(4),
@@ -5169,8 +5165,6 @@ describe('AuxLibrary', () => {
         });
 
         it('should allow negative numbers to insert from the end of the string when the current tag value is empty', () => {
-            bot1.tags.abc = '';
-
             const result = library.api.insertTagText(bot1, 'abc', -1, '123');
 
             expect(result).toEqual('123');
@@ -5186,14 +5180,12 @@ describe('AuxLibrary', () => {
         });
 
         it('should clamp to the end of the string', () => {
-            bot1.tags.abc = 'hello';
-
-            const result = library.api.insertTagText(bot1, 'abc', 7, '123');
+            const result = library.api.insertTagText(bot2, 'abc', 7, '123');
 
             expect(result).toEqual('hello123');
-            expect(bot1.tags.abc).toEqual('hello123');
-            expect(bot1.raw.abc).toEqual('hello123');
-            expect(bot1.changes).toEqual({
+            expect(bot2.tags.abc).toEqual('hello123');
+            expect(bot2.raw.abc).toEqual('hello123');
+            expect(bot2.changes).toEqual({
                 abc: edit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(5),
@@ -5212,6 +5204,9 @@ describe('AuxLibrary', () => {
             bot2 = createDummyRuntimeBot('test2');
 
             addToContext(context, bot1, bot2);
+
+            library.api.setTagMask(bot2, 'abc', 'hello', 'local');
+            bot2[CLEAR_CHANGES_SYMBOL]();
         });
 
         it('should create the tag with the given text if it does not exist', () => {
@@ -5237,10 +5232,8 @@ describe('AuxLibrary', () => {
         });
 
         it('should insert the text into the start of the given tag', () => {
-            library.api.setTagMask(bot1, 'abc', 'hello', 'local');
-
             const result = library.api.insertTagMaskText(
-                bot1,
+                bot2,
                 'abc',
                 'local',
                 0,
@@ -5248,8 +5241,8 @@ describe('AuxLibrary', () => {
             );
 
             expect(result).toEqual('123hello');
-            expect(bot1.masks.abc).toEqual('123hello');
-            expect(bot1.maskChanges).toEqual({
+            expect(bot2.masks.abc).toEqual('123hello');
+            expect(bot2.maskChanges).toEqual({
                 local: {
                     abc: edit(
                         testScriptBotInterface.currentVersion.vector,
@@ -5261,10 +5254,8 @@ describe('AuxLibrary', () => {
         });
 
         it('should insert the text into the middle of the given tag', () => {
-            library.api.setTagMask(bot1, 'abc', 'hello', 'local');
-
             const result = library.api.insertTagMaskText(
-                bot1,
+                bot2,
                 'abc',
                 'local',
                 2,
@@ -5272,8 +5263,8 @@ describe('AuxLibrary', () => {
             );
 
             expect(result).toEqual('he123llo');
-            expect(bot1.masks.abc).toEqual('he123llo');
-            expect(bot1.maskChanges).toEqual({
+            expect(bot2.masks.abc).toEqual('he123llo');
+            expect(bot2.maskChanges).toEqual({
                 local: {
                     abc: edit(
                         testScriptBotInterface.currentVersion.vector,
@@ -5285,10 +5276,8 @@ describe('AuxLibrary', () => {
         });
 
         it('should insert the text into the end of the given tag', () => {
-            library.api.setTagMask(bot1, 'abc', 'hello', 'local');
-
             const result = library.api.insertTagMaskText(
-                bot1,
+                bot2,
                 'abc',
                 'local',
                 5,
@@ -5296,8 +5285,8 @@ describe('AuxLibrary', () => {
             );
 
             expect(result).toEqual('hello123');
-            expect(bot1.masks.abc).toEqual('hello123');
-            expect(bot1.maskChanges).toEqual({
+            expect(bot2.masks.abc).toEqual('hello123');
+            expect(bot2.maskChanges).toEqual({
                 local: {
                     abc: edit(
                         testScriptBotInterface.currentVersion.vector,
@@ -5309,10 +5298,8 @@ describe('AuxLibrary', () => {
         });
 
         it('should allow negative numbers to insert from the end of the string', () => {
-            library.api.setTagMask(bot1, 'abc', 'hello', 'local');
-
             const result = library.api.insertTagMaskText(
-                bot1,
+                bot2,
                 'abc',
                 'local',
                 -1,
@@ -5320,8 +5307,8 @@ describe('AuxLibrary', () => {
             );
 
             expect(result).toEqual('hell123o');
-            expect(bot1.masks.abc).toEqual('hell123o');
-            expect(bot1.maskChanges).toEqual({
+            expect(bot2.masks.abc).toEqual('hell123o');
+            expect(bot2.maskChanges).toEqual({
                 local: {
                     abc: edit(
                         testScriptBotInterface.currentVersion.vector,
@@ -5333,8 +5320,6 @@ describe('AuxLibrary', () => {
         });
 
         it('should allow negative numbers to insert from the end of the string when the current tag value is empty', () => {
-            library.api.setTagMask(bot1, 'abc', '', 'local');
-
             const result = library.api.insertTagMaskText(
                 bot1,
                 'abc',
@@ -5357,10 +5342,8 @@ describe('AuxLibrary', () => {
         });
 
         it('should clamp to the end of the string', () => {
-            library.api.setTagMask(bot1, 'abc', 'hello', 'local');
-
             const result = library.api.insertTagMaskText(
-                bot1,
+                bot2,
                 'abc',
                 'local',
                 7,
@@ -5368,8 +5351,8 @@ describe('AuxLibrary', () => {
             );
 
             expect(result).toEqual('hello123');
-            expect(bot1.masks.abc).toEqual('hello123');
-            expect(bot1.maskChanges).toEqual({
+            expect(bot2.masks.abc).toEqual('hello123');
+            expect(bot2.maskChanges).toEqual({
                 local: {
                     abc: edit(
                         testScriptBotInterface.currentVersion.vector,

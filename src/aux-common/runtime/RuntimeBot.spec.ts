@@ -772,6 +772,19 @@ describe('RuntimeBot', () => {
             );
         });
 
+        it('should not overwrite tag changes with edits', () => {
+            script.tags.abc = 'fun';
+            script[EDIT_TAG_SYMBOL]('abc', null, [
+                preserve(1),
+                insert('111'),
+                del(1),
+            ]);
+
+            expect(script.tags.abc).toEqual('f111n');
+            expect(script.raw.abc).toEqual('f111n');
+            expect(script.changes.abc).toEqual('f111n');
+        });
+
         it('should support editing tag masks', () => {
             script[SET_TAG_MASK_SYMBOL]('abc', 'def', 'local');
             script[CLEAR_CHANGES_SYMBOL]();
@@ -793,6 +806,25 @@ describe('RuntimeBot', () => {
                         insert('111'),
                         del(1)
                     ),
+                },
+            });
+        });
+
+        it('should not overwrite tag mask changes', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 'def', 'local');
+
+            script[EDIT_TAG_SYMBOL]('abc', 'local', [
+                preserve(1),
+                insert('111'),
+                del(1),
+            ]);
+
+            expect(script.masks.abc).toEqual('d111f');
+            expect(script.raw.abc).toEqual('def');
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: 'd111f',
                 },
             });
         });

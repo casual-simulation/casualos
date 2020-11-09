@@ -1,4 +1,11 @@
-import { edit, isTagEdit, mergeEdits, TagEditOp } from '../aux-format-2';
+import { upperFirst } from 'lodash';
+import {
+    applyEdit,
+    edit,
+    isTagEdit,
+    mergeEdits,
+    TagEditOp,
+} from '../aux-format-2';
 import {
     BotSpace,
     BotTags,
@@ -372,8 +379,9 @@ export function createRuntimeBot(
         if (isTagEdit(value)) {
             const currentValue = changedRawTags[tag];
             if (isTagEdit(currentValue)) {
-                changedRawTags[tag] = mergeEdits(currentValue, value);
-                return;
+                value = mergeEdits(currentValue, value);
+            } else if (hasValue(currentValue)) {
+                value = applyEdit(currentValue, value);
             }
         }
         changedRawTags[tag] = value;
@@ -388,6 +396,8 @@ export function createRuntimeBot(
                 const currentValue = changedMasks[space][tag];
                 if (isTagEdit(currentValue)) {
                     value = mergeEdits(currentValue, value);
+                } else if (hasValue(currentValue)) {
+                    value = applyEdit(currentValue, value);
                 }
             }
             changedMasks[space][tag] = value;
