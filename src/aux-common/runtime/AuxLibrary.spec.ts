@@ -5073,6 +5073,76 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('insertTagText()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should create the tag with the given text if it does not exist', () => {
+            const result = library.api.insertTagText(bot1, 'abc', 0, 'hello');
+
+            expect(result).toEqual('hello');
+            expect(bot1.tags.abc).toEqual('hello');
+            expect(bot1.raw.abc).toEqual('hello');
+        });
+
+        it('should insert the text into the start of the given tag', () => {
+            bot1.tags.abc = 'hello';
+
+            const result = library.api.insertTagText(bot1, 'abc', 0, '123');
+
+            expect(result).toEqual('123hello');
+            expect(bot1.tags.abc).toEqual('123hello');
+            expect(bot1.raw.abc).toEqual('123hello');
+        });
+
+        it('should insert the text into the middle of the given tag', () => {
+            bot1.tags.abc = 'hello';
+
+            const result = library.api.insertTagText(bot1, 'abc', 2, '123');
+
+            expect(result).toEqual('he123llo');
+            expect(bot1.tags.abc).toEqual('he123llo');
+            expect(bot1.raw.abc).toEqual('he123llo');
+        });
+
+        it('should insert the text into the end of the given tag', () => {
+            bot1.tags.abc = 'hello';
+
+            const result = library.api.insertTagText(bot1, 'abc', 5, '123');
+
+            expect(result).toEqual('hello123');
+            expect(bot1.tags.abc).toEqual('hello123');
+            expect(bot1.raw.abc).toEqual('hello123');
+        });
+
+        it('should allow negative numbers to insert from the end of the string', () => {
+            bot1.tags.abc = 'hello';
+
+            const result = library.api.insertTagText(bot1, 'abc', -1, '123');
+
+            expect(result).toEqual('hell123o');
+            expect(bot1.tags.abc).toEqual('hell123o');
+            expect(bot1.raw.abc).toEqual('hell123o');
+        });
+
+        it('should clamp to the end of the string', () => {
+            bot1.tags.abc = 'hello';
+
+            const result = library.api.insertTagText(bot1, 'abc', 7, '123');
+
+            expect(result).toEqual('hello123');
+            expect(bot1.tags.abc).toEqual('hello123');
+            expect(bot1.raw.abc).toEqual('hello123');
+        });
+    });
+
     describe('removeTags()', () => {
         let bot1: RuntimeBot;
         let bot2: RuntimeBot;

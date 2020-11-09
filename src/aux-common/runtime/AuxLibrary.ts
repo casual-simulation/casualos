@@ -151,6 +151,7 @@ import {
     SET_TAG_MASK_SYMBOL,
     CLEAR_TAG_MASKS_SYMBOL,
     getBotScale,
+    EDIT_TAG_SYMBOL,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -173,6 +174,7 @@ import {
     verify as realVerify,
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
+import { convertToString, insert, preserve } from '../aux-format-2';
 import { Euler, Vector3, Plane, Ray } from 'three';
 
 /**
@@ -369,6 +371,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             setTag,
             setTagMask,
             clearTagMasks,
+            insertTagText,
             removeTags,
             renameTag,
             applyMod,
@@ -3475,6 +3478,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else if (bot && isRuntimeBot(bot)) {
             bot[CLEAR_TAG_MASKS_SYMBOL](space);
         }
+    }
+
+    /**
+     * Inserts the given text into the given tag at the given index.
+     * Returns the resulting raw tag value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be inserted at.
+     * @param text The text that should be inserted.
+     */
+    function insertTagText(
+        bot: RuntimeBot,
+        tag: string,
+        index: number,
+        text: string
+    ): string {
+        while (index < 0) {
+            const currentValue = bot.raw[tag];
+            index += convertToString(currentValue).length;
+        }
+        bot[EDIT_TAG_SYMBOL](tag, null, [preserve(index), insert(text)]);
+        return bot.raw[tag];
     }
 
     /**
