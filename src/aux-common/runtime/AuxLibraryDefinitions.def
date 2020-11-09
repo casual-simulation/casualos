@@ -2456,6 +2456,70 @@ declare global {
     function clearTagMasks(bot: Bot | Bot[], space?: BotSpace): void;
 
     /**
+     * Inserts the given text into the given tag at the given index.
+     * Returns the resulting raw tag value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be inserted at.
+     * @param text The text that should be inserted.
+     */
+    function insertTagText(
+        bot: Bot,
+        tag: string,
+        index: number,
+        text: string
+    ): string;
+
+    /**
+     * Inserts the given text into the given tag and space at the given index.
+     * Returns the resulting raw tag mask value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be inserted at.
+     * @param text The text that should be inserted.
+     * @param space The space that the tag exists in. If not specified then the tempLocal space will be used.
+     */
+    function insertTagMaskText(
+        bot: Bot,
+        tag: string,
+        index: number,
+        text: string,
+        space?: BotSpace
+    ): string;
+
+    /**
+     * Deletes the specified number of characters from the given tag.
+     * Returns the resulting raw tag value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be deleted at.
+     * @param count The number of characters to delete.
+     */
+    function deleteTagText(
+        bot: Bot,
+        tag: string,
+        index: number,
+        count: number
+    ): string;
+
+    /**
+     * Deletes the specified number of characters from the given tag mask.
+     * Returns the resulting raw tag mask value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be deleted at.
+     * @param count The number of characters to delete.
+     * @param space The space that the tag mask exists in. If not specified then the tempLocal space will be used.
+     */
+    function deleteTagMaskText(
+        bot: Bot,
+        tag: string,
+        index: number,
+        count: number,
+        space?: string
+    ): string;
+
+    /**
      * Creates a mod from declareed mod data.
      * @param bot The mod data that should be loaded.
      * @param tags The tags that should be included in the output mod.
