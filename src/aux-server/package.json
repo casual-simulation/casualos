@@ -99,6 +99,7 @@
         "quagga": "0.12.1",
         "redis": "2.8.0",
         "rpio": "2.2.0",
+        "serialport": "9.0.2",
         "rxjs": "^6.5.2",
         "socket.io": "2.1.1",
         "socket.io-client": "2.1.1",
