@@ -3260,7 +3260,7 @@ declare global {
         serialConnect(path: string, options?: object, cb?: any): Promise<void>;
         
         /**
-         * Parses and returns the serial stream to the event tag 'onSerialData'.
+         * Parses and returns the serial stream to the event tag 'onStreamData'.
          */
         serialStream(): Promise<void>;
 
