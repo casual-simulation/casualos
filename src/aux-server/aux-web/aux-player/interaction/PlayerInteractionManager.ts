@@ -30,6 +30,7 @@ import {
     isBot,
     addDebugApi,
     onPointerUpDownArg,
+    getBotTransformer,
 } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
@@ -51,6 +52,7 @@ import { InventoryContextGroup3D } from '../scene/InventoryContextGroup3D';
 import {
     isObjectVisible,
     objectForwardRay,
+    safeSetParent,
 } from '../../shared/scene/SceneUtils';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { CameraControls } from '../../shared/interaction/CameraControls';
@@ -441,6 +443,29 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 `${portal}CameraRotationOffsetY`,
                 0
             );
+
+            const transformer = getBotTransformer(null, userBot);
+            let hasParent = false;
+            if (transformer) {
+                const bots = sim.findBotsById(transformer);
+
+                if (bots.length > 0) {
+                    const parentBot = bots[0];
+                    if (parentBot instanceof AuxBot3D) {
+                        if (
+                            safeSetParent(
+                                rig.cameraParent,
+                                parentBot.transformContainer
+                            )
+                        ) {
+                            hasParent = true;
+                        }
+                    }
+                }
+            }
+            if (!hasParent) {
+                safeSetParent(rig.cameraParent, sim.scene);
+            }
 
             if (
                 rig.cameraParent.position.x !== targetXPos ||
