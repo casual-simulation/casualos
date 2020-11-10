@@ -1662,6 +1662,28 @@ const tag = "abc";
 playerBot.tags.tagPortal = getID(playerBot) + "." + tag;
 ```
 
+### `tagPortalSpace`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The space of the tag mask that should be edited in the tag portal.
+If not set, then the tag on the bot will be edited.
+If set, then the tag mask in the given space will be edited.
+
+Only available on the player bot.
+
+#### Examples:
+
+1. Open the tag portal for the `abc` tag mask in the `tempLocal` space on the player bot.
+```typescript
+const playerBot = player.getBot();
+const tag = "abc";
+playerBot.tags.tagPortal = getID(playerBot) + "." + tag;
+playerBot.tags.tagPortalSpace = "tempLocal";
+```
+
 ### `dataPortal`
 
 The data portal is a special portal that can be used in a web request to get bot data directly from the server.
