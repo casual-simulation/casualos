@@ -29,6 +29,7 @@
     -   `deleteTagText(bot, tag, index, deleteCount)` deletes the given number of characters at the index from the tag and bot.
     -   `deleteTagMaskText(bot, tag, index, deleteCount, space?)` deletes the given number of characters at the index from the tag and bot. Optionally accepts the space of the tag mask.
 -   Added the ability to use the `transformer` tag on the player bot to parent the player to a bot.
+-   Added the ability to edit tag masks in the tag portal by setting the `tagPortalSpace` tag on the player bot.
 
 ## V1.2.21
 
