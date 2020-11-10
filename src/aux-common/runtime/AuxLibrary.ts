@@ -130,6 +130,15 @@ import {
     rpioSPITransferPin,
     rpioSPIWritePin,
     rpioSPIEndPin,
+    serialConnectPin,
+    serialOpenPin,
+    serialStreamPin,
+    serialUpdatePin,
+    serialWritePin,
+    serialReadPin,
+    serialClosePin,
+    serialPausePin,
+    serialResumePin,
     Easing,
     LocalPositionTweenAction,
     LocalRotationTweenAction,
@@ -142,6 +151,9 @@ import {
     SET_TAG_MASK_SYMBOL,
     CLEAR_TAG_MASKS_SYMBOL,
     getBotScale,
+    EDIT_TAG_SYMBOL,
+    BotSpace,
+    EDIT_TAG_MASK_SYMBOL,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -164,7 +176,9 @@ import {
     verify as realVerify,
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
+import { convertToString, del, insert, preserve } from '../aux-format-2';
 import { Euler, Vector3, Plane, Ray } from 'three';
+import { Runtime } from 'inspector';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -360,6 +374,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             setTag,
             setTagMask,
             clearTagMasks,
+            insertTagText,
+            insertTagMaskText,
+            deleteTagText,
+            deleteTagMaskText,
             removeTags,
             renameTag,
             applyMod,
@@ -497,6 +515,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 rpioSPITransfer,
                 rpioSPIWrite,
                 rpioSPIEnd,
+                serialConnect,
+                serialStream,
+                serialOpen,
+                serialUpdate,
+                serialWrite,
+                serialRead,
+                serialClose,
+                serialPause,
+                serialResume,
                 shell,
                 backupToGithub,
                 backupAsDownload,
@@ -2218,6 +2245,173 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Establish the connection to the bluetooth serial device
+     * @param path The device path. Example: /dev/rfcomm0
+     * @param options
+     * {boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
+     *
+     * {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
+     *
+     * {number} [dataBits=8] Must be one of these: 8, 7, 6, or 5.
+     *
+     * {number} [highWaterMark=65536] The size of the read and write buffers defaults to 64k.
+     *
+     * {boolean} [lock=true] Prevent other processes from opening the port. Windows does not currently support `false`.
+     *
+     * {number} [stopBits=1] Must be one of these: 1 or 2.
+     *
+     * {string} [parity=none] Must be one of these: 'none', 'even', 'mark', 'odd', 'space'.
+     *
+     * {boolean} [rtscts=false] flow control setting
+     *
+     * {boolean} [xon=false] flow control setting
+     *
+     * {boolean} [xoff=false] flow control setting
+     *
+     * {boolean} [xany=false] flow control setting
+     *
+     * {object=} bindingOptions sets binding-specific options
+     *
+     * {Binding=} Binding The hardware access binding. `Bindings` are how Node-Serialport talks to the underlying system. Will default to the static property `Serialport.Binding`.
+     *
+     * {number} [bindingOptions.vmin=1] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
+     *
+     * {number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
+     */
+    function serialConnect(path: string, options?: object, cb?: any) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialConnectPin(path, options, cb),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Parses and returns the serial stream to the event tag 'onStreamData'.
+     */
+    function serialStream() {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialStreamPin(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
+     */
+    function serialOpen() {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialOpenPin(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Updates the SerialPort object with a new baudRate.
+     * @param options {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
+     * @param cb
+     */
+    function serialUpdate(options: object, cb?: any) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialUpdatePin(options, cb),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Writes the provided data/command to the device
+     * @param data The data/command to send
+     * @param encoding The encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
+     * @param cb
+     * @param taskId The ID of the async task.
+     */
+    function serialWrite(data: string | number[], encoding?: string, cb?: any) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialWritePin(data, encoding, cb),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Request a number of bytes from the SerialPort.
+     * @param size Specify how many bytes of data to return, if available.
+     * @param taskId The ID of the async task.
+     */
+    function serialRead(size?: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialReadPin(size),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Closes an open connection.
+     * @param cb
+     * @param taskId The ID of the async task.
+     */
+    function serialClose(cb?: any) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialClosePin(cb),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
+     */
+    function serialPause() {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialPausePin(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
+     */
+    function serialResume() {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            serialResumePin(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Executes the given shell script on the server.
      * @param script The shell script  that should be executed.
      */
@@ -3290,6 +3484,112 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else if (bot && isRuntimeBot(bot)) {
             bot[CLEAR_TAG_MASKS_SYMBOL](space);
         }
+    }
+
+    /**
+     * Inserts the given text into the given tag at the given index.
+     * Returns the resulting raw tag value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be inserted at.
+     * @param text The text that should be inserted.
+     */
+    function insertTagText(
+        bot: RuntimeBot,
+        tag: string,
+        index: number,
+        text: string
+    ): string {
+        const currentValue = convertToString(bot.raw[tag]);
+        if (index < 0) {
+            index += currentValue.length;
+        }
+        index = Math.max(0, Math.min(index, currentValue.length));
+        bot[EDIT_TAG_SYMBOL](tag, [preserve(index), insert(text)]);
+        return bot.raw[tag];
+    }
+
+    /**
+     * Inserts the given text into the given tag and space at the given index.
+     * Returns the resulting raw tag mask value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be inserted at.
+     * @param text The text that should be inserted.
+     * @param space The space that the tag exists in. If not specified then the tempLocal space will be used.
+     */
+    function insertTagMaskText(
+        bot: RuntimeBot,
+        tag: string,
+        index: number,
+        text: string,
+        space?: BotSpace
+    ): string {
+        const currentValue = convertToString(bot.masks[tag]);
+        if (index < 0) {
+            index += currentValue.length;
+        }
+        index = Math.max(0, Math.min(index, currentValue.length));
+        bot[EDIT_TAG_MASK_SYMBOL](tag, [preserve(index), insert(text)], space);
+        return bot.masks[tag];
+    }
+
+    /**
+     * Deletes the specified number of characters from the given tag.
+     * Returns the resulting raw tag value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be deleted at.
+     * @param count The number of characters to delete.
+     */
+    function deleteTagText(
+        bot: RuntimeBot,
+        tag: string,
+        index: number,
+        count: number
+    ): string {
+        const currentValue = convertToString(bot.raw[tag]);
+        if (index < 0) {
+            index += currentValue.length;
+        }
+        index = Math.max(0, Math.min(index, currentValue.length));
+        count = Math.min(count, currentValue.length - index);
+        if (count > 0) {
+            bot[EDIT_TAG_SYMBOL](tag, [preserve(index), del(count)]);
+        }
+        return bot.raw[tag] || '';
+    }
+
+    /**
+     * Deletes the specified number of characters from the given tag mask.
+     * Returns the resulting raw tag mask value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be deleted at.
+     * @param count The number of characters to delete.
+     * @param space The space that the tag mask exists in. If not specified then the tempLocal space will be used.
+     */
+    function deleteTagMaskText(
+        bot: RuntimeBot,
+        tag: string,
+        index: number,
+        count: number,
+        space?: string
+    ): string {
+        const currentValue = convertToString(bot.masks[tag]);
+        if (index < 0) {
+            index += currentValue.length;
+        }
+        index = Math.max(0, Math.min(index, currentValue.length));
+        count = Math.min(count, currentValue.length - index);
+        if (count > 0) {
+            bot[EDIT_TAG_MASK_SYMBOL](
+                tag,
+                [preserve(index), del(count)],
+                space
+            );
+        }
+        return bot.masks[tag] || '';
     }
 
     /**

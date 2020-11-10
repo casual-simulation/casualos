@@ -12,6 +12,8 @@ import {
     SET_TAG_MASK_SYMBOL,
     CLEAR_TAG_MASKS_SYMBOL,
     isRuntimeBot,
+    EDIT_TAG_SYMBOL,
+    EDIT_TAG_MASK_SYMBOL,
 } from '../bots';
 import { AuxGlobalContext, MemoryGlobalContext } from './AuxGlobalContext';
 import {
@@ -24,6 +26,15 @@ import { TestScriptBotFactory } from './test/TestScriptBotFactory';
 import { createCompiledBot, CompiledBot } from './CompiledBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
+import {
+    applyEdit,
+    del,
+    edit,
+    edits,
+    insert,
+    isTagEdit,
+    preserve,
+} from '../aux-format-2';
 
 describe('RuntimeBot', () => {
     let precalc: CompiledBot;
@@ -54,8 +65,15 @@ describe('RuntimeBot', () => {
         };
         updateTagMock = jest.fn();
         updateTagMock.mockImplementation((bot, tag, value) => {
-            bot.values[tag] = value;
-            bot.tags[tag] = value;
+            if (isTagEdit(value)) {
+                bot.values[tag] = bot.tags[tag] = applyEdit(
+                    bot.tags[tag],
+                    value
+                );
+            } else {
+                bot.values[tag] = value;
+                bot.tags[tag] = value;
+            }
             return RealtimeEditMode.Immediate;
         });
 
@@ -68,7 +86,14 @@ describe('RuntimeBot', () => {
                 if (!bot.masks[space]) {
                     bot.masks[space] = {};
                 }
-                bot.masks[space][tag] = value;
+                if (isTagEdit(value)) {
+                    bot.masks[space][tag] = applyEdit(
+                        bot.masks[space][tag],
+                        value
+                    );
+                } else {
+                    bot.masks[space][tag] = value;
+                }
             }
             return RealtimeEditMode.Immediate;
         });
@@ -109,6 +134,14 @@ describe('RuntimeBot', () => {
             notifyChange: notifyChangeMock,
             updateTagMask: updateTagMaskMock,
             getTagMask: getTagMaskMock,
+            currentVersion: {
+                localSites: {},
+                vector: {
+                    a: 1,
+                    b: 2,
+                    c: 3,
+                },
+            },
         };
         context = new MemoryGlobalContext(
             version,
@@ -717,6 +750,211 @@ describe('RuntimeBot', () => {
 
             expect(script.changes).toEqual({});
             expect(script.maskChanges).toEqual({});
+        });
+    });
+
+    describe('edit_tag', () => {
+        it('should support editing normal tags', () => {
+            script[EDIT_TAG_SYMBOL]('abc', [
+                preserve(1),
+                insert('111'),
+                del(1),
+            ]);
+
+            expect(script.tags.abc).toEqual('d111f');
+            expect(script.raw.abc).toEqual('d111f');
+            expect(script.changes.abc).toEqual(
+                edit(
+                    manager.currentVersion.vector,
+                    preserve(1),
+                    insert('111'),
+                    del(1)
+                )
+            );
+        });
+
+        it('should not overwrite tag changes with edits', () => {
+            script.tags.abc = 'fun';
+            script[EDIT_TAG_SYMBOL]('abc', [
+                preserve(1),
+                insert('111'),
+                del(1),
+            ]);
+
+            expect(script.tags.abc).toEqual('f111n');
+            expect(script.raw.abc).toEqual('f111n');
+            expect(script.changes.abc).toEqual('f111n');
+        });
+
+        it('should support multiple tag edits in a row', () => {
+            script[EDIT_TAG_SYMBOL]('abc', [
+                preserve(1),
+                insert('111'),
+                del(1),
+            ]);
+
+            script[EDIT_TAG_SYMBOL]('abc', [preserve(2), insert('2'), del(1)]);
+
+            expect(script.tags.abc).toEqual('d121f');
+            expect(script.raw.abc).toEqual('d121f');
+            expect(script.changes.abc).toEqual(
+                edits(
+                    manager.currentVersion.vector,
+                    [preserve(1), insert('111'), del(1)],
+                    [preserve(2), insert('2'), del(1)]
+                )
+            );
+        });
+    });
+
+    describe('edit_tag_mask', () => {
+        it('should support editing tag masks', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 'def', 'local');
+            script[CLEAR_CHANGES_SYMBOL]();
+
+            script[EDIT_TAG_MASK_SYMBOL](
+                'abc',
+                [preserve(1), insert('111'), del(1)],
+                'local'
+            );
+
+            expect(script.masks.abc).toEqual('d111f');
+            expect(script.raw.abc).toEqual('def');
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: edit(
+                        manager.currentVersion.vector,
+                        preserve(1),
+                        insert('111'),
+                        del(1)
+                    ),
+                },
+            });
+        });
+
+        it('should not overwrite tag mask changes', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 'def', 'local');
+
+            script[EDIT_TAG_MASK_SYMBOL](
+                'abc',
+                [preserve(1), insert('111'), del(1)],
+                'local'
+            );
+
+            expect(script.masks.abc).toEqual('d111f');
+            expect(script.raw.abc).toEqual('def');
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: 'd111f',
+                },
+            });
+        });
+
+        it('should support multiple tag mask edits in a row', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 'def', 'local');
+            script[CLEAR_CHANGES_SYMBOL]();
+
+            script[EDIT_TAG_MASK_SYMBOL](
+                'abc',
+                [preserve(1), insert('111'), del(1)],
+                'local'
+            );
+
+            script[EDIT_TAG_MASK_SYMBOL](
+                'abc',
+                [preserve(2), insert('2'), del(1)],
+                'local'
+            );
+
+            expect(script.masks.abc).toEqual('d121f');
+            expect(script.raw.abc).toEqual('def');
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: edits(
+                        manager.currentVersion.vector,
+                        [preserve(1), insert('111'), del(1)],
+                        [preserve(2), insert('2'), del(1)]
+                    ),
+                },
+            });
+        });
+
+        it('should use the default tag mask space if not specified', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 'def');
+            script[CLEAR_CHANGES_SYMBOL]();
+
+            script[EDIT_TAG_MASK_SYMBOL](
+                'abc',
+                [preserve(1), insert('111'), del(1)],
+                null
+            );
+
+            expect(script.masks.abc).toEqual('d111f');
+            expect(script.raw.abc).toEqual('def');
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                [DEFAULT_TAG_MASK_SPACE]: {
+                    abc: edit(
+                        manager.currentVersion.vector,
+                        preserve(1),
+                        insert('111'),
+                        del(1)
+                    ),
+                },
+            });
+        });
+
+        it('should use the tag mask space that the mask is already defined in if the space is not specified', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 'def', 'local');
+            script[CLEAR_CHANGES_SYMBOL]();
+
+            script[EDIT_TAG_MASK_SYMBOL](
+                'abc',
+                [preserve(1), insert('111'), del(1)],
+                null
+            );
+
+            expect(script.masks.abc).toEqual('d111f');
+            expect(script.raw.abc).toEqual('def');
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: edit(
+                        manager.currentVersion.vector,
+                        preserve(1),
+                        insert('111'),
+                        del(1)
+                    ),
+                },
+            });
+        });
+
+        it('should use the tag mask space that the highest priority if multiple masks are on the bot and the space is not specified', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 'def', 'tempLocal');
+            script[SET_TAG_MASK_SYMBOL]('abc', 'fun', 'local');
+            script[CLEAR_CHANGES_SYMBOL]();
+
+            script[EDIT_TAG_MASK_SYMBOL](
+                'abc',
+                [preserve(1), insert('111'), del(1)],
+                null
+            );
+
+            expect(script.masks.abc).toEqual('d111f');
+            expect(script.raw.abc).toEqual('def');
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                tempLocal: {
+                    abc: edit(
+                        manager.currentVersion.vector,
+                        preserve(1),
+                        insert('111'),
+                        del(1)
+                    ),
+                },
+            });
         });
     });
 });

@@ -1,3 +1,11 @@
+import { upperFirst } from 'lodash';
+import {
+    applyEdit,
+    edit,
+    isTagEdit,
+    mergeEdits,
+    TagEditOp,
+} from '../aux-format-2';
 import {
     BotSpace,
     BotTags,
@@ -20,8 +28,11 @@ import {
     SET_TAG_MASK_SYMBOL,
     CLEAR_TAG_MASKS_SYMBOL,
     CompiledBotListener,
+    EDIT_TAG_SYMBOL,
+    EDIT_TAG_MASK_SYMBOL,
 } from '../bots';
 import { CompiledBot } from './CompiledBot';
+import { RuntimeStateVersion } from './RuntimeStateVersion';
 
 /**
  * Defines an interface that contains runtime bots state.
@@ -92,9 +103,9 @@ export function createRuntimeBot(
             const mode = manager.updateTag(bot, key, value);
             if (mode === RealtimeEditMode.Immediate) {
                 rawTags[key] = value;
-                changedRawTags[key] = value;
+                changeTag(key, value);
             } else if (mode === RealtimeEditMode.Delayed) {
-                changedRawTags[key] = value;
+                changeTag(key, value);
             }
             return true;
         },
@@ -106,9 +117,9 @@ export function createRuntimeBot(
             const mode = manager.updateTag(bot, key, value);
             if (mode === RealtimeEditMode.Immediate) {
                 rawTags[key] = value;
-                changedRawTags[key] = value;
+                changeTag(key, value);
             } else if (mode === RealtimeEditMode.Delayed) {
-                changedRawTags[key] = value;
+                changeTag(key, value);
             }
             return true;
         },
@@ -138,9 +149,9 @@ export function createRuntimeBot(
             const mode = manager.updateTag(bot, key, value);
             if (mode === RealtimeEditMode.Immediate) {
                 rawTags[key] = value;
-                changedRawTags[key] = value;
+                changeTag(key, value);
             } else if (mode === RealtimeEditMode.Delayed) {
-                changedRawTags[key] = value;
+                changeTag(key, value);
             }
             return true;
         },
@@ -152,9 +163,9 @@ export function createRuntimeBot(
             const mode = manager.updateTag(bot, key, value);
             if (mode === RealtimeEditMode.Immediate) {
                 rawTags[key] = value;
-                changedRawTags[key] = value;
+                changeTag(key, value);
             } else if (mode === RealtimeEditMode.Delayed) {
-                changedRawTags[key] = value;
+                changeTag(key, value);
             }
             return true;
         },
@@ -263,6 +274,8 @@ export function createRuntimeBot(
         [CLEAR_CHANGES_SYMBOL]: null,
         [SET_TAG_MASK_SYMBOL]: null,
         [CLEAR_TAG_MASKS_SYMBOL]: null,
+        [EDIT_TAG_SYMBOL]: null,
+        [EDIT_TAG_MASK_SYMBOL]: null,
     };
 
     Object.defineProperty(script, CLEAR_CHANGES_SYMBOL, {
@@ -318,6 +331,45 @@ export function createRuntimeBot(
         writable: false,
     });
 
+    Object.defineProperty(script, EDIT_TAG_SYMBOL, {
+        value: (tag: string, ops: TagEditOp[]) => {
+            if (tag in constantTags) {
+                return;
+            }
+            const e = edit(manager.currentVersion.vector, ...ops);
+            script.tags[tag] = e;
+        },
+        configurable: false,
+        enumerable: false,
+        writable: false,
+    });
+
+    Object.defineProperty(script, EDIT_TAG_MASK_SYMBOL, {
+        value: (tag: string, ops: TagEditOp[], space?: string) => {
+            if (tag in constantTags) {
+                return;
+            }
+            const e = edit(manager.currentVersion.vector, ...ops);
+            if (!hasValue(space)) {
+                const availableSpaces = getTagMaskSpaces(bot, tag);
+                if (availableSpaces.length <= 0) {
+                    space = DEFAULT_TAG_MASK_SPACE;
+                } else {
+                    for (let possibleSpace of TAG_MASK_SPACE_PRIORITIES) {
+                        if (availableSpaces.indexOf(possibleSpace) >= 0) {
+                            space = possibleSpace;
+                            break;
+                        }
+                    }
+                }
+            }
+            script[SET_TAG_MASK_SYMBOL](tag, e, space);
+        },
+        configurable: false,
+        enumerable: false,
+        writable: false,
+    });
+
     Object.defineProperty(script, 'toJSON', {
         value: () => {
             if ('space' in bot) {
@@ -347,10 +399,30 @@ export function createRuntimeBot(
 
     return script;
 
-    function changeTagMask(tag: string, value: string, spaces: string[]) {
+    function changeTag(tag: string, value: any) {
+        if (isTagEdit(value)) {
+            const currentValue = changedRawTags[tag];
+            if (isTagEdit(currentValue)) {
+                value = mergeEdits(currentValue, value);
+            } else if (hasValue(currentValue)) {
+                value = applyEdit(currentValue, value);
+            }
+        }
+        changedRawTags[tag] = value;
+    }
+
+    function changeTagMask(tag: string, value: any, spaces: string[]) {
         for (let space of spaces) {
             if (!changedMasks[space]) {
                 changedMasks[space] = {};
+            }
+            if (isTagEdit(value)) {
+                const currentValue = changedMasks[space][tag];
+                if (isTagEdit(currentValue)) {
+                    value = mergeEdits(currentValue, value);
+                } else if (hasValue(currentValue)) {
+                    value = applyEdit(currentValue, value);
+                }
             }
             changedMasks[space][tag] = value;
         }
@@ -421,6 +493,11 @@ export interface RuntimeBotInterface extends RuntimeBatcher {
      * @param signature The tag.
      */
     getSignature(bot: CompiledBot, signature: string): string;
+
+    /**
+     * Gets the current version that the interface is at.
+     */
+    currentVersion: RuntimeStateVersion;
 }
 
 /**

@@ -11,7 +11,7 @@
                     ref="multilineEditor"
                     :bot="currentBot"
                     :tag="currentTag"
-                    :space="null"
+                    :space="currentSpace"
                     :showDesktopEditor="true"
                     :showResize="false"
                 ></tag-value-editor>

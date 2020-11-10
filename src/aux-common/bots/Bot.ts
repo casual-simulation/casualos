@@ -1,3 +1,5 @@
+import { TagEditOp } from '../aux-format-2';
+
 export type PartialBot = Partial<Bot>;
 
 export type AuxDomain = 'builder' | 'player';
@@ -24,6 +26,16 @@ export const GET_TAG_MASK_SYMBOL = Symbol('get_tag_mask');
  * Defines a symbol that is used to get all the tag masks on a runtime bot.
  */
 export const CLEAR_TAG_MASKS_SYMBOL = Symbol('clear_tag_masks');
+
+/**
+ * Defines a symbol that is used to edit a tag.
+ */
+export const EDIT_TAG_SYMBOL = Symbol('edit_tag');
+
+/**
+ * Defines a symbol that is used to edit a  tag mask.
+ */
+export const EDIT_TAG_MASK_SYMBOL = Symbol('edit_tag_mask');
 
 /**
  * Defines an interface for a bot in a script/formula.
@@ -89,6 +101,20 @@ export interface RuntimeBot {
      * @param space The space that the masks should be cleared from. If not specified then all tag masks in all spaces will be cleared.
      */
     [CLEAR_TAG_MASKS_SYMBOL]: (space?: string) => any;
+
+    /**
+     * A function that can manipulate a tag using the given edit operations.
+     */
+    [EDIT_TAG_SYMBOL]: (tag: string, ops: TagEditOp[]) => any;
+
+    /**
+     * A function that can manipulate a tag mask using the given edit operations.
+     */
+    [EDIT_TAG_MASK_SYMBOL]: (
+        tag: string,
+        ops: TagEditOp[],
+        space: string
+    ) => any;
 }
 
 /**
@@ -1157,6 +1183,11 @@ export const ON_SHEET_BOT_ID_CLICK = 'onSheetBotIDClick';
 export const ON_SHEET_BOT_CLICK = 'onSheetBotClick';
 
 /**
+ * The tag used to set the space that the tag portal operates in.
+ */
+export const TAG_PORTAL_SPACE: string = 'tagPortalSpace';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -1206,6 +1237,7 @@ export const QUERY_PORTALS: string[] = [
     'sheetPortal',
     MEET_PORTAL,
     TAG_PORTAL,
+    TAG_PORTAL_SPACE,
 ];
 
 /*
@@ -1231,6 +1263,7 @@ export const KNOWN_TAGS: string[] = [
     `${MEET_PORTAL}ConfigBot`,
     DATA_PORTAL,
     TAG_PORTAL,
+    TAG_PORTAL_SPACE,
     `${TAG_PORTAL}ConfigBot`,
 
     'pageCameraPositionX',

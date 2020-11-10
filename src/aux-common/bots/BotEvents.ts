@@ -151,6 +151,15 @@ export type AsyncActions =
     | RpioSPITransferAction
     | RpioSPIWriteAction
     | RpioSPIEndAction
+    | SerialConnectAction
+    | SerialStreamAction
+    | SerialOpenAction
+    | SerialUpdateAction
+    | SerialWriteAction
+    | SerialReadAction
+    | SerialCloseAction
+    | SerialPauseAction
+    | SerialResumeAction
     | CreateCertificateAction
     | SignTagAction
     | RevokeCertificateAction
@@ -1726,6 +1735,133 @@ export interface RpioSPIWriteAction extends AsyncAction {
  */
 export interface RpioSPIEndAction extends AsyncAction {
     type: 'rpio_spi_end';
+}
+/**
+ * Establish the connection to the bluetooth serial device
+ */
+export interface SerialConnectAction extends AsyncAction {
+    type: 'serial_connect';
+
+    /**
+     * The device path. Example: /dev/rfcomm0
+     */
+    path: string;
+
+    /**
+     * {boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
+     *
+     * {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
+     *
+     * {number} [dataBits=8] Must be one of these: 8, 7, 6, or 5.
+     *
+     * {number} [highWaterMark=65536] The size of the read and write buffers defaults to 64k.
+     *
+     * {boolean} [lock=true] Prevent other processes from opening the port. Windows does not currently support `false`.
+     *
+     * {number} [stopBits=1] Must be one of these: 1 or 2.
+     *
+     * {string} [parity=none] Must be one of these: 'none', 'even', 'mark', 'odd', 'space'.
+     *
+     * {boolean} [rtscts=false] flow control setting
+     *
+     * {boolean} [xon=false] flow control setting
+     *
+     * {boolean} [xoff=false] flow control setting
+     *
+     * {boolean} [xany=false] flow control setting
+     *
+     * {object=} bindingOptions sets binding-specific options
+     *
+     * {Binding=} Binding The hardware access binding. `Bindings` are how Node-Serialport talks to the underlying system. Will default to the static property `Serialport.Binding`.
+     *
+     * {number} [bindingOptions.vmin=1] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
+     *
+     * {number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
+     */
+    options?: object;
+}
+/**
+ * Parses and returns the serial stream to the event tag 'onStreamData'.
+ */
+export interface SerialStreamAction extends AsyncAction {
+    type: 'serial_stream';
+}
+/**
+ * Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
+ */
+export interface SerialOpenAction extends AsyncAction {
+    type: 'serial_open';
+}
+/**
+ * Updates the SerialPort object with a new baudRate.
+ */
+export interface SerialUpdateAction extends AsyncAction {
+    type: 'serial_update';
+
+    /**
+     * {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
+     */
+    options: object;
+
+    /**
+     *
+     */
+    cb?: any;
+}
+/**
+ * Writes the provided data/command to the device
+ */
+export interface SerialWriteAction extends AsyncAction {
+    type: 'serial_write';
+
+    /**
+     * The data/command to send.
+     */
+    data: string | number[];
+
+    /**
+     * The encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
+     */
+    encoding?: string;
+
+    /**
+     *
+     */
+    cb?: any;
+}
+/**
+ * Request a number of bytes from the SerialPort.
+ */
+export interface SerialReadAction extends AsyncAction {
+    type: 'serial_read';
+
+    /**
+     * Specify how many bytes of data to return, if available
+     */
+    size?: number;
+}
+/**
+ * Closes an open connection.
+ */
+export interface SerialCloseAction extends AsyncAction {
+    type: 'serial_close';
+
+    /**
+     *
+     */
+    cb?: any;
+}
+/**
+ * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
+ */
+export interface SerialPauseAction extends AsyncAction {
+    type: 'serial_pause';
+}
+/**
+ * Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
+ */
+export interface SerialResumeAction extends AsyncAction {
+    type: 'serial_resume';
 }
 /**
  * Defines an event that sets some text on the user's clipboard.
@@ -3575,6 +3711,200 @@ export function rpioSPIEndPin(
 ): RpioSPIEndAction {
     return {
         type: 'rpio_spi_end',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ */
+
+/**
+ * Establish the connection to the bluetooth serial device
+ * @param path The device path. Example: /dev/rfcomm0
+ * @param options
+ * {boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
+ *
+ * {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
+ *
+ * {number} [dataBits=8] Must be one of these: 8, 7, 6, or 5.
+ *
+ * {number} [highWaterMark=65536] The size of the read and write buffers defaults to 64k.
+ *
+ * {boolean} [lock=true] Prevent other processes from opening the port. Windows does not currently support `false`.
+ *
+ * {number} [stopBits=1] Must be one of these: 1 or 2.
+ *
+ * {string} [parity=none] Must be one of these: 'none', 'even', 'mark', 'odd', 'space'.
+ *
+ * {boolean} [rtscts=false] flow control setting
+ *
+ * {boolean} [xon=false] flow control setting
+ *
+ * {boolean} [xoff=false] flow control setting
+ *
+ * {boolean} [xany=false] flow control setting
+ *
+ * {object=} bindingOptions sets binding-specific options
+ *
+ * {Binding=} Binding The hardware access binding. `Bindings` are how Node-Serialport talks to the underlying system. Will default to the static property `Serialport.Binding`.
+ *
+ * {number} [bindingOptions.vmin=1] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
+ *
+ * {number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
+ * @param taskId The ID of the async task.
+ */
+export function serialConnectPin(
+    path: string,
+    options?: object,
+    taskId?: string | number,
+    playerId?: string
+): SerialConnectAction {
+    return {
+        path,
+        options,
+        type: 'serial_connect',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Parses and returns the serial stream to the event tag 'onStreamData'.
+ * @param taskId The ID of the async task.
+ */
+export function serialStreamPin(
+    taskId?: string | number,
+    playerId?: string
+): SerialStreamAction {
+    return {
+        type: 'serial_stream',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
+ * @param taskId The ID of the async task.
+ */
+export function serialOpenPin(
+    taskId?: string | number,
+    playerId?: string
+): SerialOpenAction {
+    return {
+        type: 'serial_open',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Updates the SerialPort object with a new baudRate.
+ * @param options {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
+ * @param cb
+ * @param taskId The ID of the async task.
+ */
+export function serialUpdatePin(
+    options: object,
+    cb?: any,
+    taskId?: string | number,
+    playerId?: string
+): SerialUpdateAction {
+    return {
+        options,
+        cb,
+        type: 'serial_update',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Writes the provided data/command to the device
+ * @param data The data/command to send
+ * @param encoding The encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
+ * @param cb
+ * @param taskId The ID of the async task.
+ */
+export function serialWritePin(
+    data: string | number[],
+    encoding?: string,
+    cb?: any,
+    taskId?: string | number,
+    playerId?: string
+): SerialWriteAction {
+    return {
+        data,
+        encoding,
+        cb,
+        type: 'serial_write',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Request a number of bytes from the SerialPort.
+ * @param size Specify how many bytes of data to return, if available.
+ * @param taskId The ID of the async task.
+ */
+export function serialReadPin(
+    size?: number,
+    taskId?: string | number,
+    playerId?: string
+): SerialReadAction {
+    return {
+        size,
+        type: 'serial_read',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Closes an open connection.
+ * @param cb
+ * @param taskId The ID of the async task.
+ */
+export function serialClosePin(
+    cb?: any,
+    taskId?: string | number,
+    playerId?: string
+): SerialCloseAction {
+    return {
+        cb,
+        type: 'serial_close',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
+ * @param taskId The ID of the async task.
+ */
+export function serialPausePin(
+    taskId?: string | number,
+    playerId?: string
+): SerialPauseAction {
+    return {
+        type: 'serial_pause',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
+ * @param taskId The ID of the async task.
+ */
+export function serialResumePin(
+    taskId?: string | number,
+    playerId?: string
+): SerialResumeAction {
+    return {
+        type: 'serial_resume',
         taskId,
         playerId,
     };

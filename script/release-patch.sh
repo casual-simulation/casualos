@@ -22,7 +22,7 @@ git commit -m "chore: Update CHANGELOG Date"
 git checkout "$TARGET_BRANCH"
 git fetch origin
 git reset "origin/$TARGET_BRANCH" --hard
-git merge develop --no-ff
+git merge -X theirs --no-ff develop
 
 # 5. Get version
 VERSION=$("${SCRIPTPATH}/next_version.sh" "${BUILD_NUMBER}")

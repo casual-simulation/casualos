@@ -771,6 +771,8 @@ When the minimum LOD is exited the <TagLink tag='@onMinLODExit'/> listener is tr
 The ID of the bot that should transform this bot in the page and inventory portals.
 When the transformer bot and this bot are in the same dimension, this bot will inherit the position and rotation of the transformer bot.
 
+When set on the player bot, this will transform the portal camera by the specified bot.
+
 <PossibleValuesTable>
   <PossibleValueCode value='null'>
     The bot is positioned on the grid. (default)
@@ -1658,6 +1660,28 @@ Only available on the player bot.
 const playerBot = player.getBot();
 const tag = "abc";
 playerBot.tags.tagPortal = getID(playerBot) + "." + tag;
+```
+
+### `tagPortalSpace`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The space of the tag mask that should be edited in the tag portal.
+If not set, then the tag on the bot will be edited.
+If set, then the tag mask in the given space will be edited.
+
+Only available on the player bot.
+
+#### Examples:
+
+1. Open the tag portal for the `abc` tag mask in the `tempLocal` space on the player bot.
+```typescript
+const playerBot = player.getBot();
+const tag = "abc";
+playerBot.tags.tagPortal = getID(playerBot) + "." + tag;
+playerBot.tags.tagPortalSpace = "tempLocal";
 ```
 
 ### `dataPortal`
