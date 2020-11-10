@@ -12,6 +12,7 @@ import {
     calculateMeetPortalAnchorPointOffset,
     DEFAULT_TAG_PORTAL_ANCHOR_POINT,
     trimTag,
+    TAG_PORTAL_SPACE,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike, Subscription, Observable } from 'rxjs';
@@ -37,16 +38,20 @@ import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrappe
 export default class TagPortal extends Vue {
     private _sub: Subscription;
     private _simulations: Map<BrowserSimulation, Subscription> = new Map();
-    private _portals: Map<BrowserSimulation, string> = new Map();
+    private _portals: Map<
+        BrowserSimulation,
+        { portal: string; space: string }
+    > = new Map();
     private _currentConfig: TagPortalConfig;
     private _currentSim: BrowserSimulation;
     private _currentSub: Subscription;
-    private _currentPortal: string;
+    private _currentPortal: { portal: string; space: string };
 
     showButton: boolean = false;
     buttonIcon: string = null;
     buttonHint: string = null;
     currentBot: Bot = null;
+    currentSpace: string = null;
     currentTag: string = null;
     extraStyle: Object = {};
 
@@ -81,16 +86,16 @@ export default class TagPortal extends Vue {
             DEFAULT_TAG_PORTAL_ANCHOR_POINT
         );
 
-        window.addEventListener('resize', e => this._resize());
+        window.addEventListener('resize', (e) => this._resize());
 
         this._sub.add(
             appManager.simulationManager.simulationAdded
-                .pipe(tap(sim => this._onSimulationAdded(sim)))
+                .pipe(tap((sim) => this._onSimulationAdded(sim)))
                 .subscribe()
         );
         this._sub.add(
             appManager.simulationManager.simulationRemoved
-                .pipe(tap(sim => this._onSimulationRemoved(sim)))
+                .pipe(tap((sim) => this._onSimulationRemoved(sim)))
                 .subscribe()
         );
     }
@@ -200,7 +205,7 @@ export default class TagPortal extends Vue {
 
         sub.add(
             userBotChanged(sim)
-                .pipe(tap(user => this._onUserBotUpdated(sim, user)))
+                .pipe(tap((user) => this._onUserBotUpdated(sim, user)))
                 .subscribe()
         );
     }
@@ -217,8 +222,14 @@ export default class TagPortal extends Vue {
 
     private _onUserBotUpdated(sim: BrowserSimulation, user: PrecalculatedBot) {
         const portal = calculateStringTagValue(null, user, TAG_PORTAL, null);
+        const space = calculateStringTagValue(
+            null,
+            user,
+            TAG_PORTAL_SPACE,
+            null
+        );
         if (hasValue(portal)) {
-            this._portals.set(sim, portal);
+            this._portals.set(sim, { portal, space });
         } else {
             this._portals.delete(sim);
         }
@@ -250,7 +261,10 @@ export default class TagPortal extends Vue {
         }
     }
 
-    private _setCurrentSim(sim: BrowserSimulation, botAndTag: string): boolean {
+    private _setCurrentSim(
+        sim: BrowserSimulation,
+        data: { portal: string; space: string }
+    ): boolean {
         if (this._currentConfig) {
             this._currentConfig.unsubscribe();
             this._currentConfig = null;
@@ -271,11 +285,13 @@ export default class TagPortal extends Vue {
                 .subscribe();
         }
         this._currentSim = sim;
-        this._currentPortal = botAndTag;
+        this._currentPortal = data;
         if (sim) {
-            if (!hasValue(botAndTag)) {
+            if (!hasValue(data)) {
                 return false;
             }
+            const botAndTag = data.portal;
+            const space = data.space;
             const dotIndex = botAndTag.indexOf('.');
             if (dotIndex < 0) {
                 return false;
@@ -287,12 +303,16 @@ export default class TagPortal extends Vue {
             }
             this.currentBot = sim.helper.botsState[botId];
             this.currentTag = trimTag(tag);
-            this._currentSub = sim.watcher.botChanged(botId).subscribe(bot => {
-                this.currentBot = bot;
-            });
+            this.currentSpace = space;
+            this._currentSub = sim.watcher
+                .botChanged(botId)
+                .subscribe((bot) => {
+                    this.currentBot = bot;
+                });
         } else {
             this.currentBot = null;
             this.currentTag = null;
+            this.currentSpace = null;
         }
         this._updateConfig();
         return true;

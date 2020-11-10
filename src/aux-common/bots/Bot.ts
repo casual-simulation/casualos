@@ -1183,6 +1183,11 @@ export const ON_SHEET_BOT_ID_CLICK = 'onSheetBotIDClick';
 export const ON_SHEET_BOT_CLICK = 'onSheetBotClick';
 
 /**
+ * The tag used to set the space that the tag portal operates in.
+ */
+export const TAG_PORTAL_SPACE: string = 'tagPortalSpace';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -1232,6 +1237,7 @@ export const QUERY_PORTALS: string[] = [
     'sheetPortal',
     MEET_PORTAL,
     TAG_PORTAL,
+    TAG_PORTAL_SPACE,
 ];
 
 /*
@@ -1257,6 +1263,7 @@ export const KNOWN_TAGS: string[] = [
     `${MEET_PORTAL}ConfigBot`,
     DATA_PORTAL,
     TAG_PORTAL,
+    TAG_PORTAL_SPACE,
     `${TAG_PORTAL}ConfigBot`,
 
     'pageCameraPositionX',
