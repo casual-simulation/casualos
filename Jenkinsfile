@@ -26,7 +26,7 @@ pipeline {
     stages {
         stage('Setup') {
             steps {
-                echo "Building branch: ${env.BRANCH_NAME}"
+                echo "Building branch: ${env.BRANCH_NAME} ${env.GIT_BRANCH} ${env.GIT_LOCAL_BRANCH}"
 
                 NotifyStarted()
                 script {
