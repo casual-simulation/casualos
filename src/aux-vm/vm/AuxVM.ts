@@ -3,6 +3,7 @@ import {
     BotAction,
     StateUpdatedEvent,
     BotDependentInfo,
+    RuntimeStateVersion,
 } from '@casual-simulation/aux-common';
 import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
 import { Observable } from 'rxjs';
@@ -35,6 +36,11 @@ export interface AuxVM extends Initable {
      * Gets the observable list of state updates from the simulation.
      */
     stateUpdated: Observable<StateUpdatedEvent>;
+
+    /**
+     * Gets the observable list of version updates from the simulation.
+     */
+    versionUpdated: Observable<RuntimeStateVersion>;
 
     /**
      * Gets an observable that resolves whenever the connection state changes.

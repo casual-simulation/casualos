@@ -81,6 +81,9 @@ import {
 } from './AuxRealtimeEditModeProvider';
 import { forOwn, merge } from 'lodash';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
+import { applyEdit, isTagEdit, mergeVersions } from '../aux-format-2';
+import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
+import { RuntimeStateVersion } from './RuntimeStateVersion';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -105,6 +108,10 @@ export class AuxRuntime
     private _zone: Zone;
     private _globalVariablesSpec: ZoneSpec;
     private _sub: SubscriptionLike;
+    private _currentVersion: RuntimeStateVersion = {
+        localSites: {},
+        vector: {},
+    };
 
     private _updatedBots = new Map<string, RuntimeBot>();
     private _newBots = new Map<string, RuntimeBot>();
@@ -139,6 +146,10 @@ export class AuxRuntime
      */
     set runFormulas(value: boolean) {
         this._runFormulas = value;
+    }
+
+    get currentVersion() {
+        return this._currentVersion;
     }
 
     /**
@@ -607,6 +618,22 @@ export class AuxRuntime
         return nextUpdate;
     }
 
+    /**
+     * Signals to the runtime that the state version has been updated.
+     * @param newVersion The version update.
+     */
+    versionUpdated(newVersion: CurrentVersion): RuntimeStateVersion {
+        if (newVersion.currentSite) {
+            this._currentVersion.localSites[newVersion.currentSite] = true;
+        }
+        this._currentVersion.vector = mergeVersions(
+            this._currentVersion.vector,
+            newVersion.vector
+        );
+
+        return this._currentVersion;
+    }
+
     private _sendOnBotsAddedShouts(
         newBots: [CompiledBot, PrecalculatedBot][],
         nextUpdate: StateUpdatedEvent
@@ -902,9 +929,16 @@ export class AuxRuntime
                 for (let tag in u.tags) {
                     const tagValue = u.tags[tag];
                     if (hasValue(tagValue) || tagValue === null) {
-                        compiled.tags[tag] = tagValue;
-                        updatedTags.add(tag);
+                        if (isTagEdit(tagValue)) {
+                            compiled.tags[tag] = applyEdit(
+                                compiled.tags[tag],
+                                tagValue
+                            );
+                        } else {
+                            compiled.tags[tag] = tagValue;
+                        }
                         partial.tags[tag] = tagValue;
+                        updatedTags.add(tag);
                     }
                 }
             }
@@ -930,6 +964,11 @@ export class AuxRuntime
 
                             if (tagValue === null) {
                                 delete compiled.masks[space][tag];
+                            } else if (isTagEdit(tagValue)) {
+                                compiled.masks[space][tag] = applyEdit(
+                                    compiled.masks[space][tag],
+                                    tagValue
+                                );
                             } else {
                                 compiled.masks[space][tag] = tagValue;
                             }
@@ -1412,7 +1451,11 @@ export class AuxRuntime
                 }
             }
         }
-        bot.tags[tag] = tagValue;
+        if (isTagEdit(tagValue)) {
+            tagValue = bot.tags[tag] = applyEdit(bot.tags[tag], tagValue);
+        } else {
+            bot.tags[tag] = tagValue;
+        }
         this._compileTagValue(bot, tag, tagValue);
     }
 

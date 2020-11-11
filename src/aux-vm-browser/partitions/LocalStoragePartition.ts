@@ -24,18 +24,36 @@ import {
     BotTagMasks,
     BotTags,
 } from '@casual-simulation/aux-common';
-import { StatusUpdate, Action } from '@casual-simulation/causal-trees';
+import {
+    StatusUpdate,
+    Action,
+    CurrentVersion,
+} from '@casual-simulation/causal-trees';
 import flatMap from 'lodash/flatMap';
-import { Subject, Subscription, Observable, fromEventPattern } from 'rxjs';
+import {
+    Subject,
+    Subscription,
+    Observable,
+    fromEventPattern,
+    BehaviorSubject,
+} from 'rxjs';
 import { startWith, filter, map } from 'rxjs/operators';
 import pickBy from 'lodash/pickBy';
 import union from 'lodash/union';
+import {
+    applyEdit,
+    isTagEdit,
+} from '@casual-simulation/aux-common/aux-format-2';
 
 export class LocalStoragePartitionImpl implements LocalStoragePartition {
     protected _onBotsAdded = new Subject<Bot[]>();
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
     protected _onStateUpdated = new Subject<StateUpdatedEvent>();
+    protected _onVersionUpdated = new BehaviorSubject<CurrentVersion>({
+        currentSite: null,
+        vector: {},
+    });
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -76,6 +94,10 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
 
     get onStatusUpdated(): Observable<StatusUpdate> {
         return this._onStatusUpdated;
+    }
+
+    get onVersionUpdated(): Observable<CurrentVersion> {
+        return this._onVersionUpdated;
     }
 
     unsubscribe() {
@@ -228,7 +250,14 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                         }
 
                         if (hasValue(newVal)) {
-                            newBot.tags[tag] = newVal;
+                            if (isTagEdit(newVal)) {
+                                newBot.tags[tag] = applyEdit(
+                                    newBot.tags[tag],
+                                    newVal
+                                );
+                            } else {
+                                newBot.tags[tag] = newVal;
+                            }
                             updatedBot.tags[tag] = newVal;
                         } else {
                             delete newBot.tags[tag];
@@ -274,7 +303,11 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                         }
 
                         if (hasValue(newVal)) {
-                            masks[tag] = newVal;
+                            if (isTagEdit(newVal)) {
+                                masks[tag] = applyEdit(masks[tag], newVal);
+                            } else {
+                                masks[tag] = newVal;
+                            }
                         } else {
                             delete masks[tag];
                             updatedBot.masks[this.space][tag] = null;

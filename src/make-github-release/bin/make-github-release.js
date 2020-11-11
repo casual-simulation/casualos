@@ -8,7 +8,7 @@ program
     .requiredOption('-r, --repo <repo>', 'The name of the repo.')
     .requiredOption('-t, --text <text>', 'The release text')
     .requiredOption('-a, --auth <auth>', 'The authorization token to use.')
-    .action(cmd => {
+    .action((cmd) => {
         const { auth, text, owner, repo } = cmd;
         const github = new Octokit({
             auth,
@@ -19,7 +19,13 @@ program
             .toString()
             .trim();
 
-        console.log(`Creating release for ${latestTag}...`);
+        const isPrerelease = latestTag.indexOf('alpha') >= 0;
+
+        if (isPrerelease) {
+            console.log(`Creating alpha release for ${latestTag}...`);
+        } else {
+            console.log(`Creating release for ${latestTag}...`);
+        }
 
         github.repos
             .createRelease({
@@ -28,11 +34,12 @@ program
                 tag_name: latestTag,
                 name: latestTag,
                 body: text,
+                prerelease: isPrerelease,
             })
-            .then(result => {
+            .then((result) => {
                 console.log(`Release created at: ${result.data.html_url}`);
             })
-            .catch(err => {
+            .catch((err) => {
                 console.error(err);
             });
     });

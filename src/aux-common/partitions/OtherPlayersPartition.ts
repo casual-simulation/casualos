@@ -15,7 +15,10 @@ import {
     SESSION_ID_CLAIM,
     RemoteActions,
 } from '@casual-simulation/causal-trees';
-import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
+import {
+    CausalRepoClient,
+    CurrentVersion,
+} from '@casual-simulation/causal-trees/core2';
 import {
     OtherPlayersPartition,
     AuxPartitionRealtimeStrategy,
@@ -44,7 +47,7 @@ import {
     isBot,
     PartialBotsState,
 } from '../bots';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { skip, startWith } from 'rxjs/operators';
 import { createCausalRepoClientPartition } from './RemoteCausalRepoPartition';
 import sortBy from 'lodash/sortBy';
@@ -72,6 +75,10 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
     protected _onStateUpdated = new Subject<StateUpdatedEvent>();
+    private _onVersionUpdated = new BehaviorSubject<CurrentVersion>({
+        currentSite: null,
+        vector: {},
+    });
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -138,6 +145,10 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
         return this._onStateUpdated.pipe(
             startWith(stateUpdatedEvent(this.state))
         );
+    }
+
+    get onVersionUpdated(): Observable<CurrentVersion> {
+        return this._onVersionUpdated;
     }
 
     get onError(): Observable<any> {

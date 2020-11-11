@@ -8,6 +8,15 @@ import {
     isScript,
     hasValue,
     getTagValueForSpace,
+    calculateBotValue,
+    BotsState,
+    calculateBooleanTagValue,
+    isBotInDimension,
+    getBotShape,
+    getActiveObjects,
+    calculateNumericalTagValue,
+    calculateStringTagValue,
+    calculateFormattedBotValue,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
 import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
@@ -17,13 +26,146 @@ import JsonWorker from 'worker-loader!monaco-editor/esm/vs/language/json/json.wo
 import { calculateFormulaDefinitions } from './FormulaHelpers';
 import { libFileMap } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
 import { SimpleEditorModelResolverService } from 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
-import { SubscriptionLike, Subscription } from 'rxjs';
-import { skip, flatMap, filter, first, takeWhile } from 'rxjs/operators';
+import { SubscriptionLike, Subscription, Observable, NEVER, merge } from 'rxjs';
+import {
+    skip,
+    flatMap,
+    filter,
+    first,
+    takeWhile,
+    tap,
+    switchMap,
+    map,
+    scan,
+    delay,
+    takeUntil,
+    debounceTime,
+} from 'rxjs/operators';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import union from 'lodash/union';
 import sortBy from 'lodash/sortBy';
 import { propertyInsertText } from './CompletionHelpers';
+import {
+    bot,
+    del,
+    edit,
+    edits,
+    insert,
+    mergeVersions,
+    preserve,
+    TagEditOp,
+} from '@casual-simulation/aux-common/aux-format-2';
+import { CurrentVersion } from '@casual-simulation/causal-trees';
+import { Color } from 'three';
+import { invertColor } from './scene/ColorUtils';
+
+let cursorColors = document.createElement('style');
+document.body.appendChild(cursorColors);
+
+let availableColors = new Map<string, string>();
+let availableLabels = new Map<string, HTMLStyleElement>();
+let stylesheet = '';
+
+function createColorClass(
+    name: string,
+    backgroundColor: Color,
+    alpha: number
+): [string, string] {
+    const bRed = backgroundColor.r * 255;
+    const bGreen = backgroundColor.g * 255;
+    const bBlue = backgroundColor.b * 255;
+    return [
+        name,
+        `.${name} {
+        background-color: rgba(${bRed}, ${bGreen}, ${bBlue}, ${alpha});
+    }
+    
+    .${name}::after {
+        border-color: rgba(${bRed}, ${bGreen}, ${bBlue}, ${alpha});
+    }`,
+    ];
+}
+
+function createHoverClass(
+    name: string,
+    backgroundColor: Color,
+    foregroundColor: Color,
+    label: string
+): string {
+    const bRed = backgroundColor.r * 255;
+    const bGreen = backgroundColor.g * 255;
+    const bBlue = backgroundColor.b * 255;
+    const fRed = foregroundColor.r * 255;
+    const fGreen = foregroundColor.g * 255;
+    const fBlue = foregroundColor.b * 255;
+    return `.${name}:hover::after {
+        content: '${label}';
+        background-color: rgb(${bRed}, ${bGreen}, ${bBlue});
+        color: rgb(${fRed}, ${fGreen}, ${fBlue});
+        border-width: 0;
+        border-radius: 0;
+        font-size: 12px;
+        line-height: 12px;
+        padding: 1px;
+        left: -2px;
+        top: -13px;
+        overflow: hidden;
+        width: auto;
+        height: auto;
+    }`;
+}
+
+function getColorClass(
+    prefix: string,
+    color: string,
+    alpha: number = 0.5
+): string {
+    const c = new Color(color);
+    const hex = c.getHexString();
+    const name = prefix + hex;
+    if (availableColors.has(name)) {
+        return availableColors.get(name);
+    } else {
+        const [colorClass, colorStyle] = createColorClass(name, c, alpha);
+        stylesheet += '\n' + colorStyle;
+        cursorColors.innerHTML = stylesheet;
+        availableColors.set(name, colorClass);
+
+        return colorClass;
+    }
+}
+
+function getLabelStyle(name: string): HTMLStyleElement {
+    if (availableLabels.has(name)) {
+        return availableLabels.get(name);
+    } else {
+        const style = document.createElement('style');
+        document.body.appendChild(style);
+        availableLabels.set(name, style);
+        return style;
+    }
+}
+
+function getLabelClass(
+    prefix: string,
+    id: string,
+    foregroundColor: string,
+    backgroundColor: string,
+    label: string
+): string {
+    const foreground = new Color(foregroundColor);
+    const background = new Color(backgroundColor);
+    const name = prefix + id;
+    const styleElement = getLabelStyle(name);
+
+    const style = createHoverClass(name, background, foreground, label);
+    if (styleElement.innerHTML !== style) {
+        styleElement.innerHTML = style;
+    }
+
+    return name;
+}
 
 export function setup() {
     // Tell monaco how to create the web workers
@@ -118,7 +260,10 @@ export function setActiveModel(model: monaco.editor.ITextModel) {
  * Watches the given simulation for changes and updates the corresponding models.
  * @param simulation The simulation to watch.
  */
-export function watchSimulation(simulation: BrowserSimulation) {
+export function watchSimulation(
+    simulation: BrowserSimulation,
+    getEditor: () => monaco.editor.ICodeEditor
+) {
     let sub = simulation.watcher.botsDiscovered
         .pipe(flatMap((f) => f))
         .subscribe((f) => {
@@ -127,7 +272,7 @@ export function watchSimulation(simulation: BrowserSimulation) {
                     shouldKeepModelWithTagLoaded(tag) ||
                     isFormula(f.tags[tag])
                 ) {
-                    loadModel(simulation, f, tag, null);
+                    loadModel(simulation, f, tag, null, getEditor);
                 }
             }
         });
@@ -171,7 +316,13 @@ export function watchSimulation(simulation: BrowserSimulation) {
                         for (let tag of result.references[id]) {
                             const bot = simulation.helper.botsState[id];
                             // TODO: Support references to tag masks
-                            let m = loadModel(simulation, bot, tag, null);
+                            let m = loadModel(
+                                simulation,
+                                bot,
+                                tag,
+                                null,
+                                getEditor
+                            );
                             locations.push(
                                 ...m
                                     .findMatches(
@@ -273,6 +424,217 @@ export function watchSimulation(simulation: BrowserSimulation) {
     return sub;
 }
 
+export function watchEditor(
+    simulation: Simulation,
+    editor: monaco.editor.ICodeEditor
+): Subscription {
+    const modelChangeObservable = new Observable<
+        monaco.editor.IModelChangedEvent
+    >((sub) => {
+        return toSubscription(editor.onDidChangeModel((e) => sub.next(e)));
+    });
+
+    const decorators = modelChangeObservable.pipe(
+        delay(100),
+        filter((e) => !!e.newModelUrl),
+        map((e) => models.get(e.newModelUrl.toString())),
+        filter((info) => !!info),
+        filter((info) => !info.model.isDisposed()),
+        switchMap((info) => {
+            const dimension = `${info.botId}.${info.tag}`;
+
+            const botEvents = merge(
+                simulation.watcher.botsDiscovered.pipe(
+                    map((bots) => ({ type: 'added_or_updated', bots } as const))
+                ),
+                simulation.watcher.botsUpdated.pipe(
+                    map((bots) => ({ type: 'added_or_updated', bots } as const))
+                ),
+                simulation.watcher.botsRemoved.pipe(
+                    map((ids) => ({ type: 'removed', ids } as const))
+                )
+            );
+
+            const dimensionStates = botEvents.pipe(
+                scan((state, event) => {
+                    if (event.type === 'added_or_updated') {
+                        for (let bot of event.bots) {
+                            if (
+                                isBotInDimension(null, bot, dimension) ===
+                                    true &&
+                                getBotShape(null, bot) === 'cursor'
+                            ) {
+                                state[bot.id] = bot;
+                            } else {
+                                delete state[bot.id];
+                            }
+                        }
+                    } else {
+                        for (let id of event.ids) {
+                            delete state[id];
+                        }
+                    }
+                    return state;
+                }, {} as BotsState)
+            );
+
+            const debouncedStates = dimensionStates.pipe(debounceTime(75));
+
+            const botDecorators = debouncedStates.pipe(
+                map((state) => {
+                    let decorators = [] as monaco.editor.IModelDeltaDecoration[];
+                    let offset = info?.isScript || info?.isFormula ? 1 : 0;
+                    for (let bot of getActiveObjects(state)) {
+                        const cursorStart = calculateNumericalTagValue(
+                            null,
+                            bot,
+                            `${dimension}Start`,
+                            0
+                        );
+                        const cursorEnd = calculateNumericalTagValue(
+                            null,
+                            bot,
+                            `${dimension}End`,
+                            0
+                        );
+                        const startPosition = info.model.getPositionAt(
+                            cursorStart - offset
+                        );
+                        const endPosition = info.model.getPositionAt(
+                            cursorEnd - offset
+                        );
+                        const range = new monaco.Range(
+                            startPosition.lineNumber,
+                            startPosition.column,
+                            endPosition.lineNumber,
+                            endPosition.column
+                        );
+
+                        let beforeContentClassName: string;
+                        let afterContentClassName: string;
+
+                        const color = calculateStringTagValue(
+                            null,
+                            bot,
+                            'color',
+                            'black'
+                        );
+                        const colorClass = getColorClass(
+                            'bot-cursor-color-',
+                            color,
+                            0.1
+                        );
+                        const notchColorClass = getColorClass(
+                            'bot-notch-cursor-color-',
+                            color,
+                            1
+                        );
+
+                        const label = calculateFormattedBotValue(
+                            null,
+                            bot,
+                            'auxLabel'
+                        );
+
+                        const inverseColor = invertColor(
+                            new Color(color).getHexString(),
+                            true
+                        );
+                        const labelForeground = calculateStringTagValue(
+                            null,
+                            bot,
+                            'labelColor',
+                            inverseColor
+                        );
+
+                        let labelClass = '';
+                        if (hasValue(label)) {
+                            labelClass = getLabelClass(
+                                'bot-notch-label',
+                                bot.id,
+                                labelForeground,
+                                color,
+                                label
+                            );
+                        }
+
+                        if (cursorStart < cursorEnd) {
+                            beforeContentClassName = null;
+                            afterContentClassName = `bot-cursor-notch ${notchColorClass} ${labelClass}`;
+                        } else {
+                            beforeContentClassName = `bot-cursor-notch ${notchColorClass} ${labelClass}`;
+                            afterContentClassName = null;
+                        }
+
+                        decorators.push({
+                            range,
+                            options: {
+                                className: `bot-cursor ${colorClass}`,
+                                beforeContentClassName,
+                                afterContentClassName,
+                                stickiness:
+                                    monaco.editor.TrackedRangeStickiness
+                                        .GrowsOnlyWhenTypingAfter,
+                            },
+                        });
+                    }
+
+                    return decorators;
+                })
+            );
+
+            const onModelWillDispose = new Observable<void>((sub) => {
+                info.model.onWillDispose(() => sub.next());
+            });
+
+            return botDecorators.pipe(takeUntil(onModelWillDispose));
+        }),
+
+        scan((ids, decorators) => {
+            return editor.getModel().deltaDecorations(ids, decorators);
+        }, [] as string[])
+    );
+
+    const sub = new Subscription();
+
+    sub.add(decorators.subscribe());
+
+    sub.add(
+        toSubscription(
+            editor.onDidChangeCursorSelection((e) => {
+                const model = editor.getModel();
+                const info = models.get(model.uri.toString());
+                const dir = e.selection.getDirection();
+                const startIndex = model.getOffsetAt(
+                    e.selection.getStartPosition()
+                );
+                const endIndex = model.getOffsetAt(
+                    e.selection.getEndPosition()
+                );
+
+                const offset = info?.isScript || info?.isFormula ? 1 : 0;
+                let finalStartIndex = offset + startIndex;
+                let finalEndIndex = offset + endIndex;
+
+                if (dir === monaco.SelectionDirection.RTL) {
+                    const temp = finalStartIndex;
+                    finalStartIndex = finalEndIndex;
+                    finalEndIndex = temp;
+                }
+
+                simulation.helper.updateBot(simulation.helper.userBot, {
+                    tags: {
+                        cursorStartIndex: finalStartIndex,
+                        cursorEndIndex: finalEndIndex,
+                    },
+                });
+            })
+        )
+    );
+
+    return sub;
+}
+
 /**
  * Clears the currently loaded models.
  */
@@ -296,7 +658,8 @@ export function loadModel(
     simulation: BrowserSimulation,
     bot: Bot,
     tag: string,
-    space: string
+    space: string,
+    getEditor: () => monaco.editor.ICodeEditor
 ) {
     const uri = getModelUri(bot, tag, space);
     let model = monaco.editor.getModel(uri);
@@ -308,7 +671,7 @@ export function loadModel(
             uri
         );
 
-        watchModel(simulation, model, bot, tag, space);
+        watchModel(simulation, model, bot, tag, space, getEditor);
     }
 
     return model;
@@ -364,7 +727,8 @@ function watchModel(
     model: monaco.editor.ITextModel,
     bot: Bot,
     tag: string,
-    space: string
+    space: string,
+    getEditor: () => monaco.editor.ICodeEditor
 ) {
     let sub = new Subscription();
     let info: ModelInfo = {
@@ -376,48 +740,187 @@ function watchModel(
         model: model,
         sub: sub,
     };
+    let lastVersion = simulation.watcher.latestVersion;
+    let applyingEdits: boolean = false;
 
     sub.add(
         simulation.watcher
-            .botTagsChanged(bot.id)
+            .botTagChanged(bot.id, tag, space)
             .pipe(
-                skip(1),
-                takeWhile((update) => update !== null)
+                takeWhile((update) => update !== null),
+                tap((update) => {
+                    lastVersion.vector = mergeVersions(
+                        lastVersion.vector,
+                        update.version
+                    );
+                }),
+                filter((update) => {
+                    // Only allow updates that are not edits
+                    // or are not from the current site.
+                    // TODO: Improve to allow edits from the current site to be mixed with
+                    // edits from other sites.
+                    return (
+                        update.type !== 'edit' ||
+                        Object.keys(lastVersion.localSites).every(
+                            (site) => !hasValue(update.version[site])
+                        )
+                    );
+                }),
+                skip(1)
             )
             .subscribe((update) => {
                 bot = update.bot;
-                if (model === activeModel || !update.tags.has(tag)) {
-                    return;
+                if (update.type === 'edit') {
+                    const userSelections = getEditor()?.getSelections() || [];
+                    const selectionPositions = userSelections.map(
+                        (s) =>
+                            [
+                                new monaco.Position(
+                                    s.startLineNumber,
+                                    s.startColumn
+                                ),
+                                new monaco.Position(
+                                    s.endLineNumber,
+                                    s.endColumn
+                                ),
+                            ] as [monaco.Position, monaco.Position]
+                    );
+
+                    for (let ops of update.operations) {
+                        let index = info.isFormula || info.isScript ? -1 : 0;
+                        for (let op of ops) {
+                            if (op.type === 'preserve') {
+                                index += op.count;
+                            } else if (op.type === 'insert') {
+                                const pos = model.getPositionAt(index);
+                                const selection = new monaco.Selection(
+                                    pos.lineNumber,
+                                    pos.column,
+                                    pos.lineNumber,
+                                    pos.column
+                                );
+
+                                try {
+                                    applyingEdits = true;
+                                    model.pushEditOperations(
+                                        [],
+                                        [{ range: selection, text: op.text }],
+                                        () => null
+                                    );
+                                } finally {
+                                    applyingEdits = false;
+                                }
+
+                                index += op.text.length;
+
+                                const endPos = model.getPositionAt(index);
+
+                                offsetSelections(
+                                    pos,
+                                    endPos,
+                                    selectionPositions
+                                );
+                            } else if (op.type === 'delete') {
+                                const startPos = model.getPositionAt(index);
+                                const endPos = model.getPositionAt(
+                                    index + op.count
+                                );
+                                const selection = new monaco.Selection(
+                                    startPos.lineNumber,
+                                    startPos.column,
+                                    endPos.lineNumber,
+                                    endPos.column
+                                );
+                                try {
+                                    applyingEdits = true;
+                                    model.pushEditOperations(
+                                        [],
+                                        [{ range: selection, text: '' }],
+                                        () => null
+                                    );
+                                } finally {
+                                    applyingEdits = false;
+                                }
+
+                                // Start and end positions are switched
+                                // so that deltas are negative
+                                offsetSelections(
+                                    endPos,
+                                    startPos,
+                                    selectionPositions
+                                );
+                            }
+                        }
+                    }
+
+                    const finalSelections = selectionPositions.map(
+                        ([start, end]) =>
+                            new monaco.Selection(
+                                start.lineNumber,
+                                start.column,
+                                end.lineNumber,
+                                end.column
+                            )
+                    );
+                    getEditor()?.setSelections(finalSelections);
+                } else {
+                    if (model === activeModel) {
+                        return;
+                    }
+                    let script = getScript(bot, tag, space);
+                    let value = model.getValue();
+                    try {
+                        applyingEdits = true;
+                        if (script !== value) {
+                            model.setValue(script);
+                        }
+                        updateLanguage(
+                            model,
+                            tag,
+                            getTagValueForSpace(bot, tag, space)
+                        );
+                    } finally {
+                        applyingEdits = false;
+                    }
                 }
-                let script = getScript(bot, tag, space);
-                let value = model.getValue();
-                if (script !== value) {
-                    model.setValue(script);
-                }
-                updateLanguage(
-                    model,
-                    tag,
-                    getTagValueForSpace(bot, tag, space)
-                );
             })
     );
 
     sub.add(
         toSubscription(
             model.onDidChangeContent(async (e) => {
-                if (e.isFlush) {
-                    return;
-                }
-                let val = model.getValue();
-                if (info.isFormula) {
-                    val = '=' + val;
-                } else if (info.isScript) {
-                    if (val.indexOf('@') !== 0) {
-                        val = '@' + val;
+                const info = models.get(model.uri.toString());
+                if (info.isFormula || info.isScript) {
+                    if (
+                        e.changes.every(
+                            (c) => c.rangeOffset === 0 && c.rangeLength === 1
+                        )
+                    ) {
+                        return;
                     }
                 }
-                updateLanguage(model, tag, val);
-                await simulation.editBot(bot, tag, val, space);
+                if (applyingEdits) {
+                    return;
+                }
+                let operations = [] as TagEditOp[][];
+                let index = 0;
+                let offset = info.isFormula || info.isScript ? 1 : 0;
+                const changes = sortBy(e.changes, (c) => c.rangeOffset);
+                for (let change of changes) {
+                    operations.push([
+                        preserve(change.rangeOffset - index + offset),
+                        del(change.rangeLength),
+                        insert(change.text),
+                    ]);
+                    index += change.rangeLength;
+                    offset += change.text.length;
+                }
+                await simulation.editBot(
+                    bot,
+                    tag,
+                    edits(lastVersion.vector, ...operations),
+                    space
+                );
             })
         )
     );
@@ -436,6 +939,43 @@ function watchModel(
     models.set(model.uri.toString(), info);
     updateDecorators(model, info, getTagValueForSpace(bot, tag, space));
     subs.push(sub);
+}
+
+function offsetSelections(
+    startPos: monaco.Position,
+    endPos: monaco.Position,
+    selectionPositions: [monaco.Position, monaco.Position][]
+) {
+    for (let selections of selectionPositions) {
+        const selectionStart = selections[0];
+        const selectionEnd = selections[1];
+        const startBefore = selectionStart.isBefore(startPos);
+        const endAfter = startPos.isBefore(selectionEnd);
+
+        // Selection does not start before edit position.
+        // We should offset the selection start by how much
+        // the edit changes
+        if (!startBefore) {
+            if (selectionStart.lineNumber === startPos.lineNumber) {
+                selections[0] = selectionStart.delta(
+                    endPos.lineNumber - startPos.lineNumber,
+                    endPos.column - startPos.column
+                );
+            }
+        }
+
+        // Selection ends after edit position.
+        // We should offset the selection end by how much
+        // the edit changes
+        if (endAfter) {
+            if (selectionEnd.lineNumber === startPos.lineNumber) {
+                selections[1] = selectionEnd.delta(
+                    endPos.lineNumber - startPos.lineNumber,
+                    endPos.column - startPos.column
+                );
+            }
+        }
+    }
 }
 
 function updateLanguage(
@@ -554,6 +1094,6 @@ export function getScript(bot: Bot, tag: string, space: string) {
     }
 }
 
-function toSubscription(disposable: monaco.IDisposable) {
+export function toSubscription(disposable: monaco.IDisposable) {
     return new Subscription(() => disposable.dispose());
 }

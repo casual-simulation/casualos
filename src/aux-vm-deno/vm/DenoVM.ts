@@ -4,6 +4,7 @@ import {
     StateUpdatedEvent,
     BotDependentInfo,
     ProxyBridgePartitionImpl,
+    RuntimeStateVersion,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import { wrap, proxy, Remote, expose, transfer, Endpoint } from 'comlink';
@@ -40,6 +41,7 @@ export class DenoVM implements AuxVM {
     private _deviceEvents: Subject<DeviceAction[]>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
+    private _versionUpdated: Subject<RuntimeStateVersion>;
     private _onError: Subject<AuxChannelErrorType>;
     private _config: AuxConfig;
     private _worker: DenoWorker;
@@ -61,6 +63,7 @@ export class DenoVM implements AuxVM {
         this._localEvents = new Subject<LocalActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
+        this._versionUpdated = new Subject<RuntimeStateVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
     }
@@ -148,6 +151,7 @@ export class DenoVM implements AuxVM {
             proxy((events) => this._localEvents.next(events)),
             proxy((events) => this._deviceEvents.next(events)),
             proxy((state) => this._stateUpdated.next(state)),
+            proxy((version) => this._versionUpdated.next(version)),
             proxy((state) =>
                 this._connectionStateChanged.next(statusMapper(state))
             ),
@@ -171,6 +175,10 @@ export class DenoVM implements AuxVM {
      */
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
+    }
+
+    get versionUpdated(): Observable<RuntimeStateVersion> {
+        return this._versionUpdated;
     }
 
     async setUser(user: AuxUser): Promise<void> {

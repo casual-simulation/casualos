@@ -1,5 +1,36 @@
 # CasualOS Changelog
 
+## V1.3.0
+
+#### Date: 11/11/2020
+
+### :rocket: Improvements
+
+-   Added multi-user text editing.
+    -   Work on shared bots when editing a tag value with the multi-line editor.
+-   Added the cursor bot form.
+    -   Used to add a cursor indicator to the multi-line editor.
+    -   Works by setting the `form` tag to "cursor" and placing the bot in the corresponding tag portal dimension.
+        -   For example, to put a cursor in the multi-line editor for the `test` tag on a bot you would set `{targetBot.id}.test` to true.
+    -   Supported tags are:
+        -   `color` - Specifies the color of the cursor.
+        -   `label` - Specifies a label that should appear on the cursor when the mouse is hovering over it.
+        -   `labelColor` - Specifies the color of the text in the cursor label.
+        -   `{dimension}Start` - Specifies the index at which the cursor selection starts (Mirrors `cursorStartIndex` from the player bot).
+        -   `{dimension}End` - Specifies the index at which the cursor selection ends (Mirrors `cursorEndIndex` from the player bot).
+-   Added the `pageTitle`, `cursorStartIndex`, and `cursorEndIndex` tags to the player bot.
+    -   `pageTitle` is used to set the title of the current browser tab.
+    -   `cursorStartIndex` contains the starting index of the player's text selection inside the multi-line editor.
+    -   `cursorEndIndex` contains the ending index of the player's text selection inside the multi-line editor.
+    -   Note that when `cursorStartIndex` is larger than `cursorEndIndex` it means that the player has selected text from the right to the left. This is important because text will always be inserted at `cursorEndIndex`.
+-   Added the `insertTagText()`, `deleteTagText()`, `insertTagMaskText()`, and `deleteTagMaskText()` functions to allow scripts to work with multi-user text editing.
+    -   `insertTagText(bot, tag, index, text)` inserts the given text at the index into the given tag on the given bot.
+    -   `insertTagMaskText(bot, tag, index, text, space?)` inserts the given text at the index into the tag and bot. Optionally accepts the space of the tag mask.
+    -   `deleteTagText(bot, tag, index, deleteCount)` deletes the given number of characters at the index from the tag and bot.
+    -   `deleteTagMaskText(bot, tag, index, deleteCount, space?)` deletes the given number of characters at the index from the tag and bot. Optionally accepts the space of the tag mask.
+-   Added the ability to use the `transformer` tag on the player bot to parent the player to a bot.
+-   Added the ability to edit tag masks in the tag portal by setting the `tagPortalSpace` tag on the player bot.
+
 ## V1.2.21
 
 #### Date: 11/5/2020

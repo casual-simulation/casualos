@@ -10,6 +10,7 @@ import {
     BotAction,
     StateUpdatedEvent,
     BotDependentInfo,
+    RuntimeStateVersion,
 } from '@casual-simulation/aux-common';
 import {
     LoadingProgressCallback,
@@ -23,6 +24,7 @@ export class AuxVMNode implements AuxVM {
     private _localEvents: Subject<LocalActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
+    private _versionUpdated: Subject<RuntimeStateVersion>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _onError: Subject<AuxChannelErrorType>;
 
@@ -38,6 +40,10 @@ export class AuxVMNode implements AuxVM {
 
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
+    }
+
+    get versionUpdated(): Observable<RuntimeStateVersion> {
+        return this._versionUpdated;
     }
 
     get connectionStateChanged(): Observable<StatusUpdate> {
@@ -57,6 +63,7 @@ export class AuxVMNode implements AuxVM {
         this._localEvents = new Subject<LocalActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
+        this._versionUpdated = new Subject<RuntimeStateVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
     }
@@ -107,11 +114,12 @@ export class AuxVMNode implements AuxVM {
 
     async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
         return await this._channel.initAndWait(
-            e => this._localEvents.next(e),
-            e => this._deviceEvents.next(e),
-            state => this._stateUpdated.next(state),
-            connection => this._connectionStateChanged.next(connection),
-            err => this._onError.next(err)
+            (e) => this._localEvents.next(e),
+            (e) => this._deviceEvents.next(e),
+            (state) => this._stateUpdated.next(state),
+            (version) => this._versionUpdated.next(version),
+            (connection) => this._connectionStateChanged.next(connection),
+            (err) => this._onError.next(err)
         );
     }
 

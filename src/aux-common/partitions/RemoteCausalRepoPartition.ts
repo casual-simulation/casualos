@@ -20,6 +20,8 @@ import {
     CommitData,
     atomMap,
     calculateCommitDiff,
+    CurrentVersion,
+    treeVersion,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxCausalTree,
@@ -28,7 +30,7 @@ import {
     BotStateUpdates,
     applyAtoms,
 } from '../aux-format-2';
-import { Observable, Subscription, Subject } from 'rxjs';
+import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import { startWith, first } from 'rxjs/operators';
 import {
     BotAction,
@@ -91,6 +93,7 @@ export class RemoteCausalRepoPartitionImpl
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
     protected _onStateUpdated = new Subject<StateUpdatedEvent>();
+    protected _onVersionUpdated: BehaviorSubject<CurrentVersion>;
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -112,6 +115,7 @@ export class RemoteCausalRepoPartitionImpl
     private _tree: AuxCausalTree = auxTree();
     private _client: CausalRepoClient;
     private _synced: boolean;
+    private _gotInitialAtoms: boolean = false;
 
     private: boolean;
 
@@ -141,6 +145,10 @@ export class RemoteCausalRepoPartitionImpl
         return this._onStateUpdated.pipe(
             startWith(stateUpdatedEvent(this._tree.state))
         );
+    }
+
+    get onVersionUpdated(): Observable<CurrentVersion> {
+        return this._onVersionUpdated;
     }
 
     get onError(): Observable<any> {
@@ -193,6 +201,10 @@ export class RemoteCausalRepoPartitionImpl
         this._temporary = config.temporary;
         this._remoteEvents =
             'remoteEvents' in config ? config.remoteEvents : true;
+        this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
+            currentSite: this._tree.site.id,
+            vector: {},
+        });
 
         // static implies read only
         this._readOnly = config.readOnly || this._static || false;
@@ -562,6 +574,7 @@ export class RemoteCausalRepoPartitionImpl
 
                             // Re-create the tree (and therefore weave) to reset the cardinality rules.
                             this._tree = auxTree();
+                            this._gotInitialAtoms = false;
                             this._applyAtoms(event.atoms, []);
                         }
                     },
@@ -588,8 +601,10 @@ export class RemoteCausalRepoPartitionImpl
             this._tree,
             atoms,
             removedAtoms,
-            this.space
+            this.space,
+            !this._gotInitialAtoms
         );
+        this._gotInitialAtoms = true;
         this._tree = tree;
         this._sendUpdates(updates, stateUpdatedEvent(update));
     }
@@ -652,6 +667,7 @@ export class RemoteCausalRepoPartitionImpl
             update.updatedBots.length > 0
         ) {
             this._onStateUpdated.next(update);
+            this._onVersionUpdated.next(treeVersion(this._tree));
         }
     }
 }

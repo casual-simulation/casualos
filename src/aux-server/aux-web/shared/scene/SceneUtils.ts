@@ -724,6 +724,9 @@ export function percentOfScreen(
  * @param parent The parent.
  */
 export function safeSetParent(obj: Object3D, parent: Object3D): boolean {
+    if (obj.parent === parent) {
+        return true;
+    }
     let grandparent = parent;
     while (grandparent) {
         if (grandparent === obj) {

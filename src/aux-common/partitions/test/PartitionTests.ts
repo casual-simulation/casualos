@@ -7,9 +7,10 @@ import {
     botRemoved,
     botUpdated,
     StateUpdatedEvent,
+    stateUpdatedEvent,
 } from '../../bots';
 import { Subscription, never } from 'rxjs';
-import { StatusUpdate } from '@casual-simulation/causal-trees';
+import { CurrentVersion, StatusUpdate } from '@casual-simulation/causal-trees';
 import { waitAsync } from '../../test/TestHelpers';
 import {
     first,
@@ -19,6 +20,7 @@ import {
     bufferCount,
     skip,
 } from 'rxjs/operators';
+import { del, edit, edits, insert, preserve } from '../../aux-format-2';
 
 export function testPartitionImplementation(
     createPartition: () => Promise<AuxPartition>
@@ -29,6 +31,7 @@ export function testPartitionImplementation(
     let updated: UpdatedBot[];
     let statuses: StatusUpdate[];
     let updates: StateUpdatedEvent[];
+    let version: CurrentVersion;
     let sub: Subscription;
     beforeEach(async () => {
         sub = new Subscription();
@@ -54,6 +57,7 @@ export function testPartitionImplementation(
                 .pipe(skip(1))
                 .subscribe((u) => updates.push(u))
         );
+        sub.add(partition.onVersionUpdated.subscribe((v) => (version = v)));
 
         sub.add(
             partition.onStatusUpdated.subscribe((update) =>
@@ -619,6 +623,218 @@ export function testPartitionImplementation(
             }
         );
 
+        describe('edits', () => {
+            it('should support inserting text into a tag value', async () => {
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test', {
+                            abc: 'def',
+                        })
+                    ),
+                ]);
+
+                await waitAsync();
+
+                const editVersion = { ...version.vector };
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit(editVersion, insert('ghi')),
+                        },
+                    }),
+                ]);
+
+                expect(partition.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'ghidef',
+                    }),
+                });
+                expect(updates.slice(1)).toEqual([
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                abc: edit(version.vector, insert('ghi')),
+                            },
+                        },
+                    }),
+                ]);
+            });
+
+            it('should support deleting text from a tag value', async () => {
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test', {
+                            abc: 'def',
+                        })
+                    ),
+                ]);
+
+                await waitAsync();
+
+                const editVersion = { ...version.vector };
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit(editVersion, del(2)),
+                        },
+                    }),
+                ]);
+
+                expect(partition.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'f',
+                    }),
+                });
+                expect(updates.slice(1)).toEqual([
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                abc: edit(version.vector, del(2)),
+                            },
+                        },
+                    }),
+                ]);
+            });
+
+            it('should support deletes in multiple edit sequences', async () => {
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test', {
+                            abc: 'abcdefghijklmnop',
+                        })
+                    ),
+                ]);
+
+                await waitAsync();
+
+                const editVersion = { ...version.vector };
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        tags: {
+                            abc: edits(
+                                editVersion,
+                                [preserve(3), del(3)],
+                                [preserve(6), del(3)]
+                            ),
+                        },
+                    }),
+                ]);
+
+                expect(partition.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'abcghimnop',
+                    }),
+                });
+                expect(updates.slice(1)).toEqual([
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                abc: edits(
+                                    version.vector,
+                                    [preserve(3), del(3)],
+                                    [preserve(6), del(3)]
+                                ),
+                            },
+                        },
+                    }),
+                ]);
+            });
+
+            it('should support inserts in multiple edit sequences', async () => {
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test', {
+                            abc: 'abcdef',
+                        })
+                    ),
+                ]);
+
+                await waitAsync();
+
+                const editVersion = { ...version.vector };
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        tags: {
+                            abc: edits(
+                                editVersion,
+                                [preserve(3), insert('123')],
+                                [preserve(9), insert('456')]
+                            ),
+                        },
+                    }),
+                ]);
+
+                expect(partition.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'abc123def456',
+                    }),
+                });
+                expect(updates.slice(1)).toEqual([
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                abc: edits(
+                                    version.vector,
+                                    [preserve(3), insert('123')],
+                                    [preserve(9), insert('456')]
+                                ),
+                            },
+                        },
+                    }),
+                ]);
+            });
+
+            const valueCases = [
+                [
+                    'numbers',
+                    123,
+                    edit({}, preserve(1), insert('abc')),
+                    '1abc23',
+                ],
+                [
+                    'booleans',
+                    true,
+                    edit({}, preserve(1), insert('abc')),
+                    'tabcrue',
+                ],
+                [
+                    'objects',
+                    { prop: 'yes' },
+                    edit({}, preserve(1), insert('abc')),
+                    '{abc"prop":"yes"}',
+                ],
+            ];
+
+            it.each(valueCases)(
+                'should support %s',
+                async (desc, initial, edit, expected) => {
+                    await partition.applyEvents([
+                        botAdded(
+                            createBot('test', {
+                                abc: initial,
+                            })
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    await partition.applyEvents([
+                        botUpdated('test', {
+                            tags: {
+                                abc: edit,
+                            },
+                        }),
+                    ]);
+
+                    expect(partition.state).toEqual({
+                        test: createBot('test', {
+                            abc: expected,
+                        }),
+                    });
+                }
+            );
+        });
+
         describe('TagMasks', () => {
             beforeEach(() => {
                 partition.space = 'testSpace';
@@ -784,6 +1000,107 @@ export function testPartitionImplementation(
                         updatedBots: ['test'],
                     },
                 ]);
+            });
+
+            describe('edits', () => {
+                it('should support inserting text into a tag mask value', async () => {
+                    await partition.applyEvents([
+                        botUpdated('test', {
+                            masks: {
+                                testSpace: {
+                                    abc: 'def',
+                                },
+                            },
+                        }),
+                    ]);
+
+                    await waitAsync();
+
+                    await partition.applyEvents([
+                        botUpdated('test', {
+                            masks: {
+                                testSpace: {
+                                    abc: edit(version.vector, insert('ghi')),
+                                },
+                            },
+                        }),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(partition.state).toEqual({
+                        test: {
+                            masks: {
+                                testSpace: {
+                                    abc: 'ghidef',
+                                },
+                            },
+                        },
+                    });
+                    expect(updated).toEqual([]);
+                    expect(updates.slice(1)).toEqual([
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    testSpace: {
+                                        abc: edit(
+                                            version.vector,
+                                            insert('ghi')
+                                        ),
+                                    },
+                                },
+                            },
+                        }),
+                    ]);
+                });
+
+                it('should support deleting text from a tag mask value', async () => {
+                    await partition.applyEvents([
+                        botUpdated('test', {
+                            masks: {
+                                testSpace: {
+                                    abc: 'def',
+                                },
+                            },
+                        }),
+                    ]);
+
+                    await waitAsync();
+
+                    await partition.applyEvents([
+                        botUpdated('test', {
+                            masks: {
+                                testSpace: {
+                                    abc: edit(version.vector, del(2)),
+                                },
+                            },
+                        }),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(partition.state).toEqual({
+                        test: {
+                            masks: {
+                                testSpace: {
+                                    abc: 'f',
+                                },
+                            },
+                        },
+                    });
+                    expect(updated).toEqual([]);
+                    expect(updates.slice(1)).toEqual([
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    testSpace: {
+                                        abc: edit(version.vector, del(2)),
+                                    },
+                                },
+                            },
+                        }),
+                    ]);
+                });
             });
         });
     });

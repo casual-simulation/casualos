@@ -2456,6 +2456,70 @@ declare global {
     function clearTagMasks(bot: Bot | Bot[], space?: BotSpace): void;
 
     /**
+     * Inserts the given text into the given tag at the given index.
+     * Returns the resulting raw tag value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be inserted at.
+     * @param text The text that should be inserted.
+     */
+    function insertTagText(
+        bot: Bot,
+        tag: string,
+        index: number,
+        text: string
+    ): string;
+
+    /**
+     * Inserts the given text into the given tag and space at the given index.
+     * Returns the resulting raw tag mask value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be inserted at.
+     * @param text The text that should be inserted.
+     * @param space The space that the tag exists in. If not specified then the tempLocal space will be used.
+     */
+    function insertTagMaskText(
+        bot: Bot,
+        tag: string,
+        index: number,
+        text: string,
+        space?: BotSpace
+    ): string;
+
+    /**
+     * Deletes the specified number of characters from the given tag.
+     * Returns the resulting raw tag value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be deleted at.
+     * @param count The number of characters to delete.
+     */
+    function deleteTagText(
+        bot: Bot,
+        tag: string,
+        index: number,
+        count: number
+    ): string;
+
+    /**
+     * Deletes the specified number of characters from the given tag mask.
+     * Returns the resulting raw tag mask value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be deleted at.
+     * @param count The number of characters to delete.
+     * @param space The space that the tag mask exists in. If not specified then the tempLocal space will be used.
+     */
+    function deleteTagMaskText(
+        bot: Bot,
+        tag: string,
+        index: number,
+        count: number,
+        space?: string
+    ): string;
+
+    /**
      * Creates a mod from declareed mod data.
      * @param bot The mod data that should be loaded.
      * @param tags The tags that should be included in the output mod.
@@ -3267,6 +3331,92 @@ declare global {
          * Release the pins back to general purpose use.
          */
         rpioSPIEnd(): Promise<void>;
+        
+        /**
+         * Establish the connection to the bluetooth serial device
+         * @param path The device path. Example: /dev/rfcomm0
+         * @param options 
+         * {boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
+         * 
+         * {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
+         * 
+         * {number} [dataBits=8] Must be one of these: 8, 7, 6, or 5.
+         * 
+         * {number} [highWaterMark=65536] The size of the read and write buffers defaults to 64k.
+         * 
+         * {boolean} [lock=true] Prevent other processes from opening the port. Windows does not currently support `false`.
+         * 
+         * {number} [stopBits=1] Must be one of these: 1 or 2.
+         * 
+         * {string} [parity=none] Must be one of these: 'none', 'even', 'mark', 'odd', 'space'.
+         * 
+         * {boolean} [rtscts=false] flow control setting
+         * 
+         * {boolean} [xon=false] flow control setting
+         * 
+         * {boolean} [xoff=false] flow control setting
+         * 
+         * {boolean} [xany=false] flow control setting
+         * 
+         * {object=} bindingOptions sets binding-specific options
+         * 
+         * {Binding=} Binding The hardware access binding. `Bindings` are how Node-Serialport talks to the underlying system. Will default to the static property `Serialport.Binding`.
+         * 
+         * {number} [bindingOptions.vmin=1] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
+         * 
+         * {number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
+         */
+        serialConnect(path: string, options?: object, cb?: any): Promise<void>;
+        
+        /**
+         * Parses and returns the serial stream to the event tag 'onStreamData'.
+         */
+        serialStream(): Promise<void>;
+
+        /**
+         * Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
+         */
+        serialOpen(): Promise<void>;
+
+        /**
+         * Updates the SerialPort object with a new baudRate.
+         * @param options {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
+         * @param cb
+         */
+        serialUpdate(options: object, cb?: any): Promise<void>;
+        
+        /**
+         * Writes the provided data/command to the device
+         * @param data The data/command to send
+         * @param encoding The encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
+         * @param cb
+         * @param taskId The ID of the async task.
+         */
+        serialWrite(data: string|number[], encoding?: string, cb?: any): Promise<void>;
+        
+        /**
+         * Request a number of bytes from the SerialPort.
+         * @param size Specify how many bytes of data to return, if available.
+         * @param taskId The ID of the async task.
+         */
+        serialRead(size?: number): Promise<void>;
+        
+        /**
+         * Closes an open connection. 
+         * @param cb
+         * @param taskId The ID of the async task.
+         */
+        serialClose(cb?: any): Promise<void>;
+        
+        /**
+         * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
+         */
+        serialPause(): Promise<void>;
+        
+        /**
+         * Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
+         */
+        serialResume(): Promise<void>;
         
         /**
          * Executes the given shell script on the server.
