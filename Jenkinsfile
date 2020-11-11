@@ -26,7 +26,8 @@ pipeline {
     stages {
         stage('Setup') {
             steps {
-                echo "Building branch: ${env.BRANCH_NAME} ${env.GIT_BRANCH} ${env.GIT_LOCAL_BRANCH}"
+                echo "Building branch: ${env.GIT_BRANCH}"
+                echo "Main Release: ${env.GIT_BRANCH.endsWith(params.MAIN_BRANCH)}"
 
                 NotifyStarted()
                 script {
@@ -200,7 +201,7 @@ def PublishDocs() {
 
 def CreateGithubRelease() {
     // Only create a Github release for main branch builds
-    if (env.BRANCH_NAME == params.MAIN_BRANCH) {
+    if (env.GIT_BRANCH.endsWith(params.MAIN_BRANCH)) {
         sh """#!/bin/bash
         set -e
         . ~/.bashrc
@@ -225,7 +226,7 @@ def PublishDocker() {
     /usr/local/bin/docker push casualsimulation/aux-redirector:${gitTag}
     """
 
-    if (env.BRANCH_NAME == params.MAIN_BRANCH) {
+    if (env.GIT_BRANCH.endsWith(params.MAIN_BRANCH)) {
         sh """#!/bin/bash
         set -e
         . ~/.bashrc
@@ -260,7 +261,7 @@ def PublishDockerArm32() {
 
     sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:${gitTag}"
 
-    if (env.BRANCH_NAME == params.MAIN_BRANCH) {
+    if (env.GIT_BRANCH.endsWith(params.MAIN_BRANCH)) {
         sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:latest"
     } else {
         sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:alpha"
