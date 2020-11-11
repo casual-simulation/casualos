@@ -26,6 +26,8 @@ pipeline {
     stages {
         stage('Setup') {
             steps {
+                echo "Building branch: ${env.BRANCH_NAME}"
+
                 NotifyStarted()
                 script {
                     env.PI_IP = sh(returnStdout: true, script: """
@@ -206,6 +208,8 @@ def CreateGithubRelease() {
         CHANGELOG=\$(./script/most_recent_changelog.sh)
         node ./src/make-github-release/bin/make-github-release.js release --owner "${AUX_GIT_REPO_OWNER}" --repo ${AUX_GIT_REPO_NAME} --text \"\${CHANGELOG}\" --auth ${GITHUB_RELEASE_TOKEN}
         """
+    } else {
+        echo "Skipping GitHub release."
     }
 }
 
