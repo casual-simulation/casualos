@@ -3377,6 +3377,43 @@ await server.serialConnect("/dev/rfcomm0", {
 await server.serialClose();
 ```
 
+### `server.serialFlush()`
+
+Flush discards data that has been received but not read, or written but not transmitted by the operating system.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves once the data has been flushed.
+
+#### Examples:
+
+1. Create the serial connection. Flush the serial connection.
+```typescript
+await server.serialConnect("/dev/rfcomm0", {
+  baudRate: 9600,
+});
+
+await server.serialFlush();
+```
+
+### `server.serialDrain()`
+
+Waits until all output data is transmitted to the serial port. 
+After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device. 
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves once the data has been drained.
+
+#### Examples:
+
+1. Create the serial connection. Drain the serial connection.
+```typescript
+await server.serialConnect("/dev/rfcomm0", {
+  baudRate: 9600,
+});
+
+await server.serialDrain();
+```
+
 ### `server.serialPause()`
 
 Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
