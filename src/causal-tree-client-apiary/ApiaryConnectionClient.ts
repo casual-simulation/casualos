@@ -11,33 +11,49 @@ import {
     merge,
     of,
 } from 'rxjs';
-import io from 'socket.io-client';
-import { map, tap, concatMap, first, takeUntil } from 'rxjs/operators';
+import {
+    map,
+    tap,
+    concatMap,
+    first,
+    takeUntil,
+    mapTo,
+    share,
+    filter,
+} from 'rxjs/operators';
+import { ReconnectableSocket } from './ReconnectableSocket';
+import { LoginPacket, MessagePacket, Packet } from './Events';
 
-export class SocketIOConnectionClient implements ConnectionClient {
-    private _socket: SocketIOClient.Socket;
+export class ApiaryConnectionClient implements ConnectionClient {
+    private _socket: ReconnectableSocket;
     private _connectionStateChanged: BehaviorSubject<ClientConnectionState>;
+    private _packets: Observable<Packet>;
 
     event<T>(name: string): Observable<T> {
-        return fromEventPattern<T>(
-            (h) => this._socket.on(name, h),
-            (h) => this._socket.off(name, h)
+        return this._packets.pipe(
+            filter((p) => p.type === 'message' && p.channel === name),
+            map((p: MessagePacket) => p.data)
         );
     }
 
     disconnect() {
-        this._socket.disconnect();
+        this._socket.close();
     }
 
     connect() {
-        this._socket.connect();
+        this._socket.open();
     }
 
     send(name: string, data: any) {
-        this._socket.emit(name, data);
+        const message: MessagePacket = {
+            type: 'message',
+            channel: name,
+            data: data,
+        };
+        this._socket.send(JSON.stringify(message));
     }
 
-    constructor(socket: SocketIOClient.Socket, token: DeviceToken) {
+    constructor(socket: ReconnectableSocket, token: DeviceToken) {
         this._socket = socket;
         this._connectionStateChanged = new BehaviorSubject<
             ClientConnectionState
@@ -46,18 +62,15 @@ export class SocketIOConnectionClient implements ConnectionClient {
             info: null,
         });
 
-        const connected = fromEventPattern<void>(
-            (h) => this._socket.on('connect', h),
-            (h) => this._socket.off('connect', h)
-        ).pipe(
-            tap(() => console.log('[SocketIOConnectionClient] Connected.')),
-            map(() => true)
+        const connected = this._socket.onOpen.pipe(
+            tap(() => console.log('[ApiaryConnectionClient] Connected.')),
+            mapTo(true)
         );
-        const disconnected = onDisconnect(this._socket).pipe(
+        const disconnected = this._socket.onClose.pipe(
             tap((reason) =>
                 console.log('[SocketManger] Disconnected. Reason:', reason)
             ),
-            map(() => false)
+            mapTo(false)
         );
 
         const connectionState = merge(connected, disconnected);
@@ -65,6 +78,11 @@ export class SocketIOConnectionClient implements ConnectionClient {
         connectionState
             .pipe(concatMap((connected) => this._login(connected, token)))
             .subscribe(this._connectionStateChanged);
+
+        this._packets = this._socket.onMessage.pipe(
+            map((e) => JSON.parse(e.data)),
+            share()
+        );
     }
 
     get connectionState(): Observable<ClientConnectionState> {
@@ -81,18 +99,21 @@ export class SocketIOConnectionClient implements ConnectionClient {
     ): Observable<ClientConnectionState> {
         if (connected) {
             console.log(`[SocketIOConnectionClient] Logging in...`);
-            const onLoginResult = fromEventPattern<DeviceInfo>(
-                (h) => this._socket.on('login_result', h),
-                (h) => this._socket.off('login_result', h)
+            const onLoginResult = this._packets.pipe(
+                filter((p) => p.type === 'login'),
+                map((p: LoginPacket) => p)
             );
-            this._socket.emit('login', token);
+            const loginPacket: LoginPacket = {
+                type: 'login',
+            };
+            this._socket.send(JSON.stringify(loginPacket));
             return onLoginResult.pipe(
                 map((result) => ({
                     connected: true,
-                    info: result,
+                    info: null,
                 })),
                 first(),
-                takeUntil(onDisconnect(this._socket))
+                takeUntil(this._socket.onClose)
             );
         } else {
             return of({
@@ -101,11 +122,4 @@ export class SocketIOConnectionClient implements ConnectionClient {
             });
         }
     }
-}
-
-function onDisconnect(socket: SocketIOClient.Socket) {
-    return fromEventPattern<string>(
-        (h) => socket.on('disconnect', h),
-        (h) => socket.off('disconnect', h)
-    );
 }

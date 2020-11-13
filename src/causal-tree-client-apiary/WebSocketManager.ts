@@ -1,8 +1,12 @@
 import io from 'socket.io-client';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, Subject, pipe } from 'rxjs';
+import { debounceTime, tap } from 'rxjs/operators';
+import { ReconnectableSocket } from 'ReconnectableSocket';
+
+const RECONNECT_TIME = 5000;
 
 export class SocketManager {
-    private _socket: SocketIOClient.Socket;
+    private _socket: ReconnectableSocket;
 
     // Whether this manager has forced the user to be offline or not.
     private _forcedOffline: boolean = false;
@@ -24,9 +28,9 @@ export class SocketManager {
     public set forcedOffline(value: boolean) {
         this._forcedOffline = !this._forcedOffline;
         if (this._forcedOffline) {
-            this._socket.disconnect();
+            this._socket.close();
         } else {
-            this._socket.connect();
+            this._socket.open();
         }
     }
 
@@ -46,25 +50,28 @@ export class SocketManager {
 
     init(): void {
         console.log('[SocketManager] Starting...');
-        this._socket = io(this._url, {
-            transports: ['websocket'],
-        });
+        this._socket = new ReconnectableSocket(this._url);
 
-        this._socket.on('connect', () => {
-            console.log('[SocketManager] Connected.');
+        this._socket.onError
+            .pipe(
+                tap((event) => {
+                    console.log('[WebSocketManager] Error:', event);
+                }),
+                debounceTime(RECONNECT_TIME),
+                tap(() => {
+                    console.log('[WebSocketManager] Reconnecting...');
+                    this._socket.open();
+                })
+            )
+            .subscribe();
+
+        this._socket.onOpen.subscribe(() => {
+            console.log('[WebSocketManager] Connected.');
             this._connectionStateChanged.next(true);
         });
 
-        this._socket.on('connect_timeout', () => {
-            console.log('[SocketManager] Connection timeout.');
-        });
-
-        this._socket.on('connect_error', (err: any) => {
-            console.error('[SocketManager] Connection error.', err);
-        });
-
-        this._socket.on('disconnect', (reason: any) => {
-            console.log('[SocketManger] Disconnected. Reason:', reason);
+        this._socket.onClose.subscribe(() => {
+            console.log('[WebSocketManager] Closed.');
             this._connectionStateChanged.next(false);
         });
     }
