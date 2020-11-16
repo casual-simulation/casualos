@@ -91,6 +91,10 @@ describe('BaseAuxChannel', () => {
         channel = new AuxChannelImpl(user, device, config);
     });
 
+    afterEach(() => {
+        uuidMock.mockReset();
+    });
+
     describe('init()', () => {
         it('should create a bot for the user', async () => {
             await channel.initAndWait();
@@ -677,17 +681,13 @@ describe('BaseAuxChannel', () => {
                 `return getBot("abc", "def").tags.abc`
             );
 
-            expect(memory.state).toEqual({
-                userId: expect.anything(),
-                dimensionBot: expect.anything(),
-                test: {
-                    id: 'test',
-                    space: 'shared',
-                    tags: {},
-                    masks: {
-                        shared: {
-                            abc: 'def',
-                        },
+            expect(memory.state.test).toEqual({
+                id: 'test',
+                space: 'shared',
+                tags: {},
+                masks: {
+                    shared: {
+                        abc: 'def',
                     },
                 },
             });

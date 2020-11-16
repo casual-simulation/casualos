@@ -54,11 +54,12 @@ export interface TreeResult {
  * @param id The ID to use for the site.
  */
 export function tree<T>(id?: string, time?: number): CausalTree<T> {
+    const site = newSite(id, time);
     return {
         weave: new Weave(),
-        site: newSite(id, time),
+        site: site,
         version: {
-            [id]: time,
+            [site.id]: site.time,
         },
     };
 }

@@ -578,6 +578,8 @@ export class BotShapeDecorator
         this.scene = gltf.scene;
         this.container.add(gltf.scene);
 
+        this.mesh = this.scene.children.find((c) => c instanceof Mesh) as Mesh;
+
         // Collider
         const collider = (this.collider = createCube(1));
         this.collider.scale.copy(size);
@@ -601,6 +603,7 @@ export class BotShapeDecorator
             this._updateAnimation(null, true);
         }
 
+        this._updateColor(null);
         this.bot3D.updateMatrixWorld(true);
     }
 
