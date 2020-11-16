@@ -112,10 +112,8 @@ import {
     serialWritePin,
     serialReadPin,
     serialClosePin,
-    // serialSetPin,
-    // serialGetPin,
-    // serialFlushPin,
-    // serialDrainPin,
+    serialFlushPin,
+    serialDrainPin,
     serialPausePin,
     serialResumePin,
     createCertificate,
@@ -191,20 +189,9 @@ describe('AuxLibrary', () => {
         uuidMock.mockReset();
     });
 
-    const falsyCases = [
-        ['false', false],
-        ['0', 0],
-    ];
-    const emptyCases = [
-        ['null', null],
-        ['empty string', ''],
-    ];
-    const numberCases = [
-        ['0', 0],
-        ['1', 1],
-        ['true', true],
-        ['false', false],
-    ];
+    const falsyCases = [['false', false], ['0', 0]];
+    const emptyCases = [['null', null], ['empty string', '']];
+    const numberCases = [['0', 0], ['1', 1], ['true', true], ['false', false]];
     const trimEventCases = [
         ['parenthesis', 'sayHello()'],
         ['hashtag', '#sayHello'],
@@ -511,10 +498,7 @@ describe('AuxLibrary', () => {
             expect(bot).toEqual(bot1);
         });
 
-        const emptyCases = [
-            ['null', null],
-            ['empty string', ''],
-        ];
+        const emptyCases = [['null', null], ['empty string', '']];
 
         it.each(emptyCases)(
             'should return undefined if a %s tag is provided',
@@ -613,7 +597,7 @@ describe('AuxLibrary', () => {
                 it('should return a function that returns true when the function returns true', () => {
                     const filter = library.api.byTag(
                         'red',
-                        (tag) => typeof tag === 'number'
+                        tag => typeof tag === 'number'
                     );
 
                     bot1.tags.red = 123;
@@ -623,7 +607,7 @@ describe('AuxLibrary', () => {
                 it('should return a function that returns false when the function returns false', () => {
                     const filter = library.api.byTag(
                         'red',
-                        (tag) => typeof tag === 'number'
+                        tag => typeof tag === 'number'
                     );
 
                     bot1.tags.red = 'abc';
@@ -1002,11 +986,9 @@ describe('AuxLibrary', () => {
                 });
 
                 it('should not work when given a direction other than the supported ones', () => {
-                    const filter = library.api.neighboring(
-                        bot1,
-                        'red',
-                        <any>'wrong'
-                    );
+                    const filter = library.api.neighboring(bot1, 'red', <any>(
+                        'wrong'
+                    ));
 
                     expect(filter(bot2)).toEqual(false);
                     expect(filter(bot3)).toEqual(false);
@@ -1105,26 +1087,17 @@ describe('AuxLibrary', () => {
             });
 
             it('should return a function that returns true when any of the given functions return true', () => {
-                const filter = library.api.either(
-                    (b) => false,
-                    (b) => true
-                );
+                const filter = library.api.either(b => false, b => true);
                 expect(filter(bot1)).toEqual(true);
             });
 
             it('should return a function that returns false when all of the given functions return false', () => {
-                const filter = library.api.either(
-                    (b) => false,
-                    (b) => false
-                );
+                const filter = library.api.either(b => false, b => false);
                 expect(filter(bot1)).toEqual(false);
             });
 
             it('should return a function that doesnt have a sort function', () => {
-                const filter = library.api.either(
-                    (b) => false,
-                    (b) => true
-                );
+                const filter = library.api.either(b => false, b => true);
                 expect(typeof filter.sort).toEqual('undefined');
             });
         });
@@ -1141,7 +1114,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should return a function which negates the given function results', () => {
-                const filter = library.api.not((b) => b.id === 'test1');
+                const filter = library.api.not(b => b.id === 'test1');
 
                 expect(filter(bot1)).toEqual(false);
                 expect(filter(bot2)).toEqual(true);
@@ -1284,7 +1257,7 @@ describe('AuxLibrary', () => {
             bot3.tags.name = 'bob';
             const values = library.api.getBotTagValues(
                 '#name',
-                (b) => b === 'bob'
+                b => b === 'bob'
             );
 
             expect(values).toEqual(['bob', 'bob']);
@@ -1810,10 +1783,9 @@ describe('AuxLibrary', () => {
             });
 
             it('should include the given format', () => {
-                const action = library.api.player.showBarcode(
-                    'hello',
-                    <any>'format'
-                );
+                const action = library.api.player.showBarcode('hello', <any>(
+                    'format'
+                ));
                 expect(action).toEqual(
                     showBarcode(true, 'hello', <any>'format')
                 );
@@ -2151,11 +2123,11 @@ describe('AuxLibrary', () => {
                 expect(result).toEqual(0);
             });
 
-            const portalCases = [...KNOWN_PORTALS.map((p) => [p])];
+            const portalCases = [...KNOWN_PORTALS.map(p => [p])];
 
             it.each(portalCases)(
                 'should return 1 when the dimension is in the %s portal',
-                (portal) => {
+                portal => {
                     player.tags[portal] = 'dimension';
                     const result = library.api.player.getDimensionalDepth(
                         'dimension'
@@ -3551,6 +3523,52 @@ describe('AuxLibrary', () => {
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 library.api.server.serialClose();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.serialFlush()', () => {
+            it('should send a SerialFlushAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.serialFlush();
+                const expected = remote(
+                    serialFlushPin(),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.serialFlush();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.serialDrain()', () => {
+            it('should send a SerialDrainAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.serialDrain();
+                const expected = remote(
+                    serialDrainPin(),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.serialDrain();
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -6567,10 +6585,10 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to modify bots that are arguments', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn((b3) => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(b3 => {
                 b3.tags.hit1 = true;
             }));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn((b3) => {
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(b3 => {
                 b3.tags.hit2 = true;
             }));
 
@@ -6582,10 +6600,10 @@ describe('AuxLibrary', () => {
         });
 
         it('should handle bots nested in an object as an argument', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn((arg) => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(arg => {
                 arg.bot.tags.hit1 = true;
             }));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn((arg) => {
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(arg => {
                 arg.bot.tags.hit2 = true;
             }));
 

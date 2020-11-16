@@ -158,6 +158,8 @@ export type AsyncActions =
     | SerialWriteAction
     | SerialReadAction
     | SerialCloseAction
+    | SerialFlushAction
+    | SerialDrainAction
     | SerialPauseAction
     | SerialResumeAction
     | CreateCertificateAction
@@ -1850,6 +1852,18 @@ export interface SerialCloseAction extends AsyncAction {
      *
      */
     cb?: any;
+}
+/**
+ * Flush discards data that has been received but not read, or written but not transmitted by the operating system.
+ */
+export interface SerialFlushAction extends AsyncAction {
+    type: 'serial_flush';
+}
+/**
+ * Waits until all output data is transmitted to the serial port. After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device.
+ */
+export interface SerialDrainAction extends AsyncAction {
+    type: 'serial_drain';
 }
 /**
  * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
@@ -3875,6 +3889,36 @@ export function serialClosePin(
     return {
         cb,
         type: 'serial_close',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Flush discards data that has been received but not read, or written but not transmitted by the operating system.
+ * @param taskId The ID of the async task.
+ */
+export function serialFlushPin(
+    taskId?: string | number,
+    playerId?: string
+): SerialFlushAction {
+    return {
+        type: 'serial_flush',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Waits until all output data is transmitted to the serial port. After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device.
+ * @param taskId The ID of the async task.
+ */
+export function serialDrainPin(
+    taskId?: string | number,
+    playerId?: string
+): SerialDrainAction {
+    return {
+        type: 'serial_drain',
         taskId,
         playerId,
     };

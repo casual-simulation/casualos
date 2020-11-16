@@ -3409,6 +3409,18 @@ declare global {
         serialClose(cb?: any): Promise<void>;
         
         /**
+         * Flush discards data that has been received but not read, or written but not transmitted by the operating system. 
+         * @param taskId The ID of the async task.
+         */
+        serialFlush(): Promise<void>;
+        
+        /**
+         * Waits until all output data is transmitted to the serial port. After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device. 
+         * @param taskId The ID of the async task.
+         */
+        serialDrain(): Promise<void>;
+        
+        /**
          * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
          */
         serialPause(): Promise<void>;

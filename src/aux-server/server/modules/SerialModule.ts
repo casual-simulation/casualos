@@ -14,6 +14,8 @@ import {
     SerialWriteAction,
     SerialReadAction,
     SerialCloseAction,
+    SerialFlushAction,
+    SerialDrainAction,
     SerialPauseAction,
     SerialResumeAction,
     asyncResult,
@@ -62,6 +64,12 @@ export class SerialModule implements AuxModule2 {
                         }
                         if (event.type === 'serial_close') {
                             await this._serialClose(simulation, event);
+                        }
+                        if (event.type === 'serial_flush') {
+                            await this._serialFlush(simulation, event);
+                        }
+                        if (event.type === 'serial_drain') {
+                            await this._serialDrain(simulation, event);
                         }
                         if (event.type === 'serial_pause') {
                             await this._serialPause(simulation, event);
@@ -116,7 +124,7 @@ export class SerialModule implements AuxModule2 {
     }
     _serialStream(simulation: Simulation, event: SerialStreamAction) {
         try {
-            // TODO: Pass an event name and a connection name
+            // TODO: Pass an event name and a conneciton name
             const port = btSerial.get('Connection01');
 
             // Use a `\r\n` as a line terminator
@@ -282,6 +290,64 @@ export class SerialModule implements AuxModule2 {
                         : asyncResult(event.taskId, undefined)
                 );
             });
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _serialFlush(simulation: Simulation, event: SerialFlushAction) {
+        try {
+            const port = btSerial.get('Connection01');
+            port.flush();
+
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _serialDrain(simulation: Simulation, event: SerialDrainAction) {
+        try {
+            const port = btSerial.get('Connection01');
+            port.drain();
+
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
         } catch (error) {
             simulation.helper.transaction(
                 hasValue(event.playerId)
