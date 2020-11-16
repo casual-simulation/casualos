@@ -4,8 +4,6 @@
 // only supports WebSocket messages up to 128KB in size. The binary format described below supports
 // splitting messages into multiple partial messages to get around this limitation.
 
-import { array } from '@hapi/joi';
-
 // message types:
 // 1 = message
 // 2 = partial_message

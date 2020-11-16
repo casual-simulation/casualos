@@ -6,7 +6,7 @@ import {
     getStartSequenceNumber,
     isFinalMessage,
     isPartialMessage,
-} from './BinaryEncoder';
+} from '@casual-simulation/binary-encoder';
 import { sortBy } from 'lodash';
 
 export const BASE_64_OVERHEAD = 1 / 3;
