@@ -104,13 +104,18 @@ export function encode(
     return final;
 }
 
+/**
+ * Decodes the given binary data into a string.
+ * The binary data must have previously been encoded using the encode() function.
+ * @param data The data that was encoded.
+ */
 export function decode(data: Uint8Array | Uint8Array[]): string {
     if (Array.isArray(data)) {
         let totalLength = 0;
         let currentSequence = 0;
         let dataArrays = [] as Uint8Array[];
         for (let array of data) {
-            if (array[0] !== MESSAGE_TYPE_PARTIAL_MESSAGE) {
+            if (!isPartialMessage(array)) {
                 throw new Error(
                     'Invalid usage. Normal messages must be passed individually.'
                 );
@@ -152,7 +157,7 @@ export function decode(data: Uint8Array | Uint8Array[]): string {
         return decoder.decode(final);
     } else {
         const decoder = new TextDecoder();
-        if (data[0] !== MESSAGE_TYPE_MESSAGE) {
+        if (isPartialMessage(data)) {
             throw new Error(
                 'Invalid usage. Partial messages must be batched and passed together as an array.'
             );
@@ -160,4 +165,46 @@ export function decode(data: Uint8Array | Uint8Array[]): string {
 
         return decoder.decode(data.slice(1));
     }
+}
+
+/**
+ * Determines if the given message is a partial message or not.
+ * @param data The data to check.
+ */
+export function isPartialMessage(data: Uint8Array): boolean {
+    return data[0] === MESSAGE_TYPE_PARTIAL_MESSAGE;
+}
+
+/**
+ * Gets the starting sequence number from the given partial message.
+ * @param message The message to get the sequence number from. Must be a partial message.
+ */
+export function getStartSequenceNumber(message: DataView): number {
+    return message.getUint32(1);
+}
+
+/**
+ * Gets the current sequence number from the given partial message.
+ * @param message The message to get the sequence number from. Must be a partial message.
+ */
+export function getCurrentSequenceNumber(message: DataView): number {
+    return message.getUint32(1 + 4);
+}
+
+/**
+ * Gets the total message count from the given partial message.
+ * @param message The message to get the message count from. Must be a partial message.
+ */
+export function getTotalMessageCount(message: DataView): number {
+    return message.getUint32(1 + 4 + 4);
+}
+
+/**
+ * Determines if the given message is the last message in the chain.
+ * @param message The message. Must be a partial message.
+ */
+export function isFinalMessage(message: DataView): boolean {
+    const count =
+        getCurrentSequenceNumber(message) - getStartSequenceNumber(message);
+    return count === getTotalMessageCount(message) - 1;
 }

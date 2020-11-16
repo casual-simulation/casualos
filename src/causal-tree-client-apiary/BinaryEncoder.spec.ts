@@ -1,6 +1,8 @@
 import {
     decode,
     encode,
+    isFinalMessage,
+    isPartialMessage,
     MESSAGE_TYPE_MESSAGE,
     MESSAGE_TYPE_PARTIAL_MESSAGE,
     PARTIAL_MESSAGE_OVERHEAD,
@@ -140,6 +142,66 @@ describe('BinaryEncoder', () => {
             expect(() => {
                 decode(missing);
             }).toThrow();
+        });
+    });
+
+    describe('isPartialMessage()', () => {
+        it('should return false if the message is a normal message', () => {
+            const data = 'abcdefg';
+            const encoded = encode(data);
+
+            expect(isPartialMessage(<Uint8Array>encoded)).toBe(false);
+        });
+
+        it('should return true if the message is a partial message', () => {
+            const data = 'abcdefghijklmnopqrstuvwxyz';
+
+            // Encode the data into sections of 10 bytes (plus whatever the partial message overhead is)
+            const encoded = encode(data, 10 + PARTIAL_MESSAGE_OVERHEAD);
+
+            expect(isPartialMessage((<Uint8Array[]>encoded)[0])).toBe(true);
+        });
+    });
+
+    describe('isFinalMessage()', () => {
+        it('should return true if the message is the last message in the sequence', () => {
+            const data = 'abcdefghijklmnopqrstuvwxyz';
+
+            // Encode the data into sections of 10 bytes (plus whatever the partial message overhead is)
+            const encoded = encode(data, 10 + PARTIAL_MESSAGE_OVERHEAD);
+
+            const arr = (<Uint8Array[]>encoded)[2];
+            const view = new DataView(
+                arr.buffer,
+                arr.byteOffset,
+                arr.byteLength
+            );
+
+            expect(isFinalMessage(view)).toBe(true);
+        });
+
+        it('should return false if the message is not the last message in the sequence', () => {
+            const data = 'abcdefghijklmnopqrstuvwxyz';
+
+            // Encode the data into sections of 10 bytes (plus whatever the partial message overhead is)
+            const encoded = encode(data, 10 + PARTIAL_MESSAGE_OVERHEAD);
+
+            const arr1 = (<Uint8Array[]>encoded)[0];
+            const view1 = new DataView(
+                arr1.buffer,
+                arr1.byteOffset,
+                arr1.byteLength
+            );
+
+            const arr2 = (<Uint8Array[]>encoded)[1];
+            const view2 = new DataView(
+                arr2.buffer,
+                arr2.byteOffset,
+                arr2.byteLength
+            );
+
+            expect(isFinalMessage(view1)).toBe(false);
+            expect(isFinalMessage(view2)).toBe(false);
         });
     });
 });
