@@ -890,15 +890,6 @@ function watchModel(
         toSubscription(
             model.onDidChangeContent(async (e) => {
                 const info = models.get(model.uri.toString());
-                if (info.isFormula || info.isScript) {
-                    if (
-                        e.changes.every(
-                            (c) => c.rangeOffset === 0 && c.rangeLength === 1
-                        )
-                    ) {
-                        return;
-                    }
-                }
                 if (applyingEdits) {
                     return;
                 }
@@ -937,7 +928,16 @@ function watchModel(
     );
 
     models.set(model.uri.toString(), info);
-    updateDecorators(model, info, getTagValueForSpace(bot, tag, space));
+
+    // We need to wrap updateDecorators() because it might try to apply
+    // an edit to the model.
+    try {
+        applyingEdits = true;
+        updateDecorators(model, info, getTagValueForSpace(bot, tag, space));
+    } finally {
+        applyingEdits = false;
+    }
+
     subs.push(sub);
 }
 
