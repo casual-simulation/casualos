@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the ability to use the `color` tag on GLTF meshes to apply a color tint to the mesh.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue that prevented deleting the first character of a script/formula in the multi-line editor.
