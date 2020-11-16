@@ -1,4 +1,3 @@
-import io from 'socket.io-client';
 import { Observable, BehaviorSubject, Subject, pipe } from 'rxjs';
 import { debounceTime, tap } from 'rxjs/operators';
 import { ReconnectableSocket } from 'ReconnectableSocket';
