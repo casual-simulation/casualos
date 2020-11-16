@@ -740,6 +740,9 @@ function watchModel(
         model: model,
         sub: sub,
     };
+
+    // TODO: Improve to support additional partitions being added dynamically.
+    // This would require recieving an update whenever a new local site is available.
     let lastVersion = simulation.watcher.latestVersion;
     let applyingEdits: boolean = false;
 
