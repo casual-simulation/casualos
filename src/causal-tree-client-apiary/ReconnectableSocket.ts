@@ -10,7 +10,7 @@ export class ReconnectableSocket {
     private _onOpen = new Subject<void>();
     private _onClose = new Subject<void>();
     private _onError = new Subject<Event>();
-    private _onMessage = new Subject<MessageEvent<any>>();
+    private _onMessage = new Subject<MessageEvent>();
 
     get onOpen() {
         return this._onOpen;
@@ -32,7 +32,7 @@ export class ReconnectableSocket {
         return this._socket;
     }
 
-    send(data: string) {
+    send(data: string | ArrayBuffer | ArrayBufferView) {
         this._socket.send(data);
     }
 
@@ -56,6 +56,10 @@ export class ReconnectableSocket {
         }
     }
 
+    protected _handleMessage(event: MessageEvent) {
+        this._onMessage.next(event);
+    }
+
     private _setupSocket() {
         this._socket = new WebSocket(this._url);
         this._socket.onopen = () => {
@@ -68,7 +72,7 @@ export class ReconnectableSocket {
             this._onError.next(event);
         };
         this._socket.onmessage = (event) => {
-            this._onMessage.next(event);
+            this._handleMessage(event);
         };
     }
 }
