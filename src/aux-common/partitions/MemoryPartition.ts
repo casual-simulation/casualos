@@ -31,6 +31,7 @@ import flatMap from 'lodash/flatMap';
 import union from 'lodash/union';
 import { merge } from '../utils';
 import { applyEdit, isTagEdit } from '../aux-format-2';
+import uuid from 'uuid/v4';
 
 /**
  * Attempts to create a MemoryPartition from the given config.
@@ -54,13 +55,11 @@ export class MemoryPartitionImpl implements MemoryPartition {
     private _onBotsRemoved = new Subject<string[]>();
     private _onBotsUpdated = new Subject<UpdatedBot[]>();
     private _onStateUpdated = new Subject<StateUpdatedEvent>();
-    private _onVersionUpdated = new BehaviorSubject<CurrentVersion>({
-        currentSite: null,
-        vector: {},
-    });
+    private _onVersionUpdated: Subject<CurrentVersion>;
     private _onError = new Subject<any>();
     private _onEvents = new Subject<Action[]>();
     private _onStatusUpdated = new Subject<StatusUpdate>();
+    private _siteId: string = uuid();
 
     type = 'memory' as const;
     state: BotsState;
@@ -108,6 +107,10 @@ export class MemoryPartitionImpl implements MemoryPartition {
     constructor(config: MemoryPartitionStateConfig) {
         this.private = config.private || false;
         this.state = config.initialState;
+        this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
+            currentSite: this._siteId,
+            vector: {},
+        });
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
