@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V1.3.1
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the ability to use the `color` tag on GLTF meshes to apply a color tint to the mesh.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue that prevented deleting the first character of a script/formula in the multi-line editor.
+-   Fixed an issue where tag edits on bots in the tempLocal and local spaces would be applied to the multi-line editor twice.
+
 ## V1.3.0
 
 #### Date: 11/11/2020

@@ -44,16 +44,14 @@ import {
     applyEdit,
     isTagEdit,
 } from '@casual-simulation/aux-common/aux-format-2';
+import uuid from 'uuid/v4';
 
 export class LocalStoragePartitionImpl implements LocalStoragePartition {
     protected _onBotsAdded = new Subject<Bot[]>();
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
     protected _onStateUpdated = new Subject<StateUpdatedEvent>();
-    protected _onVersionUpdated = new BehaviorSubject<CurrentVersion>({
-        currentSite: null,
-        vector: {},
-    });
+    protected _onVersionUpdated: Subject<CurrentVersion>;
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -61,6 +59,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     protected _hasRegisteredSubs = false;
     private _state: BotsState = {};
     private _sub = new Subscription();
+    private _siteId: string = uuid();
 
     get realtimeStrategy(): AuxPartitionRealtimeStrategy {
         return 'immediate';
@@ -120,6 +119,10 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     constructor(config: LocalStoragePartitionConfig) {
         this.private = config.private || false;
         this.namespace = config.namespace;
+        this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
+            currentSite: this._siteId,
+            vector: {},
+        });
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
