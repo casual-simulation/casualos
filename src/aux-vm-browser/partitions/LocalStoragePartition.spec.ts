@@ -7,7 +7,7 @@ import {
     createBot,
     StateUpdatedEvent,
 } from '@casual-simulation/aux-common';
-import { skip } from 'rxjs/operators';
+import { first, skip } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 
 describe('LocalStoragePartition', () => {
@@ -55,6 +55,20 @@ describe('LocalStoragePartition', () => {
             });
 
             expect(mem.realtimeStrategy).toEqual('immediate');
+        });
+
+        it('should have a current site ID', async () => {
+            const mem = new LocalStoragePartitionImpl({
+                type: 'local_storage',
+                namespace: 'namespace',
+            });
+
+            const version = await mem.onVersionUpdated
+                .pipe(first())
+                .toPromise();
+
+            expect(version.currentSite).not.toBe(null);
+            expect(version.currentSite).toBeDefined();
         });
     });
 
