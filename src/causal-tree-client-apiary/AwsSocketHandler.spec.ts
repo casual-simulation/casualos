@@ -1,4 +1,3 @@
-import { before } from 'lodash';
 import { AwsSocketHandler } from './AwsSocketHandler';
 
 describe('AwsSocketHandler', () => {
