@@ -100,17 +100,23 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
         function createPartitions(): AuxPartitionConfig {
             const parsedId = parseSimulationId(id);
-            const host = getFinalUrl(defaultHost, parsedId.host);
+            const host = getFinalUrl(
+                config.causalRepoConnectionUrl || defaultHost,
+                parsedId.host
+            );
+            const protocol = config.causalRepoConnectionProtocol;
             return {
                 shared: {
                     type: 'remote_causal_repo',
                     branch: parsedId.channel,
                     host: host,
+                    connectionProtocol: protocol,
                 },
                 [ADMIN_PARTITION_ID]: {
                     type: 'remote_causal_repo',
                     branch: ADMIN_BRANCH_NAME,
                     host: host,
+                    connectionProtocol: protocol,
                     private: true,
                     static: true,
                 },
@@ -136,6 +142,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     type: 'remote_causal_repo',
                     branch: `${parsedId.channel}-player-${user.id}`,
                     host: host,
+                    connectionProtocol: protocol,
                     temporary: true,
                     remoteEvents: false,
                 },
@@ -143,6 +150,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     type: 'other_players_repo',
                     branch: parsedId.channel,
                     host: host,
+                    connectionProtocol: protocol,
                 },
                 [BOOTSTRAP_PARTITION_ID]: {
                     type: 'memory',

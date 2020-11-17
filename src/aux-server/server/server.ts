@@ -98,6 +98,7 @@ import { GpioModule } from './modules/GpioModule';
 import { GpioModule2 } from './modules/GpioModule2';
 import { SerialModule } from './modules/SerialModule';
 import { MongoDBStageStore } from './mongodb/MongoDBStageStore';
+import { WebConfig } from 'shared/WebConfig';
 
 const connect = pify(MongoClient.connect);
 
@@ -145,10 +146,11 @@ export class ClientServer {
         this._app.get(
             '/api/config',
             asyncMiddleware(async (req, res) => {
-                res.send({
+                const config: WebConfig = {
                     ...this._player.web,
                     version: 2,
-                });
+                };
+                res.send(config);
             })
         );
 

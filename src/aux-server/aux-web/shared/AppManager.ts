@@ -92,7 +92,7 @@ export class AppManager {
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._initOffline();
-        this._simulationManager = new SimulationManager(id => {
+        this._simulationManager = new SimulationManager((id) => {
             const params = new URLSearchParams(location.search);
             const forceSignedScripts =
                 params.get('forceSignedScripts') === 'true';
@@ -106,6 +106,9 @@ export class AppManager {
                 builder: JSON.stringify(builder),
                 bootstrapState: bootstrap,
                 forceSignedScripts,
+                causalRepoConnectionProtocol: this._config
+                    .causalRepoConnectionProtocol,
+                causalRepoConnectionUrl: this._config.causalRepoConnectionUrl,
             });
         });
         this._userSubject = new BehaviorSubject<AuxUser>(null);
@@ -197,7 +200,7 @@ export class AppManager {
             .pipe(
                 scan((subs: SubscriptionLike[], user: AuxUser, index) => {
                     if (subs) {
-                        subs.forEach(s => s.unsubscribe());
+                        subs.forEach((s) => s.unsubscribe());
                     }
                     if (user && this.simulationManager.primary) {
                         return setup(user, this.simulationManager.primary);
@@ -361,7 +364,7 @@ export class AppManager {
                     this._progress.complete();
                 }
             },
-            err => console.error(err),
+            (err) => console.error(err),
             () => {
                 this._progress.next({
                     type: 'progress',
