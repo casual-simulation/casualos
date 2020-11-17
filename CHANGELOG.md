@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.3.2
+
+#### Date: 11/17/2020
+
+### :rocket: Improvements
+
+-   Updated the ab-1 bootstrapper to point to AWS S3 for quick loading.
+
 ## V1.3.1
 
 #### Date: 11/16/2020
