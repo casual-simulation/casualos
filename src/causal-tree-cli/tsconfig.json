@@ -13,6 +13,7 @@
     "references": [
         { "path": "../causal-trees" },
         { "path": "../causal-tree-store-cassandradb" },
-        { "path": "../causal-tree-store-mongodb" }
+        { "path": "../causal-tree-store-mongodb" },
+        { "path": "../causal-tree-client-apiary" }
     ]
 }
