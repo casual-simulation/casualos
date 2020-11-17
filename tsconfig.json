@@ -21,6 +21,7 @@
         { "path": "./src/aux-vm-node" },
         { "path": "./src/aux-vm-browser" },
         { "path": "./src/aux-vm-deno" },
+        { "path": "./src/binary-encoder" },
         { "path": "./src/causal-trees" },
         { "path": "./src/causal-tree-server-socketio" },
         { "path": "./src/causal-tree-client-socketio" },

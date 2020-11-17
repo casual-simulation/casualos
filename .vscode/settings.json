@@ -40,6 +40,7 @@
         "src/crypto-node/**/*.d.ts": { "when": "$(basename).ts" },
         "src/stacktrace/**/*.d.ts": { "when": "$(basename).ts" },
         "src/tunnel/**/*.d.ts": { "when": "$(basename).ts" },
+        "src/binary-encoder/**/*.d.ts": { "when": "$(basename).ts" },
         "src/**/*.d.ts.map": true
     },
     "files.associations": {
