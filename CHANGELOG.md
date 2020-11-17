@@ -2,7 +2,7 @@
 
 ## V1.3.1
 
-#### Date: TBD
+#### Date: 11/16/2020
 
 ### :rocket: Improvements
 
