@@ -66,6 +66,8 @@ export function getAWSApiaryClientForHostAndProtocol(
         const connection = new ApiaryConnectionClient(socket, user);
         client = new CausalRepoClient(connection);
         awsApiaryClientCache.set(host, client);
+
+        socket.open();
     }
 
     return client;

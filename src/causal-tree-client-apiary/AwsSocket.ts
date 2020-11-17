@@ -25,22 +25,22 @@ export class AwsSocket implements ReconnectableSocketInterface {
         );
     }
 
-    get onOpen(): Observable<void> {
+    get onOpen() {
         return this._socket.onOpen;
     }
-    get onClose(): Observable<void> {
+    get onClose() {
         return this._socket.onClose;
     }
-    get onMessage(): Observable<MessageEvent> {
+    get onMessage() {
         return this._onMessage;
     }
-    get onError(): Observable<Event> {
+    get onError() {
         return this._socket.onError;
     }
-    open(): void {
+    open() {
         return this._socket.open();
     }
-    close(): void {
+    close() {
         return this._socket.close();
     }
 

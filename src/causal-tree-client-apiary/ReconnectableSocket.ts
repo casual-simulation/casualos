@@ -5,7 +5,7 @@ import { Observable, Subject } from 'rxjs';
  */
 export interface ReconnectableSocketInterface {
     onOpen: Observable<void>;
-    onClose: Observable<void>;
+    onClose: Observable<string>;
     onMessage: Observable<MessageEvent>;
     onError: Observable<Event>;
 
@@ -22,7 +22,7 @@ export class ReconnectableSocket implements ReconnectableSocketInterface {
     private _socket: WebSocket;
 
     private _onOpen = new Subject<void>();
-    private _onClose = new Subject<void>();
+    private _onClose = new Subject<string>();
     private _onError = new Subject<Event>();
     private _onMessage = new Subject<MessageEvent>();
 
@@ -79,8 +79,8 @@ export class ReconnectableSocket implements ReconnectableSocketInterface {
         this._socket.onopen = () => {
             this._onOpen.next();
         };
-        this._socket.onclose = () => {
-            this._onClose.next();
+        this._socket.onclose = (event) => {
+            this._onClose.next(event.reason);
         };
         this._socket.onerror = (event: Event) => {
             this._onError.next(event);

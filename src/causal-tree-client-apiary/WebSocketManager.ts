@@ -48,7 +48,7 @@ export class SocketManager {
     }
 
     init(): void {
-        console.log('[SocketManager] Starting...');
+        console.log('[WebSocketManager] Starting...');
         this._socket = new ReconnectableSocket(this._url);
 
         this._socket.onError

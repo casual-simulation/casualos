@@ -103,7 +103,7 @@ export class ApiaryConnectionClient implements ConnectionClient {
         if (connected) {
             console.log(`[SocketIOConnectionClient] Logging in...`);
             const onLoginResult = this._packets.pipe(
-                filter((p) => p.type === 'login'),
+                filter((p) => p.type === 'login_result'),
                 map((p: LoginPacket) => p)
             );
             const loginPacket: LoginPacket = {
