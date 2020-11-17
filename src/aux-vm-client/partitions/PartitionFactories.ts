@@ -1,7 +1,7 @@
 import { User } from '@casual-simulation/causal-trees';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 import {
-    SocketManager,
+    SocketManager as SocketIOSocketManager,
     SocketIOConnectionClient,
 } from '@casual-simulation/causal-tree-client-socketio';
 import { BotHttpClient } from './BotHttpClient';
@@ -13,26 +13,79 @@ import {
     BotPartitionImpl,
     OtherPlayersPartition,
     OtherPlayersPartitionImpl,
+    RemoteCausalRepoProtocol,
 } from '@casual-simulation/aux-common';
+import {
+    SocketManager as ApiarySocketManager,
+    AwsSocket,
+    ApiaryConnectionClient,
+} from '@casual-simulation/causal-tree-client-apiary';
 
 /**
  * A map of hostnames to CausalRepoClients.
  * Helps prevent duplicating websocket connections to the same host.
  */
-let clientCache = new Map<string, CausalRepoClient>();
+let socketClientCache = new Map<string, CausalRepoClient>();
+
+/**
+ * A map of hostnames to CausalRepoClients.
+ * Helps prevent duplicating websocket connections to the same host.
+ */
+let awsApiaryClientCache = new Map<string, CausalRepoClient>();
 
 /**
  * Gets the causal repo client that should be used for the given host.
  * @param host The host.
  */
-export function getClientForHost(host: string, user: User): CausalRepoClient {
-    let client = clientCache.get(host);
+export function getClientForHostAndProtocol(
+    host: string,
+    user: User,
+    protocol: RemoteCausalRepoProtocol
+): CausalRepoClient {
+    if (protocol === 'apiary-aws') {
+        return getAWSApiaryClientForHostAndProtocol(host, user);
+    } else {
+        return getSocketIOClientForHost(host, user);
+    }
+}
+
+/**
+ * Gets the casual repo client that should be used for the given host when connecting over the AWS Apiary protocol.
+ * @param host The URl that should be connected to.
+ * @param user The user that the connection should be made with.
+ */
+export function getAWSApiaryClientForHostAndProtocol(
+    host: string,
+    user: User
+): CausalRepoClient {
+    let client = awsApiaryClientCache.get(host);
     if (!client) {
-        const manager = new SocketManager(host);
+        const manager = new ApiarySocketManager(host);
+        manager.init();
+        const socket = new AwsSocket(manager.socket);
+        const connection = new ApiaryConnectionClient(socket, user);
+        client = new CausalRepoClient(connection);
+        awsApiaryClientCache.set(host, client);
+    }
+
+    return client;
+}
+
+/**
+ * Gets the causal repo client that should be used for the given host when connecting over the socket.io protocol.
+ * @param host The host.
+ */
+export function getSocketIOClientForHost(
+    host: string,
+    user: User
+): CausalRepoClient {
+    let client = socketClientCache.get(host);
+    if (!client) {
+        const manager = new SocketIOSocketManager(host);
         manager.init();
         const connection = new SocketIOConnectionClient(manager.socket, user);
         client = new CausalRepoClient(connection);
-        clientCache.set(host, client);
+        socketClientCache.set(host, client);
     }
 
     return client;
@@ -48,7 +101,11 @@ export async function createRemoteCausalRepoPartition(
     useCache: boolean = true
 ): Promise<RemoteCausalRepoPartition> {
     if (config.type === 'remote_causal_repo') {
-        const client = getClientForHost(config.host, user);
+        const client = getClientForHostAndProtocol(
+            config.host,
+            user,
+            config.connectionProtocol
+        );
         const partition = new RemoteCausalRepoPartitionImpl(
             user,
             client,
@@ -70,7 +127,11 @@ export async function createOtherPlayersRepoPartition(
     useCache: boolean = true
 ): Promise<OtherPlayersPartition> {
     if (config.type === 'other_players_repo') {
-        const client = getClientForHost(config.host, user);
+        const client = getClientForHostAndProtocol(
+            config.host,
+            user,
+            config.connectionProtocol
+        );
         const partition = new OtherPlayersPartitionImpl(user, client, config);
         return partition;
     }
