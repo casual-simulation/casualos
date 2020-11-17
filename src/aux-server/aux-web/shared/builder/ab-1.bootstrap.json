@@ -1,11 +1,12 @@
 {
     "version": 1,
     "state": {
-        "2b8175f7-62fe-4e50-a691-83f73dd6553b": {
-            "id": "2b8175f7-62fe-4e50-a691-83f73dd6553b",
+        "fac20f4a-bf18-4728-833c-976614aca548": {
+            "id": "fac20f4a-bf18-4728-833c-976614aca548",
+            "space": "shared",
             "tags": {
-                "onStorySubscribed": "@if (that.story !== player.getCurrentStory()) {\r\n    return;\r\n}\r\n\r\nconst ab1Core = getBot(byTag('ab-id', 'core'));\r\nif (ab1Core) {\r\n    console.log('[ab-1 bootstrap] ab-1 already detected. Skipping bootstrap.');\r\n    return;\r\n}\r\ntry {\r\n    const response = await webhook({\r\n        method: \"GET\",\r\n        url: `https://auxplayer.com/webhook/ab-1/download?story=ab-1`\r\n    });\r\n\r\n    if (response.status !== 200) {\r\n        console.log('[ab-1 bootstrap] Could not download installer.');\r\n        return;\r\n    }\r\n\r\n    const dataOutput = response.data.data;\r\n    for (let i = 0; i < dataOutput.length; i++) {\r\n        const newBot = dataOutput[i];\r\n        let b = create(newBot.tags);\r\n        b.tags.creator = null;\r\n    }\r\n\r\n    console.log(`[ab-1 bootstrap] Installed ab-1 version ${response.data.version}!`);\r\n} catch(e) {\r\n    console.log('[ab-1 bootstrap] Could not download installer.');\r\n    return;\r\n}",
-                "label": "ab-1 Installer"
+                "label": "ab1 Installer",
+                "onStorySubscribed": "@if (that.story !== player.getCurrentStory()) {\n    return;\n}\n\nconst ab1Core = getBot(byTag('ab1ID', 'learn'));\nif (ab1Core) {\n    console.log('[ab1 bootstrap] ab1 already detected. Skipping bootstrap.');\n    return;\n}\ntry {\n    const response = await webhook({\n        method: \"GET\",\n        url: `https://casualsimulationassets.s3.us-west-2.amazonaws.com/files/ab1.aux`\n    });\n\n    if (response.status !== 200) {\n        console.log('[ab1 bootstrap] Could not download installer.');\n        return;\n    }\n\n    const dataOutput = response.data.state;\n\n    console.log(dataOutput)\n\n    for (const property in dataOutput) {\n        const newBot = dataOutput[property];\n\n        if (newBot.space) {\n            let b = create(newBot.tags);\n            b.tags.creator = null;\n        }\n        else {\n            console.log(\"skipped bot: \" + newBot);\n        }\n    }\n\n    console.log(`[ab1 bootstrap] Installed ab1 version ${response.data.version}!`);\n} catch (e) {\n    console.log('[ab1 bootstrap] Could not download installer.');\n    return;\n}"
             }
         }
     }
