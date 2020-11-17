@@ -1,9 +1,23 @@
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 
 /**
  * Defines a websocket connection that will automatically try to reconnect if the connection is lost.
  */
-export class ReconnectableSocket {
+export interface ReconnectableSocketInterface {
+    onOpen: Observable<void>;
+    onClose: Observable<void>;
+    onMessage: Observable<MessageEvent>;
+    onError: Observable<Event>;
+
+    send(data: string | ArrayBuffer | ArrayBufferView): void;
+    open(): void;
+    close(): void;
+}
+
+/**
+ * Defines a websocket connection that will automatically try to reconnect if the connection is lost.
+ */
+export class ReconnectableSocket implements ReconnectableSocketInterface {
     private _url: string;
     private _socket: WebSocket;
 

@@ -21,11 +21,14 @@ import {
     share,
     filter,
 } from 'rxjs/operators';
-import { ReconnectableSocket } from './ReconnectableSocket';
+import {
+    ReconnectableSocket,
+    ReconnectableSocketInterface,
+} from './ReconnectableSocket';
 import { LoginPacket, MessagePacket, Packet } from './Events';
 
 export class ApiaryConnectionClient implements ConnectionClient {
-    private _socket: ReconnectableSocket;
+    private _socket: ReconnectableSocketInterface;
     private _connectionStateChanged: BehaviorSubject<ClientConnectionState>;
     private _packets: Observable<Packet>;
 
@@ -53,7 +56,7 @@ export class ApiaryConnectionClient implements ConnectionClient {
         this._socket.send(JSON.stringify(message));
     }
 
-    constructor(socket: ReconnectableSocket, token: DeviceToken) {
+    constructor(socket: ReconnectableSocketInterface, token: DeviceToken) {
         this._socket = socket;
         this._connectionStateChanged = new BehaviorSubject<
             ClientConnectionState

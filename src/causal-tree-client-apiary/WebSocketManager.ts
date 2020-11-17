@@ -1,6 +1,6 @@
 import { Observable, BehaviorSubject, Subject, pipe } from 'rxjs';
 import { debounceTime, tap } from 'rxjs/operators';
-import { ReconnectableSocket } from 'ReconnectableSocket';
+import { ReconnectableSocket } from './ReconnectableSocket';
 
 const RECONNECT_TIME = 5000;
 
