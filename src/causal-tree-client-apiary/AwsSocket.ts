@@ -10,7 +10,7 @@ import {
     AwsMessageData,
     AwsUploadRequest,
     AwsUploadResponse,
-} from 'AwsMessages';
+} from './AwsMessages';
 import uuid from 'uuid/v4';
 import { concatMap, filter, map } from 'rxjs/operators';
 import axios from 'axios';
