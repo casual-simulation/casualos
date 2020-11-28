@@ -100,7 +100,8 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
         function createPartitions(): AuxPartitionConfig {
             const parsedId = parseSimulationId(id);
-            const host = getFinalUrl(
+            const host = getFinalUrl(defaultHost, parsedId.host);
+            const causalRepoHost = getFinalUrl(
                 config.causalRepoConnectionUrl || defaultHost,
                 parsedId.host
             );
@@ -109,17 +110,17 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 shared: {
                     type: 'remote_causal_repo',
                     branch: parsedId.channel,
-                    host: host,
+                    host: causalRepoHost,
                     connectionProtocol: protocol,
                 },
-                [ADMIN_PARTITION_ID]: {
-                    type: 'remote_causal_repo',
-                    branch: ADMIN_BRANCH_NAME,
-                    host: host,
-                    connectionProtocol: protocol,
-                    private: true,
-                    static: true,
-                },
+                // [ADMIN_PARTITION_ID]: {
+                //     type: 'remote_causal_repo',
+                //     branch: ADMIN_BRANCH_NAME,
+                //     host: causalRepoHost,
+                //     connectionProtocol: protocol,
+                //     private: true,
+                //     static: true,
+                // },
                 [COOKIE_BOT_PARTITION_ID]: {
                     type: 'proxy',
                     partition: new LocalStoragePartitionImpl({
@@ -141,7 +142,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 [PLAYER_PARTITION_ID]: {
                     type: 'remote_causal_repo',
                     branch: `${parsedId.channel}-player-${user.id}`,
-                    host: host,
+                    host: causalRepoHost,
                     connectionProtocol: protocol,
                     temporary: true,
                     remoteEvents: false,
@@ -149,7 +150,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 [OTHER_PLAYERS_PARTITION_ID]: {
                     type: 'other_players_repo',
                     branch: parsedId.channel,
-                    host: host,
+                    host: causalRepoHost,
                     connectionProtocol: protocol,
                 },
                 [BOOTSTRAP_PARTITION_ID]: {
