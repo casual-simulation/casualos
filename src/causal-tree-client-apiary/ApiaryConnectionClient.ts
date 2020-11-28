@@ -83,7 +83,9 @@ export class ApiaryConnectionClient implements ConnectionClient {
             .subscribe(this._connectionStateChanged);
 
         this._packets = this._socket.onMessage.pipe(
-            map((e) => JSON.parse(e.data)),
+            map((e) =>
+                typeof e.data === 'string' ? JSON.parse(e.data) : e.data
+            ),
             share()
         );
     }
@@ -108,6 +110,9 @@ export class ApiaryConnectionClient implements ConnectionClient {
             );
             const loginPacket: LoginPacket = {
                 type: 'login',
+                sessionId: token.id,
+                token: token.token,
+                username: token.username,
             };
             this._socket.send(JSON.stringify(loginPacket));
             return onLoginResult.pipe(

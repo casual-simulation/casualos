@@ -8,6 +8,9 @@ export interface WebSocketEvent {
 
 export interface LoginPacket {
     type: typeof LOGIN;
+    sessionId: string;
+    username: string;
+    token: string;
 }
 
 export interface LoginResultPacket {
