@@ -95,27 +95,35 @@ export class AwsSocket implements ReconnectableSocketInterface {
     }
 
     private async _handleUploadResponse(message: AwsUploadResponse) {
-        const pendingData = this._pendingUploads.get(message.id);
-        if (pendingData) {
-            this._pendingUploads.delete(message.id);
-            await axios.put(message.uploadUrl, pendingData, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+        try {
+            const pendingData = this._pendingUploads.get(message.id);
+            if (pendingData) {
+                this._pendingUploads.delete(message.id);
+                await axios.put(message.uploadUrl, pendingData, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
 
-            const downloadRequest: AwsDownloadRequest = {
-                type: 'download_request',
-                url: getDownloadUrl(message.uploadUrl),
-            };
+                const downloadRequest: AwsDownloadRequest = {
+                    type: 'download_request',
+                    url: getDownloadUrl(message.uploadUrl),
+                };
 
-            this._send(downloadRequest);
+                this._send(downloadRequest);
+            }
+        } catch (err) {
+            console.error('[AwsSocket] Failed to upload message.', err);
         }
     }
 
     private async _handleDownloadRequest(message: AwsDownloadRequest) {
-        const response = await axios.get(message.url);
-        this._emitMessage(response.data);
+        try {
+            const response = await axios.get(message.url);
+            this._emitMessage(response.data);
+        } catch (err) {
+            console.error('[AwsSocket] Failed to download message.', err);
+        }
     }
 
     private _handleMessageData(message: AwsMessageData): any {
