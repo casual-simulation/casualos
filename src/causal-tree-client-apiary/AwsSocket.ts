@@ -102,6 +102,7 @@ export class AwsSocket implements ReconnectableSocketInterface {
                 await axios.put(message.uploadUrl, pendingData, {
                     headers: {
                         'Content-Type': 'application/json',
+                        'x-amz-acl': 'bucket-owner-full-control',
                     },
                 });
 
