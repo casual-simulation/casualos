@@ -1,5 +1,5 @@
 import { Observable, BehaviorSubject, Subject, pipe } from 'rxjs';
-import { debounceTime, tap } from 'rxjs/operators';
+import { debounceTime, filter, tap } from 'rxjs/operators';
 import { ReconnectableSocket } from './ReconnectableSocket';
 
 const RECONNECT_TIME = 5000;
@@ -51,11 +51,9 @@ export class SocketManager {
         console.log('[WebSocketManager] Starting...');
         this._socket = new ReconnectableSocket(this._url);
 
-        this._socket.onError
+        this._socket.onClose
             .pipe(
-                tap((event) => {
-                    console.log('[WebSocketManager] Error:', event);
-                }),
+                filter((e) => e.type === 'other'),
                 debounceTime(RECONNECT_TIME),
                 tap(() => {
                     console.log('[WebSocketManager] Reconnecting...');
@@ -63,6 +61,10 @@ export class SocketManager {
                 })
             )
             .subscribe();
+
+        this._socket.onError.subscribe((event) => {
+            console.log('[WebSocketManager] Error:', event);
+        });
 
         this._socket.onOpen.subscribe(() => {
             console.log('[WebSocketManager] Connected.');
