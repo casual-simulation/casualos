@@ -13,7 +13,6 @@
     "references": [
         { "path": "../causal-trees" },
         { "path": "../crypto" },
-        { "path": "../crypto-browser" },
-        { "path": "../binary-encoder" }
+        { "path": "../crypto-browser" }
     ]
 }
