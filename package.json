@@ -27,6 +27,7 @@
         "package:docker:arm32": "docker build -t casualsimulation/aux-arm32 -f Dockerfile.arm32 .",
         "package:docker:proxy": "docker build -t casualsimulation/aux-proxy ./src/aux-proxy",
         "package:docker:redirector": "docker build -t casualsimulation/aux-redirector ./src/aux-redirector",
+        "package:config": "node ./script/prerender-web-config.js",
         "test:watch": "npm run clean && jest --watchAll",
         "test": "npm run clean && jest --verbose",
         "test:ci": "npm run clean && jest --no-cache --ci --reporters=default --reporters=jest-junit",
