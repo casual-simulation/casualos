@@ -32,7 +32,7 @@ Build the project on the dev/ci machine and build the image on the Raspberry PI
 
 1. On your Dev Machine
     1. Run a build and package it into a `.tar.gz` file.
-        - `npm run build:tar`
+        - `npm run build:tar:docker`
     2. Rsync the tar file into the Raspberry PI
         - `rsync --progress ./temp/output.tar.gz pi@{your_pi_ip_address}:/home/pi`
 1. On the Raspberry PI

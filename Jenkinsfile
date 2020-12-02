@@ -148,7 +148,7 @@ def BuildDockerArm32() {
     . ~/.bashrc
     
     echo "Building..."
-    npm run tar
+    npm run tar:docker
     """
 
     def remote = [:]

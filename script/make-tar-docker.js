@@ -14,7 +14,7 @@ const inputs = [
 ];
 
 // Creates /tmp/a/apple, regardless of whether `/tmp` and /tmp/a exist.
-fs.mkdir(outputFolder, { recursive: true }, err => {
+fs.mkdir(outputFolder, { recursive: true }, (err) => {
     if (err) throw err;
 
     tar.c(
