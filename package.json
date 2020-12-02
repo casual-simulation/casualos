@@ -35,6 +35,7 @@
         "clean:cache": "gulp clean:cache",
         "debug:server:chrome": "node --inspect src/aux-server/server/dist/main.js",
         "tar:docker": "node ./script/make-tar-docker.js",
+        "tar:client": "node ./script/make-tar-client.js",
         "view:server:profile": "gulp view:server:profile",
         "view:web:profile": "gulp view:web:profile",
         "bench": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm run bench",
