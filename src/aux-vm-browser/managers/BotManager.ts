@@ -106,21 +106,14 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 parsedId.host
             );
             const protocol = config.causalRepoConnectionProtocol;
-            return {
+
+            let partitions: AuxPartitionConfig = {
                 shared: {
                     type: 'remote_causal_repo',
                     branch: parsedId.channel,
                     host: causalRepoHost,
                     connectionProtocol: protocol,
                 },
-                // [ADMIN_PARTITION_ID]: {
-                //     type: 'remote_causal_repo',
-                //     branch: ADMIN_BRANCH_NAME,
-                //     host: causalRepoHost,
-                //     connectionProtocol: protocol,
-                //     private: true,
-                //     static: true,
-                // },
                 [COOKIE_BOT_PARTITION_ID]: {
                     type: 'proxy',
                     partition: new LocalStoragePartitionImpl({
@@ -133,11 +126,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     type: 'memory',
                     private: true,
                     initialState: {},
-                },
-                [ERROR_BOT_PARTITION_ID]: {
-                    type: 'bot',
-                    host: host,
-                    story: parsedId.channel,
                 },
                 [PLAYER_PARTITION_ID]: {
                     type: 'remote_causal_repo',
@@ -161,6 +149,28 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     private: true,
                 },
             };
+
+            // Enable the admin partition and error partition when using the socket.io protocol.
+            if (
+                !config.causalRepoConnectionProtocol ||
+                config.causalRepoConnectionProtocol === 'socket.io'
+            ) {
+                partitions[ADMIN_PARTITION_ID] = {
+                    type: 'remote_causal_repo',
+                    branch: ADMIN_BRANCH_NAME,
+                    host: causalRepoHost,
+                    connectionProtocol: protocol,
+                    private: true,
+                    static: true,
+                };
+                partitions[ERROR_BOT_PARTITION_ID] = {
+                    type: 'bot',
+                    host: host,
+                    story: parsedId.channel,
+                };
+            }
+
+            return partitions;
         }
     }
 
