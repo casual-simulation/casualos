@@ -64,3 +64,4 @@ declare module 'downloadjs' {
 declare var PRODUCTION: boolean;
 declare var GIT_HASH: string;
 declare var GIT_TAG: string;
+declare var PROXY_CORS_REQUESTS: boolean;

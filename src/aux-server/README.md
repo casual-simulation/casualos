@@ -99,6 +99,12 @@ The AUX Server Docker image can be configured using the following environment va
 -   `CAUSAL_REPO_CONNECTION_PROTOCOL`: The connection protocol that should be used for causal repos. Controls which backends the causal repos can connect to. Possible options are `socket.io` and `apiary-aws`. The `socket.io` protocol works with Raspberry PIs and self-hosted servers (like in development). The `apiary-aws` protocol works with [CasualOS apiaries hosted on AWS](https://github.com/casual-simulation/casual-apiary-aws). Defaults to `socket.io`.
 -   `CAUSAL_REPO_CONNECTION_URL`: The URL that causal repos should connect to. If not specified, then the URL that the site is hosted from will be used. Useful in development to connect to a different causal repo host than the local socket.io based one.
 
+## Build Configuration
+
+The AUX build can be configured using the following environment variables:
+
+-   `PROXY_CORS_REQUESTS` - Whether to proxy HTTP GET requests that would trigger CORS through the proxy hosted by the server. Possible options are `true` and `false`. (Defaults to `true`)
+
 ## Security Note
 
 In the default configuration, CasualOS allows running arbitrary user scripts inside the web server process. Potential capabilities include filesystem access, executing commands, making arbitrary web requests, and reading environment variables.
