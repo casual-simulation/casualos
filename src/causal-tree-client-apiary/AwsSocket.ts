@@ -2,7 +2,6 @@ import {
     ReconnectableSocket,
     ReconnectableSocketInterface,
 } from './ReconnectableSocket';
-import { AwsSocketHandler } from './AwsSocketHandler';
 import { Observable, of, Subject } from 'rxjs';
 import {
     AwsDownloadRequest,
