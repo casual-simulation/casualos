@@ -175,6 +175,11 @@ export const BRANCHES_STATUS = 'repo/branches_status';
 export const DEVICES = 'repo/devices';
 
 /**
+ * The name of the event which gets the number of devices.
+ */
+export const DEVICE_COUNT = 'repo/device_count';
+
+/**
  * The name of the event which sets the password used to edit the branch.
  */
 export const SET_BRANCH_PASSWORD = 'repo/set_branch_password';
@@ -489,6 +494,11 @@ export interface BranchesStatusEvent {
 
 export interface DevicesEvent {
     devices: DeviceInfo[];
+}
+
+export interface DeviceCountEvent {
+    branch: string;
+    count: number;
 }
 
 export interface LoadBranchEvent {

@@ -252,13 +252,10 @@ export class RemoteCausalRepoPartitionImpl
                     ]);
                 } else if (event.event.type === 'get_player_count') {
                     const action = <GetPlayerCountAction>event.event;
-                    this._client.devices(action.story).subscribe(
-                        (e) => {
-                            const devices = e.devices.filter(
-                                (d) => d.claims[USERNAME_CLAIM] !== 'Server'
-                            );
+                    this._client.deviceCount(action.story).subscribe(
+                        (count) => {
                             this._onEvents.next([
-                                asyncResult(event.taskId, devices.length),
+                                asyncResult(event.taskId, count),
                             ]);
                         },
                         (err) => {

@@ -29,6 +29,8 @@ import {
     AuthenticateBranchWritesEvent,
     AUTHENTICATE_BRANCH_WRITES,
     SET_BRANCH_PASSWORD,
+    DEVICE_COUNT,
+    DeviceCountEvent,
 } from '@casual-simulation/causal-trees/core2';
 import {
     remote,
@@ -245,7 +247,7 @@ describe('RemoteCausalRepoPartition', () => {
             });
 
             let events = [] as Action[];
-            partition.onEvents.subscribe(e => events.push(...e));
+            partition.onEvents.subscribe((e) => events.push(...e));
 
             const keys = keypair('password');
             await partition.applyEvents([
@@ -281,7 +283,7 @@ describe('RemoteCausalRepoPartition', () => {
             });
 
             let events = [] as Action[];
-            partition.onEvents.subscribe(e => events.push(...e));
+            partition.onEvents.subscribe((e) => events.push(...e));
 
             partition.connect();
 
@@ -322,7 +324,7 @@ describe('RemoteCausalRepoPartition', () => {
             });
 
             let events = [] as Action[];
-            partition.onEvents.subscribe(e => events.push(...e));
+            partition.onEvents.subscribe((e) => events.push(...e));
 
             partition.connect();
 
@@ -400,7 +402,7 @@ describe('RemoteCausalRepoPartition', () => {
 
             it('should listen for device events from the connection', async () => {
                 let events = [] as Action[];
-                partition.onEvents.subscribe(e => events.push(...e));
+                partition.onEvents.subscribe((e) => events.push(...e));
 
                 const action = device(
                     deviceInfo('username', 'device', 'session'),
@@ -467,7 +469,7 @@ describe('RemoteCausalRepoPartition', () => {
             describe('device', () => {
                 it('should set the playerId and taskId on the inner event', async () => {
                     let events = [] as Action[];
-                    partition.onEvents.subscribe(e => events.push(...e));
+                    partition.onEvents.subscribe((e) => events.push(...e));
 
                     const action = device(
                         deviceInfo('username', 'device', 'session'),
@@ -537,7 +539,7 @@ describe('RemoteCausalRepoPartition', () => {
                     connection.events.set(COMMIT_CREATED, commitCreated);
 
                     let events = [] as Action[];
-                    partition.onEvents.subscribe(e => events.push(...e));
+                    partition.onEvents.subscribe((e) => events.push(...e));
 
                     await partition.sendRemoteEvents([
                         remote(
@@ -569,7 +571,7 @@ describe('RemoteCausalRepoPartition', () => {
                     });
 
                     let events = [] as Action[];
-                    partition.onEvents.subscribe(e => events.push(...e));
+                    partition.onEvents.subscribe((e) => events.push(...e));
 
                     await partition.sendRemoteEvents([
                         remote(<any>{
@@ -598,7 +600,7 @@ describe('RemoteCausalRepoPartition', () => {
                     });
 
                     let events = [] as Action[];
-                    partition.onEvents.subscribe(e => events.push(...e));
+                    partition.onEvents.subscribe((e) => events.push(...e));
 
                     await partition.sendRemoteEvents([
                         remote(
@@ -627,7 +629,7 @@ describe('RemoteCausalRepoPartition', () => {
             });
 
             describe('get_player_count', () => {
-                it(`should send a ${DEVICES} event to the server`, async () => {
+                it(`should send a ${DEVICE_COUNT} event to the server`, async () => {
                     setupPartition({
                         type: 'remote_causal_repo',
                         branch: 'testBranch',
@@ -640,7 +642,7 @@ describe('RemoteCausalRepoPartition', () => {
 
                     expect(connection.sentMessages).toEqual([
                         {
-                            name: DEVICES,
+                            name: DEVICE_COUNT,
                             data: 'testBranch',
                         },
                     ]);
@@ -653,8 +655,8 @@ describe('RemoteCausalRepoPartition', () => {
                         host: 'testHost',
                     });
 
-                    const devices = new Subject<DevicesEvent>();
-                    connection.events.set(DEVICES, devices);
+                    const devices = new Subject<DeviceCountEvent>();
+                    connection.events.set(DEVICE_COUNT, devices);
 
                     await partition.sendRemoteEvents([
                         remote(
@@ -668,52 +670,16 @@ describe('RemoteCausalRepoPartition', () => {
                     await waitAsync();
 
                     const events = [] as Action[];
-                    partition.onEvents.subscribe(e => events.push(...e));
+                    partition.onEvents.subscribe((e) => events.push(...e));
 
-                    const info1 = deviceInfo('info1', 'info1', 'info1');
-                    const info2 = deviceInfo('info2', 'info2', 'info2');
                     devices.next({
-                        devices: [info1, info2],
+                        branch: 'testBranch',
+                        count: 2,
                     });
 
                     await waitAsync();
 
                     expect(events).toEqual([asyncResult('task1', 2)]);
-                });
-
-                it(`should filter out the server player`, async () => {
-                    setupPartition({
-                        type: 'remote_causal_repo',
-                        branch: 'testBranch',
-                        host: 'testHost',
-                    });
-
-                    const devices = new Subject<DevicesEvent>();
-                    connection.events.set(DEVICES, devices);
-
-                    await partition.sendRemoteEvents([
-                        remote(
-                            getPlayerCount('testBranch'),
-                            undefined,
-                            undefined,
-                            'task1'
-                        ),
-                    ]);
-
-                    await waitAsync();
-
-                    const events = [] as Action[];
-                    partition.onEvents.subscribe(e => events.push(...e));
-
-                    const info1 = deviceInfo('info1', 'info1', 'info1');
-                    const info2 = deviceInfo('Server', 'info2', 'info2');
-                    devices.next({
-                        devices: [info1, info2],
-                    });
-
-                    await waitAsync();
-
-                    expect(events).toEqual([asyncResult('task1', 1)]);
                 });
             });
 
@@ -778,7 +744,7 @@ describe('RemoteCausalRepoPartition', () => {
                     await waitAsync();
 
                     const events = [] as Action[];
-                    partition.onEvents.subscribe(e => events.push(...e));
+                    partition.onEvents.subscribe((e) => events.push(...e));
 
                     branches.next({
                         branches: ['abc', 'def'],
@@ -808,7 +774,7 @@ describe('RemoteCausalRepoPartition', () => {
                     await waitAsync();
 
                     const events = [] as Action[];
-                    partition.onEvents.subscribe(e => events.push(...e));
+                    partition.onEvents.subscribe((e) => events.push(...e));
 
                     branches.next({
                         branches: ['$admin', '$$hello', 'abc', 'def'],
@@ -843,7 +809,7 @@ describe('RemoteCausalRepoPartition', () => {
                     await waitAsync();
 
                     const events = [] as Action[];
-                    partition.onEvents.subscribe(e => events.push(...e));
+                    partition.onEvents.subscribe((e) => events.push(...e));
 
                     branches.next({
                         branches: [
@@ -942,7 +908,7 @@ describe('RemoteCausalRepoPartition', () => {
             describe('action', () => {
                 it('should translate a remote shout to a onRemoteWhisper event', async () => {
                     let events = [] as Action[];
-                    partition.onEvents.subscribe(e => events.push(...e));
+                    partition.onEvents.subscribe((e) => events.push(...e));
 
                     partition.connect();
 
@@ -975,7 +941,7 @@ describe('RemoteCausalRepoPartition', () => {
 
                 it('should ignore the bot IDs and userId', async () => {
                     let events = [] as Action[];
-                    partition.onEvents.subscribe(e => events.push(...e));
+                    partition.onEvents.subscribe((e) => events.push(...e));
 
                     partition.connect();
 
@@ -1021,11 +987,11 @@ describe('RemoteCausalRepoPartition', () => {
                 ]);
 
                 const addedAtoms = flatMap(
-                    connection.sentMessages.filter(m => m.name === ADD_ATOMS),
-                    m => m.data.atoms
+                    connection.sentMessages.filter((m) => m.name === ADD_ATOMS),
+                    (m) => m.data.atoms
                 );
                 const newBotAtom = addedAtoms.find(
-                    a =>
+                    (a) =>
                         a.value.type === AuxOpType.Bot &&
                         a.value.id === 'newBot'
                 );
@@ -1060,11 +1026,11 @@ describe('RemoteCausalRepoPartition', () => {
                 ]);
 
                 const addedAtoms = flatMap(
-                    connection.sentMessages.filter(m => m.name === ADD_ATOMS),
-                    m => m.data.atoms
+                    connection.sentMessages.filter((m) => m.name === ADD_ATOMS),
+                    (m) => m.data.atoms
                 );
                 const oldValueAtom = addedAtoms.find(
-                    a =>
+                    (a) =>
                         a.value.type === AuxOpType.Value &&
                         a.value.value === 'def'
                 );
@@ -1461,8 +1427,9 @@ describe('RemoteCausalRepoPartition', () => {
                 await partition.applyEvents([unlockSpace('admin', '3342')]);
 
                 expect(
-                    connection.sentMessages.filter(e => e.name === WATCH_BRANCH)
-                        .length
+                    connection.sentMessages.filter(
+                        (e) => e.name === WATCH_BRANCH
+                    ).length
                 ).toEqual(0);
             });
 
@@ -1541,7 +1508,7 @@ describe('RemoteCausalRepoPartition', () => {
                 });
 
                 let events = [] as Action[];
-                partition.onEvents.subscribe(e => events.push(...e));
+                partition.onEvents.subscribe((e) => events.push(...e));
                 await partition.applyEvents([
                     unlockSpace('admin', '3342', 123),
                 ]);
@@ -1575,7 +1542,7 @@ describe('RemoteCausalRepoPartition', () => {
                 });
 
                 let events = [] as Action[];
-                partition.onEvents.subscribe(e => events.push(...e));
+                partition.onEvents.subscribe((e) => events.push(...e));
                 await partition.applyEvents([
                     unlockSpace('admin', '3342', 123),
                 ]);
@@ -1606,7 +1573,7 @@ describe('RemoteCausalRepoPartition', () => {
                 });
 
                 let events = [] as Action[];
-                partition.onEvents.subscribe(e => events.push(...e));
+                partition.onEvents.subscribe((e) => events.push(...e));
 
                 await partition.applyEvents([
                     unlockSpace('admin', 'wrong', 123),
@@ -1673,10 +1640,14 @@ describe('RemoteCausalRepoPartition', () => {
             );
 
             sub.add(partition);
-            sub.add(partition.onBotsAdded.subscribe(b => added.push(...b)));
-            sub.add(partition.onBotsRemoved.subscribe(b => removed.push(...b)));
-            sub.add(partition.onBotsUpdated.subscribe(b => updated.push(...b)));
-            sub.add(partition.onError.subscribe(e => errors.push(e)));
+            sub.add(partition.onBotsAdded.subscribe((b) => added.push(...b)));
+            sub.add(
+                partition.onBotsRemoved.subscribe((b) => removed.push(...b))
+            );
+            sub.add(
+                partition.onBotsUpdated.subscribe((b) => updated.push(...b))
+            );
+            sub.add(partition.onError.subscribe((e) => errors.push(e)));
         }
     });
 });
