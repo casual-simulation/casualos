@@ -9,47 +9,24 @@ export type AwsMessage =
  */
 export const AWS_MESSAGE_DATA_OVERHEAD = 30;
 
-/**
- * Defines a message that sends some data over websockets.
- */
-export interface AwsMessageData {
-    type: 'message';
-    data: string;
+export enum AwsMessageTypes {
+    Message = 1,
+    UploadRequest = 2,
+    UploadResponse = 3,
+    DownloadRequest = 4,
 }
 
-/**
- * Defines a message that requests an upload URL for sending some data that is over 128KB large.
- */
-export interface AwsUploadRequest {
-    type: 'upload_request';
-
-    /**
-     * The ID of the upload request.
-     */
-    id: string;
-}
-
-/**
- * Defines a message that indicates what URL should be used in response to an upload request.
- */
-export interface AwsUploadResponse {
-    type: 'upload_response';
-
-    /**
-     * The ID of the upload request.
-     */
-    id: string;
-
-    /**
-     * The URL that the file should be uploaded to.
-     */
-    uploadUrl: string;
-}
-
-/**
- * Defines a message that indicates the given URL should be downloaded to represent the actual message.
- */
-export interface AwsDownloadRequest {
-    type: 'download_request';
-    url: string;
-}
+export type AwsMessageData = [type: AwsMessageTypes.Message, data: string];
+export type AwsUploadRequest = [
+    type: AwsMessageTypes.UploadRequest,
+    id: string
+];
+export type AwsUploadResponse = [
+    type: AwsMessageTypes.UploadResponse,
+    id: string,
+    uploadUrl: string
+];
+export type AwsDownloadRequest = [
+    type: AwsMessageTypes.DownloadRequest,
+    url: string
+];
