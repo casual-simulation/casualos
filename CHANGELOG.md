@@ -1,5 +1,27 @@
 # CasualOS Changelog
 
+## V1.3.3
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added support for the `apiary-aws` causal repo protocol.
+    -   This enables the CasualOS frontend to communicate with instances of the [CasualOS Apiary AWS](https://github.com/casual-simulation/casual-apiary-aws) project.
+    -   Use the `CAUSAL_REPO_CONNECTION_PROTOCOL` and `CAUSAL_REPO_CONNECTION_URL` environment variables to control which protocol and URL the frontend should connect to. See the [README in `aux-server`](./src/aux-server/README.md) for more info.
+    -   Note that only the following features are supported for AWS Apiaries:
+        -   `server.setupStory()`
+        -   `server.totalPlayerCount()`
+        -   `server.storyPlayerCount()`
+        -   `server.players()`
+    -   Webhooks are different when the story is hosted on an Apiary.
+        -   They require at least one device to have the story loaded for webhooks to function correctly.
+        -   They need to be sent to the Apiary host directly. Generally, this is not the same thing as `auxplayer.com` or `casualos.com` so you may need to ask the Apiary manager for it.
+-   Added better support for static builds.
+    -   Use the `PROXY_CORS_REQUESTS` environment variable during builds to disable support for proxying HTTP requests through the server.
+    -   Use `npm run tar:client` after a build to produce a `./temp/output-client.tar.gz` containing all the client code and assets. This can be deployed to S3 or a CDN for static hosting.
+    -   Use `npm run package:config` to produce a `./temp/config.json` which can be used for the `/api/config` request that the client makes at startup. Utilizes the environment variables from [the README in `aux-server`](./src/aux-server/README.md) to build the config.
+
 ## V1.3.2
 
 #### Date: 11/17/2020

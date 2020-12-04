@@ -66,6 +66,7 @@ export interface CausalRepoMessageHandlerTypes {
     'repo/branches': void;
     'repo/branches_status': void;
     'repo/devices': string;
+    'repo/device_count': string;
     'repo/commit': CommitEvent;
     'repo/watch_commits': string;
     'repo/unwatch_commits': string;
@@ -78,7 +79,7 @@ export interface CausalRepoMessageHandlerTypes {
 export type CausalRepoMessageHandlerMethods = {
     [K in keyof CausalRepoMessageHandlerTypes]: (
         value: CausalRepoMessageHandlerTypes[K]
-    ) => Promise<any>
+    ) => Promise<any>;
 };
 
 /**

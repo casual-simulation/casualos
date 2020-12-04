@@ -83,7 +83,7 @@ function playerConfig() {
                 },
                 cacheMaps: [
                     {
-                        match: function(url) {
+                        match: function (url) {
                             if (url.searchParams.has('dataPortal')) {
                                 return url;
                             }
@@ -132,6 +132,7 @@ function commonPlugins() {
         new webpack.DefinePlugin({
             GIT_HASH: JSON.stringify(commitHash),
             GIT_TAG: JSON.stringify(latestTag),
+            PROXY_CORS_REQUESTS: process.env.PROXY_CORS_REQUESTS !== 'false',
         }),
     ];
 }

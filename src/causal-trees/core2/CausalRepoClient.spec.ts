@@ -56,6 +56,8 @@ import {
     AUTHENTICATE_BRANCH_WRITES,
     AuthenticatedToBranchEvent,
     AUTHENTICATED_TO_BRANCH,
+    DEVICE_COUNT,
+    DeviceCountEvent,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -108,9 +110,9 @@ describe('CausalRepoClient', () => {
                 .watchBranch('abc')
                 .pipe(
                     filter(isClientAtoms),
-                    map(e => e.atoms)
+                    map((e) => e.atoms)
                 )
-                .subscribe(a => atoms.push(...a));
+                .subscribe((a) => atoms.push(...a));
 
             await waitAsync();
 
@@ -144,9 +146,9 @@ describe('CausalRepoClient', () => {
                 .watchBranch('abc')
                 .pipe(
                     filter(isClientAtoms),
-                    map(e => e.removedAtoms || [])
+                    map((e) => e.removedAtoms || [])
                 )
-                .subscribe(a => hashes.push(...a));
+                .subscribe((a) => hashes.push(...a));
 
             await waitAsync();
 
@@ -177,15 +179,16 @@ describe('CausalRepoClient', () => {
             let events = [] as (
                 | DeviceAction
                 | DeviceActionResult
-                | DeviceActionError)[];
+                | DeviceActionError
+            )[];
             connection.connect();
             client
                 .watchBranch('abc')
                 .pipe(
                     filter(isClientEvent),
-                    map(e => e.action)
+                    map((e) => e.action)
                 )
-                .subscribe(a => events.push(a));
+                .subscribe((a) => events.push(a));
 
             await waitAsync();
 
@@ -224,9 +227,9 @@ describe('CausalRepoClient', () => {
                 .watchBranch('abc')
                 .pipe(
                     filter(isClientResetAtoms),
-                    map(e => e.atoms)
+                    map((e) => e.atoms)
                 )
-                .subscribe(a => atoms.push(...a));
+                .subscribe((a) => atoms.push(...a));
 
             await waitAsync();
 
@@ -413,9 +416,9 @@ describe('CausalRepoClient', () => {
                 .watchBranch('abc')
                 .pipe(
                     filter(isClientAtoms),
-                    map(e => e.atoms)
+                    map((e) => e.atoms)
                 )
-                .subscribe(a => atoms.push(a));
+                .subscribe((a) => atoms.push(a));
 
             await waitAsync();
 
@@ -567,7 +570,7 @@ describe('CausalRepoClient', () => {
 
             let atoms = [] as Atom<any>[];
             connection.connect();
-            client.getBranch('abc').subscribe(a => atoms.push(...a));
+            client.getBranch('abc').subscribe((a) => atoms.push(...a));
 
             await waitAsync();
 
@@ -598,13 +601,11 @@ describe('CausalRepoClient', () => {
             let atoms = [] as Atom<any>[];
             let finished = false;
             connection.connect();
-            client
-                .getBranch('abc')
-                .subscribe(
-                    a => atoms.push(...a),
-                    err => {},
-                    () => (finished = true)
-                );
+            client.getBranch('abc').subscribe(
+                (a) => atoms.push(...a),
+                (err) => {},
+                () => (finished = true)
+            );
 
             await waitAsync();
 
@@ -726,7 +727,7 @@ describe('CausalRepoClient', () => {
             connection.events.set(COMMIT_CREATED, commits);
 
             let infos = [] as CommitCreatedEvent[];
-            client.commit('abc', 'newCommit').subscribe(e => infos.push(e));
+            client.commit('abc', 'newCommit').subscribe((e) => infos.push(e));
 
             connection.connect();
             await waitAsync();
@@ -788,7 +789,7 @@ describe('CausalRepoClient', () => {
             connection.events.set(RESTORED, restored);
 
             let infos = [] as RestoredEvent[];
-            client.restore('abc', 'newCommit').subscribe(e => infos.push(e));
+            client.restore('abc', 'newCommit').subscribe((e) => infos.push(e));
 
             connection.connect();
             await waitAsync();
@@ -836,8 +837,8 @@ describe('CausalRepoClient', () => {
             connection.connect();
             client
                 .watchCommits('abc')
-                .pipe(map(e => e.commits))
-                .subscribe(c => commits.unshift(...c));
+                .pipe(map((e) => e.commits))
+                .subscribe((c) => commits.unshift(...c));
 
             await waitAsync();
 
@@ -909,7 +910,7 @@ describe('CausalRepoClient', () => {
     describe('forcedOffline', () => {
         it('should disconnect when set set to true', async () => {
             let states = [] as boolean[];
-            connection.connectionState.subscribe(state =>
+            connection.connectionState.subscribe((state) =>
                 states.push(state.connected)
             );
 
@@ -923,7 +924,7 @@ describe('CausalRepoClient', () => {
 
         it('should reconnect when set set back to false', async () => {
             let states = [] as boolean[];
-            connection.connectionState.subscribe(state =>
+            connection.connectionState.subscribe((state) =>
                 states.push(state.connected)
             );
 
@@ -957,7 +958,7 @@ describe('CausalRepoClient', () => {
         it('should return an observable of branch loaded/unloaded events', async () => {
             let loadedBranches: string[] = [];
             let unloadedBranches: string[] = [];
-            client.watchBranches().subscribe(e => {
+            client.watchBranches().subscribe((e) => {
                 if (e.type === LOAD_BRANCH) {
                     loadedBranches.push(e.branch);
                 } else {
@@ -1028,7 +1029,7 @@ describe('CausalRepoClient', () => {
         it('should return an observable of connected/disconnected events', async () => {
             let connections: ConnectedToBranchEvent[] = [];
             let disconnections: DisconnectedFromBranchEvent[] = [];
-            client.watchDevices().subscribe(e => {
+            client.watchDevices().subscribe((e) => {
                 if (e.type === DEVICE_CONNECTED_TO_BRANCH) {
                     connections.push(e);
                 } else {
@@ -1085,7 +1086,7 @@ describe('CausalRepoClient', () => {
         it('should ignore non-broadcast events', async () => {
             let connections: ConnectedToBranchEvent[] = [];
             let disconnections: DisconnectedFromBranchEvent[] = [];
-            client.watchDevices().subscribe(e => {
+            client.watchDevices().subscribe((e) => {
                 if (e.type === DEVICE_CONNECTED_TO_BRANCH) {
                     connections.push(e);
                 } else {
@@ -1165,7 +1166,7 @@ describe('CausalRepoClient', () => {
         it('should return an observable of connected/disconnected events', async () => {
             let connections: ConnectedToBranchEvent[] = [];
             let disconnections: DisconnectedFromBranchEvent[] = [];
-            client.watchBranchDevices('testBranch').subscribe(e => {
+            client.watchBranchDevices('testBranch').subscribe((e) => {
                 if (e.type === DEVICE_CONNECTED_TO_BRANCH) {
                     connections.push(e);
                 } else {
@@ -1243,7 +1244,7 @@ describe('CausalRepoClient', () => {
         it('should send device disconnected events for all connected devices when the connection is lost', async () => {
             let connections: ConnectedToBranchEvent[] = [];
             let disconnections: DisconnectedFromBranchEvent[] = [];
-            client.watchBranchDevices('testBranch').subscribe(e => {
+            client.watchBranchDevices('testBranch').subscribe((e) => {
                 if (e.type === DEVICE_CONNECTED_TO_BRANCH) {
                     connections.push(e);
                 } else {
@@ -1321,7 +1322,7 @@ describe('CausalRepoClient', () => {
         it('should ignore broadcast events', async () => {
             let connections: ConnectedToBranchEvent[] = [];
             let disconnections: DisconnectedFromBranchEvent[] = [];
-            client.watchBranchDevices('testBranch').subscribe(e => {
+            client.watchBranchDevices('testBranch').subscribe((e) => {
                 if (e.type === DEVICE_CONNECTED_TO_BRANCH) {
                     connections.push(e);
                 } else {
@@ -1362,7 +1363,7 @@ describe('CausalRepoClient', () => {
         it('should ignore events for other branches', async () => {
             let connections: ConnectedToBranchEvent[] = [];
             let disconnections: DisconnectedFromBranchEvent[] = [];
-            client.watchBranchDevices('testBranch').subscribe(e => {
+            client.watchBranchDevices('testBranch').subscribe((e) => {
                 if (e.type === DEVICE_CONNECTED_TO_BRANCH) {
                     connections.push(e);
                 } else {
@@ -1423,7 +1424,7 @@ describe('CausalRepoClient', () => {
             connection.events.set(BRANCH_INFO, branchInfo);
 
             let infos = [] as BranchInfoEvent[];
-            client.branchInfo('abc').subscribe(e => infos.push(e));
+            client.branchInfo('abc').subscribe((e) => infos.push(e));
 
             connection.connect();
             await waitAsync();
@@ -1471,7 +1472,7 @@ describe('CausalRepoClient', () => {
             connection.events.set(BRANCHES, branches);
 
             let infos = [] as BranchesEvent[];
-            client.branches().subscribe(e => infos.push(e));
+            client.branches().subscribe((e) => infos.push(e));
 
             connection.connect();
             await waitAsync();
@@ -1553,7 +1554,7 @@ describe('CausalRepoClient', () => {
             connection.events.set(BRANCHES_STATUS, branches);
 
             let infos = [] as BranchesStatusEvent[];
-            client.branchesStatus().subscribe(e => infos.push(e));
+            client.branchesStatus().subscribe((e) => infos.push(e));
 
             connection.connect();
             await waitAsync();
@@ -1621,7 +1622,7 @@ describe('CausalRepoClient', () => {
             connection.events.set(DEVICES, devices);
 
             let infos = [] as DevicesEvent[];
-            client.devices().subscribe(e => infos.push(e));
+            client.devices().subscribe((e) => infos.push(e));
 
             connection.connect();
             await waitAsync();
@@ -1665,6 +1666,66 @@ describe('CausalRepoClient', () => {
         });
     });
 
+    describe('deviceCount()', () => {
+        it('should send a device count event after connecting', async () => {
+            client.deviceCount().subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: DEVICE_COUNT,
+                    data: null,
+                },
+            ]);
+        });
+
+        it('should return an observable of device info', async () => {
+            const devices = new Subject<DeviceCountEvent>();
+            connection.events.set(DEVICE_COUNT, devices);
+
+            let counts = [] as number[];
+            client.deviceCount().subscribe((e) => counts.push(e));
+
+            connection.connect();
+            await waitAsync();
+
+            devices.next({
+                count: 2,
+                branch: null,
+            });
+            await waitAsync();
+
+            devices.next({
+                count: 1,
+                branch: null,
+            });
+            await waitAsync();
+
+            expect(counts).toEqual([2]);
+        });
+
+        it('should send the given branch name', async () => {
+            const devices = new Subject<DeviceCountEvent>();
+            connection.events.set(DEVICE_COUNT, devices);
+
+            client.deviceCount('haha').subscribe();
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: DEVICE_COUNT,
+                    data: 'haha',
+                },
+            ]);
+        });
+    });
+
     describe('authenticateBranchWrites()', () => {
         it('should send a authenticate_branch_writes event after connecting', async () => {
             client.authenticateBranchWrites('abc', 'def').subscribe();
@@ -1692,7 +1753,7 @@ describe('CausalRepoClient', () => {
             let results = [] as boolean[];
             client
                 .authenticateBranchWrites('abc', 'def')
-                .subscribe(e => results.push(e));
+                .subscribe((e) => results.push(e));
 
             expect(connection.sentMessages).toEqual([]);
 

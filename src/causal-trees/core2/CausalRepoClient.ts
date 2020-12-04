@@ -65,6 +65,8 @@ import {
     AuthenticateBranchWritesEvent,
     AuthenticatedToBranchEvent,
     AUTHENTICATED_TO_BRANCH,
+    DEVICE_COUNT,
+    DeviceCountEvent,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -139,7 +141,7 @@ export class CausalRepoClient {
         const name = branchEvent.branch;
         this._watchedBranches.add(name);
         return this._whenConnected().pipe(
-            tap(connected => {
+            tap((connected) => {
                 this._client.send(WATCH_BRANCH, branchEvent);
                 let list = this._getSentAtoms(name);
                 let unsentAtoms = [] as Atom<any>[];
@@ -155,12 +157,12 @@ export class CausalRepoClient {
                     this._sendAddAtoms(name, unsentAtoms, removedAtoms);
                 }
             }),
-            switchMap(connected =>
+            switchMap((connected) =>
                 merge(
                     this._client.event<AddAtomsEvent>(ADD_ATOMS).pipe(
-                        filter(event => event.branch === name),
+                        filter((event) => event.branch === name),
                         map(
-                            e =>
+                            (e) =>
                                 ({
                                     type: 'atoms',
                                     atoms: e.atoms,
@@ -169,8 +171,8 @@ export class CausalRepoClient {
                         )
                     ),
                     this._client.event<AtomsReceivedEvent>(ATOMS_RECEIVED).pipe(
-                        filter(event => event.branch === name),
-                        tap(event => {
+                        filter((event) => event.branch === name),
+                        tap((event) => {
                             if (branchEvent.temporary) {
                                 return;
                             }
@@ -181,7 +183,7 @@ export class CausalRepoClient {
                             }
                         }),
                         map(
-                            event =>
+                            (event) =>
                                 ({
                                     type: 'atoms_received',
                                 } as ClientAtomsReceived)
@@ -190,9 +192,9 @@ export class CausalRepoClient {
                     this._client
                         .event<ReceiveDeviceActionEvent>(RECEIVE_EVENT)
                         .pipe(
-                            filter(event => event.branch === name),
+                            filter((event) => event.branch === name),
                             map(
-                                event =>
+                                (event) =>
                                     ({
                                         type: 'event',
                                         action: event.action,
@@ -200,9 +202,9 @@ export class CausalRepoClient {
                             )
                         ),
                     this._client.event<ResetEvent>(RESET).pipe(
-                        filter(event => event.branch === name),
+                        filter((event) => event.branch === name),
                         map(
-                            event =>
+                            (event) =>
                                 ({
                                     type: 'reset',
                                     atoms: event.atoms,
@@ -224,14 +226,14 @@ export class CausalRepoClient {
      */
     getBranch(name: string) {
         return this._whenConnected().pipe(
-            first(connected => connected),
-            tap(connected => {
+            first((connected) => connected),
+            tap((connected) => {
                 this._client.send(GET_BRANCH, name);
             }),
-            switchMap(connected =>
+            switchMap((connected) =>
                 this._client.event<AddAtomsEvent>(ADD_ATOMS).pipe(
-                    first(event => event.branch === name),
-                    map(event => event.atoms)
+                    first((event) => event.branch === name),
+                    map((event) => event.atoms)
                 )
             )
         );
@@ -239,18 +241,20 @@ export class CausalRepoClient {
 
     watchBranches() {
         return this._whenConnected().pipe(
-            tap(connected => {
+            tap((connected) => {
                 this._client.send(WATCH_BRANCHES, undefined);
             }),
-            switchMap(connected =>
+            switchMap((connected) =>
                 merge(
                     this._client
                         .event<LoadBranchEvent>(LOAD_BRANCH)
-                        .pipe(map(e => ({ type: LOAD_BRANCH, ...e } as const))),
+                        .pipe(
+                            map((e) => ({ type: LOAD_BRANCH, ...e } as const))
+                        ),
                     this._client
                         .event<UnloadBranchEvent>(UNLOAD_BRANCH)
                         .pipe(
-                            map(e => ({ type: UNLOAD_BRANCH, ...e } as const))
+                            map((e) => ({ type: UNLOAD_BRANCH, ...e } as const))
                         )
                 )
             ),
@@ -262,19 +266,19 @@ export class CausalRepoClient {
 
     watchDevices() {
         return this._whenConnected().pipe(
-            tap(connected => {
+            tap((connected) => {
                 this._client.send(WATCH_DEVICES, undefined);
             }),
-            switchMap(connected =>
+            switchMap((connected) =>
                 merge(
                     this._client
                         .event<ConnectedToBranchEvent>(
                             DEVICE_CONNECTED_TO_BRANCH
                         )
                         .pipe(
-                            filter(e => e.broadcast === true),
+                            filter((e) => e.broadcast === true),
                             map(
-                                e =>
+                                (e) =>
                                     ({
                                         type: DEVICE_CONNECTED_TO_BRANCH,
                                         ...e,
@@ -286,9 +290,9 @@ export class CausalRepoClient {
                             DEVICE_DISCONNECTED_FROM_BRANCH
                         )
                         .pipe(
-                            filter(e => e.broadcast === true),
+                            filter((e) => e.broadcast === true),
                             map(
-                                e =>
+                                (e) =>
                                     ({
                                         type: DEVICE_DISCONNECTED_FROM_BRANCH,
                                         ...e,
@@ -309,7 +313,7 @@ export class CausalRepoClient {
      */
     watchBranchDevices(branch: string) {
         return this._whenConnected(false).pipe(
-            switchMap(connected =>
+            switchMap((connected) =>
                 // Grab all of the currently connected devices
                 // and send disconnected events for them
                 !connected
@@ -322,7 +326,7 @@ export class CausalRepoClient {
     private _disconnectDevices(branch: string) {
         return of(
             ...[...this._getConnectedDevices(branch).values()].map(
-                device =>
+                (device) =>
                     ({
                         type: DEVICE_DISCONNECTED_FROM_BRANCH,
                         broadcast: false,
@@ -335,10 +339,10 @@ export class CausalRepoClient {
 
     private _watchConnectedDevices(branch: string) {
         return of(true).pipe(
-            tap(connected => {
+            tap((connected) => {
                 this._client.send(WATCH_BRANCH_DEVICES, branch);
             }),
-            switchMap(connected =>
+            switchMap((connected) =>
                 merge(
                     this._client
                         .event<ConnectedToBranchEvent>(
@@ -346,11 +350,11 @@ export class CausalRepoClient {
                         )
                         .pipe(
                             filter(
-                                e =>
+                                (e) =>
                                     e.broadcast === false &&
                                     e.branch.branch === branch
                             ),
-                            tap(e => {
+                            tap((e) => {
                                 const devices = this._getConnectedDevices(
                                     branch
                                 );
@@ -360,7 +364,7 @@ export class CausalRepoClient {
                                 );
                             }),
                             map(
-                                e =>
+                                (e) =>
                                     ({
                                         type: DEVICE_CONNECTED_TO_BRANCH,
                                         ...e,
@@ -373,10 +377,10 @@ export class CausalRepoClient {
                         )
                         .pipe(
                             filter(
-                                e =>
+                                (e) =>
                                     e.broadcast === false && e.branch === branch
                             ),
-                            tap(e => {
+                            tap((e) => {
                                 const devices = this._getConnectedDevices(
                                     branch
                                 );
@@ -385,7 +389,7 @@ export class CausalRepoClient {
                                 );
                             }),
                             map(
-                                e =>
+                                (e) =>
                                     ({
                                         type: DEVICE_DISCONNECTED_FROM_BRANCH,
                                         ...e,
@@ -406,14 +410,14 @@ export class CausalRepoClient {
      */
     branchInfo(branch: string) {
         return this._whenConnected().pipe(
-            tap(connected => {
+            tap((connected) => {
                 this._client.send(BRANCH_INFO, branch);
             }),
-            switchMap(connected =>
+            switchMap((connected) =>
                 merge(
                     this._client
                         .event<BranchInfoEvent>(BRANCH_INFO)
-                        .pipe(first(e => e.branch === branch))
+                        .pipe(first((e) => e.branch === branch))
                 )
             )
         );
@@ -424,10 +428,10 @@ export class CausalRepoClient {
      */
     branches() {
         return this._whenConnected().pipe(
-            tap(connected => {
+            tap((connected) => {
                 this._client.send(BRANCHES, undefined);
             }),
-            switchMap(connected =>
+            switchMap((connected) =>
                 merge(this._client.event<BranchesEvent>(BRANCHES).pipe(first()))
             )
         );
@@ -445,8 +449,8 @@ export class CausalRepoClient {
         newPassword: string
     ) {
         return this._whenConnected().pipe(
-            first(connected => connected),
-            tap(connected => {
+            first((connected) => connected),
+            tap((connected) => {
                 this._client.send(SET_BRANCH_PASSWORD, {
                     branch,
                     oldPassword,
@@ -466,21 +470,21 @@ export class CausalRepoClient {
         password: string
     ): Observable<boolean> {
         return this._whenConnected().pipe(
-            tap(connected => {
+            tap((connected) => {
                 this._client.send(AUTHENTICATE_BRANCH_WRITES, {
                     branch,
                     password,
                 } as AuthenticateBranchWritesEvent);
             }),
-            switchMap(connected =>
+            switchMap((connected) =>
                 merge(
                     this._client
                         .event<AuthenticatedToBranchEvent>(
                             AUTHENTICATED_TO_BRANCH
                         )
                         .pipe(
-                            filter(e => e.branch === branch),
-                            map(e => e.authenticated)
+                            filter((e) => e.branch === branch),
+                            map((e) => e.authenticated)
                         )
                 )
             )
@@ -492,10 +496,10 @@ export class CausalRepoClient {
      */
     branchesStatus() {
         return this._whenConnected().pipe(
-            tap(connected => {
+            tap((connected) => {
                 this._client.send(BRANCHES_STATUS, undefined);
             }),
-            switchMap(connected =>
+            switchMap((connected) =>
                 merge(
                     this._client
                         .event<BranchesStatusEvent>(BRANCHES_STATUS)
@@ -511,12 +515,32 @@ export class CausalRepoClient {
      */
     devices(branch?: string) {
         return this._whenConnected().pipe(
-            tap(connected => {
+            tap((connected) => {
                 this._client.send(DEVICES, branch);
             }),
-            switchMap(connected =>
+            switchMap((connected) =>
                 merge(this._client.event<DevicesEvent>(DEVICES).pipe(first()))
             )
+        );
+    }
+
+    /**
+     * Requests the number of devices that are currently connected.
+     * @param branch The branch that the devices should be counted on.
+     */
+    deviceCount(branch: string = null) {
+        return this._whenConnected().pipe(
+            tap((connected) => {
+                this._client.send(DEVICE_COUNT, branch);
+            }),
+            switchMap((connected) =>
+                merge(
+                    this._client
+                        .event<DeviceCountEvent>(DEVICE_COUNT)
+                        .pipe(first((e) => e.branch === branch))
+                )
+            ),
+            map((e) => e.count)
         );
     }
 
@@ -560,18 +584,18 @@ export class CausalRepoClient {
      */
     commit(branch: string, message: string): Observable<CommitCreatedEvent> {
         return this._whenConnected().pipe(
-            tap(connected => {
+            tap((connected) => {
                 const event: CommitEvent = {
                     branch: branch,
                     message: message,
                 };
                 this._client.send(COMMIT, event);
             }),
-            switchMap(connected =>
+            switchMap((connected) =>
                 merge(
                     this._client
                         .event<CommitCreatedEvent>(COMMIT_CREATED)
-                        .pipe(first(e => e.branch === branch))
+                        .pipe(first((e) => e.branch === branch))
                 )
             )
         );
@@ -592,18 +616,18 @@ export class CausalRepoClient {
 
     restore(branch: string, hash: string): Observable<RestoredEvent> {
         return this._whenConnected().pipe(
-            tap(connected => {
+            tap((connected) => {
                 const event: RestoreEvent = {
                     branch: branch,
                     commit: hash,
                 };
                 this._client.send(RESTORE, event);
             }),
-            switchMap(connected =>
+            switchMap((connected) =>
                 merge(
                     this._client
                         .event<RestoredEvent>(RESTORED)
-                        .pipe(first(e => e.branch === branch))
+                        .pipe(first((e) => e.branch === branch))
                 )
             )
         );
@@ -611,13 +635,13 @@ export class CausalRepoClient {
 
     watchCommits(branch: string): Observable<AddCommitsEvent> {
         return this._whenConnected().pipe(
-            tap(connected => {
+            tap((connected) => {
                 this._client.send(WATCH_COMMITS, branch);
             }),
-            switchMap(connected =>
+            switchMap((connected) =>
                 this._client
                     .event<AddCommitsEvent>(ADD_COMMITS)
-                    .pipe(filter(event => event.branch === branch))
+                    .pipe(filter((event) => event.branch === branch))
             ),
             finalize(() => {
                 this._client.send(UNWATCH_COMMITS, branch);
@@ -731,8 +755,8 @@ function whenConnected(
     filterConnected: boolean = true
 ): Observable<boolean> {
     return observable.pipe(
-        map(s => s.connected),
+        map((s) => s.connected),
         distinctUntilChanged(),
-        filterConnected ? filter(connected => connected) : a => a
+        filterConnected ? filter((connected) => connected) : (a) => a
     );
 }

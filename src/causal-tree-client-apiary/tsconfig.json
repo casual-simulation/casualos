@@ -2,7 +2,7 @@
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "baseUrl": ".",
-        "outDir": "./dist",
+        "outDir": ".",
         "declaration": true,
         "declarationMap": true,
         "composite": true,
@@ -12,8 +12,7 @@
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
     "references": [
         { "path": "../causal-trees" },
-        { "path": "../causal-tree-store-cassandradb" },
-        { "path": "../causal-tree-store-mongodb" },
-        { "path": "../causal-tree-client-apiary" }
+        { "path": "../crypto" },
+        { "path": "../crypto-browser" }
     ]
 }

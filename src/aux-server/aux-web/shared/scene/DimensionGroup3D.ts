@@ -52,21 +52,21 @@ export class DimensionGroup3D extends GameObject implements DimensionGroup {
 
     protected _childColliders: Object3D[];
     protected _decoratorFactory: AuxBot3DDecoratorFactory;
-    protected _colliders: Object3D[];
+    protected _groupColliders: Object3D[];
     protected _portalTag: string;
 
     /**
      * Gets the colliders that should be used for this dimension group.
      */
     get groupColliders() {
-        return this._colliders;
+        return this._groupColliders;
     }
 
     /**
      * Sets the colliders that should be used for this dimension group.
      */
     set groupColliders(value: Object3D[]) {
-        this._colliders = value;
+        this._groupColliders = value;
     }
 
     get childColliders() {

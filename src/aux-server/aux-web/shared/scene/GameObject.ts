@@ -19,10 +19,21 @@ export interface IGameObject {
  * Defines a class for a game object that can contain a mesh and a collider.
  */
 export class GameObject extends Object3D implements IGameObject {
+    private _colliders: Object3D[];
+
     /**
      * The colliders that this object has.
      */
-    colliders: Object3D[];
+    get colliders(): Object3D[] {
+        return this._colliders;
+    }
+
+    /**
+     * The colliders that this object has.
+     */
+    set colliders(value: Object3D[]) {
+        this._colliders = value;
+    }
 
     /**
      * Whether the object can receive pointer events.

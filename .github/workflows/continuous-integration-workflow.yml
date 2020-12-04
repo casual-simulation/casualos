@@ -41,8 +41,13 @@ jobs:
                   npm ci
                   npm run bootstrap
                   npm run build
+                  npm run tar:client
               env:
                   CI: true
+            - uses: actions/upload-artifact@v2
+              with:
+                  name: client
+                  path: temp/output-client.tar.gz
     docs:
         name: Build Docs
         strategy:
