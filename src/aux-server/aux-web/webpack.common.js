@@ -272,6 +272,10 @@ function baseConfig() {
                     __dirname,
                     'shared/public/clipboard-polyfill/clipboard-polyfill.js'
                 ),
+                'worker-loader': path.resolve(
+                    __dirname,
+                    '../loaders/worker-loader/cjs.js'
+                ),
             },
         },
     };
