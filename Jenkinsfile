@@ -20,7 +20,7 @@ pipeline {
     }
 
     tools {
-        nodejs('Node10.13.0')
+        nodejs('Node10.15.1')
     }
 
     stages {
