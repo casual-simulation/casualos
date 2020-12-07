@@ -44,7 +44,7 @@ let FetchCompileWasmPlugin;
 let FetchCompileAsyncWasmPlugin; // determine the version of webpack peer dependency
 // eslint-disable-next-line global-require, import/no-unresolved
 
-const useWebpack5 = require('webpack/package.json').version.startsWith('5.');
+const useWebpack5 = true;
 
 if (useWebpack5) {
     // eslint-disable-next-line global-require, import/no-unresolved
@@ -78,6 +78,7 @@ function pitch(request) {
     const publicPath = options.publicPath
         ? options.publicPath
         : compilerOptions.output.publicPath;
+
     workerContext.options = {
         filename,
         chunkFilename,

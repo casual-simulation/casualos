@@ -141,6 +141,22 @@ function baseConfig() {
         module: {
             rules: [
                 {
+                    test: /\.worker(\.(ts|js))?$/,
+                    use: [
+                        {
+                            // loader: 'worker-loader',
+                            loader: path.resolve(
+                                __dirname,
+                                '../loaders/worker-loader/cjs.js'
+                            ),
+                            options: {
+                                inline: 'fallback',
+                            },
+                        },
+                    ],
+                    exclude: /node_modules/,
+                },
+                {
                     test: /\.vue$/,
                     use: {
                         loader: 'vue-loader',
@@ -271,10 +287,6 @@ function baseConfig() {
                 'clipboard-polyfill': path.resolve(
                     __dirname,
                     'shared/public/clipboard-polyfill/clipboard-polyfill.js'
-                ),
-                'worker-loader': path.resolve(
-                    __dirname,
-                    '../loaders/worker-loader/cjs.js'
                 ),
             },
         },
