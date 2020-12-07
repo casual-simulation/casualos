@@ -199,7 +199,12 @@ function baseConfig() {
                 },
                 {
                     test: /three\/examples\/js/,
-                    use: 'imports-loader?THREE=three',
+                    use: {
+                        loader: 'imports-loader',
+                        options: {
+                            imports: ['default THREE three'],
+                        },
+                    },
                 },
                 {
                     test: /\.js$/,
