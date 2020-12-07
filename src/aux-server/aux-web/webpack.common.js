@@ -219,7 +219,8 @@ function baseConfig() {
                         {
                             loader: 'exports-loader',
                             options: {
-                                exports: 'globalThis.nacl',
+                                type: 'commonjs',
+                                exports: 'single globalThis.nacl',
                             },
                         },
                         {
