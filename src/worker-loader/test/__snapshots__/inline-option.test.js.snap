@@ -1,0 +1,80 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`"inline" option should not work by default: errors 1`] = `Array []`;
+
+exports[`"inline" option should not work by default: module 1`] = `
+"export default function Worker_fn() {
+  return new Worker(__webpack_public_path__ + \\"test.worker.js\\");
+}
+"
+`;
+
+exports[`"inline" option should not work by default: result 1`] = `"{\\"postMessage\\":true,\\"onmessage\\":true}"`;
+
+exports[`"inline" option should not work by default: warnings 1`] = `Array []`;
+
+exports[`"inline" option should work with "fallback" value and "esModule" with "false" value: errors 1`] = `Array []`;
+
+exports[`"inline" option should work with "fallback" value and "esModule" with "false" value: result 1`] = `"{\\"postMessage\\":true,\\"onmessage\\":true}"`;
+
+exports[`"inline" option should work with "fallback" value and "esModule" with "false" value: warnings 1`] = `Array []`;
+
+exports[`"inline" option should work with "fallback" value and "esModule" with "true" value: errors 1`] = `Array []`;
+
+exports[`"inline" option should work with "fallback" value and "esModule" with "true" value: result 1`] = `"{\\"postMessage\\":true,\\"onmessage\\":true}"`;
+
+exports[`"inline" option should work with "fallback" value and "esModule" with "true" value: warnings 1`] = `Array []`;
+
+exports[`"inline" option should work with "fallback" value and the "devtool" option ("source-map" value): errors 1`] = `Array []`;
+
+exports[`"inline" option should work with "fallback" value and the "devtool" option ("source-map" value): errors 2`] = `Array []`;
+
+exports[`"inline" option should work with "fallback" value and the "devtool" option ("source-map" value): result 1`] = `"{\\"postMessage\\":true,\\"onmessage\\":true}"`;
+
+exports[`"inline" option should work with "fallback" value and the "devtool" option ("source-map" value): result 2`] = `"{\\"postMessage\\":true,\\"onmessage\\":true}"`;
+
+exports[`"inline" option should work with "fallback" value and the "devtool" option ("source-map" value): warnings 1`] = `Array []`;
+
+exports[`"inline" option should work with "fallback" value and the "devtool" option ("source-map" value): warnings 2`] = `Array []`;
+
+exports[`"inline" option should work with "fallback" value: errors 1`] = `Array []`;
+
+exports[`"inline" option should work with "fallback" value: result 1`] = `"{\\"postMessage\\":true,\\"onmessage\\":true}"`;
+
+exports[`"inline" option should work with "fallback" value: warnings 1`] = `Array []`;
+
+exports[`"inline" option should work with "no-fallback" value and "esModule" with "false" value: errors 1`] = `Array []`;
+
+exports[`"inline" option should work with "no-fallback" value and "esModule" with "false" value: result 1`] = `"{\\"postMessage\\":true,\\"onmessage\\":true}"`;
+
+exports[`"inline" option should work with "no-fallback" value and "esModule" with "false" value: warnings 1`] = `Array []`;
+
+exports[`"inline" option should work with "no-fallback" value and "esModule" with "true" value: errors 1`] = `Array []`;
+
+exports[`"inline" option should work with "no-fallback" value and "esModule" with "true" value: result 1`] = `"{\\"postMessage\\":true,\\"onmessage\\":true}"`;
+
+exports[`"inline" option should work with "no-fallback" value and "esModule" with "true" value: warnings 1`] = `Array []`;
+
+exports[`"inline" option should work with "no-fallback" value and the "devtool" option ("eval-source-map" value): errors 1`] = `Array []`;
+
+exports[`"inline" option should work with "no-fallback" value and the "devtool" option ("eval-source-map" value): result 1`] = `"{\\"postMessage\\":true,\\"onmessage\\":true}"`;
+
+exports[`"inline" option should work with "no-fallback" value and the "devtool" option ("eval-source-map" value): warnings 1`] = `Array []`;
+
+exports[`"inline" option should work with "no-fallback" value and the "devtool" option ("source-map" value): errors 1`] = `Array []`;
+
+exports[`"inline" option should work with "no-fallback" value and the "devtool" option ("source-map" value): errors 2`] = `Array []`;
+
+exports[`"inline" option should work with "no-fallback" value and the "devtool" option ("source-map" value): result 1`] = `"{\\"postMessage\\":true,\\"onmessage\\":true}"`;
+
+exports[`"inline" option should work with "no-fallback" value and the "devtool" option ("source-map" value): result 2`] = `"{\\"postMessage\\":true,\\"onmessage\\":true}"`;
+
+exports[`"inline" option should work with "no-fallback" value and the "devtool" option ("source-map" value): warnings 1`] = `Array []`;
+
+exports[`"inline" option should work with "no-fallback" value and the "devtool" option ("source-map" value): warnings 2`] = `Array []`;
+
+exports[`"inline" option should work with "no-fallback" value: errors 1`] = `Array []`;
+
+exports[`"inline" option should work with "no-fallback" value: result 1`] = `"{\\"postMessage\\":true,\\"onmessage\\":true}"`;
+
+exports[`"inline" option should work with "no-fallback" value: warnings 1`] = `Array []`;
