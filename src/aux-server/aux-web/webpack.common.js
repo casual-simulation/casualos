@@ -167,7 +167,7 @@ function baseConfig() {
                 },
                 {
                     test: /\.css$/,
-                    use: ['vue-style-loader', 'css-loader'],
+                    use: ['style-loader', 'css-loader'],
                 },
                 {
                     test: /\.svg$/,
