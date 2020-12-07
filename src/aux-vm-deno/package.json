@@ -54,6 +54,6 @@
         "uuid": "^3.3.2"
     },
     "devDependencies": {
-        "worker-loader": "^2.0.0"
+        "worker-loader": "^3.0.6"
     }
 }

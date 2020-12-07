@@ -1,5 +1,4 @@
 import * as Sentry from '@sentry/browser';
-import * as OfflinePluginRuntime from 'offline-plugin/runtime';
 import Axios from 'axios';
 import Vue from 'vue';
 import { BehaviorSubject, Observable, SubscriptionLike } from 'rxjs';
@@ -149,9 +148,11 @@ export class AppManager {
      * Instructs the app manager to check for new updates online.
      */
     checkForUpdates() {
-        setTimeout(() => {
-            OfflinePluginRuntime.update();
-        }, 1000);
+        // setTimeout(() => {
+        //     // if ('serviceWorker' in navigator) {
+        //     // }
+        //     // OfflinePluginRuntime.update();
+        // }, 1000);
     }
 
     /**
@@ -281,47 +282,57 @@ export class AppManager {
     private _initOffline() {
         this._updateAvailable = new BehaviorSubject<boolean>(false);
 
-        OfflinePluginRuntime.install({
-            onUpdating: () => {
-                console.log('[ServiceWorker]: Updating...');
-                Sentry.addBreadcrumb({
-                    message: 'Updating service worker.',
-                    level: Sentry.Severity.Info,
-                    category: 'app',
-                    type: 'default',
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker
+                .register('/service-worker.js')
+                .then((registration) => {
+                    console.log('[ServiceWorker] Registered.');
+                })
+                .catch((err) => {
+                    console.error('[ServiceWorker] Registration Failed.', err);
                 });
-            },
-            onUpdateReady: () => {
-                console.log('[ServiceWorker]: Update Ready.');
-                OfflinePluginRuntime.applyUpdate();
-            },
-            onUpdated: () => {
-                console.log('[ServiceWorker]: Updated.');
-                Sentry.addBreadcrumb({
-                    message: 'Updated service worker.',
-                    level: Sentry.Severity.Info,
-                    category: 'app',
-                    type: 'default',
-                });
-                this._updateAvailable.next(true);
-            },
-            onUpdateFailed: () => {
-                console.log('[ServiceWorker]: Update failed.');
-                Sentry.captureMessage(
-                    'Service Worker update failed',
-                    Sentry.Severity.Error
-                );
-            },
-            onInstalled: () => {
-                console.log('[ServiceWorker]: Installed.');
-                Sentry.addBreadcrumb({
-                    message: 'Installed service worker.',
-                    level: Sentry.Severity.Info,
-                    category: 'app',
-                    type: 'default',
-                });
-            },
-        });
+        }
+        // OfflinePluginRuntime.install({
+        //     onUpdating: () => {
+        //         console.log('[ServiceWorker]: Updating...');
+        //         Sentry.addBreadcrumb({
+        //             message: 'Updating service worker.',
+        //             level: Sentry.Severity.Info,
+        //             category: 'app',
+        //             type: 'default',
+        //         });
+        //     },
+        //     onUpdateReady: () => {
+        //         console.log('[ServiceWorker]: Update Ready.');
+        //         OfflinePluginRuntime.applyUpdate();
+        //     },
+        //     onUpdated: () => {
+        //         console.log('[ServiceWorker]: Updated.');
+        //         Sentry.addBreadcrumb({
+        //             message: 'Updated service worker.',
+        //             level: Sentry.Severity.Info,
+        //             category: 'app',
+        //             type: 'default',
+        //         });
+        //         this._updateAvailable.next(true);
+        //     },
+        //     onUpdateFailed: () => {
+        //         console.log('[ServiceWorker]: Update failed.');
+        //         Sentry.captureMessage(
+        //             'Service Worker update failed',
+        //             Sentry.Severity.Error
+        //         );
+        //     },
+        //     onInstalled: () => {
+        //         console.log('[ServiceWorker]: Installed.');
+        //         Sentry.addBreadcrumb({
+        //             message: 'Installed service worker.',
+        //             level: Sentry.Severity.Info,
+        //             category: 'app',
+        //             type: 'default',
+        //         });
+        //     },
+        // });
     }
 
     async setPrimarySimulation(channelId: string) {

@@ -1,13 +1,19 @@
 const path = require('path');
-const merge = require('webpack-merge');
+const { mergeWithCustomize, customizeArray } = require('webpack-merge');
 const webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const common = require('./webpack.common.js');
 
-const finalPlayerConfig = merge.smart(common.player, productionPlayerConfig());
-const finalDenoConfig = merge.smart(common.deno, productionDenoConfig());
+const merge = mergeWithCustomize({
+    customizeArray: customizeArray({
+        'plugins.*': 'append',
+    }),
+});
+
+const finalPlayerConfig = merge(common.player, productionPlayerConfig());
+const finalDenoConfig = merge(common.deno, productionDenoConfig());
 
 module.exports = [finalPlayerConfig, finalDenoConfig];
 
@@ -33,7 +39,6 @@ function productionBaseConfig() {
                             loader: 'css-loader',
                             options: {
                                 importLoaders: 1,
-                                minimize: true,
                             },
                         },
                     ],
@@ -58,15 +63,14 @@ function productionBaseConfig() {
             new MiniCssExtractPlugin({
                 filename: '[name].[contenthash].css',
             }),
-            new webpack.HashedModuleIdsPlugin(),
         ],
         optimization: {
+            moduleIds: 'deterministic',
             minimize: true,
             minimizer: [
                 new TerserPlugin({
                     exclude: /deno\.js/,
                     parallel: true,
-                    sourceMap: true,
                     terserOptions: {
                         output: {
                             // Force ASCII characters so that Safari
@@ -100,7 +104,7 @@ function productionPlayerConfig() {
                         chunks: 'all',
                         priority: 1,
                     },
-                    vendor: {
+                    defaultVendors: {
                         test: /[\\/](node_modules|public)[\\/](?!aux-common)/,
                         name: 'vendors',
                         chunks: 'all',

@@ -99,7 +99,7 @@ Here's a list of the tools and packages that we're using to build CasualOS.
             -   [babel-loader](https://github.com/babel/babel-loader) for transpiling ES6 features to ES5. (some of our dependencies are ES6 only)
             -   [source-map-loader](https://github.com/webpack-contrib/source-map-loader) for loading sourcemaps from pre-compiled JS.
         -   Plugins
-            -   [offline-plugin](https://github.com/NekR/offline-plugin) for service worker support.
+            -   [workbox-webpack-plugin](https://github.com/GoogleChrome/workbox/tree/v6/packages/workbox-webpack-plugin) for service worker support.
             -   [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) for generating index.html files.
             -   [terser-webpack-plugin](https://github.com/webpack-contrib/terser-webpack-plugin) for minifying JS.
             -   [clean-webpack-plugin](https://github.com/johnagan/clean-webpack-plugin) for clean builds.
