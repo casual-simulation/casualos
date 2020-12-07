@@ -3,6 +3,7 @@
     "version": "3.0.6",
     "description": "worker loader module for webpack",
     "license": "MIT",
+    "private": true,
     "repository": "webpack-contrib/worker-loader",
     "author": "Tobias Koppers @sokra",
     "homepage": "https://github.com/webpack-contrib/worker-loader",
