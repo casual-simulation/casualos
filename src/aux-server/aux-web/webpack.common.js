@@ -76,8 +76,9 @@ function playerConfig() {
             new WorkboxPlugin.GenerateSW({
                 clientsClaim: true,
                 skipWaiting: true,
-                exclude: [/webxr-profiles/],
+                exclude: [/webxr-profiles/, /\.map$/, /fonts\/NotoSansKR/],
                 chunks: ['player', 'vendors', 'vm'],
+                maximumFileSizeToCacheInBytes: 3145728, // 3MiB
             }),
             new CopyPlugin({
                 patterns: [

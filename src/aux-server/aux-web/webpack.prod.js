@@ -1,5 +1,9 @@
 const path = require('path');
-const { mergeWithCustomize, customizeArray } = require('webpack-merge');
+const {
+    mergeWithRules,
+    mergeWithCustomize,
+    customizeArray,
+} = require('webpack-merge');
 const webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
