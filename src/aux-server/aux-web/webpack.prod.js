@@ -6,10 +6,24 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const common = require('./webpack.common.js');
 
+const mergeModule = mergeWithRules({
+    rules: {
+        test: 'match',
+        use: 'replace',
+    },
+});
+
 const merge = mergeWithCustomize({
     customizeArray: customizeArray({
         'plugins.*': 'append',
     }),
+    customizeObject(a, b, key) {
+        if (key === 'module') {
+            return mergeModule(a, b);
+        }
+
+        return undefined;
+    },
 });
 
 const finalPlayerConfig = merge(common.player, productionPlayerConfig());
