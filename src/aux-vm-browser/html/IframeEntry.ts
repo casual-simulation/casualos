@@ -1,17 +1,20 @@
-import Worker from '../vm/AuxWorker';
-import { listenForChannel, setupChannel } from './IFrameHelpers';
+import '@casual-simulation/aux-vm/globalThis-polyfill';
 
-const instance = new Worker();
+globalThis.addEventListener('message', (message) => {
+    if (message.data.type === 'load_script') {
+        const url = message.data.url;
 
-listenForChannel().then(port => {
-    console.log('[IframeEntry] Got port, sending to worker instance.');
-    instance.postMessage(
-        {
-            type: 'init_port',
-            port: port,
-        },
-        [port]
-    );
+        const script = document.createElement('script');
+        script.src = url;
+        script.onload = () => {
+            globalThis.postMessage(
+                {
+                    type: 'script_loaded',
+                    url,
+                },
+                message.origin
+            );
+        };
+        document.body.append(script);
+    }
 });
-
-console.log('[IframeEntry] Listening for port...');

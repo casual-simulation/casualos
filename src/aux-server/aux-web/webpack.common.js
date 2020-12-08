@@ -41,6 +41,14 @@ function playerConfig() {
                 __dirname,
                 './shared/service-worker.ts'
             ),
+            worker: path.resolve(
+                __dirname,
+                '..',
+                '..',
+                'aux-vm-browser',
+                'vm',
+                'WorkerEntry.ts'
+            ),
         },
         plugins: [
             new CleanWebpackPlugin({

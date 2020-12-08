@@ -23,7 +23,7 @@ export function setupChannel(iframeWindow: Window) {
  * Listens for the init_port event from the global context.
  */
 export function listenForChannel(): Promise<MessagePort> {
-    return new Promise<MessagePort>(resolve => {
+    return new Promise<MessagePort>((resolve) => {
         let listener = (msg: MessageEvent) => {
             if (msg.data.type === 'init_port') {
                 globalThis.removeEventListener('message', listener);
@@ -35,11 +35,42 @@ export function listenForChannel(): Promise<MessagePort> {
 }
 
 export function waitForLoad(iframe: HTMLIFrameElement): Promise<void> {
-    return new Promise<void>(resolve => {
+    return new Promise<void>((resolve) => {
         let listener = () => {
             iframe.removeEventListener('load', listener);
             resolve();
         };
         iframe.addEventListener('load', listener);
+    });
+}
+
+/**
+ * Loads the script at the given URL into the given iframe window.
+ * @param iframeWindow The iframe.
+ * @param url The URL to load.
+ */
+export function loadScript(iframeWindow: Window, url: string) {
+    return new Promise<void>((resolve, reject) => {
+        const listener = (message: MessageEvent) => {
+            if (message.source !== iframeWindow) {
+                debugger;
+                return;
+            }
+            if (
+                message.data.type === 'script_loaded' &&
+                message.data.url === url
+            ) {
+                iframeWindow.removeEventListener('message', listener);
+                resolve();
+            }
+        };
+        globalThis.addEventListener('message', listener);
+        iframeWindow.postMessage(
+            {
+                type: 'load_script',
+                url,
+            },
+            '*'
+        );
     });
 }
