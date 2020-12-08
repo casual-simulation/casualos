@@ -306,47 +306,6 @@ export class AppManager {
                     console.error('[ServiceWorker] Registration Failed.', err);
                 });
         }
-        // OfflinePluginRuntime.install({
-        //     onUpdating: () => {
-        //         console.log('[ServiceWorker]: Updating...');
-        //         Sentry.addBreadcrumb({
-        //             message: 'Updating service worker.',
-        //             level: Sentry.Severity.Info,
-        //             category: 'app',
-        //             type: 'default',
-        //         });
-        //     },
-        //     onUpdateReady: () => {
-        //         console.log('[ServiceWorker]: Update Ready.');
-        //         OfflinePluginRuntime.applyUpdate();
-        //     },
-        //     onUpdated: () => {
-        //         console.log('[ServiceWorker]: Updated.');
-        //         Sentry.addBreadcrumb({
-        //             message: 'Updated service worker.',
-        //             level: Sentry.Severity.Info,
-        //             category: 'app',
-        //             type: 'default',
-        //         });
-        //         this._updateAvailable.next(true);
-        //     },
-        //     onUpdateFailed: () => {
-        //         console.log('[ServiceWorker]: Update failed.');
-        //         Sentry.captureMessage(
-        //             'Service Worker update failed',
-        //             Sentry.Severity.Error
-        //         );
-        //     },
-        //     onInstalled: () => {
-        //         console.log('[ServiceWorker]: Installed.');
-        //         Sentry.addBreadcrumb({
-        //             message: 'Installed service worker.',
-        //             level: Sentry.Severity.Info,
-        //             category: 'app',
-        //             type: 'default',
-        //         });
-        //     },
-        // });
     }
 
     async setPrimarySimulation(channelId: string) {
