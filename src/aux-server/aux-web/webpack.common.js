@@ -36,6 +36,7 @@ function playerConfig() {
                 'html',
                 'IframeEntry.ts'
             ),
+            sw: path.resolve(__dirname, './shared/sw.ts'),
         },
         plugins: [
             new CleanWebpackPlugin({
@@ -79,6 +80,7 @@ function playerConfig() {
                 exclude: [/webxr-profiles/, /\.map$/, /fonts\/NotoSansKR/],
                 chunks: ['player', 'vendors', 'vm'],
                 maximumFileSizeToCacheInBytes: 3145728, // 3MiB
+                importScriptsViaChunks: ['sw'],
             }),
             new CopyPlugin({
                 patterns: [
