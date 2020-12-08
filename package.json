@@ -124,7 +124,7 @@
         "style-loader": "^2.0.0",
         "tar": "4.4.8",
         "terser-webpack-plugin": "^5.0.3",
-        "ts-jest": "^24.0.0",
+        "ts-jest": "26.4.4",
         "ts-loader": "8.0.11",
         "typedoc": "^0.15.0",
         "typescript": "^4.1.2",

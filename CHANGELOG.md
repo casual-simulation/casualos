@@ -22,6 +22,10 @@
     -   Use `npm run tar:client` after a build to produce a `./temp/output-client.tar.gz` containing all the client code and assets. This can be deployed to S3 or a CDN for static hosting.
     -   Use `npm run package:config` to produce a `./temp/config.json` which can be used for the `/api/config` request that the client makes at startup. Utilizes the environment variables from [the README in `aux-server`](./src/aux-server/README.md) to build the config.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was not possible to change the color of GLTF meshes that did not have a mesh in the GLTF scene root.
+
 ## V1.3.2
 
 #### Date: 11/17/2020
