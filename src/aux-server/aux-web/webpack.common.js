@@ -9,6 +9,7 @@ const WorkboxPlugin = require('workbox-webpack-plugin');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 const webpack = require('webpack');
 const { merge } = require('webpack-merge');
+const WebpackAssetsManifest = require('webpack-assets-manifest');
 
 const commitHash = childProcess
     .execSync('git rev-parse HEAD')
