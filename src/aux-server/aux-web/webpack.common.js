@@ -223,7 +223,7 @@ function baseConfig() {
                     use: {
                         loader: 'imports-loader',
                         options: {
-                            imports: ['default THREE three'],
+                            imports: ['default three THREE'],
                         },
                     },
                 },
