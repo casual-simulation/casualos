@@ -25,6 +25,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where it was not possible to change the color of GLTF meshes that did not have a mesh in the GLTF scene root.
+-   Fixed an issue where bots created by the ab1 installer would not receive the `@onStorySubscribed` shout.
 
 ## V1.3.2
 
