@@ -1,9 +1,9 @@
 <template>
-    <svg v-if="supportsSVG" viewBox="0 0 32 32" :style="{ background: backgroundColor }">
+    <svg v-if="supportsSVG" viewBox="0 0 32 32" :style="{ background: color }">
         <circle
             :style="{
-                fill: color,
-                stroke: backgroundColor,
+                fill: backgroundColor,
+                stroke: color,
                 'stroke-dasharray': progress * 100 + ' 100',
             }"
             r="16"

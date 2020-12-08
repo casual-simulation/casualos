@@ -292,10 +292,10 @@ export default class MenuBot extends Vue {
 
         this.progressBarForeground = hasValue(colorTagValue)
             ? colorTagValue
-            : '#000';
+            : '#fff';
         this.progressBarBackground = hasValue(bgColorTagValue)
             ? bgColorTagValue
-            : '#fff';
+            : '#000';
     }
 }
 
