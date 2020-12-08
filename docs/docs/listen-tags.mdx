@@ -659,6 +659,9 @@ let that: {
 ### `@onStoryStreaming`
 
 A shout that is sent when a story is connected and fully synced.
+
+Note that this can occur multiple times throughout the lifetime of a session because the player can lose and regain its connection to the server.
+
 Sent to every story that is loaded.
 
 #### Arguments:
@@ -671,6 +674,9 @@ let that: {
 ### `@onStoryStreamLost`
 
 A shout that is sent when a story has been temporarily disconnected from the server.
+
+Note that this can occur multiple times throughout the lifetime of a session because the player can lose and regain its connection to the server.
+
 Sent to every story that is loaded.
 
 #### Arguments:
