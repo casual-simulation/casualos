@@ -87,6 +87,7 @@ export class AppManager {
     private _config: WebConfig;
     private _deviceConfig: AuxConfig['config']['device'];
     private _primaryPromise: Promise<BotManager>;
+    private _registration: ServiceWorkerRegistration;
 
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
@@ -148,11 +149,11 @@ export class AppManager {
      * Instructs the app manager to check for new updates online.
      */
     checkForUpdates() {
-        // setTimeout(() => {
-        //     // if ('serviceWorker' in navigator) {
-        //     // }
-        //     // OfflinePluginRuntime.update();
-        // }, 1000);
+        setTimeout(() => {
+            if (this._registration) {
+                this._registration.update();
+            }
+        }, 1000);
     }
 
     /**
@@ -286,6 +287,19 @@ export class AppManager {
             navigator.serviceWorker
                 .register('/service-worker.js')
                 .then((registration) => {
+                    this._registration = registration;
+
+                    this._registration.onupdatefound = (e) => {
+                        console.log('[ServiceWorker]: Updated.');
+                        Sentry.addBreadcrumb({
+                            message: 'Updated service worker.',
+                            level: Sentry.Severity.Info,
+                            category: 'app',
+                            type: 'default',
+                        });
+                        this._updateAvailable.next(true);
+                    };
+
                     console.log('[ServiceWorker] Registered.');
                 })
                 .catch((err) => {

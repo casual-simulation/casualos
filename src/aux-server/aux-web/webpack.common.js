@@ -76,6 +76,8 @@ function playerConfig() {
             new WorkboxPlugin.GenerateSW({
                 clientsClaim: true,
                 skipWaiting: true,
+                exclude: [/webxr-profiles/],
+                chunks: ['player', 'vendors', 'vm'],
             }),
             new CopyPlugin({
                 patterns: [
