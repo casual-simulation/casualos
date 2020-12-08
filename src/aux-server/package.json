@@ -94,7 +94,7 @@
         "mime": "2.4.6",
         "monaco-editor": "0.21.2",
         "mongodb": "3.6.2",
-        "offline-plugin": "^5.0.6",
+        "workbox-webpack-plugin": "6.0.2",
         "onoff": "6.0.0",
         "quagga": "0.12.1",
         "redis": "2.8.0",
@@ -119,6 +119,11 @@
         "vue-material": "^1.0.0-beta-10.2",
         "vue-property-decorator": "^7.2.0",
         "vue-router": "^3.0.1",
-        "vue-shortkey": "^3.1.6"
+        "vue-shortkey": "^3.1.6",
+        "buffer": "6.0.3"
+    },
+    "devDependencies": {
+        "schema-utils": "^3.0.0",
+        "loader-utils": "^2.0.0"
     }
 }

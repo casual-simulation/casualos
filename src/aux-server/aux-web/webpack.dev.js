@@ -1,8 +1,34 @@
 const webpack = require('webpack');
-const merge = require('webpack-merge');
+const {
+    mergeWithCustomize,
+    customizeArray,
+    mergeWithRules,
+} = require('webpack-merge');
 const common = require('./webpack.common.js');
-const HardSourceWebpackPlugin = require('hard-source-webpack-plugin');
 const path = require('path');
+
+const mergeModule = mergeWithRules({
+    rules: {
+        test: 'match',
+        use: {
+            loader: 'match',
+            options: 'replace',
+        },
+    },
+});
+
+const merge = mergeWithCustomize({
+    customizeArray: customizeArray({
+        'plugins.*': 'append',
+    }),
+    customizeObject(a, b, key) {
+        if (key === 'module') {
+            return mergeModule(a, b);
+        }
+
+        return undefined;
+    },
+});
 
 const finalPlayerConfig = merge(common.player, developmentConfig());
 const finalDenoConfig = merge(common.deno, developmentConfig());
@@ -12,7 +38,7 @@ module.exports = [finalPlayerConfig, finalDenoConfig];
 function developmentConfig() {
     return {
         mode: 'development',
-        devtool: false,
+        devtool: 'eval-source-map',
         plugins: [
             new webpack.SourceMapDevToolPlugin({
                 filename: '[name].js.map',
@@ -20,32 +46,6 @@ function developmentConfig() {
             }),
             new webpack.DefinePlugin({
                 PRODUCTION: JSON.stringify(false),
-            }),
-            new HardSourceWebpackPlugin({
-                environmentHash: {
-                    root: process.cwd(),
-                    directories: [],
-                    files: [
-                        path.resolve(
-                            __dirname,
-                            '..',
-                            '..',
-                            '..',
-                            'package-lock.json'
-                        ),
-                        path.resolve(
-                            __dirname,
-                            '..',
-                            '..',
-                            '..',
-                            'tsconfig.base.json'
-                        ),
-                        path.resolve(__dirname, '..', 'package.json'),
-                        path.resolve(__dirname, '..', 'tsconfig.json'),
-                        'package-lock.json',
-                        'yarn.lock',
-                    ],
-                },
             }),
         ],
     };

@@ -5,10 +5,10 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
-const OfflinePlugin = require('offline-plugin');
+const WorkboxPlugin = require('workbox-webpack-plugin');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 const webpack = require('webpack');
-const merge = require('webpack-merge');
+const { merge } = require('webpack-merge');
 
 const commitHash = childProcess
     .execSync('git rev-parse HEAD')
@@ -36,6 +36,7 @@ function playerConfig() {
                 'html',
                 'IframeEntry.ts'
             ),
+            sw: path.resolve(__dirname, './shared/sw.ts'),
         },
         plugins: [
             new CleanWebpackPlugin({
@@ -73,40 +74,33 @@ function playerConfig() {
                 THREE: 'three',
             }),
             ...commonPlugins(),
-            new OfflinePlugin({
-                // chunks: ['player'],
-                appShell: '/player.html',
-                AppCache: false,
-                ServiceWorker: {
-                    events: true,
-                    entry: path.resolve(__dirname, 'shared', 'sw.ts'),
-                },
-                cacheMaps: [
+            new WorkboxPlugin.GenerateSW({
+                clientsClaim: true,
+                skipWaiting: true,
+                exclude: [/webxr-profiles/, /\.map$/, /fonts\/NotoSansKR/],
+                chunks: ['player', 'vendors', 'vm'],
+                maximumFileSizeToCacheInBytes: 3145728, // 3MiB
+                importScriptsViaChunks: ['sw'],
+            }),
+            new CopyPlugin({
+                patterns: [
                     {
-                        match: function (url) {
-                            if (url.searchParams.has('dataPortal')) {
-                                return url;
-                            }
-                        },
-                        requestTypes: ['navigate'],
+                        from:
+                            'node_modules/@webxr-input-profiles/assets/dist/profiles',
+                        to: path.resolve(__dirname, 'dist', 'webxr-profiles'),
+                        context: path.resolve(__dirname, '..', '..', '..'),
+                    },
+                    {
+                        from: path.resolve(
+                            __dirname,
+                            'shared',
+                            'public',
+                            'draco'
+                        ),
+                        to: path.resolve(__dirname, 'dist', 'gltf-draco'),
                     },
                 ],
-                externals: [],
             }),
-            new CopyPlugin([
-                {
-                    from:
-                        'node_modules/@webxr-input-profiles/assets/dist/profiles',
-                    to: path.resolve(__dirname, 'dist', 'webxr-profiles'),
-                    context: path.resolve(__dirname, '..', '..', '..'),
-                },
-            ]),
-            new CopyPlugin([
-                {
-                    from: path.resolve(__dirname, 'shared', 'public', 'draco'),
-                    to: path.resolve(__dirname, 'dist', 'gltf-draco'),
-                },
-            ]),
         ],
     });
 }
@@ -143,21 +137,30 @@ function baseConfig() {
             publicPath: '/',
             filename: '[name].js',
             path: path.resolve(__dirname, 'dist'),
-            // globalObject: 'self',
         },
         node: {
-            console: false,
             global: true,
-            process: false,
             __filename: 'mock',
             __dirname: 'mock',
-
-            // Buffer is needed for sha.js
-            Buffer: true,
-            setImmediate: false,
         },
         module: {
             rules: [
+                {
+                    test: /\.worker(\.(ts|js))?$/,
+                    use: [
+                        {
+                            // loader: 'worker-loader',
+                            loader: path.resolve(
+                                __dirname,
+                                '../loaders/worker-loader/cjs.js'
+                            ),
+                            options: {
+                                inline: 'fallback',
+                            },
+                        },
+                    ],
+                    exclude: /node_modules/,
+                },
                 {
                     test: /\.vue$/,
                     use: {
@@ -185,7 +188,7 @@ function baseConfig() {
                 },
                 {
                     test: /\.css$/,
-                    use: ['vue-style-loader', 'css-loader'],
+                    use: ['style-loader', 'css-loader'],
                 },
                 {
                     test: /\.svg$/,
@@ -217,7 +220,12 @@ function baseConfig() {
                 },
                 {
                     test: /three\/examples\/js/,
-                    use: 'imports-loader?THREE=three',
+                    use: {
+                        loader: 'imports-loader',
+                        options: {
+                            imports: ['namespace three THREE'],
+                        },
+                    },
                 },
                 {
                     test: /\.js$/,
@@ -233,8 +241,27 @@ function baseConfig() {
                 // window.nacl property.
                 {
                     test: /[\\\/]tweetnacl[\\\/]/,
-                    loader:
-                        'exports-loader?globalThis.nacl!imports-loader?this=>globalThis,module=>{},require=>false',
+                    use: [
+                        {
+                            loader: 'exports-loader',
+                            options: {
+                                type: 'commonjs',
+                                exports: 'single globalThis.nacl',
+                            },
+                        },
+                        {
+                            loader: 'imports-loader',
+                            options: {
+                                wrapper: {
+                                    thisArg: 'globalThis',
+                                    args: {
+                                        module: '{}',
+                                        require: 'false',
+                                    },
+                                },
+                            },
+                        },
+                    ],
                 },
             ],
             noParse: [/[\\\/]tweetnacl[\\\/]/, /[\\\/]tweetnacl-auth[\\\/]/],
