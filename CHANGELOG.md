@@ -12,6 +12,7 @@
         -   This means that some capabilities like `server.setupStory()` will not work when `EXECUTE_LOADED_STORIES` is false.
 -   Added gzip compression for HTML, CSS, and JavaScript returned from the server.
 -   Improved how some heavy assets are precached so that they can be loaded quickly.
+-   Made the browser tab title use the story ID by default.
 
 ### :bug: Bug Fixes
 
