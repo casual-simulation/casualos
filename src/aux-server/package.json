@@ -81,6 +81,7 @@
         "estraverse": "^5.2.0",
         "event-stream": "^4.0.1",
         "express": "^4.16.4",
+        "compression": "1.7.4",
         "filepond": "^3.8.2",
         "filepond-plugin-file-validate-type": "^1.2.1",
         "helmet-csp": "2.9.3",

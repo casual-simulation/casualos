@@ -88,6 +88,7 @@
         "@types/cli-progress": "3.4.2",
         "@types/mime": "2.0.2",
         "@types/estree": "0.0.45",
+        "@types/compression": "1.7.0",
         "babel-loader": "^8.2.2",
         "braces": "^2.3.2",
         "chai": "^4.2.0",

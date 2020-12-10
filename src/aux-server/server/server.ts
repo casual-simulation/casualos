@@ -99,6 +99,7 @@ import { GpioModule2 } from './modules/GpioModule2';
 import { SerialModule } from './modules/SerialModule';
 import { MongoDBStageStore } from './mongodb/MongoDBStageStore';
 import { WebConfig } from 'shared/WebConfig';
+import compression from 'compression';
 
 const connect = pify(MongoClient.connect);
 
@@ -451,6 +452,8 @@ export class Server {
         // this._applyCSP();
 
         this._app.use(cors());
+
+        this._app.use(compression());
 
         this._mongoClient = await connect(this._config.mongodb.url, {
             useNewUrlParser: this._config.mongodb.useNewUrlParser,
