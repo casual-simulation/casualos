@@ -68,6 +68,7 @@ import { FrustumHelper } from '../helpers/FrustumHelper';
 import HelixUrl from '../../public/meshes/dna_form.glb';
 import EggUrl from '../../public/meshes/egg.glb';
 import { Axial, HexMesh } from '../hex';
+import { sortBy } from 'lodash';
 
 const gltfPool = getGLTFPool('main');
 
@@ -578,7 +579,7 @@ export class BotShapeDecorator
         this.scene = gltf.scene;
         this.container.add(gltf.scene);
 
-        this.mesh = this.scene.children.find((c) => c instanceof Mesh) as Mesh;
+        this.mesh = findFirstMesh(this.scene);
 
         // Collider
         const collider = (this.collider = createCube(1));
@@ -686,4 +687,20 @@ function createStroke() {
     });
 
     return new LineSegments(geo, material);
+}
+
+function findFirstMesh(obj: Object3D): Mesh {
+    const sorted = sortBy(obj.children, (c) => c.name);
+    let mesh = sorted.find((c) => c instanceof Mesh) as Mesh;
+    if (mesh) {
+        return mesh;
+    }
+    for (let child of sorted) {
+        mesh = findFirstMesh(child);
+        if (mesh) {
+            return mesh;
+        }
+    }
+
+    return null;
 }

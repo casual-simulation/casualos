@@ -33,7 +33,7 @@ import { WebSocketClient, TunnelClient } from '@casual-simulation/tunnel';
 export class DirectoryClient {
     private _config: DirectoryClientConfig;
     private _store: DirectoryStore;
-    private _timeoutId: NodeJS.Timeout;
+    private _timeoutId: NodeJS.Timeout | number;
     private _settings: DirectoryClientSettings;
     private _tunnelClient: TunnelClient;
     private _tunnelSub: SubscriptionLike;
@@ -79,7 +79,7 @@ export class DirectoryClient {
 
     private _updateTimeout() {
         if (this._timeoutId) {
-            clearInterval(this._timeoutId);
+            clearInterval(this._timeoutId as any);
         }
         this._timeoutId = setInterval(() => {
             this._pendingPing = this._ping();
@@ -150,11 +150,14 @@ export class DirectoryClient {
 
         this._tunnelSub = deferred
             .pipe(
-                tap(x => {}, err => console.error(err)),
-                o => retryUntilFailedTimes(o, 5),
+                tap(
+                    (x) => {},
+                    (err) => console.error(err)
+                ),
+                (o) => retryUntilFailedTimes(o, 5),
                 finalize(() => (this._tunnelSub = null))
             )
-            .subscribe(null, err => {
+            .subscribe(null, (err) => {
                 console.log(err);
             });
     }
@@ -170,14 +173,14 @@ function retryUntilFailedTimes<T>(
             console.log('[DirectoryClient] Tunnel Connected!');
             currentCount = 0;
         }),
-        retryWhen(errors =>
+        retryWhen((errors) =>
             errors.pipe(
-                tap(x =>
+                tap((x) =>
                     console.log(
                         '[DirectoryClient] Disconnected from tunnel. Retrying in 5 seconds...'
                     )
                 ),
-                flatMap(error => {
+                flatMap((error) => {
                     currentCount += 1;
                     if (currentCount >= times) {
                         return throwError(error);
@@ -187,14 +190,14 @@ function retryUntilFailedTimes<T>(
                 })
             )
         ),
-        repeatWhen(completions =>
+        repeatWhen((completions) =>
             completions.pipe(
-                tap(x =>
+                tap((x) =>
                     console.log(
                         '[DirectoryClient] Disconnected from tunnel. Retrying in 5 seconds...'
                     )
                 ),
-                flatMap(x => {
+                flatMap((x) => {
                     currentCount += 1;
                     if (currentCount >= times) {
                         return empty();
@@ -233,7 +236,7 @@ function getNetworkInterface(local: boolean = false) {
     const net = networkInterfaces();
     const keys = sortBy(
         Object.keys(net),
-        ifname => {
+        (ifname) => {
             if (ifname.startsWith('lo')) {
                 return 0;
             } else if (ifname.startsWith('eth') || ifname.startsWith('en')) {
@@ -244,7 +247,7 @@ function getNetworkInterface(local: boolean = false) {
                 return 3;
             }
         },
-        ifname => ifname
+        (ifname) => ifname
     );
 
     if (local) {

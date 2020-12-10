@@ -15,6 +15,7 @@ let folders = [
     `${__dirname}/src/causal-tree-server`,
     `${__dirname}/src/causal-tree-server-socketio`,
     `${__dirname}/src/causal-tree-client-socketio`,
+    `${__dirname}/src/causal-tree-client-apiary`,
     `${__dirname}/src/causal-tree-store-mongodb`,
     `${__dirname}/src/causal-tree-store-cassandradb`,
     `${__dirname}/src/causal-tree-store-browser`,
@@ -35,25 +36,25 @@ let patterns = [
 let negativePatterns = [`/typings/**/*`];
 
 let globs = [`${__dirname}/src/aux-server/aux-web/dist`];
-folders.forEach(f => {
-    patterns.forEach(p => {
+folders.forEach((f) => {
+    patterns.forEach((p) => {
         globs.push(f + p);
     });
 
-    negativePatterns.forEach(p => {
+    negativePatterns.forEach((p) => {
         globs.push(`!${f}${p}`);
     });
 });
 
-gulp.task('clean', function() {
+gulp.task('clean', function () {
     return del(globs);
 });
 
-gulp.task('clean:cache', function() {
+gulp.task('clean:cache', function () {
     return del([`${__dirname}/src/aux-server/node_modules/.cache`]);
 });
 
-gulp.task('view:web:profile', function() {
+gulp.task('view:web:profile', function () {
     const projectDir = path.resolve(__dirname, 'src', 'aux-server');
     const source = path.resolve(projectDir, 'web_bundle_stats.json');
     const dest = path.resolve(
@@ -70,7 +71,7 @@ gulp.task('view:web:profile', function() {
     process.stdin.pipe(proc.stdin);
 });
 
-gulp.task('view:server:profile', function() {
+gulp.task('view:server:profile', function () {
     const projectDir = path.resolve(__dirname, 'src', 'aux-server');
     const source = path.resolve(projectDir, 'server_bundle_stats.json');
     const dest = path.resolve(

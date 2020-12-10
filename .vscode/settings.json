@@ -23,6 +23,9 @@
         "src/causal-tree-client-socketio/**/*.d.ts": {
             "when": "$(basename).ts"
         },
+        "src/causal-tree-client-apiary/**/*.d.ts": {
+            "when": "$(basename).ts"
+        },
         "src/causal-tree-store-mongodb/**/*.d.ts": {
             "when": "$(basename).ts"
         },

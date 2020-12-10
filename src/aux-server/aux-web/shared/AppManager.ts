@@ -1,5 +1,4 @@
 import * as Sentry from '@sentry/browser';
-import * as OfflinePluginRuntime from 'offline-plugin/runtime';
 import Axios from 'axios';
 import Vue from 'vue';
 import { BehaviorSubject, Observable, SubscriptionLike } from 'rxjs';
@@ -88,11 +87,12 @@ export class AppManager {
     private _config: WebConfig;
     private _deviceConfig: AuxConfig['config']['device'];
     private _primaryPromise: Promise<BotManager>;
+    private _registration: ServiceWorkerRegistration;
 
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._initOffline();
-        this._simulationManager = new SimulationManager(id => {
+        this._simulationManager = new SimulationManager((id) => {
             const params = new URLSearchParams(location.search);
             const forceSignedScripts =
                 params.get('forceSignedScripts') === 'true';
@@ -106,6 +106,9 @@ export class AppManager {
                 builder: JSON.stringify(builder),
                 bootstrapState: bootstrap,
                 forceSignedScripts,
+                causalRepoConnectionProtocol: this._config
+                    .causalRepoConnectionProtocol,
+                causalRepoConnectionUrl: this._config.causalRepoConnectionUrl,
             });
         });
         this._userSubject = new BehaviorSubject<AuxUser>(null);
@@ -147,7 +150,9 @@ export class AppManager {
      */
     checkForUpdates() {
         setTimeout(() => {
-            OfflinePluginRuntime.update();
+            if (this._registration) {
+                this._registration.update();
+            }
         }, 1000);
     }
 
@@ -197,7 +202,7 @@ export class AppManager {
             .pipe(
                 scan((subs: SubscriptionLike[], user: AuxUser, index) => {
                     if (subs) {
-                        subs.forEach(s => s.unsubscribe());
+                        subs.forEach((s) => s.unsubscribe());
                     }
                     if (user && this.simulationManager.primary) {
                         return setup(user, this.simulationManager.primary);
@@ -278,47 +283,29 @@ export class AppManager {
     private _initOffline() {
         this._updateAvailable = new BehaviorSubject<boolean>(false);
 
-        OfflinePluginRuntime.install({
-            onUpdating: () => {
-                console.log('[ServiceWorker]: Updating...');
-                Sentry.addBreadcrumb({
-                    message: 'Updating service worker.',
-                    level: Sentry.Severity.Info,
-                    category: 'app',
-                    type: 'default',
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker
+                .register('/sw.js')
+                .then((registration) => {
+                    this._registration = registration;
+
+                    this._registration.onupdatefound = (e) => {
+                        console.log('[ServiceWorker]: Updated.');
+                        Sentry.addBreadcrumb({
+                            message: 'Updated service worker.',
+                            level: Sentry.Severity.Info,
+                            category: 'app',
+                            type: 'default',
+                        });
+                        this._updateAvailable.next(true);
+                    };
+
+                    console.log('[ServiceWorker] Registered.');
+                })
+                .catch((err) => {
+                    console.error('[ServiceWorker] Registration Failed.', err);
                 });
-            },
-            onUpdateReady: () => {
-                console.log('[ServiceWorker]: Update Ready.');
-                OfflinePluginRuntime.applyUpdate();
-            },
-            onUpdated: () => {
-                console.log('[ServiceWorker]: Updated.');
-                Sentry.addBreadcrumb({
-                    message: 'Updated service worker.',
-                    level: Sentry.Severity.Info,
-                    category: 'app',
-                    type: 'default',
-                });
-                this._updateAvailable.next(true);
-            },
-            onUpdateFailed: () => {
-                console.log('[ServiceWorker]: Update failed.');
-                Sentry.captureMessage(
-                    'Service Worker update failed',
-                    Sentry.Severity.Error
-                );
-            },
-            onInstalled: () => {
-                console.log('[ServiceWorker]: Installed.');
-                Sentry.addBreadcrumb({
-                    message: 'Installed service worker.',
-                    level: Sentry.Severity.Info,
-                    category: 'app',
-                    type: 'default',
-                });
-            },
-        });
+        }
     }
 
     async setPrimarySimulation(channelId: string) {
@@ -361,7 +348,7 @@ export class AppManager {
                     this._progress.complete();
                 }
             },
-            err => console.error(err),
+            (err) => console.error(err),
             () => {
                 this._progress.next({
                     type: 'progress',

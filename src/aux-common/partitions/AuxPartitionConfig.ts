@@ -156,6 +156,8 @@ export interface CausalRepoClientPartitionConfig extends PartitionConfigBase {
     remoteEvents?: boolean;
 }
 
+export type RemoteCausalRepoProtocol = 'socket.io' | 'apiary-aws';
+
 /**
  * Defines a causal tree partition that uses the new Causal Repo API.
  */
@@ -192,6 +194,11 @@ export interface RemoteCausalRepoPartitionConfig extends PartitionConfigBase {
      * Whether to support remote events. (Default is true)
      */
     remoteEvents?: boolean;
+
+    /**
+     * Whether to use socket.io or the apiary protocol to connect. (Default is socket.io)
+     */
+    connectionProtocol?: RemoteCausalRepoProtocol;
 }
 
 /**
@@ -209,6 +216,11 @@ export interface OtherPlayersRepoPartitionConfig extends PartitionConfigBase {
      * The host that the branch should be loaded from.
      */
     host: string;
+
+    /**
+     * Whether to use socket.io or the apiary protocol to connect. (Default is socket.io)
+     */
+    connectionProtocol?: RemoteCausalRepoProtocol;
 }
 
 /**

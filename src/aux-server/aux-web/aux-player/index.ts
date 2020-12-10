@@ -59,7 +59,6 @@ import '../shared/public/fonts/Roboto/Roboto.css';
 import '../shared/public/fonts/NotoSansKR/NotoSansKR.css';
 
 import { polyfill } from 'es6-promise';
-import 'offline-plugin/runtime';
 import '../shared/SVGPolyfill';
 
 import { appManager, AppType } from '../shared/AppManager';
@@ -103,7 +102,7 @@ const routes: RouteConfig[] = [
         path: '*',
         name: 'home',
         component: PlayerHome,
-        props: route => ({
+        props: (route) => ({
             query: route.query,
             url: route.fullPath,
         }),
@@ -117,14 +116,14 @@ const router = new VueRouter({
 
 async function start() {
     const loading = new Vue({
-        render: createEle => createEle(Loading),
+        render: (createEle) => createEle(Loading),
     }).$mount('#loading');
 
     // await appManager.initPromise;
 
     const app = new Vue({
         router,
-        render: createEle => createEle(PlayerApp),
+        render: (createEle) => createEle(PlayerApp),
     }).$mount('#app');
 }
 

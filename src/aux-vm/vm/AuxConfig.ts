@@ -3,6 +3,7 @@ import {
     AuxDevice,
     BotsState,
     hasValue,
+    RemoteCausalRepoProtocol,
 } from '@casual-simulation/aux-common';
 import { StoredAux } from '../StoredAux';
 
@@ -36,6 +37,16 @@ export interface AuxConfigParameters {
      * This will likely cause more verbose console output.
      */
     debug?: boolean;
+
+    /**
+     * The connection protocol that causal repo partitions should use.
+     */
+    causalRepoConnectionProtocol?: RemoteCausalRepoProtocol;
+
+    /**
+     * The URL that causal repo partitions should connect to.
+     */
+    causalRepoConnectionUrl?: string;
 }
 
 export function buildVersionNumber(config: AuxConfigParameters) {

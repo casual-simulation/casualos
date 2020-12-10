@@ -14,7 +14,6 @@ const latestTag = childProcess
 
 module.exports = {
     mode: 'development',
-    devtool: 'none',
     entry: path.resolve(__dirname, 'index.ts'),
     target: 'node',
     node: {
@@ -41,7 +40,7 @@ module.exports = {
     },
     externals: [
         nodeExternals({
-            whitelist: /^@casual-simulation\/(?!aux-server)/,
+            allowlist: /^@casual-simulation\/(?!aux-server)/,
 
             // Use package.json instead of node_modules.
             // This way we can exclude packages even though they're not in the first node_modules

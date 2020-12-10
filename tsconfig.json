@@ -24,6 +24,7 @@
         { "path": "./src/causal-trees" },
         { "path": "./src/causal-tree-server-socketio" },
         { "path": "./src/causal-tree-client-socketio" },
+        { "path": "./src/causal-tree-client-apiary" },
         { "path": "./src/causal-tree-store-mongodb" },
         { "path": "./src/causal-tree-store-cassandradb" },
         { "path": "./src/crypto-browser" },
