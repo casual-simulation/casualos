@@ -45,6 +45,7 @@ function productionBaseConfig() {
                     ? '[name].js'
                     : '[name].[contenthash].js';
             },
+            chunkFilename: '[name].[contenthash].chunk.js',
             path: path.resolve(__dirname, 'dist'),
         },
         module: {

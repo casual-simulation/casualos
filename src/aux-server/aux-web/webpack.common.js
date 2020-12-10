@@ -36,7 +36,10 @@ function playerConfig() {
                 'html',
                 'IframeEntry.ts'
             ),
-            sw: path.resolve(__dirname, './shared/sw.ts'),
+            'service-worker': path.resolve(
+                __dirname,
+                './shared/service-worker.ts'
+            ),
         },
         plugins: [
             new CleanWebpackPlugin({
@@ -78,10 +81,17 @@ function playerConfig() {
                 clientsClaim: true,
                 skipWaiting: true,
                 exclude: [/webxr-profiles/, /\.map$/, /fonts\/NotoSansKR/],
-                chunks: ['player', 'vendors', 'vm'],
-                maximumFileSizeToCacheInBytes: 3145728, // 3MiB
-                importScriptsViaChunks: ['sw'],
+                chunks: [
+                    'player',
+                    'vendors',
+                    'vm',
+                    'monaco',
+                    'monaco-tag-editor',
+                ],
+                maximumFileSizeToCacheInBytes: 5242880, // 5MiB
+                importScriptsViaChunks: ['service-worker'],
                 swDest: 'sw.js',
+                inlineWorkboxRuntime: true,
             }),
             new CopyPlugin({
                 patterns: [
@@ -137,6 +147,7 @@ function baseConfig() {
         output: {
             publicPath: '/',
             filename: '[name].js',
+            chunkFilename: '[name].chunk.js',
             path: path.resolve(__dirname, 'dist'),
         },
         node: {
