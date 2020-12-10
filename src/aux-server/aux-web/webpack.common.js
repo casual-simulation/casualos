@@ -81,6 +81,7 @@ function playerConfig() {
                 chunks: ['player', 'vendors', 'vm'],
                 maximumFileSizeToCacheInBytes: 3145728, // 3MiB
                 importScriptsViaChunks: ['sw'],
+                swDest: 'sw.js',
             }),
             new CopyPlugin({
                 patterns: [
