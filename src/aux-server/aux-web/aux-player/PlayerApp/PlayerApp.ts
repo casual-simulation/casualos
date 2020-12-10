@@ -222,7 +222,7 @@ export default class PlayerApp extends Vue {
         icon: string = null,
         group: string = null
     ) {
-        const index = findIndex(this.extraItems, i => i.id === id);
+        const index = findIndex(this.extraItems, (i) => i.id === id);
         if (index >= 0) {
             this.extraItems[index] = {
                 id: id,
@@ -248,7 +248,7 @@ export default class PlayerApp extends Vue {
      */
     @Provide()
     removeSidebarItem(id: string) {
-        const index = findIndex(this.extraItems, i => i.id === id);
+        const index = findIndex(this.extraItems, (i) => i.id === id);
         if (index >= 0) {
             this.extraItems.splice(index, 1);
         }
@@ -288,20 +288,22 @@ export default class PlayerApp extends Vue {
         this._simulationSubs = new Map();
         this.camera = null;
         this._subs.push(
-            appManager.updateAvailableObservable.subscribe(updateAvailable => {
-                if (updateAvailable) {
-                    this.updateAvailable = true;
-                    this._showUpdateAvailable();
+            appManager.updateAvailableObservable.subscribe(
+                (updateAvailable) => {
+                    if (updateAvailable) {
+                        this.updateAvailable = true;
+                        this._showUpdateAvailable();
+                    }
                 }
-            })
+            )
         );
 
         this._subs.push(
             appManager.simulationManager.simulationAdded
-                .pipe(tap(sim => this._simulationAdded(sim)))
+                .pipe(tap((sim) => this._simulationAdded(sim)))
                 .subscribe(),
             appManager.simulationManager.simulationRemoved
-                .pipe(tap(sim => this._simulationRemoved(sim)))
+                .pipe(tap((sim) => this._simulationRemoved(sim)))
                 .subscribe()
         );
 
@@ -325,8 +327,8 @@ export default class PlayerApp extends Vue {
         EventBus.$on('showConfirmDialog', this.onShowConfirmDialog);
         EventBus.$on('showAlertDialog', this.onShowAlertDialog);
 
-        window.addEventListener('beforeunload', e => {
-            if (this.simulations.some(sim => sim.lostConnection)) {
+        window.addEventListener('beforeunload', (e) => {
+            if (this.simulations.some((sim) => sim.lostConnection)) {
                 e.preventDefault();
                 e.returnValue =
                     'Are you sure you want to exit? Some changes may be lost.';
@@ -343,7 +345,7 @@ export default class PlayerApp extends Vue {
     }
 
     beforeDestroy() {
-        this._subs.forEach(s => s.unsubscribe());
+        this._subs.forEach((s) => s.unsubscribe());
     }
 
     async logout() {
@@ -382,16 +384,12 @@ export default class PlayerApp extends Vue {
         );
         if (simulation.connection.forcedOffline) {
             options.title = 'Enable online?';
-            options.body = `Allow ${
-                info.displayName
-            } to reconnect to the server?`;
+            options.body = `Allow ${info.displayName} to reconnect to the server?`;
             options.okText = 'Go Online';
             options.cancelText = 'Stay Offline';
         } else {
             options.title = 'Force offline mode?';
-            options.body = `Prevent ${
-                info.displayName
-            } from connecting to the server?`;
+            options.body = `Prevent ${info.displayName} from connecting to the server?`;
             options.okText = 'Go Offline';
             options.cancelText = 'Stay Online';
         }
@@ -511,7 +509,7 @@ export default class PlayerApp extends Vue {
     }
 
     private _simulationAdded(simulation: BrowserSimulation) {
-        const index = this.simulations.findIndex(s => s.id === simulation.id);
+        const index = this.simulations.findIndex((s) => s.id === simulation.id);
         if (index >= 0) {
             return;
         }
@@ -520,7 +518,7 @@ export default class PlayerApp extends Vue {
         let info: SimulationInfo = createSimulationInfo(simulation);
 
         subs.push(
-            simulation.login.loginStateChanged.subscribe(state => {
+            simulation.login.loginStateChanged.subscribe((state) => {
                 this.loginState = state;
                 if (!state.authenticated) {
                     console.log(
@@ -557,7 +555,7 @@ export default class PlayerApp extends Vue {
                     }
                 }
             }),
-            simulation.localEvents.subscribe(async e => {
+            simulation.localEvents.subscribe(async (e) => {
                 if (e.type === 'show_toast') {
                     this.snackbar = {
                         message: e.message,
@@ -719,7 +717,7 @@ export default class PlayerApp extends Vue {
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(
-                connected => {
+                (connected) => {
                     if (!connected) {
                         info.online = false;
                         info.synced = false;
@@ -743,7 +741,7 @@ export default class PlayerApp extends Vue {
                 }
             ),
             simulation.connection.syncStateChanged.subscribe(
-                async connected => {
+                async (connected) => {
                     if (!connected) {
                         info.synced = false;
                         if (info.subscribed) {
@@ -785,10 +783,10 @@ export default class PlayerApp extends Vue {
                     }
                 }
             ),
-            simulation.login.deviceChanged.subscribe(info => {
+            simulation.login.deviceChanged.subscribe((info) => {
                 this.loginInfo = info || this.loginInfo;
             }),
-            simulation.consoleMessages.subscribe(m => {
+            simulation.consoleMessages.subscribe((m) => {
                 recordMessage(m);
             }),
             new Subscription(async () => {
@@ -801,6 +799,8 @@ export default class PlayerApp extends Vue {
 
         this._simulationSubs.set(simulation, subs);
         this.simulations.push(info);
+
+        this.setTitleToID();
     }
 
     private _showQRCode(code: string) {
@@ -827,13 +827,7 @@ export default class PlayerApp extends Vue {
     }
 
     setTitleToID() {
-        let id: string = '...';
-
-        if (appManager.simulationManager.primary != null) {
-            id = appManager.simulationManager.primary.id;
-        }
-
-        //document.title = "AUX Player | " + id;
+        const id: string = appManager.simulationManager.primaryId || '...';
         document.title = id;
     }
 
@@ -857,14 +851,14 @@ export default class PlayerApp extends Vue {
         const subs = this._simulationSubs.get(simulation);
 
         if (subs) {
-            subs.forEach(s => {
+            subs.forEach((s) => {
                 s.unsubscribe();
             });
         }
 
         this._simulationSubs.delete(simulation);
 
-        const index = this.simulations.findIndex(s => s.id === simulation.id);
+        const index = this.simulations.findIndex((s) => s.id === simulation.id);
         if (index >= 0) {
             this.simulations.splice(index, 1);
         }
@@ -884,9 +878,7 @@ export default class PlayerApp extends Vue {
     private _showConnectionLost(info: SimulationInfo) {
         this.snackbar = {
             visible: true,
-            message: `Connection to ${
-                info.displayName
-            } lost. You are now working offline.`,
+            message: `Connection to ${info.displayName} lost. You are now working offline.`,
         };
     }
 
@@ -904,9 +896,7 @@ export default class PlayerApp extends Vue {
     private _showConnectionRegained(info: SimulationInfo) {
         this.snackbar = {
             visible: true,
-            message: `Connection to ${
-                info.displayName
-            } regained. You are connected to the channel.`,
+            message: `Connection to ${info.displayName} regained. You are connected to the channel.`,
         };
     }
 
