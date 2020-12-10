@@ -1,5 +1,23 @@
 # CasualOS Changelog
 
+## V1.3.4
+
+#### Date: 12/10/2020
+
+### :rocket: Improvements
+
+-   Added the `EXECUTE_LOADED_STORIES` environment variable to allow reducing server load due to story scripts.
+    -   Defaults to `true`.
+    -   Setting to `false` will disable all server-side story features except for webhooks and data portals.
+        -   This means that some capabilities like `server.setupStory()` will not work when `EXECUTE_LOADED_STORIES` is false.
+-   Added gzip compression for HTML, CSS, and JavaScript returned from the server.
+-   Improved how some heavy assets are precached so that they can be loaded quickly.
+-   Made the browser tab title use the story ID by default.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where some `.png` files would not load because they were bundled incorrectly.
+
 ## V1.3.3
 
 #### Date: 12/10/2020

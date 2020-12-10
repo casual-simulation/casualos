@@ -39,6 +39,11 @@ export interface Config {
     sandbox: SandboxType;
 
     /**
+     * Whether to let the server instantate server-side runtimes for stories that get loaded.
+     */
+    executeLoadedStories: boolean;
+
+    /**
      * Whether to enable GPIO support.
      */
     gpio: boolean;
