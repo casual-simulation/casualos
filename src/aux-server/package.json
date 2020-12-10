@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-server",
-    "version": "1.3.3",
+    "version": "1.3.4",
     "description": "The repository for the AUX server project.",
     "main": "server/dist/main.js",
     "private": true,
@@ -72,6 +72,7 @@
         "bcryptjs": "2.4.3",
         "buffer": "6.0.3",
         "cassandra-driver": "4.5.1",
+        "compression": "1.7.4",
         "cors": "2.8.5",
         "d3": "^5.9.2",
         "deno-vm": "^0.8.0",
@@ -81,7 +82,6 @@
         "estraverse": "^5.2.0",
         "event-stream": "^4.0.1",
         "express": "^4.16.4",
-        "compression": "1.7.4",
         "filepond": "^3.8.2",
         "filepond-plugin-file-validate-type": "^1.2.1",
         "helmet-csp": "2.9.3",
