@@ -121,6 +121,8 @@ if ('MONGO_USE_UNIFIED_TOPOLOGY' in process.env) {
     mongodb.useUnifiedTopology = !!process.env.MONGO_USE_UNIFIED_TOPOLOGY;
 }
 
+const executeLoadedStories = process.env.EXECUTE_LOADED_STORIES !== 'false';
+
 const config: Config = {
     socket: {
         pingInterval: 25000,
@@ -182,6 +184,7 @@ const config: Config = {
     dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
     drives: path.resolve(__dirname, '..', '..', 'drives'),
     sandbox: sandboxType,
+    executeLoadedStories: executeLoadedStories,
     gpio: gpio,
     debug: debug,
 };

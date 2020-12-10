@@ -56,6 +56,7 @@ const config: Config = {
     dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
     drives: path.resolve(__dirname, '..', '..', 'drives'),
     sandbox: 'deno',
+    executeLoadedStories: true,
     gpio: true,
     debug: false,
 };

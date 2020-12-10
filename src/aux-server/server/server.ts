@@ -934,33 +934,63 @@ export class Server {
         const serverUser = getServerUser();
         const serverDevice = deviceInfoFromUser(serverUser);
 
-        const {
-            connections,
-            manager,
-            webhooksClient,
-        } = this._createRepoManager(serverDevice, serverUser);
-        const fixedServer = new FixedConnectionServer(connections);
-        const multiServer = new MultiConnectionServer([
-            socketIOServer,
-            fixedServer,
-        ]);
+        if (this._config.executeLoadedStories) {
+            const {
+                connections,
+                manager,
+                webhooksClient,
+            } = this._createRepoManager(serverDevice, serverUser);
+            const fixedServer = new FixedConnectionServer(connections);
+            const multiServer = new MultiConnectionServer([
+                socketIOServer,
+                fixedServer,
+            ]);
 
-        const repoServer = new CausalRepoServer(multiServer, store, stageStore);
-        repoServer.defaultDeviceSelector = {
-            username: serverDevice.claims[USERNAME_CLAIM],
-            deviceId: serverDevice.claims[DEVICE_ID_CLAIM],
-            sessionId: serverDevice.claims[SESSION_ID_CLAIM],
-        };
+            const repoServer = new CausalRepoServer(
+                multiServer,
+                store,
+                stageStore
+            );
+            repoServer.defaultDeviceSelector = {
+                username: serverDevice.claims[USERNAME_CLAIM],
+                deviceId: serverDevice.claims[DEVICE_ID_CLAIM],
+                sessionId: serverDevice.claims[SESSION_ID_CLAIM],
+            };
 
-        this._webhooksClient = webhooksClient;
+            this._webhooksClient = webhooksClient;
 
-        repoServer.init();
+            repoServer.init();
 
-        // Wait for async operations from the repoServer to finish
-        // before starting the repo manager
-        setImmediate(() => {
-            manager.init();
-        });
+            // Wait for async operations from the repoServer to finish
+            // before starting the repo manager
+            setImmediate(() => {
+                manager.init();
+            });
+        } else {
+            const webhooks = this._createWebhooksClient();
+            const fixedServer = new FixedConnectionServer([
+                webhooks.connection,
+            ]);
+            const multiServer = new MultiConnectionServer([
+                socketIOServer,
+                fixedServer,
+            ]);
+
+            const repoServer = new CausalRepoServer(
+                multiServer,
+                store,
+                stageStore
+            );
+            repoServer.defaultDeviceSelector = {
+                username: serverDevice.claims[USERNAME_CLAIM],
+                deviceId: serverDevice.claims[DEVICE_ID_CLAIM],
+                sessionId: serverDevice.claims[SESSION_ID_CLAIM],
+            };
+
+            this._webhooksClient = webhooks.client;
+
+            repoServer.init();
+        }
     }
 
     private _createRepoManager(serverDevice: DeviceInfo, serverUser: AuxUser) {
