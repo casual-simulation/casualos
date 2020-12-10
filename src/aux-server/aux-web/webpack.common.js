@@ -211,11 +211,23 @@ function baseConfig() {
                     use: 'exports-loader?vg=vg',
                 },
                 {
-                    test: /\.(png|jpg|gif|gltf|glb|webp)$/,
+                    test: /\.(gltf|glb)$/,
                     use: [
                         {
                             loader: 'file-loader',
                             options: {},
+                        },
+                    ],
+                },
+                {
+                    test: /\.(png|jpg|gif|webp)$/,
+                    use: [
+                        {
+                            loader: 'file-loader',
+                            options: {
+                                // Required for images loaded via Vue code
+                                esModule: false,
+                            },
                         },
                     ],
                 },
