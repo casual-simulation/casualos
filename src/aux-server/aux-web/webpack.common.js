@@ -56,7 +56,7 @@ function playerConfig() {
                 chunks: ['player', 'vendors', 'monaco'],
                 // inject: false,
                 template: path.resolve(__dirname, 'aux-player', 'index.html'),
-                title: 'auxPlayer',
+                title: 'CasualOS',
                 filename: 'player.html',
             }),
             new HtmlWebpackPlugin({
