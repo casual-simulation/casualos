@@ -18,6 +18,7 @@
         "build:docker:arm32": "npm run build:tar:docker && npm run package:docker:arm32",
         "build:libs": "tsc --build",
         "build:server": "lerna exec --scope @casual-simulation/aux-server -- npm run build",
+        "build:web": "lerna exec --scope @casual-simulation/aux-server -- npm run build:web",
         "build:proxy": "lerna exec --scope @casual-simulation/aux-proxy -- npm run build",
         "build:redirector": "lerna exec --scope @casual-simulation/aux-redirector -- npm run build",
         "build:cli": "lerna exec --scope @casual-simulation/causal-tree-cli -- npm run build:prod",
