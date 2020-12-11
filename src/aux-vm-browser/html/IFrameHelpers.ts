@@ -47,9 +47,10 @@ export function waitForLoad(iframe: HTMLIFrameElement): Promise<void> {
 /**
  * Loads the script at the given URL into the given iframe window.
  * @param iframeWindow The iframe.
- * @param url The URL to load.
+ * @param id The ID of the script.
+ * @param source The source code to load.
  */
-export function loadScript(iframeWindow: Window, url: string) {
+export function loadScript(iframeWindow: Window, id: string, source: string) {
     return new Promise<void>((resolve, reject) => {
         const listener = (message: MessageEvent) => {
             if (message.source !== iframeWindow) {
@@ -58,7 +59,7 @@ export function loadScript(iframeWindow: Window, url: string) {
             }
             if (
                 message.data.type === 'script_loaded' &&
-                message.data.url === url
+                message.data.id === id
             ) {
                 globalThis.removeEventListener('message', listener);
                 resolve();
@@ -68,9 +69,43 @@ export function loadScript(iframeWindow: Window, url: string) {
         iframeWindow.postMessage(
             {
                 type: 'load_script',
-                url,
+                id,
+                source,
             },
             '*'
         );
     });
 }
+
+// /**
+//  * Loads the script into the iframe window as a portal.
+//  * @param iframeWindow The iframe.
+//  * @param id The ID of the portal.
+//  * @param source The source code to load.
+//  */
+// export function registerIFramePortal(iframeWindow: Window, id: string, source: string) {
+//     return new Promise<void>((resolve, reject) => {
+//         const listener = (message: MessageEvent) => {
+//             if (message.source !== iframeWindow) {
+//                 debugger;
+//                 return;
+//             }
+//             if (
+//                 message.data.type === 'portal_registered' &&
+//                 message.data.id === id
+//             ) {
+//                 globalThis.removeEventListener('message', listener);
+//                 resolve();
+//             }
+//         };
+//         globalThis.addEventListener('message', listener);
+//         iframeWindow.postMessage(
+//             {
+//                 type: 'register_portal',
+//                 id,
+//                 source
+//             },
+//             '*'
+//         );
+//     });
+// }

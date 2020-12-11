@@ -2,19 +2,26 @@ import '@casual-simulation/aux-vm/globalThis-polyfill';
 
 globalThis.addEventListener('message', (message) => {
     if (message.data.type === 'load_script') {
-        const url = message.data.url;
+        const id = message.data.id;
+        const source = message.data.source;
 
-        const script = document.createElement('script');
-        script.src = url;
-        script.onload = () => {
-            (<any>message.source).postMessage(
-                {
-                    type: 'script_loaded',
-                    url,
-                },
-                message.origin
-            );
-        };
+        let script: HTMLScriptElement;
+        const existingScript = document.getElementById(`script-${id}`);
+        if (existingScript && existingScript instanceof HTMLScriptElement) {
+            script = existingScript;
+        } else {
+            script = document.createElement('script');
+            script.setAttribute('id', `script-${id}`);
+        }
+
+        script.textContent = source;
         document.body.append(script);
+        (<any>message.source).postMessage(
+            {
+                type: 'script_loaded',
+                id,
+            },
+            message.origin
+        );
     }
 });

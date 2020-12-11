@@ -20,7 +20,7 @@ import {
     AuxChannelErrorType,
     StoredAux,
 } from '@casual-simulation/aux-vm';
-import { loadScript, registerIFramePortal, setupChannel, waitForLoad } from '../html/IFrameHelpers';
+import { loadScript, setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import {
     StatusUpdate,
     remapProgressPercent,
@@ -130,7 +130,11 @@ export class AuxVMImpl implements AuxVM {
 
         await promise;
 
-        await loadScript(this._iframe.contentWindow, workerUrl);
+        await loadScriptFromUrl(
+            this._iframe.contentWindow,
+            'default',
+            workerUrl
+        );
 
         this._channel = setupChannel(this._iframe.contentWindow);
 
@@ -271,8 +275,8 @@ export class AuxVMImpl implements AuxVM {
             return;
         }
 
-        await registerIFramePortal(this._iframe.contentWindow, id, source);
-        console.log(`[AuxVMImpl] Registered portal: ${id}`);
+        // await registerIFramePortal(this._iframe.contentWindow, id, source);
+        // console.log(`[AuxVMImpl] Registered portal: ${id}`);
     }
 
     private async _initManifest() {
@@ -369,4 +373,23 @@ function processPartitions(config: AuxConfig): AuxConfig {
         }
     }
     return transfer(config, transferrables);
+}
+
+/**
+ * Loads the script at the given URL into the given iframe window.
+ * @param iframeWindow The iframe.
+ * @param id The ID of the script.
+ * @param url The URL to load.
+ */
+async function loadScriptFromUrl(
+    iframeWindow: Window,
+    id: string,
+    url: string
+) {
+    const source = await axios.get(url);
+    if (source.status === 200 && typeof source.data === 'string') {
+        return await loadScript(iframeWindow, id, source.data);
+    } else {
+        throw new Error('Unable to load script: ' + url);
+    }
 }
