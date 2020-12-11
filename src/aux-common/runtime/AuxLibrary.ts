@@ -53,6 +53,7 @@ import {
     webhook as calcWebhook,
     superShout as calcSuperShout,
     share as calcShare,
+    registerCustomPortal as calcRegisterCustomPortal,
     createCertificate as calcCreateCertificate,
     signTag as calcSignTag,
     revokeCertificate as calcRevokeCertificate,
@@ -467,6 +468,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 cancelSound,
                 hasBotInInventory,
                 share,
+                registerCustomPortal,
                 inSheet,
 
                 getCameraPosition,
@@ -1605,6 +1607,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function share(options: ShareOptions): Promise<void> {
         const task = context.createTask();
         const event = calcShare(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Registers a custom portal with the given source code.
+     * @param id The ID of the portal.
+     * @param source The source code that the portal should use.
+     */
+    function registerCustomPortal(id: string, source: string): Promise<void> {
+        const task = context.createTask();
+        const event = calcRegisterCustomPortal(id, source, task.taskId);
         return addAsyncAction(task, event);
     }
 

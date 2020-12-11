@@ -117,4 +117,11 @@ export interface AuxVM extends Initable {
      * Gets the list of tags that are currently in use.
      */
     getTags(): Promise<string[]>;
+
+    /**
+     * Registers a custom portal with the given ID and source code.
+     * @param id The ID of the portal.
+     * @param source The source code for the portal.
+     */
+    registerCustomPortal(id: string, source: string): Promise<void>;
 }

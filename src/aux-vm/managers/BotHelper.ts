@@ -207,6 +207,10 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
         // await this._tree.addEvents([]);
     }
 
+    async registerCustomPortal(id: string, source: string): Promise<void> {
+        await this._vm.registerCustomPortal(id, source);
+    }
+
     /**
      * Calculates the nicely formatted value for the given bot and tag.
      * @param bot The bot to calculate the value for.

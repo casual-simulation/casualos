@@ -129,6 +129,7 @@ import {
     RuntimeBot,
     SET_TAG_MASK_SYMBOL,
     CLEAR_CHANGES_SYMBOL,
+    registerCustomPortal,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2435,6 +2436,22 @@ describe('AuxLibrary', () => {
                         url: 'http://example.com',
                         title: 'Example',
                     },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('player.registerCustomPortal()', () => {
+            it('should return a RegisterCustomPortal action', () => {
+                const promise: any = library.api.player.registerCustomPortal(
+                    'test',
+                    'console.log("Hi!")'
+                );
+                const expected = registerCustomPortal(
+                    'test',
+                    'console.log("Hi!")',
                     context.tasks.size
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);

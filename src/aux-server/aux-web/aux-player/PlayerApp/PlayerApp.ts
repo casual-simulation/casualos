@@ -714,6 +714,16 @@ export default class PlayerApp extends Vue {
                             )
                         );
                     }
+                } else if (e.type === 'register_custom_portal') {
+                    await simulation.helper.registerCustomPortal(
+                        e.id,
+                        e.source
+                    );
+                    if (e.taskId) {
+                        simulation.helper.transaction(
+                            asyncResult(e.taskId, null)
+                        );
+                    }
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(

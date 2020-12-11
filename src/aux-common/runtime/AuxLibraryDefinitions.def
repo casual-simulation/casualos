@@ -2757,6 +2757,13 @@ declare global {
         share(options: ShareOptions): ShareAction;
 
         /**
+         * Registers a custom portal with the given source code.
+         * @param id The ID of the portal.
+         * @param source The source code that the portal should use.
+         */
+        registerCustomPortal(id: string, source: string): Promise<void>;
+
+        /**
          * Shows some HTML to the user.
          * @param html The HTML to show.
          */

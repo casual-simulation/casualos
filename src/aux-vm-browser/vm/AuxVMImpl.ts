@@ -20,7 +20,7 @@ import {
     AuxChannelErrorType,
     StoredAux,
 } from '@casual-simulation/aux-vm';
-import { loadScript, setupChannel, waitForLoad } from '../html/IFrameHelpers';
+import { loadScript, registerIFramePortal, setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import {
     StatusUpdate,
     remapProgressPercent,
@@ -126,7 +126,7 @@ export class AuxVMImpl implements AuxVM {
         }
 
         let promise = waitForLoad(this._iframe);
-        document.body.appendChild(this._iframe);
+        document.body.insertBefore(this._iframe, document.body.firstChild);
 
         await promise;
 
@@ -263,6 +263,16 @@ export class AuxVMImpl implements AuxVM {
         this._connectionStateChanged = null;
         this._localEvents.unsubscribe();
         this._localEvents = null;
+    }
+
+    async registerCustomPortal(id: string, source: string): Promise<void> {
+        if (!this._iframe) {
+            console.warn('[AuxVMImpl] Not initalized!');
+            return;
+        }
+
+        await registerIFramePortal(this._iframe.contentWindow, id, source);
+        console.log(`[AuxVMImpl] Registered portal: ${id}`);
     }
 
     private async _initManifest() {

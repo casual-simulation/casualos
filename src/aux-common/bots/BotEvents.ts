@@ -105,6 +105,7 @@ export type AsyncActions =
     | AsyncErrorAction
     | ShowInputAction
     | ShareAction
+    | RegisterCustomPortal
     | RunScriptAction
     | LoadBotsAction
     | ClearSpaceAction
@@ -2267,6 +2268,22 @@ export interface ShareAction extends AsyncAction, ShareOptions {
     type: 'share';
 }
 
+/**
+ * Defines an event that creates a custom portal using the given source code.
+ */
+export interface RegisterCustomPortal extends AsyncAction {
+    type: 'register_custom_portal';
+    /**
+     * The id of the portal.
+     */
+    id: string;
+
+    /**
+     * The source code that the portal should have.
+     */
+    source: string;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -4397,6 +4414,25 @@ export function share(
         type: 'share',
         taskId,
         ...options,
+    };
+}
+
+/**
+ * Creates an action that registers a custom portal.
+ * @param id The ID of the portal,
+ * @param code The source code of the portal.
+ * @param taskId The ID of the task.
+ */
+export function registerCustomPortal(
+    id: string,
+    code: string,
+    taskId?: number | string
+): RegisterCustomPortal {
+    return {
+        type: 'register_custom_portal',
+        id,
+        source: code,
+        taskId,
     };
 }
 
