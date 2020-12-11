@@ -291,6 +291,9 @@ export class AuxVMImpl implements AuxVM {
             if (result.status === 200) {
                 return result.data;
             } else {
+                console.error(
+                    '[AuxVMImpl] Unable to fetch manifest from server.'
+                );
                 return null;
             }
         } catch (err) {
@@ -323,6 +326,9 @@ export class AuxVMImpl implements AuxVM {
             if (val) {
                 return JSON.parse(val);
             } else {
+                console.error(
+                    '[AuxVMImpl] Unable to fetch manifest from storage.'
+                );
                 return null;
             }
         } catch (err) {

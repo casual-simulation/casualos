@@ -4,6 +4,7 @@ import { RemoteCausalRepoProtocol } from '@casual-simulation/aux-common';
 
 const config: ClientConfig = {
     index: 'player.html',
+    manifest: 'assets-manifest.json',
     web: {
         sentryDsn: process.env.SENTRY_DSN,
         version: null,

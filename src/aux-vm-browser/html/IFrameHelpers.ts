@@ -60,7 +60,7 @@ export function loadScript(iframeWindow: Window, url: string) {
                 message.data.type === 'script_loaded' &&
                 message.data.url === url
             ) {
-                iframeWindow.removeEventListener('message', listener);
+                globalThis.removeEventListener('message', listener);
                 resolve();
             }
         };

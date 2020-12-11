@@ -7,7 +7,7 @@ globalThis.addEventListener('message', (message) => {
         const script = document.createElement('script');
         script.src = url;
         script.onload = () => {
-            globalThis.postMessage(
+            (<any>message.source).postMessage(
                 {
                     type: 'script_loaded',
                     url,

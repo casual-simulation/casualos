@@ -35,7 +35,7 @@ function playerConfig() {
                 '..',
                 'aux-vm-browser',
                 'html',
-                'IframeEntry.ts'
+                'IframeEntry.js'
             ),
             'service-worker': path.resolve(
                 __dirname,
@@ -121,6 +121,7 @@ function playerConfig() {
                     },
                 ],
             }),
+            new WebpackAssetsManifest(),
         ],
     });
 }
