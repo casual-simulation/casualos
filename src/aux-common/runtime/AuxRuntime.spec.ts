@@ -15648,7 +15648,7 @@ describe('original action tests', () => {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}({ creator: null }, { space: "local" })`,
+                                test: `@${name}({ creator: null }, { space: "local" }, { abc: "def" })`,
                             },
                         },
                     };
@@ -15661,7 +15661,9 @@ describe('original action tests', () => {
                         botAdded({
                             id: expectedId,
                             space: 'local',
-                            tags: {},
+                            tags: {
+                                abc: 'def',
+                            },
                         }),
                     ]);
                 });
@@ -15671,7 +15673,7 @@ describe('original action tests', () => {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}({ creator: null }, { space: "cookie" }, { space: "local" })`,
+                                test: `@${name}({ creator: null }, { space: "cookie" }, { space: "local" }, { abc: "def" })`,
                             },
                         },
                     };
@@ -15684,7 +15686,9 @@ describe('original action tests', () => {
                         botAdded({
                             id: expectedId,
                             space: 'local',
-                            tags: {},
+                            tags: {
+                                abc: 'def',
+                            },
                         }),
                     ]);
                 });
@@ -15694,7 +15698,7 @@ describe('original action tests', () => {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}({ creator: null }, { space: "cookie" }, { space: null })`,
+                                test: `@${name}({ creator: null }, { space: "cookie" }, { space: null }, { abc: "def" })`,
                             },
                         },
                     };
@@ -15706,7 +15710,9 @@ describe('original action tests', () => {
                     expect(result.actions).toEqual([
                         botAdded({
                             id: expectedId,
-                            tags: {},
+                            tags: {
+                                abc: 'def',
+                            },
                         }),
                     ]);
                 });
@@ -15724,7 +15730,7 @@ describe('original action tests', () => {
                             thisBot: {
                                 id: 'thisBot',
                                 tags: {
-                                    test: `@${name}({ creator: null }, { space: ${value} })`,
+                                    test: `@${name}({ creator: null }, { space: ${value} }, { abc: "def" })`,
                                 },
                             },
                         };
@@ -15736,7 +15742,9 @@ describe('original action tests', () => {
                         expect(result.actions).toEqual([
                             botAdded({
                                 id: expectedId,
-                                tags: {},
+                                tags: {
+                                    abc: 'def',
+                                },
                             }),
                         ]);
                     }
@@ -15810,7 +15818,7 @@ describe('original action tests', () => {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}({ creator: "otherBot" }, { space: "def" })`,
+                                test: `@${name}({ creator: "otherBot" }, { space: "def" }, { abc: "def" })`,
                             },
                         },
                         otherBot: {
@@ -15830,7 +15838,9 @@ describe('original action tests', () => {
                         botAdded({
                             id: expectedId,
                             space: <any>'def',
-                            tags: {},
+                            tags: {
+                                abc: 'def',
+                            },
                         }),
                     ]);
                 });
@@ -15840,7 +15850,7 @@ describe('original action tests', () => {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}({ creator: "otherBot" })`,
+                                test: `@${name}({ creator: "otherBot" }, { abc: "def" })`,
                             },
                         },
                     };
@@ -15852,7 +15862,9 @@ describe('original action tests', () => {
                     expect(result.actions).toEqual([
                         botAdded({
                             id: expectedId,
-                            tags: {},
+                            tags: {
+                                abc: 'def',
+                            },
                         }),
                     ]);
                 });

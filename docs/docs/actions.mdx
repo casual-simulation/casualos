@@ -28,6 +28,7 @@ If <TagLink tag='creator'/> references a non-existent bot or a bot with a differ
 **Each parameter** is a mod that should be applied to the new bot(s).
 If no parameters are specified, then the new bot will have its <TagLink tag='creator'/> set to `bot.id` and <TagLink tag='space'/> set to `shared`.
 If an array of mods is used for a parameter, then one bot will be created for _each unique combination of mods_.
+Each mod must have at least one tag. If given a mod with no tags then an error will be thrown.
 
 #### Examples:
 

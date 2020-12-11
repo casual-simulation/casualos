@@ -189,9 +189,20 @@ describe('AuxLibrary', () => {
         uuidMock.mockReset();
     });
 
-    const falsyCases = [['false', false], ['0', 0]];
-    const emptyCases = [['null', null], ['empty string', '']];
-    const numberCases = [['0', 0], ['1', 1], ['true', true], ['false', false]];
+    const falsyCases = [
+        ['false', false],
+        ['0', 0],
+    ];
+    const emptyCases = [
+        ['null', null],
+        ['empty string', ''],
+    ];
+    const numberCases = [
+        ['0', 0],
+        ['1', 1],
+        ['true', true],
+        ['false', false],
+    ];
     const trimEventCases = [
         ['parenthesis', 'sayHello()'],
         ['hashtag', '#sayHello'],
@@ -498,7 +509,10 @@ describe('AuxLibrary', () => {
             expect(bot).toEqual(bot1);
         });
 
-        const emptyCases = [['null', null], ['empty string', '']];
+        const emptyCases = [
+            ['null', null],
+            ['empty string', ''],
+        ];
 
         it.each(emptyCases)(
             'should return undefined if a %s tag is provided',
@@ -597,7 +611,7 @@ describe('AuxLibrary', () => {
                 it('should return a function that returns true when the function returns true', () => {
                     const filter = library.api.byTag(
                         'red',
-                        tag => typeof tag === 'number'
+                        (tag) => typeof tag === 'number'
                     );
 
                     bot1.tags.red = 123;
@@ -607,7 +621,7 @@ describe('AuxLibrary', () => {
                 it('should return a function that returns false when the function returns false', () => {
                     const filter = library.api.byTag(
                         'red',
-                        tag => typeof tag === 'number'
+                        (tag) => typeof tag === 'number'
                     );
 
                     bot1.tags.red = 'abc';
@@ -986,9 +1000,11 @@ describe('AuxLibrary', () => {
                 });
 
                 it('should not work when given a direction other than the supported ones', () => {
-                    const filter = library.api.neighboring(bot1, 'red', <any>(
-                        'wrong'
-                    ));
+                    const filter = library.api.neighboring(
+                        bot1,
+                        'red',
+                        <any>'wrong'
+                    );
 
                     expect(filter(bot2)).toEqual(false);
                     expect(filter(bot3)).toEqual(false);
@@ -1087,17 +1103,26 @@ describe('AuxLibrary', () => {
             });
 
             it('should return a function that returns true when any of the given functions return true', () => {
-                const filter = library.api.either(b => false, b => true);
+                const filter = library.api.either(
+                    (b) => false,
+                    (b) => true
+                );
                 expect(filter(bot1)).toEqual(true);
             });
 
             it('should return a function that returns false when all of the given functions return false', () => {
-                const filter = library.api.either(b => false, b => false);
+                const filter = library.api.either(
+                    (b) => false,
+                    (b) => false
+                );
                 expect(filter(bot1)).toEqual(false);
             });
 
             it('should return a function that doesnt have a sort function', () => {
-                const filter = library.api.either(b => false, b => true);
+                const filter = library.api.either(
+                    (b) => false,
+                    (b) => true
+                );
                 expect(typeof filter.sort).toEqual('undefined');
             });
         });
@@ -1114,7 +1139,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should return a function which negates the given function results', () => {
-                const filter = library.api.not(b => b.id === 'test1');
+                const filter = library.api.not((b) => b.id === 'test1');
 
                 expect(filter(bot1)).toEqual(false);
                 expect(filter(bot2)).toEqual(true);
@@ -1257,7 +1282,7 @@ describe('AuxLibrary', () => {
             bot3.tags.name = 'bob';
             const values = library.api.getBotTagValues(
                 '#name',
-                b => b === 'bob'
+                (b) => b === 'bob'
             );
 
             expect(values).toEqual(['bob', 'bob']);
@@ -1783,9 +1808,10 @@ describe('AuxLibrary', () => {
             });
 
             it('should include the given format', () => {
-                const action = library.api.player.showBarcode('hello', <any>(
-                    'format'
-                ));
+                const action = library.api.player.showBarcode(
+                    'hello',
+                    <any>'format'
+                );
                 expect(action).toEqual(
                     showBarcode(true, 'hello', <any>'format')
                 );
@@ -2123,11 +2149,11 @@ describe('AuxLibrary', () => {
                 expect(result).toEqual(0);
             });
 
-            const portalCases = [...KNOWN_PORTALS.map(p => [p])];
+            const portalCases = [...KNOWN_PORTALS.map((p) => [p])];
 
             it.each(portalCases)(
                 'should return 1 when the dimension is in the %s portal',
-                portal => {
+                (portal) => {
                     player.tags[portal] = 'dimension';
                     const result = library.api.player.getDimensionalDepth(
                         'dimension'
@@ -6226,29 +6252,87 @@ describe('AuxLibrary', () => {
             expect(otherPart).toBeCalledTimes(1);
         });
 
+        it('should ignore null mods', () => {
+            uuidMock.mockReturnValue('uuid');
+            const bot = library.api.create(null, {
+                abc: 'def',
+            });
+
+            expect(bot).toEqual(
+                createDummyRuntimeBot('uuid', {
+                    abc: 'def',
+                })
+            );
+        });
+
+        it('should throw an error if creating a bot with no tags', () => {
+            uuidMock.mockReturnValue('uuid');
+            expect(() => {
+                library.api.create({});
+            }).toThrow();
+        });
+
+        it('should be able to create a bot that has tags but is given a mod with no tags', () => {
+            uuidMock.mockReturnValue('uuid');
+            const bot = library.api.create(
+                {
+                    abc: 'def',
+                },
+                {}
+            );
+            expect(bot).toEqual(
+                createDummyRuntimeBot('uuid', {
+                    abc: 'def',
+                })
+            );
+        });
+
+        it('should throw an error if given an array with a mod that has no tags', () => {
+            uuidMock.mockReturnValue('uuid');
+            expect(() => {
+                library.api.create([{}]);
+            }).toThrow();
+        });
+
         describe('space', () => {
             it('should set the space of the bot', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ space: 'local' });
-                expect(bot).toEqual(createDummyRuntimeBot('uuid', {}, 'local'));
+                const bot = library.api.create({ space: 'local', abc: 'def' });
+                expect(bot).toEqual(
+                    createDummyRuntimeBot('uuid', { abc: 'def' }, 'local')
+                );
             });
 
             it('should use the last space', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const bot = library.api.create(
                     { space: 'tempLocal' },
-                    { space: 'local' }
+                    { space: 'local' },
+                    { abc: 'def' }
                 );
-                expect(bot).toEqual(createDummyRuntimeBot('uuid', {}, 'local'));
+                expect(bot).toEqual(
+                    createDummyRuntimeBot(
+                        'uuid',
+                        {
+                            abc: 'def',
+                        },
+                        'local'
+                    )
+                );
             });
 
             it('should use the last space even if it is null', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const bot = library.api.create(
                     { space: 'tempLocal' },
-                    { space: null }
+                    { space: null },
+                    { abc: 'def' }
                 );
-                expect(bot).toEqual(createDummyRuntimeBot('uuid'));
+                expect(bot).toEqual(
+                    createDummyRuntimeBot('uuid', {
+                        abc: 'def',
+                    })
+                );
             });
 
             const normalCases = [
@@ -6261,8 +6345,15 @@ describe('AuxLibrary', () => {
                 'should treat %s as the default type',
                 (desc, value) => {
                     uuidMock.mockReturnValueOnce('uuid');
-                    const bot = library.api.create({ space: value });
-                    expect(bot).toEqual(createDummyRuntimeBot('uuid'));
+                    const bot = library.api.create({
+                        space: value,
+                        abc: 'def',
+                    });
+                    expect(bot).toEqual(
+                        createDummyRuntimeBot('uuid', {
+                            abc: 'def',
+                        })
+                    );
                 }
             );
         });
@@ -6291,8 +6382,12 @@ describe('AuxLibrary', () => {
 
             it('should be able to set the creator to null', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ creator: null });
-                expect(bot).toEqual(createDummyRuntimeBot('uuid'));
+                const bot = library.api.create({ creator: null, abc: 'def' });
+                expect(bot).toEqual(
+                    createDummyRuntimeBot('uuid', {
+                        abc: 'def',
+                    })
+                );
             });
 
             it('should set creator to null if it references a bot in a different space', () => {
@@ -6300,14 +6395,30 @@ describe('AuxLibrary', () => {
                 const bot = library.api.create({
                     creator: bot1.id,
                     space: 'local',
+                    abc: 'def',
                 });
-                expect(bot).toEqual(createDummyRuntimeBot('uuid', {}, 'local'));
+                expect(bot).toEqual(
+                    createDummyRuntimeBot(
+                        'uuid',
+                        {
+                            abc: 'def',
+                        },
+                        'local'
+                    )
+                );
             });
 
             it('should set creator to null if it references a bot that does not exist', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ creator: 'missing' });
-                expect(bot).toEqual(createDummyRuntimeBot('uuid'));
+                const bot = library.api.create({
+                    creator: 'missing',
+                    abc: 'def',
+                });
+                expect(bot).toEqual(
+                    createDummyRuntimeBot('uuid', {
+                        abc: 'def',
+                    })
+                );
             });
         });
     });
@@ -6399,7 +6510,9 @@ describe('AuxLibrary', () => {
 
         it('should be able to destroy a bot that was just created', () => {
             uuidMock.mockReturnValueOnce('uuid');
-            const newBot = library.api.create();
+            const newBot = library.api.create({
+                abc: 'def',
+            });
             library.api.destroy(newBot);
             expect(context.bots).not.toContain(newBot);
         });
@@ -6585,10 +6698,10 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to modify bots that are arguments', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(b3 => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn((b3) => {
                 b3.tags.hit1 = true;
             }));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(b3 => {
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn((b3) => {
                 b3.tags.hit2 = true;
             }));
 
@@ -6600,10 +6713,10 @@ describe('AuxLibrary', () => {
         });
 
         it('should handle bots nested in an object as an argument', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(arg => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn((arg) => {
                 arg.bot.tags.hit1 = true;
             }));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(arg => {
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn((arg) => {
                 arg.bot.tags.hit2 = true;
             }));
 
