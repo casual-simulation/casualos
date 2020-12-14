@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.3.5
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Changed `create()` to prevent creating bots that have no tags.
+    -   If a bot would be created with zero tags then an error will be thrown.
+
 ## V1.3.4
 
 #### Date: 12/10/2020
