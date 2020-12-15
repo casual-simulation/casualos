@@ -275,8 +275,9 @@ export class AuxVMImpl implements AuxVM {
             return;
         }
 
+        await loadScript(this._iframe.contentWindow, `script/${id}`, source);
         // await registerIFramePortal(this._iframe.contentWindow, id, source);
-        // console.log(`[AuxVMImpl] Registered portal: ${id}`);
+        console.log(`[AuxVMImpl] Registered portal: ${id}`);
     }
 
     private async _initManifest() {
