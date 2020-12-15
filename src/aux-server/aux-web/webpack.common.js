@@ -58,6 +58,7 @@ function playerConfig() {
                 template: path.resolve(__dirname, 'aux-player', 'index.html'),
                 title: 'CasualOS',
                 filename: 'player.html',
+                favicon: path.resolve(__dirname, 'aux-player', 'favicon.ico'),
             }),
             new HtmlWebpackPlugin({
                 chunks: ['vm', 'vendors'],

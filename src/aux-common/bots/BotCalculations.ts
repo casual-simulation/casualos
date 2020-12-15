@@ -187,13 +187,10 @@ export function filterBotsBySelection<TBot extends Bot>(
         if (selectionId === 'id' || selectionId === 'space') {
             return true;
         }
-        for (let prop in f.tags) {
-            const val = f.tags[prop];
-            if (prop === selectionId && val) {
-                return true;
-            }
-        }
-        return false;
+        return (
+            hasValue(f.tags[selectionId]) ||
+            hasValue(calculateBotValue(null, f, selectionId))
+        );
     });
 }
 

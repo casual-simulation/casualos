@@ -1603,7 +1603,7 @@ describe('AuxHelper', () => {
                 await helper.createBot('abc', {
                     onStoryAction: `@
                         if (that.action.type === 'action') {
-                            create(null, {
+                            create({
                                 test: true
                             });
                         }
@@ -1628,7 +1628,7 @@ describe('AuxHelper', () => {
                 await helper.createBot('abc', {
                     onStoryAction: `@
                         if (that.action.type === 'update_bot') {
-                            create(null, {
+                            create({
                                 test: true
                             });
                         }

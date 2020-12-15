@@ -61,6 +61,7 @@ import {
     calculateBotIdTagValue,
     getBotTagPortalAnchorPoint,
     getBotTagPortalAnchorPointOffset,
+    createPrecalculatedBot,
 } from '../BotCalculations';
 import {
     Bot,
@@ -262,7 +263,7 @@ export function botCalculationContextTests(
         });
 
         describe('filterBotsBySelection()', () => {
-            it('should return the bots that have the given selection ID set to a truthy value', () => {
+            it('should return the bots that have the given selection ID set in a tag', () => {
                 const selectionId = 'abcdefg1234';
                 const bot1 = createBot('test1');
                 const bot2 = createBot('test2');
@@ -270,19 +271,21 @@ export function botCalculationContextTests(
                 const bot4 = createBot('test4');
                 const bot5 = createBot('test5');
                 const bot6 = createBot('test6');
+                const bot7 = createBot('test7');
 
                 bot1.tags[selectionId] = true;
                 bot2.tags[selectionId] = 1;
                 bot3.tags[selectionId] = -1;
                 bot4.tags[selectionId] = 'hello';
                 bot5.tags[selectionId] = false;
+                bot6.tags[selectionId] = '';
 
                 const selected = filterBotsBySelection(
-                    [bot1, bot2, bot3, bot4, bot5, bot6],
+                    [bot1, bot2, bot3, bot4, bot5, bot6, bot7],
                     selectionId
                 );
 
-                expect(selected).toEqual([bot1, bot2, bot3, bot4]);
+                expect(selected).toEqual([bot1, bot2, bot3, bot4, bot5]);
             });
 
             it('should return bots that have the same ID as the selection', () => {
@@ -328,6 +331,47 @@ export function botCalculationContextTests(
                 );
 
                 expect(selected).toEqual([bot1, bot2]);
+            });
+
+            it('should support tag masks', () => {
+                const selectionId = 'abc';
+                const bot1 = createPrecalculatedBot('test1', {}, {});
+                const bot2 = createPrecalculatedBot('abcdefg1234', {}, {});
+
+                bot1.values[selectionId] = true;
+                bot1.masks = {
+                    tempLocal: {
+                        [selectionId]: true,
+                    },
+                };
+
+                const selected = filterBotsBySelection(
+                    [bot1, bot2],
+                    selectionId
+                );
+
+                expect(selected).toEqual([bot1]);
+            });
+
+            it('should include bots that have a tag but no value', () => {
+                const selectionId = 'abc';
+                const bot1 = createPrecalculatedBot(
+                    'test1',
+                    {
+                        [selectionId]: null,
+                    },
+                    {
+                        [selectionId]: 'abc',
+                    }
+                );
+                const bot2 = createPrecalculatedBot('abcdefg1234', {}, {});
+
+                const selected = filterBotsBySelection(
+                    [bot1, bot2],
+                    selectionId
+                );
+
+                expect(selected).toEqual([bot1]);
             });
         });
     });

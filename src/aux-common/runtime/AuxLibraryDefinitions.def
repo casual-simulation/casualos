@@ -1969,7 +1969,7 @@ declare global {
     /**
      * Creates a new bot and returns it.
      * @param parent The bot that should be the parent of the new bot.
-     * @param mods The mods which specify the new bot's tag values.
+     * @param mods The mods which specify the new bot's tag values. If given a mod with no tags, then an error will be thrown.
      * @returns The bot(s) that were created.
      *
      * @example
@@ -2704,7 +2704,7 @@ declare global {
          * // Play a cow "moo"
          * player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
          */
-        playSound(url: string): Promise<void>;
+        playSound(url: string): Promise<string>;
 
         /**
          * Preloads the audio for the given URL.

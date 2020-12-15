@@ -1,5 +1,21 @@
 # CasualOS Changelog
 
+## V1.3.5
+
+#### Date: 12/15/2020
+
+### :rocket: Improvements
+
+-   Changed `create()` to prevent creating bots that have no tags.
+    -   If a bot would be created with zero tags then an error will be thrown.
+-   Added a favicon.
+
+### :bug: Bug Fixes
+
+-   Changed the maximum WebSocket message size to 32KB from 128KB.
+    -   This will help ensure that we keep below the [AWS API Gateway maximum frame size of 32 KB](https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html).
+-   Fixed an issue where bots that only had a tag mask would not show up in the sheetPortal.
+
 ## V1.3.4
 
 #### Date: 12/10/2020
