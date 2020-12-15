@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.3.6
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where some bots would not be added to the page portal when created in a big batch.
+
 ## V1.3.5
 
 #### Date: 12/15/2020
