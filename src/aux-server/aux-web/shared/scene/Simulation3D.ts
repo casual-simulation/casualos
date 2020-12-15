@@ -198,7 +198,9 @@ export abstract class Simulation3D
 
         this._subs.push(
             this.simulation.dimensions
-                .watchDimensions(...this._getDimensionTags())
+                .watchDimensions(this._getDimensionTags(), (bot) =>
+                    this._filterDimensionBot(bot)
+                )
                 .pipe(tap((update) => this._dimensionsUpdated(update)))
                 .subscribe(null, (err) => console.log(err))
         );
@@ -473,6 +475,15 @@ export abstract class Simulation3D
         calc: BotCalculationContext,
         event: BotDimensionEvent
     ): boolean {
+        return true;
+    }
+
+    /**
+     * Determines if the given bot should be able to host a dimension.
+     * Defaults to true.
+     * @param bot The bot.
+     */
+    protected _filterDimensionBot(bot: Bot): boolean {
         return true;
     }
 
