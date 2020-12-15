@@ -15,7 +15,7 @@ import uuid from 'uuid/v4';
 import { concatMap, filter, map } from 'rxjs/operators';
 import axios from 'axios';
 
-export const MAX_MESSAGE_SIZE = 128_000;
+export const MAX_MESSAGE_SIZE = 32_000;
 
 /**
  * Defines a reconnectable WebSocket that implements specializations for AWS API Gateway.
