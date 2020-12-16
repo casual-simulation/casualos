@@ -1,7 +1,7 @@
 module.exports = {
-  title: 'Casual Simulation',
+  title: 'CasualOS',
   tagline: 'Problem Solving For People',
-  url: 'https://docs.casualsimulation.com',
+  url: 'https://docs.casualos.com',
   baseUrl: '/',
   favicon: 'img/favicon.ico',
   organizationName: 'casual-simulation', // Usually your GitHub org/user name.
@@ -16,7 +16,7 @@ module.exports = {
       algoliaOptions: {}
     },
     navbar: {
-      title: 'Casual Simulation',
+      title: 'CasualOS',
       logo: {
         alt: 'My Site Logo',
         src: 'img/logo.png',
@@ -54,7 +54,7 @@ module.exports = {
       ],
       logo: {
         alt: 'Casual Simulation Logo',
-        src: '/img/logo.gif',
+        src: '/img/logo.png',
       },
       copyright: `Copyright © ${new Date().getFullYear()} Casual Simulation Built with Docusaurus.`,
     },
