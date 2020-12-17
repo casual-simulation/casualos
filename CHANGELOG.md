@@ -12,6 +12,7 @@
 
 -   Fixed an issue where some bots would not be added to the page portal when created in a big batch.
 -   Fixed an issue where the `player.showInput()` dialog would appear fullscreen on mobile devices and prevent people from exiting it.
+-   Fixed an issue where `@onChatTyping` would be triggered twice for each keystroke.
 
 ## V1.3.5
 
