@@ -27,7 +27,7 @@ export default class CheckoutForm extends Vue {
     @Prop({ required: true }) description: string;
     @Prop({ required: true }) requestBillingAddress: boolean;
     @Prop() paymentRequest: PaymentRequestOptions;
-    @Prop({ required: true }) processingStory: string;
+    @Prop({ required: true }) processingServer: string;
     @Prop({ required: true }) publishableKey: string;
 
     billingName: string = '';
@@ -90,7 +90,7 @@ export default class CheckoutForm extends Vue {
 
         this.checkingOut = true;
         const productId = this.productId;
-        const processingStory = this.processingStory;
+        const processingServer = this.processingServer;
         const result = await this._stripe.createToken(
             this._card,
             this.requestBillingAddress
@@ -115,7 +115,7 @@ export default class CheckoutForm extends Vue {
                 await this._sendTokenToServer(
                     result,
                     productId,
-                    processingStory
+                    processingServer
                 );
             } catch (err) {
                 this.checkingOut = false;
@@ -278,7 +278,7 @@ export default class CheckoutForm extends Vue {
                 },
             });
 
-            this._card.on('change', e => {
+            this._card.on('change', (e) => {
                 if (e.error) {
                     this.cardError = e.error.message;
                 } else {
@@ -312,13 +312,13 @@ export default class CheckoutForm extends Vue {
                     );
                 }
 
-                this._paymentRequest.on('token', async token => {
+                this._paymentRequest.on('token', async (token) => {
                     this.checkingOut = true;
                     try {
                         await this._sendTokenToServer(
                             token,
                             this.productId,
-                            this.processingStory
+                            this.processingServer
                         );
                         token.complete('success');
                     } catch (err) {
@@ -336,7 +336,7 @@ export default class CheckoutForm extends Vue {
     private async _sendTokenToServer(
         result: stripe.TokenResponse,
         productId: string,
-        processingStory: string
+        processingServer: string
     ) {
         const token = result.token.id;
         await this._checkoutSim.helper.action(ON_CHECKOUT_ACTION_NAME, null, {
@@ -344,7 +344,7 @@ export default class CheckoutForm extends Vue {
             token: token,
         });
         await this._checkoutSim.helper.transaction(
-            remote(checkoutSubmitted(productId, token, processingStory))
+            remote(checkoutSubmitted(productId, token, processingServer))
         );
         this.$emit('paymentSuccess');
     }

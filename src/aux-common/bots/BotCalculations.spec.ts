@@ -1126,7 +1126,7 @@ describe('BotCalculations', () => {
                 host: 'https://example.com',
             });
 
-            result = parseSimulationId('https://example.com?story=sim');
+            result = parseSimulationId('https://example.com?server=sim');
             expect(result).toEqual({
                 success: true,
                 host: 'https://example.com',
@@ -1134,7 +1134,7 @@ describe('BotCalculations', () => {
             });
 
             result = parseSimulationId(
-                'https://example.com:3000?story=sim/dimension'
+                'https://example.com:3000?server=sim/dimension'
             );
             expect(result).toEqual({
                 success: true,
@@ -1171,7 +1171,7 @@ describe('BotCalculations', () => {
             };
 
             expect(simulationIdToString(id)).toBe(
-                `https://example.com?story=${encodeURIComponent('test/abc')}`
+                `https://example.com?server=${encodeURIComponent('test/abc')}`
             );
         });
 

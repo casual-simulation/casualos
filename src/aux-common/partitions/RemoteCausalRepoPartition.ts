@@ -252,7 +252,7 @@ export class RemoteCausalRepoPartitionImpl
                     ]);
                 } else if (event.event.type === 'get_player_count') {
                     const action = <GetPlayerCountAction>event.event;
-                    this._client.deviceCount(action.story).subscribe(
+                    this._client.deviceCount(action.server).subscribe(
                         (count) => {
                             this._onEvents.next([
                                 asyncResult(event.taskId, count),
@@ -277,7 +277,7 @@ export class RemoteCausalRepoPartitionImpl
                                                 (b) => !b.branch.startsWith('$')
                                             )
                                             .map((b) => ({
-                                                story: b.branch,
+                                                server: b.branch,
                                                 lastUpdateTime:
                                                     b.lastUpdateTime,
                                             }))

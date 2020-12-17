@@ -160,7 +160,7 @@ export interface MongoDBCaualReposConfig {
 export interface BotsServerConfig {
     /**
      * The name of the database that the bots should be stored in.
-     * Each story gets its own collection.
+     * Each server gets its own collection.
      */
     dbName: string;
 

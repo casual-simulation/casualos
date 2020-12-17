@@ -5,7 +5,7 @@ import { Server as HttpServer, IncomingMessage } from 'http';
 
 export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
     return (req, res, next) => {
-        Promise.resolve(fn(req, res, next)).catch(er => {
+        Promise.resolve(fn(req, res, next)).catch((er) => {
             next(er);
         });
     };
@@ -33,25 +33,21 @@ export class Server {
         }
 
         this._app.use(bodyParser.json());
-        this._app.all('/:dimension/:story', (req, res) => {
-            const story: string = req.params.story;
+        this._app.all('/:dimension/:server', (req, res) => {
+            const server: string = req.params.server;
             const dimension: string = req.params.dimension;
-            const storyEncoded = encodeURIComponent(story);
-            console.log('Redirecting to player:', story, dimension);
+            const serverEncoded = encodeURIComponent(server);
+            console.log('Redirecting to player:', server, dimension);
 
             if (dimension.startsWith('*')) {
                 const dimensionEncoded = encodeURIComponent(dimension.slice(1));
                 res.redirect(
-                    `https://${this._config.target.domain}:${
-                        this._config.target.port
-                    }?story=${storyEncoded}&sheetPortal=${dimensionEncoded}`
+                    `https://${this._config.target.domain}:${this._config.target.port}?server=${serverEncoded}&sheetPortal=${dimensionEncoded}`
                 );
             } else {
                 const dimensionEncoded = encodeURIComponent(dimension);
                 res.redirect(
-                    `https://${this._config.target.domain}:${
-                        this._config.target.port
-                    }?story=${storyEncoded}&pagePortal=${dimensionEncoded}`
+                    `https://${this._config.target.domain}:${this._config.target.port}?server=${serverEncoded}&pagePortal=${dimensionEncoded}`
                 );
             }
         });

@@ -63,8 +63,8 @@ export default class PlayerHome extends Vue {
 
     @Watch('query')
     async onQueryChanged() {
-        const story = this.query['story'] as string | string[];
-        await this._setStory(story);
+        const server = this.query['server'] as string | string[];
+        await this._setServer(server);
         for (let [sim, sub] of this._simulations) {
             getUserBotAsync(sim).subscribe(
                 (bot) => {
@@ -108,21 +108,33 @@ export default class PlayerHome extends Vue {
         });
 
         if (this.query) {
-            // On first load check the story and load a default
-            let story = this.query['story'] as string | string[];
-            if (!hasValue(story)) {
-                // Generate a random story name
-                const randomName: string = uniqueNamesGenerator(namesConfig);
-                let update: Dictionary<string> = {
-                    story: randomName,
-                };
-                if (!hasValue(this.query['pagePortal'])) {
-                    update.pagePortal = 'home';
+            // On first load check the server and load a default
+            let server = this.query['server'] as string | string[];
+            if (!hasValue(server)) {
+                // if there is no server tag defined, check for the story tag
+                server = this.query['story'];
+                if (hasValue(server)) {
+                    let update: Dictionary<string | string[]> = {
+                        server: server,
+                        story: null,
+                    };
+                    this._updateQuery(update);
+                } else {
+                    // Generate a random server name
+                    const randomName: string = uniqueNamesGenerator(
+                        namesConfig
+                    );
+                    let update: Dictionary<string> = {
+                        server: randomName,
+                    };
+                    if (!hasValue(this.query['pagePortal'])) {
+                        update.pagePortal = 'home';
+                    }
+                    this._updateQuery(update);
+                    server = randomName;
                 }
-                this._updateQuery(update);
-                story = randomName;
             }
-            this._setStory(story);
+            this._setServer(server);
         }
     }
 
@@ -136,17 +148,17 @@ export default class PlayerHome extends Vue {
                 } else {
                     if (sim.id === appManager.simulationManager.primary.id) {
                         this._handleQueryUpdates(sim, update);
-                        if (update.tags.has('story')) {
-                            // Story changed - update it
+                        if (update.tags.has('server')) {
+                            // server changed - update it
                             const calc = sim.helper.createContext();
-                            const story = calculateStringListTagValue(
+                            const server = calculateStringListTagValue(
                                 calc,
                                 update.bot,
-                                'story',
+                                'server',
                                 null
                             );
-                            if (hasValue(story)) {
-                                this._setStory(story);
+                            if (hasValue(server)) {
+                                this._setServer(server);
                             }
                         }
 
@@ -198,19 +210,19 @@ export default class PlayerHome extends Vue {
         }
     }
 
-    private async _setStory(newStory: string | string[]) {
-        if (typeof newStory === 'string') {
-            await this._loadPrimarySimulation(newStory);
+    private async _setServer(newServer: string | string[]) {
+        if (typeof newServer === 'string') {
+            await this._loadPrimarySimulation(newServer);
         } else {
             if (!appManager.simulationManager.primary) {
-                await this._loadPrimarySimulation(newStory[0]);
+                await this._loadPrimarySimulation(newServer[0]);
             }
-            await appManager.simulationManager.updateSimulations(newStory);
+            await appManager.simulationManager.updateSimulations(newServer);
         }
     }
 
-    private async _loadPrimarySimulation(newStory: string) {
-        const sim = await appManager.setPrimarySimulation(newStory);
+    private async _loadPrimarySimulation(newServer: string) {
+        const sim = await appManager.setPrimarySimulation(newServer);
         sim.connection.syncStateChanged
             .pipe(first((synced) => synced))
             .subscribe(() => {

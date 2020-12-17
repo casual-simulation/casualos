@@ -52,7 +52,8 @@ export interface DenoSimulation extends RemoteSimulation {
  * Defines a class that interfaces with the AppManager and SocketManager
  * to reactively edit bots.
  */
-export class DenoSimulationImpl extends BaseSimulation
+export class DenoSimulationImpl
+    extends BaseSimulation
     implements DenoSimulation {
     private _login: LoginManager;
     private _progress: ProgressManager;
@@ -75,7 +76,7 @@ export class DenoSimulationImpl extends BaseSimulation
             id,
             config,
             createPartitions(),
-            config => new DenoVM(user, config)
+            (config) => new DenoVM(user, config)
         );
         this.helper.userId = user ? user.id : null;
 
@@ -106,7 +107,7 @@ export class DenoSimulationImpl extends BaseSimulation
                 [ERROR_BOT_PARTITION_ID]: {
                     type: 'bot',
                     host: host,
-                    story: parsedId.channel,
+                    server: parsedId.channel,
                 },
                 [PLAYER_PARTITION_ID]: {
                     type: 'remote_causal_repo',

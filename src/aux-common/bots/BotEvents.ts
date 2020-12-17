@@ -62,8 +62,8 @@ export type ExtraActions =
     | OpenBarcodeScannerAction
     | ShowQRCodeAction
     | ShowBarcodeAction
-    | LoadStoryAction
-    | UnloadStoryAction
+    | LoadServerAction
+    | UnloadServerAction
     | SuperShoutAction
     | SendWebhookAction
     | GoToDimensionAction
@@ -472,9 +472,9 @@ export interface StartCheckoutOptions {
     description: string;
 
     /**
-     * The story that the payment processing should occur in.
+     * The server that the payment processing should occur in.
      */
-    processingStory: string;
+    processingServer: string;
 
     /**
      * Whether to request the payer's billing address.
@@ -543,7 +543,7 @@ export interface CheckoutSubmittedAction extends Action {
     /**
      * The channel that processing should happen in.
      */
-    processingStory: string;
+    processingServer: string;
 }
 
 /**
@@ -768,8 +768,8 @@ export interface ShowBarcodeAction extends Action {
 /**
  * An event that is used to load a simulation.
  */
-export interface LoadStoryAction extends Action {
-    type: 'load_story';
+export interface LoadServerAction extends Action {
+    type: 'load_server';
 
     /**
      * The ID of the simulation to load.
@@ -780,8 +780,8 @@ export interface LoadStoryAction extends Action {
 /**
  * An event that is used to unload a simulation.
  */
-export interface UnloadStoryAction extends Action {
-    type: 'unload_story';
+export interface UnloadServerAction extends Action {
+    type: 'unload_server';
 
     /**
      * The ID of the simulation to unload.
@@ -933,10 +933,10 @@ export interface GetPlayerCountAction extends Action {
     type: 'get_player_count';
 
     /**
-     * The story that the player count should be retrieved for.
+     * The server that the player count should be retrieved for.
      * If omitted, then the total player count will be returned.
      */
-    story?: string;
+    server?: string;
 }
 
 /**
@@ -946,7 +946,7 @@ export interface GetStoriesAction extends Action {
     type: 'get_stories';
 
     /**
-     * Whether to get the story statuses.
+     * Whether to get the server statuses.
      */
     includeStatuses?: boolean;
 }
@@ -1211,7 +1211,7 @@ export interface RejectAction {
  * Defines an event that creates a channel if it doesn't exist.
  */
 export interface SetupChannelAction extends AsyncAction {
-    type: 'setup_story';
+    type: 'setup_server';
 
     /**
      * The channel that should be created.
@@ -1958,7 +1958,7 @@ export interface MarkHistoryAction {
 }
 
 /**
- * Defines an event that loads the history into the story.
+ * Defines an event that loads the history into the server.
  */
 export interface BrowseHistoryAction {
     type: 'browse_history';
@@ -1976,14 +1976,14 @@ export interface RestoreHistoryMarkAction {
     mark: string;
 
     /**
-     * The story that the mark should be restored to.
-     * If not specified, then the current story will be used.
+     * The server that the mark should be restored to.
+     * If not specified, then the current server will be used.
      */
-    story?: string;
+    server?: string;
 }
 
 /**
- * Defines an event that loads a space into the story.
+ * Defines an event that loads a space into the server.
  */
 export interface LoadSpaceAction extends Partial<AsyncAction> {
     type: 'load_space';
@@ -2208,15 +2208,15 @@ export interface EnableVRAction {
 }
 
 /**
- * Defines an event that shows a QR code that is a link to a story & dimension.
+ * Defines an event that shows a QR code that is a link to a server & dimension.
  */
 export interface ShowJoinCodeAction {
     type: 'show_join_code';
 
     /**
-     * The story that should be joined.
+     * The server that should be joined.
      */
-    story?: string;
+    server?: string;
 
     /**
      * The dimension that should be joined.
@@ -2563,9 +2563,9 @@ export function hideChat(): ShowChatBarAction {
  * Creates a new LoadSimulationAction.
  * @param id The ID of the simulation to load.
  */
-export function loadSimulation(id: string): LoadStoryAction {
+export function loadSimulation(id: string): LoadServerAction {
     return {
-        type: 'load_story',
+        type: 'load_server',
         id: id,
     };
 }
@@ -2574,9 +2574,9 @@ export function loadSimulation(id: string): LoadStoryAction {
  * Creates a new UnloadSimulationAction.
  * @param id The ID of the simulation to unload.
  */
-export function unloadSimulation(id: string): UnloadStoryAction {
+export function unloadSimulation(id: string): UnloadServerAction {
     return {
-        type: 'unload_story',
+        type: 'unload_server',
         id: id,
     };
 }
@@ -2824,13 +2824,13 @@ export function checkout(options: StartCheckoutOptions): StartCheckoutAction {
 export function checkoutSubmitted(
     productId: string,
     token: string,
-    processingStory: string
+    processingServer: string
 ): CheckoutSubmittedAction {
     return {
         type: 'checkout_submitted',
         productId: productId,
         token: token,
-        processingStory: processingStory,
+        processingServer: processingServer,
     };
 }
 
@@ -2912,13 +2912,13 @@ export function saveFile(
 
 /**
  * Creates a new GetPlayerCountAction.
- * @param story The story that the player count should be retrieved for.
+ * @param server The server that the player count should be retrieved for.
  */
-export function getPlayerCount(story?: string): GetPlayerCountAction {
-    if (hasValue(story)) {
+export function getPlayerCount(server?: string): GetPlayerCountAction {
+    if (hasValue(server)) {
         return {
             type: 'get_player_count',
-            story,
+            server,
         };
     } else {
         return {
@@ -2939,7 +2939,7 @@ export function getStories(): GetStoriesAction {
 /**
  * Creates a new GetStoriesAction that includes statuses.
  */
-export function getStoryStatuses(): GetStoriesAction {
+export function getServerStatuses(): GetStoriesAction {
     return {
         type: 'get_stories',
         includeStatuses: true,
@@ -2972,14 +2972,14 @@ export function replaceDragBot(bot: Bot | BotTags): ReplaceDragBotAction {
  * @param botOrMod The bot that should be cloned into the new channel.
  * @param taskId The ID of the async task.
  */
-export function setupStory(
+export function setupServer(
     channel: string,
     botOrMod?: Bot | BotTags,
     taskId?: string | number,
     playerId?: string
 ): SetupChannelAction {
     return {
-        type: 'setup_story',
+        type: 'setup_server',
         channel,
         botOrMod,
         taskId,
@@ -4017,13 +4017,13 @@ export function browseHistory(): BrowseHistoryAction {
 /**
  * Creates a RestoreHistoryMarkAction.
  * @param mark The ID of the mark that history should be restored to.
- * @param story The story that the mark should be restored to. If not specified, then the current story will be used.
+ * @param server The server that the mark should be restored to. If not specified, then the current server will be used.
  */
 export function restoreHistoryMark(
     mark: string,
-    story?: string
+    server?: string
 ): RestoreHistoryMarkAction {
-    if (!story) {
+    if (!server) {
         return {
             type: 'restore_history_mark',
             mark,
@@ -4032,13 +4032,13 @@ export function restoreHistoryMark(
         return {
             type: 'restore_history_mark',
             mark,
-            story,
+            server,
         };
     }
 }
 
 /**
- * Loads a space into the story.
+ * Loads a space into the server.
  * @param space The space to load.
  * @param config The config which specifies how the space should be loaded.
  * @param taskId The ID of the async task.
@@ -4098,16 +4098,16 @@ export function disableVR(): EnableVRAction {
 
 /**
  * Creates a ShowJoinCodeAction.
- * @param story The story to link to.
+ * @param server The server to link to.
  * @param dimension The dimension to link to.
  */
 export function showJoinCode(
-    story?: string,
+    server?: string,
     dimension?: string
 ): ShowJoinCodeAction {
     return {
         type: 'show_join_code',
-        story,
+        server,
         dimension,
     };
 }

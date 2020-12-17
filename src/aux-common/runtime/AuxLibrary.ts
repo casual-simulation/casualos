@@ -38,7 +38,7 @@ import {
     playSound as calcPlaySound,
     bufferSound as calcBufferSound,
     cancelSound as calcCancelSound,
-    setupStory as calcSetupStory,
+    setupServer as calcSetupServer,
     shell as calcShell,
     backupToGithub as calcBackupToGithub,
     backupAsDownload as calcBackupAsDownload,
@@ -91,7 +91,7 @@ import {
     getStories,
     getPlayers,
     action,
-    getStoryStatuses,
+    getServerStatuses,
     setSpacePassword,
     exportGpioPin,
     unexportGpioPin,
@@ -432,7 +432,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 enableVR,
                 disableVR,
                 downloadBots,
-                downloadStory,
+                downloadServer,
                 showUploadAuxFile,
                 openQRCodeScanner,
                 closeQRCodeScanner,
@@ -442,15 +442,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 closeBarcodeScanner,
                 showBarcode,
                 hideBarcode,
-                loadStory,
-                unloadStory,
+                loadServer,
+                unloadServer,
                 importAUX,
                 replaceDragBot,
 
                 getBot: getPlayerBot,
                 isInDimension,
                 getCurrentDimension,
-                getCurrentStory,
+                getCurrentServer,
                 getMenuDimension,
                 getInventoryDimension,
                 getPortalDimension,
@@ -479,7 +479,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             },
 
             server: {
-                setupStory,
+                setupServer,
                 exportGpio,
                 unexportGpio,
                 setGpio,
@@ -535,15 +535,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 markHistory,
                 browseHistory,
                 restoreHistoryMark,
-                restoreHistoryMarkToStory,
+                restoreHistoryMarkToServer,
                 loadFile,
                 saveFile,
                 destroyErrors,
                 loadErrors,
-                storyPlayerCount,
+                serverPlayerCount,
                 totalPlayerCount,
                 stories,
-                storyStatuses,
+                serverStatuses,
                 players,
             },
 
@@ -599,7 +599,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets a list of all the bots.
      *
      * @example
-     * // Gets all the bots in the story.
+     * // Gets all the bots in the server.
      * let bots = getBots();
      */
     function getBots(...args: any[]): RuntimeBot[] {
@@ -985,12 +985,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows a QR Code that contains a link to a story and dimension.
-     * @param story The story that should be joined. Defaults to the current story.
+     * Shows a QR Code that contains a link to a server and dimension.
+     * @param server The server that should be joined. Defaults to the current server.
      * @param dimension The dimension that should be joined. Defaults to the current dimension.
      */
-    function showJoinCode(story?: string, dimension?: string) {
-        return addAction(calcShowJoinCode(story, dimension));
+    function showJoinCode(server?: string, dimension?: string) {
+        return addAction(calcShowJoinCode(server, dimension));
     }
 
     /**
@@ -1162,10 +1162,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         );
     }
 
-    function downloadStory() {
+    function downloadServer() {
         return downloadBots(
             getBots(bySpace('shared')),
-            `${getCurrentStory()}.aux`
+            `${getCurrentServer()}.aux`
         );
     }
 
@@ -1246,19 +1246,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Loads the story with the given ID.
-     * @param id The ID of the story to load.
+     * Loads the server with the given ID.
+     * @param id The ID of the server to load.
      */
-    function loadStory(id: string) {
+    function loadServer(id: string) {
         const event = loadSimulation(id);
         return addAction(event);
     }
 
     /**
-     * Unloads the story with the given ID.
-     * @param id The ID of the story to unload.
+     * Unloads the server with the given ID.
+     * @param id The ID of the server to unload.
      */
-    function unloadStory(id: string) {
+    function unloadServer(id: string) {
         const event = unloadSimulation(id);
         return addAction(event);
     }
@@ -1325,14 +1325,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the story that the player is currently in.
+     * Gets the server that the player is currently in.
      */
-    function getCurrentStory(): string {
+    function getCurrentServer(): string {
         const user = context.playerBot;
         if (user) {
-            let story = getTag(user, 'story');
-            if (hasValue(story)) {
-                return story.toString();
+            let server = getTag(user, 'server');
+            if (hasValue(server)) {
+                return server.toString();
             }
             return undefined;
         }
@@ -1525,7 +1525,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *   productId: '10_cookies',
      *   title: '10 Cookies',
      *   description: '$5.00',
-     *   processingStory: 'cookies_checkout'
+     *   processingServer: 'cookies_checkout'
      * });
      *
      */
@@ -1609,14 +1609,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sends an event to the server to setup a new story if it does not exist.
-     * @param story The story.
-     * @param botOrMod The bot or mod that should be cloned into the new story.
+     * Sends an event to the server to setup a new server if it does not exist.
+     * @param server The server.
+     * @param botOrMod The bot or mod that should be cloned into the new server.
      */
-    function setupStory(story: string, botOrMod?: Mod) {
+    function setupServer(server: string, botOrMod?: Mod) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            calcSetupStory(story, convertToCopiableValue(botOrMod)),
+            calcSetupServer(server, convertToCopiableValue(botOrMod)),
             undefined,
             undefined,
             task.taskId
@@ -2517,7 +2517,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Loads the "history" space into the story.
+     * Loads the "history" space into the server.
      */
     function browseHistory() {
         const task = context.createTask(true, true);
@@ -2549,13 +2549,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Restores the current state to the given mark.
      * @param mark The bot or bot ID that represents the mark that should be restored.
-     * @param story The story that the mark should be restored to.
+     * @param server The server that the mark should be restored to.
      */
-    function restoreHistoryMarkToStory(mark: Bot | string, story: string) {
+    function restoreHistoryMarkToServer(mark: Bot | string, server: string) {
         const id = getID(mark);
         const task = context.createTask(true, true);
         const event = calcRemote(
-            calcRestoreHistoryMark(id, story),
+            calcRestoreHistoryMark(id, server),
             undefined,
             undefined,
             task.taskId
@@ -2604,7 +2604,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Destroys all the errors in the story.
+     * Destroys all the errors in the server.
      */
     function destroyErrors() {
         const task = context.createTask();
@@ -2641,14 +2641,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the number of players that are viewing the current story.
-     * @param story The story to get the statistics for. If omitted, then the current story is used.
+     * Gets the number of players that are viewing the current server.
+     * @param server The server to get the statistics for. If omitted, then the current server is used.
      */
-    function storyPlayerCount(story?: string): Promise<number> {
+    function serverPlayerCount(server?: string): Promise<number> {
         const task = context.createTask(true, true);
-        const actualStory = hasValue(story) ? story : getCurrentStory();
+        const actualServer = hasValue(server) ? server : getCurrentServer();
         const event = calcRemote(
-            getPlayerCount(actualStory),
+            getPlayerCount(actualServer),
             undefined,
             undefined,
             task.taskId
@@ -2687,15 +2687,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Gets the list of stories that are on the server.
      */
-    function storyStatuses(): Promise<
+    function serverStatuses(): Promise<
         {
-            story: string;
+            server: string;
             lastUpdateTime: Date;
         }[]
     > {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            getStoryStatuses(),
+            getServerStatuses(),
             undefined,
             undefined,
             task.taskId
@@ -2704,7 +2704,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the list of player IDs that are connected to the story.
+     * Gets the list of player IDs that are connected to the server.
      */
     function players(): Promise<string[]> {
         const task = context.createTask(true, true);
@@ -3394,7 +3394,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Revokes the given certificate using the given secret.
-     * In effect, this deletes the certificate bot from the story.
+     * In effect, this deletes the certificate bot from the server.
      * Additionally, any tags signed with the given certificate will no longer be verified.
      *
      * If given a signer, then the specified certificate will be used to sign the revocation.
@@ -3979,7 +3979,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Asks every bot in the story to run the given action.
+     * Asks every bot in the server to run the given action.
      * In effect, this is like shouting to a bunch of people in a room.
      *
      * @param name The event name.

@@ -748,7 +748,7 @@ describe('BaseAuxChannel', () => {
                         config: <SearchPartitionClientConfig>{
                             type: 'bot_client',
                             client: client,
-                            story: 'story',
+                            server: 'server',
                         },
                     },
                 ]);

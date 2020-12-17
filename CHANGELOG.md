@@ -1,5 +1,27 @@
 # CasualOS Changelog
 
+## V1.3.7
+
+#### Date: 12/17/2020
+
+### :boom: Breaking Changes
+
+-   "story" has been renamed to "server". Below is the list of tags, actions and listeners that have been changed:
+    -   `#story` -> `#server`.
+    -   `server.setupStory()` -> `server.setupServer()`
+    -   `server.restoreHistoryMarkToStory()` -> `server.restoreHistoryMarkToServer()`
+    -   `server.storyStatuses()` -> `server.serverStatuses()`
+    -   `server.storyPlayerCount()` -> `server.serverPlayerCount()`
+    -   `player.downloadStory()` -> `player.downloadServer()`
+    -   `player.loadStory()` -> `player.loadServer()`
+    -   `player.unloadStory()` -> `player.unloadServer()`
+    -   `player.getCurrentStory()` -> `player.getCurrentServer()`
+    -   `@onStoryAction` -> `@onServerAction`
+    -   `@onStoryStreaming` -> `@onServerStreaming`
+    -   `@onStoryStreamLost` -> `@onServerStreamLost`
+    -   `@onStorySubscribed` -> `@onServerSubscribed`
+    -   `@onStoryUnsubscribed` -> `@onServerUnsubscribed`
+
 ## V1.3.6
 
 #### Date: 12/17/2020

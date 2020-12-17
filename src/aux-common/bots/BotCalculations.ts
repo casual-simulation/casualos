@@ -2273,7 +2273,7 @@ export function simulationIdToString(id: SimulationIdParseSuccess): string {
     if (id.host) {
         let str = id.host;
         if (id.channel) {
-            str += `?story=${encodeURIComponent(id.channel)}`;
+            str += `?server=${encodeURIComponent(id.channel)}`;
         }
         return str;
     }
@@ -2284,7 +2284,7 @@ export function simulationIdToString(id: SimulationIdParseSuccess): string {
 export function parseSimulationId(id: string): SimulationIdParseSuccess {
     try {
         let uri = new URL(id);
-        const channel = uri.searchParams.get('story');
+        const channel = uri.searchParams.get('server');
         if (channel) {
             return {
                 success: true,
@@ -2497,7 +2497,7 @@ export function isSimulation(
 }
 
 /**
- * Gets the story tag from the given bot.
+ * Gets the server tag from the given bot.
  * @param calc The bot calculation context to use.
  * @param bot The bot.
  */
@@ -2505,11 +2505,11 @@ export function getBotChannel(
     calc: BotCalculationContext,
     bot: Object
 ): string {
-    return calculateBotValue(calc, bot, 'story');
+    return calculateBotValue(calc, bot, 'server');
 }
 
 /**
- * Gets the first bot which is in the aux.channels dimension that has the story tag set to the given ID.
+ * Gets the first bot which is in the aux.channels dimension that has the server tag set to the given ID.
  * @param calc The bot calculation context.
  * @param id The ID to search for.
  */
@@ -2517,7 +2517,7 @@ export function getChannelBotById(calc: BotCalculationContext, id: string) {
     const bots = calc.objects.filter((o) => {
         return (
             isBotInDimension(calc, o, 'aux.channels') &&
-            calculateBotValue(calc, o, 'story') === id
+            calculateBotValue(calc, o, 'server') === id
         );
     });
 
