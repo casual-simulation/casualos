@@ -224,6 +224,33 @@ describe('BotDimensionManager', () => {
                     ],
                 });
             });
+
+            it('should not emit a dimension_added event when a the dimension bot filter returns false', () => {
+                const test = createPrecalculatedBot('test', {
+                    auxDimensionConfig: 'abc',
+                });
+                const calc = createPrecalculatedContext([test]);
+                const indexEvents = index.addBots([test]);
+                const [result] = processIndexEvents(
+                    null,
+                    calc,
+                    indexEvents,
+                    index,
+                    ['auxDimensionConfig'],
+                    () => false
+                );
+
+                expect(result).toEqual({
+                    calc: calc,
+                    events: [],
+                    updatedBots: [
+                        {
+                            bot: test,
+                            tags: new Set(['auxDimensionConfig']),
+                        },
+                    ],
+                });
+            });
         });
 
         describe('dimension_removed', () => {
@@ -650,8 +677,8 @@ describe('BotDimensionManager', () => {
             let events = [] as BotDimensionsUpdate[];
 
             dimensions
-                .watchDimensions('auxDimensionConfig')
-                .subscribe(e => events.push(e));
+                .watchDimensions(['auxDimensionConfig'], () => true)
+                .subscribe((e) => events.push(e));
 
             const test = createPrecalculatedBot('test', {
                 auxDimensionConfig: 'abc',
@@ -684,8 +711,8 @@ describe('BotDimensionManager', () => {
             let events = [] as BotDimensionsUpdate[];
 
             dimensions
-                .watchDimensions('pagePortal')
-                .subscribe(e => events.push(e));
+                .watchDimensions(['pagePortal'], () => true)
+                .subscribe((e) => events.push(e));
 
             const test = createPrecalculatedBot('test', {
                 pagePortal: 'abc',
@@ -752,8 +779,11 @@ describe('BotDimensionManager', () => {
             let events = [] as BotDimensionsUpdate[];
 
             dimensions
-                .watchDimensions('auxDimensionConfig1', 'auxDimensionConfig2')
-                .subscribe(e => events.push(e));
+                .watchDimensions(
+                    ['auxDimensionConfig1', 'auxDimensionConfig2'],
+                    () => true
+                )
+                .subscribe((e) => events.push(e));
 
             const test = createPrecalculatedBot('test', {
                 auxDimensionConfig1: 'abc',

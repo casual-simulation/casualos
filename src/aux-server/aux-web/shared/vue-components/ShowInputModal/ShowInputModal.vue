@@ -2,6 +2,7 @@
     <div>
         <md-dialog
             :md-active.sync="showInputDialog"
+            :md-fullscreen="false"
             @md-closed="saveInputDialog()"
             @md-opened="autoFocusInputDialog()"
             class="input-dialog"
@@ -20,8 +21,10 @@
                         <md-immediate-input
                             v-model="currentValue"
                             @keyup.enter="saveInputDialog()"
+                            @blur="saveInputDialog()"
+                            :type="currentType === 'secret' ? 'password' : 'text'"
                             ref="inputModalField"
-                            style="-webkit-text-fill-color: inherit;"
+                            style="-webkit-text-fill-color: inherit"
                             :style="{ color: labelColor }"
                         ></md-immediate-input>
                     </md-field>

@@ -1496,7 +1496,16 @@ const color = await player.showInput('green', {
     type: 'color',
     title: 'Enter a custom color'
 });
-player.toast(name);
+player.toast(color);
+```
+
+5. Show an input for entering secrets (like passwords).
+```typescript
+const secret = await player.showInput('', {
+    type: 'secret',
+    title: 'Enter a secret key'
+});
+player.toast(secret);
 ```
 
 ### `player.showInputForTag(bot, tag, options?)`
@@ -4185,11 +4194,11 @@ player.toast(hash);
 Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
 Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
 
-HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular password.
+HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.
 
 Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
 
-The **first parameter** is the password that should be used to create the HMAC.
+The **first parameter** is the secret key that should be used to create the HMAC.
 
 The **other parameters** are the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
 
@@ -4214,11 +4223,11 @@ player.toast(hash);
 Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-512](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
 Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
 
-HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular password.
+HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.
 
 Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
 
-The **first parameter** is the password that should be used to create the HMAC.
+The **first parameter** is the secret key that should be used to create the HMAC.
 
 The **other parameters** are the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
 
@@ -4238,25 +4247,25 @@ const hash = crypto.hmacSha512("key", {
 player.toast(hash);
 ```
 
-### `crypto.encrypt(password, data)`
+### `crypto.encrypt(key, data)`
 
-[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given password and returns the result.
+[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given secret key (also commonly known as a password) and returns the result.
 
-Use the <ActionLink action='crypto.decrypt(password, data)'/> function to decrypt the data.
+Use the <ActionLink action='crypto.decrypt(key, data)'/> function to decrypt the data.
 
-_Always use a strong and unique password._ Use a password manager such as LastPass or 1Password to help you create and keep track of them.
+_Always use a strong and unique secret key._ Use a password manager such as LastPass or 1Password to help you create and keep track of them.
 
-Assuming a strong password, this method will return a string of encrypted data that is _confidential_ (unreadable without the password),
-_reliable_ (the encrypted data cannot be changed without making it unreadable), and _authentic_ (decryptability proves that the password was used to encrypt the data).
+Assuming a strong secret, this method will return a string of encrypted data that is _confidential_ (unreadable without the key),
+_reliable_ (the encrypted data cannot be changed without making it unreadable), and _authentic_ (decryptability proves that this specific key was used to encrypt the data).
 
-As a consequence, encrypting the same data with the same password will produce different results.
+As a consequence, encrypting the same data with the same key will produce different results.
 This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
 
 Encrypts the given data using an authenticated encryption mechanism 
 based on [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).
 Additionally uses [scrypt](https://en.wikipedia.org/wiki/Scrypt) for [password-based key derivation](https://en.wikipedia.org/wiki/Key_derivation_function). 
 
-The **first parameter** is the password that should be used to encrypt the data. Use a strong an unique password for maximum security.
+The **first parameter** is the key that should be used to encrypt the data. Use a strong an unique secret for maximum security.
 
 The **second parameter** is the string data that should be encrypted.
 
@@ -4268,15 +4277,15 @@ const encrypted = crypto.encrypt("key", "hello, world");
 player.toast(encrypted);
 ```
 
-### `crypto.decrypt(password, data)`
+### `crypto.decrypt(key, data)`
 
-[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given password and returns the result.
+[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given secret key (also commonly known as a password) and returns the result.
 
-Use the <ActionLink action='crypto.encrypt(password, data)'/> function to encrypt the data.
+Use the <ActionLink action='crypto.encrypt(key, data)'/> function to encrypt the data.
 
-The **first parameter** is the password that should be used to decrypt the data. This should be the same password that was used to encrypt the data.
+The **first parameter** is the key that should be used to decrypt the data. This should be the same key that was used to encrypt the data.
 
-The **second parameter** is the data from <ActionLink action='crypto.encrypt(password, data)'/> that should be decrypted.
+The **second parameter** is the data from <ActionLink action='crypto.encrypt(key, data)'/> that should be decrypted.
 
 #### Examples
 
@@ -4286,37 +4295,37 @@ const decrypted = crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iik
 player.toast(decrypted);
 ```
 
-### `crypto.keypair(password)`
+### `crypto.keypair(secret)`
 
 Creates a keypair that can be used to [digitially sign](https://en.wikipedia.org/wiki/Digital_signature) and verify data.
 
-Use <ActionLink action='crypto.sign(keypair, password, data)'/> and <ActionLink action='crypto.verify(keypair, signature, data)'/> to sign and verify the data.
+Use <ActionLink action='crypto.sign(keypair, secret, data)'/> and <ActionLink action='crypto.verify(keypair, signature, data)'/> to sign and verify the data.
 
 Keypairs are made up of a private key and a public key.
 The private key is a special value that can be used to create digital signatures and
 the public key is a related value that can be used to verify that a digitital signature was created by the private key.
 
-The private key is called "private" because it is encrypted using the given password
+The private key is called "private" because it is encrypted using the given secret
 while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
 
 Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
 they have access to it.
 
-The **first parameter** is the password that should be used to encrypt the private key of the keypair.
+The **first parameter** is the secret that should be used to encrypt the private key of the keypair.
 
 #### Examples:
 
 1. Create a keypair and toast it.
 ```typescript
-const keypair = crypto.keypair("password");
+const keypair = crypto.keypair("my secret");
 player.toast(keypair);
 ```
 
-### `crypt.sign(keypair, password, data)`
+### `crypt.sign(keypair, secret, data)`
 
-Calculates the digital signature for the given data using the given keypair and password.
+Calculates the digital signature for the given data using the given keypair and secret (also commonly known as a password).
 
-Use <ActionLink action='crypto.keypair(password)'/> to create a keypair that can be used to create signatures.
+Use <ActionLink action='crypto.keypair(secret)'/> to create a keypair that can be used to create signatures.
 
 Use <ActionLink action='crypto.verify(keypair, signature, data)'/> to validate signatures.
 
@@ -4328,13 +4337,13 @@ If we can encrypt some data such that only the public key of a keypair can decry
 the data was encrypted (i.e. signed) by the corresponding private key.
 
 And since the public key is available to everyone but the private
-key is only usable when you have the password, we can use this to prove that a particular piece of data was signed by whoever knows the password.
+key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.
 
 Note that because of how digital signatures work, signing the same data with the same keypair will produce the same signature.
 
 The **first parameter** is the keypair that should be used to sign the data.
 
-The **second parameter** is the password that was used to encrypt the private key of the keypair.
+The **second parameter** is the secret that was used to encrypt the private key of the keypair.
 
 The **third parameter** is the string data that should be signed.
 
@@ -4343,9 +4352,9 @@ The **third parameter** is the string data that should be signed.
 1. Create a signature for the string `"hello"`.
 ```typescript
 // Returned from crypto.keypair()
-const keypair = "vK1.qaG7S8rjXL5G03lbCwMsYybi/M6xFHEo6TDpofyx2Uc=.djEuRWp5TGZjRVNmTXNGZ2Q4SXArcjRSbXNVRXdTK2ZzK2wuZHhNM0RiM2VPNWgwNk5FQitVVW91YStWS1RyRkVLSzEuTkVjZDZtd0hGNDltT0hGWC9OODQxb2JqbWs0QU1yNndTWWxsSGlMS0M1UEs4ZW9vem83WVFieUxVcGJJcW4vcUZDbTVWZWhpdmRteHF0enlmQjNEeEQraklRVFRKcU1aaFpkYkZtdFFnZ2M9";
+const keypair = "vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MHFzMTBFMXRHamR1ZFhqTmRTV3AycjVyZUsudzFjSWZWVUFQVUdqK3hTM000NUduYUlNQ094SUhCTUEuanYrZEQwNVJFVGo3UzRPSklQQUkxc3U0anZjUmxrTEM2OW1BajkyMkxxdTFZd2sxNzV5QW9Dc3gwU3RENlQ0cmtNTVk4b2Zna2JRVTIrQmp5OUIrTTJsaFI2ajcyb0lJdmdSWkRXRU9lZE09";
 
-const signature = crypto.sign(keypair, "password", "hello");
+const signature = crypto.sign(keypair, "my secret", "hello");
 player.toast(signature);
 ```
 
@@ -4354,33 +4363,33 @@ player.toast(signature);
 Validates that the given signature was created by the given keypair for the given data.
 Returns true if the signature is valid. Returns false otherwise.
 
-Use <ActionLink action='crypto.keypair(password)'/> to create a keypair that can be used to create signatures.
+Use <ActionLink action='crypto.keypair(secret)'/> to create a keypair that can be used to create signatures.
 
-Use <ActionLink action='crypto.sign(keypair, password, data)'/> to create signatures.
+Use <ActionLink action='crypto.sign(keypair, secret, data)'/> to create signatures.
 
 The **first parameter** is the keypair that was used to create the signature.
 
-The **second parameter** is the signature that was returned from <ActionLink action='crypto.sign(keypair, password, data)'/>.
+The **second parameter** is the signature that was returned from <ActionLink action='crypto.sign(keypair, secret, data)'/>.
 
-The **third parameter** is the data that was used in the call to <ActionLink action='crypto.sign(keypair, password, data)'/>.
+The **third parameter** is the data that was used in the call to <ActionLink action='crypto.sign(keypair, secret, data)'/>.
 
 #### Examples:
 
 1. Validate a signature.
 ```typescript
 // Returned from crypto.keypair()
-const keypair = "vK1.qaG7S8rjXL5G03lbCwMsYybi/M6xFHEo6TDpofyx2Uc=.djEuRWp5TGZjRVNmTXNGZ2Q4SXArcjRSbXNVRXdTK2ZzK2wuZHhNM0RiM2VPNWgwNk5FQitVVW91YStWS1RyRkVLSzEuTkVjZDZtd0hGNDltT0hGWC9OODQxb2JqbWs0QU1yNndTWWxsSGlMS0M1UEs4ZW9vem83WVFieUxVcGJJcW4vcUZDbTVWZWhpdmRteHF0enlmQjNEeEQraklRVFRKcU1aaFpkYkZtdFFnZ2M9";
+const keypair = "vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MHFzMTBFMXRHamR1ZFhqTmRTV3AycjVyZUsudzFjSWZWVUFQVUdqK3hTM000NUduYUlNQ094SUhCTUEuanYrZEQwNVJFVGo3UzRPSklQQUkxc3U0anZjUmxrTEM2OW1BajkyMkxxdTFZd2sxNzV5QW9Dc3gwU3RENlQ0cmtNTVk4b2Zna2JRVTIrQmp5OUIrTTJsaFI2ajcyb0lJdmdSWkRXRU9lZE09";
 
 // Returned from crypto.sign()
-const signature = "vS1./su0SXu8r9PvsVgELmKPCdfYr9GlLCChAfITsqt40PXEr74H/MMwcO5oaZCLXtZHOiSy9AHZiRYqLPFPiaRkDg==";
+const signature = "vS1.uF93ErJBhdI/vqRF2XD2zgRAO96vKc9mx8crn6Kasijmx92px36B/alLGluU22tgCav/nNQEHdV2zZoHPgy7Dg==";
 
 const valid = crypto.verify(keypair, signature, "hello");
 player.toast(valid);
 ```
 
-### `crypto.createCertificate(certificate, password, keypair)`
+### `crypto.createCertificate(certificate, secret, keypair)`
 
-Creates a new certified bot (also known as a certificate) from the given keypair that is signed by the given certified bot using the given password.
+Creates a new certified bot (also known as a certificate) from the given keypair that is signed by the given certified bot using the given secret (also commonly known as a password).
 Returns a promise that resolves with the new bot.
 
 Certificates are useful for creating signatures for tag values that CasualOS is aware of and will validate for you.
@@ -4408,13 +4417,13 @@ _Non-root certificates_ are certificates that are signed by another certificate.
 As such, the validity of the certificate can be checked by following the chain of trust back to the root certificate.
 If the chain does not end at the root certificate for the story, then the certificate is invalid and any signatures created by it will also be invalid.
 
-Use <ActionLink action='crypto.keypair(password)'/> to create a keypair that can be used to create signatures.
+Use <ActionLink action='crypto.keypair(secret)'/> to create a keypair that can be used to create signatures.
 
-Use <ActionLink action='crypto.signTag(certificate, password, bot, tag)'/> to create signatures for a certificate.
+Use <ActionLink action='crypto.signTag(certificate, secret, bot, tag)'/> to create signatures for a certificate.
 
 The **first parameter** is the certified bot that should be used to sign the new certificate. If given null, then the new bot will be self-signed.
 
-The **second parameter** is the password that should be used to decrypt the private key. If the first parameter is null, then this should be the password for the keypair.
+The **second parameter** is the secret that should be used to decrypt the private key. If the first parameter is null, then this should be the secret for the keypair.
 
 The **third parameter** is the keypair that the new certificate should have.
 
@@ -4422,8 +4431,8 @@ The **third parameter** is the keypair that the new certificate should have.
 
 1. Create a root certificate and toast the Bot ID:
 ```typescript
-const keypair = await crypto.keypair('passwordForRootCert');
-const cert = await crypto.createCertificate(null, 'passwordForRootCert', keypair);
+const keypair = await crypto.keypair('secretForRootCert');
+const cert = await crypto.createCertificate(null, 'secretForRootCert', keypair);
 
 player.toast(getID(cert));
 ```
@@ -4432,28 +4441,28 @@ player.toast(getID(cert));
 ```typescript
 const rootKeypair = getBot('id', rootCertID);
 
-const nonRootKeypair = await crypto.keypair('passwordForNonRootCert');
-const nonRoot = await crypto.createCertificate(rootCert, 'passwordForRootCert', nonRootKeypair);
+const nonRootKeypair = await crypto.keypair('secretForNonRootCert');
+const nonRoot = await crypto.createCertificate(rootCert, 'secretForRootCert', nonRootKeypair);
 
 player.toast(getID(nonRoot));
 ```
 
-### `crypto.signTag(certificate, password, bot, tag)`
+### `crypto.signTag(certificate, secret, bot, tag)`
 
-Creates a signature for the given bot, tag, and current value using the given certificate and password.
+Creates a signature for the given bot, tag, and current value using the given certificate and secret.
 Returns a promise that resolves once the tag value has been signed.
 
 When a signature is created for a tag value, the value is considered valid until it is changed or the certificate is revoked.
 
 The **first parameter** is the certificate bot that should be used to create the signature.
 
-The **second parameter** is the password used to decrypt the private key of the certificate.
+The **second parameter** is the secret used to decrypt the private key of the certificate.
 
 The **third parameter** is the bot whose tag value should be signed.
 
 The **fourth parameter** is the tag whose value should be signed.
 
-Use <ActionLink action='crypto.createCertificate(certificate, password, keypair)'/> to create certificates that can be used with this function.
+Use <ActionLink action='crypto.createCertificate(certificate, secret, keypair)'/> to create certificates that can be used with this function.
 
 Use <ActionLink action='crypto.verifyTag(bot, tag)'/> to verify that a tag has a valid signature.
 
@@ -4462,7 +4471,7 @@ Use <ActionLink action='crypto.verifyTag(bot, tag)'/> to verify that a tag has a
 1. Sign the `@onClick` script on a bot.
 ```typescript
 const cert = getBot('id', certID);
-await crypto.signTag(cert, 'passwordForCert', bot, 'onClick');
+await crypto.signTag(cert, 'secretForCert', bot, 'onClick');
 ```
 
 ### `crypto.verifyTag(bot, tag)`
@@ -4487,7 +4496,7 @@ if (valid) {
 }
 ```
 
-### `crypto.revokeCertificate(certificate, password, signer?)`
+### `crypto.revokeCertificate(certificate, secret, signer?)`
 
 Revokes the given certificate and any signatures that it has created.
 In effect, this deletes the certificate bot from the story.
@@ -4500,9 +4509,9 @@ or an ancestor of the original certificate. This record is then stored in the sh
 
 The **first parameter** is the certificate that should be revoked.
 
-The **second parameter** is the password that should be used to decrypt the corresponding certificate's private key.
-If the signer parameter is specified, then this is the password for the signer certificate.
-If the signer parameter is omitted, then this is the password for the certificate that is being revoked.
+The **second parameter** is the secret that should be used to decrypt the corresponding certificate's private key.
+If the signer parameter is specified, then this is the secret for the signer certificate.
+If the signer parameter is omitted, then this is the secret for the certificate that is being revoked.
 
 The **third parameter** is optional and is the certificate that should be used to perform the revocation process.
 If not specified, then the revocation will be signed by the revoked certificate (self-signed revocation).
@@ -4514,7 +4523,7 @@ Note that any certificate that is specified must either be the original certific
 1. Revoke a certificate with itself.
 ```typescript
 const cert = getBot('id', certificateId);
-await crypto.revokeCertificate(cert, 'passwordForCert');
+await crypto.revokeCertificate(cert, 'secretForCert');
 
 player.toast('Certificate revoked!');
 ```
@@ -4524,7 +4533,7 @@ player.toast('Certificate revoked!');
 const certToRevoke = getBot('id', certToRevokeId);
 const signingCert = getBot('id', signingCertId);
 
-await crypto.revokeCertificate(certToRevoke, 'passwordForSigningCert', signingCert);
+await crypto.revokeCertificate(certToRevoke, 'secretForSigningCert', signingCert);
 
 player.toast('Certificate revoked!');
 ```

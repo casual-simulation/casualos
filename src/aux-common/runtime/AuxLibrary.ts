@@ -3169,7 +3169,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Calculates the HMAC SHA-256 hash of the given data.
      * HMAC is commonly used to verify that a message was created with a specific key.
-     * @param key The password that should be used to sign the message.
+     * @param key The key that should be used to sign the message.
      * @param data The data that should be hashed.
      */
     function hmacSha256(key: string, ...data: unknown[]): string {
@@ -3186,7 +3186,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Calculates the HMAC SHA-512 hash of the given data.
      * HMAC is commonly used to verify that a message was created with a specific key.
-     * @param key The password that should be used to sign the message.
+     * @param key The key that should be used to sign the message.
      * @param data The data that should be hashed.
      */
     function hmacSha512(key: string, ...data: unknown[]): string {
@@ -3201,43 +3201,43 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Encrypts the given data with the given password and returns the result.
+     * Encrypts the given data with the given secret and returns the result.
      *
-     * @description Always choose a strong unique password. Use a password manager such as LastPass or 1Password to
+     * @description Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to
      * help you create and keep track of them.
      *
-     * Assuming the above, this method will return a string of encrypted data that is confidential (unreadable without the password),
-     * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the password was used to encrypt the data).
+     * Assuming the above, this method will return a string of encrypted data that is confidential (unreadable without the secret),
+     * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the secret was used to encrypt the data).
      *
-     * As a consequence, encrypting the same data with the same password will produce different results.
+     * As a consequence, encrypting the same data with the same secret will produce different results.
      * This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
      *
      * Encrypts the given data using an authenticated encryption mechanism
      * based on XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
      *
-     * @param password The password to use to secure the data.
+     * @param secret The secret to use to secure the data.
      * @param data The data to encrypt.
      */
-    function encrypt(password: string, data: string): string {
+    function encrypt(secret: string, data: string): string {
         if (typeof data === 'string') {
             const encoder = new TextEncoder();
             const bytes = encoder.encode(data);
-            return realEncrypt(password, bytes);
+            return realEncrypt(secret, bytes);
         } else {
             throw new Error('The data to encrypt must be a string.');
         }
     }
 
     /**
-     * Decrypts the given data using the given password and returns the result.
+     * Decrypts the given data using the given secret and returns the result.
      * If the data was unable to be decrypted, null will be returned.
      *
-     * @param password The password to use to decrypt the data.
+     * @param secret The secret to use to decrypt the data.
      * @param data The data to decrypt.
      */
-    function decrypt(password: string, data: string): string {
+    function decrypt(secret: string, data: string): string {
         if (typeof data === 'string') {
-            const bytes = realDecrypt(password, data);
+            const bytes = realDecrypt(secret, data);
             if (!bytes) {
                 return null;
             }
@@ -3256,16 +3256,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * The private key is a special value that can be used to create digital signatures and
      * the public key is a related value that can be used to verify that a digitital signature was created by the private key.
      *
-     * The private key is called "private" because it is encrypted using the given password
+     * The private key is called "private" because it is encrypted using the given secret
      * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
      *
      * Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
      * they have access to it.
      *
-     * @param password The password that should be used to encrypt the private key.
+     * @param secret The secret that should be used to encrypt the private key.
      */
-    function keypair(password: string): string {
-        return realKeypair(password);
+    function keypair(secret: string): string {
+        return realKeypair(secret);
     }
 
     /**
@@ -3277,17 +3277,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * This works by leveraging asymetric encryption but in reverse.
      * If we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that
      * the data was encrypted (i.e. signed) by the corresponding private key. And since the public key is available to everyone but the private
-     * key is only usable when you have the password, we can use this to prove that a particular piece of data was signed by whoever knows the password.
+     * key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.
      *
      * @param keypair The keypair that should be used to create the signature.
-     * @param password The password that was used when creating the keypair. Used to decrypt the private key.
+     * @param secret The secret that was used when creating the keypair. Used to decrypt the private key.
      * @param data The data to sign.
      */
-    function sign(keypair: string, password: string, data: string): string {
+    function sign(keypair: string, secret: string, data: string): string {
         if (typeof data === 'string') {
             const encoder = new TextEncoder();
             const bytes = encoder.encode(data);
-            return realSign(keypair, password, bytes);
+            return realSign(keypair, secret, bytes);
         } else {
             throw new Error('The data to encrypt must be a string.');
         }
@@ -3314,14 +3314,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param certificate The certified bot that the new certificate should be signed with.
      *                    This is commonly known as the signing certificate.
      *                    If given null, then the new certificate will be self-signed.
-     * @param password The signing certificate's password. This is the password that was used to create
+     * @param secret The signing certificate's secret. This is the secret that was used to create
      *                 the keypair for the signing certificate. If the new certificate will be self-signed, then this
-     *                 is the password that was used to create the given keypair.
+     *                 is the secret that was used to create the given keypair.
      * @param keypair The keypair that the new certificate should use.
      */
     function createCertificate(
         certificate: Bot | string,
-        password: string,
+        secret: string,
         keypair: string
     ): Promise<RuntimeBot> {
         const signingBotId = getID(certificate);
@@ -3331,14 +3331,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                   {
                       keypair: keypair,
                       signingBotId: signingBotId,
-                      signingPassword: password,
+                      signingPassword: secret,
                   },
                   task.taskId
               )
             : calcCreateCertificate(
                   {
                       keypair: keypair,
-                      signingPassword: password,
+                      signingPassword: secret,
                   },
                   task.taskId
               );
@@ -3347,15 +3347,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Signs the tag on the given bot using the given certificate and password.
+     * Signs the tag on the given bot using the given certificate and secret.
      * @param certificate The certificate to use to create the signature.
-     * @param password The password to use to decrypt the certificate's private key.
+     * @param secret The secret to use to decrypt the certificate's private key.
      * @param bot The bot that should be signed.
      * @param tag The tag that should be signed.
      */
     function signTag(
         certificate: Bot | string,
-        password: string,
+        secret: string,
         bot: Bot | string,
         tag: string
     ): Promise<void> {
@@ -3366,7 +3366,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const action = calcSignTag(
             signingBotId,
-            password,
+            secret,
             realBot.id,
             tag,
             value,
@@ -3393,7 +3393,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Revokes the given certificate using the given password.
+     * Revokes the given certificate using the given secret.
      * In effect, this deletes the certificate bot from the story.
      * Additionally, any tags signed with the given certificate will no longer be verified.
      *
@@ -3403,14 +3403,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * If no signer is given, then the certificate will be used to revoke itself.
      *
      * @param certificate The certificate that should be revoked.
-     * @param password The password that should be used to decrypt the corresponding certificate's private key.
-     *                 If given a signer, then this is the password for the signer certificate. If no signer is given,
-     *                 then this is the password for the revoked certificate.
+     * @param secret The secret that should be used to decrypt the corresponding certificate's private key.
+     *                 If given a signer, then this is the secret for the signer certificate. If no signer is given,
+     *                 then this is the secret for the revoked certificate.
      * @param signer The certificate that should be used to revoke the aforementioned certificate. If not specified then the revocation will be self-signed.
      */
     function revokeCertificate(
         certificate: Bot | string,
-        password: string,
+        secret: string,
         signer?: Bot | string
     ): Promise<void> {
         const certId = getID(certificate);
@@ -3418,7 +3418,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const action = calcRevokeCertificate(
             signerId,
-            password,
+            secret,
             certId,
             task.taskId
         );

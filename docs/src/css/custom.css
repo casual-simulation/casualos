@@ -20,7 +20,8 @@
   
   .hero.hero--primary {
     --ifm-hero-background-color: #1c1c1c;
-    --ifm-hero-text-color: var(--ifm-font-base-color-inverse);
+    --ifm-hero-text-color: rgb(235, 237, 240);
+    --ifm-heading-color: rgb(235, 237, 240);
   }
   
   div.markdown > h2 > a.hash-link {
@@ -70,4 +71,9 @@
   
   pre.prism-code {
     font-size: inherit;
+  }
+
+  .footer__logo {
+      width: 64px;
+      height: 64px;
   }
