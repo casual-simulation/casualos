@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the ability to show a password input by using the `secret` type with `player.showInput()`.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where some bots would not be added to the page portal when created in a big batch.
