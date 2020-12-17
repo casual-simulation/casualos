@@ -111,16 +111,28 @@ export default class PlayerHome extends Vue {
             // On first load check the server and load a default
             let server = this.query['server'] as string | string[];
             if (!hasValue(server)) {
-                // Generate a random server name
-                const randomName: string = uniqueNamesGenerator(namesConfig);
-                let update: Dictionary<string> = {
-                    server: randomName,
-                };
-                if (!hasValue(this.query['pagePortal'])) {
-                    update.pagePortal = 'home';
+                // if there is no server tag defined, check for the story tag
+                server = this.query['story'];
+                if (hasValue(server)) {
+                    let update: Dictionary<string | string[]> = {
+                        server: server,
+                        story: null,
+                    };
+                    this._updateQuery(update);
+                } else {
+                    // Generate a random server name
+                    const randomName: string = uniqueNamesGenerator(
+                        namesConfig
+                    );
+                    let update: Dictionary<string> = {
+                        server: randomName,
+                    };
+                    if (!hasValue(this.query['pagePortal'])) {
+                        update.pagePortal = 'home';
+                    }
+                    this._updateQuery(update);
+                    server = randomName;
                 }
-                this._updateQuery(update);
-                server = randomName;
             }
             this._setServer(server);
         }
