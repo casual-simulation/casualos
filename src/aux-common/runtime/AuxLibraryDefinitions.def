@@ -1175,7 +1175,7 @@ declare interface ShowInputOptions {
 /**
  * Defines the possible input types.
  */
-declare type ShowInputType = 'text' | 'color';
+declare type ShowInputType = 'text' | 'color' | 'secret';
 
 /**
  * Defines the possible input types.

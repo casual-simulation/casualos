@@ -1154,7 +1154,7 @@ export interface ShowInputOptions {
 /**
  * Defines the possible input types.
  */
-export type ShowInputType = 'text' | 'color';
+export type ShowInputType = 'text' | 'color' | 'secret';
 
 /**
  * Defines the possible input types.

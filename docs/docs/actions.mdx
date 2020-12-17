@@ -1496,7 +1496,16 @@ const color = await player.showInput('green', {
     type: 'color',
     title: 'Enter a custom color'
 });
-player.toast(name);
+player.toast(color);
+```
+
+5. Show an input for entering secrets (like passwords).
+```typescript
+const secret = await player.showInput('', {
+    type: 'secret',
+    title: 'Enter a secret key'
+});
+player.toast(secret);
 ```
 
 ### `player.showInputForTag(bot, tag, options?)`
