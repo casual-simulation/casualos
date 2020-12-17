@@ -35,7 +35,7 @@ import {
     BotSpace,
     getTagMask,
     hasTagOrMask,
-    ON_STORY_STREAM_LOST_ACTION_NAME,
+    ON_SERVER_STREAM_LOST_ACTION_NAME,
     PartialBot,
     updatedBot,
     TAG_MASK_SPACE_PRIORITIES,
@@ -1659,7 +1659,7 @@ export class AuxRuntime
      *
      * Works by making a copy of the value where every bot value is replaced with a reference
      * to a script bot instance for the bot. The copy has a reference to the original value in the ORIGINAL_OBJECT symbol property.
-     * We use this property in action.reject() to resolve the original action value so that doing a action.reject() in a onStoryAction works properly.
+     * We use this property in action.reject() to resolve the original action value so that doing a action.reject() in a onServerAction works properly.
      *
      * @param context The sandbox context.
      * @param value The value that should be converted.

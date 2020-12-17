@@ -173,8 +173,8 @@ declare type ExtraActions =
     | OpenBarcodeScannerAction
     | ShowQRCodeAction
     | ShowBarcodeAction
-    | LoadStoryAction
-    | UnloadStoryAction
+    | LoadServerAction
+    | UnloadServerAction
     | SuperShoutAction
     | SendWebhookAction
     | LoadFileAction
@@ -509,9 +509,9 @@ declare interface StartCheckoutOptions {
     description: string;
 
     /**
-     * The story that the payment processing should occur in.
+     * The server that the payment processing should occur in.
      */
-    processingStory: string;
+    processingServer: string;
 
     /**
      * Whether to request the payer's billing address.
@@ -580,7 +580,7 @@ declare interface CheckoutSubmittedAction extends Action {
     /**
      * The channel that processing should happen in.
      */
-    processingStory: string;
+    processingServer: string;
 }
 
 /**
@@ -805,8 +805,8 @@ declare interface ShowBarcodeAction extends Action {
 /**
  * An event that is used to load a simulation.
  */
-declare interface LoadStoryAction extends Action {
-    type: 'load_story';
+declare interface LoadServerAction extends Action {
+    type: 'load_server';
 
     /**
      * The ID of the simulation to load.
@@ -817,8 +817,8 @@ declare interface LoadStoryAction extends Action {
 /**
  * An event that is used to unload a simulation.
  */
-declare interface UnloadStoryAction extends Action {
-    type: 'unload_story';
+declare interface UnloadServerAction extends Action {
+    type: 'unload_server';
 
     /**
      * The ID of the simulation to unload.
@@ -1232,7 +1232,7 @@ declare interface RejectAction {
  * Defines an event that creates a channel if it doesn't exist.
  */
 declare interface SetupChannelAction {
-    type: 'setup_story';
+    type: 'setup_server';
 
     /**
      * The channel that should be created.
@@ -1326,7 +1326,7 @@ declare interface MarkHistoryAction {
 }
 
 /**
- * Defines an event that loads the history into the story.
+ * Defines an event that loads the history into the server.
  */
 declare interface BrowseHistoryAction {
     type: 'browse_history';
@@ -1344,14 +1344,14 @@ declare interface RestoreHistoryMarkAction {
     mark: string;
 
     /**
-     * The story that the mark should be restored to.
-     * If not specified, then the current story will be used.
+     * The server that the mark should be restored to.
+     * If not specified, then the current server will be used.
      */
-    story?: string;
+    server?: string;
 }
 
 /**
- * Defines an event that loads a space into the story.
+ * Defines an event that loads a space into the server.
  */
 declare interface LoadSpaceAction {
     type: 'load_space';
@@ -1578,15 +1578,15 @@ declare interface EnableVRAction {
 }
 
 /**
- * Defines an event that shows a QR code that is a link to a story & dimension.
+ * Defines an event that shows a QR code that is a link to a server & dimension.
  */
 declare interface ShowJoinCodeAction {
     type: 'show_join_code';
 
     /**
-     * The story that should be joined.
+     * The server that should be joined.
      */
-    story?: string;
+    server?: string;
 
     /**
      * The dimension that should be joined.
@@ -1662,9 +1662,9 @@ declare interface CheckoutOptions {
     description: string;
 
     /**
-     * The story that the payment should be processed on.
+     * The server that the payment should be processed on.
      */
-    processingStory: string;
+    processingServer: string;
 
     /**
      * Whether to request the payer's billing address.
@@ -2034,7 +2034,7 @@ declare global {
     function getJSON(data: any): string;
 
     /**
-     * Asks every bot in the story to run the given action.
+     * Asks every bot in the server to run the given action.
      * In effect, this is like shouting to a bunch of people in a room.
      *
      * @param name The event name.
@@ -2268,7 +2268,7 @@ declare global {
      * Gets a list of all the bots.
      *
      * @example
-     * // Gets all the bots in the story.
+     * // Gets all the bots in the server.
      * let bots = getBots();
      */
     function getBots(): Bot[];
@@ -2730,12 +2730,12 @@ declare global {
         cancelSound(soundID: number): Promise<void>;
 
         /**
-         * Shows a QR Code that contains a link to a story and dimension.
-         * @param story The story that should be joined. Defaults to the current story.
+         * Shows a QR Code that contains a link to a server and dimension.
+         * @param server The server that should be joined. Defaults to the current server.
          * @param dimension The dimension that should be joined. Defaults to the current dimension.
          */
         showJoinCode(
-            story?: string,
+            server?: string,
             dimension?: string
         ): ShowJoinCodeAction;
 
@@ -2882,7 +2882,7 @@ declare global {
          */
         downloadBots(bots: Bot[], filename: string): DownloadAction;
 
-        downloadStory(): DownloadAction;
+        downloadServer(): DownloadAction;
 
         /**
          * Shows the "Upload AUX File" dialog.
@@ -2890,16 +2890,16 @@ declare global {
         showUploadAuxFile(): ShowUploadAuxFileAction;
 
         /**
-         * Loads the story with the given ID.
-         * @param id The ID of the story to load.
+         * Loads the server with the given ID.
+         * @param id The ID of the server to load.
          */
-        loadStory(id: string): LoadStoryAction;
+        loadServer(id: string): LoadServerAction;
 
         /**
-         * Unloads the story with the given ID.
-         * @param id The ID of the story to unload.
+         * Unloads the server with the given ID.
+         * @param id The ID of the server to unload.
          */
-        unloadStory(id: string): UnloadStoryAction;
+        unloadServer(id: string): UnloadServerAction;
 
         /**
          * Imports the AUX from the given URL or JSON
@@ -2999,7 +2999,7 @@ declare global {
          *   productId: '10_cookies',
          *   title: '10 Cookies',
          *   description: '$5.00',
-         *   processingStory: 'cookies_checkout'
+         *   processingServer: 'cookies_checkout'
          * });
          *
          */
@@ -3011,9 +3011,9 @@ declare global {
         getCurrentDimension(): string;
 
         /**
-         * Gets the story that the player is currently in.
+         * Gets the server that the player is currently in.
          */
-        getCurrentStory(): string;
+        getCurrentServer(): string;
 
         /**
          * Gets the distance that the player bot is from the given dimension.
@@ -3051,11 +3051,11 @@ declare global {
      */
     const server: {
         /**
-         * Sends an event to the server to setup a new story if it does not exist.
-         * @param story The story.
-         * @param botOrMod The bot or mod that should be cloned into the new story.
+         * Sends an event to the server to setup a new server if it does not exist.
+         * @param server The server.
+         * @param botOrMod The bot or mod that should be cloned into the new server.
          */
-        setupStory(story: string, botOrMod?: Mod): Promise<void>;
+        setupServer(server: string, botOrMod?: Mod): Promise<void>;
     
         /**
          * Sends an event to the server to export a pin (BCM) as input or output.
@@ -3448,7 +3448,7 @@ declare global {
         backupAsDownload(target: SessionSelector): BackupAsDownloadAction;
     
         /**
-         * Clears all the errors in the story.
+         * Clears all the errors in the server.
          */
         destroyErrors(): Promise<void>;
     
@@ -3460,10 +3460,10 @@ declare global {
         loadErrors(bot: string | Bot, tag: string): Promise<Bot[]>;
 
         /**
-         * Gets the number of players that are viewing the current story.
-         * @param story The story to get the statistics for. If omitted, then the current story is used.
+         * Gets the number of players that are viewing the current server.
+         * @param server The server to get the statistics for. If omitted, then the current server is used.
          */
-        storyPlayerCount(story?: string): Promise<number>;
+        serverPlayerCount(server?: string): Promise<number>;
 
         /**
          * Gets the total number of players that are connected to the server.
@@ -3478,13 +3478,13 @@ declare global {
         /**
          * Gets the list of stories that are on the server.
          */
-        storyStatuses(): Promise<{
-            story: string,
+        serverStatuses(): Promise<{
+            server: string,
             lastUpdateTime: Date
         }[]>;
 
         /**
-         * Gets the list of player IDs that are connected to the story.
+         * Gets the list of player IDs that are connected to the server.
          */
         players(): Promise<string[]>;
     
@@ -3534,7 +3534,7 @@ declare global {
         markHistory(options: MarkHistoryOptions): MarkHistoryAction;
     
         /**
-         * Loads the "history" space into the story.
+         * Loads the "history" space into the server.
          */
         browseHistory(): Promise<void>;
     
@@ -3547,11 +3547,11 @@ declare global {
         /**
          * Restores the current state to the given mark.
          * @param mark The bot or bot ID that represents the mark that should be restored.
-         * @param story The story that the mark should be restored to.
+         * @param server The server that the mark should be restored to.
          */
-        restoreHistoryMarkToStory(
+        restoreHistoryMarkToServer(
             mark: Bot | string,
-            story: string
+            server: string
         ): Promise<void>;
     };
 
@@ -3807,7 +3807,7 @@ declare global {
 
         /**
          * Revokes the given certificate using the given secret.
-         * In effect, this deletes the certificate bot from the story.
+         * In effect, this deletes the certificate bot from the server.
          * Additionally, any tags signed with the given certificate will no longer be verified.
          * 
          * If given a signer, then the specified certificate will be used to sign the revocation.

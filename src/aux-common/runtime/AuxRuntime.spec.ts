@@ -50,7 +50,7 @@ import {
     goToURL,
     openURL,
     openConsole,
-    setupStory,
+    setupServer,
     shell,
     backupToGithub,
     backupAsDownload,
@@ -5932,10 +5932,10 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should send onStoryAction() shouts for each event', async () => {
+        it('should send onServerAction() shouts for each event', async () => {
             runtime.botsAdded([
                 createBot('test1', {
-                    onStoryAction: '@player.toast(that.action.message)',
+                    onServerAction: '@player.toast(that.action.message)',
                 }),
             ]);
             runtime.process([
@@ -5962,7 +5962,7 @@ describe('AuxRuntime', () => {
         it('should resolve rejected events', async () => {
             runtime.botsAdded([
                 createBot('test1', {
-                    onStoryAction: '@action.reject(that.action)',
+                    onServerAction: '@action.reject(that.action)',
                 }),
             ]);
             runtime.process([
@@ -5976,10 +5976,10 @@ describe('AuxRuntime', () => {
             expect(events).toEqual([]);
         });
 
-        it('should call onStoryAction() once per action in a batch', async () => {
+        it('should call onServerAction() once per action in a batch', async () => {
             runtime.botsAdded([
                 createBot('test1', {
-                    onStoryAction: '@tags.count += 1',
+                    onServerAction: '@tags.count += 1',
                     wow: '@player.toast("hi")',
                     count: 0,
                 }),
@@ -6041,7 +6041,7 @@ describe('AuxRuntime', () => {
         it('should be able to filter actions before they are executed', async () => {
             runtime.botsAdded([
                 createBot('test1', {
-                    onStoryAction: `@if(that.action.type === "action") action.reject(that.action);`,
+                    onServerAction: `@if(that.action.type === "action") action.reject(that.action);`,
                     test: '@player.toast("hi")',
                 }),
             ]);
@@ -6055,7 +6055,7 @@ describe('AuxRuntime', () => {
         it('should be able to filter runScript actions before they are executed', async () => {
             runtime.botsAdded([
                 createBot('test1', {
-                    onStoryAction: `@if(that.action.type === "run_script") action.reject(that.action);`,
+                    onServerAction: `@if(that.action.type === "run_script") action.reject(that.action);`,
                 }),
             ]);
             runtime.process([runScript('player.toast("hi")')]);
@@ -6083,10 +6083,10 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should support dispatching a new shout from inside onStoryAction()', async () => {
+        it('should support dispatching a new shout from inside onServerAction()', async () => {
             runtime.botsAdded([
                 createBot('test1', {
-                    onStoryAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
+                    onServerAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
                     test: '@tags.hit = true',
                 }),
             ]);
@@ -6096,7 +6096,7 @@ describe('AuxRuntime', () => {
 
             expect(events).toEqual([
                 [
-                    // onStoryAction is executed before
+                    // onServerAction is executed before
                     // the device action is executed
                     botUpdated('test1', {
                         tags: {
@@ -6108,10 +6108,10 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should support dispatching a new script from inside onStoryAction()', async () => {
+        it('should support dispatching a new script from inside onServerAction()', async () => {
             runtime.botsAdded([
                 createBot('test1', {
-                    onStoryAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
+                    onServerAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
                 }),
             ]);
             runtime.process([device(<any>{}, runScript('player.toast("hi")'))]);
@@ -6120,7 +6120,7 @@ describe('AuxRuntime', () => {
 
             expect(events).toEqual([
                 [
-                    // onStoryAction is executed before
+                    // onServerAction is executed before
                     // the device action is executed
                     toast('hi'),
                     device(<any>{}, runScript('player.toast("hi")')),
@@ -6213,7 +6213,7 @@ describe('AuxRuntime', () => {
             uuidMock.mockReturnValueOnce('task1');
             runtime.process([
                 runScript(
-                    'server.storyPlayerCount("test").then(result => player.toast(result))'
+                    'server.serverPlayerCount("test").then(result => player.toast(result))'
                 ),
             ]);
 
@@ -6234,7 +6234,7 @@ describe('AuxRuntime', () => {
             uuidMock.mockReturnValueOnce('task1');
             runtime.process([
                 runScript(
-                    'server.storyPlayerCount("test").catch(err => player.toast(err))'
+                    'server.serverPlayerCount("test").catch(err => player.toast(err))'
                 ),
             ]);
 
@@ -12512,12 +12512,12 @@ describe('original action tests', () => {
             expect(result.actions).toEqual([showJoinCode()]);
         });
 
-        it('should allow linking to a specific story and dimension', () => {
+        it('should allow linking to a specific server and dimension', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.showJoinCode("story", "dimension")',
+                        test: '@player.showJoinCode("server", "dimension")',
                     },
                 },
             };
@@ -12528,7 +12528,7 @@ describe('original action tests', () => {
             const result = calculateActionResults(state, botAction);
 
             expect(result.actions).toEqual([
-                showJoinCode('story', 'dimension'),
+                showJoinCode('server', 'dimension'),
             ]);
         });
     });
@@ -13117,19 +13117,19 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.downloadStory()', () => {
-        it('should emit a DownloadAction with the current state and story name', () => {
+    describe('player.downloadServer()', () => {
+        it('should emit a DownloadAction with the current state and server name', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.downloadStory()',
+                        test: '@player.downloadServer()',
                     },
                 },
                 userBot: {
                     id: 'userBot',
                     tags: {
-                        story: 'channel',
+                        server: 'channel',
                     },
                 },
             };
@@ -13156,7 +13156,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.downloadStory()',
+                        test: '@player.downloadServer()',
                     },
                 },
                 thatBot: {
@@ -13170,7 +13170,7 @@ describe('original action tests', () => {
                     id: 'userBot',
                     space: 'tempLocal',
                     tags: {
-                        story: 'channel',
+                        server: 'channel',
                     },
                 },
                 otherBot: {
@@ -13426,13 +13426,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('loadStory()', () => {
-        it('should emit a LoadStoryAction', () => {
+    describe('loadServer()', () => {
+        it('should emit a LoadServerAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.loadStory("abc")',
+                        test: '@player.loadServer("abc")',
                     },
                 },
             };
@@ -13446,13 +13446,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('unloadStory()', () => {
-        it('should emit a UnloadStoryAction', () => {
+    describe('unloadServer()', () => {
+        it('should emit a UnloadServerAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.unloadStory("abc")',
+                        test: '@player.unloadServer("abc")',
                     },
                 },
             };
@@ -13671,20 +13671,20 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.getCurrentStory()', () => {
-        it('should return story', () => {
+    describe('player.getCurrentServer()', () => {
+        it('should return server', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@setTag(this, "#dimension", player.getCurrentStory())',
+                            '@setTag(this, "#dimension", player.getCurrentServer())',
                     },
                 },
                 userBot: {
                     id: 'userBot',
                     tags: {
-                        story: 'dimension',
+                        server: 'dimension',
                     },
                 },
             };
@@ -13703,13 +13703,13 @@ describe('original action tests', () => {
             ]);
         });
 
-        it('should return undefined when story is not set', () => {
+        it('should return undefined when server is not set', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@setTag(this, "#dimension", player.getCurrentStory())',
+                            '@setTag(this, "#dimension", player.getCurrentServer())',
                     },
                 },
                 userBot: {
@@ -13743,13 +13743,13 @@ describe('original action tests', () => {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#dimension", player.getCurrentStory())',
+                                '@setTag(this, "#dimension", player.getCurrentServer())',
                         },
                     },
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            story: given,
+                            server: given,
                         },
                     },
                 };
@@ -14352,13 +14352,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('server.setupStory()', () => {
+    describe('server.setupServer()', () => {
         it('should send a SetupChannelAction in a RemoteAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@server.setupStory("channel", this)',
+                        test: '@server.setupServer("channel", this)',
                     },
                 },
                 userBot: {
@@ -14376,10 +14376,10 @@ describe('original action tests', () => {
 
             expect(result.actions).toEqual([
                 remote(
-                    setupStory(
+                    setupServer(
                         'channel',
                         createBot('thisBot', {
-                            test: '@server.setupStory("channel", this)',
+                            test: '@server.setupServer("channel", this)',
                         })
                     ),
                     undefined,
@@ -14470,7 +14470,7 @@ describe('original action tests', () => {
                             productId: 'ID1',
                             title: 'Product 1',
                             description: '$50.43',
-                            processingStory: 'channel2'
+                            processingServer: 'channel2'
                         })`,
                     },
                 },
@@ -14487,7 +14487,7 @@ describe('original action tests', () => {
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingStory: 'channel2',
+                    processingServer: 'channel2',
                 }),
             ]);
         });
@@ -14632,13 +14632,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('server.restoreHistoryMarkToStory()', () => {
+    describe('server.restoreHistoryMarkToServer()', () => {
         it('should emit a restore_history_mark event', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: `@server.restoreHistoryMarkToStory("mark", "story")`,
+                        test: `@server.restoreHistoryMarkToServer("mark", "server")`,
                     },
                 },
             };
@@ -14653,7 +14653,7 @@ describe('original action tests', () => {
                     <RestoreHistoryMarkAction>{
                         type: 'restore_history_mark',
                         mark: 'mark',
-                        story: 'story',
+                        server: 'server',
                     },
                     undefined,
                     undefined,
@@ -14677,8 +14677,8 @@ describe('original action tests', () => {
             ['player.closeBarcodeScanner()', openBarcodeScanner(false)],
             ['player.showBarcode("code")', showBarcode(true, 'code')],
             ['player.hideBarcode()', showBarcode(false)],
-            ['player.loadStory("channel")', loadSimulation('channel')],
-            ['player.unloadStory("channel")', unloadSimulation('channel')],
+            ['player.loadServer("channel")', loadSimulation('channel')],
+            ['player.unloadServer("channel")', unloadSimulation('channel')],
             ['player.importAUX("aux")', importAUX('aux')],
             ['player.showQRCode("code")', showQRCode(true, 'code')],
             ['player.hideQRCode()', showQRCode(false)],
@@ -14692,14 +14692,14 @@ describe('original action tests', () => {
                 productId: 'ID1',
                 title: 'Product 1',
                 description: '$50.43',
-                processingStory: 'channel2'
+                processingServer: 'channel2'
             })`,
                 checkout({
                     publishableKey: 'my_key',
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingStory: 'channel2',
+                    processingServer: 'channel2',
                 }),
             ],
             ['player.openDevConsole()', openConsole()],

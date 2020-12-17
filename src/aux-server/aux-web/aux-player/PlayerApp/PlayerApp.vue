@@ -130,7 +130,7 @@
 
             <html-modal></html-modal>
             <clipboard-modal></clipboard-modal>
-            <upload-story-modal></upload-story-modal>
+            <upload-server-modal></upload-server-modal>
         </load-app>
     </div>
 </template>

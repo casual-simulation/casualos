@@ -12,5 +12,5 @@
         </md-dialog-actions>
     </md-dialog>
 </template>
-<script src="./UploadStoryModal.ts"></script>
-<style src="./UploadStoryModal.css" scoped></style>
+<script src="./UploadServerModal.ts"></script>
+<style src="./UploadServerModal.css" scoped></style>

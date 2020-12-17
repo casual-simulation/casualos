@@ -24,7 +24,7 @@ describe('BotPartition', () => {
         client = new MemoryBotClient();
         subject = createBotClientPartition({
             type: 'bot_client',
-            story: 'story',
+            server: 'server',
             client: client,
         });
     });
@@ -55,7 +55,7 @@ describe('BotPartition', () => {
         ]);
 
         expect(client.stories).toEqual({
-            story: {
+            server: {
                 test: createBot('test', {
                     abc: 'def',
                 }),
@@ -78,7 +78,7 @@ describe('BotPartition', () => {
         ]);
 
         expect(client.stories).toEqual({
-            story: {
+            server: {
                 test: createBot('test', {
                     abc: 'def',
                 }),
@@ -97,7 +97,7 @@ describe('BotPartition', () => {
         ]);
 
         expect(client.stories).toEqual({
-            story: {
+            server: {
                 test: createBot('test', {
                     abc: 'def',
                 }),
@@ -107,7 +107,7 @@ describe('BotPartition', () => {
 
     describe('load_bots', () => {
         it('should load the matching bots and emit a bot added event', async () => {
-            await client.addBots('story', [
+            await client.addBots('server', [
                 createBot('test2', {
                     num: 123,
                     test: true,
@@ -181,7 +181,7 @@ describe('BotPartition', () => {
         });
 
         it('should emit a async result with the loaded bots', async () => {
-            await client.addBots('story', [
+            await client.addBots('server', [
                 createBot('test2', {
                     num: 123,
                     test: true,
@@ -234,7 +234,7 @@ describe('BotPartition', () => {
 
         it('should put the bots into the space specified by the partition', async () => {
             subject.space = 'test';
-            await client.addBots('story', [
+            await client.addBots('server', [
                 createBot('test2', {
                     num: 123,
                     test: true,
@@ -304,8 +304,8 @@ describe('BotPartition', () => {
     });
 
     describe('clear_space', () => {
-        it('should clear all the bots in the given story', async () => {
-            await client.addBots('story', [
+        it('should clear all the bots in the given server', async () => {
+            await client.addBots('server', [
                 createBot('test2', {
                     num: 123,
                     test: true,
@@ -341,7 +341,7 @@ describe('BotPartition', () => {
 
             await waitAsync();
 
-            const bots = await client.stories['story'];
+            const bots = await client.stories['server'];
             expect(bots).toEqual({});
 
             // Should emit them in order of ID
@@ -361,7 +361,7 @@ describe('BotPartition', () => {
         });
 
         it('should emit a async result when the bots are cleared', async () => {
-            await client.addBots('story', [
+            await client.addBots('server', [
                 createBot('test2', {
                     num: 123,
                     test: true,

@@ -928,14 +928,14 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 },
             ];
         },
-        'player.getCurrentStory': (node: AuxScriptSimpleDependency) => {
+        'player.getCurrentServer': (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];
             }
             return [
                 {
                     type: 'tag',
-                    name: 'story',
+                    name: 'server',
                     dependencies: [],
                 },
             ];

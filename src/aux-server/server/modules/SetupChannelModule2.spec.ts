@@ -1,7 +1,7 @@
 import { nodeSimulationForBranch } from '@casual-simulation/aux-vm-node';
 import {
     createBot,
-    setupStory,
+    setupServer,
     createPrecalculatedBot,
 } from '@casual-simulation/aux-common';
 import {
@@ -104,11 +104,11 @@ describe('SetupChannelModule2', () => {
     });
 
     describe('events', () => {
-        describe('setup_story', () => {
+        describe('setup_server', () => {
             it('should create non-existant channels', async () => {
                 expect.assertions(1);
 
-                await simulation.helper.transaction(setupStory('newChannel'));
+                await simulation.helper.transaction(setupServer('newChannel'));
 
                 await waitAsync();
 
@@ -122,7 +122,7 @@ describe('SetupChannelModule2', () => {
                 expect.assertions(2);
 
                 await simulation.helper.transaction(
-                    setupStory(
+                    setupServer(
                         'newChannel',
                         createBot('test', {
                             abc: 'def',
@@ -160,7 +160,7 @@ describe('SetupChannelModule2', () => {
                 expect.assertions(2);
 
                 await simulation.helper.transaction(
-                    setupStory('newChannel', {
+                    setupServer('newChannel', {
                         abc: 'def',
                     })
                 );
@@ -195,7 +195,7 @@ describe('SetupChannelModule2', () => {
                 expect.assertions(2);
 
                 await simulation.helper.transaction(
-                    setupStory('newChannel', {
+                    setupServer('newChannel', {
                         onCreate: '@setTag(this, "created", true)',
                     })
                 );
@@ -239,7 +239,7 @@ describe('SetupChannelModule2', () => {
                 await newChannelSim.init();
 
                 await simulation.helper.transaction(
-                    setupStory('newChannel', {
+                    setupServer('newChannel', {
                         test: 'abc',
                     })
                 );
@@ -258,7 +258,7 @@ describe('SetupChannelModule2', () => {
                 );
             });
 
-            it('should send a remote error if the story already exists', async () => {
+            it('should send a remote error if the server already exists', async () => {
                 expect.assertions(1);
 
                 // Creates the new channel
@@ -275,7 +275,7 @@ describe('SetupChannelModule2', () => {
                     .subscribe((e) => remoteEvents.push(e));
 
                 await simulation.helper.transaction(
-                    setupStory('newChannel', undefined, 'task1', 'player1')
+                    setupServer('newChannel', undefined, 'task1', 'player1')
                 );
 
                 await waitAsync();
@@ -286,7 +286,7 @@ describe('SetupChannelModule2', () => {
                         action: remoteError(
                             {
                                 error: 'failure',
-                                exception: 'The story already exists.',
+                                exception: 'The server already exists.',
                             },
                             {
                                 sessionId: 'player1',
@@ -306,7 +306,7 @@ describe('SetupChannelModule2', () => {
                     .subscribe((e) => remoteEvents.push(e));
 
                 await simulation.helper.transaction(
-                    setupStory('newChannel', undefined, 'task1', 'player1')
+                    setupServer('newChannel', undefined, 'task1', 'player1')
                 );
 
                 await waitAsync();
@@ -325,7 +325,7 @@ describe('SetupChannelModule2', () => {
                 ]);
             });
 
-            it('should only setup a story once when triggered twice in a row', async () => {
+            it('should only setup a server once when triggered twice in a row', async () => {
                 expect.assertions(3);
 
                 const remoteEvents = [] as SendRemoteActionEvent[];
@@ -334,7 +334,7 @@ describe('SetupChannelModule2', () => {
                     .subscribe((e) => remoteEvents.push(e));
 
                 await simulation.helper.transaction(
-                    setupStory(
+                    setupServer(
                         'newChannel',
                         {
                             color: 'red',
@@ -342,7 +342,7 @@ describe('SetupChannelModule2', () => {
                         'task1',
                         'player1'
                     ),
-                    setupStory(
+                    setupServer(
                         'newChannel',
                         {
                             color: 'blue',
@@ -397,7 +397,7 @@ describe('SetupChannelModule2', () => {
                         action: remoteError(
                             {
                                 error: 'failure',
-                                exception: 'The story already exists.',
+                                exception: 'The server already exists.',
                             },
                             {
                                 sessionId: 'player1',

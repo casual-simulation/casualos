@@ -313,7 +313,7 @@ export interface BotTags {
     ['auxPlayerActive']?: boolean;
     ['pagePortal']?: string | boolean;
     ['sheetPortal']?: string | boolean;
-    ['story']?: string | string[];
+    ['server']?: string | string[];
     ['inventoryPortal']?: string;
     ['menuPortal']?: string;
     ['leftWristPortal']?: string;
@@ -785,7 +785,7 @@ export const ADMIN_PARTITION_ID = 'admin';
 export const PLAYER_PARTITION_ID = 'player';
 
 /**
- * The partition ID for bots that are automatically added to the story.
+ * The partition ID for bots that are automatically added to the server.
  */
 export const BOOTSTRAP_PARTITION_ID = 'bootstrap';
 
@@ -997,7 +997,7 @@ export const ON_SHOUT_ACTION_NAME: string = 'onListen';
 /**
  * The name of the event that is triggered before an action is executed.
  */
-export const ON_ACTION_ACTION_NAME: string = 'onStoryAction';
+export const ON_ACTION_ACTION_NAME: string = 'onServerAction';
 
 /**
  * The name of the event that is triggered when a remote whisper is executed.
@@ -1007,22 +1007,23 @@ export const ON_REMOTE_WHISPER_ACTION_NAME: string = 'onRemoteWhisper';
 /**
  * The name of the event that is triggered when a channel becomes synced.
  */
-export const ON_STORY_STREAMING_ACTION_NAME: string = 'onStoryStreaming';
+export const ON_SERVER_STREAMING_ACTION_NAME: string = 'onServerStreaming';
 
 /**
  * The name of the event that is triggered when a channel has become unsynced.
  */
-export const ON_STORY_STREAM_LOST_ACTION_NAME: string = 'onStoryStreamLost';
+export const ON_SERVER_STREAM_LOST_ACTION_NAME: string = 'onServerStreamLost';
 
 /**
  * The name of the event that is triggered when a channel is loaded.
  */
-export const ON_STORY_SUBSCRIBED_ACTION_NAME: string = 'onStorySubscribed';
+export const ON_SERVER_SUBSCRIBED_ACTION_NAME: string = 'onServerSubscribed';
 
 /**
  * The name of the event that is triggered when a channel is unloaded.
  */
-export const ON_STORY_UNSUBSCRIBED_ACTION_NAME: string = 'onStoryUnsubscribed';
+export const ON_SERVER_UNSUBSCRIBED_ACTION_NAME: string =
+    'onServerUnsubscribed';
 
 /**
  * The name of the event that is triggered when portal tag is changed on the player.
@@ -1247,7 +1248,7 @@ export const KNOWN_TAGS: string[] = [
     'playerActive',
     'pagePortal',
     'sheetPortal',
-    'story',
+    'server',
     'inventoryPortal',
     'menuPortal',
     'leftWristPortal',
@@ -1477,10 +1478,10 @@ export const KNOWN_TAGS: string[] = [
     ON_ANY_POINTER_EXIT,
     'onPointerDown',
     'onPointerUp',
-    ON_STORY_STREAMING_ACTION_NAME,
-    ON_STORY_STREAM_LOST_ACTION_NAME,
-    ON_STORY_SUBSCRIBED_ACTION_NAME,
-    ON_STORY_UNSUBSCRIBED_ACTION_NAME,
+    ON_SERVER_STREAMING_ACTION_NAME,
+    ON_SERVER_STREAM_LOST_ACTION_NAME,
+    ON_SERVER_SUBSCRIBED_ACTION_NAME,
+    ON_SERVER_UNSUBSCRIBED_ACTION_NAME,
     ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
     'onKeyDown',
     'onKeyUp',
@@ -1570,27 +1571,27 @@ export function onDropArg(
     };
 }
 
-export function onStoryStreamingArg(story: string) {
+export function onServerStreamingArg(server: string) {
     return {
-        story,
+        server,
     };
 }
 
-export function onStoryStreamLostArg(story: string) {
+export function onServerStreamLostArg(server: string) {
     return {
-        story,
+        server,
     };
 }
 
-export function onStorySubscribedArg(story: string) {
+export function onServerSubscribedArg(server: string) {
     return {
-        story,
+        server,
     };
 }
 
-export function onStoryUnsubscribedArg(story: string) {
+export function onServerUnsubscribedArg(server: string) {
     return {
-        story,
+        server,
     };
 }
 

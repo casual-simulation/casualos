@@ -48,7 +48,7 @@ export class CheckoutModule2 implements AuxModule2 {
         sub.add(
             simulation.deviceEvents
                 .pipe(
-                    flatMap(async event => {
+                    flatMap(async (event) => {
                         if (event.event) {
                             let local = <LocalActions>event.event;
                             if (local.type === 'checkout_submitted') {
@@ -63,7 +63,7 @@ export class CheckoutModule2 implements AuxModule2 {
         sub.add(
             simulation.localEvents
                 .pipe(
-                    flatMap(async event => {
+                    flatMap(async (event) => {
                         if (event.type === 'finish_checkout') {
                             await this._finishCheckout(simulation, event);
                         }
@@ -90,7 +90,7 @@ export class CheckoutModule2 implements AuxModule2 {
         device: DeviceInfo
     ) {
         const info = await this._client
-            .branchInfo(event.processingStory)
+            .branchInfo(event.processingServer)
             .toPromise();
         if (!info.exists) {
             console.log(
@@ -99,12 +99,12 @@ export class CheckoutModule2 implements AuxModule2 {
             return;
         }
         console.log(
-            `[CheckoutModule2] Loading channel: ${event.processingStory}`
+            `[CheckoutModule2] Loading channel: ${event.processingServer}`
         );
         const simulation = nodeSimulationForBranch(
             this._user,
             this._client,
-            event.processingStory
+            event.processingServer
         );
         try {
             await simulation.init();
