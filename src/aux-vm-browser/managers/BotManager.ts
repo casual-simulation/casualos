@@ -166,7 +166,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 partitions[ERROR_BOT_PARTITION_ID] = {
                     type: 'bot',
                     host: host,
-                    story: parsedId.channel,
+                    server: parsedId.channel,
                 };
             }
 

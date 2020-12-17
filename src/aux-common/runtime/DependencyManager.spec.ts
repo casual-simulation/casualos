@@ -896,7 +896,7 @@ describe('DependencyManager', () => {
             }
         );
 
-        const formulas = ['=getBot("#tag")', '=player.getCurrentStory()'];
+        const formulas = ['=getBot("#tag")', '=player.getCurrentServer()'];
 
         const cases = [];
         for (let formula of formulas) {

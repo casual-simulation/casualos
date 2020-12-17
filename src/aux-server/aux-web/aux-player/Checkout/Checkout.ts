@@ -26,7 +26,7 @@ export default class Checkout extends Vue {
     cardError: string = '';
     simulationId: string = null;
     productId: string = null;
-    processingStory: string = null;
+    processingServer: string = null;
     title: string = '';
     description: string = '';
     requestBillingAddress: boolean = false;
@@ -42,10 +42,10 @@ export default class Checkout extends Vue {
 
         this._subs.push(
             appManager.simulationManager.simulationAdded
-                .pipe(tap(sim => this._simulationAdded(sim)))
+                .pipe(tap((sim) => this._simulationAdded(sim)))
                 .subscribe(),
             appManager.simulationManager.simulationRemoved
-                .pipe(tap(sim => this._simulationRemoved(sim)))
+                .pipe(tap((sim) => this._simulationRemoved(sim)))
                 .subscribe()
         );
     }
@@ -72,7 +72,7 @@ export default class Checkout extends Vue {
         let subs: SubscriptionLike[] = [];
 
         subs.push(
-            sim.localEvents.subscribe(e => {
+            sim.localEvents.subscribe((e) => {
                 if (e.type === 'start_checkout') {
                     this._startCheckout(sim, e);
                 }
@@ -84,7 +84,7 @@ export default class Checkout extends Vue {
     private _simulationRemoved(sim: BrowserSimulation): void {
         const subs = this._simulationSubs.get(sim);
         if (subs) {
-            subs.forEach(s => {
+            subs.forEach((s) => {
                 s.unsubscribe();
             });
         }
@@ -100,7 +100,7 @@ export default class Checkout extends Vue {
         this.title = event.title;
         this.requestBillingAddress = event.requestBillingAddress || false;
         this.productId = event.productId;
-        this.processingStory = event.processingStory;
+        this.processingServer = event.processingServer;
         this.paymentRequest = event.paymentRequest;
         this.publishableKey = event.publishableKey;
     }

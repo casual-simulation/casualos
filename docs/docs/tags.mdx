@@ -1565,13 +1565,13 @@ All tags on the player bot will be synced with the URL query parameters.
 This means that setting the `#abc` tag on the player bot to `hello` will update the URL to include `abc=hello`.
 It also means that putting `inventoryPortal=myDimension` into the query string will set the <TagLink tag='inventoryPortal'/> tag to `myDimension`.
 
-### `story`
+### `server`
 
 <Badges>
   <UserBotBadge/>
 </Badges>
 
-The story that is loaded into CasualOS.
+The server that is loaded into CasualOS.
 
 ### `pagePortal`
 
@@ -1687,7 +1687,7 @@ playerBot.tags.tagPortalSpace = "tempLocal";
 ### `dataPortal`
 
 The data portal is a special portal that can be used in a web request to get bot data directly from the server.
-Similar to webhooks, you specify the story and data portal in the query string of the URL.
+Similar to webhooks, you specify the server and data portal in the query string of the URL.
 
 If given a bot ID, then the bot will be returned as JSON.
 
@@ -1703,17 +1703,17 @@ If there is only one tag and it ends with an extension like specified above then
 
 1. Request the JSON of the Bot with the given ID:
 ```
-https://auxplayer.com?story=my-story&dataPortal=bf68e5cc-993b-42fd-a142-a23de6d2cdcb
+https://auxplayer.com?server=my-server&dataPortal=bf68e5cc-993b-42fd-a142-a23de6d2cdcb
 ```
 
 2. Request all the <TagLink tag='label'/> tags values.
 ```
-https://auxplayer.com?story=my-story&dataPortal=label
+https://auxplayer.com?server=my-server&dataPortal=label
 ```
 
 3. Request a web page from the `test.html` tag.
 ```
-https://auxplayer.com?story=my-story&dataPortal=test.html
+https://auxplayer.com?server=my-server&dataPortal=test.html
 ```
 
 ### `pagePortalConfigBot`
@@ -2235,7 +2235,7 @@ Whether to force all shared scripts to have been signed by a certificate in orde
 This option only takes effect if it is set in the query string of the URL.
 Additionally, changing the tag value has no effect.
 
-If the story is loaded with `forceSignedScripts` set to `true`, then scripts will be required to be signed for the entire session.
+If the server is loaded with `forceSignedScripts` set to `true`, then scripts will be required to be signed for the entire session.
 
 `tempLocal` and `local` spaces are exempt from this requirement.
 

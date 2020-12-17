@@ -648,7 +648,7 @@ export class Server {
     }
 
     private async _handleDataPortal(req: Request, res: Response) {
-        const id = req.query.story;
+        const id = req.query.server;
         if (!id) {
             res.sendStatus(400);
             return;
@@ -733,7 +733,7 @@ export class Server {
     }
 
     private async _handleWebhook(req: Request, res: Response) {
-        const id = req.query.story;
+        const id = req.query.server;
         if (!id) {
             res.sendStatus(400);
             return;
@@ -1220,7 +1220,7 @@ function getWebhooksUser(): AuxUser {
  */
 function dataPortalMiddleware(func: express.Handler) {
     return function (req: Request, res: Response, next: NextFunction) {
-        if (hasValue(req.query.story) && hasValue(req.query[DATA_PORTAL])) {
+        if (hasValue(req.query.server) && hasValue(req.query[DATA_PORTAL])) {
             return func(req, res, next);
         } else {
             return next();
