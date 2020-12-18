@@ -2,7 +2,7 @@
 
 ## V1.3.8
 
-#### Date: TBD
+#### Date: 12/17/2020
 
 ### :bug: Bug Fixes
 
