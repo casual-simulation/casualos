@@ -84,6 +84,7 @@ import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { applyEdit, isTagEdit, mergeVersions } from '../aux-format-2';
 import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
 import { RuntimeStateVersion } from './RuntimeStateVersion';
+import { replaceMacros } from './Transpiler';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -1483,11 +1484,11 @@ export class AuxRuntime
         listener: AuxCompiledScript;
     } {
         let listener: AuxCompiledScript;
-        if (isFormula(value) && this._runFormulas) {
+        if (isFormula(value)) {
+            const parsed = value.substring(1);
+            const transformed = replaceMacros(parsed);
             try {
-                value = this._compile(bot, tag, value, {
-                    allowsEditing: false,
-                });
+                value = JSON.parse(transformed);
             } catch (ex) {
                 value = ex;
             }

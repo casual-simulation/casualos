@@ -4,6 +4,7 @@ import {
     tagsOnBot,
     isFormula,
     Transpiler,
+    replaceMacros,
     KNOWN_TAGS,
     isScript,
     hasValue,
@@ -246,7 +247,6 @@ interface ModelInfo {
 let subs: SubscriptionLike[] = [];
 let activeModel: monaco.editor.ITextModel = null;
 let models: Map<string, ModelInfo> = new Map();
-let transpiler = new Transpiler();
 
 /**
  * The model that should be marked as active.
@@ -1088,7 +1088,7 @@ export function getScript(bot: Bot, tag: string, space: string) {
             str = JSON.stringify(val);
         }
         if (isFormula(str)) {
-            return transpiler.replaceMacros(str);
+            return replaceMacros(str);
         } else {
             return str;
         }
