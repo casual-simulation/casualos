@@ -21,7 +21,6 @@
                         <md-immediate-input
                             v-model="currentValue"
                             @keyup.enter="saveInputDialog()"
-                            @blur="saveInputDialog()"
                             :type="currentType === 'secret' ? 'password' : 'text'"
                             ref="inputModalField"
                             style="-webkit-text-fill-color: inherit"
