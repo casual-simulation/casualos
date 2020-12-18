@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.3.8
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where selecting a color from a `player.showInput()` modal would not save the selected color.
+
 ## V1.3.7
 
 #### Date: 12/17/2020
