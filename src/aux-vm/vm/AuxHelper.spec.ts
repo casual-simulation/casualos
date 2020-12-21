@@ -121,33 +121,10 @@ describe('AuxHelper', () => {
 
         for (let [, partition] of iteratePartitions(partitions)) {
             subs.push(
-                partition.onBotsAdded
+                partition.onStateUpdated
                     .pipe(
                         tap((e) => {
-                            if (e.length === 0) {
-                                return;
-                            }
-                            runtime.botsAdded(e);
-                        })
-                    )
-                    .subscribe(null, (e: any) => console.error(e)),
-                partition.onBotsRemoved
-                    .pipe(
-                        tap((e) => {
-                            if (e.length === 0) {
-                                return;
-                            }
-                            runtime.botsRemoved(e);
-                        })
-                    )
-                    .subscribe(null, (e: any) => console.error(e)),
-                partition.onBotsUpdated
-                    .pipe(
-                        tap((e) => {
-                            if (e.length === 0) {
-                                return;
-                            }
-                            runtime.botsUpdated(e);
+                            runtime.stateUpdated(e);
                         })
                     )
                     .subscribe(null, (e: any) => console.error(e))

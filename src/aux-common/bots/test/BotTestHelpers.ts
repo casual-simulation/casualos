@@ -1,3 +1,5 @@
+import { DNA_TAG_PREFIX } from '../Bot';
+
 export const possibleTagNameCases = [
     ['""', ''],
     ['0', '0'],
@@ -16,8 +18,8 @@ export const possibleTagValueCases = [
     ['', ''],
     [null, null],
     [0, 0],
-    ['=false', false],
-    ['=0', 0],
+    [`${DNA_TAG_PREFIX}false`, false],
+    [`${DNA_TAG_PREFIX}0`, 0],
     ['a', 'a'],
     [1, 1],
     [-10, -10],
@@ -27,8 +29,8 @@ export const possibleTagValueCases = [
     ['false', false],
     [true, true],
     ['true', true],
-    ['=1', 1],
-    ['="hello"', 'hello'],
+    [`${DNA_TAG_PREFIX}1`, 1],
+    [`${DNA_TAG_PREFIX}"hello"`, 'hello'],
 ];
 
 export function booleanTagValueTests(

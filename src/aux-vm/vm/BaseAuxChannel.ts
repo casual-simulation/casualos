@@ -12,7 +12,6 @@ import {
     AuxPartition,
     PartitionConfig,
     iteratePartitions,
-    BotDependentInfo,
     AuxRuntime,
     BotSpace,
     realtimeStrategyToRealtimeEditMode,
@@ -356,11 +355,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             version: 1,
             state: final,
         };
-    }
-
-    async getReferences(tag: string): Promise<BotDependentInfo> {
-        return this._runtime.dependencies.getDependents(tag);
-        // return this._precalculation.dependencies.getDependents(tag);
     }
 
     async getTags(): Promise<string[]> {

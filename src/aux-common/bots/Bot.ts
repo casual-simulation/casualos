@@ -1217,6 +1217,11 @@ export const DATA_PORTAL: string = 'dataPortal';
 export const SHEET_PORTAL: string = 'sheetPortal';
 
 /**
+ * The prefix for DNA Tags.
+ */
+export const DNA_TAG_PREFIX: string = '🧬';
+
+/**
  * The list of all portal tags.
  */
 export const KNOWN_PORTALS: string[] = [

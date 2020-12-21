@@ -9,7 +9,6 @@ import {
     LocalActions,
     BotAction,
     StateUpdatedEvent,
-    BotDependentInfo,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-common';
 import {
@@ -102,10 +101,6 @@ export class AuxVMNode implements AuxVM {
 
     export(): Promise<StoredAux> {
         return this._channel.export();
-    }
-
-    getReferences(tag: string): Promise<BotDependentInfo> {
-        return this._channel.getReferences(tag);
     }
 
     getTags(): Promise<string[]> {

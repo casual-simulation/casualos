@@ -43,6 +43,7 @@ import {
     DEFAULT_TAG_PORTAL_ANCHOR_POINT,
     TAG_MASK_SPACE_PRIORITIES,
     RuntimeBot,
+    DNA_TAG_PREFIX,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -457,7 +458,7 @@ export function calculateFormattedBotValue(
  * Determines if the given value represents a formula.
  */
 export function isFormula(value: unknown): value is string {
-    return typeof value === 'string' && value.indexOf('=') === 0;
+    return typeof value === 'string' && value.indexOf(DNA_TAG_PREFIX) === 0;
 }
 
 /**

@@ -277,77 +277,6 @@ export function watchSimulation(
             }
         });
 
-    let referencesDisposable = monaco.languages.registerReferenceProvider(
-        'javascript',
-        {
-            async provideReferences(
-                model: monaco.editor.ITextModel,
-                position: monaco.Position,
-                context: monaco.languages.ReferenceContext,
-                token: monaco.CancellationToken
-            ): Promise<monaco.languages.Location[]> {
-                const line = model.getLineContent(position.lineNumber);
-                let startIndex = position.column;
-                let endIndex = position.column;
-                for (; startIndex >= 0; startIndex -= 1) {
-                    if (
-                        line[startIndex] === '"' ||
-                        line[startIndex] === "'" ||
-                        line[startIndex] === '`'
-                    ) {
-                        break;
-                    }
-                }
-                for (; endIndex < line.length; endIndex += 1) {
-                    if (
-                        line[endIndex] === '"' ||
-                        line[endIndex] === "'" ||
-                        line[endIndex] === '`'
-                    ) {
-                        break;
-                    }
-                }
-
-                const word = line.substring(startIndex + 1, endIndex);
-                if (word) {
-                    const result = await simulation.code.getReferences(word);
-                    let locations: monaco.languages.Location[] = [];
-                    for (let id in result.references) {
-                        for (let tag of result.references[id]) {
-                            const bot = simulation.helper.botsState[id];
-                            // TODO: Support references to tag masks
-                            let m = loadModel(
-                                simulation,
-                                bot,
-                                tag,
-                                null,
-                                getEditor
-                            );
-                            locations.push(
-                                ...m
-                                    .findMatches(
-                                        result.tag,
-                                        true,
-                                        false,
-                                        true,
-                                        null,
-                                        false
-                                    )
-                                    .map((r) => ({
-                                        range: r.range,
-                                        uri: m.uri,
-                                    }))
-                            );
-                        }
-                    }
-                    return locations;
-                }
-
-                return [];
-            },
-        }
-    );
-
     let completionDisposable = monaco.languages.registerCompletionItemProvider(
         'javascript',
         {
@@ -417,7 +346,6 @@ export function watchSimulation(
     );
 
     sub.add(() => {
-        referencesDisposable.dispose();
         completionDisposable.dispose();
     });
 
@@ -678,8 +606,10 @@ export function loadModel(
 }
 
 function tagScriptLanguage(tag: string, script: any): string {
-    return isFormula(script) || isScript(script)
+    return isScript(script)
         ? 'javascript'
+        : isFormula(script)
+        ? 'json'
         : tag.indexOf('.') >= 0
         ? undefined
         : 'plaintext';

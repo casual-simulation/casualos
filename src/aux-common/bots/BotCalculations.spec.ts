@@ -36,7 +36,7 @@ import {
     getUpdateForTagAndSpace,
     hasMaskForTag,
 } from './BotCalculations';
-import { Bot, BotsState } from './Bot';
+import { Bot, BotsState, DNA_TAG_PREFIX } from './Bot';
 import uuid from 'uuid/v4';
 import { botCalculationContextTests } from './test/BotCalculationContextTests';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
@@ -51,12 +51,12 @@ const dateNowMock = (Date.now = jest.fn());
 
 describe('BotCalculations', () => {
     describe('isFormula()', () => {
-        it('should be true when value starts with a "=" sign', () => {
-            expect(isFormula('=')).toBeTruthy();
-            expect(isFormula('a=')).toBeFalsy();
+        it('should be true when value starts with a "🧬" sign', () => {
+            expect(isFormula(DNA_TAG_PREFIX)).toBeTruthy();
+            expect(isFormula(`a${DNA_TAG_PREFIX}`)).toBeFalsy();
         });
 
-        it('should be false when value does not start with a "=" sign', () => {
+        it('should be false when value does not start with a "🧬" sign', () => {
             expect(isFormula('abc')).toBeFalsy();
         });
     });
