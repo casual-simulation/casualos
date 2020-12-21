@@ -67,7 +67,7 @@ export interface TranspilerMacro {
  */
 const MACROS: TranspilerMacro[] = [
     {
-        test: /^(?:\=|\:\=)/g,
+        test: /^(?:\🧬)/g,
         replacement: (val) => '',
     },
     {

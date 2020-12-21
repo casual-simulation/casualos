@@ -18,6 +18,7 @@ import {
     calculateNumericalTagValue,
     calculateStringTagValue,
     calculateFormattedBotValue,
+    DNA_TAG_PREFIX,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
 import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
@@ -411,7 +412,10 @@ export function watchEditor(
             const botDecorators = debouncedStates.pipe(
                 map((state) => {
                     let decorators = [] as monaco.editor.IModelDeltaDecoration[];
-                    let offset = info?.isScript || info?.isFormula ? 1 : 0;
+                    let offset =
+                        info?.isScript || info?.isFormula
+                            ? DNA_TAG_PREFIX.length
+                            : 0;
                     for (let bot of getActiveObjects(state)) {
                         const cursorStart = calculateNumericalTagValue(
                             null,
@@ -540,7 +544,10 @@ export function watchEditor(
                     e.selection.getEndPosition()
                 );
 
-                const offset = info?.isScript || info?.isFormula ? 1 : 0;
+                const offset =
+                    info?.isScript || info?.isFormula
+                        ? DNA_TAG_PREFIX.length
+                        : 0;
                 let finalStartIndex = offset + startIndex;
                 let finalEndIndex = offset + endIndex;
 
@@ -720,7 +727,11 @@ function watchModel(
                     );
 
                     for (let ops of update.operations) {
-                        let index = info.isFormula || info.isScript ? -1 : 0;
+                        let index = info.isFormula
+                            ? -DNA_TAG_PREFIX.length
+                            : info.isScript
+                            ? -1
+                            : 0;
                         for (let op of ops) {
                             if (op.type === 'preserve') {
                                 index += op.count;
@@ -828,7 +839,11 @@ function watchModel(
                 }
                 let operations = [] as TagEditOp[][];
                 let index = 0;
-                let offset = info.isFormula || info.isScript ? 1 : 0;
+                let offset = info.isFormula
+                    ? DNA_TAG_PREFIX.length
+                    : info.isScript
+                    ? 1
+                    : 0;
                 const changes = sortBy(e.changes, (c) => c.rangeOffset);
                 for (let change of changes) {
                     operations.push([
@@ -939,12 +954,17 @@ function updateDecorators(
         info.isScript = false;
         if (!wasFormula) {
             const text = model.getValue();
-            if (text.indexOf('=') === 0) {
+            if (isFormula(text)) {
                 // Delete the first character from the model cause
                 // it is a formula marker
                 model.applyEdits([
                     {
-                        range: new monaco.Range(1, 1, 1, 2),
+                        range: new monaco.Range(
+                            1,
+                            1,
+                            1,
+                            1 + DNA_TAG_PREFIX.length
+                        ),
                         text: '',
                     },
                 ]);
@@ -967,7 +987,7 @@ function updateDecorators(
 
         if (!wasScript) {
             const text = model.getValue();
-            if (text.indexOf('@') === 0) {
+            if (isScript(text)) {
                 // Delete the first character from the model cause
                 // it is a script marker
                 model.applyEdits([

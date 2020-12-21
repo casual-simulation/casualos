@@ -1,14 +1,16 @@
 <template>
     <div class="editor-wrapper">
         <div class="editor-breadcrumbs" :class="{ 'show-resize': showResize }">
-            <bot-tag
-                :tag="tag"
-                :isScript="isScript"
-                :isFormula="isFormula"
-                :allowCloning="false"
-            ></bot-tag>
-            <div v-if="!!space" class="bot-space">
-                {{ space }}
+            <div class="editor-tag">
+                <bot-tag
+                    :tag="tag"
+                    :isScript="isScript"
+                    :isFormula="isFormula"
+                    :allowCloning="false"
+                ></bot-tag>
+                <div v-if="!!space" class="bot-space">
+                    {{ space }}
+                </div>
             </div>
             <div class="editor-spacing"></div>
             <div class="editor-docs">

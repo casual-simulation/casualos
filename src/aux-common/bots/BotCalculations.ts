@@ -483,6 +483,32 @@ export function parseScript(value: unknown): string | null {
 }
 
 /**
+ * Parses the given value into a script.
+ * Returns the script if the value is a script.
+ * Returns the value if it is not a script.
+ * @param value The value to parse.
+ */
+export function parseScriptSafe(value: string): string {
+    if (isScript(value)) {
+        return value.substring(1);
+    }
+    return value;
+}
+
+/**
+ * Parses the given value into a formula.
+ * Returns the JSON if the value is a formula.
+ * Returns the value if it is not a formula.
+ * @param value The value to parse.
+ */
+export function parseFormulaSafe(value: string): string {
+    if (isFormula(value)) {
+        return value.substring(DNA_TAG_PREFIX.length);
+    }
+    return value;
+}
+
+/**
  * Determines if the given value contains a formula.
  * This is different from isFormula() because it checks arrays for containing formulas in their elements.
  * @param value The value to check.
