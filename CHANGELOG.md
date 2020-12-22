@@ -32,6 +32,10 @@
     -   This was a little used feature and caused issues for people who simply wanted to store JSON data in a tag.
     -   Now, a value like `[1, 2, 3]` will no longer be parsed and so will appear as the string: `"[1, 2, 3]"`.
     -   If you want CasualOS to parse a tag value as an array, you can use the Mod tags mentioned above.
+-   Removed the `error` space.
+    -   Also removed the related functions:
+        -   `server.destroyErrors()`
+        -   `server.loadErrors()`
 
 ## V1.3.8
 
