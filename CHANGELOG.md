@@ -1,5 +1,38 @@
 # CasualOS Changelog
 
+## V1.3.9
+
+#### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Formulas have been removed and replaced with Mod tags.
+    -   Mod tags are tags that start with the DNA Emoji (🧬) and contain JSON data.
+    -   Because Mod tags are JSON data, they do not support programmatic computations.
+    -   We are making this change because while formulas are powerful, inprecise use of them can result in large slowdowns which is a bad user experience.
+    -   The tag data must be valid JSON, so that means using double-quotes `"` for strings and wrapping property names in double-quotes.
+        -   Before:
+            ```
+            =({ color: 'blue', number: 99, toggle: true })
+            ```
+            After:
+            ```
+            🧬{ "color": "blue", "number": 99, "toggle": true }
+            ```
+        -   Before:
+            ```
+            =([ 1 + 2 ])
+            ```
+            After:
+            ```
+            🧬3
+            ```
+-   Array-like values in tags are now considered strings.
+    -   Previously a value like `[1, 2, 3]` was parsed into an array automatically.
+    -   This was a little used feature and caused issues for people who simply wanted to store JSON data in a tag.
+    -   Now, a value like `[1, 2, 3]` will no longer be parsed and so will appear as the string: `"[1, 2, 3]"`.
+    -   If you want CasualOS to parse a tag value as an array, you can use the Mod tags mentioned above.
+
 ## V1.3.8
 
 #### Date: 12/17/2020
