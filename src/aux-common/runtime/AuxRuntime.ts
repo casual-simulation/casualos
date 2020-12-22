@@ -17,8 +17,6 @@ import {
     isFormula,
     isScript,
     isNumber,
-    isArray,
-    parseArray,
     BOT_SPACE_TAG,
     botUpdated,
     isBot,
@@ -1290,30 +1288,6 @@ export class AuxRuntime
             value = true;
         } else if (value === 'false') {
             value = false;
-        } else if (isArray(value)) {
-            const split = parseArray(value);
-
-            // Note: Don't name isFormula because then webpack will be
-            // confused and decide to not import the isFormula function above
-            let isAFormula = false;
-            const values = split.map((s) => {
-                const result = this._compileValue(bot, tag, s.trim());
-                if (typeof result.value === 'function') {
-                    isAFormula = true;
-                }
-                return result;
-            });
-
-            if (isAFormula) {
-                // TODO: Add the proper metadata for formulas in array elements
-                value = <any>(() => {
-                    return values.map((v) =>
-                        typeof v.value === 'function' ? v.value() : v.value
-                    );
-                });
-            } else {
-                value = values.map((v) => v.value);
-            }
         }
 
         return { value, listener };

@@ -352,6 +352,27 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            it('should treat array values like strings', async () => {
+                const update = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            value: '[true, false, hello, 1.23, .35]',
+                        }),
+                    })
+                );
+
+                expect(update).toEqual({
+                    state: {
+                        test: createPrecalculatedBot('test', {
+                            value: '[true, false, hello, 1.23, .35]',
+                        }),
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
             it.skip('should not add the bot to the runtime twice', () => {
                 const update1 = runtime.stateUpdated(
                     stateUpdatedEvent({
@@ -488,62 +509,6 @@ describe('AuxRuntime', () => {
                                 {
                                     value1: 'true',
                                     value2: 'false',
-                                }
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                    });
-                });
-            });
-
-            describe.skip('arrays', () => {
-                it('should calculate array values', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value: '[true, false, hello, 1.23, .35]',
-                            }),
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    value: [true, false, 'hello', 1.23, 0.35],
-                                },
-                                {
-                                    value: '[true, false, hello, 1.23, .35]',
-                                }
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                    });
-                });
-
-                it('should upgrade the tag to a formula if it contains a formula', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value: '[true, false, ="hello", 1.23, .35]',
-                            }),
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    value: [true, false, 'hello', 1.23, 0.35],
-                                },
-                                {
-                                    value: '[true, false, ="hello", 1.23, .35]',
                                 }
                             ),
                         },
@@ -1301,6 +1266,40 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            it('should treat array values like strings', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {}),
+                    })
+                );
+
+                const update = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                value: '[true, false, hello, 1.23, .35]',
+                            },
+                        },
+                    })
+                );
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                value: '[true, false, hello, 1.23, .35]',
+                            },
+                            values: {
+                                value: '[true, false, hello, 1.23, .35]',
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
             describe('numbers', () => {
                 it('should calculate number values', () => {
                     runtime.stateUpdated(
@@ -1407,80 +1406,6 @@ describe('AuxRuntime', () => {
                                 values: {
                                     value1: false,
                                     value2: true,
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                    });
-                });
-            });
-
-            describe.skip('arrays', () => {
-                it('should calculate array values', () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value: '[true, false, hello, 1.23, .35]',
-                            }),
-                        })
-                    );
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                tags: {
-                                    value: '[false, true, 1.23, hello]',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                tags: {
-                                    value: '[false, true, 1.23, hello]',
-                                },
-                                values: {
-                                    value: [false, true, 1.23, 'hello'],
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                    });
-                });
-
-                it('should recalculate the array when the formula changes', () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value: '[true, false, ="hello", 1.23, .35]',
-                            }),
-                        })
-                    );
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                tags: {
-                                    value: '[false, true, 1.23, ="hello1"]',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                tags: {
-                                    value: '[false, true, 1.23, ="hello1"]',
-                                },
-                                values: {
-                                    value: [false, true, 1.23, 'hello1'],
                                 },
                             },
                         },

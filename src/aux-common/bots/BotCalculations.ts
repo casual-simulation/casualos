@@ -509,45 +509,6 @@ export function parseFormulaSafe(value: string): string {
 }
 
 /**
- * Determines if the given value contains a formula.
- * This is different from isFormula() because it checks arrays for containing formulas in their elements.
- * @param value The value to check.
- */
-export function containsFormula(value: string): boolean {
-    return (
-        isFormula(value) ||
-        (isArray(value) && some(parseArray(value), (v) => isFormula(v)))
-    );
-}
-
-/**
- * Determines if the given string value represents an array.
- */
-export function isArray(value: unknown): boolean {
-    return (
-        typeof value === 'string' &&
-        value.indexOf('[') === 0 &&
-        value.lastIndexOf(']') === value.length - 1
-    );
-}
-
-/**
- * Parses the given string value that represents an array into an actual array.
- * @see isArray
- */
-export function parseArray(value: string): string[] {
-    var array: string[] = value.slice(1, value.length - 1).split(',');
-    if (array && array.length > 0 && array[0].length > 0) {
-        // trim all entries.
-        return array.map((s) => {
-            return s.trim();
-        });
-    } else {
-        return [];
-    }
-}
-
-/**
  * Determines if the given value represents a number.
  */
 export function isNumber(value: string): boolean {
@@ -2635,21 +2596,6 @@ export function isUserActive(calc: BotCalculationContext, bot: Bot) {
     return calculateBooleanTagValue(calc, bot, `auxPlayerActive`, false);
 }
 
-function _parseFilterValue(value: string): any {
-    if (isArray(value)) {
-        const split = parseArray(value);
-        return split.map((v) => _parseFilterValue(v));
-    } else if (isNumber(value)) {
-        return parseFloat(value);
-    } else if (value === 'true') {
-        return true;
-    } else if (value === 'false') {
-        return false;
-    } else {
-        return value;
-    }
-}
-
 /**
  * Formats the given value and returns a string representing it.
  * @param value The value to format.
@@ -2687,10 +2633,7 @@ export function calculateValue(
     tag: keyof BotTags,
     formula: string
 ): any {
-    if (isArray(formula)) {
-        const split = parseArray(formula);
-        return split.map((s) => calculateValue(object, tag, s.trim()));
-    } else if (isNumber(formula)) {
+    if (isNumber(formula)) {
         return parseFloat(formula);
     } else if (formula === 'true') {
         return true;

@@ -1,14 +1,12 @@
 import {
     isFormula,
     isNumber,
-    isArray,
     createBot,
     calculateBotValue,
     validateTag,
     botTags,
     isHiddenTag,
     getActiveObjects,
-    parseArray,
     doBotsAppearEqual,
     isTagWellKnown,
     calculateStateDiff,
@@ -109,28 +107,6 @@ describe('BotCalculations', () => {
                 expect(isNumber(value)).toBe(expected);
             }
         );
-    });
-
-    describe('isArray()', () => {
-        it('should be true if the value is a simple list surrounded by square brackets', () => {
-            expect(isArray('[1,2,3]')).toBeTruthy();
-            expect(isArray('[1]')).toBeTruthy();
-            expect(isArray('[]')).toBeTruthy();
-            expect(isArray('[eggs, milk, ham]')).toBeTruthy();
-            expect(isArray('[(eggs), milk, ham]')).toBeTruthy();
-            expect(isArray('[(eggs), (milk, -ham)]')).toBeTruthy();
-
-            expect(isArray('')).toBeFalsy();
-            expect(isArray('abc, def, ghi')).toBeFalsy();
-            expect(isArray('1,2,3')).toBeFalsy();
-            expect(isArray('clone(this, { something: true })')).toBeFalsy();
-        });
-    });
-
-    describe('parseArray()', () => {
-        it('should handle empty arrays properly', () => {
-            expect(parseArray('[]')).toEqual([]);
-        });
     });
 
     describe('isBot()', () => {
