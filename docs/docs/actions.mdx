@@ -4817,4 +4817,37 @@ for(let point of points) {
 }
 ```
 
+### `perf.getStats()`
+
+Gets an object that contains statistics about the performance of the server.
+
+The returned object has the following structure:
+```typescript
+let stats: {
+    /**
+     * The number of bots in the server.
+     */
+    numberOfBots: number,
+
+    /**
+     * A list shouts and their associated execution time (in miliseconds).
+     * Sorted from largest time to smallest.
+     */
+    shoutTimers: {
+        tag: string,
+        timeMs: number
+    }[];
+};
+```
+
+#### Examples:
+
+1. Get the 5 slowest listen tags.
+```typescript
+const stats = perf.getStats();
+const slowestTags = stats.shoutTimers.slice(0, 5).map(timer => timer.tag)
+
+player.toast(slowestTags.join());
+```
+
 [listen-tag]: docs/listen-tags

@@ -346,10 +346,37 @@ export interface TweenOptions {
 }
 
 /**
+ * Defines an interface that contains performance statistics about a server.
+ */
+export interface PerformanceStats {
+    /**
+     * The number of bots in the server.
+     */
+    numberOfBots: number;
+
+    /**
+     * A list of listen tags and the amount of time spent executing them (in miliseconds).
+     * Useful to guage if a listen tag is causing the server to slow down.
+     */
+    shoutTimers: {
+        tag: string;
+        timeMs: number;
+    }[];
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
 export function createDefaultLibrary(context: AuxGlobalContext) {
+    if (!globalThis.performance) {
+        globalThis.performance = {
+            now() {
+                return Date.now();
+            },
+        } as any;
+    }
+
     webhook.post = function (
         url: string,
         data?: any,
@@ -589,6 +616,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 signTag,
                 verifyTag,
                 revokeCertificate,
+            },
+
+            perf: {
+                getStats,
             },
         },
     };
@@ -3386,6 +3417,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, action);
     }
 
+    /**
+     * Gets performance stats from the runtime.
+     */
+    function getStats(): PerformanceStats {
+        return {
+            numberOfBots: context.bots.length,
+            shoutTimers: context.getShoutTimers(),
+        };
+    }
+
     function _hash(hash: MessageDigest<any>, data: unknown[]): string {
         for (let d of data) {
             if (!hasValue(d)) {
@@ -4160,6 +4201,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         arg?: any,
         sendListenEvents: boolean = true
     ) {
+        const startTime = globalThis.performance.now();
+
         let ids = !!bots
             ? bots.map((bot) => {
                   return !!bot
@@ -4209,6 +4252,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 listeners.push(bot);
             }
         }
+
+        const endTime = globalThis.performance.now();
+        const delta = endTime - startTime;
+        context.addShoutTime(name, delta);
 
         if (sendListenEvents) {
             const listenArg = {

@@ -254,6 +254,10 @@ export class AuxRuntime
         this._zone = batchingZone;
     }
 
+    getShoutTimers(): { [shout: string]: number } {
+        return {};
+    }
+
     get closed() {
         return this._sub.closed;
     }

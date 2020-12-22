@@ -6874,6 +6874,51 @@ describe('AuxLibrary', () => {
                 library.api.shout('first');
             }).toThrowError(new RanOutOfEnergyError());
         });
+
+        describe('timers', () => {
+            let now: jest.Mock<number>;
+            let oldNow: typeof performance.now;
+
+            beforeAll(() => {
+                oldNow = globalThis.performance.now;
+                globalThis.performance.now = now = jest.fn();
+            });
+
+            afterAll(() => {
+                globalThis.performance.now = oldNow;
+            });
+
+            it('should use performance.now() to track the amount of time the shout takes', () => {
+                now.mockReturnValueOnce(1) // sayHello start
+                    .mockReturnValueOnce(10) // sayHello end
+                    .mockReturnValueOnce(12) // onListen start
+                    .mockReturnValueOnce(15) // onListen end
+                    .mockReturnValueOnce(16) // onAnyListen end
+                    .mockReturnValueOnce(20); // onAnyListen end
+
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+
+                library.api.shout('sayHello');
+
+                const timers = context.getShoutTimers();
+
+                expect(timers).toEqual([
+                    {
+                        tag: 'sayHello',
+                        timeMs: 9,
+                    },
+                    {
+                        tag: 'onAnyListen',
+                        timeMs: 4,
+                    },
+                    {
+                        tag: 'onListen',
+                        timeMs: 3,
+                    },
+                ]);
+            });
+        });
     });
 
     describe('whisper()', () => {
@@ -8694,6 +8739,50 @@ describe('AuxLibrary', () => {
             );
             expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
             expect(context.actions).toEqual([expected]);
+        });
+    });
+
+    describe('perf.getStats()', () => {
+        let getShoutTimers: jest.Mock<{}>;
+
+        beforeEach(() => {
+            context.getShoutTimers = getShoutTimers = jest.fn();
+        });
+
+        it('should return the number of bots in the runtime', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            const bot2 = createDummyRuntimeBot('test2');
+            const bot3 = createDummyRuntimeBot('test3');
+            const bot4 = createDummyRuntimeBot('test4');
+
+            addToContext(context, bot1, bot2, bot3);
+
+            const result = library.api.perf.getStats();
+
+            // only counts the bots in the context
+            expect(result.numberOfBots).toEqual(3);
+        });
+
+        it('should return an object with timers', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            const bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+
+            getShoutTimers.mockReturnValueOnce([
+                { tag: 'abc', timeMs: 99 },
+                { tag: 'def', timeMs: 123 },
+                { tag: 'haha', timeMs: 999 },
+            ]);
+
+            const result = library.api.perf.getStats();
+
+            // only counts the bots in the context
+            expect(result.shoutTimers).toEqual([
+                { tag: 'abc', timeMs: 99 },
+                { tag: 'def', timeMs: 123 },
+                { tag: 'haha', timeMs: 999 },
+            ]);
         });
     });
 });
