@@ -3446,18 +3446,6 @@ declare global {
          * Backs up all the AUX stories to a zip bot.
          */
         backupAsDownload(target: SessionSelector): BackupAsDownloadAction;
-    
-        /**
-         * Clears all the errors in the server.
-         */
-        destroyErrors(): Promise<void>;
-    
-        /**
-         * Loads the errors for the given bot and tag.
-         * @param bot The bot that the errors should be loaded for.
-         * @param tag The tag that the errors should be loaded for.
-         */
-        loadErrors(bot: string | Bot, tag: string): Promise<Bot[]>;
 
         /**
          * Gets the number of players that are viewing the current server.
