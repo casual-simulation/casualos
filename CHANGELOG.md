@@ -37,6 +37,10 @@
         -   `server.destroyErrors()`
         -   `server.loadErrors()`
 
+### :rocket: Improvements
+
+-   Updated Material Icons to v4.0.0.
+
 ## V1.3.8
 
 #### Date: 12/17/2020
