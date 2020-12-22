@@ -2008,7 +2008,7 @@ export interface LoadBotsAction extends AsyncAction {
     /**
      * The space that should be searched.
      */
-    space: BotSpace;
+    space: string;
 
     /**
      * The tags that the loaded bots should have.
@@ -2044,7 +2044,7 @@ export interface ClearSpaceAction extends AsyncAction {
     /**
      * The space to clear.
      */
-    space: BotSpace;
+    space: string;
 }
 
 /**
@@ -4137,7 +4137,7 @@ export function exitFullscreen(): ExitFullscreenAction {
  * @param taskId The ID of the async task for this action.
  */
 export function loadBots(
-    space: BotSpace,
+    space: string,
     tags: TagFilter[],
     taskId?: number | string
 ): LoadBotsAction {
@@ -4159,7 +4159,7 @@ export function loadBots(
  * @param taskId The ID of the async task.
  */
 export function clearSpace(
-    space: BotSpace,
+    space: string,
     taskId?: number | string
 ): ClearSpaceAction {
     return {

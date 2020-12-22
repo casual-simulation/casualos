@@ -538,8 +538,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 restoreHistoryMarkToServer,
                 loadFile,
                 saveFile,
-                destroyErrors,
-                loadErrors,
                 serverPlayerCount,
                 totalPlayerCount,
                 stories,
@@ -2598,43 +2596,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }),
             undefined,
             undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Destroys all the errors in the server.
-     */
-    function destroyErrors() {
-        const task = context.createTask();
-        const event = clearSpace('error', task.taskId);
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Loads the errors for the given bot and tag.
-     * @param bot The bot that the errors should be loaded for.
-     * @param tag The tag that the errors should be loaded for.
-     */
-    function loadErrors(bot: string | Bot, tag: string): Promise<Bot[]> {
-        const task = context.createTask();
-        const event = loadBots(
-            'error',
-            [
-                {
-                    tag: 'error',
-                    value: true,
-                },
-                {
-                    tag: 'errorBot',
-                    value: getID(bot),
-                },
-                {
-                    tag: 'errorTag',
-                    value: tag,
-                },
-            ],
             task.taskId
         );
         return addAsyncAction(task, event);

@@ -208,7 +208,6 @@ export interface UpdatedBot {
  * - "local" means that the bot is stored in the local storage partition.
  * - "tempLocal" means that the bot is stored in the temporary partition.
  * - "history" means that the bot represents a version of another space.
- * - "error" means that the bot represents an error.
  * - "admin" means that the bot is shared across all stories.
  * - "player" means that the bot is temporary and shared with other players.
  * - "otherPlayers" means that the bot is temporary and shared with this player from another player.
@@ -219,7 +218,6 @@ export type BotSpace =
     | 'local'
     | 'tempLocal'
     | 'history'
-    | 'error'
     | 'admin'
     | 'player'
     | 'otherPlayers'
@@ -768,11 +766,6 @@ export const COOKIE_BOT_PARTITION_ID = 'local';
  * The partition ID for temporary bots.
  */
 export const TEMPORARY_BOT_PARTITION_ID = 'tempLocal';
-
-/**
- * The partition ID for error bots.
- */
-export const ERROR_BOT_PARTITION_ID = 'error';
 
 /**
  * The partition ID for admin bots.

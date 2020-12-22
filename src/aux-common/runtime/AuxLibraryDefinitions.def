@@ -1833,7 +1833,7 @@ declare interface BotsState {
 /**
  * The possible bot spaces.
  */
-declare type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history' | 'error' | 'admin' | 'player' | 'otherPlayers';
+declare type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history' | 'admin' | 'player' | 'otherPlayers';
 
 /**
  * The possible portal types.

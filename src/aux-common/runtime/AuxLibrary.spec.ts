@@ -1706,10 +1706,8 @@ describe('AuxLibrary', () => {
                 const bot4 = createDummyRuntimeBot('test4', {}, 'history');
                 const bot5 = createDummyRuntimeBot('test5', {}, 'local');
                 const bot6 = createDummyRuntimeBot('test6', {}, 'tempLocal');
-                const bot7 = createDummyRuntimeBot('test7', {}, 'error');
-                const bot8 = createDummyRuntimeBot('test8', {}, 'admin');
-                addToContext(context, bot4, bot5, bot6, bot7, bot8);
-
+                const bot7 = createDummyRuntimeBot('test7', {}, 'admin');
+                addToContext(context, bot4, bot5, bot6, bot7);
                 const action = library.api.player.downloadServer();
                 const expected = download(
                     JSON.stringify({
@@ -3881,68 +3879,6 @@ describe('AuxLibrary', () => {
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
-        describe('server.destroyErrors()', () => {
-            it('should issue a ClearSpaceAction', () => {
-                const action: any = library.api.server.destroyErrors();
-                const expected = clearSpace('error', context.tasks.size);
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-        });
-
-        describe('server.loadErrors()', () => {
-            it('should issue a LoadBotsAction for the given tag and bot ID', () => {
-                const action: any = library.api.server.loadErrors(
-                    'test',
-                    'abc'
-                );
-                const expected = loadBots(
-                    'error',
-                    [
-                        {
-                            tag: 'error',
-                            value: true,
-                        },
-                        {
-                            tag: 'errorBot',
-                            value: 'test',
-                        },
-                        {
-                            tag: 'errorTag',
-                            value: 'abc',
-                        },
-                    ],
-                    context.tasks.size
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should support being passed a runtime bot', () => {
-                const action: any = library.api.server.loadErrors(bot1, 'abc');
-                const expected = loadBots(
-                    'error',
-                    [
-                        {
-                            tag: 'error',
-                            value: true,
-                        },
-                        {
-                            tag: 'errorBot',
-                            value: bot1.id,
-                        },
-                        {
-                            tag: 'errorTag',
-                            value: 'abc',
-                        },
-                    ],
-                    context.tasks.size
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
             });
         });
 
