@@ -3637,45 +3637,6 @@ await server.saveFile('/2/book.txt', 'My memoirs', {
 player.toast("File Saved!");
 ```
 
-### `server.loadErrors(bot, tag)`
-
-Loads the errors for the given bot and tag.
-Note that the bots don't load immediately. They will automatically be added to the server state once they have been loaded.
-
-Can be called multiple times for the same bot/tag combination to load errors that have been created since the last time they were loaded.
-
-Finds bots by searching the error space for bots with the following tags:
-
--   `error` must be set to true.
--   `errorBot` must be the ID of the bot that was specified.
--   `errorTag` must be the tag that was specified.
-
-Returns a promise that resolves with the list of bots that were loaded.
-
-The **first parameter** is the Bot or Bot ID that the errors should be loaded for.
-
-The **second parameter** is the name of the tag that the errors should be loaded for.
-
-#### Examples:
-
-1. Load all errors that have occurred for this script:
-```typescript
-let bots = await server.loadErrors(this, tagName);
-```
-
-### `server.destroyErrors()`
-
-Destroys all the error bots.
-
-Returns a promise that resolves once the bots are destroyed.
-
-#### Examples:
-
-1. Destroy all the error bots in this server:
-```typescript
-server.destroyErrors();
-```
-
 ### `server.serverPlayerCount(server?)`
 
 Gets the number of players that are viewing the current server.
@@ -4854,6 +4815,39 @@ for(let point of points) {
         scale: 0.1,
     });
 }
+```
+
+### `perf.getStats()`
+
+Gets an object that contains statistics about the performance of the server.
+
+The returned object has the following structure:
+```typescript
+let stats: {
+    /**
+     * The number of bots in the server.
+     */
+    numberOfBots: number,
+
+    /**
+     * A list shouts and their associated execution time (in miliseconds).
+     * Sorted from largest time to smallest.
+     */
+    shoutTimers: {
+        tag: string,
+        timeMs: number
+    }[];
+};
+```
+
+#### Examples:
+
+1. Get the 5 slowest listen tags.
+```typescript
+const stats = perf.getStats();
+const slowestTags = stats.shoutTimers.slice(0, 5).map(timer => timer.tag)
+
+player.toast(slowestTags.join());
 ```
 
 [listen-tag]: docs/listen-tags

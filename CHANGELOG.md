@@ -2,7 +2,7 @@
 
 ## V1.3.9
 
-#### Date: 12/21/2020
+#### Date: 12/22/2020
 
 ### :boom: Breaking Changes
 
@@ -32,6 +32,15 @@
     -   This was a little used feature and caused issues for people who simply wanted to store JSON data in a tag.
     -   Now, a value like `[1, 2, 3]` will no longer be parsed and so will appear as the string: `"[1, 2, 3]"`.
     -   If you want CasualOS to parse a tag value as an array, you can use the Mod tags mentioned above.
+-   Removed the `error` space.
+    -   Also removed the related functions:
+        -   `server.destroyErrors()`
+        -   `server.loadErrors()`
+
+### :rocket: Improvements
+
+-   Updated Material Icons to v4.0.0.
+-   Added `perf.getStats()` as a way to get some statistics on the performance of the server.
 
 ## V1.3.8
 

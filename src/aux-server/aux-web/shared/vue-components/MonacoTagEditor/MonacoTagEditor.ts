@@ -53,14 +53,8 @@ export default class MonacoTagEditor extends Vue {
     private _simulation: BrowserSimulation;
     private _sub: Subscription;
     private _model: monaco.editor.ITextModel;
-    private _allErrors: BotError[];
-    private _errorIds: Set<string>;
-    private _requestedErrors: Set<string>;
 
-    scriptErrors: BotError[];
     signed: boolean;
-
-    showErrors: boolean;
 
     @Watch('tag')
     tagChanged() {
@@ -86,16 +80,6 @@ export default class MonacoTagEditor extends Vue {
                 tagLink
             )}`;
         }
-    }
-
-    get errorsCount() {
-        return sumBy(this.scriptErrors, (e) => e.count);
-    }
-
-    get errorsLabel() {
-        return this.errorsCount > 1
-            ? `${this.errorsCount} Errors`
-            : `${this.errorsCount} Error`;
     }
 
     get isListenTag() {
@@ -132,15 +116,9 @@ export default class MonacoTagEditor extends Vue {
 
     constructor() {
         super();
-        this.scriptErrors = [];
-        this.showErrors = false;
     }
 
     created() {
-        this._allErrors = [];
-        this._errorIds = new Set();
-        this._requestedErrors = new Set();
-        this.showErrors = false;
         this.signed = false;
 
         this._sub = new Subscription();
@@ -149,50 +127,7 @@ export default class MonacoTagEditor extends Vue {
                 this._simulation = sim;
                 const sub = watchSimulation(sim, () => this.editor);
 
-                const sub2 = sim.watcher.botsDiscovered
-                    .pipe(
-                        tap((bots) => {
-                            let update = false;
-                            for (let b of bots) {
-                                if (
-                                    b.space !== 'error' ||
-                                    b.values['error'] !== true
-                                ) {
-                                    continue;
-                                }
-                                if (this._errorIds.has(b.id)) {
-                                    continue;
-                                }
-
-                                let error = {
-                                    botId: b.values['errorBot'],
-                                    tag: b.values['errorTag'],
-                                    message: b.values['errorMessage'],
-                                    name: b.values['errorName'],
-                                    stack: b.values['errorStack'],
-                                } as BotError;
-
-                                this._errorIds.add(b.id);
-                                this._allErrors.push(error);
-
-                                if (
-                                    this.bot &&
-                                    this.bot.id === error.botId &&
-                                    this.tag === error.tag
-                                ) {
-                                    update = true;
-                                }
-                            }
-                            if (update) {
-                                this.$nextTick(() => {
-                                    this._updateModel();
-                                });
-                            }
-                        })
-                    )
-                    .subscribe(null, (e) => console.error(e));
                 this._sub.add(sub);
-                this._sub.add(sub2);
                 return [sub];
             })
         );
@@ -219,10 +154,6 @@ export default class MonacoTagEditor extends Vue {
 
     editorBlured() {
         setActiveModel(null);
-    }
-
-    toggleErrors() {
-        this.showErrors = !this.showErrors;
     }
 
     makeNormalTag() {
@@ -304,47 +235,5 @@ export default class MonacoTagEditor extends Vue {
         } else {
             this.signed = false;
         }
-
-        const scriptErrors = this._allErrors.filter(
-            (e) => e.botId === bot.id && e.tag === tag
-        );
-        const grouped = groupBy(scriptErrors, (e) => `${e.name}${e.message}`);
-        this.scriptErrors = Object.keys(grouped).map((k) => {
-            let error = grouped[k][0];
-            return {
-                ...error,
-                count: grouped[k].length,
-            };
-        });
-
-        const requestId = `${bot.id}-${tag}`;
-        if (!this._requestedErrors.has(requestId)) {
-            this._requestedErrors.add(requestId);
-            this._simulation.helper.transaction(
-                loadBots('error', [
-                    {
-                        tag: 'error',
-                        value: true,
-                    },
-                    {
-                        tag: 'errorBot',
-                        value: bot.id,
-                    },
-                    {
-                        tag: 'errorTag',
-                        value: tag,
-                    },
-                ])
-            );
-        }
     }
-}
-
-interface BotError {
-    count: number;
-    name: string;
-    message: string;
-    stack: string;
-    tag: string;
-    botId: string;
 }

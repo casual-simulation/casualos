@@ -28,6 +28,7 @@ import { Swatches, Chrome, Compact } from 'vue-color';
 export default class ShowInputModal extends Vue {
     private _sub: Subscription;
     private _simulationSubs: Map<Simulation, Subscription>;
+    private _saved: boolean;
 
     currentLabel: string = '';
     currentPlaceholder: string = '';
@@ -50,12 +51,12 @@ export default class ShowInputModal extends Vue {
 
         this._sub.add(
             appManager.simulationManager.simulationAdded
-                .pipe(tap(sim => this._simulationAdded(sim)))
+                .pipe(tap((sim) => this._simulationAdded(sim)))
                 .subscribe()
         );
         this._sub.add(
             appManager.simulationManager.simulationRemoved
-                .pipe(tap(sim => this._simulationRemoved(sim)))
+                .pipe(tap((sim) => this._simulationRemoved(sim)))
                 .subscribe()
         );
     }
@@ -69,7 +70,7 @@ export default class ShowInputModal extends Vue {
         this._sub.add(sub);
 
         sub.add(
-            sim.localEvents.subscribe(e => {
+            sim.localEvents.subscribe((e) => {
                 if (e.type === 'show_input_for_tag') {
                     setTimeout(() => {
                         this._showInputForTag(sim, e);
@@ -103,6 +104,7 @@ export default class ShowInputModal extends Vue {
         this._inputDialogSimulation = simulation;
         this.autoSelect = !!(event.options.autoSelect || false);
         this.showInputDialog = true;
+        this._saved = false;
     }
 
     private _showInput(simulation: Simulation, event: ShowInputAction) {
@@ -115,6 +117,7 @@ export default class ShowInputModal extends Vue {
         this._currentTask = event.taskId;
         this.autoSelect = !!(event.options.autoSelect || false);
         this.showInputDialog = true;
+        this._saved = false;
     }
 
     updateInputDialogColor(newColor: any) {
@@ -166,6 +169,9 @@ export default class ShowInputModal extends Vue {
     }
 
     async saveInputDialog() {
+        if (this._saved) {
+            return;
+        }
         let value: any;
         if (
             this.currentType === 'color' &&
@@ -188,6 +194,7 @@ export default class ShowInputModal extends Vue {
                 '[ShowInputModal] Unable to save since no bot or task was specified'
             );
         }
+        this._saved = true;
         await this.closeInputDialog();
     }
 

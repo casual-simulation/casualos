@@ -1833,7 +1833,7 @@ declare interface BotsState {
 /**
  * The possible bot spaces.
  */
-declare type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history' | 'error' | 'admin' | 'player' | 'otherPlayers';
+declare type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history' | 'admin' | 'player' | 'otherPlayers';
 
 /**
  * The possible portal types.
@@ -1927,6 +1927,25 @@ declare interface Point3D {
      * The Z position of the point.
      */
     z: number;
+}
+
+/**
+ * Defines an interface that contains performance statistics about a server.
+ */
+declare interface PerformanceStats {
+    /**
+     * The number of bots in the server.
+     */
+    numberOfBots: number;
+
+    /**
+     * A list of listen tags and the amount of time spent executing them (in miliseconds).
+     * Useful to guage if a listen tag is causing the server to slow down.
+     */
+    shoutTimers: {
+        tag: string;
+        timeMs: number;
+    }[];
 }
 
 declare global {
@@ -3446,18 +3465,6 @@ declare global {
          * Backs up all the AUX stories to a zip bot.
          */
         backupAsDownload(target: SessionSelector): BackupAsDownloadAction;
-    
-        /**
-         * Clears all the errors in the server.
-         */
-        destroyErrors(): Promise<void>;
-    
-        /**
-         * Loads the errors for the given bot and tag.
-         * @param bot The bot that the errors should be loaded for.
-         * @param tag The tag that the errors should be loaded for.
-         */
-        loadErrors(bot: string | Bot, tag: string): Promise<Bot[]>;
 
         /**
          * Gets the number of players that are viewing the current server.
@@ -3878,5 +3885,15 @@ declare global {
             dimension: string,
             anchorPoint: BotAnchorPoint
         ): {x: number, y: number, z: number};
+    };
+
+    /**
+     * Defines a set of performance related functions.
+     */
+    const perf: {
+        /**
+         * Gets the performance stats for the server.
+         */
+        getStats(): PerformanceStats;
     };
 }

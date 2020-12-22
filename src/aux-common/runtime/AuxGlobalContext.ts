@@ -20,6 +20,7 @@ import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { ScriptError, RanOutOfEnergyError } from './AuxResults';
 import uuid from 'uuid/v4';
+import { sortBy } from 'lodash';
 
 /**
  * Holds global values that need to be accessible from the runtime.
@@ -132,6 +133,21 @@ export interface AuxGlobalContext {
      *               This should be true if resolveTask() is being called in response to a remote or device action.
      */
     rejectTask(taskId: number | string, error: any, remote: boolean): void;
+
+    /**
+     * Gets a list of timers that contains the amount of time a tag has run for in miliseconds.
+     */
+    getShoutTimers(): {
+        tag: string;
+        timeMs: number;
+    }[];
+
+    /**
+     * Adds the given number of miliseconds to the timer for the given shout.
+     * @param shout The name of the shout.
+     * @param ms The number of miliseconds to add.
+     */
+    addShoutTime(shout: string, ms: number): void;
 }
 
 /**
@@ -285,6 +301,9 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     private _taskCounter: number = 0;
     private _scriptFactory: RuntimeBotFactory;
     private _batcher: RuntimeBatcher;
+    private _shoutTimers: {
+        [shout: string]: number;
+    } = {};
 
     /**
      * Creates a new global context.
@@ -425,5 +444,26 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             this.tasks.delete(taskId);
             task.reject(error);
         }
+    }
+
+    getShoutTimers() {
+        const keys = Object.keys(this._shoutTimers);
+        const list = keys.map((k) => ({
+            tag: k,
+            timeMs: this._shoutTimers[k],
+        }));
+
+        return sortBy(list, (timer) => -timer.timeMs);
+    }
+
+    addShoutTime(shout: string, ms: number) {
+        if (ms < 0) {
+            throw new Error('Cannot add negative time to a shout timer.');
+        }
+        if (!(shout in this._shoutTimers)) {
+            this._shoutTimers[shout] = 0;
+        }
+
+        this._shoutTimers[shout] += ms;
     }
 }
