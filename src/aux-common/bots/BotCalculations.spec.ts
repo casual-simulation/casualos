@@ -1,14 +1,12 @@
 import {
     isFormula,
     isNumber,
-    isArray,
     createBot,
     calculateBotValue,
     validateTag,
     botTags,
     isHiddenTag,
     getActiveObjects,
-    parseArray,
     doBotsAppearEqual,
     isTagWellKnown,
     calculateStateDiff,
@@ -36,7 +34,7 @@ import {
     getUpdateForTagAndSpace,
     hasMaskForTag,
 } from './BotCalculations';
-import { Bot, BotsState } from './Bot';
+import { Bot, BotsState, DNA_TAG_PREFIX } from './Bot';
 import uuid from 'uuid/v4';
 import { botCalculationContextTests } from './test/BotCalculationContextTests';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
@@ -51,12 +49,12 @@ const dateNowMock = (Date.now = jest.fn());
 
 describe('BotCalculations', () => {
     describe('isFormula()', () => {
-        it('should be true when value starts with a "=" sign', () => {
-            expect(isFormula('=')).toBeTruthy();
-            expect(isFormula('a=')).toBeFalsy();
+        it('should be true when value starts with a "🧬" sign', () => {
+            expect(isFormula(DNA_TAG_PREFIX)).toBeTruthy();
+            expect(isFormula(`a${DNA_TAG_PREFIX}`)).toBeFalsy();
         });
 
-        it('should be false when value does not start with a "=" sign', () => {
+        it('should be false when value does not start with a "🧬" sign', () => {
             expect(isFormula('abc')).toBeFalsy();
         });
     });
@@ -109,28 +107,6 @@ describe('BotCalculations', () => {
                 expect(isNumber(value)).toBe(expected);
             }
         );
-    });
-
-    describe('isArray()', () => {
-        it('should be true if the value is a simple list surrounded by square brackets', () => {
-            expect(isArray('[1,2,3]')).toBeTruthy();
-            expect(isArray('[1]')).toBeTruthy();
-            expect(isArray('[]')).toBeTruthy();
-            expect(isArray('[eggs, milk, ham]')).toBeTruthy();
-            expect(isArray('[(eggs), milk, ham]')).toBeTruthy();
-            expect(isArray('[(eggs), (milk, -ham)]')).toBeTruthy();
-
-            expect(isArray('')).toBeFalsy();
-            expect(isArray('abc, def, ghi')).toBeFalsy();
-            expect(isArray('1,2,3')).toBeFalsy();
-            expect(isArray('clone(this, { something: true })')).toBeFalsy();
-        });
-    });
-
-    describe('parseArray()', () => {
-        it('should handle empty arrays properly', () => {
-            expect(parseArray('[]')).toEqual([]);
-        });
     });
 
     describe('isBot()', () => {
@@ -1126,7 +1102,7 @@ describe('BotCalculations', () => {
                 host: 'https://example.com',
             });
 
-            result = parseSimulationId('https://example.com?story=sim');
+            result = parseSimulationId('https://example.com?server=sim');
             expect(result).toEqual({
                 success: true,
                 host: 'https://example.com',
@@ -1134,7 +1110,7 @@ describe('BotCalculations', () => {
             });
 
             result = parseSimulationId(
-                'https://example.com:3000?story=sim/dimension'
+                'https://example.com:3000?server=sim/dimension'
             );
             expect(result).toEqual({
                 success: true,
@@ -1171,7 +1147,7 @@ describe('BotCalculations', () => {
             };
 
             expect(simulationIdToString(id)).toBe(
-                `https://example.com?story=${encodeURIComponent('test/abc')}`
+                `https://example.com?server=${encodeURIComponent('test/abc')}`
             );
         });
 

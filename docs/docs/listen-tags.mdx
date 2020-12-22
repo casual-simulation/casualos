@@ -336,10 +336,10 @@ let that: {
 
 ### `@onBotAdded`
 
-A whisper that is sent when the bot is added to the local story.
+A whisper that is sent when the bot is added to the local server.
 
-Unlike <TagLink tag='@onCreate'/>, this listen tag is triggered whenever the bot as been added to the current player's story, even if the bot has already been created.
-An example of this happening is when you first load a story. Even though all the bots have already been created, they still need to be added to the story in order for you to interact with them.
+Unlike <TagLink tag='@onCreate'/>, this listen tag is triggered whenever the bot as been added to the current player's server, even if the bot has already been created.
+An example of this happening is when you first load a server. Even though all the bots have already been created, they still need to be added to the server in order for you to interact with them.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script creates multiple bots, `@onBotAdded` will be triggered after all the bots have been created.
 
@@ -349,7 +349,7 @@ There is no `that` argument for this listen tag.
 
 A whisper that is sent when a tag on the bot is updated.
 
-This listen tag is triggered whenever the bot has been updated in the current player's story, even if the bot was not updated locally.
+This listen tag is triggered whenever the bot has been updated in the current player's server, even if the bot was not updated locally.
 An example of this happening is when another player changes a tag in the sheet portal. Even though the change was made on their device, it will show up on the current device.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script updates the same tag multiple times, `@onBotChanged` will still only be triggered once.
@@ -632,57 +632,57 @@ let that: {
 };
 ```
 
-### `@onStorySubscribed`
+### `@onServerSubscribed`
 
-A shout that is sent when a story is loaded.
-Sent to every story that is loaded.
-
-#### Arguments:
-```typescript
-let that: {
-  story: string
-};
-```
-
-### `@onStoryUnsubscribed`
-
-A shout that is sent when a story is unloaded.
-Sent to every story that is loaded.
+A shout that is sent when a server is loaded.
+Sent to every server that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  story: string
+  server: string
 };
 ```
 
-### `@onStoryStreaming`
+### `@onServerUnsubscribed`
 
-A shout that is sent when a story is connected and fully synced.
+A shout that is sent when a server is unloaded.
+Sent to every server that is loaded.
+
+#### Arguments:
+```typescript
+let that: {
+  server: string
+};
+```
+
+### `@onServerStreaming`
+
+A shout that is sent when a server is connected and fully synced.
 
 Note that this can occur multiple times throughout the lifetime of a session because the player can lose and regain its connection to the server.
 
-Sent to every story that is loaded.
+Sent to every server that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  story: string
+  server: string
 };
 ```
 
-### `@onStoryStreamLost`
+### `@onServerStreamLost`
 
-A shout that is sent when a story has been temporarily disconnected from the server.
+A shout that is sent when a server has been temporarily disconnected from the server.
 
 Note that this can occur multiple times throughout the lifetime of a session because the player can lose and regain its connection to the server.
 
-Sent to every story that is loaded.
+Sent to every server that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  story: string
+  server: string
 };
 ```
 
@@ -705,7 +705,7 @@ let that: {
 
 ### `@onPaste`
 
-A shout that is sent when some text is pasted into the story.
+A shout that is sent when some text is pasted into the server.
 
 This happens by pressing <kbd>Ctrl</kbd>+<kbd>V</kbd> or <kbd>Cmd</kbd>+<kbd>V</kbd> while something is in your clipboard.
 
@@ -774,6 +774,7 @@ A shout that is sent whenever a bot is dropped after being dragged.
 let that: {
   dragBot: Bot,
   to: {
+    bot: Bot,
     x: number,
     y: number,
     dimension: string
@@ -941,7 +942,7 @@ return {
 };
 ```
 
-### `@onStoryAction`
+### `@onServerAction`
 
 A shout that is sent whenever an action happens.
 
@@ -1038,7 +1039,7 @@ if (that.name === "hello") {
 
 ### `@onRemotePlayerSubscribed`
 
-A shout that is run on every other player when a player joins the current story.
+A shout that is run on every other player when a player joins the current server.
 
 Since this shout is run on every player, you should be careful about performing duplicate actions.
 When in doubt, elect a player to perform all actions that should only be executed once.
@@ -1048,7 +1049,7 @@ See example 2 below.
 ```typescript
 let that: {
     /**
-     * The ID of the player that joined the story.
+     * The ID of the player that joined the server.
      */
     playerId: string
 };
@@ -1075,7 +1076,7 @@ if (getID(player.getBot()) === 'server') {
 
 ### `@onRemotePlayerUnsubscribed`
 
-A shout that is run on every other player when a player leaves the current story.
+A shout that is run on every other player when a player leaves the current server.
 
 Since this shout is run on every player, you should be careful about performing duplicate actions.
 When in doubt, elect a player to perform all actions that should only be executed once.
@@ -1085,7 +1086,7 @@ See example 2 below.
 ```typescript
 let that: {
     /**
-     * The ID of the player that left the story.
+     * The ID of the player that left the server.
      */
     playerId: string
 };
@@ -1112,10 +1113,10 @@ if (getID(player.getBot()) === 'server') {
 
 ### `@onAnyBotsAdded`
 
-A shout that is sent when a list of bots is added to the current story.
+A shout that is sent when a list of bots is added to the current server.
 
-Unlike <TagLink tag='@onAnyCreate'/>, this listen tag is triggered whenever the bots have been added to the current player's story, even if the bots have already been created.
-An example of this happening is when you first load a story. Even though all the bots have already been created, they still need to be added to the story in order for you to interact with them.
+Unlike <TagLink tag='@onAnyCreate'/>, this listen tag is triggered whenever the bots have been added to the current player's server, even if the bots have already been created.
+An example of this happening is when you first load a server. Even though all the bots have already been created, they still need to be added to the server in order for you to interact with them.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script creates multiple bots, `@onAnyBotsAdded` will only be triggered once.
 
@@ -1123,7 +1124,7 @@ Note that this listen tag is triggered after any pending scripts have finished r
 ```typescript
 let that: {
     /**
-     * The array of bots that were added to the story.
+     * The array of bots that were added to the server.
      */
     bots: Bot[];
 };
@@ -1131,10 +1132,10 @@ let that: {
 
 ### `@onAnyBotsRemoved`
 
-A shout that is sent when a list of bots is removed from the current story.
+A shout that is sent when a list of bots is removed from the current server.
 
-Unlike <TagLink tag='@onDestroy'/>, this listen tag is triggered whenever the bots have been removed from the current player's story, even if the bots were not destroyed.
-An example of this happening is when another player disconnects. Even though their player bots were not destroyed, they still need to be removed from the story.
+Unlike <TagLink tag='@onDestroy'/>, this listen tag is triggered whenever the bots have been removed from the current player's server, even if the bots were not destroyed.
+An example of this happening is when another player disconnects. Even though their player bots were not destroyed, they still need to be removed from the server.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script deletes multiple bots, `@onAnyBotsRemoved` will only be triggered once.
 
@@ -1142,7 +1143,7 @@ Note that this listen tag is triggered after any pending scripts have finished r
 ```typescript
 let that: {
     /**
-     * The array of bot IDs that were removed from the story.
+     * The array of bot IDs that were removed from the server.
      */
     botIDs: string[];
 };
@@ -1150,9 +1151,9 @@ let that: {
 
 ### `@onAnyBotsChanged`
 
-A shout that is sent when one or more tags are changed on a list of bots in the current story.
+A shout that is sent when one or more tags are changed on a list of bots in the current server.
 
-This listen tag is triggered whenever the bots have been updated in the current player's story, even if the bots were not updated locally.
+This listen tag is triggered whenever the bots have been updated in the current player's server, even if the bots were not updated locally.
 An example of this happening is when another player changes a tag in the sheet portal. Even though the change was made on their device, it will show up on the current device.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script updates multiple bots, `@onAnyBotsChanged` will only be triggered once.

@@ -33,18 +33,23 @@ export class BotDimensionManager {
     /**
      * Watches for changes to dimensions defined in the given tags.
      * @param tags The tags to watch for dimensions.
+     * @param dimensionBotFilter The filter function that should be used to determine which bots are allowed to create/host dimensions.
      */
-    watchDimensions(...tags: string[]): Observable<BotDimensionsUpdate> {
+    watchDimensions(
+        tags: string[],
+        dimensionBotFilter: (bot: Bot) => boolean
+    ): Observable<BotDimensionsUpdate> {
         let state: BotDimensionsState = null;
         return this._index.events.pipe(
-            map(events => {
+            map((events) => {
                 const calc = this._helper.createContext();
                 let [update, newState] = processIndexEvents(
                     state,
                     calc,
                     events,
                     this._index,
-                    tags
+                    tags,
+                    dimensionBotFilter
                 );
                 state = newState;
                 return update;
@@ -116,7 +121,8 @@ export function processIndexEvents(
     calc: BotCalculationContext,
     events: BotIndexEvent[],
     index: BotIndex,
-    dimensionTags: string[]
+    dimensionTags: string[],
+    dimensionBotFilter: (bot: Bot) => boolean = () => true
 ): [BotDimensionsUpdate, BotDimensionsState] {
     if (!prevState) {
         prevState = {
@@ -133,7 +139,10 @@ export function processIndexEvents(
     let updatedBots = new Map<Bot, string[]>();
     for (let event of events) {
         // Check for new/removed dimensions
-        if (dimensionTags.indexOf(event.tag) >= 0) {
+        if (
+            dimensionTags.indexOf(event.tag) >= 0 &&
+            dimensionBotFilter(event.bot)
+        ) {
             if (event.type === 'bot_tag_added') {
                 const dimensions = calculateDimensions(
                     calc,
@@ -325,7 +334,7 @@ function addDimension(
     let botsWithDimensionTag = index.findBotsWithTag(dimension);
     let userBots = index.findBotsWithTag('pagePortal');
     let allBots = union(userBots, botsWithDimensionTag);
-    let botsInDimension = allBots.filter(b =>
+    let botsInDimension = allBots.filter((b) =>
         isBotInDimension(calc, b, dimension)
     );
     dimensionEvents.push({

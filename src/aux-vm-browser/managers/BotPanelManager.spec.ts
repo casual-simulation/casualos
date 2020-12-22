@@ -59,7 +59,7 @@ describe('BotPanelManager', () => {
                 ),
                 botAdded(
                     createBot('test2', {
-                        hello: false,
+                        hello: null,
                     })
                 ),
             ]);

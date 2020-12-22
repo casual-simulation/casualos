@@ -2,8 +2,6 @@ import {
     LocalActions,
     BotAction,
     StateUpdatedEvent,
-    BotDependentInfo,
-    ActionResult,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-common';
 import {
@@ -151,12 +149,6 @@ export interface AuxChannel extends SubscriptionLike {
      * Exports the causal tree for the simulation.
      */
     export(): Promise<StoredAux>;
-
-    /**
-     * Gets the list of references to the given tag.
-     * @param tag The tag.
-     */
-    getReferences(tag: string): Promise<BotDependentInfo>;
 
     /**
      * Gets the list of tags that are in use.

@@ -22,6 +22,7 @@ import {
 
 Creates a new bot or combination of bots with the given mods. Also triggers <TagLink tag='@onCreate'/> on all the created bots.
 By default, bots are created with a unique <TagLink tag='id'/>, <TagLink tag='creator'/> set to the current `bot.id`, and <TagLink tag='space'/> set to `shared`.
+Bots must be created with at least one tag. If `create()` tries to make a bot with zero tags then an error will be thrown.
 
 If <TagLink tag='creator'/> references a non-existent bot or a bot with a different <TagLink tag='space'/> than the created bot, then <TagLink tag='creator'/> will be set to `null`.
 
@@ -31,19 +32,14 @@ If an array of mods is used for a parameter, then one bot will be created for _e
 
 #### Examples:
 
-1. Create an empty bot:
-```typescript
-let myNewBot = create();
-```
-
-2. Create a red bot:
+1. Create a red bot:
 ```typescript
 let myRedBot = create({
     color: "red"
 });
 ```
 
-3. Create a parent and a child bot:
+2. Create a parent and a child bot:
 ```typescript
 let myParentBot = create({
     creator: null,
@@ -55,12 +51,12 @@ let myChildBot = create({
 });
 ```
 
-4. Create a empty bot in the `tempLocal` space:
+3. Create a red bot in the `tempLocal` space:
 ```typescript
-let myBot = create({ space: "tempLocal" });
+let myBot = create({ space: "tempLocal", color: "red" });
 ```
 
-5. Create a bot from multiple mods:
+4. Create a bot from multiple mods:
 ```typescript
 // myBot is placed in the "myDimension" dimension and is colored green
 let myBot = create({ myDimension: true }, {
@@ -68,7 +64,7 @@ let myBot = create({ myDimension: true }, {
 });
 ```
 
-6. Create a red bot and a blue bot:
+5. Create a red bot and a blue bot:
 ```typescript
 let [myRedBot, myBlueBot] = create({ creator: null}, [
     {
@@ -233,7 +229,7 @@ changeState(bot, "Playing", "playbackState");
 
 Gets an array of bots that match all of the given filter(s). The returned array is sorted alphabetically by the <TagLink tag='id'/> tag.
 
-**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then all bots in the story are returned.
+**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then all bots in the server are returned.
 If multiple filters are specified, then only the bots that match all of the filters are returned.
 
 #### Examples
@@ -284,7 +280,7 @@ let bots = getBots("#test");
 
 Get the first bot that matches all of the given filter(s). If multiple bots match the given filter(s), then bots are sorted alphabetically by the <TagLink tag='id'/> tag and the first one is returned. If no bots match the given filter(s), then `undefined` is returned.
 
-**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then the first bot in the story is returned.
+**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then the first bot in the server is returned.
 If multiple filters are specified, then the first bot that matches all of the filters is returned.
 
 #### Examples
@@ -333,7 +329,7 @@ let foundBot = getBot("#test");
 ### `getBotTagValues(tag, filter?)`
 
 
-Gets a list of all the values in the story for the given tag. Optionally accepts a filter for the tag values.
+Gets a list of all the values in the server for the given tag. Optionally accepts a filter for the tag values.
 
 The **first parameter** is the name of the tag to search for.
 
@@ -835,11 +831,11 @@ Sends the given action to another player.
 In CasualOS, all actions are messages which are placed in a queue and processed one at at time.
 
 For example, the <ActionLink action='player.toast(message, duration?)'/> action queues a message which, when processed, will show a toast message.
-However, before any action is performed, it is run through the <TagLink tag='@onStoryAction'/> listener which can decide whether reject an action using <ActionLink action='action.reject(action)'/>.
+However, before any action is performed, it is run through the <TagLink tag='@onServerAction'/> listener which can decide whether reject an action using <ActionLink action='action.reject(action)'/>.
 This lets you write rules for what actions each player is allowed to take.
 
 There are a couple special cases. First, when you send/receive an action from someone else (i.e. they sent an action to you using the <ActionLink action='remote(action)'/> function), it won't run by default.
-Instead it is wrapped as a `device` action and sent to <TagLink tag='@onStoryAction'/> for processing. This lets you decide whether to allow players to send messages to each other and what the effect of those messages are.
+Instead it is wrapped as a `device` action and sent to <TagLink tag='@onServerAction'/> for processing. This lets you decide whether to allow players to send messages to each other and what the effect of those messages are.
 If you want to perform the action, you can use <ActionLink action='action.perform(action)'/> on the inner device action to queue it for execution.
 
 The **first parameter** is the action to send.
@@ -898,8 +894,8 @@ remoteWhisper(otherPlayers, "custom", "Hello");
 
 ### `remoteShout(name, arg?)`
 
-Sends a <TagLink tag='@onRemoteWhisper'/> shout to all the players in the current story.
-The listener will be triggered on all players connected to the story, including the local player.
+Sends a <TagLink tag='@onRemoteWhisper'/> shout to all the players in the current server.
+The listener will be triggered on all players connected to the server, including the local player.
 
 The **first parameter** is the name of the message that is being sent. This is useful for telling the difference between different messages.
 
@@ -937,7 +933,7 @@ action.perform({
 
 Prevents a previous action from being performed.
 
-This is especially useful when used in a <TagLink tag='@onStoryAction'/> listener since it lets you reject actions before they are performed.
+This is especially useful when used in a <TagLink tag='@onServerAction'/> listener since it lets you reject actions before they are performed.
 
 The **first parameter** is the action that should be prevented/rejected.
 
@@ -953,7 +949,7 @@ action.reject(toastAction);
 
 
 Shows a payment screen modal that lets the player purchase something.
-Triggers the <TagLink tag='@onCheckout'/> shout on the server inside the given processing story.
+Triggers the <TagLink tag='@onCheckout'/> shout on the server inside the given processing server.
 
 The **first parameter** is the options to use to setup the checkout screen.
 
@@ -970,7 +966,7 @@ player.checkout({
     productId: '10_cookies',
     title: '10 Cookies',
     description: '$5.00',
-    processingStory: 'cookies_checkout'
+    processingServer: 'cookies_checkout'
 });
 ```
 
@@ -1329,13 +1325,13 @@ Closes the QR Code popup modal.
 player.hideQRCode();
 ```
 
-### `player.showJoinCode(story?, dimension?)`
+### `player.showJoinCode(server?, dimension?)`
 
 
-Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) with a link to join the given story and dimension.
-If the story and dimension are omitted, then the current story and dimension will be used.
+Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) with a link to join the given server and dimension.
+If the server and dimension are omitted, then the current server and dimension will be used.
 
-The **first parameter** is the story that the code should be shown for.
+The **first parameter** is the server that the code should be shown for.
 
 The **second parameter** is the dimension that the code should be shown for.
 
@@ -1346,9 +1342,9 @@ The **second parameter** is the dimension that the code should be shown for.
 player.showJoinCode();
 ```
 
-2. Show a join QR Code for a story and dimension.
+2. Show a join QR Code for a server and dimension.
 ```typescript
-player.showJoinCode("story", "dimension");
+player.showJoinCode("server", "dimension");
 ```
 
 ### `player.openBarcodeScanner(camera?)`
@@ -1500,7 +1496,16 @@ const color = await player.showInput('green', {
     type: 'color',
     title: 'Enter a custom color'
 });
-player.toast(name);
+player.toast(color);
+```
+
+5. Show an input for entering secrets (like passwords).
+```typescript
+const secret = await player.showInput('', {
+    type: 'secret',
+    title: 'Enter a secret key'
+});
+player.toast(secret);
 ```
 
 ### `player.showInputForTag(bot, tag, options?)`
@@ -1563,7 +1568,7 @@ player.setClipboard("hello");
 ### `player.showUploadAuxFile()`
 
 
-Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to upload to the story.
+Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to upload to the server.
 
 #### Examples:
 
@@ -1572,49 +1577,49 @@ Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to u
 player.showUploadAuxFile();
 ```
 
-### `player.loadStory(story)`
+### `player.loadServer(server)`
 
 
-Loads the given univese into the current browser tab. When the story is loaded, the <TagLink tag='@onStorySubscribed'/> shout will be triggered.
+Loads the given univese into the current browser tab. When the server is loaded, the <TagLink tag='@onServerSubscribed'/> shout will be triggered.
 
 Note that separate stories cannot interact directly. They must instead interact via super shouts.
 
-The **first parameter** is the name of the story to load.
+The **first parameter** is the name of the server to load.
 
 #### Examples:
 
-1. Load the `fun` story.
+1. Load the `fun` server.
 ```typescript
-player.loadStory("fun");
+player.loadServer("fun");
 ```
 
-### `player.unloadStory()`
+### `player.unloadServer()`
 
-Unloads the given story from the current browser tab. When the story is unloaded, the <TagLink tag='@onStoryUnsubscribed'/> shout will be triggered.
+Unloads the given server from the current browser tab. When the server is unloaded, the <TagLink tag='@onServerUnsubscribed'/> shout will be triggered.
 
-The **first parameter** is the name of the story to unload.
+The **first parameter** is the name of the server to unload.
 
 #### Examples:
 
-1. Unload the `fun` story.
+1. Unload the `fun` server.
 ```typescript
-player.unloadStory('fun');
+player.unloadServer('fun');
 ```
 
-### `player.downloadStory()`
+### `player.downloadServer()`
 
 
 Downloads all of the shared bots into a `.aux` file on the player's computer.
-The file will have the same name as the story.
+The file will have the same name as the server.
 
 Note that this function is almost exactly the same as <ActionLink action='player.downloadBots(bots, filename)'/>.
 The only difference is that all bots in the shared space are included and the file is named for you automatically.
 
 #### Examples:
 
-1. Download the entire story.
+1. Download the entire server.
 ```typescript
-player.downloadStory();
+player.downloadServer();
 ```
 
 ### `player.enableAR()`
@@ -1665,17 +1670,17 @@ Disables virtual reality on the device.
 player.disableVR();
 ```
 
-### `player.getCurrentStory()`
+### `player.getCurrentServer()`
 
 
-Gets the story that the player is in.
+Gets the server that the player is in.
 
 #### Examples:
 
-1. Show a message of the current story.
+1. Show a message of the current server.
 ```typescript
-const story = player.getCurrentStory();
-player.toast(story);
+const server = player.getCurrentServer();
+player.toast(server);
 ```
 
 ### `player.getCurrentDimension()`
@@ -2233,7 +2238,7 @@ Imports an AUX file from the given string.
 If the string contains JSON, then the JSON will be imported as if it was a .aux file.
 If the string is a [URL](https://en.wikipedia.org/wiki/URL), then it will be downloaded and imported.
 
-This is useful to quickly download a AUX file and load it into the current story from a site such as https://gist.github.com/.
+This is useful to quickly download a AUX file and load it into the current server from a site such as https://gist.github.com/.
 
 The **first parameter** is the JSON or URL that the AUX file should be imported from.
 
@@ -2346,8 +2351,8 @@ The **first parameter** is the Github Personal Access Token that should be used 
 See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
 
 <Alert type='info'>
-    By default, backing up to GitHub is disabled on a story.
-    To enable it, you have to write a custom <TagLink tag='@onStoryAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, backing up to GitHub is disabled on a server.
+    To enable it, you have to write a custom <TagLink tag='@onServerAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 #### Examples:
@@ -2365,8 +2370,8 @@ Saves all the stories to a zip file and downloads it to the session matching the
 The **first parameter** is an object that indicates which session the zip file should be downloaded to.
 
 <Alert type='info'>
-    By default, backing up as a download is disabled on a story.
-    To enable it, you have to write a custom <TagLink tag='@onStoryAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, backing up as a download is disabled on a server.
+    To enable it, you have to write a custom <TagLink tag='@onServerAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 #### Examples:
@@ -2401,57 +2406,57 @@ server.finishCheckout({
 });
 ```
 
-### `server.setupStory(story, botOrMod?)`
+### `server.setupServer(server, botOrMod?)`
 
 
-Sends an action to the server that will create the given story if it does not exist and places a clone of the given bot or mod in it.
-The new bot will only be added to the story if the story did not exist.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+Sends an action to the server that will create the given server if it does not exist and places a clone of the given bot or mod in it.
+The new bot will only be added to the server if the server did not exist.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
-Returns a promise that resolves when the story has been setup.
+Returns a promise that resolves when the server has been setup.
 
-The **first parameter** is the ID of the story that should be setup.
+The **first parameter** is the ID of the server that should be setup.
 
-The **second parameter** is optional and is the bot or mod that should be cloned into the new story. After the bot is created, <TagLink tag='@onCreate'/> will be triggered.
+The **second parameter** is optional and is the bot or mod that should be cloned into the new server. After the bot is created, <TagLink tag='@onCreate'/> will be triggered.
 
 #### Examples:
 
-Before `server.setupStory()` will work, you need to setup the <TagLink tag='@onStoryAction'/> tag to execute events from remote devices.
-This is because when you run `server.setupStory()` from a PC or phone (a.k.a. A "remote device"), it needs to send an event to the server to actually create the new story.
+Before `server.setupServer()` will work, you need to setup the <TagLink tag='@onServerAction'/> tag to execute events from remote devices.
+This is because when you run `server.setupServer()` from a PC or phone (a.k.a. A "remote device"), it needs to send an event to the server to actually create the new server.
 By default, AUX does not perform actions that are received from a remote device. You must instruct AUX to execute these yourself.
 
-Ensure that <TagLink tag='@onStoryAction'/> is setup properly.
-The following script will execute `setup_story` events that were sent from other devices:
+Ensure that <TagLink tag='@onServerAction'/> is setup properly.
+The following script will execute `setup_server` events that were sent from other devices:
 ```typescript
 // Device actions are actions that were sent to this computer from another device
 if (that.action.type === 'device') {
 
-    // The setup_story action is the action that is created
-    // from server.setupStory()
-    if (that.action.event.type === 'setup_story') {
+    // The setup_server action is the action that is created
+    // from server.setupServer()
+    if (that.action.event.type === 'setup_server') {
 
-        // Execute the setup_story action
+        // Execute the setup_server action
         action.perform(that.action.event);
     }
 }
 ```
 
-1. Create the "test" story:
+1. Create the "test" server:
 ```typescript
-await server.setupStory("test");
+await server.setupServer("test");
 ```
 
-2. Create the "test" story with a bot inside it:
+2. Create the "test" server with a bot inside it:
 ```typescript
-await server.setupStory("test", {
+await server.setupServer("test", {
     "name": "bob",
     "color": "red"
 });
 ```
 
-3. Create the "test" story with a bot that places a bot in the "abc" dimension:
+3. Create the "test" server with a bot that places a bot in the "abc" dimension:
 ```typescript
-await server.setupStory("test", {
+await server.setupServer("test", {
     "onCreate": `@
         create({
             creator: null,
@@ -2469,7 +2474,7 @@ await server.setupStory("test", {
 
 
 This exports a GPIO pin (BCM) on the physical server so that you can access them as inputs or outputs.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been exported.
 
@@ -2490,7 +2495,7 @@ server.exportGpio(led_pin, 'out');
 
 
 This unexports a GPIO pin (BCM) on the physical server so that it's freed up once you're done with it.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been unexported.
 
@@ -2511,7 +2516,7 @@ server.unexportGpio(led_pin);
 
 
 This sets a GPIO pin (BCM) on the physical server to either HIGH (1) or LOW (0).
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been set.
 
@@ -2533,7 +2538,7 @@ server.setGpio(led_pin, 0);
 
 
 This reads a given GPIO pin (BCM) and returns the state/value of the pin.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been read.
 
@@ -2555,7 +2560,7 @@ player.shout(state);
 
 
 Initialise the bcm2835 library. This will be called automatically by `.open()` using the default option values if not called explicitly.  
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when rpio has been initialized.
 
@@ -2585,7 +2590,7 @@ server.rpioInit(options);
 
 
 Shuts down the rpio library, unmapping and clearing all memory maps. By default this will happen automatically.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when rpio has been exited.
 
@@ -2602,7 +2607,7 @@ server.rpioExit();
 Open a pin for input or output.
 For input pins, `options` can be used to configure the internal pullup or pulldown resistors.
 For output pins, `options` defines the initial state of the pin, rather than having to issue a separate `.write()` call. 
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been configured.
 
@@ -2637,7 +2642,7 @@ server.rpioOpen(led_pin, 'INPUT', 'PULL_DOWN');
 
 Switch a pin that has already been opened in one mode to a different mode. 
 This is provided primarily for performance reasons, as it avoids some of the setup work done by `.open()`. 
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been configured.
 
@@ -2667,7 +2672,7 @@ server.rpioMode(led_pin, 'INPUT', 'PULL_DOWN');
 
 
 Read the current value of pin, returning either `1` (high) or `0` (low).
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been read.
 
@@ -2690,7 +2695,7 @@ player.shout(state);
 
 Read length bits from pin into buffer as fast as possible.
 This is useful for devices which send out information faster than the JavaScript function call overhead can handle, e.g. if you need microsecond accuracy. 
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been read.
 
@@ -2709,7 +2714,7 @@ server.rpioReadSequence(16, 10);
 
 
 Set the specified pin either high or low.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been set.
 
@@ -2731,7 +2736,7 @@ server.rpioWrite(led_pin, 'HIGH');
 
 
 Write length bits to pin from buffer as fast as possible.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been written to.
 
@@ -2756,7 +2761,7 @@ On current models of Raspberry Pi there are three groups with corresponding defi
 PAD_GROUP_0_27: GPIO0 - GPIO27. Use this for the main GPIO header.
 PAD_GROUP_28_45: GPIO28 - GPIO45. Use this to configure the P5 header.
 PAD_GROUP_46_53: GPIO46 - GPIO53. Internal, you probably won't need this.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 The value returned will be true/false for 'slew' and 'hysteresis'.
 The value returned will be the drive current in mA for 'current'.
@@ -2790,7 +2795,7 @@ On current models of Raspberry Pi there are three groups with corresponding defi
 PAD_GROUP_0_27: GPIO0 - GPIO27. Use this for the main GPIO header.
 PAD_GROUP_28_45: GPIO28 - GPIO45. Use this to configure the P5 header.
 PAD_GROUP_46_53: GPIO46 - GPIO53. Internal, you probably won't need this.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pad control has been written to.
 
@@ -2813,7 +2818,7 @@ server.rpioWritepad('PAD_GROUP_0_27', undefined, true, 12);
 
 
 Configure the pin's internal pullup or pulldown resistors.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been configured.
 
@@ -2840,7 +2845,7 @@ server.rpioPud(led_pin, 'PULL_OFF');
 
 Watch `pin` for changes and execute the callback `cb()` on events.
 To stop watching for `pin` changes, call `.rpioPoll()` again, setting the callback to `null` (or anything else which isn't a function).
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when 
 
@@ -2877,7 +2882,7 @@ server.rpioPoll(16, nuke_button, 'POLL_HIGH');
 
 
 Indicate that the pin will no longer be used, and clear any poll events associated with it.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been closed.
 
@@ -2904,7 +2909,7 @@ server.rpioClose(led_pin, 'PIN_PRESERVE');
 ### `server.rpioI2CBegin()`
 
 Initializes i²c for use.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when i²c has been initialized.
 
@@ -2918,7 +2923,7 @@ server.rpioI2CBegin();
 ### `server.rpioI2CSetSlaveAddress()`
 
 Configure the slave address. This is between `0 - 0x7f`.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the slave address has been set.
 
@@ -2934,7 +2939,7 @@ server.rpioI2CSetSlaveAddress(0x20);
 ### `server.rpioI2CSetBaudRate(rate)`
 
 Set the baud rate. Directly set the speed in hertz.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when rate has been set.
 
@@ -2950,7 +2955,7 @@ server.rpioI2CSetBaudRate(100000);
 ### `server.rpioI2CSetClockDivider(rate)`
 
 Set the baud rate. Set it based on a divisor of the base 250MHz rate.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when rate has been set.
 
@@ -2966,7 +2971,7 @@ server.rpioI2CSetClockDivider(2500);
 ### `server.rpioI2CRead(rx, length?)`
 
 Set the baud rate. Set it based on a divisor of the base 250MHz rate.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when rate has been set.
 
@@ -2984,7 +2989,7 @@ await server.rpioI2CRead([32], 16);
 ### `server.rpioI2CWrite(tx, length?)`
 
 Set the baud rate. Set it based on a divisor of the base 250MHz rate.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when rate has been set.
 
@@ -3002,7 +3007,7 @@ server.rpioI2CWrite([0x0b, 0x0e, 0x0e, 0x0f]);
 ### `server.rpioI2CEnd()`
 
 Turn off the i²c interface and return the pins to GPIO.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when i²c has been turned off.
 
@@ -3017,7 +3022,7 @@ server.rpioI2CEnd();
 
 Set the PWM refresh rate.
 This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the rate has been set.
 
@@ -3035,7 +3040,7 @@ server.rpioPWMSetClockDivider(64);
 
 Set the PWM range for a pin.
 This determines the maximum pulse width.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when maximum width has been set.
 
@@ -3054,7 +3059,7 @@ server.rpioPWMSetRange(12, 1024);
 ### `server.rpioPWMSetData(pin, width)`
 
 Set the PWM width for a pin.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the width has been set.
 
@@ -3076,7 +3081,7 @@ Initiate SPI mode.
 Once SPI is enabled, the SPI pins are unavailable for GPIO use until `server.rpioSPIEnd()` is called.
 SPI requires `gpiomem: false` and root privileges. 
 `server.rpioSPIBegin()` will call `server.rpioInit()` with the appropriate values if you do not explicitly call it yourself.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when SPI mode has been initiated.
 
@@ -3095,7 +3100,7 @@ Value | Pin
   0   | SPI_CE0 (24 / GPIO8)
   1   | SPI_CE1 (26 / GPIO7)
   2   | Both
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when SPI pin(s) have been enabled.
 
@@ -3120,7 +3125,7 @@ Value | Pin
 
 Setting the polarity to 'HIGH' means it will activate on 'HIGH'.
 Setting the polarity to 'LOW' means it will activate on 'LOW'.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when polarity has been set.
 
@@ -3139,7 +3144,7 @@ server.rpioSPISetCSPolarity(0, 'HIGH');
 
 Set the SPI clock speed.
 The rate is an even divisor of the base 250MHz rate ranging between 0 and 65536.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the clock speed has been set.
 
@@ -3163,7 +3168,7 @@ Mode | CPOL | CPHA
   2  |  1   |  0
   3  |  1   |  1
 
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when a data mode has been set.
 
@@ -3179,7 +3184,7 @@ server.rpioSPISetDataMode(0);
 ### `server.rpioSPITransfer(tx)`
 
 Send and recieve data via SPI. 
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a buffer the same size as the buffer sent.
 
@@ -3195,7 +3200,7 @@ await server.rpioSPITransfer([1,1]);
 ### `server.rpioSPIWrite(tx)`
 
 Send data via SPI.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the buffer has been sent.
 
@@ -3211,7 +3216,7 @@ server.rpioSPIWrite([1,1]);
 ### `server.rpioSPIEnd()`
 
 Release the pins back to general purpose use.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the clock speed has been set.
 
@@ -3225,7 +3230,7 @@ server.rpioSPIEnd();
 ### `server.serialConnect()`
 
 Establish the connection to the bluetooth serial device. Currently only one device is supported at a time.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves on the 'open' event.
 
@@ -3259,7 +3264,7 @@ await server.serialConnect("/dev/rfcomm0", {
 ### `server.serialStream()`
 
 Parses and returns the serial stream to the event tag <TagLink tag='@onStreamData'/>.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Shouts data to the <TagLink tag='@onStreamData'/> event tag.
 
@@ -3282,7 +3287,7 @@ tags.data=that;
 ### `server.serialOpen()`
 
 Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves on the 'open' event.
 
@@ -3301,7 +3306,7 @@ await server.serialOpen();
 ### `server.serialUpdate()`
 
 Updates the SerialPort object with a new baudRate.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 The **first parameter** is an object with the baudRate you want to update the connection with.
 The **second parameter** is a callback.
@@ -3320,7 +3325,7 @@ await server.serialUpdate({baudRate: 14400});
 ### `server.serialWrite()`
 
 Writes the provided data/command to the device. Might be single-quote/double-quote sensitive.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 The **first parameter** is a string with the data/command to send.
 The **second parameter** is the encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
@@ -3340,7 +3345,7 @@ await server.serialWrite('#READ:0', 'utf8');
 ### `server.serialRead()`
 
 Request a number of bytes from the device.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 If no data is available to be read, null is returned.
 
@@ -3360,7 +3365,7 @@ await server.serialRead(8);
 ### `server.serialClose()`
 
 Closes an open connection.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves on the 'close' event.
 
@@ -3380,7 +3385,7 @@ await server.serialClose();
 ### `server.serialFlush()`
 
 Flush discards data that has been received but not read, or written but not transmitted by the operating system.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves once the data has been flushed.
 
@@ -3399,7 +3404,7 @@ await server.serialFlush();
 
 Waits until all output data is transmitted to the serial port. 
 After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device. 
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves once the data has been drained.
 
@@ -3417,7 +3422,7 @@ await server.serialDrain();
 ### `server.serialPause()`
 
 Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 #### Examples:
 
@@ -3433,7 +3438,7 @@ await server.serialPause();
 ### `server.serialResume()`
 
 Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
-The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
 #### Examples:
 
@@ -3451,8 +3456,8 @@ await server.serialResume();
 ### `server.browseHistory()`
 
 
-Loads the `history` space into the current story.
-The `history` space is read-only and contains all the marks that have been created for the story.
+Loads the `history` space into the current server.
+The `history` space is read-only and contains all the marks that have been created for the server.
 Each mark is a bot that is placed in the `#history` dimension.
 
 Returns a promise that resolves when the history bots are loaded.
@@ -3493,7 +3498,7 @@ This will create a new mark with any unsaved changes and another mark with the s
 
 Returns a promise that resolves when the history mark has been restored.
 
-The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current story by using the <ActionLink action='server.browseHistory()'/> action.
+The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current server by using the <ActionLink action='server.browseHistory()'/> action.
 
 #### Examples:
 
@@ -3506,27 +3511,27 @@ let mark = getBot(byTag("#history", true));
 await server.restoreHistoryMark(mark);
 ```
 
-### `server.restoreHistoryMarkToStory(mark, story)`
+### `server.restoreHistoryMarkToServer(mark, server)`
 
 
-Restores the state in the given story to the state that was saved by the given mark.
-This will create a new mark with any unsaved changes in the story and another mark with the state that was saved by the given mark.
+Restores the state in the given server to the state that was saved by the given mark.
+This will create a new mark with any unsaved changes in the server and another mark with the state that was saved by the given mark.
 
 Returns a promise that resolves when the history mark has been restored.
 
-The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current story by using the <ActionLink action='server.browseHistory()'/> action.
+The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current server by using the <ActionLink action='server.browseHistory()'/> action.
 
-The **second parameter** is the story that the state should be restored to. If `null` or an empty string, then the current story will be restored.
+The **second parameter** is the server that the state should be restored to. If `null` or an empty string, then the current server will be restored.
 
 #### Examples:
 
-1. Restore the state of the `test` story to a given mark.
+1. Restore the state of the `test` server to a given mark.
 ```typescript
 // Find a random mark that was loaded by server.browseHistory()
 let mark = getBot(byTag("#history", true));
 
 // Restore the current state to the given mark.
-await server.restoreHistoryMarkToStory(mark, "test");
+await server.restoreHistoryMarkToServer(mark, "test");
 ```
 
 ### `server.shell(script)`
@@ -3537,8 +3542,8 @@ Executes the given script on the server.
 The **first parameter** is the shell script that should be executed.
 
 <Alert type='info'>
-    By default, shell scripts are disabled on a story.
-    To enable them, you have to write a custom <TagLink tag='@onStoryAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, shell scripts are disabled on a server.
+    To enable them, you have to write a custom <TagLink tag='@onServerAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 ### `server.loadFile(path, options?)`
@@ -3557,8 +3562,8 @@ The **first parameter** is the path that the file should be loaded from. This is
 The **second parameter** are the options that should be used for loading the file.
 
 <Alert type='info'>
-    By default, loading files is disabled on a story.
-    To enable it, you have to write a custom <TagLink tag='@onStoryAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, loading files is disabled on a server.
+    To enable it, you have to write a custom <TagLink tag='@onServerAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 #### Examples:
@@ -3602,8 +3607,8 @@ The **second parameter** is the data that should be saved into the file.
 The **third parameter** are the options that should be used for saving the file.
 
 <Alert type='info'>
-    By default, saving files is disabled on a story.
-    To enable it, you have to write a custom <TagLink tag='@onStoryAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, saving files is disabled on a server.
+    To enable it, you have to write a custom <TagLink tag='@onServerAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 #### Examples:
@@ -3635,7 +3640,7 @@ player.toast("File Saved!");
 ### `server.loadErrors(bot, tag)`
 
 Loads the errors for the given bot and tag.
-Note that the bots don't load immediately. They will automatically be added to the story state once they have been loaded.
+Note that the bots don't load immediately. They will automatically be added to the server state once they have been loaded.
 
 Can be called multiple times for the same bot/tag combination to load errors that have been created since the last time they were loaded.
 
@@ -3666,32 +3671,32 @@ Returns a promise that resolves once the bots are destroyed.
 
 #### Examples:
 
-1. Destroy all the error bots in this story:
+1. Destroy all the error bots in this server:
 ```typescript
 server.destroyErrors();
 ```
 
-### `server.storyPlayerCount(story?)`
+### `server.serverPlayerCount(server?)`
 
-Gets the number of players that are viewing the current story.
-Optionally takes a parameter which is the story that the number of players should be retrieved for. If omitted, then the current story will be checked.
+Gets the number of players that are viewing the current server.
+Optionally takes a parameter which is the server that the number of players should be retrieved for. If omitted, then the current server will be checked.
 Returns a promise that resolves with the number of active players.
 
-The **first parameter** is optional and is the name of the story that the number of players should be retrieved for.
-If not specified, then the current story <ActionLink action="player.getCurrentStory()">current story</ActionLink> will be used.
+The **first parameter** is optional and is the name of the server that the number of players should be retrieved for.
+If not specified, then the current server <ActionLink action="player.getCurrentServer()">current server</ActionLink> will be used.
 
 #### Examples
 
-1. Get the number of players in the current story.
+1. Get the number of players in the current server.
 ```typescript
-const numberOfPlayers = await server.storyPlayerCount();
+const numberOfPlayers = await server.serverPlayerCount();
 
 player.toast("Number of Players: " + numberOfPlayers);
 ```
 
-2. Get the number of players in the `test` story.
+2. Get the number of players in the `test` server.
 ```typescript
-const numberOfPlayers = await server.storyPlayerCount('test');
+const numberOfPlayers = await server.serverPlayerCount('test');
 
 player.toast("Number of Players: " + numberOfPlayers);
 ```
@@ -3713,7 +3718,7 @@ player.toast("Number of Players: " + numberOfPlayers);
 ### `server.stories()`
 
 Gets the list of stories that are stored on the server.
-Returns a promise that resolves with the list of story names.
+Returns a promise that resolves with the list of server names.
 
 #### Examples
 
@@ -3724,7 +3729,7 @@ const stories = await server.stories();
 player.toast("Stories " + stories.join(','));
 ```
 
-### `server.storyStatuses()`
+### `server.serverStatuses()`
 
 Gets the list of stories that are stored on the server along with the last time that they were updated.
 Returns a promise that resolves with the list of stories.
@@ -3735,14 +3740,14 @@ The resolved list is sorted by the most recently updated first and the least rec
 
 1. Get the list of stories on the server along with their status.
 ```typescript
-const stories = await server.storyStatuses();
+const stories = await server.serverStatuses();
 
 player.toast("Stories " + getJSON(stories));
 ```
 
 ### `server.players()`
 
-Gets the list of player IDs that are connected to the current story.
+Gets the list of player IDs that are connected to the current server.
 Returns a promise that resolves with the list of player IDs.
 
 The resolved list will always have at least one value that represents the current player.
@@ -4189,11 +4194,11 @@ player.toast(hash);
 Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
 Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
 
-HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular password.
+HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.
 
 Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
 
-The **first parameter** is the password that should be used to create the HMAC.
+The **first parameter** is the secret key that should be used to create the HMAC.
 
 The **other parameters** are the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
 
@@ -4218,11 +4223,11 @@ player.toast(hash);
 Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-512](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
 Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
 
-HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular password.
+HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.
 
 Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
 
-The **first parameter** is the password that should be used to create the HMAC.
+The **first parameter** is the secret key that should be used to create the HMAC.
 
 The **other parameters** are the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
 
@@ -4242,25 +4247,25 @@ const hash = crypto.hmacSha512("key", {
 player.toast(hash);
 ```
 
-### `crypto.encrypt(password, data)`
+### `crypto.encrypt(key, data)`
 
-[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given password and returns the result.
+[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given secret key (also commonly known as a password) and returns the result.
 
-Use the <ActionLink action='crypto.decrypt(password, data)'/> function to decrypt the data.
+Use the <ActionLink action='crypto.decrypt(key, data)'/> function to decrypt the data.
 
-_Always use a strong and unique password._ Use a password manager such as LastPass or 1Password to help you create and keep track of them.
+_Always use a strong and unique secret key._ Use a password manager such as LastPass or 1Password to help you create and keep track of them.
 
-Assuming a strong password, this method will return a string of encrypted data that is _confidential_ (unreadable without the password),
-_reliable_ (the encrypted data cannot be changed without making it unreadable), and _authentic_ (decryptability proves that the password was used to encrypt the data).
+Assuming a strong secret, this method will return a string of encrypted data that is _confidential_ (unreadable without the key),
+_reliable_ (the encrypted data cannot be changed without making it unreadable), and _authentic_ (decryptability proves that this specific key was used to encrypt the data).
 
-As a consequence, encrypting the same data with the same password will produce different results.
+As a consequence, encrypting the same data with the same key will produce different results.
 This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
 
 Encrypts the given data using an authenticated encryption mechanism 
 based on [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).
 Additionally uses [scrypt](https://en.wikipedia.org/wiki/Scrypt) for [password-based key derivation](https://en.wikipedia.org/wiki/Key_derivation_function). 
 
-The **first parameter** is the password that should be used to encrypt the data. Use a strong an unique password for maximum security.
+The **first parameter** is the key that should be used to encrypt the data. Use a strong an unique secret for maximum security.
 
 The **second parameter** is the string data that should be encrypted.
 
@@ -4272,15 +4277,15 @@ const encrypted = crypto.encrypt("key", "hello, world");
 player.toast(encrypted);
 ```
 
-### `crypto.decrypt(password, data)`
+### `crypto.decrypt(key, data)`
 
-[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given password and returns the result.
+[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given secret key (also commonly known as a password) and returns the result.
 
-Use the <ActionLink action='crypto.encrypt(password, data)'/> function to encrypt the data.
+Use the <ActionLink action='crypto.encrypt(key, data)'/> function to encrypt the data.
 
-The **first parameter** is the password that should be used to decrypt the data. This should be the same password that was used to encrypt the data.
+The **first parameter** is the key that should be used to decrypt the data. This should be the same key that was used to encrypt the data.
 
-The **second parameter** is the data from <ActionLink action='crypto.encrypt(password, data)'/> that should be decrypted.
+The **second parameter** is the data from <ActionLink action='crypto.encrypt(key, data)'/> that should be decrypted.
 
 #### Examples
 
@@ -4290,37 +4295,37 @@ const decrypted = crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iik
 player.toast(decrypted);
 ```
 
-### `crypto.keypair(password)`
+### `crypto.keypair(secret)`
 
 Creates a keypair that can be used to [digitially sign](https://en.wikipedia.org/wiki/Digital_signature) and verify data.
 
-Use <ActionLink action='crypto.sign(keypair, password, data)'/> and <ActionLink action='crypto.verify(keypair, signature, data)'/> to sign and verify the data.
+Use <ActionLink action='crypto.sign(keypair, secret, data)'/> and <ActionLink action='crypto.verify(keypair, signature, data)'/> to sign and verify the data.
 
 Keypairs are made up of a private key and a public key.
 The private key is a special value that can be used to create digital signatures and
 the public key is a related value that can be used to verify that a digitital signature was created by the private key.
 
-The private key is called "private" because it is encrypted using the given password
+The private key is called "private" because it is encrypted using the given secret
 while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
 
 Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
 they have access to it.
 
-The **first parameter** is the password that should be used to encrypt the private key of the keypair.
+The **first parameter** is the secret that should be used to encrypt the private key of the keypair.
 
 #### Examples:
 
 1. Create a keypair and toast it.
 ```typescript
-const keypair = crypto.keypair("password");
+const keypair = crypto.keypair("my secret");
 player.toast(keypair);
 ```
 
-### `crypt.sign(keypair, password, data)`
+### `crypt.sign(keypair, secret, data)`
 
-Calculates the digital signature for the given data using the given keypair and password.
+Calculates the digital signature for the given data using the given keypair and secret (also commonly known as a password).
 
-Use <ActionLink action='crypto.keypair(password)'/> to create a keypair that can be used to create signatures.
+Use <ActionLink action='crypto.keypair(secret)'/> to create a keypair that can be used to create signatures.
 
 Use <ActionLink action='crypto.verify(keypair, signature, data)'/> to validate signatures.
 
@@ -4332,13 +4337,13 @@ If we can encrypt some data such that only the public key of a keypair can decry
 the data was encrypted (i.e. signed) by the corresponding private key.
 
 And since the public key is available to everyone but the private
-key is only usable when you have the password, we can use this to prove that a particular piece of data was signed by whoever knows the password.
+key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.
 
 Note that because of how digital signatures work, signing the same data with the same keypair will produce the same signature.
 
 The **first parameter** is the keypair that should be used to sign the data.
 
-The **second parameter** is the password that was used to encrypt the private key of the keypair.
+The **second parameter** is the secret that was used to encrypt the private key of the keypair.
 
 The **third parameter** is the string data that should be signed.
 
@@ -4347,9 +4352,9 @@ The **third parameter** is the string data that should be signed.
 1. Create a signature for the string `"hello"`.
 ```typescript
 // Returned from crypto.keypair()
-const keypair = "vK1.qaG7S8rjXL5G03lbCwMsYybi/M6xFHEo6TDpofyx2Uc=.djEuRWp5TGZjRVNmTXNGZ2Q4SXArcjRSbXNVRXdTK2ZzK2wuZHhNM0RiM2VPNWgwNk5FQitVVW91YStWS1RyRkVLSzEuTkVjZDZtd0hGNDltT0hGWC9OODQxb2JqbWs0QU1yNndTWWxsSGlMS0M1UEs4ZW9vem83WVFieUxVcGJJcW4vcUZDbTVWZWhpdmRteHF0enlmQjNEeEQraklRVFRKcU1aaFpkYkZtdFFnZ2M9";
+const keypair = "vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MHFzMTBFMXRHamR1ZFhqTmRTV3AycjVyZUsudzFjSWZWVUFQVUdqK3hTM000NUduYUlNQ094SUhCTUEuanYrZEQwNVJFVGo3UzRPSklQQUkxc3U0anZjUmxrTEM2OW1BajkyMkxxdTFZd2sxNzV5QW9Dc3gwU3RENlQ0cmtNTVk4b2Zna2JRVTIrQmp5OUIrTTJsaFI2ajcyb0lJdmdSWkRXRU9lZE09";
 
-const signature = crypto.sign(keypair, "password", "hello");
+const signature = crypto.sign(keypair, "my secret", "hello");
 player.toast(signature);
 ```
 
@@ -4358,33 +4363,33 @@ player.toast(signature);
 Validates that the given signature was created by the given keypair for the given data.
 Returns true if the signature is valid. Returns false otherwise.
 
-Use <ActionLink action='crypto.keypair(password)'/> to create a keypair that can be used to create signatures.
+Use <ActionLink action='crypto.keypair(secret)'/> to create a keypair that can be used to create signatures.
 
-Use <ActionLink action='crypto.sign(keypair, password, data)'/> to create signatures.
+Use <ActionLink action='crypto.sign(keypair, secret, data)'/> to create signatures.
 
 The **first parameter** is the keypair that was used to create the signature.
 
-The **second parameter** is the signature that was returned from <ActionLink action='crypto.sign(keypair, password, data)'/>.
+The **second parameter** is the signature that was returned from <ActionLink action='crypto.sign(keypair, secret, data)'/>.
 
-The **third parameter** is the data that was used in the call to <ActionLink action='crypto.sign(keypair, password, data)'/>.
+The **third parameter** is the data that was used in the call to <ActionLink action='crypto.sign(keypair, secret, data)'/>.
 
 #### Examples:
 
 1. Validate a signature.
 ```typescript
 // Returned from crypto.keypair()
-const keypair = "vK1.qaG7S8rjXL5G03lbCwMsYybi/M6xFHEo6TDpofyx2Uc=.djEuRWp5TGZjRVNmTXNGZ2Q4SXArcjRSbXNVRXdTK2ZzK2wuZHhNM0RiM2VPNWgwNk5FQitVVW91YStWS1RyRkVLSzEuTkVjZDZtd0hGNDltT0hGWC9OODQxb2JqbWs0QU1yNndTWWxsSGlMS0M1UEs4ZW9vem83WVFieUxVcGJJcW4vcUZDbTVWZWhpdmRteHF0enlmQjNEeEQraklRVFRKcU1aaFpkYkZtdFFnZ2M9";
+const keypair = "vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MHFzMTBFMXRHamR1ZFhqTmRTV3AycjVyZUsudzFjSWZWVUFQVUdqK3hTM000NUduYUlNQ094SUhCTUEuanYrZEQwNVJFVGo3UzRPSklQQUkxc3U0anZjUmxrTEM2OW1BajkyMkxxdTFZd2sxNzV5QW9Dc3gwU3RENlQ0cmtNTVk4b2Zna2JRVTIrQmp5OUIrTTJsaFI2ajcyb0lJdmdSWkRXRU9lZE09";
 
 // Returned from crypto.sign()
-const signature = "vS1./su0SXu8r9PvsVgELmKPCdfYr9GlLCChAfITsqt40PXEr74H/MMwcO5oaZCLXtZHOiSy9AHZiRYqLPFPiaRkDg==";
+const signature = "vS1.uF93ErJBhdI/vqRF2XD2zgRAO96vKc9mx8crn6Kasijmx92px36B/alLGluU22tgCav/nNQEHdV2zZoHPgy7Dg==";
 
 const valid = crypto.verify(keypair, signature, "hello");
 player.toast(valid);
 ```
 
-### `crypto.createCertificate(certificate, password, keypair)`
+### `crypto.createCertificate(certificate, secret, keypair)`
 
-Creates a new certified bot (also known as a certificate) from the given keypair that is signed by the given certified bot using the given password.
+Creates a new certified bot (also known as a certificate) from the given keypair that is signed by the given certified bot using the given secret (also commonly known as a password).
 Returns a promise that resolves with the new bot.
 
 Certificates are useful for creating signatures for tag values that CasualOS is aware of and will validate for you.
@@ -4405,20 +4410,20 @@ In CasualOS, there are two types of certificates:
 2. Non-root certificates.
 
 _Root certificates_ are certificates that are both signee and signer. This means that the certificate used its own keypair to create the signature.
-As such, the validity of the certificate cannot be checked apart from simply trusting it. Only one root certificate is allowed per story on a first-come first-serve basis.
-Once a root certificate is created for a story, another cannot be created.
+As such, the validity of the certificate cannot be checked apart from simply trusting it. Only one root certificate is allowed per server on a first-come first-serve basis.
+Once a root certificate is created for a server, another cannot be created.
 
 _Non-root certificates_ are certificates that are signed by another certificate. This means that another certificate's keypair was used to create the signature.
 As such, the validity of the certificate can be checked by following the chain of trust back to the root certificate.
-If the chain does not end at the root certificate for the story, then the certificate is invalid and any signatures created by it will also be invalid.
+If the chain does not end at the root certificate for the server, then the certificate is invalid and any signatures created by it will also be invalid.
 
-Use <ActionLink action='crypto.keypair(password)'/> to create a keypair that can be used to create signatures.
+Use <ActionLink action='crypto.keypair(secret)'/> to create a keypair that can be used to create signatures.
 
-Use <ActionLink action='crypto.signTag(certificate, password, bot, tag)'/> to create signatures for a certificate.
+Use <ActionLink action='crypto.signTag(certificate, secret, bot, tag)'/> to create signatures for a certificate.
 
 The **first parameter** is the certified bot that should be used to sign the new certificate. If given null, then the new bot will be self-signed.
 
-The **second parameter** is the password that should be used to decrypt the private key. If the first parameter is null, then this should be the password for the keypair.
+The **second parameter** is the secret that should be used to decrypt the private key. If the first parameter is null, then this should be the secret for the keypair.
 
 The **third parameter** is the keypair that the new certificate should have.
 
@@ -4426,8 +4431,8 @@ The **third parameter** is the keypair that the new certificate should have.
 
 1. Create a root certificate and toast the Bot ID:
 ```typescript
-const keypair = await crypto.keypair('passwordForRootCert');
-const cert = await crypto.createCertificate(null, 'passwordForRootCert', keypair);
+const keypair = await crypto.keypair('secretForRootCert');
+const cert = await crypto.createCertificate(null, 'secretForRootCert', keypair);
 
 player.toast(getID(cert));
 ```
@@ -4436,28 +4441,28 @@ player.toast(getID(cert));
 ```typescript
 const rootKeypair = getBot('id', rootCertID);
 
-const nonRootKeypair = await crypto.keypair('passwordForNonRootCert');
-const nonRoot = await crypto.createCertificate(rootCert, 'passwordForRootCert', nonRootKeypair);
+const nonRootKeypair = await crypto.keypair('secretForNonRootCert');
+const nonRoot = await crypto.createCertificate(rootCert, 'secretForRootCert', nonRootKeypair);
 
 player.toast(getID(nonRoot));
 ```
 
-### `crypto.signTag(certificate, password, bot, tag)`
+### `crypto.signTag(certificate, secret, bot, tag)`
 
-Creates a signature for the given bot, tag, and current value using the given certificate and password.
+Creates a signature for the given bot, tag, and current value using the given certificate and secret.
 Returns a promise that resolves once the tag value has been signed.
 
 When a signature is created for a tag value, the value is considered valid until it is changed or the certificate is revoked.
 
 The **first parameter** is the certificate bot that should be used to create the signature.
 
-The **second parameter** is the password used to decrypt the private key of the certificate.
+The **second parameter** is the secret used to decrypt the private key of the certificate.
 
 The **third parameter** is the bot whose tag value should be signed.
 
 The **fourth parameter** is the tag whose value should be signed.
 
-Use <ActionLink action='crypto.createCertificate(certificate, password, keypair)'/> to create certificates that can be used with this function.
+Use <ActionLink action='crypto.createCertificate(certificate, secret, keypair)'/> to create certificates that can be used with this function.
 
 Use <ActionLink action='crypto.verifyTag(bot, tag)'/> to verify that a tag has a valid signature.
 
@@ -4466,7 +4471,7 @@ Use <ActionLink action='crypto.verifyTag(bot, tag)'/> to verify that a tag has a
 1. Sign the `@onClick` script on a bot.
 ```typescript
 const cert = getBot('id', certID);
-await crypto.signTag(cert, 'passwordForCert', bot, 'onClick');
+await crypto.signTag(cert, 'secretForCert', bot, 'onClick');
 ```
 
 ### `crypto.verifyTag(bot, tag)`
@@ -4491,10 +4496,10 @@ if (valid) {
 }
 ```
 
-### `crypto.revokeCertificate(certificate, password, signer?)`
+### `crypto.revokeCertificate(certificate, secret, signer?)`
 
 Revokes the given certificate and any signatures that it has created.
-In effect, this deletes the certificate bot from the story.
+In effect, this deletes the certificate bot from the server.
 Additionally, any tags signed with the given certificate will no longer be verified.
 
 Returns a promise that resolves when the certificate has been revoked.
@@ -4504,9 +4509,9 @@ or an ancestor of the original certificate. This record is then stored in the sh
 
 The **first parameter** is the certificate that should be revoked.
 
-The **second parameter** is the password that should be used to decrypt the corresponding certificate's private key.
-If the signer parameter is specified, then this is the password for the signer certificate.
-If the signer parameter is omitted, then this is the password for the certificate that is being revoked.
+The **second parameter** is the secret that should be used to decrypt the corresponding certificate's private key.
+If the signer parameter is specified, then this is the secret for the signer certificate.
+If the signer parameter is omitted, then this is the secret for the certificate that is being revoked.
 
 The **third parameter** is optional and is the certificate that should be used to perform the revocation process.
 If not specified, then the revocation will be signed by the revoked certificate (self-signed revocation).
@@ -4518,7 +4523,7 @@ Note that any certificate that is specified must either be the original certific
 1. Revoke a certificate with itself.
 ```typescript
 const cert = getBot('id', certificateId);
-await crypto.revokeCertificate(cert, 'passwordForCert');
+await crypto.revokeCertificate(cert, 'secretForCert');
 
 player.toast('Certificate revoked!');
 ```
@@ -4528,7 +4533,7 @@ player.toast('Certificate revoked!');
 const certToRevoke = getBot('id', certToRevokeId);
 const signingCert = getBot('id', signingCertId);
 
-await crypto.revokeCertificate(certToRevoke, 'passwordForSigningCert', signingCert);
+await crypto.revokeCertificate(certToRevoke, 'secretForSigningCert', signingCert);
 
 player.toast('Certificate revoked!');
 ```

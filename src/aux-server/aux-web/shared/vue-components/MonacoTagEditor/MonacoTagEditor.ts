@@ -11,6 +11,9 @@ import {
     hasValue,
     getTagValueForSpace,
     getUpdateForTagAndSpace,
+    DNA_TAG_PREFIX,
+    parseScriptSafe,
+    parseFormulaSafe,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike, Subscription } from 'rxjs';
@@ -231,8 +234,13 @@ export default class MonacoTagEditor extends Vue {
             currentValue = '';
         }
         let final = null as string;
+        if (this.isFormula) {
+            final = parseFormulaSafe(currentValue);
+        } else if (this.isScript) {
+            final = parseScriptSafe(currentValue);
+        }
         if (this.isScript || this.isFormula) {
-            final = currentValue.slice(1);
+            final = currentValue.slice(DNA_TAG_PREFIX.length);
         }
         if (final !== null) {
             this._simulation.helper.updateBot(
@@ -252,7 +260,7 @@ export default class MonacoTagEditor extends Vue {
         }
         let final = null as string;
         if (this.isFormula) {
-            final = '@' + currentValue.slice(1);
+            final = '@' + parseFormulaSafe(currentValue);
         } else if (!this.isScript) {
             final = '@' + currentValue;
         }

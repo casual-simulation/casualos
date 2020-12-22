@@ -4,13 +4,13 @@ import values from 'lodash/values';
 
 export class MemoryBotClient implements BotClient {
     stories: {
-        [story: string]: BotsState;
+        [server: string]: BotsState;
     } = {};
 
-    async addBots(story: string, added: Bot[]): Promise<void> {
-        let uni = this.stories[story];
+    async addBots(server: string, added: Bot[]): Promise<void> {
+        let uni = this.stories[server];
         if (!uni) {
-            uni = this.stories[story] = {};
+            uni = this.stories[server] = {};
         }
 
         for (let bot of added) {
@@ -18,18 +18,18 @@ export class MemoryBotClient implements BotClient {
         }
     }
 
-    async clearBots(story: string) {
-        this.stories[story] = {};
+    async clearBots(server: string) {
+        this.stories[server] = {};
     }
 
-    async lookupBots(story: string, tags: TagFilter[]): Promise<Bot[]> {
-        let uni = this.stories[story];
+    async lookupBots(server: string, tags: TagFilter[]): Promise<Bot[]> {
+        let uni = this.stories[server];
         if (!uni) {
             return [];
         }
 
-        return values(uni).filter(b =>
-            tags.every(t => b.tags[t.tag] === t.value)
+        return values(uni).filter((b) =>
+            tags.every((t) => b.tags[t.tag] === t.value)
         );
     }
 }

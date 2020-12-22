@@ -24,7 +24,7 @@ describe('AuxPartitionRealtimeEditModeProvider', () => {
             'history',
             'custom',
             'certified',
-        ])('%s', space => {
+        ])('%s', (space) => {
             it('should return the edit mode for the given space', () => {
                 partitions[space] = createMemoryPartition({
                     type: 'memory',
@@ -41,7 +41,7 @@ describe('AuxPartitionRealtimeEditModeProvider', () => {
                 partitions[space] = createBotClientPartition({
                     type: 'bot_client',
                     client: new MemoryBotClient(),
-                    story: 'story',
+                    server: 'server',
                 });
                 expect(subject.getEditMode(space)).toEqual(
                     RealtimeEditMode.Delayed

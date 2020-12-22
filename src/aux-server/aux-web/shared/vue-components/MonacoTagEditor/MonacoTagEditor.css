@@ -28,12 +28,12 @@
     cursor: row-resize;
 }
 
-.editor-breadcrumbs .bot-tag {
-    flex: 0 1;
+.editor-breadcrumbs .editor-tag {
+    flex: 1 1;
 }
 
-.editor-breadcrumbs .bot-space {
-    flex: 0 1;
+.editor-breadcrumbs .editor-tag .bot-space {
+    display: inline-block;
     background-color: #dedede;
     margin: 0 8px;
     padding: 0 8px;

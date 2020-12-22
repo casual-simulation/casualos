@@ -82,7 +82,7 @@ export class BotPartitionImpl implements BotPartition {
     }
 
     _client: BotClient;
-    _story: string;
+    _server: string;
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._onBotsAdded.pipe(startWith(getActiveObjects(this.state)));
@@ -123,7 +123,7 @@ export class BotPartitionImpl implements BotPartition {
         config: BotPartitionConfig | SearchPartitionClientConfig
     ) {
         this.private = hasValue(config.private) ? config.private : true;
-        this._story = config.story;
+        this._server = config.server;
         this._client = client;
         this.state = {};
     }
@@ -191,12 +191,12 @@ export class BotPartitionImpl implements BotPartition {
         }
 
         if (added.length > 0) {
-            this._client.addBots(this._story, added);
+            this._client.addBots(this._server, added);
         }
     }
 
     private async _loadBots(event: LoadBotsAction) {
-        const bots = await this._client.lookupBots(this._story, event.tags);
+        const bots = await this._client.lookupBots(this._server, event.tags);
         const sorted = sortBy(bots, (b) => b.id);
 
         if (bots.length > 0) {
@@ -231,7 +231,7 @@ export class BotPartitionImpl implements BotPartition {
     }
 
     private async _clearBots(event: ClearSpaceAction) {
-        await this._client.clearBots(this._story);
+        await this._client.clearBots(this._server);
 
         const ids = sortBy(values(this.state).map((b) => b.id));
         this.state = {};

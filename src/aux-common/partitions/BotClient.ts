@@ -5,22 +5,22 @@ import { Bot, TagFilter } from '../bots';
  */
 export interface BotClient {
     /**
-     * Adds the given bots to the given story.
-     * @param story The story the bots should be accociated with.
+     * Adds the given bots to the given server.
+     * @param server The server the bots should be accociated with.
      * @param added The bots that should be added.
      */
-    addBots(story: string, added: Bot[]): Promise<void>;
+    addBots(server: string, added: Bot[]): Promise<void>;
 
     /**
-     * Clears all the bots in the given story.
-     * @param story The story to clear.
+     * Clears all the bots in the given server.
+     * @param server The server to clear.
      */
-    clearBots(story: string): Promise<void>;
+    clearBots(server: string): Promise<void>;
 
     /**
-     * Searches for bots matching the given tags in the given story.
-     * @param story The story.
+     * Searches for bots matching the given tags in the given server.
+     * @param server The server.
      * @param tags The tags to search for.
      */
-    lookupBots(story: string, tags: TagFilter[]): Promise<Bot[]>;
+    lookupBots(server: string, tags: TagFilter[]): Promise<Bot[]>;
 }

@@ -111,7 +111,7 @@ export class PlayerSimulation3D extends Simulation3D {
         this._playerDimensionGroups = new Map();
 
         this._subs.push(
-            this.onDimensionGroupRemoved.subscribe(group => {
+            this.onDimensionGroupRemoved.subscribe((group) => {
                 this._playerDimensionGroups.delete(group.portalTag);
             })
         );
@@ -183,6 +183,11 @@ export class PlayerSimulation3D extends Simulation3D {
         return super._filterDimensionEvent(calc, event);
     }
 
+    protected _filterDimensionBot(bot: Bot): boolean {
+        // Only allow dimensions defined on the user's bot
+        return bot.id === this.simulation.helper.userId;
+    }
+
     protected _createDimensionGroup(
         calc: BotCalculationContext,
         bot: PrecalculatedBot,
@@ -222,7 +227,7 @@ export class PlayerSimulation3D extends Simulation3D {
             this._subs.push(
                 config,
                 config.onGridScaleUpdated.subscribe(() => {
-                    this.ensureUpdate(this.bots.map(b => b.bot.id));
+                    this.ensureUpdate(this.bots.map((b) => b.bot.id));
                 })
             );
         }

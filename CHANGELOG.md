@@ -1,5 +1,116 @@
 # CasualOS Changelog
 
+## V1.3.9
+
+#### Date: 12/21/2020
+
+### :boom: Breaking Changes
+
+-   Formulas have been removed and replaced with Mod tags.
+    -   Mod tags are tags that start with the DNA Emoji (🧬) and contain JSON data.
+    -   Because Mod tags are JSON data, they do not support programmatic computations.
+    -   We are making this change because while formulas are powerful, inprecise use of them can result in large slowdowns which is a bad user experience.
+    -   The tag data must be valid JSON, so that means using double-quotes `"` for strings and wrapping property names in double-quotes.
+        -   Before:
+            ```
+            =({ color: 'blue', number: 99, toggle: true })
+            ```
+            After:
+            ```
+            🧬{ "color": "blue", "number": 99, "toggle": true }
+            ```
+        -   Before:
+            ```
+            =([ 1 + 2 ])
+            ```
+            After:
+            ```
+            🧬3
+            ```
+-   Array-like values in tags are now considered strings.
+    -   Previously a value like `[1, 2, 3]` was parsed into an array automatically.
+    -   This was a little used feature and caused issues for people who simply wanted to store JSON data in a tag.
+    -   Now, a value like `[1, 2, 3]` will no longer be parsed and so will appear as the string: `"[1, 2, 3]"`.
+    -   If you want CasualOS to parse a tag value as an array, you can use the Mod tags mentioned above.
+
+## V1.3.8
+
+#### Date: 12/17/2020
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where selecting a color from a `player.showInput()` modal would not save the selected color.
+
+## V1.3.7
+
+#### Date: 12/17/2020
+
+### :boom: Breaking Changes
+
+-   "story" has been renamed to "server". Below is the list of tags, actions and listeners that have been changed:
+    -   `#story` -> `#server`.
+    -   `server.setupStory()` -> `server.setupServer()`
+    -   `server.restoreHistoryMarkToStory()` -> `server.restoreHistoryMarkToServer()`
+    -   `server.storyStatuses()` -> `server.serverStatuses()`
+    -   `server.storyPlayerCount()` -> `server.serverPlayerCount()`
+    -   `player.downloadStory()` -> `player.downloadServer()`
+    -   `player.loadStory()` -> `player.loadServer()`
+    -   `player.unloadStory()` -> `player.unloadServer()`
+    -   `player.getCurrentStory()` -> `player.getCurrentServer()`
+    -   `@onStoryAction` -> `@onServerAction`
+    -   `@onStoryStreaming` -> `@onServerStreaming`
+    -   `@onStoryStreamLost` -> `@onServerStreamLost`
+    -   `@onStorySubscribed` -> `@onServerSubscribed`
+    -   `@onStoryUnsubscribed` -> `@onServerUnsubscribed`
+
+## V1.3.6
+
+#### Date: 12/17/2020
+
+### :rocket: Improvements
+
+-   Added the ability to show a password input by using the `secret` type with `player.showInput()`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where some bots would not be added to the page portal when created in a big batch.
+-   Fixed an issue where the `player.showInput()` dialog would appear fullscreen on mobile devices and prevent people from exiting it.
+-   Fixed an issue where `@onChatTyping` would be triggered twice for each keystroke.
+
+## V1.3.5
+
+#### Date: 12/15/2020
+
+### :rocket: Improvements
+
+-   Changed `create()` to prevent creating bots that have no tags.
+    -   If a bot would be created with zero tags then an error will be thrown.
+-   Added a favicon.
+
+### :bug: Bug Fixes
+
+-   Changed the maximum WebSocket message size to 32KB from 128KB.
+    -   This will help ensure that we keep below the [AWS API Gateway maximum frame size of 32 KB](https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html).
+-   Fixed an issue where bots that only had a tag mask would not show up in the sheetPortal.
+
+## V1.3.4
+
+#### Date: 12/10/2020
+
+### :rocket: Improvements
+
+-   Added the `EXECUTE_LOADED_STORIES` environment variable to allow reducing server load due to story scripts.
+    -   Defaults to `true`.
+    -   Setting to `false` will disable all server-side story features except for webhooks and data portals.
+        -   This means that some capabilities like `server.setupStory()` will not work when `EXECUTE_LOADED_STORIES` is false.
+-   Added gzip compression for HTML, CSS, and JavaScript returned from the server.
+-   Improved how some heavy assets are precached so that they can be loaded quickly.
+-   Made the browser tab title use the story ID by default.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where some `.png` files would not load because they were bundled incorrectly.
+
 ## V1.3.3
 
 #### Date: 12/10/2020

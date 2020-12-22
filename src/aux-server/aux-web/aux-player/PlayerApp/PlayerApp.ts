@@ -15,15 +15,15 @@ import {
     ON_BARCODE_SCANNER_OPENED_ACTION_NAME,
     ON_BARCODE_SCANNER_CLOSED_ACTION_NAME,
     ON_BARCODE_SCANNED_ACTION_NAME,
-    ON_STORY_SUBSCRIBED_ACTION_NAME,
-    ON_STORY_STREAMING_ACTION_NAME,
-    ON_STORY_STREAM_LOST_ACTION_NAME,
-    ON_STORY_UNSUBSCRIBED_ACTION_NAME,
+    ON_SERVER_SUBSCRIBED_ACTION_NAME,
+    ON_SERVER_STREAMING_ACTION_NAME,
+    ON_SERVER_STREAM_LOST_ACTION_NAME,
+    ON_SERVER_UNSUBSCRIBED_ACTION_NAME,
     CameraType,
-    onStoryStreamingArg,
-    onStoryStreamLostArg,
-    onStorySubscribedArg,
-    onStoryUnsubscribedArg,
+    onServerStreamingArg,
+    onServerStreamLostArg,
+    onServerSubscribedArg,
+    onServerUnsubscribedArg,
     calculateStringListTagValue,
     asyncError,
     asyncResult,
@@ -50,7 +50,7 @@ import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/Au
 import { sendWebhook } from '../../../shared/WebhookUtils';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 import ClipboardModal from '../../shared/vue-components/ClipboardModal/ClipboardModal';
-import UploadStoryModal from '../../shared/vue-components/UploadStoryModal/UploadStoryModal';
+import UploadServerModal from '../../shared/vue-components/UploadServerModal/UploadServerModal';
 import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 import download from 'downloadjs';
 import BotChat from '../../shared/vue-components/BotChat/BotChat';
@@ -72,7 +72,7 @@ import merge from 'lodash/merge';
         barcode: VueBarcode,
         'barcode-stream': BarcodeScanner,
         'html-modal': HtmlModal,
-        'upload-story-modal': UploadStoryModal,
+        'upload-server-modal': UploadServerModal,
         'clipboard-modal': ClipboardModal,
         'bot-chat': BotChat,
         'bot-sheet': BotSheet,
@@ -222,7 +222,7 @@ export default class PlayerApp extends Vue {
         icon: string = null,
         group: string = null
     ) {
-        const index = findIndex(this.extraItems, i => i.id === id);
+        const index = findIndex(this.extraItems, (i) => i.id === id);
         if (index >= 0) {
             this.extraItems[index] = {
                 id: id,
@@ -248,7 +248,7 @@ export default class PlayerApp extends Vue {
      */
     @Provide()
     removeSidebarItem(id: string) {
-        const index = findIndex(this.extraItems, i => i.id === id);
+        const index = findIndex(this.extraItems, (i) => i.id === id);
         if (index >= 0) {
             this.extraItems.splice(index, 1);
         }
@@ -288,20 +288,22 @@ export default class PlayerApp extends Vue {
         this._simulationSubs = new Map();
         this.camera = null;
         this._subs.push(
-            appManager.updateAvailableObservable.subscribe(updateAvailable => {
-                if (updateAvailable) {
-                    this.updateAvailable = true;
-                    this._showUpdateAvailable();
+            appManager.updateAvailableObservable.subscribe(
+                (updateAvailable) => {
+                    if (updateAvailable) {
+                        this.updateAvailable = true;
+                        this._showUpdateAvailable();
+                    }
                 }
-            })
+            )
         );
 
         this._subs.push(
             appManager.simulationManager.simulationAdded
-                .pipe(tap(sim => this._simulationAdded(sim)))
+                .pipe(tap((sim) => this._simulationAdded(sim)))
                 .subscribe(),
             appManager.simulationManager.simulationRemoved
-                .pipe(tap(sim => this._simulationRemoved(sim)))
+                .pipe(tap((sim) => this._simulationRemoved(sim)))
                 .subscribe()
         );
 
@@ -325,8 +327,8 @@ export default class PlayerApp extends Vue {
         EventBus.$on('showConfirmDialog', this.onShowConfirmDialog);
         EventBus.$on('showAlertDialog', this.onShowAlertDialog);
 
-        window.addEventListener('beforeunload', e => {
-            if (this.simulations.some(sim => sim.lostConnection)) {
+        window.addEventListener('beforeunload', (e) => {
+            if (this.simulations.some((sim) => sim.lostConnection)) {
                 e.preventDefault();
                 e.returnValue =
                     'Are you sure you want to exit? Some changes may be lost.';
@@ -343,7 +345,7 @@ export default class PlayerApp extends Vue {
     }
 
     beforeDestroy() {
-        this._subs.forEach(s => s.unsubscribe());
+        this._subs.forEach((s) => s.unsubscribe());
     }
 
     async logout() {
@@ -382,16 +384,12 @@ export default class PlayerApp extends Vue {
         );
         if (simulation.connection.forcedOffline) {
             options.title = 'Enable online?';
-            options.body = `Allow ${
-                info.displayName
-            } to reconnect to the server?`;
+            options.body = `Allow ${info.displayName} to reconnect to the server?`;
             options.okText = 'Go Online';
             options.cancelText = 'Stay Offline';
         } else {
             options.title = 'Force offline mode?';
-            options.body = `Prevent ${
-                info.displayName
-            } from connecting to the server?`;
+            options.body = `Prevent ${info.displayName} from connecting to the server?`;
             options.okText = 'Go Offline';
             options.cancelText = 'Stay Online';
         }
@@ -431,33 +429,33 @@ export default class PlayerApp extends Vue {
 
     async finishAddSimulation(id: string) {
         console.log('[PlayerApp] Add simulation!');
-        this._addStoryToSimulation(appManager.simulationManager.primary, id);
+        this._addServerToSimulation(appManager.simulationManager.primary, id);
     }
 
-    private _addStoryToSimulation(sim: BrowserSimulation, id: string) {
+    private _addServerToSimulation(sim: BrowserSimulation, id: string) {
         const calc = sim.helper.createContext();
         const list = calculateStringListTagValue(
             calc,
             sim.helper.userBot,
-            'story',
+            'server',
             []
         );
         if (list.indexOf(id) < 0) {
             list.push(id);
             sim.helper.updateBot(sim.helper.userBot, {
                 tags: {
-                    story: list,
+                    server: list,
                 },
             });
         }
     }
 
-    private _removeStoryFromSimulation(sim: BrowserSimulation, id: string) {
+    private _removeServerFromSimulation(sim: BrowserSimulation, id: string) {
         const calc = sim.helper.createContext();
         const list = calculateStringListTagValue(
             calc,
             sim.helper.userBot,
-            'story',
+            'server',
             []
         );
         const index = list.indexOf(id);
@@ -465,7 +463,7 @@ export default class PlayerApp extends Vue {
             list.splice(index, 1);
             sim.helper.updateBot(sim.helper.userBot, {
                 tags: {
-                    story: list,
+                    server: list,
                 },
             });
         }
@@ -488,7 +486,7 @@ export default class PlayerApp extends Vue {
     }
 
     removeSimulationById(id: string) {
-        this._removeStoryFromSimulation(
+        this._removeServerFromSimulation(
             appManager.simulationManager.primary,
             id
         );
@@ -511,7 +509,7 @@ export default class PlayerApp extends Vue {
     }
 
     private _simulationAdded(simulation: BrowserSimulation) {
-        const index = this.simulations.findIndex(s => s.id === simulation.id);
+        const index = this.simulations.findIndex((s) => s.id === simulation.id);
         if (index >= 0) {
             return;
         }
@@ -520,7 +518,7 @@ export default class PlayerApp extends Vue {
         let info: SimulationInfo = createSimulationInfo(simulation);
 
         subs.push(
-            simulation.login.loginStateChanged.subscribe(state => {
+            simulation.login.loginStateChanged.subscribe((state) => {
                 this.loginState = state;
                 if (!state.authenticated) {
                     console.log(
@@ -557,7 +555,7 @@ export default class PlayerApp extends Vue {
                     }
                 }
             }),
-            simulation.localEvents.subscribe(async e => {
+            simulation.localEvents.subscribe(async (e) => {
                 if (e.type === 'show_toast') {
                     this.snackbar = {
                         message: e.message,
@@ -592,9 +590,9 @@ export default class PlayerApp extends Vue {
                             // automatically.
                         }
                     }
-                } else if (e.type === 'load_story') {
+                } else if (e.type === 'load_server') {
                     this.finishAddSimulation(e.id);
-                } else if (e.type === 'unload_story') {
+                } else if (e.type === 'unload_server') {
                     this.removeSimulationById(e.id);
                 } else if (e.type === 'super_shout') {
                     this._superAction(e.eventName, e.argument);
@@ -635,15 +633,15 @@ export default class PlayerApp extends Vue {
                 } else if (e.type === 'show_join_code') {
                     const player = simulation.helper.userBot;
                     const calc = simulation.helper.createContext();
-                    const story =
-                        e.story || calculateBotValue(calc, player, 'story');
+                    const server =
+                        e.server || calculateBotValue(calc, player, 'server');
                     const dimension =
                         e.dimension ||
                         calculateBotValue(calc, player, 'pagePortal');
                     const code = `${location.protocol}//${
                         location.host
-                    }?story=${encodeURIComponent(
-                        story
+                    }?server=${encodeURIComponent(
+                        server
                     )}&pagePortal=${encodeURIComponent(dimension)}`;
                     this._showQRCode(code);
                 } else if (e.type === 'request_fullscreen_mode') {
@@ -719,7 +717,7 @@ export default class PlayerApp extends Vue {
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(
-                connected => {
+                (connected) => {
                     if (!connected) {
                         info.online = false;
                         info.synced = false;
@@ -743,14 +741,14 @@ export default class PlayerApp extends Vue {
                 }
             ),
             simulation.connection.syncStateChanged.subscribe(
-                async connected => {
+                async (connected) => {
                     if (!connected) {
                         info.synced = false;
                         if (info.subscribed) {
                             info.lostConnection = true;
                             await this._superAction(
-                                ON_STORY_STREAM_LOST_ACTION_NAME,
-                                onStoryStreamLostArg(simulation.id)
+                                ON_SERVER_STREAM_LOST_ACTION_NAME,
+                                onServerStreamLostArg(simulation.id)
                             );
                         }
                     } else {
@@ -759,8 +757,8 @@ export default class PlayerApp extends Vue {
                         if (!info.subscribed) {
                             info.subscribed = true;
                             await this._superAction(
-                                ON_STORY_SUBSCRIBED_ACTION_NAME,
-                                onStorySubscribedArg(simulation.id)
+                                ON_SERVER_SUBSCRIBED_ACTION_NAME,
+                                onServerSubscribedArg(simulation.id)
                             );
 
                             for (let info of this.simulations) {
@@ -771,36 +769,38 @@ export default class PlayerApp extends Vue {
                                     continue;
                                 }
                                 await simulation.helper.action(
-                                    ON_STORY_SUBSCRIBED_ACTION_NAME,
+                                    ON_SERVER_SUBSCRIBED_ACTION_NAME,
                                     null,
-                                    onStorySubscribedArg(info.id)
+                                    onServerSubscribedArg(info.id)
                                 );
                             }
                         }
 
                         await this._superAction(
-                            ON_STORY_STREAMING_ACTION_NAME,
-                            onStoryStreamingArg(simulation.id)
+                            ON_SERVER_STREAMING_ACTION_NAME,
+                            onServerStreamingArg(simulation.id)
                         );
                     }
                 }
             ),
-            simulation.login.deviceChanged.subscribe(info => {
+            simulation.login.deviceChanged.subscribe((info) => {
                 this.loginInfo = info || this.loginInfo;
             }),
-            simulation.consoleMessages.subscribe(m => {
+            simulation.consoleMessages.subscribe((m) => {
                 recordMessage(m);
             }),
             new Subscription(async () => {
                 await this._superAction(
-                    ON_STORY_UNSUBSCRIBED_ACTION_NAME,
-                    onStoryUnsubscribedArg(simulation.id)
+                    ON_SERVER_UNSUBSCRIBED_ACTION_NAME,
+                    onServerUnsubscribedArg(simulation.id)
                 );
             })
         );
 
         this._simulationSubs.set(simulation, subs);
         this.simulations.push(info);
+
+        this.setTitleToID();
     }
 
     private _showQRCode(code: string) {
@@ -827,13 +827,7 @@ export default class PlayerApp extends Vue {
     }
 
     setTitleToID() {
-        let id: string = '...';
-
-        if (appManager.simulationManager.primary != null) {
-            id = appManager.simulationManager.primary.id;
-        }
-
-        //document.title = "AUX Player | " + id;
+        const id: string = appManager.simulationManager.primaryId || '...';
         document.title = id;
     }
 
@@ -857,14 +851,14 @@ export default class PlayerApp extends Vue {
         const subs = this._simulationSubs.get(simulation);
 
         if (subs) {
-            subs.forEach(s => {
+            subs.forEach((s) => {
                 s.unsubscribe();
             });
         }
 
         this._simulationSubs.delete(simulation);
 
-        const index = this.simulations.findIndex(s => s.id === simulation.id);
+        const index = this.simulations.findIndex((s) => s.id === simulation.id);
         if (index >= 0) {
             this.simulations.splice(index, 1);
         }
@@ -884,9 +878,7 @@ export default class PlayerApp extends Vue {
     private _showConnectionLost(info: SimulationInfo) {
         this.snackbar = {
             visible: true,
-            message: `Connection to ${
-                info.displayName
-            } lost. You are now working offline.`,
+            message: `Connection to ${info.displayName} lost. You are now working offline.`,
         };
     }
 
@@ -904,9 +896,7 @@ export default class PlayerApp extends Vue {
     private _showConnectionRegained(info: SimulationInfo) {
         this.snackbar = {
             visible: true,
-            message: `Connection to ${
-                info.displayName
-            } regained. You are connected to the channel.`,
+            message: `Connection to ${info.displayName} regained. You are connected to the channel.`,
         };
     }
 

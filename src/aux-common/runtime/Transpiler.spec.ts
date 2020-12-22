@@ -1,4 +1,5 @@
-import { Transpiler, anyArgument } from './Transpiler';
+import { DNA_TAG_PREFIX } from '..';
+import { Transpiler, anyArgument, replaceMacros } from './Transpiler';
 
 describe('Transpiler', () => {
     describe('transpile()', () => {
@@ -227,6 +228,21 @@ describe('Transpiler', () => {
             const transpiler = new Transpiler();
             const result = transpiler.transpile('import("test");');
             expect(result.trim()).toEqual('import("test");');
+        });
+    });
+
+    describe('replaceMacros()', () => {
+        it('should remove the 🧬 character from the front', () => {
+            expect(replaceMacros(`${DNA_TAG_PREFIX}${DNA_TAG_PREFIX}`)).toEqual(
+                '🧬'
+            );
+        });
+
+        it('should convert curly quotes to normal quotes', () => {
+            expect(replaceMacros('’')).toEqual("'");
+            expect(replaceMacros('‘')).toEqual("'");
+            expect(replaceMacros('”')).toEqual('"');
+            expect(replaceMacros('“')).toEqual('"');
         });
     });
 });

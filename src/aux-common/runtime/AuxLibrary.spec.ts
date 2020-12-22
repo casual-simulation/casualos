@@ -41,7 +41,7 @@ import {
     openConsole,
     checkout,
     playSound,
-    setupStory,
+    setupServer,
     shell,
     backupToGithub,
     backupAsDownload,
@@ -67,7 +67,7 @@ import {
     getStories,
     getPlayers,
     action,
-    getStoryStatuses,
+    getServerStatuses,
     exportGpioPin,
     unexportGpioPin,
     setGpioPin,
@@ -189,9 +189,20 @@ describe('AuxLibrary', () => {
         uuidMock.mockReset();
     });
 
-    const falsyCases = [['false', false], ['0', 0]];
-    const emptyCases = [['null', null], ['empty string', '']];
-    const numberCases = [['0', 0], ['1', 1], ['true', true], ['false', false]];
+    const falsyCases = [
+        ['false', false],
+        ['0', 0],
+    ];
+    const emptyCases = [
+        ['null', null],
+        ['empty string', ''],
+    ];
+    const numberCases = [
+        ['0', 0],
+        ['1', 1],
+        ['true', true],
+        ['false', false],
+    ];
     const trimEventCases = [
         ['parenthesis', 'sayHello()'],
         ['hashtag', '#sayHello'],
@@ -498,7 +509,10 @@ describe('AuxLibrary', () => {
             expect(bot).toEqual(bot1);
         });
 
-        const emptyCases = [['null', null], ['empty string', '']];
+        const emptyCases = [
+            ['null', null],
+            ['empty string', ''],
+        ];
 
         it.each(emptyCases)(
             'should return undefined if a %s tag is provided',
@@ -597,7 +611,7 @@ describe('AuxLibrary', () => {
                 it('should return a function that returns true when the function returns true', () => {
                     const filter = library.api.byTag(
                         'red',
-                        tag => typeof tag === 'number'
+                        (tag) => typeof tag === 'number'
                     );
 
                     bot1.tags.red = 123;
@@ -607,7 +621,7 @@ describe('AuxLibrary', () => {
                 it('should return a function that returns false when the function returns false', () => {
                     const filter = library.api.byTag(
                         'red',
-                        tag => typeof tag === 'number'
+                        (tag) => typeof tag === 'number'
                     );
 
                     bot1.tags.red = 'abc';
@@ -986,9 +1000,11 @@ describe('AuxLibrary', () => {
                 });
 
                 it('should not work when given a direction other than the supported ones', () => {
-                    const filter = library.api.neighboring(bot1, 'red', <any>(
-                        'wrong'
-                    ));
+                    const filter = library.api.neighboring(
+                        bot1,
+                        'red',
+                        <any>'wrong'
+                    );
 
                     expect(filter(bot2)).toEqual(false);
                     expect(filter(bot3)).toEqual(false);
@@ -1087,17 +1103,26 @@ describe('AuxLibrary', () => {
             });
 
             it('should return a function that returns true when any of the given functions return true', () => {
-                const filter = library.api.either(b => false, b => true);
+                const filter = library.api.either(
+                    (b) => false,
+                    (b) => true
+                );
                 expect(filter(bot1)).toEqual(true);
             });
 
             it('should return a function that returns false when all of the given functions return false', () => {
-                const filter = library.api.either(b => false, b => false);
+                const filter = library.api.either(
+                    (b) => false,
+                    (b) => false
+                );
                 expect(filter(bot1)).toEqual(false);
             });
 
             it('should return a function that doesnt have a sort function', () => {
-                const filter = library.api.either(b => false, b => true);
+                const filter = library.api.either(
+                    (b) => false,
+                    (b) => true
+                );
                 expect(typeof filter.sort).toEqual('undefined');
             });
         });
@@ -1114,7 +1139,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should return a function which negates the given function results', () => {
-                const filter = library.api.not(b => b.id === 'test1');
+                const filter = library.api.not((b) => b.id === 'test1');
 
                 expect(filter(bot1)).toEqual(false);
                 expect(filter(bot2)).toEqual(true);
@@ -1257,7 +1282,7 @@ describe('AuxLibrary', () => {
             bot3.tags.name = 'bob';
             const values = library.api.getBotTagValues(
                 '#name',
-                b => b === 'bob'
+                (b) => b === 'bob'
             );
 
             expect(values).toEqual(['bob', 'bob']);
@@ -1385,14 +1410,14 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([showJoinCode()]);
             });
 
-            it('should allow linking to a specific story and dimension', () => {
+            it('should allow linking to a specific server and dimension', () => {
                 const action = library.api.player.showJoinCode(
-                    'story',
+                    'server',
                     'dimension'
                 );
-                expect(action).toEqual(showJoinCode('story', 'dimension'));
+                expect(action).toEqual(showJoinCode('server', 'dimension'));
                 expect(context.actions).toEqual([
-                    showJoinCode('story', 'dimension'),
+                    showJoinCode('server', 'dimension'),
                 ]);
             });
         });
@@ -1642,7 +1667,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.downloadStory()', () => {
+        describe('player.downloadServer()', () => {
             let bot3: RuntimeBot;
             let player: RuntimeBot;
 
@@ -1651,7 +1676,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        story: 'channel',
+                        server: 'channel',
                     },
                     'tempLocal'
                 );
@@ -1659,8 +1684,8 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should emit a DownloadAction with the current state and story name', () => {
-                const action = library.api.player.downloadStory();
+            it('should emit a DownloadAction with the current state and server name', () => {
+                const action = library.api.player.downloadServer();
                 const expected = download(
                     JSON.stringify({
                         version: 1,
@@ -1685,7 +1710,7 @@ describe('AuxLibrary', () => {
                 const bot8 = createDummyRuntimeBot('test8', {}, 'admin');
                 addToContext(context, bot4, bot5, bot6, bot7, bot8);
 
-                const action = library.api.player.downloadStory();
+                const action = library.api.player.downloadServer();
                 const expected = download(
                     JSON.stringify({
                         version: 1,
@@ -1783,9 +1808,10 @@ describe('AuxLibrary', () => {
             });
 
             it('should include the given format', () => {
-                const action = library.api.player.showBarcode('hello', <any>(
-                    'format'
-                ));
+                const action = library.api.player.showBarcode(
+                    'hello',
+                    <any>'format'
+                );
                 expect(action).toEqual(
                     showBarcode(true, 'hello', <any>'format')
                 );
@@ -1803,17 +1829,17 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.loadStory()', () => {
-            it('should emit a LoadStoryAction', () => {
-                const action = library.api.player.loadStory('abc');
+        describe('player.loadServer()', () => {
+            it('should emit a LoadServerAction', () => {
+                const action = library.api.player.loadServer('abc');
                 expect(action).toEqual(loadSimulation('abc'));
                 expect(context.actions).toEqual([loadSimulation('abc')]);
             });
         });
 
-        describe('player.unloadStory()', () => {
-            it('should emit a UnloadStoryAction', () => {
-                const action = library.api.player.unloadStory('abc');
+        describe('player.unloadServer()', () => {
+            it('should emit a UnloadServerAction', () => {
+                const action = library.api.player.unloadServer('abc');
                 expect(action).toEqual(unloadSimulation('abc'));
                 expect(context.actions).toEqual([unloadSimulation('abc')]);
             });
@@ -1896,7 +1922,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        story: 'channel',
+                        server: 'channel',
                     },
                     'tempLocal'
                 );
@@ -1938,7 +1964,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        story: 'channel',
+                        server: 'channel',
                     },
                     'tempLocal'
                 );
@@ -1967,7 +1993,7 @@ describe('AuxLibrary', () => {
             );
         });
 
-        describe('player.getCurrentStory()', () => {
+        describe('player.getCurrentServer()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
@@ -1976,22 +2002,22 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return story', () => {
-                player.tags.story = 'story';
-                const result = library.api.player.getCurrentStory();
-                expect(result).toEqual('story');
+            it('should return server', () => {
+                player.tags.server = 'server';
+                const result = library.api.player.getCurrentServer();
+                expect(result).toEqual('server');
             });
 
-            it('should return undefined when story is not set', () => {
-                const result = library.api.player.getCurrentStory();
+            it('should return undefined when server is not set', () => {
+                const result = library.api.player.getCurrentServer();
                 expect(result).toBeUndefined();
             });
 
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.story = given;
-                    const result = library.api.player.getCurrentStory();
+                    player.tags.server = given;
+                    const result = library.api.player.getCurrentServer();
                     expect(result).toEqual(expected);
                 }
             );
@@ -2123,11 +2149,11 @@ describe('AuxLibrary', () => {
                 expect(result).toEqual(0);
             });
 
-            const portalCases = [...KNOWN_PORTALS.map(p => [p])];
+            const portalCases = [...KNOWN_PORTALS.map((p) => [p])];
 
             it.each(portalCases)(
                 'should return 1 when the dimension is in the %s portal',
-                portal => {
+                (portal) => {
                     player.tags[portal] = 'dimension';
                     const result = library.api.player.getDimensionalDepth(
                         'dimension'
@@ -2294,14 +2320,14 @@ describe('AuxLibrary', () => {
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingStory: 'channel2',
+                    processingServer: 'channel2',
                 });
                 const expected = checkout({
                     publishableKey: 'key',
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingStory: 'channel2',
+                    processingServer: 'channel2',
                 });
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -2416,16 +2442,16 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.setupStory()', () => {
+        describe('server.setupServer()', () => {
             it('should send a SetupChannelAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
                 bot1.tags.abc = true;
-                const action: any = library.api.server.setupStory(
+                const action: any = library.api.server.setupServer(
                     'channel',
                     bot1
                 );
                 const expected = remote(
-                    setupStory('channel', createBot(bot1.id, bot1.tags)),
+                    setupServer('channel', createBot(bot1.id, bot1.tags)),
                     undefined,
                     undefined,
                     'task1'
@@ -2436,7 +2462,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.setupStory('channel');
+                library.api.server.setupServer('channel');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -2445,11 +2471,11 @@ describe('AuxLibrary', () => {
             it('should convert the given bot to a copiable value', () => {
                 uuidMock.mockReturnValueOnce('task1');
                 bot1.tags.abc = true;
-                const action: any = library.api.server.setupStory('channel', {
+                const action: any = library.api.server.setupServer('channel', {
                     botTag: bot1,
                 });
                 const expected = remote(
-                    setupStory('channel', {
+                    setupServer('channel', {
                         botTag: createBot(bot1.id, bot1.tags),
                     }),
                     undefined,
@@ -3781,15 +3807,15 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.restoreHistoryMarkToStory()', () => {
+        describe('server.restoreHistoryMarkToServer()', () => {
             it('should emit a restore_history_mark event', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.restoreHistoryMarkToStory(
+                const action: any = library.api.server.restoreHistoryMarkToServer(
                     'mark',
-                    'story'
+                    'server'
                 );
                 const expected = remote(
-                    restoreHistoryMark('mark', 'story'),
+                    restoreHistoryMark('mark', 'server'),
                     undefined,
                     undefined,
                     'task1'
@@ -3800,7 +3826,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.restoreHistoryMarkToStory('mark', 'story');
+                library.api.server.restoreHistoryMarkToServer('mark', 'server');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -3920,14 +3946,14 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.storyPlayerCount()', () => {
+        describe('server.serverPlayerCount()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        story: 'channel',
+                        server: 'channel',
                     },
                     'tempLocal'
                 );
@@ -3937,7 +3963,7 @@ describe('AuxLibrary', () => {
 
             it('should emit a remote action with a get_player_count action', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const action: any = library.api.server.storyPlayerCount();
+                const action: any = library.api.server.serverPlayerCount();
                 const expected = remote(
                     getPlayerCount('channel'),
                     undefined,
@@ -3949,9 +3975,11 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should accept a custom story ID', () => {
+            it('should accept a custom server ID', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const action: any = library.api.server.storyPlayerCount('test');
+                const action: any = library.api.server.serverPlayerCount(
+                    'test'
+                );
                 const expected = remote(
                     getPlayerCount('test'),
                     undefined,
@@ -3965,7 +3993,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.storyPlayerCount('test');
+                library.api.server.serverPlayerCount('test');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -4020,12 +4048,12 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.storyStatuses()', () => {
-            it('should emit a remote action with a get_story_statuses action', () => {
+        describe('server.serverStatuses()', () => {
+            it('should emit a remote action with a get_server_statuses action', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const action: any = library.api.server.storyStatuses();
+                const action: any = library.api.server.serverStatuses();
                 const expected = remote(
-                    getStoryStatuses(),
+                    getServerStatuses(),
                     undefined,
                     undefined,
                     'uuid'
@@ -4037,7 +4065,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.storyStatuses();
+                library.api.server.serverStatuses();
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -6226,29 +6254,87 @@ describe('AuxLibrary', () => {
             expect(otherPart).toBeCalledTimes(1);
         });
 
+        it('should ignore null mods', () => {
+            uuidMock.mockReturnValue('uuid');
+            const bot = library.api.create(null, {
+                abc: 'def',
+            });
+
+            expect(bot).toEqual(
+                createDummyRuntimeBot('uuid', {
+                    abc: 'def',
+                })
+            );
+        });
+
+        it('should throw an error if creating a bot with no tags', () => {
+            uuidMock.mockReturnValue('uuid');
+            expect(() => {
+                library.api.create({});
+            }).toThrow();
+        });
+
+        it('should be able to create a bot that has tags but is given a mod with no tags', () => {
+            uuidMock.mockReturnValue('uuid');
+            const bot = library.api.create(
+                {
+                    abc: 'def',
+                },
+                {}
+            );
+            expect(bot).toEqual(
+                createDummyRuntimeBot('uuid', {
+                    abc: 'def',
+                })
+            );
+        });
+
+        it('should throw an error if given an array with a mod that has no tags', () => {
+            uuidMock.mockReturnValue('uuid');
+            expect(() => {
+                library.api.create([{}]);
+            }).toThrow();
+        });
+
         describe('space', () => {
             it('should set the space of the bot', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ space: 'local' });
-                expect(bot).toEqual(createDummyRuntimeBot('uuid', {}, 'local'));
+                const bot = library.api.create({ space: 'local', abc: 'def' });
+                expect(bot).toEqual(
+                    createDummyRuntimeBot('uuid', { abc: 'def' }, 'local')
+                );
             });
 
             it('should use the last space', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const bot = library.api.create(
                     { space: 'tempLocal' },
-                    { space: 'local' }
+                    { space: 'local' },
+                    { abc: 'def' }
                 );
-                expect(bot).toEqual(createDummyRuntimeBot('uuid', {}, 'local'));
+                expect(bot).toEqual(
+                    createDummyRuntimeBot(
+                        'uuid',
+                        {
+                            abc: 'def',
+                        },
+                        'local'
+                    )
+                );
             });
 
             it('should use the last space even if it is null', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const bot = library.api.create(
                     { space: 'tempLocal' },
-                    { space: null }
+                    { space: null },
+                    { abc: 'def' }
                 );
-                expect(bot).toEqual(createDummyRuntimeBot('uuid'));
+                expect(bot).toEqual(
+                    createDummyRuntimeBot('uuid', {
+                        abc: 'def',
+                    })
+                );
             });
 
             const normalCases = [
@@ -6261,8 +6347,15 @@ describe('AuxLibrary', () => {
                 'should treat %s as the default type',
                 (desc, value) => {
                     uuidMock.mockReturnValueOnce('uuid');
-                    const bot = library.api.create({ space: value });
-                    expect(bot).toEqual(createDummyRuntimeBot('uuid'));
+                    const bot = library.api.create({
+                        space: value,
+                        abc: 'def',
+                    });
+                    expect(bot).toEqual(
+                        createDummyRuntimeBot('uuid', {
+                            abc: 'def',
+                        })
+                    );
                 }
             );
         });
@@ -6291,8 +6384,12 @@ describe('AuxLibrary', () => {
 
             it('should be able to set the creator to null', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ creator: null });
-                expect(bot).toEqual(createDummyRuntimeBot('uuid'));
+                const bot = library.api.create({ creator: null, abc: 'def' });
+                expect(bot).toEqual(
+                    createDummyRuntimeBot('uuid', {
+                        abc: 'def',
+                    })
+                );
             });
 
             it('should set creator to null if it references a bot in a different space', () => {
@@ -6300,14 +6397,30 @@ describe('AuxLibrary', () => {
                 const bot = library.api.create({
                     creator: bot1.id,
                     space: 'local',
+                    abc: 'def',
                 });
-                expect(bot).toEqual(createDummyRuntimeBot('uuid', {}, 'local'));
+                expect(bot).toEqual(
+                    createDummyRuntimeBot(
+                        'uuid',
+                        {
+                            abc: 'def',
+                        },
+                        'local'
+                    )
+                );
             });
 
             it('should set creator to null if it references a bot that does not exist', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ creator: 'missing' });
-                expect(bot).toEqual(createDummyRuntimeBot('uuid'));
+                const bot = library.api.create({
+                    creator: 'missing',
+                    abc: 'def',
+                });
+                expect(bot).toEqual(
+                    createDummyRuntimeBot('uuid', {
+                        abc: 'def',
+                    })
+                );
             });
         });
     });
@@ -6399,7 +6512,9 @@ describe('AuxLibrary', () => {
 
         it('should be able to destroy a bot that was just created', () => {
             uuidMock.mockReturnValueOnce('uuid');
-            const newBot = library.api.create();
+            const newBot = library.api.create({
+                abc: 'def',
+            });
             library.api.destroy(newBot);
             expect(context.bots).not.toContain(newBot);
         });
@@ -6585,10 +6700,10 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to modify bots that are arguments', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(b3 => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn((b3) => {
                 b3.tags.hit1 = true;
             }));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(b3 => {
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn((b3) => {
                 b3.tags.hit2 = true;
             }));
 
@@ -6600,10 +6715,10 @@ describe('AuxLibrary', () => {
         });
 
         it('should handle bots nested in an object as an argument', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(arg => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn((arg) => {
                 arg.bot.tags.hit1 = true;
             }));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(arg => {
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn((arg) => {
                 arg.bot.tags.hit2 = true;
             }));
 

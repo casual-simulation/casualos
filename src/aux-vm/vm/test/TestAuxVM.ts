@@ -12,7 +12,6 @@ import {
     getActiveObjects,
     tagsOnBot,
     StateUpdatedEvent,
-    BotDependentInfo,
     AuxRuntime,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-common';
@@ -26,6 +25,7 @@ import union from 'lodash/union';
 import { AuxUser } from '../../AuxUser';
 import { StoredAux } from '../../StoredAux';
 import { ChannelActionResult } from '../../vm';
+import { BotStateUpdates } from '@casual-simulation/aux-common/aux-format-2';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -100,37 +100,38 @@ export class TestAuxVM implements AuxVM {
         this.events.push(...events);
 
         if (this.processEvents) {
-            let added = [];
-            let removed = [];
-            let updated = [];
+            let update: StateUpdatedEvent = {
+                state: {},
+                addedBots: [],
+                removedBots: [],
+                updatedBots: [],
+            };
 
             for (let event of events) {
                 if (event.type === 'add_bot') {
                     this.state[event.bot.id] = event.bot;
-                    added.push(event.bot);
+                    update.state[event.bot.id] = event.bot;
+                    update.addedBots.push(event.bot.id);
                 } else if (event.type === 'remove_bot') {
                     delete this.state[event.id];
-                    removed.push(event.id);
+                    update.state[event.id] = null;
+                    update.removedBots.push(event.id);
                 } else if (event.type === 'update_bot') {
                     this.state[event.id] = merge(
                         this.state[event.id],
                         event.update
                     );
-                    updated.push({
-                        bot: this.state[event.id],
-                        tags: Object.keys(event.update.tags),
-                    });
+                    update.state[event.id] = event.update;
+                    update.updatedBots.push(event.id);
                 }
             }
 
-            if (added.length > 0) {
-                this._stateUpdated.next(this._runtime.botsAdded(added));
-            }
-            if (removed.length > 0) {
-                this._stateUpdated.next(this._runtime.botsRemoved(removed));
-            }
-            if (updated.length > 0) {
-                this._stateUpdated.next(this._runtime.botsUpdated(updated));
+            if (
+                update.addedBots.length > 0 ||
+                update.removedBots.length > 0 ||
+                update.updatedBots.length > 0
+            ) {
+                this._stateUpdated.next(this._runtime.stateUpdated(update));
             }
         }
     }
@@ -155,10 +156,6 @@ export class TestAuxVM implements AuxVM {
             version: 1,
             state: {},
         };
-    }
-
-    async getReferences(tag: string): Promise<BotDependentInfo> {
-        return this._runtime.dependencies.getDependents(tag);
     }
 
     async getTags(): Promise<string[]> {

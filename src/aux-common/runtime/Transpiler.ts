@@ -50,7 +50,7 @@ export interface ObjectValueNode extends Acorn.Node {
 }
 
 const exJsGenerator = Object.assign({}, baseGenerator, {
-    ImportExpression: function(node: any, state: any) {
+    ImportExpression: function (node: any, state: any) {
         state.write('import(');
         this[node.source.type](node.source, state);
         state.write(')');
@@ -63,6 +63,40 @@ export interface TranspilerMacro {
 }
 
 /**
+ * The list of macros that the sandbox uses on the input code before transpiling it.
+ */
+const MACROS: TranspilerMacro[] = [
+    {
+        test: /^(?:\🧬)/g,
+        replacement: (val) => '',
+    },
+    {
+        test: /(?:[“”])/g,
+        replacement: (val) => '"',
+    },
+    {
+        test: /(?:[‘’])/g,
+        replacement: (val) => "'",
+    },
+];
+
+/**
+ * Replaces macros in the given text.
+ * @param text The text that the macros should be replaced in.
+ */
+export function replaceMacros(text: string) {
+    if (!text) {
+        return text;
+    }
+
+    for (let m of MACROS) {
+        text = text.replace(m.test, m.replacement);
+    }
+
+    return text;
+}
+
+/**
  * Defines a class that is able to compile code from AUX's custom JavaScript dialect
  * into pure ES6 JavaScript. Does not preserve spacing or comments.
  *
@@ -71,24 +105,6 @@ export interface TranspilerMacro {
 export class Transpiler {
     private _parser: typeof Acorn.Parser;
     private _cache: LRU.Cache<string, string>;
-
-    /**
-     * The list of macros that the sandbox uses on the input code before transpiling it.
-     */
-    macros: TranspilerMacro[] = [
-        {
-            test: /^(?:\=|\:\=)/g,
-            replacement: val => '',
-        },
-        {
-            test: /(?:[“”])/g,
-            replacement: val => '"',
-        },
-        {
-            test: /(?:[‘’])/g,
-            replacement: val => "'",
-        },
-    ];
 
     constructor() {
         this._cache = new LRU<string, string>({
@@ -117,19 +133,11 @@ export class Transpiler {
      * @param code
      */
     parse(code: string): any {
-        const macroed = this.replaceMacros(code);
+        const macroed = replaceMacros(code);
         const node = this._parser.parse(macroed, {
             ecmaVersion: <any>11,
         });
         return node;
-    }
-
-    /**
-     * Adds the given macro to the list of macros that are run on the code
-     * before execution.
-     */
-    addMacro(macro: TranspilerMacro) {
-        this.macros.push(macro);
     }
 
     getTagNodeValues(n: any) {
@@ -303,17 +311,5 @@ export class Transpiler {
                 arguments: [] as any[],
             },
         };
-    }
-
-    replaceMacros(formula: string) {
-        if (!formula) {
-            return formula;
-        }
-
-        for (let m of this.macros) {
-            formula = formula.replace(m.test, m.replacement);
-        }
-
-        return formula;
     }
 }
