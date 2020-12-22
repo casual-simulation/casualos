@@ -40,6 +40,7 @@
 ### :rocket: Improvements
 
 -   Updated Material Icons to v4.0.0.
+-   Added `perf.getStats()` as a way to get some statistics on the performance of the server.
 
 ## V1.3.8
 
