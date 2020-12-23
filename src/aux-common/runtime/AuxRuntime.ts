@@ -1175,6 +1175,11 @@ export class AuxRuntime
                 newBot.listeners[tag] = this._compile(newBot, tag, value, {
                     allowsEditing: true,
                 });
+                this._globalContext.recordListenerPresense(
+                    newBot.id,
+                    tag,
+                    !!newBot.listeners[tag]
+                );
             }
 
             return value;
@@ -1250,8 +1255,10 @@ export class AuxRuntime
         let { value, listener } = this._compileValue(bot, tag, tagValue);
         if (listener) {
             bot.listeners[tag] = listener;
-        } else {
+            this._globalContext.recordListenerPresense(bot.id, tag, true);
+        } else if (!!bot.listeners[tag]) {
             delete bot.listeners[tag];
+            this._globalContext.recordListenerPresense(bot.id, tag, false);
         }
         bot.compiledValues[tag] = value;
         if (typeof value !== 'function') {

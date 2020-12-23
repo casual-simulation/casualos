@@ -20,7 +20,7 @@ import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { ScriptError, RanOutOfEnergyError } from './AuxResults';
 import uuid from 'uuid/v4';
-import { sortBy } from 'lodash';
+import { sortBy, sortedIndex, sortedIndexOf } from 'lodash';
 
 /**
  * Holds global values that need to be accessible from the runtime.
@@ -105,6 +105,20 @@ export interface AuxGlobalContext {
      * @param bot The bot to destroy.
      */
     destroyBot(bot: RuntimeBot): void;
+
+    /**
+     * Gets the list of bot IDs that have a listener for the given tag.
+     * @param tag The tag.
+     */
+    getBotIdsWithListener(tag: string): string[];
+
+    /**
+     * Records whether the given ID has a listener for the given tag.
+     * @param id The ID of the bot.
+     * @param tag The tag that the bot has a listener for.
+     * @param hasListener Whether the bot has a listener for the  given tag.
+     */
+    recordListenerPresense(id: string, tag: string, hasListener: boolean): void;
 
     /**
      * Creates a new task.
@@ -304,6 +318,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     private _shoutTimers: {
         [shout: string]: number;
     } = {};
+    private _listenerMap: Map<string, string[]>;
 
     /**
      * Creates a new global context.
@@ -322,6 +337,61 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this.device = device;
         this._scriptFactory = scriptFactory;
         this._batcher = batcher;
+        this._listenerMap = new Map();
+    }
+
+    getBotIdsWithListener(tag: string): string[] {
+        const set = this._listenerMap.get(tag);
+        if (!set) {
+            return [];
+        }
+
+        return set.slice();
+    }
+
+    recordListenerPresense(
+        id: string,
+        tag: string,
+        hasListener: boolean
+    ): void {
+        let set = this._listenerMap.get(tag);
+        if (!hasListener && !set) {
+            // we don't have a listener to record
+            // and there is no list for the tag
+            // so there is nothing to do.
+            return;
+        }
+
+        if (!set) {
+            set = [];
+            this._listenerMap.set(tag, set);
+        }
+
+        if (hasListener) {
+            const index = sortedIndex(set, id);
+
+            // ensure that our indexing is in bounds
+            // to prevent the array from being put into slow-mode
+            // see https://stackoverflow.com/a/26737403/1832856
+            if (index < set.length && index >= 0) {
+                const current = set[index];
+                if (current !== id) {
+                    set.splice(index, 0, id);
+                }
+            } else {
+                set.splice(index, 0, id);
+            }
+        } else {
+            const index = sortedIndexOf(set, id);
+            if (index >= 0) {
+                set.splice(index, 1);
+            }
+
+            // Delete the tag from the list if there are no more IDs
+            if (set.length <= 0) {
+                this._listenerMap.delete(tag);
+            }
+        }
     }
 
     /**
@@ -386,6 +456,14 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         const script = this._scriptFactory.createRuntimeBot(bot) || null;
         if (script) {
             addToContext(this, script);
+
+            if (script.listeners) {
+                for (let key in script.listeners) {
+                    if (typeof script.listeners[key] === 'function') {
+                        this.recordListenerPresense(script.id, key, true);
+                    }
+                }
+            }
         }
         this.enqueueAction(botAdded(bot));
         return script;
@@ -404,6 +482,14 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         if (mode === RealtimeEditMode.Immediate) {
             this.bots.splice(index, 1);
             delete this.state[bot.id];
+
+            if (bot.listeners) {
+                for (let key in bot.listeners) {
+                    if (typeof bot.listeners[key] === 'function') {
+                        this.recordListenerPresense(bot.id, key, false);
+                    }
+                }
+            }
         }
         this.enqueueAction(botRemoved(bot.id));
     }
