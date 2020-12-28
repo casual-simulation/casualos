@@ -44,7 +44,7 @@
 -   Various performance improvements:
     -   `getBot('id', id)` is now works in `O(1)` time.
     -   The `tempLocal` and `local` spaces now handle new and deleted bots in a much more performant manner.
--   Fixed an issue where deleted bots would be treated like they were not deleted on initial load.
+-   Fixed an issue where deleted bots in the `shared` space would be treated like they were not deleted on initial load.
 
 ### :bug: Bug Fixes
 
