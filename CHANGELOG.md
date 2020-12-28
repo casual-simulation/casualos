@@ -2,7 +2,7 @@
 
 ## V1.3.9
 
-#### Date: 12/22/2020
+#### Date: 12/28/2020
 
 ### :boom: Breaking Changes
 
@@ -41,6 +41,14 @@
 
 -   Updated Material Icons to v4.0.0.
 -   Added `perf.getStats()` as a way to get some statistics on the performance of the server.
+-   Various performance improvements:
+    -   `getBot('id', id)` is now works in `O(1)` time.
+    -   The `tempLocal` and `local` spaces now handle new and deleted bots in a much more performant manner.
+-   Fixed an issue where deleted bots in the `shared` space would be treated like they were not deleted on initial load.
+
+### :bug: Bug Fixes
+
+-   Fixed autofocusing newly created tags in the sheetPortal.
 
 ## V1.3.8
 

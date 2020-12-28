@@ -206,15 +206,23 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
         let removedBots = [] as string[];
         let updated = new Map<string, UpdatedBot>();
         let updatedState = {} as PartialBotsState;
+        // Flag to record if we have already created a new state object
+        // during the update.
+        let createdNewState = false;
         for (let event of events) {
             if (event.type === 'add_bot') {
                 let bot = {
                     ...event.bot,
                     space: this.space as BotSpace,
                 };
-                this._state = Object.assign({}, this._state, {
-                    [event.bot.id]: bot,
-                });
+                if (createdNewState) {
+                    this._state[event.bot.id] = bot;
+                } else {
+                    this._state = Object.assign({}, this._state, {
+                        [event.bot.id]: bot,
+                    });
+                    createdNewState = true;
+                }
                 updatedState[event.bot.id] = bot;
                 addedBots.set(event.bot.id, bot);
                 if (updateStorage) {
@@ -223,8 +231,13 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                 }
             } else if (event.type === 'remove_bot') {
                 const id = event.id;
-                let { [id]: removedBot, ...state } = this._state;
-                this._state = state;
+                if (createdNewState) {
+                    delete this._state[id];
+                } else {
+                    let { [id]: removedBot, ...state } = this._state;
+                    this._state = state;
+                    createdNewState = true;
+                }
                 if (!addedBots.delete(event.id)) {
                     removedBots.push(event.id);
                 }

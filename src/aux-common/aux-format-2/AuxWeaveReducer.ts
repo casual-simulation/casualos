@@ -98,7 +98,10 @@ function atomAddedReducer(
         return valueAtomAddedReducer(weave, atom, value, state, space);
     } else if (value.type === AuxOpType.Insert && !initial) {
         return insertAtomAddedReducer(weave, atom, value, state, space);
-    } else if (value.type === AuxOpType.Delete && !initial) {
+    } else if (
+        value.type === AuxOpType.Delete &&
+        (!initial || !hasValue(value.start))
+    ) {
         return deleteAtomAddedReducer(weave, atom, value, state, space);
     } else if (value.type === AuxOpType.Certificate) {
         return certificateAtomAddedReducer(

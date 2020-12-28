@@ -3846,6 +3846,61 @@ describe('AuxRuntime', () => {
                     ],
                 ]);
             });
+
+            it('should be able to create multiple bots with the same script', async () => {
+                uuidMock
+                    .mockReturnValueOnce('uuid1')
+                    .mockReturnValueOnce('uuid2')
+                    .mockReturnValueOnce('uuid3');
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: `@
+                                for (let i = 0; i < 3; i++) {
+                                    create({ script: "@destroy(this);" });
+                                }`,
+                        }),
+                    })
+                );
+                runtime.shout('hello');
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botAdded(
+                            createBot('uuid1', {
+                                creator: 'test1',
+                                script: '@destroy(this);',
+                            })
+                        ),
+                        botAdded(
+                            createBot('uuid2', {
+                                creator: 'test1',
+                                script: '@destroy(this);',
+                            })
+                        ),
+                        botAdded(
+                            createBot('uuid3', {
+                                creator: 'test1',
+                                script: '@destroy(this);',
+                            })
+                        ),
+                    ],
+                ]);
+
+                runtime.shout('script');
+
+                await waitAsync();
+
+                expect(events.slice(1)).toEqual([
+                    [
+                        botRemoved('uuid1'),
+                        botRemoved('uuid2'),
+                        botRemoved('uuid3'),
+                    ],
+                ]);
+            });
         });
 
         describe('bot_removed', () => {

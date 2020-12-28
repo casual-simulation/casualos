@@ -127,12 +127,18 @@ export default class TagEditor extends Vue {
 
     onFocus() {
         this.focused = true;
-        (<any>this.$refs.mdField).MdField.focused = true;
+        const field = (<any>this.$refs.mdField)?.MdField;
+        if (field) {
+            field.focused = true;
+        }
     }
 
     onBlur() {
         this.focused = false;
-        (<any>this.$refs.mdField).MdField.focused = false;
+        const field = (<any>this.$refs.mdField)?.MdField;
+        if (field) {
+            field.focused = false;
+        }
     }
 
     constructor() {

@@ -167,6 +167,9 @@ export class MemoryPartitionImpl implements MemoryPartition {
         let removed: string[] = [];
         let updated = new Map<string, UpdatedBot>();
         let updatedState = {} as PartialBotsState;
+        // Flag to record if we have already created a new state object
+        // during the update.
+        let createdNewState = false;
         for (let event of events) {
             if (event.type === 'add_bot') {
                 // console.log('[MemoryPartition] Add bot', event.bot);
@@ -174,14 +177,24 @@ export class MemoryPartitionImpl implements MemoryPartition {
                     ...event.bot,
                     space: this.space as BotSpace,
                 };
-                this.state = Object.assign({}, this.state, {
-                    [event.bot.id]: bot,
-                });
+                if (createdNewState) {
+                    this.state[event.bot.id] = bot;
+                } else {
+                    this.state = Object.assign({}, this.state, {
+                        [event.bot.id]: bot,
+                    });
+                    createdNewState = true;
+                }
                 updatedState[event.bot.id] = bot;
                 added.set(event.bot.id, event.bot);
             } else if (event.type === 'remove_bot') {
-                let { [event.id]: removedBot, ...state } = this.state;
-                this.state = state;
+                if (createdNewState) {
+                    delete this.state[event.id];
+                } else {
+                    let { [event.id]: removedBot, ...state } = this.state;
+                    this.state = state;
+                    createdNewState = true;
+                }
                 if (!added.delete(event.id)) {
                     removed.push(event.id);
                 }

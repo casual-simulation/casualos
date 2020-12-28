@@ -660,6 +660,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (hasValue(filter)) {
             if (typeof filter === 'function') {
                 return context.bots.filter((b) => filter(b.tags[tag]));
+            } else if (tag === 'id' && typeof filter === 'string') {
+                const bot = context.state[filter];
+                return bot ? [bot] : [];
             } else {
                 return context.bots.filter((b) => b.tags[tag] === filter);
             }
@@ -4202,6 +4205,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         sendListenEvents: boolean = true
     ) {
         const startTime = globalThis.performance.now();
+        let tag = trimEvent(name);
 
         let ids = !!bots
             ? bots.map((bot) => {
@@ -4211,10 +4215,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                           : bot.id
                       : null;
               })
-            : context.bots.map((b) => b.id);
+            : context.getBotIdsWithListener(tag);
 
         let results = [] as any[];
-        let tag = trimEvent(name);
 
         let targets = [] as RuntimeBot[];
         let listeners = [] as RuntimeBot[];
