@@ -426,7 +426,7 @@ export default class BotTable extends Vue {
                 const tags = this.$refs.tagValues as BotValue[];
                 for (let tag of tags) {
                     if (tag.tag === addedTag) {
-                        tag.$el.focus();
+                        tag.focus();
                         // This is a super hacky way to pre-fill the first bot's tag with an @ symbol
                         if (isScript) {
                             tag.setInitialValue('@');
