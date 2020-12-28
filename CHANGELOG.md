@@ -45,6 +45,10 @@
     -   `getBot('id', id)` is now works in `O(1)` time.
     -   The `tempLocal` and `local` spaces now handle new and deleted bots in a much more performant manner.
 
+### :bug: Bug Fixes
+
+-   Fixed autofocusing newly created tags in the sheetPortal.
+
 ## V1.3.8
 
 #### Date: 12/17/2020
