@@ -660,6 +660,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (hasValue(filter)) {
             if (typeof filter === 'function') {
                 return context.bots.filter((b) => filter(b.tags[tag]));
+            } else if (tag === 'id' && typeof filter === 'string') {
+                const bot = context.state[filter];
+                return bot ? [bot] : [];
             } else {
                 return context.bots.filter((b) => b.tags[tag] === filter);
             }

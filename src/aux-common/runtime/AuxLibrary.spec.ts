@@ -402,6 +402,11 @@ describe('AuxLibrary', () => {
                 expect(bots).toEqual([bot2]);
             }
         );
+
+        it('should be able to get a bot by ID', () => {
+            const bots = library.api.getBots('id', bot1.id);
+            expect(bots).toEqual([bot1]);
+        });
     });
 
     describe('getBot()', () => {
@@ -526,6 +531,11 @@ describe('AuxLibrary', () => {
                 expect(bot).toEqual(undefined);
             }
         );
+
+        it('should be able to get a bot by ID', () => {
+            const bot = library.api.getBot('id', bot1.id);
+            expect(bot).toEqual(bot1);
+        });
     });
 
     describe('filters', () => {
