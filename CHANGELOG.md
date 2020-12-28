@@ -41,6 +41,9 @@
 
 -   Updated Material Icons to v4.0.0.
 -   Added `perf.getStats()` as a way to get some statistics on the performance of the server.
+-   Various performance improvements:
+    -   `getBot('id', id)` is now works in `O(1)` time.
+    -   The `tempLocal` and `local` spaces now handle new and deleted bots in a much more performant manner.
 
 ## V1.3.8
 
