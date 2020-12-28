@@ -13,6 +13,7 @@ export const COMPILED_SCRIPT_SYMBOL = Symbol('compiled_script');
  */
 export class AuxCompiler {
     private _transpiler = new Transpiler();
+    private _functionCache = new Map<string, Function>();
 
     /**
      * Compiles the given script into a function.
@@ -133,6 +134,17 @@ export class AuxCompiler {
         return script;
     }
 
+    private _compileAndBindFunction<T>(
+        script: string,
+        options: AuxCompileOptions<T>
+    ): {
+        func: Function;
+        scriptLineOffset: number;
+        async: boolean;
+    } {
+        return this._compileFunction(script, options);
+    }
+
     private _compileFunction<T>(
         script: string,
         options: AuxCompileOptions<T>
@@ -204,7 +216,7 @@ export class AuxCompiler {
 
         const finalCode = `${constantsCode}return ${transpiled};`;
 
-        let func = _buildFunction(finalCode, options);
+        let func = this._buildFunction(finalCode, options);
         (<any>func)[COMPILED_SCRIPT_SYMBOL] = true;
 
         // Add 2 extra lines to count the line feeds that
@@ -221,15 +233,37 @@ export class AuxCompiler {
 
         return { func, scriptLineOffset, async };
     }
-}
 
-function _buildFunction<T>(finalCode: string, options: AuxCompileOptions<T>) {
-    return Function(
-        'constants',
-        'variables',
-        'context',
-        finalCode
-    )(options.constants, options.variables, options.context);
+    private _buildFunction<T>(
+        finalCode: string,
+        options: AuxCompileOptions<T>
+    ) {
+        return this._constructFunction<T>(finalCode)(
+            options.constants,
+            options.variables,
+            options.context
+        );
+    }
+
+    private _constructFunction<T>(
+        finalCode: string
+    ): (
+        constants: AuxCompileOptions<T>['constants'],
+        variables: AuxCompileOptions<T>['variables'],
+        context: AuxCompileOptions<T>['context']
+    ) => Function {
+        let existing = this._functionCache.get(finalCode) as any;
+        if (!existing) {
+            existing = Function(
+                'constants',
+                'variables',
+                'context',
+                finalCode
+            ) as any;
+            this._functionCache.set(finalCode, existing);
+        }
+        return existing;
+    }
 }
 
 /**
