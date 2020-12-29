@@ -402,6 +402,11 @@ describe('AuxLibrary', () => {
                 expect(bots).toEqual([bot2]);
             }
         );
+
+        it('should be able to get a bot by ID', () => {
+            const bots = library.api.getBots('id', bot1.id);
+            expect(bots).toEqual([bot1]);
+        });
     });
 
     describe('getBot()', () => {
@@ -526,6 +531,11 @@ describe('AuxLibrary', () => {
                 expect(bot).toEqual(undefined);
             }
         );
+
+        it('should be able to get a bot by ID', () => {
+            const bot = library.api.getBot('id', bot1.id);
+            expect(bot).toEqual(bot1);
+        });
     });
 
     describe('filters', () => {
@@ -1706,10 +1716,8 @@ describe('AuxLibrary', () => {
                 const bot4 = createDummyRuntimeBot('test4', {}, 'history');
                 const bot5 = createDummyRuntimeBot('test5', {}, 'local');
                 const bot6 = createDummyRuntimeBot('test6', {}, 'tempLocal');
-                const bot7 = createDummyRuntimeBot('test7', {}, 'error');
-                const bot8 = createDummyRuntimeBot('test8', {}, 'admin');
-                addToContext(context, bot4, bot5, bot6, bot7, bot8);
-
+                const bot7 = createDummyRuntimeBot('test7', {}, 'admin');
+                addToContext(context, bot4, bot5, bot6, bot7);
                 const action = library.api.player.downloadServer();
                 const expected = download(
                     JSON.stringify({
@@ -3884,68 +3892,6 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.destroyErrors()', () => {
-            it('should issue a ClearSpaceAction', () => {
-                const action: any = library.api.server.destroyErrors();
-                const expected = clearSpace('error', context.tasks.size);
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-        });
-
-        describe('server.loadErrors()', () => {
-            it('should issue a LoadBotsAction for the given tag and bot ID', () => {
-                const action: any = library.api.server.loadErrors(
-                    'test',
-                    'abc'
-                );
-                const expected = loadBots(
-                    'error',
-                    [
-                        {
-                            tag: 'error',
-                            value: true,
-                        },
-                        {
-                            tag: 'errorBot',
-                            value: 'test',
-                        },
-                        {
-                            tag: 'errorTag',
-                            value: 'abc',
-                        },
-                    ],
-                    context.tasks.size
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should support being passed a runtime bot', () => {
-                const action: any = library.api.server.loadErrors(bot1, 'abc');
-                const expected = loadBots(
-                    'error',
-                    [
-                        {
-                            tag: 'error',
-                            value: true,
-                        },
-                        {
-                            tag: 'errorBot',
-                            value: bot1.id,
-                        },
-                        {
-                            tag: 'errorTag',
-                            value: 'abc',
-                        },
-                    ],
-                    context.tasks.size
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-        });
-
         describe('server.serverPlayerCount()', () => {
             let player: RuntimeBot;
 
@@ -5990,6 +5936,7 @@ describe('AuxLibrary', () => {
             addToContext(context, bot1);
 
             const onAnyCreate1 = (bot1.listeners.onAnyCreate = jest.fn());
+            context.recordListenerPresense(bot1.id, 'onAnyCreate', true);
 
             const bot = library.api.create({ abc: 'def' });
 
@@ -6153,6 +6100,7 @@ describe('AuxLibrary', () => {
             bot1.listeners.create = jest.fn(() => {
                 library.api.create({ test: true, abc: abc });
             });
+            context.recordListenerPresense(bot1.id, 'create', true);
 
             library.api.shout('create');
             library.api.shout('abc');
@@ -6170,6 +6118,7 @@ describe('AuxLibrary', () => {
             bot1.listeners.create = jest.fn(() => {
                 library.api.create({ test: true, abc, def, space: 'custom' });
             });
+            context.recordListenerPresense(bot1.id, 'create', true);
 
             library.api.shout('create');
             library.api.shout('abc');
@@ -6188,6 +6137,7 @@ describe('AuxLibrary', () => {
             bot1.listeners.create = jest.fn(() => {
                 return library.api.create({ test: true, abc });
             });
+            context.recordListenerPresense(bot1.id, 'create', true);
 
             let [newBot] = library.api.shout('create');
             library.api.whisper(newBot, 'abc');
@@ -6207,6 +6157,7 @@ describe('AuxLibrary', () => {
             bot1.listeners.create = jest.fn(() => {
                 return library.api.create({ test: true, abc, def });
             });
+            context.recordListenerPresense(bot1.id, 'create', true);
 
             let [] = library.api.shout('create');
             library.api.shout('abc');
@@ -6245,6 +6196,7 @@ describe('AuxLibrary', () => {
                     return b;
                 }
             ));
+            context.recordListenerPresense(bot1.id, 'ensureCreated', true);
 
             library.api.shout('ensureCreated');
             library.api.shout('ensureCreated');
@@ -6491,6 +6443,7 @@ describe('AuxLibrary', () => {
 
         it('should trigger onDestroy()', () => {
             const onDestroy1 = (bot1.listeners.onDestroy = jest.fn());
+            context.recordListenerPresense(bot1.id, 'onDestroy', true);
 
             library.api.destroy(['test1']);
 
@@ -6606,6 +6559,7 @@ describe('AuxLibrary', () => {
 
         it('should send an @onEnter whisper to the bot', () => {
             const enter = (bot1.listeners.stateAbcOnEnter = jest.fn());
+            context.recordListenerPresense(bot1.id, 'stateAbcOnEnter', true);
             library.api.changeState(bot1, 'Abc');
 
             expect(enter).toBeCalledTimes(1);
@@ -6613,6 +6567,7 @@ describe('AuxLibrary', () => {
 
         it('should send an @onExit whisper to the bot', () => {
             const exit = (bot1.listeners.stateXyzOnExit = jest.fn());
+            context.recordListenerPresense(bot1.id, 'stateXyzOnExit', true);
             bot1.tags.state = 'Xyz';
             library.api.changeState(bot1, 'Abc');
 
@@ -6622,6 +6577,9 @@ describe('AuxLibrary', () => {
         it('should use the given group name', () => {
             const enter = (bot1.listeners.funAbcOnEnter = jest.fn());
             const exit = (bot1.listeners.funXyzOnExit = jest.fn());
+            context.recordListenerPresense(bot1.id, 'funAbcOnEnter', true);
+            context.recordListenerPresense(bot1.id, 'funXyzOnExit', true);
+
             bot1.tags.fun = 'Xyz';
             library.api.changeState(bot1, 'Abc', 'fun');
 
@@ -6632,6 +6590,9 @@ describe('AuxLibrary', () => {
         it('should do nothing if the state does not change', () => {
             const enter = (bot1.listeners.stateAbcOnEnter = jest.fn());
             const exit = (bot1.listeners.stateXyzOnExit = jest.fn());
+            context.recordListenerPresense(bot1.id, 'stateAbcOnEnter', true);
+            context.recordListenerPresense(bot1.id, 'stateXyzOnExit', true);
+
             bot1.tags.state = 'Xyz';
             library.api.changeState(bot1, 'Xyz');
 
@@ -6672,9 +6633,19 @@ describe('AuxLibrary', () => {
             addToContext(context, bot1, bot2, bot3, bot4);
         });
 
+        function recordListeners() {
+            for (let bot of [bot1, bot2, bot3, bot4]) {
+                for (let key in bot.listeners) {
+                    context.recordListenerPresense(bot.id, key, true);
+                }
+            }
+        }
+
         it('should run the event on every bot', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn());
             const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+
+            recordListeners();
 
             library.api.shout('sayHello');
             expect(sayHello1).toBeCalled();
@@ -6685,6 +6656,8 @@ describe('AuxLibrary', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn());
             const sayHello2 = (bot2.listeners.sayHello = jest.fn());
 
+            recordListeners();
+
             library.api.shout('sayHello', { hi: 'test' });
             expect(sayHello1).toBeCalledWith({ hi: 'test' });
             expect(sayHello2).toBeCalledWith({ hi: 'test' });
@@ -6693,6 +6666,8 @@ describe('AuxLibrary', () => {
         it('should handle passing bots as arguments', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn());
             const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+
+            recordListeners();
 
             library.api.shout('sayHello', bot3);
             expect(sayHello1).toBeCalledWith(bot3);
@@ -6706,6 +6681,7 @@ describe('AuxLibrary', () => {
             const sayHello2 = (bot2.listeners.sayHello = jest.fn((b3) => {
                 b3.tags.hit2 = true;
             }));
+            recordListeners();
 
             library.api.shout('sayHello', bot3);
             expect(sayHello1).toBeCalled();
@@ -6721,6 +6697,7 @@ describe('AuxLibrary', () => {
             const sayHello2 = (bot2.listeners.sayHello = jest.fn((arg) => {
                 arg.bot.tags.hit2 = true;
             }));
+            recordListeners();
 
             library.api.shout('sayHello', { bot: bot3 });
             expect(sayHello1).toBeCalledWith({ bot: bot3 });
@@ -6732,6 +6709,7 @@ describe('AuxLibrary', () => {
         it('should handle primitive values', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn());
             const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+            recordListeners();
 
             library.api.shout('sayHello', true);
             expect(sayHello1).toBeCalledWith(true);
@@ -6741,6 +6719,8 @@ describe('AuxLibrary', () => {
         it('should return an array of results from the other formulas', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
+            recordListeners();
+
             const results = library.api.shout('sayHello');
             expect(results).toEqual([1, 2]);
         });
@@ -6750,6 +6730,8 @@ describe('AuxLibrary', () => {
             it('should ignore bots that are not listening', () => {
                 const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
                 const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
+                recordListeners();
+
                 bot2.tags[tag] = false;
 
                 const results = library.api.shout('sayHello');
@@ -6762,6 +6744,7 @@ describe('AuxLibrary', () => {
         it('should ignore bots where either listening tag is false', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
+            recordListeners();
 
             bot2.tags.auxListening = true;
             bot2.tags.listening = false;
@@ -6779,6 +6762,7 @@ describe('AuxLibrary', () => {
             }));
             const sayHello3 = (bot3.listeners.sayHello = jest.fn());
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+            recordListeners();
 
             library.api.shout('sayHello');
             expect(sayHello1).toBeCalled();
@@ -6804,6 +6788,7 @@ describe('AuxLibrary', () => {
             const sayHello2 = (bot2.listeners.sayHello = jest.fn());
             const sayHello3 = (bot3.listeners.sayHello = jest.fn());
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+            recordListeners();
 
             library.api.shout('sayHello');
 
@@ -6830,6 +6815,7 @@ describe('AuxLibrary', () => {
             (desc, eventName) => {
                 const sayHello1 = (bot1.listeners.sayHello = jest.fn());
                 const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+                recordListeners();
 
                 library.api.shout(eventName);
                 expect(sayHello1).toBeCalled();
@@ -6844,6 +6830,7 @@ describe('AuxLibrary', () => {
             }));
             const sayHello3 = (bot3.listeners.sayHello = jest.fn());
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+            recordListeners();
 
             library.api.shout('sayHello');
             expect(sayHello1).toBeCalled();
@@ -6863,13 +6850,14 @@ describe('AuxLibrary', () => {
             const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
             const onListen3 = (bot3.listeners.onListen = jest.fn());
             const onListen4 = (bot4.listeners.onListen = jest.fn());
+            recordListeners();
 
             library.api.shout('sayHello', 123);
             const expected = {
                 name: 'sayHello',
                 that: 123,
                 responses: [undefined, undefined, undefined] as any[],
-                targets: [bot1, bot2, bot3, bot4],
+                targets: [bot1, bot2, bot3],
                 listeners: [bot1, bot2, bot3], // should exclude erroring listeners
             };
             expect(onListen1).toBeCalledWith(expected);
@@ -6886,6 +6874,7 @@ describe('AuxLibrary', () => {
             const sayHello3 = (bot3.listeners.sayHello = jest.fn());
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
             const onAnyListen4 = (bot4.listeners.onAnyListen = jest.fn());
+            recordListeners();
 
             library.api.shout('sayHello', 123);
             const expected = {
@@ -6905,6 +6894,8 @@ describe('AuxLibrary', () => {
 
         it('should perform an energy check', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            recordListeners();
+
             context.energy = 1;
             expect(() => {
                 library.api.shout('sayHello');
@@ -6915,12 +6906,16 @@ describe('AuxLibrary', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {}));
             const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => {}));
+            recordListeners();
+
             context.energy = 2;
             library.api.shout('sayHello');
             expect(context.energy).toBe(1);
         });
 
         it('should not perform an energy check if there are no listeners', () => {
+            recordListeners();
+
             context.energy = 1;
             library.api.shout('sayHello');
             expect(context.energy).toBe(1);
@@ -6933,10 +6928,58 @@ describe('AuxLibrary', () => {
             const second = (bot2.listeners.second = jest.fn(() => {
                 library.api.shout('first');
             }));
+            recordListeners();
+
             context.energy = 20;
             expect(() => {
                 library.api.shout('first');
             }).toThrowError(new RanOutOfEnergyError());
+        });
+
+        describe('timers', () => {
+            let now: jest.Mock<number>;
+            let oldNow: typeof performance.now;
+
+            beforeAll(() => {
+                oldNow = globalThis.performance.now;
+                globalThis.performance.now = now = jest.fn();
+            });
+
+            afterAll(() => {
+                globalThis.performance.now = oldNow;
+            });
+
+            it('should use performance.now() to track the amount of time the shout takes', () => {
+                now.mockReturnValueOnce(1) // sayHello start
+                    .mockReturnValueOnce(10) // sayHello end
+                    .mockReturnValueOnce(12) // onListen start
+                    .mockReturnValueOnce(15) // onListen end
+                    .mockReturnValueOnce(16) // onAnyListen end
+                    .mockReturnValueOnce(20); // onAnyListen end
+
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+                recordListeners();
+
+                library.api.shout('sayHello');
+
+                const timers = context.getShoutTimers();
+
+                expect(timers).toEqual([
+                    {
+                        tag: 'sayHello',
+                        timeMs: 9,
+                    },
+                    {
+                        tag: 'onAnyListen',
+                        timeMs: 4,
+                    },
+                    {
+                        tag: 'onListen',
+                        timeMs: 3,
+                    },
+                ]);
+            });
         });
     });
 
@@ -6955,9 +6998,18 @@ describe('AuxLibrary', () => {
             addToContext(context, bot1, bot2, bot3, bot4);
         });
 
+        function recordListeners() {
+            for (let bot of [bot1, bot2, bot3, bot4]) {
+                for (let key in bot.listeners) {
+                    context.recordListenerPresense(bot.id, key, true);
+                }
+            }
+        }
+
         it('should send an event only to the given bot', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn());
             const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+            recordListeners();
 
             library.api.whisper(bot1, 'sayHello');
             expect(sayHello1).toBeCalled();
@@ -6968,6 +7020,7 @@ describe('AuxLibrary', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn());
             const sayHello2 = (bot2.listeners.sayHello = jest.fn());
             const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+            recordListeners();
 
             library.api.whisper([bot1, bot2], 'sayHello');
             expect(sayHello1).toBeCalled();
@@ -6979,6 +7032,7 @@ describe('AuxLibrary', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
             const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
+            recordListeners();
 
             const results = library.api.whisper([bot2, bot1], 'sayHello');
             expect(results).toEqual([2, 1]);
@@ -6994,6 +7048,7 @@ describe('AuxLibrary', () => {
                 const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
                 bot2.tags[tag] = false;
                 const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
+                recordListeners();
 
                 const results = library.api.whisper([bot2, bot1], 'sayHello');
                 expect(results).toEqual([1]);
@@ -7009,6 +7064,7 @@ describe('AuxLibrary', () => {
             bot2.tags.auxListening = true;
             bot2.tags.listening = false;
             const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
+            recordListeners();
 
             const results = library.api.whisper([bot2, bot1], 'sayHello');
             expect(results).toEqual([1]);
@@ -7023,6 +7079,7 @@ describe('AuxLibrary', () => {
                 const sayHello1 = (bot1.listeners.sayHello = jest.fn());
                 const sayHello2 = (bot2.listeners.sayHello = jest.fn());
                 const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+                recordListeners();
 
                 library.api.whisper([bot2, bot1], eventName);
                 expect(sayHello1).toBeCalled();
@@ -7038,6 +7095,7 @@ describe('AuxLibrary', () => {
             }));
             const sayHello3 = (bot3.listeners.sayHello = jest.fn());
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+            recordListeners();
 
             library.api.whisper([bot1, bot2, bot3], 'sayHello');
             expect(sayHello1).toBeCalled();
@@ -7057,6 +7115,7 @@ describe('AuxLibrary', () => {
             const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
             const onListen3 = (bot3.listeners.onListen = jest.fn());
             const onListen4 = (bot4.listeners.onListen = jest.fn());
+            recordListeners();
 
             library.api.whisper([bot1, bot2, bot3], 'sayHello', 123);
             const expected = {
@@ -7080,6 +7139,7 @@ describe('AuxLibrary', () => {
             const sayHello3 = (bot3.listeners.sayHello = jest.fn());
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
             const onAnyListen4 = (bot4.listeners.onAnyListen = jest.fn());
+            recordListeners();
 
             library.api.whisper([bot1, bot2, bot3], 'sayHello', 123);
             const expected = {
@@ -7094,6 +7154,8 @@ describe('AuxLibrary', () => {
 
         it('should ignore null bots', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            recordListeners();
+
             library.api.whisper([bot1, null], 'sayHello');
             expect(sayHello1).toBeCalledTimes(1);
         });
@@ -7109,6 +7171,8 @@ describe('AuxLibrary', () => {
                 const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
                 const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {}));
                 const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => {}));
+                recordListeners();
+
                 library.api.whisper(bot, 'sayHello');
 
                 expect(sayHello1).not.toBeCalled();
@@ -7119,6 +7183,8 @@ describe('AuxLibrary', () => {
 
         it('should perform an energy check', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            recordListeners();
+
             context.energy = 1;
             expect(() => {
                 library.api.whisper(bot1, 'sayHello');
@@ -7128,6 +7194,8 @@ describe('AuxLibrary', () => {
         it('should only take 1 energy for multiple listeners', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {}));
+            recordListeners();
+
             context.energy = 2;
             library.api.whisper([bot1, bot2], 'sayHello');
             expect(context.energy).toBe(1);
@@ -7146,6 +7214,8 @@ describe('AuxLibrary', () => {
             const second = (bot2.listeners.second = jest.fn(() => {
                 library.api.whisper(bot1, 'first');
             }));
+            recordListeners();
+
             context.energy = 20;
             expect(() => {
                 library.api.whisper(bot1, 'first');
@@ -8758,6 +8828,50 @@ describe('AuxLibrary', () => {
             );
             expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
             expect(context.actions).toEqual([expected]);
+        });
+    });
+
+    describe('perf.getStats()', () => {
+        let getShoutTimers: jest.Mock<{}>;
+
+        beforeEach(() => {
+            context.getShoutTimers = getShoutTimers = jest.fn();
+        });
+
+        it('should return the number of bots in the runtime', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            const bot2 = createDummyRuntimeBot('test2');
+            const bot3 = createDummyRuntimeBot('test3');
+            const bot4 = createDummyRuntimeBot('test4');
+
+            addToContext(context, bot1, bot2, bot3);
+
+            const result = library.api.perf.getStats();
+
+            // only counts the bots in the context
+            expect(result.numberOfBots).toEqual(3);
+        });
+
+        it('should return an object with timers', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            const bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+
+            getShoutTimers.mockReturnValueOnce([
+                { tag: 'abc', timeMs: 99 },
+                { tag: 'def', timeMs: 123 },
+                { tag: 'haha', timeMs: 999 },
+            ]);
+
+            const result = library.api.perf.getStats();
+
+            // only counts the bots in the context
+            expect(result.shoutTimers).toEqual([
+                { tag: 'abc', timeMs: 99 },
+                { tag: 'def', timeMs: 123 },
+                { tag: 'haha', timeMs: 999 },
+            ]);
         });
     });
 });

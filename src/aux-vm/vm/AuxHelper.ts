@@ -93,29 +93,6 @@ export class AuxHelper extends BaseHelper<Bot> {
                     for (let error of errors) {
                         console.error(error.error);
                     }
-
-                    // Send the new errors
-                    // directly to the partitions
-                    // so that the runtime can't error
-                    // infinitely
-                    this._sendEvents(
-                        errors.map((e) =>
-                            botAdded(
-                                createBot(
-                                    undefined,
-                                    {
-                                        error: true,
-                                        errorName: e.error.name,
-                                        errorMessage: e.error.message,
-                                        errorStack: e.error.stack,
-                                        errorBot: e.bot ? e.bot.id : null,
-                                        errorTag: e.tag || null,
-                                    },
-                                    'error'
-                                )
-                            )
-                        )
-                    );
                 })
             )
             .subscribe(null, (e: any) => console.error(e));

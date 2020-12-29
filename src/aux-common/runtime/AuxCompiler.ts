@@ -13,6 +13,7 @@ export const COMPILED_SCRIPT_SYMBOL = Symbol('compiled_script');
  */
 export class AuxCompiler {
     private _transpiler = new Transpiler();
+    private _functionCache = new Map<string, Function>();
 
     /**
      * Compiles the given script into a function.
@@ -46,7 +47,7 @@ export class AuxCompiler {
                 const after = options.after || (() => {});
                 const onError =
                     options.onError ||
-                    (err => {
+                    ((err) => {
                         throw err;
                     });
 
@@ -58,7 +59,7 @@ export class AuxCompiler {
                           invoke(() => scriptFunc(...args), context)
                     : scriptFunc;
                 if (async) {
-                    func = function(...args: any[]) {
+                    func = function (...args: any[]) {
                         before(context);
                         try {
                             const result = finalFunc(...args);
@@ -75,7 +76,7 @@ export class AuxCompiler {
                         }
                     };
                 } else {
-                    func = function(...args: any[]) {
+                    func = function (...args: any[]) {
                         before(context);
                         try {
                             return finalFunc(...args);
@@ -102,7 +103,7 @@ export class AuxCompiler {
      * @param metadata The metadata.
      */
     findLineInfo(stackTrace: NodeJS.CallSite[], metadata: AuxScriptMetadata) {
-        const frame = stackTrace.find(f => {
+        const frame = stackTrace.find((f) => {
             const func: any = f.getFunction();
             return func && func[COMPILED_SCRIPT_SYMBOL] === true;
         });
@@ -133,6 +134,17 @@ export class AuxCompiler {
         return script;
     }
 
+    private _compileAndBindFunction<T>(
+        script: string,
+        options: AuxCompileOptions<T>
+    ): {
+        func: Function;
+        scriptLineOffset: number;
+        async: boolean;
+    } {
+        return this._compileFunction(script, options);
+    }
+
     private _compileFunction<T>(
         script: string,
         options: AuxCompileOptions<T>
@@ -146,12 +158,8 @@ export class AuxCompiler {
         // compiler, but for now this ad-hoc method
         // seems to work.
 
-        let formula = false;
         let async = false;
-        if (isFormula(script)) {
-            script = script.substring(1);
-            formula = true;
-        } else if (isScript(script)) {
+        if (isScript(script)) {
             script = parseScript(script);
         }
         if (script.indexOf('await ') >= 0) {
@@ -163,8 +171,8 @@ export class AuxCompiler {
         let constantsCode = '';
         if (options.constants) {
             const lines = Object.keys(options.constants)
-                .filter(v => v !== 'this')
-                .map(v => `const ${v} = constants["${v}"];`);
+                .filter((v) => v !== 'this')
+                .map((v) => `const ${v} = constants["${v}"];`);
             constantsCode = lines.join('\n') + '\n';
             scriptLineOffset += 1 + Math.max(lines.length - 1, 0);
         }
@@ -172,8 +180,8 @@ export class AuxCompiler {
         let variablesCode = '';
         if (options.variables) {
             const lines = Object.keys(options.variables)
-                .filter(v => v !== 'this')
-                .map(v => `const ${v} = variables["${v}"](context);`);
+                .filter((v) => v !== 'this')
+                .map((v) => `const ${v} = variables["${v}"](context);`);
             variablesCode = '\n' + lines.join('\n');
             scriptLineOffset += 1 + Math.max(lines.length - 1, 0);
         }
@@ -182,25 +190,21 @@ export class AuxCompiler {
         if (options.arguments) {
             const lines = flatMap(
                 options.arguments
-                    .filter(v => v !== 'this')
+                    .filter((v) => v !== 'this')
                     .map((v, i) =>
                         Array.isArray(v)
                             ? ([v, i] as const)
                             : ([[v] as string[], i] as const)
                     ),
-                ([v, i]) => v.map(name => `const ${name} = args[${i}];`)
+                ([v, i]) => v.map((name) => `const ${name} = args[${i}];`)
             );
             argumentsCode = '\n' + lines.join('\n');
             scriptLineOffset += 1 + Math.max(lines.length - 1, 0);
         }
 
         let scriptCode: string;
-        if (formula) {
-            scriptCode = `\nreturn eval(_script)`;
-        } else {
-            scriptCode = `\n { \n${script}\n }`;
-            scriptLineOffset += 2;
-        }
+        scriptCode = `\n { \n${script}\n }`;
+        scriptLineOffset += 2;
 
         // Function needs a name because acorn doesn't understand
         // that this function is allowed to be anonymous.
@@ -208,17 +212,11 @@ export class AuxCompiler {
         if (async) {
             functionCode = `async ` + functionCode;
         }
-        const transpiled = formula
-            ? functionCode
-            : this._transpiler.transpile(functionCode);
+        const transpiled = this._transpiler.transpile(functionCode);
 
         const finalCode = `${constantsCode}return ${transpiled};`;
 
-        let func = _buildFunction(
-            finalCode,
-            options,
-            formula ? this._transpiler.transpile(script) : null
-        );
+        let func = this._buildFunction(finalCode, options);
         (<any>func)[COMPILED_SCRIPT_SYMBOL] = true;
 
         // Add 2 extra lines to count the line feeds that
@@ -235,27 +233,36 @@ export class AuxCompiler {
 
         return { func, scriptLineOffset, async };
     }
-}
 
-function _buildFunction<T>(
-    finalCode: string,
-    options: AuxCompileOptions<T>,
-    script?: string
-) {
-    if (script) {
-        return Function(
-            'constants',
-            'variables',
-            'context',
-            '_script',
-            finalCode
-        )(options.constants, options.variables, options.context, script);
-    } else {
-        return Function('constants', 'variables', 'context', finalCode)(
+    private _buildFunction<T>(
+        finalCode: string,
+        options: AuxCompileOptions<T>
+    ) {
+        return this._constructFunction<T>(finalCode)(
             options.constants,
             options.variables,
             options.context
         );
+    }
+
+    private _constructFunction<T>(
+        finalCode: string
+    ): (
+        constants: AuxCompileOptions<T>['constants'],
+        variables: AuxCompileOptions<T>['variables'],
+        context: AuxCompileOptions<T>['context']
+    ) => Function {
+        let existing = this._functionCache.get(finalCode) as any;
+        if (!existing) {
+            existing = Function(
+                'constants',
+                'variables',
+                'context',
+                finalCode
+            ) as any;
+            this._functionCache.set(finalCode, existing);
+        }
+        return existing;
     }
 }
 

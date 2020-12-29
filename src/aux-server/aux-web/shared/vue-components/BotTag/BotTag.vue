@@ -1,11 +1,13 @@
 <template>
     <span class="tag bot-tag" :class="{ clonable: allowCloning }">
-        <span v-if="!isScript">
-            <span class="hashtag">#</span><span class="tag-name">{{ tag }}</span
-            ><span v-if="isFormula" class="equals-sign">=</span>
+        <span v-if="isFormula">
+            <span class="dna-symbol">🧬</span><span class="tag-name">{{ tag }}</span>
+        </span>
+        <span v-else-if="isScript">
+            <span class="at-symbol">@</span><span class="tag-name">{{ tag }}</span>
         </span>
         <span v-else>
-            <span class="at-symbol">@</span><span class="tag-name">{{ tag }}</span>
+            <span class="hashtag">#</span><span class="tag-name">{{ tag }}</span>
         </span>
     </span>
 </template>

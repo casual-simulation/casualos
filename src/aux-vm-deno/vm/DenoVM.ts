@@ -2,7 +2,6 @@ import {
     LocalActions,
     BotAction,
     StateUpdatedEvent,
-    BotDependentInfo,
     ProxyBridgePartitionImpl,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-common';
@@ -238,11 +237,6 @@ export class DenoVM implements AuxVM {
     async export(): Promise<StoredAux> {
         if (!this._proxy) return null;
         return await this._proxy.export();
-    }
-
-    async getReferences(tag: string): Promise<BotDependentInfo> {
-        if (!this._proxy) return null;
-        return await this._proxy.getReferences(tag);
     }
 
     async getTags(): Promise<string[]> {

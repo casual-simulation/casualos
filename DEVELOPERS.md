@@ -61,7 +61,7 @@ You can find other scripts in the `package.json` file at the root of the reposit
 
 ## Deployment Process
 
-Making new releases for AUX is pretty simple. All that needs to happen is for the `master` branch to be updated and pushed to Github. From there a webhook is sent to the CI server which instructs it to make a new build and push it to production.
+Making new releases for CasualOS is pretty simple. All that needs to happen is for the `master` branch to be updated and pushed to Github. From there a webhook is sent to the CI server which instructs it to make a new build and push it to production.
 
 The version number shown in the app is taken from the most recent git tag. We additionally package the git commit hash just in case `master` is pushed multiple times without updating the git tag.
 
@@ -81,6 +81,73 @@ Additionally, the CI server will publish the `aux-common` NPM package whenever t
     - After confirmation lerna will update the `package.json` version numbers, add a git tag, and push the branch.
 6. You're done.
     - GitHub will send a webhook to the CI server which will make a build and publish everything.
+
+## Projects
+
+### [AUX Server](./src/aux-server/)
+
+<a href="https://hub.docker.com/r/casualsimulation/aux">
+    <img alt="AUX Docker Pulls" src="https://img.shields.io/docker/pulls/casualsimulation/aux?label=aux&logo=docker&logoColor=white"/>
+</a>
+<a href="https://hub.docker.com/r/casualsimulation/aux-arm32">
+    <img alt="AUX ARM32 Docker Pulls" src="https://img.shields.io/docker/pulls/casualsimulation/aux-arm32?label=aux-arm32&logo=docker&logoColor=white"/>
+</a>
+
+A web application that serves the CasualOS experience. Built on the other projects.
+
+### [AUX Common](./src/aux-common/)
+
+<a href="https://www.npmjs.com/package/@casual-simulation/aux-common">
+    <img alt="AUX Common NPM" src="https://img.shields.io/npm/v/@casual-simulation/aux-common/latest"/>
+</a>
+
+A library that contains common operations needed to modify and understand AUX files.
+
+### [AUX VM](./src/aux-vm/)
+
+<a href="https://www.npmjs.com/package/@casual-simulation/aux-vm">
+    <img alt="AUX VM NPM" src="https://img.shields.io/npm/v/@casual-simulation/aux-vm/latest"/>
+</a>
+
+A set of abstractions and common utilities required to run an AUX on any platform.
+
+#### Related libraries
+
+-   [AUX VM Browser](./src/aux-vm-browser)
+-   [AUX VM Client](./src/aux-vm-client)
+-   [AUX VM Node](./src/aux-vm-node)
+
+### [Causal Trees](./src/causal-trees/)
+
+<a href="https://www.npmjs.com/package/@casual-simulation/aux-vm">
+    <img alt="Causal Trees NPM" src="https://img.shields.io/npm/v/@casual-simulation/causal-trees/latest"/>
+</a>
+
+A library to create persistent, distributed, realtime, and conflict-free data types.
+
+#### Related libraries
+
+-   [Causal Tree Client Socket.io](./src/causal-tree-client-socketio)
+-   [Causal Tree Server](./src/causal-tree-server)
+-   [Causal Tree Server Socket.io](./src/causal-tree-server-socketio)
+-   [Causal Tree Store Browser](./src/causal-tree-store-browser)
+-   [Causal Tree Store MongoDB](./src/causal-tree-store-mongodb)
+
+### [AUX Proxy](./src/aux-proxy/)
+
+<a href="https://hub.docker.com/r/casualsimulation/aux-proxy">
+    <img alt="AUX Docker Pulls" src="https://img.shields.io/docker/pulls/casualsimulation/aux-proxy?label=aux-proxy&logo=docker&logoColor=white"/>
+</a>
+
+A web service that can facilitate WebSocket tunnels from the external web to a device in an internal network.
+
+### Miscellaneous
+
+-   [Crypto](./src/crypto)
+-   [Crypto Browser](./src/crypto-browser)
+-   [Crypto Node](./src/crypto-node)
+-   [Tunnel](./src/tunnel)
+-   [AUX Benchmarks](./src/aux-benchmarks)
 
 ## Tools we use
 

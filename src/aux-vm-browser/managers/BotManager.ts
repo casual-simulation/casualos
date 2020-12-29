@@ -12,7 +12,6 @@ import {
     BotTags,
     isBotTags,
     isBot,
-    ERROR_BOT_PARTITION_ID,
     AuxPartitionConfig,
     ADMIN_PARTITION_ID,
     ADMIN_BRANCH_NAME,
@@ -162,11 +161,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     connectionProtocol: protocol,
                     private: true,
                     static: true,
-                };
-                partitions[ERROR_BOT_PARTITION_ID] = {
-                    type: 'bot',
-                    host: host,
-                    server: parsedId.channel,
                 };
             }
 

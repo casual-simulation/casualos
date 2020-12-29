@@ -44,16 +44,38 @@ describe('AuxWeaveReducer', () => {
     let weave: Weave<AuxOp>;
     let state: BotsState;
     let space: string;
+    let initial: boolean;
 
     beforeEach(() => {
         weave = new Weave();
         state = {};
         space = undefined;
+        initial = false;
     });
+
+    function initialCases(func: () => void) {
+        const cases = [
+            ['not initial', false],
+            ['initial', true],
+        ];
+
+        describe.each(cases)('%s', (_, init) => {
+            beforeEach(() => {
+                initial = init;
+            });
+            func();
+        });
+    }
 
     function add(...atoms: Atom<AuxOp>[]): BotsState {
         for (let atom of atoms) {
-            let update = reduce(weave, weave.insert(atom), undefined, space);
+            let update = reduce(
+                weave,
+                weave.insert(atom),
+                undefined,
+                space,
+                initial
+            );
             state = apply(state, update);
         }
         return state;
@@ -61,7 +83,13 @@ describe('AuxWeaveReducer', () => {
 
     function remove(...atoms: Atom<AuxOp>[]): BotsState {
         for (let atom of atoms) {
-            let update = reduce(weave, weave.remove(atom));
+            let update = reduce(
+                weave,
+                weave.remove(atom),
+                undefined,
+                undefined,
+                initial
+            );
             state = apply(state, update);
         }
         return state;
@@ -69,203 +97,221 @@ describe('AuxWeaveReducer', () => {
 
     describe('atom_added', () => {
         describe('bot', () => {
-            it('should calculate the File ID from the Atom ID', () => {
-                const bot1 = atom(atomId('a', 1), null, bot('test'));
-                state = add(bot1);
+            initialCases(() => {
+                it('should calculate the File ID from the Atom ID', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    state = add(bot1);
 
-                expect(state).toEqual({
-                    ['test']: {
-                        id: 'test',
-                        tags: {},
-                    },
-                });
-            });
-
-            it('should do nothing for bot atoms with a non-null cause', () => {
-                const b1 = atom(atomId('b', 1), null, bot('test1'));
-                const bot1 = atom(atomId('a', 2), b1, bot('test2'));
-
-                state = add(b1, bot1);
-                expect(state).toEqual({
-                    ['test1']: {
-                        id: 'test1',
-                        tags: {},
-                    },
-                });
-            });
-
-            it('should preserve the existing bot if a duplicate is added', () => {
-                const bot1A = atom(atomId('a', 1), null, bot('test1'));
-                const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
-                const value1A = atom(atomId('a', 3), tag1A, value('def'));
-
-                const bot1B = atom(atomId('a', 4), null, bot('test1'));
-                const tag1B = atom(atomId('a', 5), bot1B, tag('num'));
-                const value1B = atom(atomId('a', 6), tag1B, value(1));
-
-                state = add(bot1A, tag1A, value1A);
-                state = add(bot1B, tag1B, value1B);
-
-                expect(state).toEqual({
-                    ['test1']: {
-                        id: 'test1',
-                        tags: {
-                            abc: 'def',
-                            num: 1,
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {},
                         },
-                    },
+                    });
                 });
-            });
 
-            it('should gracefully handle duplicate bots with duplicate tags', () => {
-                const bot1A = atom(atomId('a', 1), null, bot('test1'));
-                const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
-                const value1A = atom(atomId('a', 3), tag1A, value('def'));
+                it('should do nothing for bot atoms with a non-null cause', () => {
+                    const b1 = atom(atomId('b', 1), null, bot('test1'));
+                    const bot1 = atom(atomId('a', 2), b1, bot('test2'));
 
-                const bot1B = atom(atomId('a', 4), null, bot('test1'));
-                const tag1B = atom(atomId('a', 5), bot1B, tag('abc'));
-                const value1B = atom(atomId('a', 6), tag1B, value('different'));
-
-                state = add(bot1A, tag1A, value1A);
-                state = add(bot1B, tag1B, value1B);
-
-                expect(state).toEqual({
-                    ['test1']: {
-                        id: 'test1',
-                        tags: {
-                            abc: 'different',
+                    state = add(b1, bot1);
+                    expect(state).toEqual({
+                        ['test1']: {
+                            id: 'test1',
+                            tags: {},
                         },
-                    },
+                    });
                 });
-            });
 
-            it('should gracefully handle duplicate bots when the first bot is deleted', () => {
-                const bot1A = atom(atomId('a', 1), null, bot('test1'));
-                const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
-                const value1A = atom(atomId('a', 3), tag1A, value('def'));
-                const del1A = atom(atomId('a', 4), bot1A, deleteOp());
+                it('should preserve the existing bot if a duplicate is added', () => {
+                    const bot1A = atom(atomId('a', 1), null, bot('test1'));
+                    const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
+                    const value1A = atom(atomId('a', 3), tag1A, value('def'));
 
-                const bot1B = atom(atomId('a', 5), null, bot('test1'));
-                const tag1B = atom(atomId('a', 6), bot1B, tag('abc'));
-                const value1B = atom(atomId('a', 7), tag1B, value('different'));
+                    const bot1B = atom(atomId('a', 4), null, bot('test1'));
+                    const tag1B = atom(atomId('a', 5), bot1B, tag('num'));
+                    const value1B = atom(atomId('a', 6), tag1B, value(1));
 
-                state = add(bot1A, tag1A, value1A, del1A);
-                state = add(bot1B, tag1B, value1B);
+                    state = add(bot1A, tag1A, value1A);
+                    state = add(bot1B, tag1B, value1B);
 
-                expect(state).toEqual({
-                    ['test1']: {
-                        id: 'test1',
-                        tags: {
-                            abc: 'different',
+                    expect(state).toEqual({
+                        ['test1']: {
+                            id: 'test1',
+                            tags: {
+                                abc: 'def',
+                                num: 1,
+                            },
                         },
-                    },
+                    });
+                });
+
+                it('should gracefully handle duplicate bots with duplicate tags', () => {
+                    const bot1A = atom(atomId('a', 1), null, bot('test1'));
+                    const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
+                    const value1A = atom(atomId('a', 3), tag1A, value('def'));
+
+                    const bot1B = atom(atomId('a', 4), null, bot('test1'));
+                    const tag1B = atom(atomId('a', 5), bot1B, tag('abc'));
+                    const value1B = atom(
+                        atomId('a', 6),
+                        tag1B,
+                        value('different')
+                    );
+
+                    state = add(bot1A, tag1A, value1A);
+                    state = add(bot1B, tag1B, value1B);
+
+                    expect(state).toEqual({
+                        ['test1']: {
+                            id: 'test1',
+                            tags: {
+                                abc: 'different',
+                            },
+                        },
+                    });
+                });
+
+                it('should gracefully handle duplicate bots when the first bot is deleted', () => {
+                    const bot1A = atom(atomId('a', 1), null, bot('test1'));
+                    const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
+                    const value1A = atom(atomId('a', 3), tag1A, value('def'));
+                    const del1A = atom(atomId('a', 4), bot1A, deleteOp());
+
+                    const bot1B = atom(atomId('a', 5), null, bot('test1'));
+                    const tag1B = atom(atomId('a', 6), bot1B, tag('abc'));
+                    const value1B = atom(
+                        atomId('a', 7),
+                        tag1B,
+                        value('different')
+                    );
+
+                    state = add(bot1A, tag1A, value1A, del1A);
+                    state = add(bot1B, tag1B, value1B);
+
+                    expect(state).toEqual({
+                        ['test1']: {
+                            id: 'test1',
+                            tags: {
+                                abc: 'different',
+                            },
+                        },
+                    });
                 });
             });
         });
 
         describe('delete', () => {
-            it('should remove the bot from the state', () => {
-                const bot1 = atom(atomId('a', 1), null, bot('test'));
-                const delete1 = atom(atomId('a', 2), bot1, deleteOp());
-                state = add(bot1, delete1);
+            initialCases(() => {
+                it('should remove the bot from the state', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const delete1 = atom(atomId('a', 2), bot1, deleteOp());
+                    state = add(bot1, delete1);
 
-                expect(state).toEqual({});
-            });
-
-            it('should ignore deletes whose cause is null', () => {
-                const delete1 = atom(atomId('a', 2), null, deleteOp());
-                state = add(delete1);
-
-                expect(state).toEqual({});
-            });
-
-            it('should ignore deletes that are not the first child of the bot', () => {
-                const bot1 = atom(atomId('a', 1), null, bot('test'));
-                const delete1 = atom(atomId('a', 2), bot1, deleteOp());
-                const tag1 = atom(atomId('a', 3), bot1, tag('test'));
-                state = add(bot1, tag1, delete1);
-
-                expect(state).toEqual({
-                    ['test']: {
-                        id: 'test',
-                        tags: {},
-                    },
+                    expect(state).toEqual({});
                 });
-            });
 
-            it('should not touch other bots', () => {
-                const bot1 = atom(atomId('a', 1), null, bot('test1'));
-                const bot2 = atom(atomId('a', 2), null, bot('test2'));
-                const delete1 = atom(atomId('a', 3), bot1, deleteOp());
+                it('should ignore deletes whose cause is null', () => {
+                    const delete1 = atom(atomId('a', 2), null, deleteOp());
+                    state = add(delete1);
 
-                state = add(bot1, bot2, delete1);
-
-                expect(state).toEqual({
-                    ['test2']: {
-                        id: 'test2',
-                        tags: {},
-                    },
+                    expect(state).toEqual({});
                 });
-            });
 
-            it('should only delete a bot if a bot atom is deleted', () => {
-                const bot1A = atom(atomId('b', 100), null, bot('test2'));
-                const tag1A = atom(atomId('b', 101), bot1A, tag('tag1'));
-                const val1A = atom(atomId('b', 102), tag1A, value('val1A'));
+                it('should ignore deletes that are not the first child of the bot', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const delete1 = atom(atomId('a', 2), bot1, deleteOp());
+                    const tag1 = atom(atomId('a', 3), bot1, tag('test'));
+                    state = add(bot1, tag1, delete1);
 
-                const bot1B = atom(atomId('b', 110), null, bot('test2'));
-                const tag1B = atom(atomId('b', 111), bot1B, tag('tag1'));
-                const val1B = atom(atomId('b', 112), tag1B, value('val1B'));
-                const del1B = atom(atomId('b', 113), bot1B, deleteOp());
-
-                state = add(bot1A, tag1A, val1A);
-                state = add(bot1B, tag1B, val1B);
-
-                expect(state).toEqual({
-                    ['test2']: {
-                        id: 'test2',
-                        tags: {
-                            tag1: 'val1B',
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {},
                         },
-                    },
+                    });
                 });
 
-                state = add(del1B);
+                it('should not touch other bots', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test1'));
+                    const bot2 = atom(atomId('a', 2), null, bot('test2'));
+                    const delete1 = atom(atomId('a', 3), bot1, deleteOp());
 
-                expect(state).toEqual({});
-            });
+                    state = add(bot1, bot2, delete1);
 
-            // TODO: Add support for deleting spans of text from values/inserts.
-            it.skip('should remove the span of text from the tag value', () => {
-                const bot1 = atom(atomId('a', 1), null, bot('test'));
-                const tag1 = atom(atomId('a', 2), bot1, tag('tag'));
-                const value1 = atom(atomId('a', 3), tag1, value('abcdef'));
-                const delete1 = atom(atomId('a', 2), value1, deleteOp(0, 2));
-                state = add(bot1, tag1, value1, delete1);
-
-                expect(state).toEqual({
-                    ['test']: {
-                        id: 'test',
-                        tags: {
-                            tag: 'def',
+                    expect(state).toEqual({
+                        ['test2']: {
+                            id: 'test2',
+                            tags: {},
                         },
-                    },
+                    });
+                });
+
+                it('should only delete a bot if a bot atom is deleted', () => {
+                    const bot1A = atom(atomId('b', 100), null, bot('test2'));
+                    const tag1A = atom(atomId('b', 101), bot1A, tag('tag1'));
+                    const val1A = atom(atomId('b', 102), tag1A, value('val1A'));
+
+                    const bot1B = atom(atomId('b', 110), null, bot('test2'));
+                    const tag1B = atom(atomId('b', 111), bot1B, tag('tag1'));
+                    const val1B = atom(atomId('b', 112), tag1B, value('val1B'));
+                    const del1B = atom(atomId('b', 113), bot1B, deleteOp());
+
+                    state = add(bot1A, tag1A, val1A);
+                    state = add(bot1B, tag1B, val1B);
+
+                    expect(state).toEqual({
+                        ['test2']: {
+                            id: 'test2',
+                            tags: {
+                                tag1: 'val1B',
+                            },
+                        },
+                    });
+
+                    state = add(del1B);
+
+                    expect(state).toEqual({});
+                });
+
+                // TODO: Add support for deleting spans of text from values/inserts.
+                it.skip('should remove the span of text from the tag value', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('tag'));
+                    const value1 = atom(atomId('a', 3), tag1, value('abcdef'));
+                    const delete1 = atom(
+                        atomId('a', 2),
+                        value1,
+                        deleteOp(0, 2)
+                    );
+                    state = add(bot1, tag1, value1, delete1);
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {
+                                tag: 'def',
+                            },
+                        },
+                    });
                 });
             });
         });
 
         describe('tag', () => {
-            it('should do nothing', () => {
-                const bot1 = atom(atomId('a', 1), null, bot('test'));
-                const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+            initialCases(() => {
+                it('should do nothing', () => {
+                    const bot1 = atom(atomId('a', 1), null, bot('test'));
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
 
-                state = add(bot1, tag1);
+                    state = add(bot1, tag1);
 
-                expect(state).toEqual({
-                    ['test']: {
-                        id: 'test',
-                        tags: {},
-                    },
+                    expect(state).toEqual({
+                        ['test']: {
+                            id: 'test',
+                            tags: {},
+                        },
+                    });
                 });
             });
         });
@@ -289,86 +335,56 @@ describe('AuxWeaveReducer', () => {
                 ['undefined', undefined],
             ];
 
-            describe('tag', () => {
-                it('should set the tag value', () => {
-                    const bot1 = atom(atomId('a', 1), null, bot('test'));
-                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
-                    const value1 = atom(atomId('a', 3), tag1, value('def'));
-
-                    state = add(bot1, tag1, value1);
-
-                    expect(state).toEqual({
-                        ['test']: {
-                            id: 'test',
-                            tags: {
-                                abc: 'def',
-                            },
-                        },
-                    });
-                });
-
-                it('should preserve values with timestamps after the new atom', () => {
-                    const bot1 = atom(atomId('a', 1), null, bot('test'));
-                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
-                    const value1 = atom(atomId('a', 3), tag1, value('def'));
-                    const value2 = atom(atomId('a', 4), tag1, value('haha'));
-
-                    state = add(bot1, tag1, value2, value1);
-
-                    expect(state).toEqual({
-                        ['test']: {
-                            id: 'test',
-                            tags: {
-                                abc: 'haha',
-                            },
-                        },
-                    });
-                });
-
-                it('should use last write wins for new tag values', () => {
-                    const bot1 = atom(atomId('a', 1), null, bot('test'));
-                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
-                    const value1 = atom(atomId('a', 3), tag1, value('def'));
-                    const value2 = atom(atomId('a', 4), tag1, value('haha'));
-
-                    state = add(bot1, tag1, value1, value2);
-
-                    expect(state).toEqual({
-                        ['test']: {
-                            id: 'test',
-                            tags: {
-                                abc: 'haha',
-                            },
-                        },
-                    });
-                });
-
-                it.each(deleteValueCases)(
-                    'should delete tags with %s values',
-                    (desc, val) => {
+            initialCases(() => {
+                describe('tag', () => {
+                    it('should set the tag value', () => {
                         const bot1 = atom(atomId('a', 1), null, bot('test'));
                         const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
                         const value1 = atom(atomId('a', 3), tag1, value('def'));
-                        const value2 = atom(atomId('a', 4), tag1, value(val));
 
-                        state = add(bot1, tag1, value1, value2);
+                        state = add(bot1, tag1, value1);
 
                         expect(state).toEqual({
                             ['test']: {
                                 id: 'test',
-                                tags: {},
+                                tags: {
+                                    abc: 'def',
+                                },
                             },
                         });
-                    }
-                );
+                    });
 
-                it.each(preserveValueCases)(
-                    'should preserve tags with %s values',
-                    (desc, val) => {
+                    it('should preserve values with timestamps after the new atom', () => {
                         const bot1 = atom(atomId('a', 1), null, bot('test'));
                         const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
                         const value1 = atom(atomId('a', 3), tag1, value('def'));
-                        const value2 = atom(atomId('a', 4), tag1, value(val));
+                        const value2 = atom(
+                            atomId('a', 4),
+                            tag1,
+                            value('haha')
+                        );
+
+                        state = add(bot1, tag1, value2, value1);
+
+                        expect(state).toEqual({
+                            ['test']: {
+                                id: 'test',
+                                tags: {
+                                    abc: 'haha',
+                                },
+                            },
+                        });
+                    });
+
+                    it('should use last write wins for new tag values', () => {
+                        const bot1 = atom(atomId('a', 1), null, bot('test'));
+                        const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                        const value1 = atom(atomId('a', 3), tag1, value('def'));
+                        const value2 = atom(
+                            atomId('a', 4),
+                            tag1,
+                            value('haha')
+                        );
 
                         state = add(bot1, tag1, value1, value2);
 
@@ -376,25 +392,147 @@ describe('AuxWeaveReducer', () => {
                             ['test']: {
                                 id: 'test',
                                 tags: {
-                                    abc: val,
+                                    abc: 'haha',
                                 },
                             },
                         });
-                    }
-                );
+                    });
 
-                it.each(invalidTagNameCases)(
-                    'should ignore tags with %s names',
-                    (desc, name) => {
+                    it.each(deleteValueCases)(
+                        'should delete tags with %s values',
+                        (desc, val) => {
+                            const bot1 = atom(
+                                atomId('a', 1),
+                                null,
+                                bot('test')
+                            );
+                            const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                            const value1 = atom(
+                                atomId('a', 3),
+                                tag1,
+                                value('def')
+                            );
+                            const value2 = atom(
+                                atomId('a', 4),
+                                tag1,
+                                value(val)
+                            );
+
+                            state = add(bot1, tag1, value1, value2);
+
+                            expect(state).toEqual({
+                                ['test']: {
+                                    id: 'test',
+                                    tags: {},
+                                },
+                            });
+                        }
+                    );
+
+                    it.each(preserveValueCases)(
+                        'should preserve tags with %s values',
+                        (desc, val) => {
+                            const bot1 = atom(
+                                atomId('a', 1),
+                                null,
+                                bot('test')
+                            );
+                            const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                            const value1 = atom(
+                                atomId('a', 3),
+                                tag1,
+                                value('def')
+                            );
+                            const value2 = atom(
+                                atomId('a', 4),
+                                tag1,
+                                value(val)
+                            );
+
+                            state = add(bot1, tag1, value1, value2);
+
+                            expect(state).toEqual({
+                                ['test']: {
+                                    id: 'test',
+                                    tags: {
+                                        abc: val,
+                                    },
+                                },
+                            });
+                        }
+                    );
+
+                    it.each(invalidTagNameCases)(
+                        'should ignore tags with %s names',
+                        (desc, name) => {
+                            const bot1 = atom(
+                                atomId('a', 1),
+                                null,
+                                bot('test')
+                            );
+                            const tag1 = atom(atomId('a', 2), bot1, tag(name));
+                            const value1 = atom(
+                                atomId('a', 3),
+                                tag1,
+                                value('haha')
+                            );
+
+                            state = add(bot1, tag1, value1);
+
+                            expect(state).toEqual({
+                                ['test']: {
+                                    id: 'test',
+                                    tags: {},
+                                },
+                            });
+                        }
+                    );
+
+                    it('should preserve other tag values when deleting a tag', () => {
                         const bot1 = atom(atomId('a', 1), null, bot('test'));
-                        const tag1 = atom(atomId('a', 2), bot1, tag(name));
+                        const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                        const value1 = atom(atomId('a', 3), tag1, value('def'));
+                        const value2 = atom(atomId('a', 6), tag1, value(null));
+
+                        const otherTag1 = atom(
+                            atomId('a', 4),
+                            bot1,
+                            tag('test')
+                        );
+                        const otherValue1 = atom(
+                            atomId('a', 5),
+                            otherTag1,
+                            value(true)
+                        );
+
+                        state = add(
+                            bot1,
+                            tag1,
+                            value1,
+                            otherTag1,
+                            otherValue1,
+                            value2
+                        );
+
+                        expect(state).toEqual({
+                            ['test']: {
+                                id: 'test',
+                                tags: {
+                                    test: true,
+                                },
+                            },
+                        });
+                    });
+
+                    it('should ignore values whose direct cause is nonexistent', () => {
+                        const bot1 = atom(atomId('a', 1), null, bot('test'));
                         const value1 = atom(
                             atomId('a', 3),
-                            tag1,
+                            bot1,
                             value('haha')
                         );
 
-                        state = add(bot1, tag1, value1);
+                        state = add(bot1, value1);
 
                         expect(state).toEqual({
                             ['test']: {
@@ -402,223 +540,10 @@ describe('AuxWeaveReducer', () => {
                                 tags: {},
                             },
                         });
-                    }
-                );
-
-                it('should preserve other tag values when deleting a tag', () => {
-                    const bot1 = atom(atomId('a', 1), null, bot('test'));
-                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
-                    const value1 = atom(atomId('a', 3), tag1, value('def'));
-                    const value2 = atom(atomId('a', 6), tag1, value(null));
-
-                    const otherTag1 = atom(atomId('a', 4), bot1, tag('test'));
-                    const otherValue1 = atom(
-                        atomId('a', 5),
-                        otherTag1,
-                        value(true)
-                    );
-
-                    state = add(
-                        bot1,
-                        tag1,
-                        value1,
-                        otherTag1,
-                        otherValue1,
-                        value2
-                    );
-
-                    expect(state).toEqual({
-                        ['test']: {
-                            id: 'test',
-                            tags: {
-                                test: true,
-                            },
-                        },
                     });
-                });
 
-                it('should ignore values whose direct cause is nonexistent', () => {
-                    const bot1 = atom(atomId('a', 1), null, bot('test'));
-                    const value1 = atom(atomId('a', 3), bot1, value('haha'));
-
-                    state = add(bot1, value1);
-
-                    expect(state).toEqual({
-                        ['test']: {
-                            id: 'test',
-                            tags: {},
-                        },
-                    });
-                });
-
-                it('should ignore values whose grandparent cause is nonexistent', () => {
-                    const tag1 = atom(atomId('a', 1), null, tag('abc'));
-                    const value1 = atom(atomId('a', 3), tag1, value('haha'));
-
-                    state = add(tag1, value1);
-
-                    expect(state).toEqual({});
-                });
-
-                it('should ignore values whose cause is not a tag', () => {
-                    const bot1 = atom(atomId('a', 1), null, bot('test1'));
-                    const tag1 = atom(atomId('a', 2), bot1, bot('test2'));
-                    const value1 = atom(atomId('a', 3), tag1, value('haha'));
-
-                    state = add(bot1, tag1, value1);
-
-                    expect(state).toEqual({
-                        ['test1']: {
-                            id: 'test1',
-                            tags: {},
-                        },
-                    });
-                });
-
-                it('should ignore values whose grandcause is not a bot', () => {
-                    const bot1 = atom(atomId('a', 1), null, tag('test1'));
-                    const tag1 = atom(atomId('a', 2), bot1, tag('test2'));
-                    const value1 = atom(atomId('a', 3), tag1, value('haha'));
-
-                    state = add(bot1, tag1, value1);
-
-                    expect(state).toEqual({});
-                });
-
-                it('should ignore values when the bot is deleted', () => {
-                    const bot1 = atom(atomId('a', 1), null, bot('bot'));
-                    const tag1 = atom(atomId('a', 2), bot1, tag('test'));
-                    const delete1 = atom(atomId('a', 3), bot1, deleteOp());
-                    const value1 = atom(atomId('a', 4), tag1, value('haha'));
-
-                    state = add(bot1, tag1, delete1, value1);
-
-                    expect(state).toEqual({});
-                });
-            });
-
-            describe('TagMask', () => {
-                beforeEach(() => {
-                    space = 'space';
-                });
-
-                it('should set the mask value', () => {
-                    const tag1 = atom(
-                        atomId('a', 2),
-                        null,
-                        tagMask('test', 'abc')
-                    );
-                    const value1 = atom(atomId('a', 3), tag1, value('def'));
-
-                    state = add(tag1, value1);
-
-                    expect(state).toEqual({
-                        ['test']: {
-                            masks: {
-                                [space]: {
-                                    abc: 'def',
-                                },
-                            },
-                        },
-                    });
-                });
-
-                it('should preserve values with timestamps after the new atom', () => {
-                    const tag1 = atom(
-                        atomId('a', 2),
-                        null,
-                        tagMask('test', 'abc')
-                    );
-                    const value1 = atom(atomId('a', 3), tag1, value('def'));
-                    const value2 = atom(atomId('a', 4), tag1, value('haha'));
-
-                    state = add(tag1, value2, value1);
-
-                    expect(state).toEqual({
-                        ['test']: {
-                            masks: {
-                                [space]: {
-                                    abc: 'haha',
-                                },
-                            },
-                        },
-                    });
-                });
-
-                it('should use last write wins for new tag values', () => {
-                    const tag1 = atom(
-                        atomId('a', 2),
-                        null,
-                        tagMask('test', 'abc')
-                    );
-                    const value1 = atom(atomId('a', 3), tag1, value('def'));
-                    const value2 = atom(atomId('a', 4), tag1, value('haha'));
-
-                    state = add(tag1, value1, value2);
-
-                    expect(state).toEqual({
-                        ['test']: {
-                            masks: {
-                                [space]: {
-                                    abc: 'haha',
-                                },
-                            },
-                        },
-                    });
-                });
-
-                it.each(deleteValueCases)(
-                    'should delete tags with %s values',
-                    (desc, val) => {
-                        const tag1 = atom(
-                            atomId('a', 2),
-                            null,
-                            tagMask('test', 'abc')
-                        );
-                        const value1 = atom(atomId('a', 3), tag1, value('def'));
-                        const value2 = atom(atomId('a', 4), tag1, value(val));
-
-                        state = add(tag1, value1, value2);
-
-                        expect(state).toEqual({
-                            ['test']: {},
-                        });
-                    }
-                );
-
-                it.each(preserveValueCases)(
-                    'should preserve tags with %s values',
-                    (desc, val) => {
-                        const tag1 = atom(
-                            atomId('a', 2),
-                            null,
-                            tagMask('test', 'abc')
-                        );
-                        const value1 = atom(atomId('a', 3), tag1, value('def'));
-                        const value2 = atom(atomId('a', 4), tag1, value(val));
-
-                        state = add(tag1, value1, value2);
-
-                        expect(state).toEqual({
-                            ['test']: {
-                                masks: {
-                                    [space]: {
-                                        abc: val,
-                                    },
-                                },
-                            },
-                        });
-                    }
-                );
-
-                it.each(invalidTagNameCases)(
-                    'should ignore tags with %s names',
-                    (desc, name) => {
-                        const tag1 = atom(
-                            atomId('a', 2),
-                            null,
-                            tagMask('test', name)
-                        );
+                    it('should ignore values whose grandparent cause is nonexistent', () => {
+                        const tag1 = atom(atomId('a', 1), null, tag('abc'));
                         const value1 = atom(
                             atomId('a', 3),
                             tag1,
@@ -628,57 +553,278 @@ describe('AuxWeaveReducer', () => {
                         state = add(tag1, value1);
 
                         expect(state).toEqual({});
-                    }
-                );
+                    });
 
-                it('should preserve other tag values when deleting a tag', () => {
-                    const tag1 = atom(
-                        atomId('a', 2),
-                        null,
-                        tagMask('test', 'abc')
-                    );
-                    const value1 = atom(atomId('a', 3), tag1, value('def'));
-                    const value2 = atom(atomId('a', 6), tag1, value(null));
+                    it('should ignore values whose cause is not a tag', () => {
+                        const bot1 = atom(atomId('a', 1), null, bot('test1'));
+                        const tag1 = atom(atomId('a', 2), bot1, bot('test2'));
+                        const value1 = atom(
+                            atomId('a', 3),
+                            tag1,
+                            value('haha')
+                        );
 
-                    const otherTag1 = atom(
-                        atomId('a', 4),
-                        null,
-                        tagMask('test', 'test')
-                    );
-                    const otherValue1 = atom(
-                        atomId('a', 5),
-                        otherTag1,
-                        value(true)
-                    );
+                        state = add(bot1, tag1, value1);
 
-                    state = add(tag1, value1, otherTag1, otherValue1, value2);
-
-                    expect(state).toEqual({
-                        ['test']: {
-                            masks: {
-                                [space]: {
-                                    test: true,
-                                },
+                        expect(state).toEqual({
+                            ['test1']: {
+                                id: 'test1',
+                                tags: {},
                             },
-                        },
+                        });
+                    });
+
+                    it('should ignore values whose grandcause is not a bot', () => {
+                        const bot1 = atom(atomId('a', 1), null, tag('test1'));
+                        const tag1 = atom(atomId('a', 2), bot1, tag('test2'));
+                        const value1 = atom(
+                            atomId('a', 3),
+                            tag1,
+                            value('haha')
+                        );
+
+                        state = add(bot1, tag1, value1);
+
+                        expect(state).toEqual({});
+                    });
+
+                    it('should ignore values when the bot is deleted', () => {
+                        const bot1 = atom(atomId('a', 1), null, bot('bot'));
+                        const tag1 = atom(atomId('a', 2), bot1, tag('test'));
+                        const delete1 = atom(atomId('a', 3), bot1, deleteOp());
+                        const value1 = atom(
+                            atomId('a', 4),
+                            tag1,
+                            value('haha')
+                        );
+
+                        state = add(bot1, tag1, delete1, value1);
+
+                        expect(state).toEqual({});
                     });
                 });
 
-                it('should ignore values whose direct cause is nonexistent', () => {
-                    const value1 = atom(atomId('a', 3), null, value('haha'));
+                describe('TagMask', () => {
+                    beforeEach(() => {
+                        space = 'space';
+                    });
 
-                    state = add(value1);
+                    it('should set the mask value', () => {
+                        const tag1 = atom(
+                            atomId('a', 2),
+                            null,
+                            tagMask('test', 'abc')
+                        );
+                        const value1 = atom(atomId('a', 3), tag1, value('def'));
 
-                    expect(state).toEqual({});
-                });
+                        state = add(tag1, value1);
 
-                it('should ignore values whose cause is not a tag mask', () => {
-                    const tag1 = atom(atomId('a', 2), null, tag('test2'));
-                    const value1 = atom(atomId('a', 3), tag1, value('haha'));
+                        expect(state).toEqual({
+                            ['test']: {
+                                masks: {
+                                    [space]: {
+                                        abc: 'def',
+                                    },
+                                },
+                            },
+                        });
+                    });
 
-                    state = add(tag1, value1);
+                    it('should preserve values with timestamps after the new atom', () => {
+                        const tag1 = atom(
+                            atomId('a', 2),
+                            null,
+                            tagMask('test', 'abc')
+                        );
+                        const value1 = atom(atomId('a', 3), tag1, value('def'));
+                        const value2 = atom(
+                            atomId('a', 4),
+                            tag1,
+                            value('haha')
+                        );
 
-                    expect(state).toEqual({});
+                        state = add(tag1, value2, value1);
+
+                        expect(state).toEqual({
+                            ['test']: {
+                                masks: {
+                                    [space]: {
+                                        abc: 'haha',
+                                    },
+                                },
+                            },
+                        });
+                    });
+
+                    it('should use last write wins for new tag values', () => {
+                        const tag1 = atom(
+                            atomId('a', 2),
+                            null,
+                            tagMask('test', 'abc')
+                        );
+                        const value1 = atom(atomId('a', 3), tag1, value('def'));
+                        const value2 = atom(
+                            atomId('a', 4),
+                            tag1,
+                            value('haha')
+                        );
+
+                        state = add(tag1, value1, value2);
+
+                        expect(state).toEqual({
+                            ['test']: {
+                                masks: {
+                                    [space]: {
+                                        abc: 'haha',
+                                    },
+                                },
+                            },
+                        });
+                    });
+
+                    it.each(deleteValueCases)(
+                        'should delete tags with %s values',
+                        (desc, val) => {
+                            const tag1 = atom(
+                                atomId('a', 2),
+                                null,
+                                tagMask('test', 'abc')
+                            );
+                            const value1 = atom(
+                                atomId('a', 3),
+                                tag1,
+                                value('def')
+                            );
+                            const value2 = atom(
+                                atomId('a', 4),
+                                tag1,
+                                value(val)
+                            );
+
+                            state = add(tag1, value1, value2);
+
+                            expect(state).toEqual({
+                                ['test']: {},
+                            });
+                        }
+                    );
+
+                    it.each(preserveValueCases)(
+                        'should preserve tags with %s values',
+                        (desc, val) => {
+                            const tag1 = atom(
+                                atomId('a', 2),
+                                null,
+                                tagMask('test', 'abc')
+                            );
+                            const value1 = atom(
+                                atomId('a', 3),
+                                tag1,
+                                value('def')
+                            );
+                            const value2 = atom(
+                                atomId('a', 4),
+                                tag1,
+                                value(val)
+                            );
+
+                            state = add(tag1, value1, value2);
+
+                            expect(state).toEqual({
+                                ['test']: {
+                                    masks: {
+                                        [space]: {
+                                            abc: val,
+                                        },
+                                    },
+                                },
+                            });
+                        }
+                    );
+
+                    it.each(invalidTagNameCases)(
+                        'should ignore tags with %s names',
+                        (desc, name) => {
+                            const tag1 = atom(
+                                atomId('a', 2),
+                                null,
+                                tagMask('test', name)
+                            );
+                            const value1 = atom(
+                                atomId('a', 3),
+                                tag1,
+                                value('haha')
+                            );
+
+                            state = add(tag1, value1);
+
+                            expect(state).toEqual({});
+                        }
+                    );
+
+                    it('should preserve other tag values when deleting a tag', () => {
+                        const tag1 = atom(
+                            atomId('a', 2),
+                            null,
+                            tagMask('test', 'abc')
+                        );
+                        const value1 = atom(atomId('a', 3), tag1, value('def'));
+                        const value2 = atom(atomId('a', 6), tag1, value(null));
+
+                        const otherTag1 = atom(
+                            atomId('a', 4),
+                            null,
+                            tagMask('test', 'test')
+                        );
+                        const otherValue1 = atom(
+                            atomId('a', 5),
+                            otherTag1,
+                            value(true)
+                        );
+
+                        state = add(
+                            tag1,
+                            value1,
+                            otherTag1,
+                            otherValue1,
+                            value2
+                        );
+
+                        expect(state).toEqual({
+                            ['test']: {
+                                masks: {
+                                    [space]: {
+                                        test: true,
+                                    },
+                                },
+                            },
+                        });
+                    });
+
+                    it('should ignore values whose direct cause is nonexistent', () => {
+                        const value1 = atom(
+                            atomId('a', 3),
+                            null,
+                            value('haha')
+                        );
+
+                        state = add(value1);
+
+                        expect(state).toEqual({});
+                    });
+
+                    it('should ignore values whose cause is not a tag mask', () => {
+                        const tag1 = atom(atomId('a', 2), null, tag('test2'));
+                        const value1 = atom(
+                            atomId('a', 3),
+                            tag1,
+                            value('haha')
+                        );
+
+                        state = add(tag1, value1);
+
+                        expect(state).toEqual({});
+                    });
                 });
             });
         });

@@ -20,6 +20,7 @@ import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { ScriptError, RanOutOfEnergyError } from './AuxResults';
 import uuid from 'uuid/v4';
+import { sortBy, sortedIndex, sortedIndexOf } from 'lodash';
 
 /**
  * Holds global values that need to be accessible from the runtime.
@@ -106,6 +107,20 @@ export interface AuxGlobalContext {
     destroyBot(bot: RuntimeBot): void;
 
     /**
+     * Gets the list of bot IDs that have a listener for the given tag.
+     * @param tag The tag.
+     */
+    getBotIdsWithListener(tag: string): string[];
+
+    /**
+     * Records whether the given ID has a listener for the given tag.
+     * @param id The ID of the bot.
+     * @param tag The tag that the bot has a listener for.
+     * @param hasListener Whether the bot has a listener for the  given tag.
+     */
+    recordListenerPresense(id: string, tag: string, hasListener: boolean): void;
+
+    /**
      * Creates a new task.
      * @param Whether to use an unguessable task ID. Defaults to false.
      * @param Whether the task is allowed to be resolved via a remote action result. Defaults to false.
@@ -132,6 +147,21 @@ export interface AuxGlobalContext {
      *               This should be true if resolveTask() is being called in response to a remote or device action.
      */
     rejectTask(taskId: number | string, error: any, remote: boolean): void;
+
+    /**
+     * Gets a list of timers that contains the amount of time a tag has run for in miliseconds.
+     */
+    getShoutTimers(): {
+        tag: string;
+        timeMs: number;
+    }[];
+
+    /**
+     * Adds the given number of miliseconds to the timer for the given shout.
+     * @param shout The name of the shout.
+     * @param ms The number of miliseconds to add.
+     */
+    addShoutTime(shout: string, ms: number): void;
 }
 
 /**
@@ -285,6 +315,10 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     private _taskCounter: number = 0;
     private _scriptFactory: RuntimeBotFactory;
     private _batcher: RuntimeBatcher;
+    private _shoutTimers: {
+        [shout: string]: number;
+    } = {};
+    private _listenerMap: Map<string, string[]>;
 
     /**
      * Creates a new global context.
@@ -303,6 +337,61 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this.device = device;
         this._scriptFactory = scriptFactory;
         this._batcher = batcher;
+        this._listenerMap = new Map();
+    }
+
+    getBotIdsWithListener(tag: string): string[] {
+        const set = this._listenerMap.get(tag);
+        if (!set) {
+            return [];
+        }
+
+        return set.slice();
+    }
+
+    recordListenerPresense(
+        id: string,
+        tag: string,
+        hasListener: boolean
+    ): void {
+        let set = this._listenerMap.get(tag);
+        if (!hasListener && !set) {
+            // we don't have a listener to record
+            // and there is no list for the tag
+            // so there is nothing to do.
+            return;
+        }
+
+        if (!set) {
+            set = [];
+            this._listenerMap.set(tag, set);
+        }
+
+        if (hasListener) {
+            const index = sortedIndex(set, id);
+
+            // ensure that our indexing is in bounds
+            // to prevent the array from being put into slow-mode
+            // see https://stackoverflow.com/a/26737403/1832856
+            if (index < set.length && index >= 0) {
+                const current = set[index];
+                if (current !== id) {
+                    set.splice(index, 0, id);
+                }
+            } else {
+                set.splice(index, 0, id);
+            }
+        } else {
+            const index = sortedIndexOf(set, id);
+            if (index >= 0) {
+                set.splice(index, 1);
+            }
+
+            // Delete the tag from the list if there are no more IDs
+            if (set.length <= 0) {
+                this._listenerMap.delete(tag);
+            }
+        }
     }
 
     /**
@@ -367,6 +456,14 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         const script = this._scriptFactory.createRuntimeBot(bot) || null;
         if (script) {
             addToContext(this, script);
+
+            if (script.listeners) {
+                for (let key in script.listeners) {
+                    if (typeof script.listeners[key] === 'function') {
+                        this.recordListenerPresense(script.id, key, true);
+                    }
+                }
+            }
         }
         this.enqueueAction(botAdded(bot));
         return script;
@@ -385,6 +482,14 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         if (mode === RealtimeEditMode.Immediate) {
             this.bots.splice(index, 1);
             delete this.state[bot.id];
+
+            if (bot.listeners) {
+                for (let key in bot.listeners) {
+                    if (typeof bot.listeners[key] === 'function') {
+                        this.recordListenerPresense(bot.id, key, false);
+                    }
+                }
+            }
         }
         this.enqueueAction(botRemoved(bot.id));
     }
@@ -425,5 +530,26 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             this.tasks.delete(taskId);
             task.reject(error);
         }
+    }
+
+    getShoutTimers() {
+        const keys = Object.keys(this._shoutTimers);
+        const list = keys.map((k) => ({
+            tag: k,
+            timeMs: this._shoutTimers[k],
+        }));
+
+        return sortBy(list, (timer) => -timer.timeMs);
+    }
+
+    addShoutTime(shout: string, ms: number) {
+        if (ms < 0) {
+            throw new Error('Cannot add negative time to a shout timer.');
+        }
+        if (!(shout in this._shoutTimers)) {
+            this._shoutTimers[shout] = 0;
+        }
+
+        this._shoutTimers[shout] += ms;
     }
 }

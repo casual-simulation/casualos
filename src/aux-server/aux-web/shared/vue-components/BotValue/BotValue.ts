@@ -76,12 +76,18 @@ export default class BotValue extends Vue {
     }
 
     focus() {
+        if (this.$refs.textarea) {
+            (<HTMLTextAreaElement>this.$refs.textarea).focus();
+        }
+    }
+
+    onFocus() {
         this._focused = true;
         this._updateValue(true);
         this.$emit('focusChanged', true);
     }
 
-    blur() {
+    onBlur() {
         this._focused = false;
         this._updateValue();
 

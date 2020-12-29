@@ -1,9 +1,10 @@
 <template>
     <div class="value-input-container">
         <textarea
+            ref="textarea"
             @input="valueChanged(bot, tag, $event.target.value)"
-            @focus="focus()"
-            @blur="blur()"
+            @focus="onFocus()"
+            @blur="onBlur()"
             :value="value"
             class="value-input"
             :disabled="readOnly"

@@ -4,8 +4,6 @@ import {
     BotCalculationContext,
     isFormula,
     calculateBotValue,
-    isArray,
-    parseArray,
     hasValue,
     isBot,
     calculateStringTagValue,
@@ -44,13 +42,13 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
 
     dispose(): void {
         if (this.arrows) {
-            this.arrows.forEach(a => {
+            this.arrows.forEach((a) => {
                 a.dispose();
             });
         }
 
         if (this.walls) {
-            this.walls.forEach(a => {
+            this.walls.forEach((a) => {
                 a.dispose();
             });
         }
@@ -144,7 +142,7 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
         if (!hasValue(style) || style !== 'wall') {
             if (this.arrows) {
                 // Filter out lines that are no longer being used.
-                this.arrows = this.arrows.filter(a => {
+                this.arrows = this.arrows.filter((a) => {
                     if (a && a.targetBot3d) {
                         if (
                             validLineIds &&
@@ -174,7 +172,7 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
         if (style === 'wall') {
             if (this.walls) {
                 // Filter out lines that are no longer being used.
-                this.walls = this.walls.filter(a => {
+                this.walls = this.walls.filter((a) => {
                     if (a && a.targetBot3d) {
                         if (
                             validLineIds &&
@@ -217,7 +215,7 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
         if (this.bot3D.bot.id === targetBotId) return;
 
         const bots = this._finder.findBotsById(targetBotId);
-        bots.forEach(f =>
+        bots.forEach((f) =>
             this._trySetupLine(calc, <AuxBot3D>f, validLineIds, color)
         );
     }

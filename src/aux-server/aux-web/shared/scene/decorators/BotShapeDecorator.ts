@@ -120,9 +120,7 @@ export class BotShapeDecorator
 
     constructor(bot3D: AuxBot3D, game: Game) {
         super(bot3D);
-
         this._game = game;
-        this._rebuildShape('cube', null, null, null, null);
     }
 
     frameUpdate() {

@@ -17,8 +17,6 @@ import {
     isFormula,
     isScript,
     isNumber,
-    isArray,
-    parseArray,
     BOT_SPACE_TAG,
     botUpdated,
     isBot,
@@ -43,6 +41,7 @@ import {
     RuntimeBot,
     CLEAR_CHANGES_SYMBOL,
     CompiledBotListener,
+    DNA_TAG_PREFIX,
 } from '../bots';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -54,11 +53,6 @@ import {
     isInContext,
 } from './AuxGlobalContext';
 import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
-import {
-    DependencyManager,
-    BotDependentInfo,
-    mergeDependents,
-} from './DependencyManager';
 import {
     RuntimeBotInterface,
     RuntimeBotFactory,
@@ -84,6 +78,7 @@ import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { applyEdit, isTagEdit, mergeVersions } from '../aux-format-2';
 import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
 import { RuntimeStateVersion } from './RuntimeStateVersion';
+import { replaceMacros } from './Transpiler';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -96,7 +91,6 @@ export class AuxRuntime
     private _compiledState: CompiledBotsState = {};
     private _existingMasks: { [id: string]: BotTagMasks } = {};
     private _compiler = new AuxCompiler();
-    private _dependencies = new DependencyManager();
     private _onActions: Subject<BotAction[]>;
     private _onErrors: Subject<ScriptError[]>;
 
@@ -260,6 +254,10 @@ export class AuxRuntime
         this._zone = batchingZone;
     }
 
+    getShoutTimers(): { [shout: string]: number } {
+        return {};
+    }
+
     get closed() {
         return this._sub.closed;
     }
@@ -304,13 +302,6 @@ export class AuxRuntime
      */
     get onErrors(): Observable<ScriptError[]> {
         return this._onErrors;
-    }
-
-    /**
-     * Gets the dependency manager that the runtime is using.
-     */
-    get dependencies() {
-        return this._dependencies;
     }
 
     /**
@@ -487,72 +478,6 @@ export class AuxRuntime
     }
 
     /**
-     * Signals to the runtime that the given bots were added.
-     * @param bots The bots.
-     * @deprecated Use stateUpdated() instead.
-     */
-    botsAdded(bots: Bot[]): StateUpdatedEvent {
-        let update = {
-            state: {},
-            addedBots: [],
-            updatedBots: [],
-            removedBots: [],
-        } as StateUpdatedEvent;
-
-        const { newBotIDs, newBots, changes } = this._addBotsToState(
-            bots,
-            update
-        );
-
-        this._updateDependentBots(changes, update, newBotIDs);
-        this._sendOnBotsAddedShouts(newBots, update);
-
-        return update;
-    }
-
-    /**
-     * Signals to the runtime that the given bots were removed.
-     * @param botIds The IDs of the bots that were removed.
-     * @deprecated Use stateUpdated() instead.
-     */
-    botsRemoved(botIds: string[]): StateUpdatedEvent {
-        let update = {
-            state: {},
-            addedBots: [],
-            updatedBots: [],
-            removedBots: [],
-        } as StateUpdatedEvent;
-
-        const { changes } = this._removeBotsFromState(botIds, update);
-        this._updateDependentBots(changes, update, new Set());
-
-        this._sendOnBotsRemovedShouts(botIds);
-
-        return update;
-    }
-
-    /**
-     * Signals to the runtime that the given bots were updated.
-     * @param updates The bot updates.
-     * @deprecated Use stateUpdated() instead.
-     */
-    botsUpdated(updates: UpdatedBot[]): StateUpdatedEvent {
-        let update = {
-            state: {},
-            addedBots: [],
-            updatedBots: [],
-            removedBots: [],
-        } as StateUpdatedEvent;
-
-        const { changes } = this._updateBotsInState(updates, update);
-        this._updateDependentBots(changes, update, new Set());
-
-        this._sendOnBotsChangedShouts(updates);
-
-        return update;
-    }
-
-    /**
      * Signals to the runtime that the bots state has been updated.
      * @param update The bot state update.
      */
@@ -564,7 +489,6 @@ export class AuxRuntime
             removedBots: [],
         } as StateUpdatedEvent;
 
-        let changes = {} as BotDependentInfo;
         let newBotIds = null as Set<string>;
         let newBots = null as [CompiledBot, PrecalculatedBot][];
         let updates = null as UpdatedBot[];
@@ -572,23 +496,17 @@ export class AuxRuntime
             const {
                 newBots: addedNewBots,
                 newBotIDs: addedBotIds,
-                changes: addBotChanges,
             } = this._addBotsToState(
                 update.addedBots.map((id) => update.state[id] as Bot),
                 nextUpdate
             );
 
-            newBotIds = addedBotIds;
             newBots = addedNewBots;
-            changes = mergeDependents(changes, addBotChanges);
+            newBotIds = addedBotIds;
         }
 
         if (update.removedBots.length > 0) {
-            const { changes: removeBotChanges } = this._removeBotsFromState(
-                update.removedBots,
-                nextUpdate
-            );
-            changes = mergeDependents(changes, removeBotChanges);
+            this._removeBotsFromState(update.removedBots, nextUpdate);
         }
 
         if (update.updatedBots.length > 0) {
@@ -601,15 +519,13 @@ export class AuxRuntime
                 return updatedBot(partial, current);
             });
 
-            const { changes: updateBotChanges } = this._updateBotsWithState(
+            this._updateBotsWithState(
                 update,
                 updates,
-                nextUpdate
+                nextUpdate,
+                newBotIds || new Set()
             );
-            changes = merge(changes, updateBotChanges);
         }
-
-        this._updateDependentBots(changes, nextUpdate, newBotIds || new Set());
 
         this._sendOnBotsAddedShouts(newBots, nextUpdate);
         this._sendOnBotsRemovedShouts(update.removedBots);
@@ -774,12 +690,9 @@ export class AuxRuntime
             }
         }
 
-        const changes = this._dependencies.addBots(bots);
-
         return {
             newBotIDs,
             newBots,
-            changes,
         };
     }
 
@@ -796,110 +709,13 @@ export class AuxRuntime
             nextUpdate.state[id] = null;
             nextUpdate.removedBots.push(id);
         }
-
-        const changes = this._dependencies.removeBots(botIds);
-
-        return {
-            changes,
-        };
-    }
-
-    private _updateBotsInState(
-        updates: UpdatedBot[],
-        nextUpdate: StateUpdatedEvent
-    ) {
-        for (let u of updates) {
-            if (!u) {
-                continue;
-            }
-
-            // 1. get compiled bot
-            let compiled = this._compiledState[u.bot.id];
-
-            if (!compiled) {
-                continue;
-            }
-
-            // 2. update
-            let updates = this._compileTags(u.tags, compiled, u.bot);
-
-            // 3. convert to precalculated
-            let partial = {
-                tags: {},
-                values: {},
-            } as Partial<PrecalculatedBot>;
-            if (u.bot.masks) {
-                partial.masks = {};
-            }
-
-            for (let [space, tag] of updates) {
-                if (space) {
-                    if (u.bot.masks) {
-                        for (let space in u.bot.masks) {
-                            if (hasValue(u.bot.masks[space][tag])) {
-                                if (!partial.masks[space]) {
-                                    partial.masks[space] = {};
-                                }
-                                partial.masks[space][tag] =
-                                    u.bot.masks[space][tag];
-                            }
-                        }
-                    }
-                } else if (space === undefined) {
-                    if (compiled.masks) {
-                        for (let space in compiled.masks) {
-                            if (hasValue(compiled.masks[space][tag])) {
-                                if (!partial.masks[space]) {
-                                    partial.masks[space] = {};
-                                }
-                                partial.masks[space][tag] = null;
-                                delete compiled.masks[space][tag];
-                            }
-                        }
-                    }
-                } else {
-                    partial.tags[tag] = u.bot.tags[tag];
-                }
-            }
-
-            if (u.signatures) {
-                if (!compiled.signatures) {
-                    compiled.signatures = {};
-                }
-                partial.signatures = {};
-                for (let sig of u.signatures) {
-                    const val = !!u.bot.signatures
-                        ? u.bot.signatures[sig] || null
-                        : null;
-                    const current = compiled.signatures[sig];
-                    compiled.signatures[sig] = val;
-                    partial.signatures[sig] = val;
-
-                    if (!val && current) {
-                        this._compileTag(
-                            compiled,
-                            current,
-                            compiled.tags[current]
-                        );
-                    } else if (val && !current) {
-                        this._compileTag(compiled, val, compiled.tags[val]);
-                    }
-                }
-            }
-
-            nextUpdate.state[u.bot.id] = <any>partial;
-        }
-
-        const changes = this._dependencies.updateBots(updates);
-        return {
-            changes,
-        };
     }
 
     private _updateBotsWithState(
         update: StateUpdatedEvent,
         updates: UpdatedBot[],
-        nextUpdate: StateUpdatedEvent
+        nextUpdate: StateUpdatedEvent,
+        newBotIds: Set<string>
     ) {
         for (let id of update.updatedBots) {
             if (!id) {
@@ -980,24 +796,35 @@ export class AuxRuntime
             }
 
             for (let tag of updatedTags) {
-                let hasMask = false;
+                let hasTag = false;
                 if (compiled.masks) {
                     for (let space of TAG_MASK_SPACE_PRIORITIES) {
                         const tagValue = compiled.masks[space]?.[tag];
                         if (hasValue(tagValue)) {
                             this._compileTagValue(compiled, tag, tagValue);
-                            hasMask = true;
+                            hasTag = true;
                             break;
                         }
                     }
                 }
 
-                if (!hasMask) {
+                if (!hasTag) {
                     const tagValue = compiled.tags[tag];
                     if (hasValue(tagValue) || tagValue === null) {
                         this._compileTagValue(compiled, tag, tagValue);
+                        hasTag = true;
                     }
                 }
+
+                if (!hasTag) {
+                    // no tag or tag mask has a value
+                    this._compileTagValue(compiled, tag, null);
+                }
+
+                const compiledValue = compiled.values[tag];
+                partial.values[tag] = hasValue(compiledValue)
+                    ? compiledValue
+                    : null;
             }
 
             if (u.signatures) {
@@ -1026,12 +853,11 @@ export class AuxRuntime
             }
 
             nextUpdate.state[id] = <any>partial;
-        }
 
-        const changes = this._dependencies.updateBots(updates);
-        return {
-            changes,
-        };
+            if (!newBotIds.has(id)) {
+                nextUpdate.updatedBots.push(id);
+            }
+        }
     }
 
     notifyChange(): void {
@@ -1175,45 +1001,6 @@ export class AuxRuntime
         actions.push(...sortedUpdates);
 
         return actions;
-    }
-
-    private _updateDependentBots(
-        updated: BotDependentInfo,
-        update: StateUpdatedEvent,
-        newBotIDs: Set<string>
-    ) {
-        const nextState = update.state;
-        const originalState = this._compiledState;
-        for (let botId in updated) {
-            const originalBot = originalState[botId];
-            if (!originalBot) {
-                continue;
-            }
-            let botUpdate: Partial<PrecalculatedBot> = nextState[botId];
-            if (!botUpdate) {
-                botUpdate = {
-                    values: {},
-                };
-            }
-            const tags = updated[botId];
-            for (let tag of tags) {
-                let hasTag = hasTagOrMask(originalBot, tag);
-                if (hasTag) {
-                    botUpdate.values[tag] = convertToCopiableValue(
-                        this._updateTag(originalBot, tag, true)
-                    );
-                } else {
-                    if (botUpdate.tags) {
-                        botUpdate.tags[tag] = null;
-                    }
-                    botUpdate.values[tag] = null;
-                }
-            }
-            nextState[botId] = <PrecalculatedBot>botUpdate;
-            if (!newBotIDs.has(botId)) {
-                update.updatedBots.push(botId);
-            }
-        }
     }
 
     private _compileTags(
@@ -1388,6 +1175,11 @@ export class AuxRuntime
                 newBot.listeners[tag] = this._compile(newBot, tag, value, {
                     allowsEditing: true,
                 });
+                this._globalContext.recordListenerPresense(
+                    newBot.id,
+                    tag,
+                    !!newBot.listeners[tag]
+                );
             }
 
             return value;
@@ -1463,8 +1255,10 @@ export class AuxRuntime
         let { value, listener } = this._compileValue(bot, tag, tagValue);
         if (listener) {
             bot.listeners[tag] = listener;
-        } else {
+            this._globalContext.recordListenerPresense(bot.id, tag, true);
+        } else if (!!bot.listeners[tag]) {
             delete bot.listeners[tag];
+            this._globalContext.recordListenerPresense(bot.id, tag, false);
         }
         bot.compiledValues[tag] = value;
         if (typeof value !== 'function') {
@@ -1483,11 +1277,11 @@ export class AuxRuntime
         listener: AuxCompiledScript;
     } {
         let listener: AuxCompiledScript;
-        if (isFormula(value) && this._runFormulas) {
+        if (isFormula(value)) {
+            const parsed = value.substring(DNA_TAG_PREFIX.length);
+            const transformed = replaceMacros(parsed);
             try {
-                value = this._compile(bot, tag, value, {
-                    allowsEditing: false,
-                });
+                value = JSON.parse(transformed);
             } catch (ex) {
                 value = ex;
             }
@@ -1505,30 +1299,6 @@ export class AuxRuntime
             value = true;
         } else if (value === 'false') {
             value = false;
-        } else if (isArray(value)) {
-            const split = parseArray(value);
-
-            // Note: Don't name isFormula because then webpack will be
-            // confused and decide to not import the isFormula function above
-            let isAFormula = false;
-            const values = split.map((s) => {
-                const result = this._compileValue(bot, tag, s.trim());
-                if (typeof result.value === 'function') {
-                    isAFormula = true;
-                }
-                return result;
-            });
-
-            if (isAFormula) {
-                // TODO: Add the proper metadata for formulas in array elements
-                value = <any>(() => {
-                    return values.map((v) =>
-                        typeof v.value === 'function' ? v.value() : v.value
-                    );
-                });
-            } else {
-                value = values.map((v) => v.value);
-            }
         }
 
         return { value, listener };

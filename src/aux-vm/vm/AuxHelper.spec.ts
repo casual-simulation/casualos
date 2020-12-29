@@ -121,33 +121,10 @@ describe('AuxHelper', () => {
 
         for (let [, partition] of iteratePartitions(partitions)) {
             subs.push(
-                partition.onBotsAdded
+                partition.onStateUpdated
                     .pipe(
                         tap((e) => {
-                            if (e.length === 0) {
-                                return;
-                            }
-                            runtime.botsAdded(e);
-                        })
-                    )
-                    .subscribe(null, (e: any) => console.error(e)),
-                partition.onBotsRemoved
-                    .pipe(
-                        tap((e) => {
-                            if (e.length === 0) {
-                                return;
-                            }
-                            runtime.botsRemoved(e);
-                        })
-                    )
-                    .subscribe(null, (e: any) => console.error(e)),
-                partition.onBotsUpdated
-                    .pipe(
-                        tap((e) => {
-                            if (e.length === 0) {
-                                return;
-                            }
-                            runtime.botsUpdated(e);
+                            runtime.stateUpdated(e);
                         })
                     )
                     .subscribe(null, (e: any) => console.error(e))
@@ -1047,30 +1024,6 @@ describe('AuxHelper', () => {
             ]);
         });
 
-        it('should store errors in the error space', async () => {
-            await helper.createBot('test', {
-                action: '@throw new Error("abc")',
-            });
-
-            uuidMock.mockReturnValue('error');
-            await helper.transaction(action('action', ['test'], 'user'));
-
-            expect(error.state).toEqual({
-                error: {
-                    id: 'error',
-                    space: 'error',
-                    tags: {
-                        error: true,
-                        errorName: 'Error',
-                        errorMessage: 'abc',
-                        errorStack: expect.any(String),
-                        errorBot: 'test',
-                        errorTag: 'action',
-                    },
-                },
-            });
-        });
-
         describe('load_bots', () => {
             it('should be able to load bots from the error space', async () => {
                 let searchClient = new MemoryBotClient();
@@ -1111,7 +1064,7 @@ describe('AuxHelper', () => {
                         {
                             abc: 'def',
                         },
-                        'error'
+                        'error' as any
                     ),
                 });
             });

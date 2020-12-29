@@ -346,10 +346,37 @@ export interface TweenOptions {
 }
 
 /**
+ * Defines an interface that contains performance statistics about a server.
+ */
+export interface PerformanceStats {
+    /**
+     * The number of bots in the server.
+     */
+    numberOfBots: number;
+
+    /**
+     * A list of listen tags and the amount of time spent executing them (in miliseconds).
+     * Useful to guage if a listen tag is causing the server to slow down.
+     */
+    shoutTimers: {
+        tag: string;
+        timeMs: number;
+    }[];
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
 export function createDefaultLibrary(context: AuxGlobalContext) {
+    if (!globalThis.performance) {
+        globalThis.performance = {
+            now() {
+                return Date.now();
+            },
+        } as any;
+    }
+
     webhook.post = function (
         url: string,
         data?: any,
@@ -538,8 +565,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 restoreHistoryMarkToServer,
                 loadFile,
                 saveFile,
-                destroyErrors,
-                loadErrors,
                 serverPlayerCount,
                 totalPlayerCount,
                 stories,
@@ -592,6 +617,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 verifyTag,
                 revokeCertificate,
             },
+
+            perf: {
+                getStats,
+            },
         },
     };
 
@@ -631,6 +660,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (hasValue(filter)) {
             if (typeof filter === 'function') {
                 return context.bots.filter((b) => filter(b.tags[tag]));
+            } else if (tag === 'id' && typeof filter === 'string') {
+                const bot = context.state[filter];
+                return bot ? [bot] : [];
             } else {
                 return context.bots.filter((b) => b.tags[tag] === filter);
             }
@@ -2604,43 +2636,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Destroys all the errors in the server.
-     */
-    function destroyErrors() {
-        const task = context.createTask();
-        const event = clearSpace('error', task.taskId);
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Loads the errors for the given bot and tag.
-     * @param bot The bot that the errors should be loaded for.
-     * @param tag The tag that the errors should be loaded for.
-     */
-    function loadErrors(bot: string | Bot, tag: string): Promise<Bot[]> {
-        const task = context.createTask();
-        const event = loadBots(
-            'error',
-            [
-                {
-                    tag: 'error',
-                    value: true,
-                },
-                {
-                    tag: 'errorBot',
-                    value: getID(bot),
-                },
-                {
-                    tag: 'errorTag',
-                    value: tag,
-                },
-            ],
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
      * Gets the number of players that are viewing the current server.
      * @param server The server to get the statistics for. If omitted, then the current server is used.
      */
@@ -3425,6 +3420,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, action);
     }
 
+    /**
+     * Gets performance stats from the runtime.
+     */
+    function getStats(): PerformanceStats {
+        return {
+            numberOfBots: context.bots.length,
+            shoutTimers: context.getShoutTimers(),
+        };
+    }
+
     function _hash(hash: MessageDigest<any>, data: unknown[]): string {
         for (let d of data) {
             if (!hasValue(d)) {
@@ -4199,6 +4204,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         arg?: any,
         sendListenEvents: boolean = true
     ) {
+        const startTime = globalThis.performance.now();
+        let tag = trimEvent(name);
+
         let ids = !!bots
             ? bots.map((bot) => {
                   return !!bot
@@ -4207,10 +4215,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                           : bot.id
                       : null;
               })
-            : context.bots.map((b) => b.id);
+            : context.getBotIdsWithListener(tag);
 
         let results = [] as any[];
-        let tag = trimEvent(name);
 
         let targets = [] as RuntimeBot[];
         let listeners = [] as RuntimeBot[];
@@ -4248,6 +4255,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 listeners.push(bot);
             }
         }
+
+        const endTime = globalThis.performance.now();
+        const delta = endTime - startTime;
+        context.addShoutTime(name, delta);
 
         if (sendListenEvents) {
             const listenArg = {
