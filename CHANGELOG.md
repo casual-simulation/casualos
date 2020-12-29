@@ -8,6 +8,10 @@
 
 -   Added a button to the Multiline tag editor to make it easy to turn a tag into a Mod tag.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where script compilation errors would not be handled correctly and would prevent those changes from being communicated to the multiline code editor.
+
 ## V1.3.9
 
 #### Date: 12/28/2020
