@@ -2,6 +2,14 @@
 
 ## V1.3.9
 
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added a button to the Multiline tag editor to make it easy to turn a tag into a Mod tag.
+
+## V1.3.9
+
 #### Date: 12/28/2020
 
 ### :boom: Breaking Changes
