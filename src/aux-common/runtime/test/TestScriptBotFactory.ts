@@ -7,6 +7,7 @@ import {
     botsFromShortIds,
     TAG_MASK_SPACE_PRIORITIES,
     RuntimeBot,
+    hasValue,
 } from '../../bots';
 import {
     createRuntimeBot,
@@ -47,7 +48,6 @@ export function createDummyRuntimeBot(
         tags,
         undefined,
         space,
-        undefined,
         functions,
         signatures
     );
@@ -62,8 +62,13 @@ export const testScriptBotInterface: RuntimeBotInterface = {
                 newValue
             );
         } else {
-            bot.tags[tag] = newValue;
-            bot.values[tag] = newValue;
+            if (hasValue(newValue)) {
+                bot.tags[tag] = newValue;
+                bot.values[tag] = newValue;
+            } else {
+                delete bot.tags[tag];
+                delete bot.values[tag];
+            }
         }
         return RealtimeEditMode.Immediate;
     },

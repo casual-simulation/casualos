@@ -96,7 +96,6 @@ export class AuxRuntime
 
     private _actionBatch: BotAction[] = [];
     private _errorBatch: ScriptError[] = [];
-    private _runFormulas: boolean = true;
 
     private _userId: string;
     private _zone: Zone;
@@ -126,20 +125,6 @@ export class AuxRuntime
 
     get context() {
         return this._globalContext;
-    }
-
-    /**
-     * Gets whether to compile and run formulas.
-     */
-    get runFormulas(): boolean {
-        return this._runFormulas;
-    }
-
-    /**
-     * Sets whether to compile and run formulas.
-     */
-    set runFormulas(value: boolean) {
-        this._runFormulas = value;
     }
 
     get currentVersion() {
@@ -682,10 +667,10 @@ export class AuxRuntime
         }
 
         for (let [bot, precalculated] of newBots) {
-            let tags = Object.keys(bot.compiledValues);
+            let tags = Object.keys(bot.values);
             for (let tag of tags) {
                 precalculated.values[tag] = convertToCopiableValue(
-                    this._updateTag(bot, tag, true)
+                    bot.values[tag]
                 );
             }
         }
@@ -1022,7 +1007,6 @@ export class AuxRuntime
             tags: fromFactory ? bot.tags : { ...bot.tags },
             listeners: {},
             values: {},
-            compiledValues: {},
             script: null,
         };
         if (BOT_SPACE_TAG in bot) {
@@ -1092,7 +1076,7 @@ export class AuxRuntime
     }
 
     getValue(bot: CompiledBot, tag: string): any {
-        return this._updateTag(bot, tag, false);
+        return bot.values[tag];
     }
 
     getRawValue(bot: CompiledBot, tag: string): any {
@@ -1156,43 +1140,6 @@ export class AuxRuntime
         return !!bot.signatures ? bot.signatures[signature] : undefined;
     }
 
-    private _updateTag(
-        newBot: CompiledBot,
-        tag: string,
-        forceUpdateListener: boolean
-    ): any {
-        const compiled = newBot.compiledValues[tag];
-        try {
-            const value = (newBot.values[tag] =
-                this._runFormulas && typeof compiled === 'function'
-                    ? compiled()
-                    : compiled);
-
-            if (
-                isScript(value) &&
-                (!newBot.listeners[tag] || forceUpdateListener)
-            ) {
-                newBot.listeners[tag] = this._compile(newBot, tag, value, {
-                    allowsEditing: true,
-                });
-                this._globalContext.recordListenerPresense(
-                    newBot.id,
-                    tag,
-                    !!newBot.listeners[tag]
-                );
-            }
-
-            return value;
-        } catch (ex) {
-            if ('error' in ex) {
-                const scriptError = ex as ScriptError;
-                return (newBot.values[tag] = scriptError.error);
-            } else {
-                return (newBot.values[tag] = ex);
-            }
-        }
-    }
-
     private _compileTagOrMask(
         bot: CompiledBot,
         existingBot: Bot,
@@ -1246,7 +1193,11 @@ export class AuxRuntime
         if (isTagEdit(tagValue)) {
             tagValue = bot.tags[tag] = applyEdit(bot.tags[tag], tagValue);
         } else {
-            bot.tags[tag] = tagValue;
+            if (hasValue(tagValue)) {
+                bot.tags[tag] = tagValue;
+            } else {
+                delete bot.tags[tag];
+            }
         }
         this._compileTagValue(bot, tag, tagValue);
     }
@@ -1260,9 +1211,12 @@ export class AuxRuntime
             delete bot.listeners[tag];
             this._globalContext.recordListenerPresense(bot.id, tag, false);
         }
-        bot.compiledValues[tag] = value;
         if (typeof value !== 'function') {
-            bot.values[tag] = value;
+            if (hasValue(value)) {
+                bot.values[tag] = value;
+            } else {
+                delete bot.values[tag];
+            }
         }
 
         return value;

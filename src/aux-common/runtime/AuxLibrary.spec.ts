@@ -5645,9 +5645,9 @@ describe('AuxLibrary', () => {
             bot1.tags.nameY = 2;
             bot1.tags.other = true;
             library.api.removeTags(bot1, 'name');
-            expect(bot1.tags.name).toEqual(null);
-            expect(bot1.tags.nameX).toEqual(null);
-            expect(bot1.tags.nameY).toEqual(null);
+            expect(bot1.tags.name).toBeUndefined();
+            expect(bot1.tags.nameX).toBeUndefined();
+            expect(bot1.tags.nameY).toBeUndefined();
             expect(bot1.tags.other).toEqual(true);
         });
 
@@ -5661,13 +5661,13 @@ describe('AuxLibrary', () => {
             bot2.tags.nameY = 2;
             bot2.tags.other = true;
             library.api.removeTags([bot1, bot2], 'name');
-            expect(bot1.tags.name).toEqual(null);
-            expect(bot1.tags.nameX).toEqual(null);
-            expect(bot1.tags.nameY).toEqual(null);
+            expect(bot1.tags.name).toBeUndefined();
+            expect(bot1.tags.nameX).toBeUndefined();
+            expect(bot1.tags.nameY).toBeUndefined();
             expect(bot1.tags.other).toEqual(true);
-            expect(bot2.tags.name).toEqual(null);
-            expect(bot2.tags.nameX).toEqual(null);
-            expect(bot2.tags.nameY).toEqual(null);
+            expect(bot2.tags.name).toBeUndefined();
+            expect(bot2.tags.nameX).toBeUndefined();
+            expect(bot2.tags.nameY).toBeUndefined();
             expect(bot2.tags.other).toEqual(true);
         });
     });
@@ -5689,7 +5689,7 @@ describe('AuxLibrary', () => {
 
             library.api.renameTag(bot1, 'abc', 'def');
 
-            expect(bot1.tags.abc).toBe(null);
+            expect(bot1.tags.abc).toBeUndefined();
             expect(bot1.tags.def).toBe(123);
         });
 
@@ -5699,10 +5699,10 @@ describe('AuxLibrary', () => {
 
             library.api.renameTag([bot1, bot2], 'abc', 'def');
 
-            expect(bot1.tags.abc).toBe(null);
+            expect(bot1.tags.abc).toBeUndefined();
             expect(bot1.tags.def).toBe(123);
 
-            expect(bot2.tags.abc).toBe(null);
+            expect(bot2.tags.abc).toBeUndefined();
             expect(bot2.tags.def).toBe(456);
         });
 
@@ -5721,7 +5721,7 @@ describe('AuxLibrary', () => {
 
             library.api.renameTag([bot1, bot2], 'abc', 'def');
 
-            expect(bot1.tags.abc).toBe(null);
+            expect(bot1.tags.abc).toBeUndefined();
             expect(bot1.tags.def).toBe('hello');
         });
     });
@@ -5792,7 +5792,7 @@ describe('AuxLibrary', () => {
                 abc: 'different',
             });
 
-            expect(bot1.tags.abc).toEqual(null);
+            expect(bot1.tags.abc).toBeUndefined();
             expect(bot1.tags.num).toEqual(123);
         });
     });
