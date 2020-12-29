@@ -170,8 +170,27 @@ export default class MonacoTagEditor extends Vue {
         } else if (this.isScript) {
             final = parseScriptSafe(currentValue);
         }
-        if (this.isScript || this.isFormula) {
-            final = currentValue.slice(DNA_TAG_PREFIX.length);
+        if (final !== null) {
+            this._simulation.helper.updateBot(
+                this.bot,
+                getUpdateForTagAndSpace(this.tag, final, this.space)
+            );
+        }
+    }
+
+    makeDnaTag() {
+        let currentValue = getTagValueForSpace(this.bot, this.tag, this.space);
+        if (typeof currentValue === 'object') {
+            return;
+        }
+        if (!hasValue(currentValue)) {
+            currentValue = '';
+        }
+        let final = null as string;
+        if (this.isScript) {
+            final = '🧬' + parseScriptSafe(currentValue);
+        } else if (!this.isFormula) {
+            final = '🧬' + currentValue;
         }
         if (final !== null) {
             this._simulation.helper.updateBot(

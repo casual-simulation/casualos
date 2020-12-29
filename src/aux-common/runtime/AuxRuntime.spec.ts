@@ -71,6 +71,7 @@ import {
     stateUpdatedEvent,
     DEFAULT_TAG_MASK_SPACE,
     DNA_TAG_PREFIX,
+    tagsOnBot,
 } from '../bots';
 import uuid from 'uuid/v4';
 import { waitAsync } from '../test/TestHelpers';
@@ -428,6 +429,33 @@ describe('AuxRuntime', () => {
                     addedBots: ['test1'],
                     removedBots: [],
                     updatedBots: ['test2'],
+                });
+            });
+
+            it('should convert script errors into copiable values', async () => {
+                const update = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: '@broken.',
+                        }),
+                    })
+                );
+
+                expect(update).toEqual({
+                    state: {
+                        test: createPrecalculatedBot(
+                            'test',
+                            {
+                                abc: expect.any(String),
+                            },
+                            {
+                                abc: '@broken.',
+                            }
+                        ),
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
                 });
             });
 
@@ -878,6 +906,47 @@ describe('AuxRuntime', () => {
                         updatedBots: [],
                     });
                 });
+
+                it('should convert script errors into copiable values', async () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                masks: {
+                                    shared: {
+                                        abc: '@broken.',
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                id: 'test',
+                                precalculated: true,
+                                tags: {
+                                    abc: 'def',
+                                },
+                                values: {
+                                    abc: expect.any(String),
+                                },
+                                masks: {
+                                    shared: {
+                                        abc: '@broken.',
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
             });
         });
 
@@ -1291,6 +1360,42 @@ describe('AuxRuntime', () => {
                             },
                             values: {
                                 value: '[true, false, hello, 1.23, .35]',
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should convert script errors into copiable values', async () => {
+                const update1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const update2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                abc: '@broken.',
+                            },
+                        },
+                    })
+                );
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                abc: '@broken.',
+                            },
+                            values: {
+                                abc: expect.any(String),
                             },
                         },
                     },
@@ -2721,6 +2826,47 @@ describe('AuxRuntime', () => {
                             removedBots: [],
                             updatedBots: ['test'],
                         });
+                    });
+                });
+
+                it('should convert script errors into copiable values', async () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    tempLocal: {
+                                        abc: '@broken.',
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {},
+                                masks: {
+                                    tempLocal: {
+                                        abc: '@broken.',
+                                    },
+                                },
+                                values: {
+                                    abc: expect.any(String),
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
                     });
                 });
             });
@@ -4543,7 +4689,7 @@ describe('AuxRuntime', () => {
             ['false', 'false', false],
             ['integer numbers', '123456', 123456],
             ['floating point numbers', '123.456', 123.456],
-            ['null', 'null', null as any],
+            ['null', 'null', undefined as any],
         ];
 
         it.each(jsonPrimitiveCases)(
@@ -4983,9 +5129,9 @@ describe('AuxRuntime', () => {
             const bot = runtime.currentState['test'];
             runtime.updateTag(bot, 'abc', null);
 
-            expect(bot.tags.abc).toBe(null);
-            expect(bot.values.abc).toBe(null);
-            expect(runtime.getValue(bot, 'abc')).toBe(null);
+            expect(bot.tags.abc).toBeUndefined();
+            expect(bot.values.abc).toBeUndefined();
+            expect(runtime.getValue(bot, 'abc')).toBeUndefined();
         });
 
         it('should support tag edits', () => {
@@ -5031,6 +5177,67 @@ describe('AuxRuntime', () => {
             expect(bot.tags.abc).toEqual('1f');
             expect(bot.values.abc).toEqual('1f');
             expect(runtime.getValue(bot, 'abc')).toEqual('1f');
+        });
+
+        it('should support creating a listener in a tag', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            runtime.updateTag(bot, 'abc', '@return 55 + 9');
+
+            expect(bot.tags.abc).toEqual('@return 55 + 9');
+            expect(bot.values.abc).toEqual('@return 55 + 9');
+            expect(bot.listeners.abc).toBeInstanceOf(Function);
+
+            const listener = runtime.getListener(bot, 'abc');
+            expect(listener).toBeInstanceOf(Function);
+
+            expect(listener()).toEqual(55 + 9);
+        });
+
+        it('should support setting a tag to null to clear the listener', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: '@return 55 + 9',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            runtime.updateTag(bot, 'abc', null);
+
+            expect(bot.tags.abc).toBeUndefined();
+            expect(bot.values.abc).toBeUndefined();
+            expect(bot.listeners.abc).toBeUndefined();
+
+            const listener = runtime.getListener(bot, 'abc');
+            expect(listener).toEqual(null);
+        });
+    });
+
+    describe('getListener()', () => {
+        it('should not create a key on the bot tags when getting a listener that does not exist', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {}),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            const listener = runtime.getListener(bot, 'missing');
+
+            expect(listener).toEqual(null);
+            expect(Object.keys(bot.tags)).toEqual([]);
+            expect(Object.keys(bot.values)).toEqual([]);
+            expect(tagsOnBot(bot)).toEqual([]);
+            expect(runtime.getValue(bot, 'missing')).toBeUndefined();
         });
     });
 
@@ -7884,8 +8091,6 @@ describe('original action tests', () => {
                     id: 'uuid-0',
                     tags: {
                         stay: 'def',
-                        leaveX: null,
-                        leaveY: null,
                         creator: 'thisBot',
                     },
                 }),

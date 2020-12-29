@@ -14,6 +14,7 @@ import {
     isRuntimeBot,
     EDIT_TAG_SYMBOL,
     EDIT_TAG_MASK_SYMBOL,
+    hasValue,
 } from '../bots';
 import { AuxGlobalContext, MemoryGlobalContext } from './AuxGlobalContext';
 import {
@@ -71,8 +72,13 @@ describe('RuntimeBot', () => {
                     value
                 );
             } else {
-                bot.values[tag] = value;
-                bot.tags[tag] = value;
+                if (hasValue(value)) {
+                    bot.values[tag] = value;
+                    bot.tags[tag] = value;
+                } else {
+                    delete bot.values[tag];
+                    delete bot.tags[tag];
+                }
             }
             return RealtimeEditMode.Immediate;
         });
@@ -92,7 +98,11 @@ describe('RuntimeBot', () => {
                         value
                     );
                 } else {
-                    bot.masks[space][tag] = value;
+                    if (hasValue(value)) {
+                        bot.masks[space][tag] = value;
+                    } else {
+                        delete bot.masks[space][tag];
+                    }
                 }
             }
             return RealtimeEditMode.Immediate;
@@ -239,7 +249,7 @@ describe('RuntimeBot', () => {
 
         it('should support the delete keyword', () => {
             delete script.tags.abc;
-            expect(script.raw.abc).toEqual(null);
+            expect(script.raw.abc).toBeUndefined();
             expect(manager.updateTag).toHaveBeenCalledWith(
                 precalc,
                 'abc',
@@ -302,6 +312,27 @@ describe('RuntimeBot', () => {
                 'newTag',
                 'otherNewTag',
             ]);
+        });
+
+        it('should support Object.keys() for tags that were deleted from the bot', () => {
+            const keys1 = Object.keys(script.tags);
+            keys1.sort();
+
+            expect(keys1).toEqual(['abc', 'bool', 'different', 'ghi']);
+
+            script.tags.abc = null;
+
+            const keys2 = Object.keys(script.tags);
+            keys2.sort();
+
+            expect(keys2).toEqual(['bool', 'different', 'ghi']);
+
+            delete precalc.values.bool;
+
+            const keys3 = Object.keys(script.tags);
+            keys3.sort();
+
+            expect(keys3).toEqual(['different', 'ghi']);
         });
 
         describe('toJSON()', () => {
@@ -407,7 +438,7 @@ describe('RuntimeBot', () => {
 
         it('should support the delete keyword', () => {
             delete script.raw.abc;
-            expect(script.raw.abc).toEqual(null);
+            expect(script.raw.abc).toBeUndefined();
             expect(manager.updateTag).toHaveBeenCalledWith(
                 precalc,
                 'abc',
@@ -470,6 +501,27 @@ describe('RuntimeBot', () => {
                 'newTag',
                 'otherNewTag',
             ]);
+        });
+
+        it('should support Object.keys() for tags that were deleted from the bot', () => {
+            const keys1 = Object.keys(script.raw);
+            keys1.sort();
+
+            expect(keys1).toEqual(['abc', 'bool', 'different', 'ghi']);
+
+            script.raw.abc = null;
+
+            const keys2 = Object.keys(script.raw);
+            keys2.sort();
+
+            expect(keys2).toEqual(['bool', 'different', 'ghi']);
+
+            delete precalc.tags.bool;
+
+            const keys3 = Object.keys(script.raw);
+            keys3.sort();
+
+            expect(keys3).toEqual(['different', 'ghi']);
         });
 
         it('should get the raw value from the manager', () => {
@@ -555,6 +607,37 @@ describe('RuntimeBot', () => {
             expect(Object.keys(script.masks)).toEqual(['abc', 'ghi']);
         });
 
+        it('should support Object.keys() for tags that were deleted from the bot', () => {
+            precalc.masks = {
+                shared: {
+                    abc: 'def',
+                    different: 123,
+                },
+                tempLocal: {
+                    ghi: 'jkl',
+                    bool: true,
+                },
+            };
+            const keys1 = Object.keys(script.masks);
+            keys1.sort();
+
+            expect(keys1).toEqual(['abc', 'bool', 'different', 'ghi']);
+
+            script.masks.abc = null;
+
+            const keys2 = Object.keys(script.masks);
+            keys2.sort();
+
+            expect(keys2).toEqual(['bool', 'different', 'ghi']);
+
+            delete precalc.masks.tempLocal.bool;
+
+            const keys3 = Object.keys(script.masks);
+            keys3.sort();
+
+            expect(keys3).toEqual(['different', 'ghi']);
+        });
+
         it('should support the delete keyword', () => {
             precalc.masks = {
                 shared: {
@@ -570,7 +653,7 @@ describe('RuntimeBot', () => {
 
             delete script.masks.abc;
 
-            expect(script.masks.abc).toEqual(null);
+            expect(script.masks.abc).toBeUndefined();
             expect(script.maskChanges).toEqual({
                 shared: {
                     abc: null,
@@ -696,7 +779,7 @@ describe('RuntimeBot', () => {
                     abc: null,
                 },
             });
-            expect(script.masks.abc).toEqual(null);
+            expect(script.masks.abc).toBeUndefined();
         });
     });
 
@@ -718,8 +801,8 @@ describe('RuntimeBot', () => {
                     other: 'era',
                 },
             });
-            expect(script.masks.abc).toEqual(null);
-            expect(script.masks.value).toEqual(null);
+            expect(script.masks.abc).toBeUndefined();
+            expect(script.masks.value).toBeUndefined();
             expect(script.masks.other).toEqual('era');
         });
 
@@ -740,9 +823,9 @@ describe('RuntimeBot', () => {
                     other: null,
                 },
             });
-            expect(script.masks.abc).toEqual(null);
-            expect(script.masks.value).toEqual(null);
-            expect(script.masks.other).toEqual(null);
+            expect(script.masks.abc).toBeUndefined();
+            expect(script.masks.value).toBeUndefined();
+            expect(script.masks.other).toBeUndefined();
         });
 
         it('should work when the bot has no tag masks', () => {
