@@ -28,7 +28,7 @@
                     <span class="hashtag">#</span>
                 </md-button>
                 <md-button @click="makeDnaTag()" class="md-dense" :class="{ active: isFormula }">
-                    <md-tooltip>Make DNA Tag</md-tooltip>
+                    <md-tooltip>Make Mod Tag</md-tooltip>
                     <span class="dna-symbol">🧬</span>
                 </md-button>
                 <md-button @click="makeScriptTag()" class="md-dense" :class="{ active: isScript }">
