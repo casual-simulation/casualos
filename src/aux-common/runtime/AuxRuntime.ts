@@ -807,9 +807,9 @@ export class AuxRuntime
                 }
 
                 const compiledValue = compiled.values[tag];
-                partial.values[tag] = hasValue(compiledValue)
-                    ? compiledValue
-                    : null;
+                partial.values[tag] = convertToCopiableValue(
+                    hasValue(compiledValue) ? compiledValue : null
+                );
             }
 
             if (u.signatures) {

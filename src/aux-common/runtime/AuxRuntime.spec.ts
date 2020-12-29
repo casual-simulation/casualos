@@ -432,6 +432,33 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            it('should convert script errors into copiable values', async () => {
+                const update = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: '@broken.',
+                        }),
+                    })
+                );
+
+                expect(update).toEqual({
+                    state: {
+                        test: createPrecalculatedBot(
+                            'test',
+                            {
+                                abc: expect.any(String),
+                            },
+                            {
+                                abc: '@broken.',
+                            }
+                        ),
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
             describe('numbers', () => {
                 it('should calculate number values', () => {
                     const update = runtime.stateUpdated(
@@ -879,6 +906,47 @@ describe('AuxRuntime', () => {
                         updatedBots: [],
                     });
                 });
+
+                it('should convert script errors into copiable values', async () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                masks: {
+                                    shared: {
+                                        abc: '@broken.',
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                id: 'test',
+                                precalculated: true,
+                                tags: {
+                                    abc: 'def',
+                                },
+                                values: {
+                                    abc: expect.any(String),
+                                },
+                                masks: {
+                                    shared: {
+                                        abc: '@broken.',
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
             });
         });
 
@@ -1292,6 +1360,42 @@ describe('AuxRuntime', () => {
                             },
                             values: {
                                 value: '[true, false, hello, 1.23, .35]',
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should convert script errors into copiable values', async () => {
+                const update1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const update2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                abc: '@broken.',
+                            },
+                        },
+                    })
+                );
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                abc: '@broken.',
+                            },
+                            values: {
+                                abc: expect.any(String),
                             },
                         },
                     },
@@ -2722,6 +2826,47 @@ describe('AuxRuntime', () => {
                             removedBots: [],
                             updatedBots: ['test'],
                         });
+                    });
+                });
+
+                it('should convert script errors into copiable values', async () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    tempLocal: {
+                                        abc: '@broken.',
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {},
+                                masks: {
+                                    tempLocal: {
+                                        abc: '@broken.',
+                                    },
+                                },
+                                values: {
+                                    abc: expect.any(String),
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
                     });
                 });
             });
