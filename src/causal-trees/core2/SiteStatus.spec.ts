@@ -1,4 +1,4 @@
-import { Weave } from './Weave2';
+import { Weave, WeaveResult } from './Weave2';
 import { atom, atomId } from './Atom2';
 import { updateSite, createAtom, newSite, mergeSites } from './SiteStatus';
 
@@ -51,6 +51,30 @@ describe('SiteStatus', () => {
                     time: 6,
                 });
             });
+
+            it('should choose the correct time from multiple atoms', () => {
+                const cause1 = atom(atomId('1', 0), null, {});
+                const cause2 = atom(atomId('2', 0), null, {});
+                const atom1 = atom(atomId('test', 6), cause1, {});
+                const atom2 = atom(atomId('test', 7), cause2, {});
+
+                const result: WeaveResult = {
+                    type: 'atoms_added',
+                    atoms: [cause1, atom2, cause2, atom1],
+                };
+
+                const current = {
+                    id: 'test',
+                    time: 0,
+                };
+
+                const next = updateSite(current, result);
+
+                expect(next).toEqual({
+                    id: 'test',
+                    time: 7,
+                });
+            });
         });
 
         describe('atoms from others', () => {
@@ -93,6 +117,32 @@ describe('SiteStatus', () => {
                 expect(next).toEqual({
                     id: 'test',
                     time: 7,
+                });
+            });
+
+            it('should choose the correct time from multiple atoms', () => {
+                const cause1 = atom(atomId('1', 0), null, {});
+                const cause2 = atom(atomId('2', 0), null, {});
+                const atom1 = atom(atomId('a', 6), cause1, {});
+                const atom2 = atom(atomId('a', 7), cause2, {});
+                weave.insert(cause1);
+                weave.insert(cause2);
+                weave.insert(atom1);
+                const result: WeaveResult = {
+                    type: 'atoms_added',
+                    atoms: [cause1, atom2, cause2, atom1],
+                };
+
+                const current = {
+                    id: 'test',
+                    time: 0,
+                };
+
+                const next = updateSite(current, result);
+
+                expect(next).toEqual({
+                    id: 'test',
+                    time: 8,
                 });
             });
         });
