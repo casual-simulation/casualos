@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.3.11
+
+#### Date: 12/31/2020
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where atoms that were received before their cause would be discarded.
+
 ## V1.3.10
 
 #### Date: 12/29/2020
