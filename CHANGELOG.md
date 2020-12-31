@@ -2,7 +2,7 @@
 
 ## V1.3.11
 
-#### Date: TBD
+#### Date: 12/31/2020
 
 ### :bug: Bug Fixes
 
