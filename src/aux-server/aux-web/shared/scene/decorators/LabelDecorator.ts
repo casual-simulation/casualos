@@ -12,6 +12,7 @@ import {
     getBotLabelAlignment,
     calculateStringTagValue,
     DEFAULT_LABEL_FONT_ADDRESS,
+    calculateLabelFontSize,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
 import { Color, Vector3, Box3, PerspectiveCamera } from 'three';
@@ -22,7 +23,8 @@ import { calculateScale, buildSRGBColor } from '../SceneUtils';
 import NotoSansKR from '../../public/fonts/NotoSansKR/NotoSansKR-Regular.otf';
 import Roboto from '../../public/fonts/Roboto/roboto-v18-latin-regular.woff';
 
-export class LabelDecorator extends AuxBot3DDecoratorBase
+export class LabelDecorator
+    extends AuxBot3DDecoratorBase
     implements WordBubbleElement {
     /**
      * The distance that should be used when the text sizing mode === 'auto'.
@@ -118,6 +120,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             }
 
             this._updateLabelSize(calc);
+            this._updateFontSize(calc);
             this._updateLabelAnchor(calc);
             this._updateLabelColor(calc);
             this.bot3D.forceComputeBoundingObjects();
@@ -212,6 +215,17 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             this.text3D.setScale(finalScale);
         } else {
             this.text3D.setScale(labelSize);
+        }
+    }
+
+    private _updateFontSize(calc: BotCalculationContext) {
+        let fontSize = calculateLabelFontSize(calc, this.bot3D.bot);
+
+        if (fontSize === 'auto') {
+            // const botContainer = this.bot3D.boundingBox;
+            this.text3D.setFontSize(1 * Text3D.defaultFontSize);
+        } else {
+            this.text3D.setFontSize(fontSize * Text3D.defaultFontSize);
         }
     }
 

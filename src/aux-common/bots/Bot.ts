@@ -490,6 +490,11 @@ export type BotLabelAlignment = 'center' | 'left' | 'right';
 export type BotLabelFontAddress = 'roboto' | 'noto-sans-kr' | string;
 
 /**
+ * Defines the possible label font sizes.
+ */
+export type BotLabelFontSize = 'auto' | number;
+
+/**
  * Defines the possible bot orientation modes.
  */
 export type BotOrientationMode =
@@ -592,6 +597,11 @@ export const DEFAULT_PORTAL_POINTER_DRAG_MODE: PortalPointerDragMode = 'world';
  * The default bot label font address.
  */
 export const DEFAULT_LABEL_FONT_ADDRESS: BotLabelFontAddress = 'rotobo';
+
+/**
+ * The default bot label font address.
+ */
+export const DEFAULT_LABEL_FONT_SIZE: BotLabelFontSize = 'auto';
 
 /**
  * Whether canvas transparency is disabled by default.
@@ -1385,6 +1395,7 @@ export const KNOWN_TAGS: string[] = [
     'lineColor',
     'label',
     'labelColor',
+    'labelFontSize',
     'labelSize',
     'labelSizeMode',
     'labelPosition',

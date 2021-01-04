@@ -62,6 +62,7 @@ import {
     getBotTagPortalAnchorPoint,
     getBotTagPortalAnchorPointOffset,
     createPrecalculatedBot,
+    calculateLabelFontSize,
 } from '../BotCalculations';
 import {
     Bot,
@@ -1409,6 +1410,32 @@ export function botCalculationContextTests(
             const shape = calculatePortalPointerDragMode(calc, bot);
 
             expect(shape).toBe('world');
+        });
+    });
+
+    describe('calculateLabelFontSize()', () => {
+        const cases = [['auto'], [10], [1]];
+        const tagCases = ['auxLabelFontSize', 'labelFontSize'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (mode: string | number) => {
+                const bot = createBot('test', {
+                    [tag]: <any>mode,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(calculateLabelFontSize(calc, bot)).toBe(mode);
+            });
+        });
+
+        it('should default to auto', () => {
+            const bot = createBot();
+
+            const calc = createPrecalculatedContext([bot]);
+            const shape = calculateLabelFontSize(calc, bot);
+
+            expect(shape).toBe('auto');
         });
     });
 

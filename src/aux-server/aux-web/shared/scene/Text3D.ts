@@ -48,7 +48,7 @@ export class Text3D extends Object3D {
      * Number chosen by expirementation to place 5-6 characters on a bot.
      */
     public static readonly defaultFontSize: number = 0.325;
-    public static readonly defaultWidth: number = Text3D.defaultFontSize * 6;
+    public static readonly defaultWidth: number = 1;
 
     public static readonly defaultScale: number = 1;
 
@@ -62,6 +62,12 @@ export class Text3D extends Object3D {
 
     // The bounding box for the text 3d in world space.
     private _boundingBox: Box3;
+
+    /**
+     * A bounding box for the text 3D that is derived directly from the geometry instead of the
+     * bounding sphere.
+     */
+    private _sizingBox: Box3;
 
     // The anchor position for the text 3d.
     private _anchor: BotLabelAnchor = 'top';
@@ -113,13 +119,14 @@ export class Text3D extends Object3D {
         this._mesh.text = '';
         this._mesh.textAlign = 'center';
         this._mesh.font = Roboto;
-        this._mesh.fontSize = 0.325;
+        this._mesh.fontSize = Text3D.defaultFontSize;
         this._mesh.maxWidth = width;
         this._mesh.anchorX = 'center';
         this._mesh.anchorY = 'middle';
+        this._mesh.whiteSpace = 'normal';
+        this._mesh.overflowWrap = 'break-word';
 
         this.add(this._mesh);
-        this.setScale(Text3D.defaultScale);
 
         this._mesh.position.set(0, 0, 0);
 
@@ -197,20 +204,17 @@ export class Text3D extends Object3D {
      */
     public updateBoundingBox(): void {
         this.updateMatrixWorld(true);
-        this._mesh.geometry.computeBoundingSphere();
-        let box = new Box3();
-        this._mesh.geometry.boundingSphere.getBoundingBox(box);
+        this._mesh.geometry.computeBoundingBox();
+        if (!this._boundingBox) {
+            this._boundingBox = new Box3();
+        }
+        this._boundingBox.copy(this._mesh.geometry.boundingBox);
         // box.min.z = -1;
         // box.max.z = 1;
 
         // Apply the matrix to the bounding box.
         let matrix = this._mesh.matrixWorld;
-        box.applyMatrix4(matrix);
-
-        if (!this._boundingBox) {
-            this._boundingBox = new Box3();
-        }
-        this._boundingBox.copy(box);
+        this._boundingBox.applyMatrix4(matrix);
     }
 
     /**
@@ -270,6 +274,17 @@ export class Text3D extends Object3D {
         if (this.scale.x !== scale) {
             this.scale.setScalar(scale);
             this.updateBoundingBox();
+        }
+    }
+
+    /**
+     * Set the font size of the text.
+     * @param size The font size of the text.
+     */
+    public setFontSize(size: number) {
+        if (this._mesh.fontSize !== size) {
+            this._mesh.fontSize = size;
+            this._mesh.sync(() => this._onSync());
         }
     }
 

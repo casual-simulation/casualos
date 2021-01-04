@@ -44,6 +44,8 @@ import {
     TAG_MASK_SPACE_PRIORITIES,
     RuntimeBot,
     DNA_TAG_PREFIX,
+    BotLabelFontSize,
+    DEFAULT_LABEL_FONT_SIZE,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -1675,6 +1677,24 @@ export function calculatePortalPointerDragMode(
         return mode;
     }
     return DEFAULT_PORTAL_POINTER_DRAG_MODE;
+}
+
+/**
+ * Calculates the label font size that the given bot has set.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function calculateLabelFontSize(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotLabelFontSize {
+    const mode = <BotLabelFontSize>(
+        calculateBotValue(calc, bot, 'auxLabelFontSize')
+    );
+    if (mode === 'auto' || typeof mode === 'number') {
+        return mode;
+    }
+    return DEFAULT_LABEL_FONT_SIZE;
 }
 
 /**
