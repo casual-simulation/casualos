@@ -362,13 +362,31 @@ The color of the text in the label.
   <AnyColorValues/>
 </PossibleValuesTable>
 
+### `labelFontSize`
+
+The font size of the text in the label.
+Changing this value scales the text characters in the label which changes the text layout.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='auto'>
+    The label font size is automatically scaled to fit the text in the bot. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>
+    The label will use the given font size.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `labelSize`
 
 <Badges>
   <VideoBadge url='https://youtu.be/ql5R8t6RP-c' />
 </Badges>
 
-The size of the label font. Default is 1.
+The size of the label. Default is 1.
+Changing this value scales the label text in size without changing the text layout.
+This is useful for floating labels where you want the bubble to be larger without changing the size of the font.
 
 ### `labelSizeMode`
 
@@ -436,6 +454,24 @@ If the current font does not support a specific character, the character will be
   <PossibleValue value='Any URL'>
     Specifies that the font to be used should be downloaded from the given URL.
     Currently supports <a href="https://en.wikipedia.org/wiki/Web_Open_Font_Format">WOFF</a> and <a href="https://en.wikipedia.org/wiki/OpenType">OTF</a> fonts.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `labelWordWrapMode`
+
+The word wrapping mode that the label should use. Useful for automatically fitting the text onto the bot.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='breakCharacters'>
+    Line breaks may be inserted inside a word to fit the label on the bot. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='breakWords'>
+    Line breaks may be inserted between words to fit the label on the bot.
+  </PossibleValueCode>
+  <PossibleValue value='none'>
+    Line breaks will not be inserted.
   </PossibleValue>
 </PossibleValuesTable>
 
