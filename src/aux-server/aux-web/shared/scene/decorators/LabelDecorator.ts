@@ -13,6 +13,7 @@ import {
     calculateStringTagValue,
     DEFAULT_LABEL_FONT_ADDRESS,
     calculateLabelFontSize,
+    BotLabelAlignment,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
 import { Color, Vector3, Box3, PerspectiveCamera } from 'three';
@@ -38,11 +39,12 @@ export class LabelDecorator
 
     private _game: Game;
     private _autoSizeMode: boolean;
+    private _initialSetup: boolean;
 
     constructor(bot3D: AuxBot3D, game: Game) {
         super(bot3D);
         this._game = game;
-        this.text3D = null;
+        this._initialSetup = false;
         this._autoSizeMode = false;
     }
 
@@ -85,10 +87,10 @@ export class LabelDecorator
                 // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that
                 // without worrying about what the AuxBot3D scale is etc.
                 this.bot3D.container.add(this.text3D);
+                this._initialSetup = true;
             }
 
-            // Update label text content.
-            this.text3D.setText(label, alignment);
+            let updateNeeded = this.text3D.setText(label, alignment);
 
             // Update auto size mode.
             this._autoSizeMode =
@@ -116,16 +118,50 @@ export class LabelDecorator
                     }
                 }
 
-                this.text3D.setFont(url.href);
+                updateNeeded = this.text3D.setFont(url.href) || updateNeeded;
             }
 
-            this._updateLabelSize(calc);
-            this._updateFontSize(calc);
-            this._updateLabelAnchor(calc);
+            let fontSize = calculateLabelFontSize(calc, this.bot3D.bot);
+
+            if (typeof fontSize === 'number') {
+                updateNeeded =
+                    this.text3D.setFontSize(
+                        fontSize * Text3D.defaultFontSize
+                    ) || updateNeeded;
+            }
+
+            updateNeeded = this._updateLabelSize(calc) || updateNeeded;
+            updateNeeded = this._updateLabelAnchor(calc) || updateNeeded;
             this._updateLabelColor(calc);
             this.bot3D.forceComputeBoundingObjects();
 
-            this._updateTextPosition();
+            updateNeeded = this._updateTextPosition() || updateNeeded;
+
+            if (updateNeeded && fontSize === 'auto') {
+                if (this._initialSetup) {
+                    // Hide the text while it is being setup
+                    // for the first time.
+                    this.text3D.visible = false;
+                }
+                this.text3D
+                    .calculateFontSizeToFit(
+                        this.bot3D.boundingBox,
+                        0.1 * Text3D.defaultFontSize,
+                        2 * Text3D.defaultFontSize,
+                        0.025
+                    )
+                    .then((size) => {
+                        this.text3D.setFontSize(size);
+                        this.text3D.visible = true;
+                        this.text3D.sync();
+                    })
+                    .catch((err) => {
+                        console.error('[LabelDecorator]', err);
+                        this.text3D.visible = true;
+                    });
+            } else if (updateNeeded) {
+                this.text3D.sync();
+            }
         } else {
             this.disposeText3D();
         }
@@ -176,10 +212,13 @@ export class LabelDecorator
             botBoundingBox.getCenter(objCenter);
         }
 
-        this.text3D.setPositionForObject(this.bot3D.scaleContainer, objCenter);
+        return this.text3D.setPositionForObject(
+            this.bot3D.scaleContainer,
+            objCenter
+        );
     }
 
-    private _updateLabelSize(calc: BotCalculationContext) {
+    private _updateLabelSize(calc: BotCalculationContext): boolean {
         let gridScale = this.bot3D.gridScale;
         let labelSize =
             calculateNumericalTagValue(
@@ -212,20 +251,9 @@ export class LabelDecorator
                 finalScale = labelSize * extraScale;
             }
 
-            this.text3D.setScale(finalScale);
+            return this.text3D.setScale(finalScale);
         } else {
-            this.text3D.setScale(labelSize);
-        }
-    }
-
-    private _updateFontSize(calc: BotCalculationContext) {
-        let fontSize = calculateLabelFontSize(calc, this.bot3D.bot);
-
-        if (fontSize === 'auto') {
-            // const botContainer = this.bot3D.boundingBox;
-            this.text3D.setFontSize(1 * Text3D.defaultFontSize);
-        } else {
-            this.text3D.setFontSize(fontSize * Text3D.defaultFontSize);
+            return this.text3D.setScale(labelSize);
         }
     }
 
@@ -249,6 +277,6 @@ export class LabelDecorator
 
     private _updateLabelAnchor(calc: BotCalculationContext) {
         let anchor = getBotLabelAnchor(calc, this.bot3D.bot);
-        this.text3D.setAnchor(anchor);
+        return this.text3D.setAnchor(anchor);
     }
 }
