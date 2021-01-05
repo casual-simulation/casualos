@@ -494,6 +494,8 @@ export type BotLabelFontAddress = 'roboto' | 'noto-sans-kr' | string;
  */
 export type BotLabelFontSize = 'auto' | number;
 
+export type BotLabelWordWrap = 'breakWords' | 'breakCharacters' | 'none';
+
 /**
  * Defines the possible bot orientation modes.
  */
@@ -602,6 +604,11 @@ export const DEFAULT_LABEL_FONT_ADDRESS: BotLabelFontAddress = 'rotobo';
  * The default bot label font address.
  */
 export const DEFAULT_LABEL_FONT_SIZE: BotLabelFontSize = 'auto';
+
+/**
+ * The default bot label word wrapping mode.
+ */
+export const DEFAULT_LABEL_WORD_WRAP_MODE: BotLabelWordWrap = 'breakCharacters';
 
 /**
  * Whether canvas transparency is disabled by default.
@@ -1400,6 +1407,7 @@ export const KNOWN_TAGS: string[] = [
     'labelSizeMode',
     'labelPosition',
     'labelAlignment',
+    'labelWordWrapMode',
     'labelFontAddress',
     'listening',
     'scale',

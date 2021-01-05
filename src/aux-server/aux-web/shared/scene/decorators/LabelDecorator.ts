@@ -14,6 +14,7 @@ import {
     DEFAULT_LABEL_FONT_ADDRESS,
     calculateLabelFontSize,
     BotLabelAlignment,
+    calculateLabelWordWrapMode,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
 import { Color, Vector3, Box3, PerspectiveCamera } from 'three';
@@ -132,6 +133,7 @@ export class LabelDecorator
 
             updateNeeded = this._updateLabelSize(calc) || updateNeeded;
             updateNeeded = this._updateLabelAnchor(calc) || updateNeeded;
+            updateNeeded = this._updateWordWrapMode(calc) || updateNeeded;
             this._updateLabelColor(calc);
             this.bot3D.forceComputeBoundingObjects();
 
@@ -278,5 +280,10 @@ export class LabelDecorator
     private _updateLabelAnchor(calc: BotCalculationContext) {
         let anchor = getBotLabelAnchor(calc, this.bot3D.bot);
         return this.text3D.setAnchor(anchor);
+    }
+
+    private _updateWordWrapMode(calc: BotCalculationContext): boolean {
+        let mode = calculateLabelWordWrapMode(calc, this.bot3D.bot);
+        return this.text3D.setWordWrapMode(mode);
     }
 }

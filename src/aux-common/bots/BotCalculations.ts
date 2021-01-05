@@ -46,6 +46,8 @@ import {
     DNA_TAG_PREFIX,
     BotLabelFontSize,
     DEFAULT_LABEL_FONT_SIZE,
+    BotLabelWordWrap,
+    DEFAULT_LABEL_WORD_WRAP_MODE,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -1695,6 +1697,28 @@ export function calculateLabelFontSize(
         return mode;
     }
     return DEFAULT_LABEL_FONT_SIZE;
+}
+
+/**
+ * Calculates the label word wrapping mode that the given bot has set.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function calculateLabelWordWrapMode(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotLabelWordWrap {
+    const mode = <BotLabelWordWrap>(
+        calculateBotValue(calc, bot, 'auxLabelWordWrapMode')
+    );
+    if (
+        mode === 'breakCharacters' ||
+        mode === 'breakWords' ||
+        mode === 'none'
+    ) {
+        return mode;
+    }
+    return DEFAULT_LABEL_WORD_WRAP_MODE;
 }
 
 /**

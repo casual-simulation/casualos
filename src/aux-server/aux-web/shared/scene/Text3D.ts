@@ -18,6 +18,7 @@ import {
 import {
     BotLabelAnchor,
     BotLabelAlignment,
+    BotLabelWordWrap,
 } from '@casual-simulation/aux-common';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { Text as TextMesh } from 'troika-three-text';
@@ -65,6 +66,9 @@ export class Text3D extends Object3D {
 
     // The anchor position for the text 3d.
     private _anchor: BotLabelAnchor = 'top';
+
+    // The word wrapping mode for the text 3d.
+    private _wordWrap: BotLabelWordWrap = 'breakCharacters';
 
     private _renderedThisFrame: boolean = false;
 
@@ -433,6 +437,30 @@ export class Text3D extends Object3D {
         } else {
             this._mesh.anchorY = 'middle';
         }
+        return true;
+    }
+
+    /**
+     * Sets the word wrapping mode that this text should use.
+     * Returns whether a call to sync() is required.
+     * @param mode The word wrap mode.
+     */
+    public setWordWrapMode(mode: BotLabelWordWrap): boolean {
+        if (this._wordWrap === mode) {
+            return false;
+        }
+        this._wordWrap = mode;
+
+        if (this._wordWrap === 'breakCharacters') {
+            this._mesh.whiteSpace = 'normal';
+            this._mesh.overflowWrap = 'break-word';
+        } else if (this._wordWrap === 'breakWords') {
+            this._mesh.whiteSpace = 'normal';
+            this._mesh.overflowWrap = 'normal';
+        } else if (this._wordWrap === 'none') {
+            this._mesh.whiteSpace = 'nowrap';
+        }
+
         return true;
     }
 
