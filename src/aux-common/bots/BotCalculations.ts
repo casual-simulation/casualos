@@ -1693,7 +1693,12 @@ export function calculateLabelFontSize(
     const mode = <BotLabelFontSize>(
         calculateBotValue(calc, bot, 'auxLabelFontSize')
     );
-    if (mode === 'auto' || typeof mode === 'number') {
+    if (mode === 'auto') {
+        return mode;
+    } else if (typeof mode === 'number') {
+        if (mode < 0.001) {
+            return 0.001;
+        }
         return mode;
     }
     return DEFAULT_LABEL_FONT_SIZE;
