@@ -61,20 +61,13 @@ export class LabelDecorator
         const anchor = getBotLabelAnchor(calc, this.bot3D.bot);
         const alignment = getBotLabelAlignment(calc, this.bot3D.bot);
 
-        let botWidth = calculateNumericalTagValue(
-            calc,
-            this.bot3D.bot,
-            'auxScaleX',
-            1
-        );
+        const botSize = getBotScale(calc, this.bot3D.bot);
+
+        let botWidth = botSize.x;
+        let botHeight = botSize.y;
 
         if (anchor === 'left' || anchor === 'right') {
-            botWidth = calculateNumericalTagValue(
-                calc,
-                this.bot3D.bot,
-                'auxScaleY',
-                1
-            );
+            botWidth = botHeight;
         }
 
         if (this.text3D) {
