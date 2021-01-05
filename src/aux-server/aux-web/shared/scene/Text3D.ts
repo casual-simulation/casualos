@@ -50,6 +50,7 @@ export class Text3D extends Object3D {
      */
     public static readonly defaultFontSize: number = 0.325;
     public static readonly defaultWidth: number = 1;
+    public static readonly minWidth: number = 0.01;
 
     public static readonly defaultScale: number = 1;
 
@@ -106,8 +107,10 @@ export class Text3D extends Object3D {
     constructor(width?: number) {
         super();
 
-        if (width === undefined || width < Text3D.defaultWidth) {
+        if (width === undefined) {
             width = Text3D.defaultWidth;
+        } else if (width < Text3D.minWidth) {
+            width = Text3D.minWidth;
         }
 
         this.currentWidth = width;
