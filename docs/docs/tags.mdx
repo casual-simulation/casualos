@@ -457,6 +457,24 @@ If the current font does not support a specific character, the character will be
   </PossibleValue>
 </PossibleValuesTable>
 
+### `labelWordWrapMode`
+
+The word wrapping mode that the label should use. Useful for automatically fitting the text onto the bot.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='breakCharacters'>
+    Line breaks may be inserted inside a word to fit the label on the bot. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='breakWords'>
+    Line breaks may be inserted between words to fit the label on the bot.
+  </PossibleValueCode>
+  <PossibleValue value='none'>
+    Line breaks will not be inserted.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `scale`
 
 <Badges>
