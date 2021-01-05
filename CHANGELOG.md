@@ -14,6 +14,8 @@
         -   `breakCharacters` - Specifies that the system should insert line breaks inside words if needed.
         -   `breakWords` - Specifies that the system should insert line breaks between words if needed.
         -   `none` - Specifies that the system should not insert line breaks.
+-   Added the ability to control the color of the placeholder text in the chat bar.
+    -   Use the `placeholderColor` option when calling `player.showChat()`.
 
 ### :bug: Bug Fixes
 
