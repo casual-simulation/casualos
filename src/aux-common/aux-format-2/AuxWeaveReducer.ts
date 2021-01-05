@@ -73,7 +73,12 @@ export default function reducer(
     initial: boolean = false
 ): PartialBotsState {
     if (result.type === 'atom_added') {
-        return atomAddedReducer(weave, result, state, space, initial);
+        return atomAddedReducer(weave, result.atom, state, space, initial);
+    } else if (result.type === 'atoms_added') {
+        for (let atom of result.atoms) {
+            atomAddedReducer(weave, atom, state, space, initial);
+        }
+        return state;
     } else if (result.type === 'conflict') {
         return conflictReducer(weave, result, state, space, initial);
     } else if (result.type === 'atom_removed') {
@@ -84,12 +89,11 @@ export default function reducer(
 
 function atomAddedReducer(
     weave: Weave<AuxOp>,
-    result: AtomAddedResult,
+    atom: Atom<AuxOp>,
     state: PartialBotsState,
     space: string,
     initial: boolean
 ): PartialBotsState {
-    const atom: Atom<AuxOp> = result.atom;
     const value: AuxOp = atom.value;
 
     if (value.type === AuxOpType.Bot) {
@@ -1218,16 +1222,7 @@ function conflictReducer(
         );
     }
 
-    atomAddedReducer(
-        weave,
-        {
-            type: 'atom_added',
-            atom: result.winner,
-        },
-        update,
-        space,
-        initial
-    );
+    atomAddedReducer(weave, result.winner, update, space, initial);
 
     return update;
 }

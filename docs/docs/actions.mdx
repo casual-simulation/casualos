@@ -1078,6 +1078,7 @@ The **first parameter** is an object with the options that the chat bar should u
 It should be an object with the following properties:
 - `placeholder` - The text that should be shown as a placeholder. (optional)
 - `prefill` - The text that should be filled into the chat bar. If the chat bar already has text in it, then setting this property does nothing.
+- `placeholderColor` - The color that the placeholder text should be. Defaults to `#448aff`.
 
 #### Examples:
 
@@ -1100,6 +1101,14 @@ player.showChat({
 player.showChat({
     prefill: "this is prefilled",
     placeholder: "hello"
+});
+```
+
+4. Show the chat bar with a custom placeholder color.
+```typescript
+player.showChat({
+    placeholder: "hello",
+    placeholderColor: '#44a471'
 });
 ```
 

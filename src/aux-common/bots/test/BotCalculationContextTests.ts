@@ -62,6 +62,8 @@ import {
     getBotTagPortalAnchorPoint,
     getBotTagPortalAnchorPointOffset,
     createPrecalculatedBot,
+    calculateLabelFontSize,
+    calculateLabelWordWrapMode,
 } from '../BotCalculations';
 import {
     Bot,
@@ -1409,6 +1411,80 @@ export function botCalculationContextTests(
             const shape = calculatePortalPointerDragMode(calc, bot);
 
             expect(shape).toBe('world');
+        });
+    });
+
+    describe('calculateLabelFontSize()', () => {
+        const cases = [['auto'], [10], [1]];
+        const tagCases = ['auxLabelFontSize', 'labelFontSize'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (mode: string | number) => {
+                const bot = createBot('test', {
+                    [tag]: <any>mode,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(calculateLabelFontSize(calc, bot)).toBe(mode);
+            });
+
+            it('should return 0.001 for 0', () => {
+                const bot = createBot('test', {
+                    [tag]: 0,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+                const shape = calculateLabelFontSize(calc, bot);
+
+                expect(shape).toBe(0.001);
+            });
+
+            it('should return 0.001 for 0.0001', () => {
+                const bot = createBot('test', {
+                    [tag]: 0.0001,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+                const shape = calculateLabelFontSize(calc, bot);
+
+                expect(shape).toBe(0.001);
+            });
+        });
+
+        it('should default to auto', () => {
+            const bot = createBot();
+
+            const calc = createPrecalculatedContext([bot]);
+            const shape = calculateLabelFontSize(calc, bot);
+
+            expect(shape).toBe('auto');
+        });
+    });
+
+    describe('calculateLabelWordWrapMode()', () => {
+        const cases = [['breakCharacters'], ['breakWords'], ['none']];
+        const tagCases = ['auxLabelWordWrapMode', 'labelWordWrapMode'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (mode: string) => {
+                const bot = createBot('test', {
+                    [tag]: <any>mode,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(calculateLabelWordWrapMode(calc, bot)).toBe(mode);
+            });
+        });
+
+        it('should default to breakCharacters', () => {
+            const bot = createBot();
+
+            const calc = createPrecalculatedContext([bot]);
+            const shape = calculateLabelWordWrapMode(calc, bot);
+
+            expect(shape).toBe('breakCharacters');
         });
     });
 

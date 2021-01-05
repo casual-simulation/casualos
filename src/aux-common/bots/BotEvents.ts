@@ -1909,6 +1909,11 @@ export interface ShowChatBarAction {
      * The text that the bar should have as the placeholder.
      */
     placeholder?: string;
+
+    /**
+     * The color to use for the placeholder.
+     */
+    placeholderColor?: string;
 }
 
 /**
@@ -1924,6 +1929,11 @@ export interface ShowChatOptions {
      * The text that the bar should have as the placeholder.
      */
     placeholder?: string;
+
+    /**
+     * The color to use for the placeholder.
+     */
+    placeholderColor?: string;
 }
 
 /**

@@ -1,4 +1,10 @@
-import { Weave, WeaveResult, addedAtom, weaveRemovedAtoms } from './Weave2';
+import {
+    Weave,
+    WeaveResult,
+    addedAtom,
+    weaveRemovedAtoms,
+    addedWeaveAtoms,
+} from './Weave2';
 import {
     SiteStatus,
     newSite,
@@ -88,18 +94,20 @@ export function insertAtoms<T, O extends T>(
     for (let atom of atoms) {
         const result = tree.weave.insert(atom);
         results.push(result);
-        const added = addedAtom(result);
-        if (added) {
-            tree.site.time = calculateTimeFromId(
-                tree.site.id,
-                tree.site.time,
-                added.id.site,
-                added.id.timestamp
-            );
-            tree.version[added.id.site] = Math.max(
-                added.id.timestamp,
-                tree.version[added.id.site] || 0
-            );
+        const addedAtoms = addedWeaveAtoms(result);
+        if (addedAtoms) {
+            for (let added of addedAtoms) {
+                tree.site.time = calculateTimeFromId(
+                    tree.site.id,
+                    tree.site.time,
+                    added.id.site,
+                    added.id.timestamp
+                );
+                tree.version[added.id.site] = Math.max(
+                    added.id.timestamp,
+                    tree.version[added.id.site] || 0
+                );
+            }
         }
     }
 
@@ -215,12 +223,14 @@ export function applyResult<T>(
     result: TreeResult
 ): CausalTree<T> {
     for (let r of result.results) {
-        const added = addedAtom(r);
-        if (added) {
-            tree.version[added.id.site] = Math.max(
-                added.id.timestamp,
-                tree.version[added.id.site] || 0
-            );
+        const addedAtoms = addedWeaveAtoms(r);
+        if (addedAtoms) {
+            for (let added of addedAtoms) {
+                tree.version[added.id.site] = Math.max(
+                    added.id.timestamp,
+                    tree.version[added.id.site] || 0
+                );
+            }
         }
     }
     return {
@@ -239,7 +249,11 @@ export function addedAtoms(results: WeaveResult[]): Atom<any>[] {
     for (let r of results) {
         const added = addedAtom(r);
         if (added) {
-            atoms.push(added);
+            if (Array.isArray(added)) {
+                atoms.push(...added);
+            } else {
+                atoms.push(added);
+            }
         }
     }
     return atoms;

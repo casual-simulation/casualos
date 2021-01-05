@@ -22,9 +22,16 @@ export default class BotChat extends Vue {
     text: string = '';
 
     @Prop({ default: null }) placeholder: string;
+    @Prop({ default: null }) placeholderColor: string;
     @Prop({ default: null }) prefill: string;
 
     private _updatingText: boolean = false;
+
+    get styleVariables() {
+        return {
+            '--chat-placeholder-color': this.placeholderColor || '#448aff',
+        };
+    }
 
     async sendMessage(dropFocus: boolean) {
         if (dropFocus) {

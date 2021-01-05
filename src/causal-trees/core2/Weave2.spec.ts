@@ -85,6 +85,7 @@ describe('Weave2', () => {
             expect(result).toEqual({
                 type: 'cause_not_found',
                 atom: atom1,
+                savedInReorderBuffer: true,
             });
             expect(weave.getAtoms()).toEqual([]);
         });
@@ -438,6 +439,176 @@ describe('Weave2', () => {
             weave.insert(second);
 
             expect(weave.getAtoms()).toEqual([root3, second, first]);
+        });
+
+        it('should support an atom that is added before its cause', () => {
+            const cause = atom(atomId('a', 0), null, {});
+            const atom1 = atom(atomId('a', 1, 3), cause, {});
+
+            const result1 = weave.insert(atom1);
+            const result2 = weave.insert(cause);
+
+            expect(result1).toEqual({
+                type: 'cause_not_found',
+                atom: atom1,
+                savedInReorderBuffer: true,
+            });
+            expect(result2).toEqual({
+                type: 'atoms_added',
+                atoms: [cause, atom1],
+            });
+            expect(weave.getAtoms()).toEqual([cause, atom1]);
+        });
+
+        it('should support atoms that are added before their cause', () => {
+            const cause = atom(atomId('a', 0), null, {});
+            const atom1 = atom(atomId('a', 1), cause, {});
+            const atom2 = atom(atomId('a', 2), cause, {});
+            const atom3 = atom(atomId('a', 3), cause, {});
+
+            const result1 = weave.insert(atom1);
+            const result2 = weave.insert(atom2);
+            const result3 = weave.insert(atom3);
+            const result4 = weave.insert(cause);
+
+            expect(result1).toEqual({
+                type: 'cause_not_found',
+                atom: atom1,
+                savedInReorderBuffer: true,
+            });
+            expect(result2).toEqual({
+                type: 'cause_not_found',
+                atom: atom2,
+                savedInReorderBuffer: true,
+            });
+            expect(result3).toEqual({
+                type: 'cause_not_found',
+                atom: atom3,
+                savedInReorderBuffer: true,
+            });
+            expect(result4).toEqual({
+                type: 'atoms_added',
+                atoms: [cause, atom3, atom2, atom1],
+            });
+            expect(weave.getAtoms()).toEqual([cause, atom3, atom2, atom1]);
+        });
+
+        it('should support chains of atoms that are added without a cause', () => {
+            const cause = atom(atomId('a', 0), null, {});
+            const atom1 = atom(atomId('a', 1), cause, {});
+            const atom2 = atom(atomId('a', 2), atom1, {});
+            const atom3 = atom(atomId('a', 3), atom2, {});
+
+            const result1 = weave.insert(atom1);
+            const result2 = weave.insert(atom2);
+            const result3 = weave.insert(atom3);
+            const result4 = weave.insert(cause);
+
+            expect(result1).toEqual({
+                type: 'cause_not_found',
+                atom: atom1,
+                savedInReorderBuffer: true,
+            });
+            expect(result2).toEqual({
+                type: 'cause_not_found',
+                atom: atom2,
+                savedInReorderBuffer: true,
+            });
+            expect(result3).toEqual({
+                type: 'cause_not_found',
+                atom: atom3,
+                savedInReorderBuffer: true,
+            });
+            expect(result4).toEqual({
+                type: 'atoms_added',
+                atoms: [cause, atom1, atom2, atom3],
+            });
+            expect(weave.getAtoms()).toEqual([cause, atom1, atom2, atom3]);
+        });
+
+        it('should not save atoms that exceed the reorder buffer size in the reorder buffer', () => {
+            const cause = atom(atomId('a', 0), null, {});
+            const atom1 = atom(atomId('a', 1), cause, {});
+            const atom2 = atom(atomId('a', 2), cause, {});
+            const atom3 = atom(atomId('a', 3), cause, {});
+            const atom4 = atom(atomId('a', 4), cause, {});
+
+            weave = new Weave({
+                maxReorderBufferSize: 2,
+            });
+
+            const result1 = weave.insert(atom1);
+            const result2 = weave.insert(atom2);
+            const result3 = weave.insert(atom3);
+            const result4 = weave.insert(atom4);
+
+            expect(result1).toEqual({
+                type: 'cause_not_found',
+                atom: atom1,
+                savedInReorderBuffer: true,
+            });
+            expect(result2).toEqual({
+                type: 'cause_not_found',
+                atom: atom2,
+                savedInReorderBuffer: true,
+            });
+            expect(result3).toEqual({
+                type: 'cause_not_found',
+                atom: atom3,
+                savedInReorderBuffer: false,
+            });
+            expect(result4).toEqual({
+                type: 'cause_not_found',
+                atom: atom4,
+                savedInReorderBuffer: false,
+            });
+        });
+
+        it('should support chains of atoms that are added in reverse order', () => {
+            const cause = atom(atomId('a', 0), null, {});
+            const atom1 = atom(atomId('a', 1), cause, {});
+            const atom2 = atom(atomId('a', 2), atom1, {});
+            const atom3 = atom(atomId('a', 3), atom2, {});
+            const atom4 = atom(atomId('a', 4), atom3, {});
+
+            const result4 = weave.insert(atom4);
+            const result3 = weave.insert(atom3);
+            const result2 = weave.insert(atom2);
+            const result1 = weave.insert(atom1);
+            const result5 = weave.insert(cause);
+
+            expect(result1).toEqual({
+                type: 'cause_not_found',
+                atom: atom1,
+                savedInReorderBuffer: true,
+            });
+            expect(result2).toEqual({
+                type: 'cause_not_found',
+                atom: atom2,
+                savedInReorderBuffer: true,
+            });
+            expect(result3).toEqual({
+                type: 'cause_not_found',
+                atom: atom3,
+                savedInReorderBuffer: true,
+            });
+            expect(result4).toEqual({
+                type: 'cause_not_found',
+                atom: atom4,
+                savedInReorderBuffer: true,
+            });
+            expect(result5).toEqual({
+                type: 'atoms_added',
+                atoms: [cause, atom1, atom2, atom3, atom4],
+            });
+
+            expect(weave.getAtoms()).toEqual([
+                cause,
+                atom1,
+                atom2,
+                atom3,
+                atom4,
+            ]);
         });
 
         describe('bugs', () => {
@@ -1265,6 +1436,20 @@ describe('Weave2', () => {
             const added = addedAtom(result);
 
             expect(added).toEqual(a1);
+        });
+
+        it('should return the atoms when a bunch are added at once', () => {
+            const cause = atom(atomId('a', 0), null, {});
+            const a1 = atom(atomId('a', 1), cause, {});
+            const a2 = atom(atomId('a', 2), cause, {});
+
+            weave.insert(a2);
+            weave.insert(a1);
+            weave.insert(a2);
+            const result = weave.insert(cause);
+            const added = addedAtom(result);
+
+            expect(added).toEqual([cause, a2, a1]);
         });
     });
 });

@@ -4324,6 +4324,25 @@ describe('AuxWeaveReducer', () => {
         });
     });
 
+    describe('atoms_added', () => {
+        it('should support scenarios when atoms are added in reverse order', () => {
+            const bot1A = atom(atomId('a', 1), null, bot('test1'));
+            const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
+            const value1A = atom(atomId('a', 3), tag1A, value('def'));
+
+            state = add(value1A, tag1A, bot1A);
+
+            expect(state).toEqual({
+                ['test1']: {
+                    id: 'test1',
+                    tags: {
+                        abc: 'def',
+                    },
+                },
+            });
+        });
+    });
+
     describe('atom_removed', () => {
         describe('bot', () => {
             it('should remove the bot from the state', () => {

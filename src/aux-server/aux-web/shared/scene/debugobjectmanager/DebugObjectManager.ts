@@ -31,6 +31,7 @@ import { drawExamples } from './DebugExamples';
 import { PlaneHelperPool } from '../objectpools/PlaneHelerPool';
 import { CubeHelperPool } from '../objectpools/CubeHelperPool';
 import merge from 'lodash/merge';
+import { Subscription } from 'rxjs';
 
 const BOX3HELPER_POOL_ID = 'box3helper_pool';
 const CUBEHELPER_POOL_ID = 'cubehelper_pool';
@@ -60,6 +61,7 @@ export namespace DebugObjectManager {
     var _debugObjects: DebugObject[];
     var _objectPools: Map<string, ObjectPool<unknown>>;
     var _initialized: boolean;
+    let _updateFuncs: Function[];
 
     /**
      * Initalize the Debug Object Manager.
@@ -73,6 +75,7 @@ export namespace DebugObjectManager {
         _time = new Time();
         _scene = new Scene();
         _debugObjects = [];
+        _updateFuncs = [];
         _objectPools = new Map<string, ObjectPool<unknown>>();
 
         // Setup object pools.
@@ -115,7 +118,7 @@ export namespace DebugObjectManager {
     export function removeAll(): void {
         if (!_initialized) return;
 
-        _debugObjects.forEach(o => {
+        _debugObjects.forEach((o) => {
             let pool = _objectPools.get(o.poolId);
             pool.restore(o.object3D);
         });
@@ -130,7 +133,7 @@ export namespace DebugObjectManager {
 
             // Filter for elements that should still be alive.
             // Dispose of elements that should not be alive anymore.
-            _debugObjects = _debugObjects.filter(o => {
+            _debugObjects = _debugObjects.filter((o) => {
                 if (o.killTime <= _time.timeSinceStart) {
                     let pool = _objectPools.get(o.poolId);
                     pool.restore(o.object3D);
@@ -142,6 +145,10 @@ export namespace DebugObjectManager {
 
             for (let o of _debugObjects) {
                 o.object3D.updateMatrixWorld(true);
+            }
+
+            for (let f of _updateFuncs) {
+                f();
             }
         }
 
@@ -421,6 +428,25 @@ export namespace DebugObjectManager {
     }
 
     /**
+     * Registers the given function to be executed every frame.
+     * @param func The function to execute.
+     */
+    export function registerUpdateFunction(func: Function) {
+        _updateFuncs.push(func);
+    }
+
+    /**
+     * Unregisters the given function so it will no longer be executed every frame.
+     * @param func The function to unregister.
+     */
+    export function unregisterUpdateFunction(func: Function) {
+        const index = _updateFuncs.indexOf(func);
+        if (index >= 0) {
+            _updateFuncs.splice(index, 1);
+        }
+    }
+
+    /**
      * Internal object to help keep track of debug objects.
      */
     interface DebugObject {
@@ -431,10 +457,12 @@ export namespace DebugObjectManager {
 }
 
 if (typeof window !== 'undefined') {
+    let debuggedObjects: Map<Object3D, Function> = new Map();
     const a = <any>window;
+
     merge(window, {
         aux: {
-            debug: function(val: boolean) {
+            debug: function (val: boolean) {
                 DebugObjectManager.enabled =
                     typeof val === 'undefined' ? true : val;
                 if (DebugObjectManager.enabled) {
@@ -443,6 +471,33 @@ if (typeof window !== 'undefined') {
                     console.log('Disabled debug mode');
                 }
             },
+            debugObject: function (obj: Object3D, color: number | Color) {
+                const finalColor =
+                    typeof color === 'number' ? new Color(color) : color;
+                const anyObj = obj as any;
+                let func = () => {
+                    obj.updateMatrixWorld();
+                    if (!anyObj.boundingBox) {
+                        const box = new Box3();
+                        box.setFromObject(obj);
+                        DebugObjectManager.drawBox3(box, finalColor);
+                    } else {
+                        DebugObjectManager.drawBox3(
+                            anyObj.boundingBox,
+                            finalColor
+                        );
+                    }
+                };
+
+                debuggedObjects.set(obj, func);
+                DebugObjectManager.registerUpdateFunction(func);
+
+                return new Subscription(() => {
+                    DebugObjectManager.unregisterUpdateFunction(func);
+                    debuggedObjects.delete(obj);
+                });
+            },
+            debugManager: DebugObjectManager,
         },
     });
 }
