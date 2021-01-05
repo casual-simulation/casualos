@@ -2,7 +2,18 @@
 
 ## V1.3.11
 
-#### Date: 12/31/2020
+#### Date: 1/5/2021
+
+### :rocket: Improvements
+
+-   Greatly improved the default layouting behaviour of labels.
+    -   Added the `#labelFontSize` tag to control the sizing of the characters in a label. Unlike `#labelSize`, changing this value will cause the label to layout again which will affect word wrapping. Possible values are:
+        -   `auto` - Specifies that the system should try to find a font size that fits the text onto the bot. (default)
+        -   Any Number - Specifies a specific font size. (1 is previous default)
+    -   Added the `#labelWordWrapMode` tag to control the word wrapping behavior of labels. Possible values are:
+        -   `breakCharacters` - Specifies that the system should insert line breaks inside words if needed.
+        -   `breakWords` - Specifies that the system should insert line breaks between words if needed.
+        -   `none` - Specifies that the system should not insert line breaks.
 
 ### :bug: Bug Fixes
 
