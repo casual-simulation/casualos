@@ -9,6 +9,7 @@
                                 ref="chatBar"
                                 :prefill="chatBarPrefill"
                                 :placeholder="chatBarPlaceholder"
+                                :placeholderColor="chatBarPlaceholderColor"
                             ></bot-chat>
                         </div>
                     </md-toolbar>

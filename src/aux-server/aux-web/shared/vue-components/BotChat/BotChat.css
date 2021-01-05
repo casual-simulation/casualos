@@ -59,3 +59,15 @@ svg {
     margin-top: 0;
     margin-bottom: 8px;
 }
+
+.md-field.chat-input::before {
+    background-color: var(--chat-placeholder-color);
+}
+
+.md-field.chat-input.md-focused label {
+    color: var(--chat-placeholder-color);
+}
+
+.md-field.chat-input.md-focused .md-field {
+    color: var(--chat-placeholder-color);
+}

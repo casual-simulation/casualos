@@ -183,6 +183,7 @@ export default class PlayerApp extends Vue {
     showChatBar: boolean = false;
     chatBarPrefill: string = null;
     chatBarPlaceholder: string = null;
+    chatBarPlaceholderColor: string = null;
 
     showConsole: boolean = false;
     loginInfo: DeviceInfo = null;
@@ -626,6 +627,7 @@ export default class PlayerApp extends Vue {
                     this.showChatBar = e.visible;
                     this.chatBarPrefill = e.prefill;
                     this.chatBarPlaceholder = e.placeholder;
+                    this.chatBarPlaceholderColor = e.placeholderColor;
                     const chatBar = this.$refs.chatBar as BotChat;
                     if (chatBar) {
                         await chatBar.setPrefill(e.prefill);
