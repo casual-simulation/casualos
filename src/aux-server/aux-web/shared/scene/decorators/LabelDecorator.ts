@@ -15,6 +15,7 @@ import {
     calculateLabelFontSize,
     BotLabelAlignment,
     calculateLabelWordWrapMode,
+    BotLabelFontSize,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
 import { Color, Vector3, Box3, PerspectiveCamera } from 'three';
@@ -41,6 +42,7 @@ export class LabelDecorator
     private _game: Game;
     private _autoSizeMode: boolean;
     private _initialSetup: boolean;
+    private _lastFontSize: BotLabelFontSize;
 
     constructor(bot3D: AuxBot3D, game: Game) {
         super(bot3D);
@@ -124,6 +126,8 @@ export class LabelDecorator
 
             let fontSize = calculateLabelFontSize(calc, this.bot3D.bot);
 
+            updateNeeded = updateNeeded || fontSize !== this._lastFontSize;
+
             if (typeof fontSize === 'number') {
                 updateNeeded =
                     this.text3D.setFontSize(
@@ -164,6 +168,8 @@ export class LabelDecorator
             } else if (updateNeeded) {
                 this.text3D.sync();
             }
+
+            this._lastFontSize = fontSize;
         } else {
             this.disposeText3D();
         }
