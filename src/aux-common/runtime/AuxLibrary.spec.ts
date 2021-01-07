@@ -129,6 +129,7 @@ import {
     RuntimeBot,
     SET_TAG_MASK_SYMBOL,
     CLEAR_CHANGES_SYMBOL,
+    animateTag,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -4233,6 +4234,40 @@ describe('AuxLibrary', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const guid = library.api.uuid();
                 expect(guid).toBe('uuid');
+            });
+        });
+
+        describe('animateTag()', () => {
+            it('should emit a AnimateTagAction', () => {
+                const promise: any = library.api.animateTag(bot1, 'abc', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                const expected = animateTag(
+                    bot1.id,
+                    'abc',
+                    {
+                        fromValue: 0,
+                        toValue: 10,
+                        easing: {
+                            type: 'quadratic',
+                            mode: 'inout',
+                        },
+                        duration: 0.5,
+                        tagMaskSpace: 'tempLocal',
+                    },
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual([expected]);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

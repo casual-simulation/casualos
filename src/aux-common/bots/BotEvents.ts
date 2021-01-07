@@ -109,6 +109,7 @@ export type AsyncActions =
     | LoadBotsAction
     | ClearSpaceAction
     | SendWebhookAction
+    | AnimateTagAction
     | UnlockSpaceAction
     | SetSpacePasswordAction
     | LoadFileAction
@@ -860,6 +861,59 @@ export interface WebhookOptions {
      * The shout that should be made when the request finishes.
      */
     responseShout: string;
+}
+
+/**
+ * Defines an event that animates a tag on a bot over some time.
+ */
+export interface AnimateTagAction extends AsyncAction {
+    type: 'animate_tag';
+
+    /**
+     * The ID of the bot to animate.
+     */
+    botId: string;
+
+    /**
+     * The tag to animate.
+     */
+    tag: string;
+
+    /**
+     * The options to use for the animation.
+     */
+    options: AnimateTagOptions;
+}
+
+/**
+ * Defines the options that can be used to animate a tag.
+ */
+export interface AnimateTagOptions {
+    /**
+     * The value to animate from.
+     */
+    fromValue: any;
+
+    /**
+     * The value to animate to.
+     */
+    toValue: any;
+
+    /**
+     * The number of seconds that the animation executes over.
+     */
+    duration: number;
+
+    /**
+     * The easing that should be used.
+     */
+    easing: Easing;
+
+    /**
+     * The space that the tag should be animated in.
+     * If set to false, then the tag on the bot will be modified.
+     */
+    tagMaskSpace: BotSpace | false;
 }
 
 /**
@@ -2884,6 +2938,28 @@ export function webhook(
     return {
         type: 'send_webhook',
         options: options,
+        taskId,
+    };
+}
+
+/**
+ * Animates the given tag on the given bot using the given options.
+ * @param botId The ID of the bot.
+ * @param tag The tag to animate.
+ * @param options The options.
+ * @param taskId The ID of the task that this event represents.
+ */
+export function animateTag(
+    botId: string,
+    tag: string,
+    options: AnimateTagOptions,
+    taskId?: number | string
+): AnimateTagAction {
+    return {
+        type: 'animate_tag',
+        botId,
+        tag,
+        options,
         taskId,
     };
 }

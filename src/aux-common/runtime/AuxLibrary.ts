@@ -58,6 +58,7 @@ import {
     revokeCertificate as calcRevokeCertificate,
     localPositionTween as calcLocalPositionTween,
     localRotationTween as calcLocalRotationTween,
+    animateTag as calcAnimateTag,
     clearSpace,
     loadBots,
     BotAction,
@@ -156,6 +157,8 @@ import {
     EDIT_TAG_SYMBOL,
     BotSpace,
     EDIT_TAG_MASK_SYMBOL,
+    AnimateTagOptions,
+    EaseType,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -325,6 +328,40 @@ export interface WebhookOptions {
     responseShout?: string;
 }
 
+/**
+ * Defines a set of options for animateTag().
+ */
+export interface AnimateTagFunctionOptions {
+    /**
+     * The value that should be animated from.
+     * If not specified then the current tag value will be used.
+     */
+    fromValue?: any;
+
+    /**
+     * The value that should be animated to.
+     */
+    toValue: any;
+
+    /**
+     * The duration of the animation in seconds.
+     */
+    duration: number;
+
+    /**
+     * The type of easing to use.
+     * If not specified then "linear" "inout" will be used.
+     */
+    easing?: EaseType | Easing;
+
+    /**
+     * The space that the tag should be animated in.
+     * If not specified then "tempLocal" will be used.
+     * If false, then the bot will be edited instead of using tag masks.
+     */
+    tagMaskSpace?: BotSpace | false;
+}
+
 export interface BotFilterFunction {
     (bot: Bot): boolean;
     sort?: (bot: Bot) => any;
@@ -436,6 +473,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             webhook,
             uuid,
             sleep,
+            animateTag,
 
             __energyCheck,
 
@@ -2808,6 +2846,69 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function sleep(time: number) {
         let sleepy = new Promise((resolve) => setTimeout(resolve, time));
         return sleepy;
+    }
+
+    /**
+     * Animates the given tag. Returns a promise when the animation is finished.
+     * @param bot The bot or list of bots that should be animated.
+     * @param tag The tag that should be animated.
+     * @param options The options for the animation.
+     */
+    function animateTag(
+        bot: RuntimeBot | RuntimeBot[] | string[] | string,
+        tag: string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void[]> {
+        const botsOrIds = Array.isArray(bot) ? bot : [bot];
+        const bots = botsOrIds
+            .map((b) => (typeof b === 'string' ? getBot('id', b) : b))
+            .filter((b) => !!b);
+
+        const promises = bots.map((b) => animateBotTag(b, tag, options));
+
+        const allPromises = Promise.all(promises);
+
+        (<any>allPromises)[ORIGINAL_OBJECT] = promises.map(
+            (p) => (<any>p)[ORIGINAL_OBJECT]
+        );
+
+        return allPromises;
+    }
+
+    function animateBotTag(
+        bot: RuntimeBot,
+        tag: string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void> {
+        const task = context.createTask();
+
+        const event = calcAnimateTag(
+            bot.id,
+            tag,
+            {
+                fromValue: hasValue(options.fromValue)
+                    ? options.fromValue
+                    : bot.tags[tag],
+                toValue: options.toValue,
+                duration: options.duration,
+                easing: hasValue(options.easing)
+                    ? typeof options.easing === 'string'
+                        ? {
+                              mode: 'inout',
+                              type: options.easing,
+                          }
+                        : options.easing
+                    : {
+                          mode: 'inout',
+                          type: 'linear',
+                      },
+                tagMaskSpace: hasValue(options.tagMaskSpace)
+                    ? options.tagMaskSpace
+                    : 'tempLocal',
+            },
+            task.taskId
+        );
+        return addAsyncAction(task, event);
     }
 
     // /**
