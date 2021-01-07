@@ -319,6 +319,16 @@ export class Text3D extends Object3D {
         text.visible = false;
         text.updateMatrixWorld(true);
 
+        const axis =
+            this._anchor === 'top'
+                ? 'z'
+                : this._anchor === 'front' || this._anchor === 'back'
+                ? 'y'
+                : // front and left use the y axis because the text overflows along the y axis
+                this._anchor === 'left' || this._anchor === 'right'
+                ? 'y'
+                : 'y';
+
         try {
             const targetBoundingBox = target;
             const targetSize = new Vector3();
@@ -340,7 +350,7 @@ export class Text3D extends Object3D {
                 // check the bounding box size compared to the bot
                 text._boundingBox.getSize(currentSize);
 
-                const delta = currentSize.z - targetSize.z;
+                const delta = currentSize[axis] - targetSize[axis];
 
                 // While the best fit is larger than the target
                 // box, choose the smallest delta

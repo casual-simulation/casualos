@@ -44,6 +44,7 @@ export class LabelDecorator
     private _initialSetup: boolean;
     private _lastFontSize: BotLabelFontSize;
     private _lastHeight: number;
+    private _lastLength: number;
 
     constructor(bot3D: AuxBot3D, game: Game) {
         super(bot3D);
@@ -65,10 +66,11 @@ export class LabelDecorator
         const botSize = getBotScale(calc, this.bot3D.bot);
 
         let botWidth = botSize.x;
-        let botHeight = botSize.y;
+        let botHeight = botSize.z;
+        let botLength = botSize.y;
 
         if (anchor === 'left' || anchor === 'right') {
-            botWidth = botHeight;
+            botWidth = botLength;
         }
 
         if (this.text3D) {
@@ -122,6 +124,7 @@ export class LabelDecorator
 
             updateNeeded = updateNeeded || fontSize !== this._lastFontSize;
             updateNeeded = updateNeeded || botHeight !== this._lastHeight;
+            updateNeeded = updateNeeded || botLength !== this._lastLength;
 
             if (typeof fontSize === 'number') {
                 updateNeeded =
@@ -166,6 +169,7 @@ export class LabelDecorator
 
             this._lastFontSize = fontSize;
             this._lastHeight = botHeight;
+            this._lastLength = botLength;
         } else {
             this.disposeText3D();
         }
