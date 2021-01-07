@@ -72,6 +72,10 @@ export class LabelDecorator
         if (anchor === 'left' || anchor === 'right') {
             botWidth = botLength;
         }
+        if (anchor === 'top') {
+            botHeight = botSize.y;
+            botLength = botSize.z;
+        }
 
         if (this.text3D) {
             if (botWidth != this.text3D.currentWidth) {
@@ -149,7 +153,7 @@ export class LabelDecorator
                 }
                 this.text3D
                     .calculateFontSizeToFit(
-                        this.bot3D.boundingBox,
+                        botHeight,
                         0.1 * Text3D.defaultFontSize,
                         2 * Text3D.defaultFontSize,
                         0.025
