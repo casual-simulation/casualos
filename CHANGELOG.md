@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.3.12
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed issues with `#labelFontSize = auto` when `#labelPosition != front` or when the bot is rotated.
+
 ## V1.3.11
 
 #### Date: 1/5/2021
