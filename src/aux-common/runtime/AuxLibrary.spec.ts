@@ -4330,7 +4330,21 @@ describe('AuxLibrary', () => {
                 const expected = reject(original);
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
-                expect(action.action).toBe(original);
+                expect(action.actions).toEqual([original]);
+            });
+
+            it('should be able to reject multiple original actions', () => {
+                const original1 = toast('abc');
+                const original2 = toast('def');
+                const action = library.api.action.reject({
+                    type: 'show_toast',
+                    message: 'abc',
+                    [ORIGINAL_OBJECT]: [original1, original2],
+                });
+                const expected = reject(original1, original2);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+                expect(action.actions).toEqual([original1, original2]);
             });
         });
 

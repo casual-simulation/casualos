@@ -7472,7 +7472,9 @@ describe('original action tests', () => {
             const result = calculateActionResults(state, botAction);
 
             expect(result.actions).toEqual([reject(toast('abc'))]);
-            expect((<RejectAction>result.actions[0]).action).toBe(original);
+            expect((<RejectAction>result.actions[0]).actions).toEqual([
+                original,
+            ]);
         });
     });
 

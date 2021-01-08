@@ -2958,7 +2958,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param action The action to reject.
      */
     function reject(action: any) {
-        const event = calcReject(getOriginalObject(action));
+        const original = getOriginalObject(action);
+        const event = Array.isArray(original)
+            ? calcReject(...original)
+            : calcReject(original);
         return addAction(event);
     }
 

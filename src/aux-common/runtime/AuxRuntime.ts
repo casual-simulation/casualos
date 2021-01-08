@@ -363,7 +363,7 @@ export class AuxRuntime
         let rejected = false;
         for (let i = 0; i < result.actions.length; i++) {
             const a = result.actions[i];
-            if (a.type === 'reject' && a.action === action) {
+            if (a.type === 'reject' && a.actions.indexOf(action) >= 0) {
                 rejected = true;
                 result.actions.splice(i, 1);
                 break;

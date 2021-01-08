@@ -1256,9 +1256,9 @@ export interface RejectAction {
     type: 'reject';
 
     /**
-     * The action to prevent.
+     * The actions to prevent.
      */
-    action: Action;
+    actions: Action[];
 }
 
 /**
@@ -2407,10 +2407,10 @@ export function action(
  * Creates a new RejectAction.
  * @param event The action to reject.
  */
-export function reject(event: Action): RejectAction {
+export function reject(...events: Action[]): RejectAction {
     return {
         type: 'reject',
-        action: event,
+        actions: events,
     };
 }
 
