@@ -5,7 +5,6 @@ import some from 'lodash/some';
 import isObject from 'lodash/isObject';
 import mapValues from 'lodash/mapValues';
 import uuid from 'uuid/v4';
-import { string } from '@hapi/joi';
 
 /**
  * Merges the two objects and returns a new object that contains the combination of the two.
@@ -21,27 +20,27 @@ export function merge<T1, T2, T3>(
 ): T1 & T2 & T3;
 export function merge(...objs: any[]): any {
     let result: any = {};
-    const objKeys = objs.map(o => keys(o));
+    const objKeys = objs.map((o) => keys(o));
     const allKeys = union(...objKeys);
 
-    allKeys.forEach(k => {
-        result[k] = decide(...objs.map(o => o[k]));
+    allKeys.forEach((k) => {
+        result[k] = decide(...objs.map((o) => o[k]));
     });
 
     return result;
 }
 
 function decide(...vals: any[]) {
-    const undefed = vals.filter(v => typeof v !== 'undefined');
+    const undefed = vals.filter((v) => typeof v !== 'undefined');
     if (undefed.length === 1) {
         return undefed[0];
     } else {
         if (
             every(
                 undefed,
-                v => typeof v === 'object' && !Array.isArray(v) && v !== null
+                (v) => typeof v === 'object' && !Array.isArray(v) && v !== null
             ) &&
-            some(undefed, v => v !== undefed[0])
+            some(undefed, (v) => v !== undefed[0])
         ) {
             return (<any>merge)(...undefed);
         } else {
@@ -57,7 +56,7 @@ function decide(...vals: any[]) {
  */
 export function mapValuesDeep(value: any, callback: (v: any) => any): any {
     return isObject(value)
-        ? mapValues(value, v => mapValuesDeep(v, callback))
+        ? mapValues(value, (v) => mapValuesDeep(v, callback))
         : callback(value);
 }
 
