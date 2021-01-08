@@ -22,6 +22,9 @@ import { ScriptError, RanOutOfEnergyError } from './AuxResults';
 import uuid from 'uuid/v4';
 import { sortBy, sortedIndex, sortedIndexOf } from 'lodash';
 import './PerformanceNowPolyfill';
+import { Observable, Subscription, SubscriptionLike } from 'rxjs';
+import { tap } from 'rxjs/operators';
+import TWEEN from '@tweenjs/tween.js';
 
 /**
  * Holds global values that need to be accessible from the runtime.
@@ -66,6 +69,11 @@ export interface AuxGlobalContext {
      * The current energy that the context has.
      */
     energy: number;
+
+    /**
+     * The number of miliseconds since the session has started.
+     */
+    localTime: number;
 
     /**
      * Enqueues the given action.
@@ -163,6 +171,11 @@ export interface AuxGlobalContext {
      * @param ms The number of miliseconds to add.
      */
     addShoutTime(shout: string, ms: number): void;
+
+    /**
+     * Starts the animation loop for the context.
+     */
+    startAnimationLoop(): SubscriptionLike;
 }
 
 /**
@@ -313,6 +326,10 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      */
     energy: number = DEFAULT_ENERGY;
 
+    get localTime() {
+        return performance.now() - this._startTime;
+    }
+
     private _taskCounter: number = 0;
     private _scriptFactory: RuntimeBotFactory;
     private _batcher: RuntimeBatcher;
@@ -320,6 +337,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         [shout: string]: number;
     } = {};
     private _listenerMap: Map<string, string[]>;
+    private _startTime: number;
+    private _animationLoop: Subscription;
 
     /**
      * Creates a new global context.
@@ -339,6 +358,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this._scriptFactory = scriptFactory;
         this._batcher = batcher;
         this._listenerMap = new Map();
+        this._startTime = performance.now();
     }
 
     getBotIdsWithListener(tag: string): string[] {
@@ -553,4 +573,54 @@ export class MemoryGlobalContext implements AuxGlobalContext {
 
         this._shoutTimers[shout] += ms;
     }
+
+    startAnimationLoop(): SubscriptionLike {
+        if (!this._animationLoop) {
+            const sub = animationLoop()
+                .pipe(tap(() => this._updateAnimationLoop()))
+                .subscribe();
+
+            this._animationLoop = new Subscription(() => {
+                sub.unsubscribe();
+                this._animationLoop = null;
+            });
+        }
+
+        return this._animationLoop;
+    }
+
+    private _updateAnimationLoop() {
+        TWEEN.update(this.localTime);
+    }
+}
+
+function animationLoop(): Observable<void> {
+    return new Observable<void>((observer) => {
+        if (globalThis.requestAnimationFrame) {
+            let running = true;
+            let handlerId: number;
+
+            const handler = () => {
+                if (!running) {
+                    return;
+                }
+                observer.next();
+                handlerId = globalThis.requestAnimationFrame(handler);
+            };
+            handlerId = globalThis.requestAnimationFrame(handler);
+
+            return () => {
+                running = false;
+                globalThis.cancelAnimationFrame(handlerId);
+            };
+        } else {
+            let interval = setInterval(() => {
+                observer.next();
+            }, 16);
+
+            return () => {
+                clearInterval(interval);
+            };
+        }
+    });
 }

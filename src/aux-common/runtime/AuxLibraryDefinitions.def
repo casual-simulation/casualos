@@ -900,6 +900,40 @@ declare interface WebhookOptions {
 }
 
 /**
+ * Defines a set of options for animateTag().
+ */
+declare interface AnimateTagFunctionOptions {
+    /**
+     * The value that should be animated from.
+     * If not specified then the current tag value will be used.
+     */
+    fromValue?: any;
+
+    /**
+     * The value that should be animated to.
+     */
+    toValue: any;
+
+    /**
+     * The duration of the animation in seconds.
+     */
+    duration: number;
+
+    /**
+     * The type of easing to use.
+     * If not specified then "linear" "inout" will be used.
+     */
+    easing?: EaseType | Easing;
+
+    /**
+     * The space that the tag should be animated in.
+     * If not specified then "tempLocal" will be used.
+     * If false, then the bot will be edited instead of using tag masks.
+     */
+    tagMaskSpace?: BotSpace | false;
+}
+
+/**
  * Defines an event that is used to load a file.
  */
 declare interface LoadFileAction extends Action {
@@ -2178,6 +2212,18 @@ declare global {
      * @param time Time in ms. 1 second is 1000ms.
      */
     function sleep(time: number): Promise<void>;
+
+    /**
+     * Animates the given tag. Returns a promise when the animation is finished.
+     * @param bot The bot or list of bots that should be animated.
+     * @param tag The tag that should be animated.
+     * @param options The options for the animation.
+     */
+    function animateTag(
+        bot: Bot | Bot[] | string[] | string,
+        tag: string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void[]>;
 
     /**
      * Sends the given operation to all the devices that matches the given selector.

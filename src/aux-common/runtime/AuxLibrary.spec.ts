@@ -151,6 +151,8 @@ import { decryptV1, keypair } from '@casual-simulation/crypto';
 import { CERTIFIED_SPACE } from '../aux-format-2/AuxWeaveReducer';
 import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { RanOutOfEnergyError } from './AuxResults';
+import { Subscription, SubscriptionLike } from 'rxjs';
+import { waitAsync } from '../test/TestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -4238,8 +4240,20 @@ describe('AuxLibrary', () => {
         });
 
         describe('animateTag()', () => {
-            it('should emit a AnimateTagAction', () => {
-                const promise: any = library.api.animateTag(bot1, 'abc', {
+            let sub: SubscriptionLike;
+            beforeEach(() => {
+                jest.useFakeTimers('modern');
+            });
+
+            afterEach(() => {
+                if(sub) {
+                    sub.unsubscribe();
+                }
+            });
+
+            it('should animate the given tag to the given value over the duration', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
                     fromValue: 0,
                     toValue: 10,
                     easing: {
@@ -4250,24 +4264,23 @@ describe('AuxLibrary', () => {
                     tagMaskSpace: 'tempLocal',
                 });
 
-                const expected = animateTag(
-                    bot1.id,
-                    'abc',
-                    {
-                        fromValue: 0,
-                        toValue: 10,
-                        easing: {
-                            type: 'quadratic',
-                            mode: 'inout',
-                        },
-                        duration: 0.5,
-                        tagMaskSpace: 'tempLocal',
-                    },
-                    context.tasks.size
-                );
+                let resolved = false;
 
-                expect(promise[ORIGINAL_OBJECT]).toEqual([expected]);
-                expect(context.actions).toEqual([expected]);
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(516);
+                jest.runOnlyPendingTimers();
+
+                // await waitAsync();
+
+                expect(resolved).toBe(true);
+                expect(bot1.tags.abc).toEqual(10);
+                expect(bot1.masks.abc).toEqual(10);
+                expect(bot1.raw.abc).toEqual(0);
             });
         });
 

@@ -170,7 +170,7 @@ import uuidv4 from 'uuid/v4';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
-import { convertToCopiableValue } from './Utils';
+import { convertToCopiableValue, getEasing } from './Utils';
 import { sha256 as hashSha256, sha512 as hashSha512, hmac } from 'hash.js';
 import stableStringify from 'fast-json-stable-stringify';
 import {
@@ -183,7 +183,7 @@ import {
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, del, insert, preserve } from '../aux-format-2';
 import { Euler, Vector3, Plane, Ray } from 'three';
-import { Runtime } from 'inspector';
+import { Tween } from '@tweenjs/tween.js';
 import './PerformanceNowPolyfill';
 
 /**
@@ -2848,24 +2848,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param options The options for the animation.
      */
     function animateTag(
-        bot: RuntimeBot | RuntimeBot[] | string[] | string,
+        bot: RuntimeBot | (RuntimeBot | string)[] | string,
         tag: string,
         options: AnimateTagFunctionOptions
-    ): Promise<void[]> {
-        const botsOrIds = Array.isArray(bot) ? bot : [bot];
-        const bots = botsOrIds
-            .map((b) => (typeof b === 'string' ? getBot('id', b) : b))
-            .filter((b) => !!b);
+    ): Promise<void> {
+        if (Array.isArray(bot)) {
+            const bots = bot
+                .map((b) => (typeof b === 'string' ? getBot('id', b) : b))
+                .filter((b) => !!b);
 
-        const promises = bots.map((b) => animateBotTag(b, tag, options));
+            const promises = bots.map((b) => animateBotTag(b, tag, options));
 
-        const allPromises = Promise.all(promises);
-
-        (<any>allPromises)[ORIGINAL_OBJECT] = promises.map(
-            (p) => (<any>p)[ORIGINAL_OBJECT]
-        );
-
-        return allPromises;
+            const allPromises = Promise.all(promises);
+            return <Promise<void>>(<any>allPromises);
+        } else if (typeof bot === 'string') {
+            const finalBot = getBot('id', bot);
+            if (finalBot) {
+                return animateBotTag(finalBot, tag, options);
+            } else {
+                return Promise.resolve();
+            }
+        } else {
+            return animateBotTag(bot, tag, options);
+        }
     }
 
     function animateBotTag(
@@ -2873,35 +2878,49 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         tag: string,
         options: AnimateTagFunctionOptions
     ): Promise<void> {
-        const task = context.createTask();
-
-        const event = calcAnimateTag(
-            bot.id,
-            tag,
-            {
-                fromValue: hasValue(options.fromValue)
+        return new Promise<void>((resolve, reject) => {
+            let valueHolder = {
+                [tag]: hasValue(options.fromValue)
                     ? options.fromValue
                     : bot.tags[tag],
-                toValue: options.toValue,
-                duration: options.duration,
-                easing: hasValue(options.easing)
-                    ? typeof options.easing === 'string'
-                        ? {
-                              mode: 'inout',
-                              type: options.easing,
-                          }
-                        : options.easing
-                    : {
+            };
+            const easing: Easing = hasValue(options.easing)
+                ? typeof options.easing === 'string'
+                    ? {
                           mode: 'inout',
-                          type: 'linear',
-                      },
-                tagMaskSpace: hasValue(options.tagMaskSpace)
-                    ? options.tagMaskSpace
-                    : 'tempLocal',
-            },
-            task.taskId
-        );
-        return addAsyncAction(task, event);
+                          type: options.easing,
+                      }
+                    : options.easing
+                : {
+                      mode: 'inout',
+                      type: 'linear',
+                  };
+            const tween = new Tween<any>(valueHolder)
+                .to({
+                    [tag]: options.toValue,
+                })
+                .duration(options.duration * 1000)
+                .easing(getEasing(easing))
+                .onUpdate(() => {
+                    if (
+                        options.tagMaskSpace === false ||
+                        options.tagMaskSpace === getBotSpace(bot)
+                    ) {
+                        setTag(bot, tag, valueHolder[tag]);
+                    } else {
+                        setTagMask(
+                            bot,
+                            tag,
+                            valueHolder[tag],
+                            options.tagMaskSpace || 'tempLocal'
+                        );
+                    }
+                })
+                .onComplete(() => {
+                    resolve();
+                })
+                .start(context.localTime);
+        });
     }
 
     // /**
