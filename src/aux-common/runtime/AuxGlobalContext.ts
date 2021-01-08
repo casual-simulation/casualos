@@ -21,6 +21,7 @@ import { AuxDevice } from './AuxDevice';
 import { ScriptError, RanOutOfEnergyError } from './AuxResults';
 import uuid from 'uuid/v4';
 import { sortBy, sortedIndex, sortedIndexOf } from 'lodash';
+import './PerformanceNowPolyfill';
 
 /**
  * Holds global values that need to be accessible from the runtime.

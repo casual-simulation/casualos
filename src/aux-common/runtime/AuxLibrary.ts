@@ -184,6 +184,7 @@ import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, del, insert, preserve } from '../aux-format-2';
 import { Euler, Vector3, Plane, Ray } from 'three';
 import { Runtime } from 'inspector';
+import './PerformanceNowPolyfill';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -406,14 +407,6 @@ export interface PerformanceStats {
  * @param context The global context that should be used.
  */
 export function createDefaultLibrary(context: AuxGlobalContext) {
-    if (!globalThis.performance) {
-        globalThis.performance = {
-            now() {
-                return Date.now();
-            },
-        } as any;
-    }
-
     webhook.post = function (
         url: string,
         data?: any,
