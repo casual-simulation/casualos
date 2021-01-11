@@ -43,7 +43,7 @@ import {
     CompiledBotListener,
     DNA_TAG_PREFIX,
 } from '../bots';
-import { Observable, Subject, SubscriptionLike } from 'rxjs';
+import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
 import {
     AuxGlobalContext,
@@ -62,8 +62,6 @@ import {
 import { CompiledBot, CompiledBotsState } from './CompiledBot';
 import sortBy from 'lodash/sortBy';
 import transform from 'lodash/transform';
-import { BatchingZoneSpec } from './BatchingZoneSpec';
-import { CleanupZoneSpec } from './CleanupZoneSpec';
 import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
@@ -98,8 +96,6 @@ export class AuxRuntime
     private _errorBatch: ScriptError[] = [];
 
     private _userId: string;
-    private _zone: Zone;
-    private _globalVariablesSpec: ZoneSpec;
     private _sub: SubscriptionLike;
     private _currentVersion: RuntimeStateVersion = {
         localSites: {},
@@ -160,83 +156,7 @@ export class AuxRuntime
         this._onActions = new Subject();
         this._onErrors = new Subject();
 
-        const cleanupSpec = new CleanupZoneSpec();
-        this._sub = cleanupSpec;
-
-        const cleanupZone = Zone.current.fork(cleanupSpec);
-
-        const batchingZone = cleanupZone.fork(
-            new BatchingZoneSpec(() => {
-                this._processBatch();
-            })
-        );
-
-        const wrapInvoke = (targetZone: Zone, fn: Function) => {
-            const previousBot = this._globalContext.currentBot;
-            this._globalContext.currentBot =
-                targetZone.get('currentBot') || null;
-
-            const wasEditable = this._globalContext.allowsEditing;
-            this._globalContext.allowsEditing = targetZone.get('allowsEditing');
-            try {
-                return fn();
-            } finally {
-                this._globalContext.currentBot = previousBot || null;
-                this._globalContext.allowsEditing = wasEditable;
-            }
-        };
-
-        this._globalVariablesSpec = {
-            name: 'GlobalVariablesZone',
-            onScheduleTask: (
-                parentZoneDelegate: ZoneDelegate,
-                currentZone: Zone,
-                targetZone: Zone,
-                task: Task
-            ) => {
-                if (targetZone.get('allowsEditing') === false) {
-                    task.cancelScheduleRequest();
-                    return task;
-                }
-                return parentZoneDelegate.scheduleTask(targetZone, task);
-            },
-            onInvoke: (
-                parentZoneDelegate,
-                currentZone,
-                targetZone,
-                target,
-                applyThis,
-                applyArgs
-            ) => {
-                return wrapInvoke(targetZone, () =>
-                    parentZoneDelegate.invoke(
-                        targetZone,
-                        target,
-                        applyThis,
-                        applyArgs
-                    )
-                );
-            },
-            onInvokeTask: (
-                parentZoneDelegate,
-                currentZone,
-                targetZone,
-                task,
-                applyThis,
-                applyArgs
-            ) => {
-                return wrapInvoke(targetZone, () =>
-                    parentZoneDelegate.invokeTask(
-                        targetZone,
-                        task,
-                        applyThis,
-                        applyArgs
-                    )
-                );
-            },
-        };
-
-        this._zone = batchingZone;
+        this._sub = new Subscription();
     }
 
     getShoutTimers(): { [shout: string]: number } {
@@ -294,19 +214,18 @@ export class AuxRuntime
      * @param actions The actions to process.
      */
     process(actions: BotAction[]) {
-        this._zone.run(() => {
-            for (let action of actions) {
-                let { rejected, newActions } = this._rejectAction(action);
-                for (let newAction of newActions) {
-                    this._processAction(newAction);
-                }
-                if (rejected) {
-                    continue;
-                }
-
-                this._processAction(action);
+        for (let action of actions) {
+            let { rejected, newActions } = this._rejectAction(action);
+            for (let newAction of newActions) {
+                this._processAction(newAction);
             }
-        });
+            if (rejected) {
+                continue;
+            }
+
+            this._processAction(action);
+        }
+        this.notifyChange();
     }
 
     private _processAction(action: BotAction) {
@@ -848,7 +767,7 @@ export class AuxRuntime
     notifyChange(): void {
         if (!this._batchPending) {
             this._batchPending = true;
-            Zone.root.scheduleMicroTask('AuxRuntime#notifyChange', () => {
+            queueMicrotask(() => {
                 this._processBatch();
             });
         }
@@ -903,7 +822,7 @@ export class AuxRuntime
         // run at a later time with the actions.
         // This ensures that we don't block other flush operations
         // due to handlers running synchronously.
-        Zone.root.scheduleMicroTask('AuxRuntime#_processBatch', () => {
+        queueMicrotask(() => {
             this._onActions.next(actions);
             this._onErrors.next(errors);
         });
@@ -914,16 +833,14 @@ export class AuxRuntime
         batch: boolean,
         resetEnergy: boolean
     ): { result: T; actions: BotAction[]; errors: ScriptError[] } {
-        return this._zone.run(() => {
-            const results = this._calculateScriptResults(callback, resetEnergy);
+        const results = this._calculateScriptResults(callback, resetEnergy);
 
-            if (batch) {
-                this._actionBatch.push(...results.actions);
-            }
-            this._errorBatch.push(...results.errors);
+        if (batch) {
+            this._actionBatch.push(...results.actions);
+        }
+        this._errorBatch.push(...results.errors);
 
-            return results;
-        });
+        return results;
     }
 
     private _calculateScriptResults<T>(
@@ -1294,17 +1211,6 @@ export class AuxRuntime
                 ctx.config = ctx.bot
                     ? this._getRuntimeBot(ctx.bot.script.tags.configBot)
                     : null;
-            },
-            invoke: (fn, ctx) => {
-                return Zone.current
-                    .fork({
-                        ...this._globalVariablesSpec,
-                        properties: {
-                            currentBot: ctx.bot,
-                            allowsEditing: options.allowsEditing,
-                        },
-                    })
-                    .run(() => fn());
             },
             onError: (err, ctx, meta) => {
                 if (err instanceof RanOutOfEnergyError) {
