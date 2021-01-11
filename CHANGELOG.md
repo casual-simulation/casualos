@@ -4,6 +4,12 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the Terms of Service and Privacy Policy documents.
+    -   The Terms of Service are available at `/terms` (or at `/terms-of-service.txt`).
+    -   The Privacy Policy is available at `/privacy-policy` (or at `/privacy-policy.txt`).
+
 ### :bug: Bug Fixes
 
 -   Fixed issues with `#labelFontSize = auto` when `#labelPosition != front` or when the bot is rotated.
