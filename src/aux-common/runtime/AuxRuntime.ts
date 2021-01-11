@@ -347,9 +347,7 @@ export class AuxRuntime
         let fn: () => any;
 
         try {
-            fn = this._compile(null, null, script, {
-                allowsEditing: true,
-            });
+            fn = this._compile(null, null, script, {});
         } catch (ex) {
             let errors = [
                 {
@@ -979,17 +977,14 @@ export class AuxRuntime
     }
 
     updateTag(bot: CompiledBot, tag: string, newValue: any): RealtimeEditMode {
-        if (this._globalContext.allowsEditing) {
-            const space = getBotSpace(bot);
-            const mode = this._editModeProvider.getEditMode(space);
-            if (mode === RealtimeEditMode.Immediate) {
-                this._compileTag(bot, tag, newValue);
-            }
-            this._updatedBots.set(bot.id, bot.script);
-            this.notifyChange();
-            return mode;
+        const space = getBotSpace(bot);
+        const mode = this._editModeProvider.getEditMode(space);
+        if (mode === RealtimeEditMode.Immediate) {
+            this._compileTag(bot, tag, newValue);
         }
-        return RealtimeEditMode.None;
+        this._updatedBots.set(bot.id, bot.script);
+        this.notifyChange();
+        return mode;
     }
 
     getValue(bot: CompiledBot, tag: string): any {
@@ -1006,31 +1001,27 @@ export class AuxRuntime
         spaces: string[],
         value: any
     ): RealtimeEditMode {
-        if (this._globalContext.allowsEditing) {
-            let updated = false;
-            for (let space of spaces) {
-                const mode = this._editModeProvider.getEditMode(space);
-                if (mode === RealtimeEditMode.Immediate) {
-                    if (!bot.masks) {
-                        bot.masks = {};
-                    }
-                    if (!bot.masks[space]) {
-                        bot.masks[space] = {};
-                    }
-                    bot.masks[space][tag] = value;
-                    updated = true;
+        let updated = false;
+        for (let space of spaces) {
+            const mode = this._editModeProvider.getEditMode(space);
+            if (mode === RealtimeEditMode.Immediate) {
+                if (!bot.masks) {
+                    bot.masks = {};
                 }
+                if (!bot.masks[space]) {
+                    bot.masks[space] = {};
+                }
+                bot.masks[space][tag] = value;
+                updated = true;
             }
-            if (updated) {
-                this._compileTagOrMask(bot, bot, tag);
-                this._updatedBots.set(bot.id, bot.script);
-                this.notifyChange();
-            }
-
-            return RealtimeEditMode.Immediate;
+        }
+        if (updated) {
+            this._compileTagOrMask(bot, bot, tag);
+            this._updatedBots.set(bot.id, bot.script);
+            this.notifyChange();
         }
 
-        return RealtimeEditMode.None;
+        return RealtimeEditMode.Immediate;
     }
 
     getTagMask(bot: CompiledBot, tag: string): RealtimeEditMode {
@@ -1158,9 +1149,7 @@ export class AuxRuntime
             }
         } else if (isScript(value)) {
             try {
-                listener = this._compile(bot, tag, value, {
-                    allowsEditing: true,
-                });
+                listener = this._compile(bot, tag, value, {});
             } catch (ex) {
                 value = ex;
             }
@@ -1201,10 +1190,6 @@ export class AuxRuntime
                 config: null as RuntimeBot,
             },
             before: (ctx) => {
-                // if (!options.allowsEditing) {
-                //     ctx.wasEditable = ctx.global.allowsEditing;
-                //     ctx.global.allowsEditing = false;
-                // }
                 ctx.creator = ctx.bot
                     ? this._getRuntimeBot(ctx.bot.script.tags.creator)
                     : null;
@@ -1258,6 +1243,7 @@ export class AuxRuntime
                 tagName: tag,
             },
             variables: {
+                ...this._library.tagSpecificApi,
                 this: (ctx) => (ctx.bot ? ctx.bot.script : null),
                 bot: (ctx) => (ctx.bot ? ctx.bot.script : null),
                 tags: (ctx) => (ctx.bot ? ctx.bot.script.tags : null),
@@ -1370,13 +1356,7 @@ export class AuxRuntime
 /**
  * Options that are used to influence the behavior of the compiled script.
  */
-interface CompileOptions {
-    /**
-     * Whether the script allows editing the bot.
-     * If false, then the script will set the bot's editable value to false for the duration of the script.
-     */
-    allowsEditing: boolean;
-}
+interface CompileOptions {}
 
 interface UncompiledScript {
     bot: CompiledBot;

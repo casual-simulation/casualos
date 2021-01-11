@@ -1,5 +1,3 @@
-jest.useFakeTimers();
-
 import { MemoryPartition, createMemoryPartition } from '../partitions';
 import { AuxRuntime } from './AuxRuntime';
 import {
@@ -727,7 +725,7 @@ describe('AuxRuntime', () => {
 
                     await waitAsync();
 
-                    expect(events).toEqual([[toast(1)], [toast(2)]]);
+                    expect(events).toEqual([[toast(1), toast(2)]]);
                 });
 
                 it('should allow updating the bots', async () => {
@@ -760,8 +758,6 @@ describe('AuxRuntime', () => {
                                     hit: true,
                                 },
                             }),
-                        ],
-                        [
                             botUpdated('test2', {
                                 tags: {
                                     hit: true,
@@ -1557,8 +1553,7 @@ describe('AuxRuntime', () => {
                     await waitAsync();
 
                     expect(events).toEqual([
-                        [toast('Changed 1!')],
-                        [toast('Changed 2!')],
+                        [toast('Changed 1!'), toast('Changed 2!')],
                     ]);
                 });
 
@@ -3810,8 +3805,8 @@ describe('AuxRuntime', () => {
                                 shout: "@player.toast('abc')",
                             })
                         ),
+                        toast('abc'),
                     ],
-                    [toast('abc')],
                 ]);
             });
 
@@ -5280,27 +5275,6 @@ describe('AuxRuntime', () => {
 
             expect(test).toBeCalledTimes(2);
         });
-    });
-
-    it('should not leak zones to callbacks', async () => {
-        let root = Zone.root;
-        const zones = [] as Zone[];
-        runtime.onActions.subscribe((e) => {
-            zones.push(Zone.current);
-        });
-        runtime.stateUpdated(
-            stateUpdatedEvent({
-                test: createBot('test', {
-                    start: '@player.toast("abc")',
-                }),
-            })
-        );
-        runtime.shout('start');
-
-        await waitAsync();
-
-        expect(zones.length).toBe(1);
-        expect(zones[0]).toBe(root);
     });
 
     describe('forceSignedScripts', () => {

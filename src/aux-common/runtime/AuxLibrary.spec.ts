@@ -1,4 +1,8 @@
-import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
+import {
+    AuxLibrary,
+    createDefaultLibrary,
+    TagSpecificApiOptions,
+} from './AuxLibrary';
 import {
     AuxGlobalContext,
     addToContext,
@@ -5798,9 +5802,20 @@ describe('AuxLibrary', () => {
     });
 
     describe('create()', () => {
+        let tagContext: TagSpecificApiOptions;
+
+        beforeEach(() => {
+            tagContext = {
+                bot: null,
+                config: null,
+                creator: null,
+                tag: null,
+            };
+        });
+
         it('should return the created bot', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create({
+            const bot = library.tagSpecificApi.create(tagContext)({
                 abc: 'def',
             });
             expect(bot).toEqual(
@@ -5809,13 +5824,14 @@ describe('AuxLibrary', () => {
                 })
             );
         });
+
         it('should automatically set the creator to the current bot ID', () => {
             const creator = createDummyRuntimeBot('creator');
             addToContext(context, creator);
-            context.currentBot = creator;
+            tagContext.bot = creator;
 
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create({
+            const bot = library.tagSpecificApi.create(tagContext)({
                 abc: 'def',
             });
             expect(bot).toEqual(
@@ -5828,12 +5844,15 @@ describe('AuxLibrary', () => {
         it('should ignore strings because they are no longer used to set the creator ID', () => {
             const creator = createDummyRuntimeBot('creator');
             addToContext(context, creator);
-            context.currentBot = creator;
+            tagContext.bot = creator;
 
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create('otherBot' as any, {
-                abc: 'def',
-            });
+            const bot = library.tagSpecificApi.create(tagContext)(
+                'otherBot' as any,
+                {
+                    abc: 'def',
+                }
+            );
             expect(bot).toEqual(
                 createDummyRuntimeBot('uuid', {
                     creator: 'creator',
@@ -5843,7 +5862,7 @@ describe('AuxLibrary', () => {
         });
         it('should support multiple arguments', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create(
+            const bot = library.tagSpecificApi.create(tagContext)(
                 {
                     abc: 'def',
                 },
@@ -5864,7 +5883,7 @@ describe('AuxLibrary', () => {
             other.tags.num = 1;
 
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create(other);
+            const bot = library.tagSpecificApi.create(tagContext)(other);
             expect(bot).toEqual(
                 createDummyRuntimeBot('uuid', {
                     abc: 'def',
@@ -5875,7 +5894,9 @@ describe('AuxLibrary', () => {
 
         it('should support modifying the returned bot', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create({ abc: 'def' }) as RuntimeBot;
+            const bot = library.tagSpecificApi.create(tagContext)({
+                abc: 'def',
+            }) as RuntimeBot;
             bot.tags.fun = true;
 
             expect(bot).toEqual({
@@ -5899,7 +5920,9 @@ describe('AuxLibrary', () => {
         });
         it('should add the new bot to the context', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create({ abc: 'def' });
+            const bot = library.tagSpecificApi.create(tagContext)({
+                abc: 'def',
+            });
 
             const bots = library.api.getBots('abc', 'def');
             expect(bots[0]).toBe(bot);
@@ -5907,7 +5930,10 @@ describe('AuxLibrary', () => {
         it('should trigger onCreate() on the created bot.', () => {
             uuidMock.mockReturnValue('uuid');
             const callback = jest.fn();
-            const bot = library.api.create({ abc: 'def', onCreate: callback });
+            const bot = library.tagSpecificApi.create(tagContext)({
+                abc: 'def',
+                onCreate: callback,
+            });
 
             expect(callback).toBeCalled();
             expect(bot).toEqual({
@@ -5938,7 +5964,9 @@ describe('AuxLibrary', () => {
             const onAnyCreate1 = (bot1.listeners.onAnyCreate = jest.fn());
             context.recordListenerPresense(bot1.id, 'onAnyCreate', true);
 
-            const bot = library.api.create({ abc: 'def' });
+            const bot = library.tagSpecificApi.create(tagContext)({
+                abc: 'def',
+            });
 
             expect(onAnyCreate1).toBeCalledWith({
                 bot: bot,
@@ -5946,7 +5974,10 @@ describe('AuxLibrary', () => {
         });
         it('should support arrays of diffs as arguments', () => {
             uuidMock.mockReturnValueOnce('uuid1').mockReturnValueOnce('uuid2');
-            const bots = library.api.create([{ abc: 'def' }, { abc: 123 }]);
+            const bots = library.tagSpecificApi.create(tagContext)([
+                { abc: 'def' },
+                { abc: 123 },
+            ]);
 
             expect(bots).toEqual([
                 createDummyRuntimeBot('uuid1', {
@@ -5960,7 +5991,7 @@ describe('AuxLibrary', () => {
         it('should create every combination of diff', () => {
             let num = 1;
             uuidMock.mockImplementation(() => `uuid-${num++}`);
-            const bots = library.api.create(
+            const bots = library.tagSpecificApi.create(tagContext)(
                 [{ hello: true }, { hello: false }],
                 { abc: 'def' },
                 [{ wow: 1 }, { oh: 'haha' }, { test: 'a' }]
@@ -6009,7 +6040,10 @@ describe('AuxLibrary', () => {
             addToContext(context, first, second);
 
             uuidMock.mockReturnValueOnce('uuid1').mockReturnValueOnce('uuid2');
-            const bots = library.api.create([first, second]);
+            const bots = library.tagSpecificApi.create(tagContext)([
+                first,
+                second,
+            ]);
 
             expect(bots).toEqual([
                 createDummyRuntimeBot('uuid1', {
@@ -6031,7 +6065,7 @@ describe('AuxLibrary', () => {
             addToContext(context, other);
 
             uuidMock.mockReturnValueOnce('uuid1');
-            const bots = library.api.create([other]);
+            const bots = library.tagSpecificApi.create(tagContext)([other]);
             expect(bots).toEqual(
                 createDummyRuntimeBot(
                     'uuid1',
@@ -6054,7 +6088,9 @@ describe('AuxLibrary', () => {
             addToContext(context, other);
 
             uuidMock.mockReturnValueOnce('uuid1');
-            const bots = library.api.create([other]) as RuntimeBot;
+            const bots = library.tagSpecificApi.create(tagContext)([
+                other,
+            ]) as RuntimeBot;
             bots.tags.hello = true;
             expect(other).toEqual(
                 createDummyRuntimeBot(
@@ -6070,7 +6106,7 @@ describe('AuxLibrary', () => {
         it('should be able to shout to a new bot', () => {
             uuidMock.mockReturnValue('uuid');
             const abc = jest.fn();
-            library.api.create({ abc: abc, test: true });
+            library.tagSpecificApi.create(tagContext)({ abc: abc, test: true });
             library.api.shout('abc');
 
             expect(abc).toBeCalled();
@@ -6081,7 +6117,7 @@ describe('AuxLibrary', () => {
             it('should be able to shout to a new bot that is just now listening', () => {
                 uuidMock.mockReturnValue('uuid');
                 const abc = jest.fn();
-                library.api.create(
+                library.tagSpecificApi.create(tagContext)(
                     { [tag]: false, abc: abc, test: true },
                     { [tag]: true }
                 );
@@ -6098,7 +6134,10 @@ describe('AuxLibrary', () => {
 
             const abc = jest.fn();
             bot1.listeners.create = jest.fn(() => {
-                library.api.create({ test: true, abc: abc });
+                library.tagSpecificApi.create(tagContext)({
+                    test: true,
+                    abc: abc,
+                });
             });
             context.recordListenerPresense(bot1.id, 'create', true);
 
@@ -6116,7 +6155,12 @@ describe('AuxLibrary', () => {
             const abc = jest.fn();
             const def = jest.fn();
             bot1.listeners.create = jest.fn(() => {
-                library.api.create({ test: true, abc, def, space: 'custom' });
+                library.tagSpecificApi.create(tagContext)({
+                    test: true,
+                    abc,
+                    def,
+                    space: 'custom',
+                });
             });
             context.recordListenerPresense(bot1.id, 'create', true);
 
@@ -6135,7 +6179,10 @@ describe('AuxLibrary', () => {
 
             const abc = jest.fn();
             bot1.listeners.create = jest.fn(() => {
-                return library.api.create({ test: true, abc });
+                return library.tagSpecificApi.create(tagContext)({
+                    test: true,
+                    abc,
+                });
             });
             context.recordListenerPresense(bot1.id, 'create', true);
 
@@ -6155,7 +6202,11 @@ describe('AuxLibrary', () => {
             });
             const def = jest.fn();
             bot1.listeners.create = jest.fn(() => {
-                return library.api.create({ test: true, abc, def });
+                return library.tagSpecificApi.create(tagContext)({
+                    test: true,
+                    abc,
+                    def,
+                });
             });
             context.recordListenerPresense(bot1.id, 'create', true);
 
@@ -6182,7 +6233,7 @@ describe('AuxLibrary', () => {
                         library.api.bySpace('custom')
                     );
                     if (!b) {
-                        b = library.api.create(
+                        b = library.tagSpecificApi.create(tagContext)(
                             {
                                 test: true,
                                 otherPart,
@@ -6208,7 +6259,7 @@ describe('AuxLibrary', () => {
 
         it('should ignore null mods', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create(null, {
+            const bot = library.tagSpecificApi.create(tagContext)(null, {
                 abc: 'def',
             });
 
@@ -6222,13 +6273,13 @@ describe('AuxLibrary', () => {
         it('should throw an error if creating a bot with no tags', () => {
             uuidMock.mockReturnValue('uuid');
             expect(() => {
-                library.api.create({});
+                library.tagSpecificApi.create(tagContext)({});
             }).toThrow();
         });
 
         it('should be able to create a bot that has tags but is given a mod with no tags', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create(
+            const bot = library.tagSpecificApi.create(tagContext)(
                 {
                     abc: 'def',
                 },
@@ -6244,14 +6295,17 @@ describe('AuxLibrary', () => {
         it('should throw an error if given an array with a mod that has no tags', () => {
             uuidMock.mockReturnValue('uuid');
             expect(() => {
-                library.api.create([{}]);
+                library.tagSpecificApi.create(tagContext)([{}]);
             }).toThrow();
         });
 
         describe('space', () => {
             it('should set the space of the bot', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ space: 'local', abc: 'def' });
+                const bot = library.tagSpecificApi.create(tagContext)({
+                    space: 'local',
+                    abc: 'def',
+                });
                 expect(bot).toEqual(
                     createDummyRuntimeBot('uuid', { abc: 'def' }, 'local')
                 );
@@ -6259,7 +6313,7 @@ describe('AuxLibrary', () => {
 
             it('should use the last space', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create(
+                const bot = library.tagSpecificApi.create(tagContext)(
                     { space: 'tempLocal' },
                     { space: 'local' },
                     { abc: 'def' }
@@ -6277,7 +6331,7 @@ describe('AuxLibrary', () => {
 
             it('should use the last space even if it is null', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create(
+                const bot = library.tagSpecificApi.create(tagContext)(
                     { space: 'tempLocal' },
                     { space: null },
                     { abc: 'def' }
@@ -6299,7 +6353,7 @@ describe('AuxLibrary', () => {
                 'should treat %s as the default type',
                 (desc, value) => {
                     uuidMock.mockReturnValueOnce('uuid');
-                    const bot = library.api.create({
+                    const bot = library.tagSpecificApi.create(tagContext)({
                         space: value,
                         abc: 'def',
                     });
@@ -6321,12 +6375,14 @@ describe('AuxLibrary', () => {
                 bot1 = createDummyRuntimeBot('bot1');
                 addToContext(context, current, bot1);
 
-                context.currentBot = current;
+                tagContext.bot = bot1;
             });
 
             it('should set the creator to the given bot', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ creator: bot1.id });
+                const bot = library.tagSpecificApi.create(tagContext)({
+                    creator: bot1.id,
+                });
                 expect(bot).toEqual(
                     createDummyRuntimeBot('uuid', {
                         creator: 'bot1',
@@ -6336,7 +6392,10 @@ describe('AuxLibrary', () => {
 
             it('should be able to set the creator to null', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ creator: null, abc: 'def' });
+                const bot = library.tagSpecificApi.create(tagContext)({
+                    creator: null,
+                    abc: 'def',
+                });
                 expect(bot).toEqual(
                     createDummyRuntimeBot('uuid', {
                         abc: 'def',
@@ -6346,7 +6405,7 @@ describe('AuxLibrary', () => {
 
             it('should set creator to null if it references a bot in a different space', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({
+                const bot = library.tagSpecificApi.create(tagContext)({
                     creator: bot1.id,
                     space: 'local',
                     abc: 'def',
@@ -6364,7 +6423,7 @@ describe('AuxLibrary', () => {
 
             it('should set creator to null if it references a bot that does not exist', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({
+                const bot = library.tagSpecificApi.create(tagContext)({
                     creator: 'missing',
                     abc: 'def',
                 });
@@ -6465,7 +6524,12 @@ describe('AuxLibrary', () => {
 
         it('should be able to destroy a bot that was just created', () => {
             uuidMock.mockReturnValueOnce('uuid');
-            const newBot = library.api.create({
+            const newBot = library.tagSpecificApi.create({
+                bot: null,
+                config: null,
+                creator: null,
+                tag: null,
+            })({
                 abc: 'def',
             });
             library.api.destroy(newBot);
@@ -6777,11 +6841,17 @@ describe('AuxLibrary', () => {
 
         it('should handle when a bot is created during a shout', () => {
             uuidMock.mockReturnValueOnce('test0').mockReturnValueOnce('test5');
+            const tagContext: TagSpecificApiOptions = {
+                bot: null,
+                config: null,
+                creator: null,
+                tag: null,
+            };
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {
-                library.api.create({
+                library.tagSpecificApi.create(tagContext)({
                     num: 1,
                 });
-                library.api.create({
+                library.tagSpecificApi.create(tagContext)({
                     num: 2,
                 });
             }));

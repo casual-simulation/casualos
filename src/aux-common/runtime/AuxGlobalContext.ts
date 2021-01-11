@@ -27,11 +27,6 @@ import { sortBy, sortedIndex, sortedIndexOf } from 'lodash';
  */
 export interface AuxGlobalContext {
     /**
-     * Whether editing is currently allowed.
-     */
-    allowsEditing: boolean;
-
-    /**
      * The ordered list of script bots.
      */
     bots: RuntimeBot[];
@@ -55,11 +50,6 @@ export interface AuxGlobalContext {
      * The player bot.
      */
     playerBot: RuntimeBot;
-
-    /**
-     * The current bot.
-     */
-    currentBot: RuntimeBot;
 
     /**
      * The current energy that the context has.
@@ -258,11 +248,6 @@ export function isInContext(context: AuxGlobalContext, bot: Bot) {
  */
 export class MemoryGlobalContext implements AuxGlobalContext {
     /**
-     * Whether editing is currently allowed.
-     */
-    allowsEditing: boolean = true;
-
-    /**
      * The ordered list of script bots.
      */
     bots: RuntimeBot[] = [];
@@ -301,11 +286,6 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      * The player bot.
      */
     playerBot: RuntimeBot = null;
-
-    /**
-     * The current bot.
-     */
-    currentBot: RuntimeBot = null;
 
     /**
      * The current energy that the context has.

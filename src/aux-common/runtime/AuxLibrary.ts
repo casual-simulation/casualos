@@ -1,4 +1,4 @@
-import { AuxGlobalContext, AsyncTask } from './AuxGlobalContext';
+import { AuxGlobalContext, AsyncTask, BotTimer } from './AuxGlobalContext';
 import {
     hasValue,
     trimTag,
@@ -180,12 +180,14 @@ import {
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, del, insert, preserve } from '../aux-format-2';
 import { Euler, Vector3, Plane, Ray } from 'three';
-import { Runtime } from 'inspector';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
  */
 export interface AuxLibrary {
+    /**
+     * The functions that are part of the general API.
+     */
     api: {
         whisper(
             bot: (Bot | string)[] | Bot | string,
@@ -195,6 +197,13 @@ export interface AuxLibrary {
         shout(name: string, arg?: any): any[];
         __energyCheck(): void;
         [key: string]: any;
+    };
+
+    /**
+     * The functions that are part of the bot-specific API.
+     */
+    tagSpecificApi: {
+        [key: string]: (options: TagSpecificApiOptions) => any;
     };
     typeDefinitions?: string;
 }
@@ -365,6 +374,30 @@ export interface PerformanceStats {
 }
 
 /**
+ * Options needed for the Bot-specific API.
+ */
+export interface TagSpecificApiOptions {
+    /**
+     * The Bot that the API is for.
+     */
+    bot: Bot;
+    /**
+     * The tag that the API is for.
+     */
+    tag: string;
+
+    /**
+     * The bot that is set as the creator of the current bot.
+     */
+    creator: RuntimeBot;
+
+    /**
+     * The bot that is set as the config of the current bot.
+     */
+    config: RuntimeBot;
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
@@ -412,7 +445,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             applyMod,
             subtractMods,
 
-            create,
             destroy,
             changeState,
             superShout,
@@ -621,6 +653,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             perf: {
                 getStats,
             },
+        },
+
+        tagSpecificApi: {
+            create: (options: TagSpecificApiOptions) => (...args: any[]) =>
+                create(options.bot?.id, ...args),
         },
     };
 
@@ -3767,13 +3804,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * ]);
      *
      */
-    function create(...mods: Mod[]) {
-        return createBase(() => uuidv4(), ...mods);
+    function create(botId: string, ...mods: Mod[]) {
+        return createBase(botId, () => uuidv4(), ...mods);
     }
 
-    function createBase(idFactory: () => string, ...datas: Mod[]) {
-        let parent = context.currentBot;
-        let parentDiff = parent ? { creator: getID(parent) } : {};
+    function createBase(
+        botId: string,
+        idFactory: () => string,
+        ...datas: Mod[]
+    ) {
+        let parentDiff = botId ? { creator: botId } : {};
         return createFromMods(idFactory, parentDiff, ...datas);
     }
 
