@@ -7293,6 +7293,173 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('setTimeout()', () => {
+        let tagContext: TagSpecificApiOptions;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeAll(() => {
+            (<any>jest.useFakeTimers)('modern');
+        });
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+
+            tagContext = {
+                bot: bot1,
+                config: null,
+                creator: null,
+                tag: null,
+            };
+        });
+
+        afterEach(() => {
+            jest.clearAllTimers();
+        });
+
+        afterAll(() => {
+            jest.useRealTimers();
+        });
+
+        it('should add a timer to the list of timers for the current bot', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setTimeout(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'timeout',
+                },
+            ]);
+        });
+
+        it('should clear the timer when the timeout is finished', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setTimeout(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'timeout',
+                },
+            ]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(1);
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('should clear the timer when the bot is destroyed', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setTimeout(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'timeout',
+                },
+            ]);
+
+            library.api.destroy(bot1);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(0);
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+    });
+
+    describe('setInterval()', () => {
+        let tagContext: TagSpecificApiOptions;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeAll(() => {
+            (<any>jest.useFakeTimers)('modern');
+        });
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+
+            tagContext = {
+                bot: bot1,
+                config: null,
+                creator: null,
+                tag: null,
+            };
+        });
+
+        afterEach(() => {
+            jest.clearAllTimers();
+        });
+
+        afterAll(() => {
+            jest.useRealTimers();
+        });
+
+        it('should add a timer to the list of timers for the current bot', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setInterval(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'interval',
+                },
+            ]);
+        });
+
+        it('should not clear the timer when the interval has run', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setInterval(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'interval',
+                },
+            ]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(1);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'interval',
+                },
+            ]);
+
+            jest.advanceTimersByTime(500);
+            expect(fn).toBeCalledTimes(2);
+        });
+    });
+
     describe('player.inSheet()', () => {
         let player: RuntimeBot;
 

@@ -111,6 +111,37 @@ export interface AuxGlobalContext {
     recordListenerPresense(id: string, tag: string, hasListener: boolean): void;
 
     /**
+     * Records the given bot timer for the bot.
+     * @param id The ID of the bot.
+     * @param info The timer info.
+     */
+    recordBotTimer(id: string, info: BotTimer): void;
+
+    /**
+     * Removes the given bot timer from the bot.
+     * @param id The ID of the bot.
+     * @param timer The timer to remove.
+     */
+    removeBotTimer(id: string, timer: number): void;
+
+    /**
+     * Gets the list of bot timers for the given bot.
+     * @param id The ID of the bot.
+     */
+    getBotTimers(id: string): BotTimer[];
+
+    /**
+     * Cancels the list of timers for the given bot ID.
+     * @param id The ID of the bot.
+     */
+    cancelBotTimers(id: string): void;
+
+    /**
+     * Cancels all the timers that bots have created.
+     */
+    cancelAllBotTimers(): void;
+
+    /**
      * Creates a new task.
      * @param Whether to use an unguessable task ID. Defaults to false.
      * @param Whether the task is allowed to be resolved via a remote action result. Defaults to false.
@@ -185,6 +216,21 @@ export interface AsyncTask {
 }
 
 /**
+ * Defines an interface for a timer that was created by a bot (e.g. setTimeout() or setInterval()).
+ */
+export interface BotTimer {
+    /**
+     * The ID of the timer.
+     */
+    timerId: number;
+
+    /**
+     * The type of the timer.
+     */
+    type: 'timeout' | 'interval';
+}
+
+/**
  * Gets the index of the bot in the given context.
  * Returns a negative number if the bot is not in the list.
  * @param context The context.
@@ -231,6 +277,8 @@ export function removeFromContext(
         }
         context.bots.splice(index, 1);
         delete context.state[bot.id];
+
+        context.cancelBotTimers(bot.id);
     }
 }
 
@@ -299,6 +347,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         [shout: string]: number;
     } = {};
     private _listenerMap: Map<string, string[]>;
+    private _botTimerMap: Map<string, BotTimer[]>;
 
     /**
      * Creates a new global context.
@@ -318,6 +367,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this._scriptFactory = scriptFactory;
         this._batcher = batcher;
         this._listenerMap = new Map();
+        this._botTimerMap = new Map();
     }
 
     getBotIdsWithListener(tag: string): string[] {
@@ -370,6 +420,55 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             // Delete the tag from the list if there are no more IDs
             if (set.length <= 0) {
                 this._listenerMap.delete(tag);
+            }
+        }
+    }
+
+    recordBotTimer(id: string, info: BotTimer): void {
+        let list = this._botTimerMap.get(id);
+        if (!list) {
+            list = [];
+            this._botTimerMap.set(id, list);
+        }
+        list.push(info);
+    }
+
+    removeBotTimer(id: string, timer: number): void {
+        let list = this._botTimerMap.get(id);
+        if (list) {
+            let index = list.findIndex((t) => t.timerId === timer);
+            if (index >= 0) {
+                list.splice(index, 1);
+            }
+        }
+    }
+
+    getBotTimers(id: string): BotTimer[] {
+        return this._botTimerMap.get(id) || [];
+    }
+
+    cancelBotTimers(id: string): void {
+        let list = this._botTimerMap.get(id);
+        if (list) {
+            this._clearTimers(list);
+        }
+        this._botTimerMap.delete(id);
+    }
+
+    cancelAllBotTimers() {
+        for (let list of this._botTimerMap.values()) {
+            this._clearTimers(list);
+        }
+
+        this._botTimerMap.clear();
+    }
+
+    private _clearTimers(list: BotTimer[]) {
+        for (let timer of list) {
+            if (timer.type === 'timeout') {
+                clearTimeout(timer.timerId);
+            } else if (timer.type === 'interval') {
+                clearInterval(timer.timerId);
             }
         }
     }
@@ -462,6 +561,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         if (mode === RealtimeEditMode.Immediate) {
             this.bots.splice(index, 1);
             delete this.state[bot.id];
+            this.cancelBotTimers(bot.id);
 
             if (bot.listeners) {
                 for (let key in bot.listeners) {

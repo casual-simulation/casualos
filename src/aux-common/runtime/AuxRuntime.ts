@@ -156,7 +156,9 @@ export class AuxRuntime
         this._onActions = new Subject();
         this._onErrors = new Subject();
 
-        this._sub = new Subscription();
+        this._sub = new Subscription(() => {
+            this._globalContext.cancelAllBotTimers();
+        });
     }
 
     getShoutTimers(): { [shout: string]: number } {

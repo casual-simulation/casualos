@@ -658,8 +658,48 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         tagSpecificApi: {
             create: (options: TagSpecificApiOptions) => (...args: any[]) =>
                 create(options.bot?.id, ...args),
+            setTimeout: botTimer('timeout', setTimeout, true),
+            setInterval: botTimer('interval', setInterval, false),
         },
     };
+
+    function botTimer(
+        type: BotTimer['type'],
+        func: (handler: Function, timeout: number, ...args: any[]) => number,
+        clearAfterHandlerIsRun: boolean
+    ) {
+        return (options: TagSpecificApiOptions) =>
+            function (handler: Function, timeout?: number, ...args: any[]) {
+                if (!options.bot) {
+                    throw new Error(
+                        `Timers are not supported when there is no current bot.`
+                    );
+                }
+
+                let timer: number;
+                if (clearAfterHandlerIsRun) {
+                    timer = func(
+                        function () {
+                            try {
+                                handler(...arguments);
+                            } finally {
+                                context.removeBotTimer(options.bot.id, timer);
+                            }
+                        },
+                        timeout,
+                        ...args
+                    );
+                } else {
+                    timer = func(handler, timeout, ...args);
+                }
+                context.recordBotTimer(options.bot.id, {
+                    timerId: timer,
+                    type: type,
+                });
+
+                return timer;
+            };
+    }
 
     /**
      * Gets a list of all the bots.
