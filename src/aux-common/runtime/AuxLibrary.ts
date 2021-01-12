@@ -367,10 +367,15 @@ export interface PerformanceStats {
      * A list of listen tags and the amount of time spent executing them (in miliseconds).
      * Useful to guage if a listen tag is causing the server to slow down.
      */
-    shoutTimers: {
+    shoutTimes: {
         tag: string;
         timeMs: number;
     }[];
+
+    /**
+     * The total number of active setTimeout() and setInterval() timers that are active.
+     */
+    numberOfActiveTimers: number;
 }
 
 /**
@@ -3503,7 +3508,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getStats(): PerformanceStats {
         return {
             numberOfBots: context.bots.length,
-            shoutTimers: context.getShoutTimers(),
+            shoutTimes: context.getShoutTimers(),
+            numberOfActiveTimers: context.getNumberOfActiveTimers(),
         };
     }
 

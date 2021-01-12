@@ -142,6 +142,11 @@ export interface AuxGlobalContext {
     cancelAllBotTimers(): void;
 
     /**
+     * Gets the number of timers.
+     */
+    getNumberOfActiveTimers(): number;
+
+    /**
      * Creates a new task.
      * @param Whether to use an unguessable task ID. Defaults to false.
      * @param Whether the task is allowed to be resolved via a remote action result. Defaults to false.
@@ -351,6 +356,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     } = {};
     private _listenerMap: Map<string, string[]>;
     private _botTimerMap: Map<string, BotTimer[]>;
+    private _numberOfTimers: number = 0;
 
     /**
      * Creates a new global context.
@@ -434,6 +440,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             this._botTimerMap.set(id, list);
         }
         list.push(info);
+        this._numberOfTimers += 1;
     }
 
     removeBotTimer(id: string, timer: number): void {
@@ -442,6 +449,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             let index = list.findIndex((t) => t.timerId === timer);
             if (index >= 0) {
                 list.splice(index, 1);
+                this._numberOfTimers = Math.max(0, this._numberOfTimers - 1);
             }
         }
     }
@@ -466,7 +474,12 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this._botTimerMap.clear();
     }
 
+    getNumberOfActiveTimers() {
+        return this._numberOfTimers;
+    }
+
     private _clearTimers(list: BotTimer[]) {
+        this._numberOfTimers = Math.max(0, this._numberOfTimers - list.length);
         for (let timer of list) {
             if (timer.type === 'timeout') {
                 clearTimeout(timer.timerId);

@@ -9104,11 +9104,33 @@ describe('AuxLibrary', () => {
             const result = library.api.perf.getStats();
 
             // only counts the bots in the context
-            expect(result.shoutTimers).toEqual([
+            expect(result.shoutTimes).toEqual([
                 { tag: 'abc', timeMs: 99 },
                 { tag: 'def', timeMs: 123 },
                 { tag: 'haha', timeMs: 999 },
             ]);
+        });
+
+        it('should include the total number of interval and timeout timers', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            const bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+
+            context.recordBotTimer(bot1.id, {
+                timerId: 1,
+                type: 'timeout',
+            });
+
+            context.recordBotTimer(bot2.id, {
+                timerId: 4,
+                type: 'timeout',
+            });
+
+            const result = library.api.perf.getStats();
+
+            // only counts the bots in the context
+            expect(result.numberOfActiveTimers).toBe(2);
         });
     });
 });

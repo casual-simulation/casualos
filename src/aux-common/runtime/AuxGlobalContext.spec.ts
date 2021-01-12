@@ -90,6 +90,47 @@ describe('AuxGlobalContext', () => {
                 jest.useRealTimers();
             });
 
+            it('should keep track of the total number of timers', () => {
+                const bot1 = createDummyRuntimeBot('test1');
+                const bot2 = createDummyRuntimeBot('test2');
+                addToContext(context, bot1, bot2);
+
+                const fn = jest.fn();
+                const timer = <any>setTimeout(fn, 500);
+
+                context.recordBotTimer(bot1.id, {
+                    timerId: timer,
+                    type: 'timeout',
+                });
+
+                context.recordBotTimer(bot1.id, {
+                    timerId: timer,
+                    type: 'timeout',
+                });
+
+                expect(context.getNumberOfActiveTimers()).toBe(2);
+
+                context.cancelAllBotTimers();
+
+                expect(context.getNumberOfActiveTimers()).toBe(0);
+
+                context.recordBotTimer(bot1.id, {
+                    timerId: timer,
+                    type: 'timeout',
+                });
+
+                context.recordBotTimer(bot2.id, {
+                    timerId: timer,
+                    type: 'timeout',
+                });
+
+                expect(context.getNumberOfActiveTimers()).toBe(2);
+
+                context.cancelBotTimers(bot1.id);
+
+                expect(context.getNumberOfActiveTimers()).toBe(1);
+            });
+
             it('should cancel setTimeout() timers', () => {
                 const bot1 = createDummyRuntimeBot('test1');
                 addToContext(context, bot1);
