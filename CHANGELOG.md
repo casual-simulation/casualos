@@ -9,10 +9,12 @@
 -   Added the Terms of Service and Privacy Policy documents.
     -   The Terms of Service are available at `/terms` (or at `/terms-of-service.txt`).
     -   The Privacy Policy is available at `/privacy-policy` (or at `/privacy-policy.txt`).
+-   Added the ability to keep track of the number of `setTimeout()` and `setInterval()` timers that are currently active via the `numberOfActiveTimers` property returned from `perf.getStats()`.
 
 ### :bug: Bug Fixes
 
 -   Fixed issues with `#labelFontSize = auto` when `#labelPosition != front` or when the bot is rotated.
+-   Fixed an issue where non-ASCII characters were being corrupted on download.
 
 ## V1.3.11
 
