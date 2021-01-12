@@ -216,6 +216,11 @@ export class AuxRuntime
      * @param actions The actions to process.
      */
     process(actions: BotAction[]) {
+        this._processCore(actions);
+        this._processBatch();
+    }
+
+    private _processCore(actions: BotAction[]) {
         for (let action of actions) {
             let { rejected, newActions } = this._rejectAction(action);
             for (let newAction of newActions) {
@@ -227,7 +232,6 @@ export class AuxRuntime
 
             this._processAction(action);
         }
-        this.notifyChange();
     }
 
     private _processAction(action: BotAction) {
@@ -238,10 +242,10 @@ export class AuxRuntime
                 action.argument,
                 false
             );
-            this.process(result.actions);
+            this._processCore(result.actions);
         } else if (action.type === 'run_script') {
             const result = this._execute(action.script, false, false);
-            this.process(result.actions);
+            this._processCore(result.actions);
             if (hasValue(action.taskId)) {
                 this._globalContext.resolveTask(
                     action.taskId,
@@ -251,7 +255,7 @@ export class AuxRuntime
             }
         } else if (action.type === 'apply_state') {
             const events = breakIntoIndividualEvents(this.currentState, action);
-            this.process(events);
+            this._processCore(events);
         } else if (action.type === 'async_result') {
             const value =
                 action.mapBotsInResult === true
