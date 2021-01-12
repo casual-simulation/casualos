@@ -553,7 +553,11 @@ export class AuxRuntime
         for (let bot of bots) {
             const existing = this._compiledState[bot.id];
             if (!!existing) {
-                removeFromContext(this._globalContext, existing.script);
+                removeFromContext(
+                    this._globalContext,
+                    [existing.script],
+                    false
+                );
                 delete this._compiledState[bot.id];
 
                 const index = newBots.findIndex(([b]) => b === existing);
@@ -611,7 +615,7 @@ export class AuxRuntime
         for (let id of botIds) {
             const bot = this._compiledState[id];
             if (bot) {
-                removeFromContext(this._globalContext, bot.script);
+                removeFromContext(this._globalContext, [bot.script]);
             }
             delete this._compiledState[id];
             nextUpdate.state[id] = null;

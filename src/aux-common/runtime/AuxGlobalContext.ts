@@ -268,7 +268,8 @@ export function addToContext(context: AuxGlobalContext, ...bots: RuntimeBot[]) {
  */
 export function removeFromContext(
     context: AuxGlobalContext,
-    ...bots: RuntimeBot[]
+    bots: RuntimeBot[],
+    cancelTimers: boolean = true
 ) {
     for (let bot of bots) {
         const index = indexInContext(context, bot);
@@ -278,7 +279,9 @@ export function removeFromContext(
         context.bots.splice(index, 1);
         delete context.state[bot.id];
 
-        context.cancelBotTimers(bot.id);
+        if (cancelTimers) {
+            context.cancelBotTimers(bot.id);
+        }
     }
 }
 

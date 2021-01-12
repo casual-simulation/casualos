@@ -945,6 +945,61 @@ describe('AuxRuntime', () => {
                     });
                 });
             });
+
+            describe('timers', () => {
+                beforeAll(() => {
+                    (<any>jest.useFakeTimers)('modern');
+                });
+
+                afterEach(() => {
+                    jest.clearAllTimers();
+                });
+
+                afterAll(() => {
+                    jest.useRealTimers();
+                });
+
+                it('should not cancel timers when an existing bot is overridden', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc:
+                                    '@setInterval(() => player.toast("hi"), 100);',
+                            }),
+                        })
+                    );
+
+                    runtime.shout('abc');
+                    jest.runAllTicks();
+
+                    expect(events).toEqual([]);
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 123,
+                            }),
+                        })
+                    );
+
+                    jest.runAllTicks();
+                    jest.advanceTimersByTime(200);
+                    jest.runAllTicks();
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: createPrecalculatedBot('test', {
+                                abc: 123,
+                            }),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+
+                    expect(events).toEqual([[toast('hi')], [toast('hi')]]);
+                });
+            });
         });
 
         describe('removed bots', () => {
@@ -3947,6 +4002,122 @@ describe('AuxRuntime', () => {
                         botRemoved('uuid1'),
                         botRemoved('uuid2'),
                         botRemoved('uuid3'),
+                    ],
+                ]);
+            });
+
+            it('should be able to shout to a bot that is created in a shout', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            create:
+                                '@create({ abc: "@player.toast(`Hi`);" }); shout("abc");',
+                        }),
+                    })
+                );
+                runtime.shout('create');
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botAdded(
+                            createBot('uuid', {
+                                creator: 'test1',
+                                abc: '@player.toast(`Hi`);',
+                            })
+                        ),
+                        toast('Hi'),
+                    ],
+                ]);
+            });
+
+            it('should be able to whisper to a bot that is created in a shout', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            create:
+                                '@let created = create({ abc: "@player.toast(`Hi`);" }); whisper(created, "abc");',
+                        }),
+                    })
+                );
+                runtime.shout('create');
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botAdded(
+                            createBot('uuid', {
+                                creator: 'test1',
+                                abc: '@player.toast(`Hi`);',
+                            })
+                        ),
+                        toast('Hi'),
+                    ],
+                ]);
+            });
+
+            it('should be able to whisper to a bot that is created in an async shout', async () => {
+                let resolve: Function;
+                const promise = new Promise((r, reject) => {
+                    resolve = r;
+                });
+                runtime = new AuxRuntime(
+                    version,
+                    auxDevice,
+                    (context) =>
+                        merge(createDefaultLibrary(context), {
+                            api: {
+                                testPromise: promise,
+                            },
+                        }),
+                    new DefaultRealtimeEditModeProvider(
+                        new Map<BotSpace, RealtimeEditMode>([
+                            ['shared', RealtimeEditMode.Immediate],
+                            [<any>'delayed', RealtimeEditMode.Delayed],
+                        ])
+                    )
+                );
+                runtime.onActions.subscribe((a) => {
+                    events.push(a);
+                    allEvents.push(...a);
+                });
+                runtime.onErrors.subscribe((e) => {
+                    errors.push(e);
+                    allErrors.push(...e);
+                });
+
+                uuidMock.mockReturnValueOnce('uuid');
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            create:
+                                '@await testPromise; let created = create({ abc: "@player.toast(`Hi`);" }); whisper(created, "abc");',
+                        }),
+                    })
+                );
+                runtime.shout('create');
+
+                await waitAsync();
+
+                expect(events).toEqual([]);
+
+                resolve();
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botAdded(
+                            createBot('uuid', {
+                                creator: 'test1',
+                                abc: '@player.toast(`Hi`);',
+                            })
+                        ),
+                        toast('Hi'),
                     ],
                 ]);
             });
