@@ -3,7 +3,7 @@ import { isBot, isRuntimeBot } from '../bots/BotCalculations';
 import { AuxPartitionRealtimeStrategy } from '../partitions/AuxPartition';
 import forOwn from 'lodash/forOwn';
 import { Easing, EaseMode } from '../bots';
-import { Easing as TweenEasing } from '@tweenjs/tween.js';
+import TWEEN, { Easing as TweenEasing } from '@tweenjs/tween.js';
 
 /**
  * Converts the given value to a copiable value.
@@ -93,23 +93,23 @@ export function getEasing(easing: Easing): any {
     switch (easing.type) {
         case 'linear':
         default:
-            return TweenEasing.Linear.None;
+            return TWEEN.Easing.Linear.None;
         case 'circular':
-            return resolveEaseType(easing.mode, TweenEasing.Circular);
+            return resolveEaseType(easing.mode, TWEEN.Easing.Circular);
         case 'cubic':
-            return resolveEaseType(easing.mode, TweenEasing.Cubic);
+            return resolveEaseType(easing.mode, TWEEN.Easing.Cubic);
         case 'exponential':
-            return resolveEaseType(easing.mode, TweenEasing.Exponential);
+            return resolveEaseType(easing.mode, TWEEN.Easing.Exponential);
         case 'elastic':
-            return resolveEaseType(easing.mode, TweenEasing.Elastic);
+            return resolveEaseType(easing.mode, TWEEN.Easing.Elastic);
         case 'quadratic':
-            return resolveEaseType(easing.mode, TweenEasing.Quadratic);
+            return resolveEaseType(easing.mode, TWEEN.Easing.Quadratic);
         case 'quartic':
-            return resolveEaseType(easing.mode, TweenEasing.Quartic);
+            return resolveEaseType(easing.mode, TWEEN.Easing.Quartic);
         case 'quintic':
-            return resolveEaseType(easing.mode, TweenEasing.Quintic);
+            return resolveEaseType(easing.mode, TWEEN.Easing.Quintic);
         case 'sinusoidal':
-            return resolveEaseType(easing.mode, TweenEasing.Sinusoidal);
+            return resolveEaseType(easing.mode, TWEEN.Easing.Sinusoidal);
     }
 }
 

@@ -27,6 +27,11 @@ import { tap } from 'rxjs/operators';
 import TWEEN from '@tweenjs/tween.js';
 
 /**
+ * The interval between animation frames in miliseconds when using setInterval().
+ */
+export const SET_INTERVAL_ANIMATION_FRAME_TIME: number = 16;
+
+/**
  * Holds global values that need to be accessible from the runtime.
  */
 export interface AuxGlobalContext {
@@ -712,7 +717,7 @@ function animationLoop(): Observable<void> {
         } else {
             let interval = setInterval(() => {
                 observer.next();
-            }, 16);
+            }, SET_INTERVAL_ANIMATION_FRAME_TIME);
 
             return () => {
                 clearInterval(interval);

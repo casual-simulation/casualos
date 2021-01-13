@@ -183,7 +183,7 @@ import {
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, del, insert, preserve } from '../aux-format-2';
 import { Euler, Vector3, Plane, Ray } from 'three';
-import { Tween } from '@tweenjs/tween.js';
+import TWEEN from '@tweenjs/tween.js';
 import './PerformanceNowPolyfill';
 
 /**
@@ -2978,7 +2978,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                       mode: 'inout',
                       type: 'linear',
                   };
-            const tween = new Tween<any>(valueHolder)
+            const tween = new TWEEN.Tween<any>(valueHolder)
                 .to({
                     [tag]: options.toValue,
                 })

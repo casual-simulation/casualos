@@ -156,9 +156,10 @@ export class AuxRuntime
         this._onActions = new Subject();
         this._onErrors = new Subject();
 
-        this._sub = new Subscription(() => {
+        let sub = (this._sub = new Subscription(() => {
             this._globalContext.cancelAllBotTimers();
-        });
+        }));
+        sub.add(this._globalContext.startAnimationLoop());
     }
 
     getShoutTimers(): { [shout: string]: number } {
