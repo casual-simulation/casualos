@@ -186,9 +186,9 @@ describe('SiteStatus', () => {
         });
 
         let identityCases = [
-            ['right is null', newSite('a'), null, newSite('a')],
-            ['left is null', null, newSite('a'), newSite('a')],
-            ['both are null', null, null, null],
+            ['right is null', newSite('a'), null as any, newSite('a')] as const,
+            ['left is null', null as any, newSite('a'), newSite('a')] as const,
+            ['both are null', null as any, null as any, null as any] as const,
         ];
 
         it.each(identityCases)(

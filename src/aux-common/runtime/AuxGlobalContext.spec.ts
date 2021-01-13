@@ -80,7 +80,7 @@ describe('AuxGlobalContext', () => {
 
         describe('timers', () => {
             beforeEach(() => {
-                (<any>jest.useFakeTimers)('modern');
+                jest.useFakeTimers('modern');
             });
             afterEach(() => {
                 jest.clearAllTimers();
@@ -557,7 +557,7 @@ describe('AuxGlobalContext', () => {
 
     describe('cancelAllBotTimers', () => {
         beforeEach(() => {
-            (<any>jest.useFakeTimers)('modern');
+            jest.useFakeTimers('modern');
         });
         afterEach(() => {
             jest.clearAllTimers();

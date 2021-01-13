@@ -43,7 +43,7 @@ describe('UrlHelpers', () => {
     });
 
     describe('isSecureProtocol()', () => {
-        const cases = [['http:', false], ['https:', true]];
+        const cases = [['http:', false] as const, ['https:', true] as const];
         it.each(cases)('should map %s to %s', (protocol, expected) => {
             expect(isSecureProtocol(protocol)).toBe(expected);
         });

@@ -515,15 +515,15 @@ export function testPartitionImplementation(
         });
 
         let deleteValueCases = [
-            ['null', null],
-            ['undefined', undefined],
-            ['empty string', ''],
+            ['null', null as any] as const,
+            ['undefined', undefined as any] as const,
+            ['empty string', ''] as const,
         ];
 
         let preserveValueCases = [
-            ['0', 0],
-            ['false', false],
-            ['whitespace', ' '],
+            ['0', 0] as const,
+            ['false', false] as const,
+            ['whitespace', ' '] as const,
         ];
 
         it.each(deleteValueCases)(
@@ -790,19 +790,19 @@ export function testPartitionImplementation(
                     123,
                     edit({}, preserve(1), insert('abc')),
                     '1abc23',
-                ],
+                ] as const,
                 [
                     'booleans',
                     true,
                     edit({}, preserve(1), insert('abc')),
                     'tabcrue',
-                ],
+                ] as const,
                 [
                     'objects',
                     { prop: 'yes' },
                     edit({}, preserve(1), insert('abc')),
                     '{abc"prop":"yes"}',
-                ],
+                ] as const,
             ];
 
             it.each(valueCases)(

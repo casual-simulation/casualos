@@ -55,8 +55,8 @@ describe('AuxWeaveReducer', () => {
 
     function initialCases(func: () => void) {
         const cases = [
-            ['not initial', false],
-            ['initial', true],
+            ['not initial', false] as const,
+            ['initial', true] as const,
         ];
 
         describe.each(cases)('%s', (_, init) => {
@@ -318,21 +318,21 @@ describe('AuxWeaveReducer', () => {
 
         describe('value', () => {
             let deleteValueCases = [
-                ['null', null],
-                ['undefined', undefined],
-                ['empty string', ''],
+                ['null', null as any] as const,
+                ['undefined', undefined as any] as const,
+                ['empty string', ''] as const,
             ];
 
             let preserveValueCases = [
-                ['0', 0],
-                ['false', false],
-                ['whitespace', ' '],
+                ['0', 0] as const,
+                ['false', false] as const,
+                ['whitespace', ' '] as const,
             ];
 
             let invalidTagNameCases = [
-                ['empty', ''],
-                ['null', null],
-                ['undefined', undefined],
+                ['empty', ''] as const,
+                ['null', null as any] as const,
+                ['undefined', undefined as any] as const,
             ];
 
             initialCases(() => {

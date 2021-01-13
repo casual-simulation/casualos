@@ -948,7 +948,7 @@ describe('AuxRuntime', () => {
 
             describe('timers', () => {
                 beforeAll(() => {
-                    (<any>jest.useFakeTimers)('modern');
+                    jest.useFakeTimers('modern');
                 });
 
                 afterEach(() => {
@@ -3638,7 +3638,7 @@ describe('AuxRuntime', () => {
 
         describe('timers', () => {
             beforeAll(() => {
-                (<any>jest.useFakeTimers)('modern');
+                jest.useFakeTimers('modern');
             });
 
             afterEach(() => {
@@ -4124,7 +4124,7 @@ describe('AuxRuntime', () => {
 
             describe('timers', () => {
                 beforeAll(() => {
-                    (<any>jest.useFakeTimers)('modern');
+                    jest.useFakeTimers('modern');
                 });
 
                 afterEach(() => {
@@ -4331,7 +4331,7 @@ describe('AuxRuntime', () => {
 
             describe('timers', () => {
                 beforeAll(() => {
-                    (<any>jest.useFakeTimers)('modern');
+                    jest.useFakeTimers('modern');
                 });
 
                 afterEach(() => {
@@ -4812,7 +4812,7 @@ describe('AuxRuntime', () => {
 
             describe('timers', () => {
                 beforeAll(() => {
-                    (<any>jest.useFakeTimers)('modern');
+                    jest.useFakeTimers('modern');
                 });
 
                 afterEach(() => {
@@ -5458,7 +5458,7 @@ describe('AuxRuntime', () => {
 
     describe('unsubscribe()', () => {
         beforeAll(() => {
-            (<any>jest.useFakeTimers)('modern');
+            jest.useFakeTimers('modern');
         });
 
         afterEach(() => {
@@ -7344,15 +7344,15 @@ describe('original action tests', () => {
         });
 
         const ignoreCases = [
-            ['null', null],
-            ['0', 0],
-            ['1', 1],
-            ['false', false],
-            ['true', true],
-            ['undefined', undefined],
-            ['*empty string*', ''],
-            ['*filled string*', 'a'],
-            ['*array buffer*', new ArrayBuffer(255)],
+            ['null', null as any] as const,
+            ['0', 0] as const,
+            ['1', 1] as const,
+            ['false', false] as const,
+            ['true', true] as const,
+            ['undefined', undefined as any] as const,
+            ['*empty string*', ''] as const,
+            ['*filled string*', 'a'] as const,
+            ['*array buffer*', new ArrayBuffer(255)] as const,
             // ['*typed array*', new Int8Array([1, 2, 3])],
         ];
         it.each(ignoreCases)(
@@ -11426,27 +11426,39 @@ describe('original action tests', () => {
 
     describe('remote()', () => {
         const cases = [
-            ['player.toast("My Message!")', toast('My Message!')],
-            ['player.goToDimension("dimension")', goToDimension('dimension')],
-            ['player.openURL("url")', openURL('url')],
-            ['player.goToURL("url")', goToURL('url')],
-            ['player.tweenTo("id")', tweenTo('id')],
-            ['player.openURL("url")', openURL('url')],
-            ['player.openQRCodeScanner()', openQRCodeScanner(true)],
-            ['player.closeQRCodeScanner()', openQRCodeScanner(false)],
-            ['player.openBarcodeScanner()', openBarcodeScanner(true)],
-            ['player.closeBarcodeScanner()', openBarcodeScanner(false)],
-            ['player.showBarcode("code")', showBarcode(true, 'code')],
-            ['player.hideBarcode()', showBarcode(false)],
-            ['player.loadServer("channel")', loadSimulation('channel')],
-            ['player.unloadServer("channel")', unloadSimulation('channel')],
-            ['player.importAUX("aux")', importAUX('aux')],
-            ['player.showQRCode("code")', showQRCode(true, 'code')],
-            ['player.hideQRCode()', showQRCode(false)],
+            ['player.toast("My Message!")', toast('My Message!')] as const,
+            [
+                'player.goToDimension("dimension")',
+                goToDimension('dimension'),
+            ] as const,
+            ['player.openURL("url")', openURL('url')] as const,
+            ['player.goToURL("url")', goToURL('url')] as const,
+            ['player.tweenTo("id")', tweenTo('id')] as const,
+            ['player.openURL("url")', openURL('url')] as const,
+            ['player.openQRCodeScanner()', openQRCodeScanner(true)] as const,
+            ['player.closeQRCodeScanner()', openQRCodeScanner(false)] as const,
+            ['player.openBarcodeScanner()', openBarcodeScanner(true)] as const,
+            [
+                'player.closeBarcodeScanner()',
+                openBarcodeScanner(false),
+            ] as const,
+            ['player.showBarcode("code")', showBarcode(true, 'code')] as const,
+            ['player.hideBarcode()', showBarcode(false)] as const,
+            [
+                'player.loadServer("channel")',
+                loadSimulation('channel'),
+            ] as const,
+            [
+                'player.unloadServer("channel")',
+                unloadSimulation('channel'),
+            ] as const,
+            ['player.importAUX("aux")', importAUX('aux')] as const,
+            ['player.showQRCode("code")', showQRCode(true, 'code')] as const,
+            ['player.hideQRCode()', showQRCode(false)] as const,
             [
                 'player.showInputForTag(this, "abc")',
                 showInputForTag('thisBot', 'abc'),
-            ],
+            ] as const,
             [
                 `player.checkout({
                 publishableKey: 'my_key',
@@ -11462,8 +11474,8 @@ describe('original action tests', () => {
                     description: '$50.43',
                     processingServer: 'channel2',
                 }),
-            ],
-            ['player.openDevConsole()', openConsole()],
+            ] as const,
+            ['player.openDevConsole()', openConsole()] as const,
         ];
 
         it.each(cases)('should wrap %s in a remote event', (script, event) => {
