@@ -12,7 +12,7 @@ describe('Console', () => {
         let calls: ConsoleMessages[] = [];
 
         beforeAll(() => {
-            sub = messages.subscribe(m => {
+            sub = messages.subscribe((m) => {
                 calls.push(m);
             });
         });
@@ -26,9 +26,9 @@ describe('Console', () => {
         });
 
         const cases = [
-            ['log', logMock],
-            ['warn', warnMock],
-            ['error', errorMock],
+            ['log', logMock] as const,
+            ['warn', warnMock] as const,
+            ['error', errorMock] as const,
         ];
 
         it.each(cases)(

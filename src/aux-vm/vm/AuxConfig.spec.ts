@@ -12,7 +12,7 @@ describe('AuxConfig', () => {
                     patch: 0,
                     alpha: false,
                 },
-            ],
+            ] as const,
             [
                 'v0.1.54',
                 {
@@ -22,7 +22,7 @@ describe('AuxConfig', () => {
                     patch: 54,
                     alpha: false,
                 },
-            ],
+            ] as const,
             [
                 'v0.22.4',
                 {
@@ -32,7 +32,7 @@ describe('AuxConfig', () => {
                     patch: 4,
                     alpha: false,
                 },
-            ],
+            ] as const,
             [
                 'v0.22.4-alpha.0',
                 {
@@ -42,7 +42,7 @@ describe('AuxConfig', () => {
                     patch: 4,
                     alpha: 0,
                 },
-            ],
+            ] as const,
             [
                 'v0.22.4-alpha.997',
                 {
@@ -52,7 +52,7 @@ describe('AuxConfig', () => {
                     patch: 4,
                     alpha: 997,
                 },
-            ],
+            ] as const,
             [
                 'v0.22.4-alpha',
                 {
@@ -62,7 +62,7 @@ describe('AuxConfig', () => {
                     patch: 4,
                     alpha: true,
                 },
-            ],
+            ] as const,
         ];
 
         it.each(cases)('should parse %s', (version, expected) => {

@@ -111,6 +111,10 @@ function playerConfig() {
                         ),
                         to: path.resolve(__dirname, 'dist', 'gltf-draco'),
                     },
+                    {
+                        from: path.resolve(__dirname, 'aux-player', 'legal'),
+                        to: path.resolve(__dirname, 'dist'),
+                    },
                 ],
             }),
         ],

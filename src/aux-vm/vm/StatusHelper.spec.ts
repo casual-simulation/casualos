@@ -12,7 +12,7 @@ describe('StatusHelper', () => {
             const helper = new StatusHelper([channel1, channel2]);
 
             let updates: StatusUpdate[] = [];
-            helper.updates.subscribe(update => {
+            helper.updates.subscribe((update) => {
                 updates.push(update);
             });
 
@@ -53,7 +53,7 @@ describe('StatusHelper', () => {
             const helper = new StatusHelper([channel1, channel2]);
 
             let updates: StatusUpdate[] = [];
-            helper.updates.subscribe(update => {
+            helper.updates.subscribe((update) => {
                 updates.push(update);
             });
 
@@ -96,7 +96,7 @@ describe('StatusHelper', () => {
             const helper = new StatusHelper([channel1, channel2]);
 
             let updates: StatusUpdate[] = [];
-            helper.updates.subscribe(update => {
+            helper.updates.subscribe((update) => {
                 updates.push(update);
             });
 
@@ -141,7 +141,7 @@ describe('StatusHelper', () => {
             const helper = new StatusHelper([channel1, channel2]);
 
             let updates: StatusUpdate[] = [];
-            helper.updates.subscribe(update => {
+            helper.updates.subscribe((update) => {
                 updates.push(update);
             });
 
@@ -184,7 +184,7 @@ describe('StatusHelper', () => {
             const helper = new StatusHelper([channel1, channel2]);
 
             let updates: StatusUpdate[] = [];
-            helper.updates.subscribe(update => {
+            helper.updates.subscribe((update) => {
                 updates.push(update);
             });
 
@@ -227,7 +227,7 @@ describe('StatusHelper', () => {
             const helper = new StatusHelper([channel1, channel2]);
 
             let updates: StatusUpdate[] = [];
-            helper.updates.subscribe(update => {
+            helper.updates.subscribe((update) => {
                 updates.push(update);
             });
 
@@ -262,7 +262,7 @@ describe('StatusHelper', () => {
             const helper = new StatusHelper([channel1, channel2]);
 
             let updates: StatusUpdate[] = [];
-            helper.updates.subscribe(update => {
+            helper.updates.subscribe((update) => {
                 updates.push(update);
             });
 
@@ -307,18 +307,22 @@ describe('StatusHelper', () => {
     });
 
     describe('console', () => {
-        const consoleMessageCases = [['log'], ['warn'], ['error']];
+        const consoleMessageCases = [
+            ['log'] as const,
+            ['warn'] as const,
+            ['error'] as const,
+        ];
 
         it.each(consoleMessageCases)(
             'should send console %s messages directly through',
-            async type => {
+            async (type) => {
                 let channel1 = new Subject<StatusUpdate>();
                 let channel2 = new Subject<StatusUpdate>();
 
                 const helper = new StatusHelper([channel1, channel2]);
 
                 let updates: StatusUpdate[] = [];
-                helper.updates.subscribe(update => {
+                helper.updates.subscribe((update) => {
                     updates.push(update);
                 });
 
@@ -376,7 +380,7 @@ describe('StatusHelper', () => {
             const helper = new StatusHelper([channel1, channel2]);
 
             let updates: StatusUpdate[] = [];
-            helper.updates.subscribe(update => {
+            helper.updates.subscribe((update) => {
                 updates.push(update);
             });
 
@@ -414,7 +418,7 @@ describe('StatusHelper', () => {
             const helper = new StatusHelper([channel1, channel2]);
 
             let updates: StatusUpdate[] = [];
-            helper.updates.subscribe(update => {
+            helper.updates.subscribe((update) => {
                 updates.push(update);
             });
 

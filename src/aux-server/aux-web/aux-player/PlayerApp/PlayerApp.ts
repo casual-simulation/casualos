@@ -618,7 +618,11 @@ export default class PlayerApp extends Vue {
                     navigateToUrl(e.url, '_blank', 'noreferrer');
                 } else if (e.type === 'download') {
                     console.log(`[BuilderApp] Downloading ${e.filename}...`);
-                    download(e.data, e.filename, e.mimeType);
+                    const data =
+                        typeof e.data === 'string'
+                            ? new Blob([e.data], { type: e.mimeType })
+                            : e.data;
+                    download(data, e.filename, e.mimeType);
                 } else if (e.type === 'open_console') {
                     this.showConsole = e.open;
                 } else if (e.type === 'send_webhook') {

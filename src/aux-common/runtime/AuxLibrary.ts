@@ -1,4 +1,4 @@
-import { AuxGlobalContext, AsyncTask } from './AuxGlobalContext';
+import { AuxGlobalContext, AsyncTask, BotTimer } from './AuxGlobalContext';
 import {
     hasValue,
     trimTag,
@@ -190,6 +190,9 @@ import './PerformanceNowPolyfill';
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
  */
 export interface AuxLibrary {
+    /**
+     * The functions that are part of the general API.
+     */
     api: {
         whisper(
             bot: (Bot | string)[] | Bot | string,
@@ -199,6 +202,13 @@ export interface AuxLibrary {
         shout(name: string, arg?: any): any[];
         __energyCheck(): void;
         [key: string]: any;
+    };
+
+    /**
+     * The functions that are part of the bot-specific API.
+     */
+    tagSpecificApi: {
+        [key: string]: (options: TagSpecificApiOptions) => any;
     };
     typeDefinitions?: string;
 }
@@ -396,10 +406,39 @@ export interface PerformanceStats {
      * A list of listen tags and the amount of time spent executing them (in miliseconds).
      * Useful to guage if a listen tag is causing the server to slow down.
      */
-    shoutTimers: {
+    shoutTimes: {
         tag: string;
         timeMs: number;
     }[];
+
+    /**
+     * The total number of active setTimeout() and setInterval() timers that are active.
+     */
+    numberOfActiveTimers: number;
+}
+
+/**
+ * Options needed for the Bot-specific API.
+ */
+export interface TagSpecificApiOptions {
+    /**
+     * The Bot that the API is for.
+     */
+    bot: Bot;
+    /**
+     * The tag that the API is for.
+     */
+    tag: string;
+
+    /**
+     * The bot that is set as the creator of the current bot.
+     */
+    creator: RuntimeBot;
+
+    /**
+     * The bot that is set as the config of the current bot.
+     */
+    config: RuntimeBot;
 }
 
 /**
@@ -442,7 +481,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             applyMod,
             subtractMods,
 
-            create,
             destroy,
             changeState,
             superShout,
@@ -653,7 +691,52 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getStats,
             },
         },
+
+        tagSpecificApi: {
+            create: (options: TagSpecificApiOptions) => (...args: any[]) =>
+                create(options.bot?.id, ...args),
+            setTimeout: botTimer('timeout', setTimeout, true),
+            setInterval: botTimer('interval', setInterval, false),
+        },
     };
+
+    function botTimer(
+        type: BotTimer['type'],
+        func: (handler: Function, timeout: number, ...args: any[]) => number,
+        clearAfterHandlerIsRun: boolean
+    ) {
+        return (options: TagSpecificApiOptions) =>
+            function (handler: Function, timeout?: number, ...args: any[]) {
+                if (!options.bot) {
+                    throw new Error(
+                        `Timers are not supported when there is no current bot.`
+                    );
+                }
+
+                let timer: number;
+                if (clearAfterHandlerIsRun) {
+                    timer = func(
+                        function () {
+                            try {
+                                handler(...arguments);
+                            } finally {
+                                context.removeBotTimer(options.bot.id, timer);
+                            }
+                        },
+                        timeout,
+                        ...args
+                    );
+                } else {
+                    timer = func(handler, timeout, ...args);
+                }
+                context.recordBotTimer(options.bot.id, {
+                    timerId: timer,
+                    type: type,
+                });
+
+                return timer;
+            };
+    }
 
     /**
      * Gets a list of all the bots.
@@ -3542,7 +3625,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getStats(): PerformanceStats {
         return {
             numberOfBots: context.bots.length,
-            shoutTimers: context.getShoutTimers(),
+            shoutTimes: context.getShoutTimers(),
+            numberOfActiveTimers: context.getNumberOfActiveTimers(),
         };
     }
 
@@ -3883,13 +3967,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * ]);
      *
      */
-    function create(...mods: Mod[]) {
-        return createBase(() => uuidv4(), ...mods);
+    function create(botId: string, ...mods: Mod[]) {
+        return createBase(botId, () => uuidv4(), ...mods);
     }
 
-    function createBase(idFactory: () => string, ...datas: Mod[]) {
-        let parent = context.currentBot;
-        let parentDiff = parent ? { creator: getID(parent) } : {};
+    function createBase(
+        botId: string,
+        idFactory: () => string,
+        ...datas: Mod[]
+    ) {
+        let parentDiff = botId ? { creator: botId } : {};
         return createFromMods(idFactory, parentDiff, ...datas);
     }
 

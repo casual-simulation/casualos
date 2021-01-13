@@ -4842,10 +4842,15 @@ let stats: {
      * A list shouts and their associated execution time (in miliseconds).
      * Sorted from largest time to smallest.
      */
-    shoutTimers: {
+    shoutTimes: {
         tag: string,
         timeMs: number
     }[];
+
+    /**
+     * The total number of active setTimeout() and setInterval() timers that are active.
+     */
+    numberOfActiveTimers: number;
 };
 ```
 

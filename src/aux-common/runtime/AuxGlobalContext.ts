@@ -31,11 +31,6 @@ import TWEEN from '@tweenjs/tween.js';
  */
 export interface AuxGlobalContext {
     /**
-     * Whether editing is currently allowed.
-     */
-    allowsEditing: boolean;
-
-    /**
      * The ordered list of script bots.
      */
     bots: RuntimeBot[];
@@ -59,11 +54,6 @@ export interface AuxGlobalContext {
      * The player bot.
      */
     playerBot: RuntimeBot;
-
-    /**
-     * The current bot.
-     */
-    currentBot: RuntimeBot;
 
     /**
      * The current energy that the context has.
@@ -128,6 +118,42 @@ export interface AuxGlobalContext {
      * @param hasListener Whether the bot has a listener for the  given tag.
      */
     recordListenerPresense(id: string, tag: string, hasListener: boolean): void;
+
+    /**
+     * Records the given bot timer for the bot.
+     * @param id The ID of the bot.
+     * @param info The timer info.
+     */
+    recordBotTimer(id: string, info: BotTimer): void;
+
+    /**
+     * Removes the given bot timer from the bot.
+     * @param id The ID of the bot.
+     * @param timer The timer to remove.
+     */
+    removeBotTimer(id: string, timer: number): void;
+
+    /**
+     * Gets the list of bot timers for the given bot.
+     * @param id The ID of the bot.
+     */
+    getBotTimers(id: string): BotTimer[];
+
+    /**
+     * Cancels the list of timers for the given bot ID.
+     * @param id The ID of the bot.
+     */
+    cancelBotTimers(id: string): void;
+
+    /**
+     * Cancels all the timers that bots have created.
+     */
+    cancelAllBotTimers(): void;
+
+    /**
+     * Gets the number of timers.
+     */
+    getNumberOfActiveTimers(): number;
 
     /**
      * Creates a new task.
@@ -209,6 +235,21 @@ export interface AsyncTask {
 }
 
 /**
+ * Defines an interface for a timer that was created by a bot (e.g. setTimeout() or setInterval()).
+ */
+export interface BotTimer {
+    /**
+     * The ID of the timer.
+     */
+    timerId: number;
+
+    /**
+     * The type of the timer.
+     */
+    type: 'timeout' | 'interval';
+}
+
+/**
  * Gets the index of the bot in the given context.
  * Returns a negative number if the bot is not in the list.
  * @param context The context.
@@ -246,7 +287,8 @@ export function addToContext(context: AuxGlobalContext, ...bots: RuntimeBot[]) {
  */
 export function removeFromContext(
     context: AuxGlobalContext,
-    ...bots: RuntimeBot[]
+    bots: RuntimeBot[],
+    cancelTimers: boolean = true
 ) {
     for (let bot of bots) {
         const index = indexInContext(context, bot);
@@ -255,6 +297,10 @@ export function removeFromContext(
         }
         context.bots.splice(index, 1);
         delete context.state[bot.id];
+
+        if (cancelTimers) {
+            context.cancelBotTimers(bot.id);
+        }
     }
 }
 
@@ -271,11 +317,6 @@ export function isInContext(context: AuxGlobalContext, bot: Bot) {
  * Defines a global context that stores all information in memory.
  */
 export class MemoryGlobalContext implements AuxGlobalContext {
-    /**
-     * Whether editing is currently allowed.
-     */
-    allowsEditing: boolean = true;
-
     /**
      * The ordered list of script bots.
      */
@@ -317,11 +358,6 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     playerBot: RuntimeBot = null;
 
     /**
-     * The current bot.
-     */
-    currentBot: RuntimeBot = null;
-
-    /**
      * The current energy that the context has.
      */
     energy: number = DEFAULT_ENERGY;
@@ -337,6 +373,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         [shout: string]: number;
     } = {};
     private _listenerMap: Map<string, string[]>;
+    private _botTimerMap: Map<string, BotTimer[]>;
+    private _numberOfTimers: number = 0;
     private _startTime: number;
     private _animationLoop: Subscription;
 
@@ -358,6 +396,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this._scriptFactory = scriptFactory;
         this._batcher = batcher;
         this._listenerMap = new Map();
+        this._botTimerMap = new Map();
         this._startTime = performance.now();
     }
 
@@ -411,6 +450,62 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             // Delete the tag from the list if there are no more IDs
             if (set.length <= 0) {
                 this._listenerMap.delete(tag);
+            }
+        }
+    }
+
+    recordBotTimer(id: string, info: BotTimer): void {
+        let list = this._botTimerMap.get(id);
+        if (!list) {
+            list = [];
+            this._botTimerMap.set(id, list);
+        }
+        list.push(info);
+        this._numberOfTimers += 1;
+    }
+
+    removeBotTimer(id: string, timer: number): void {
+        let list = this._botTimerMap.get(id);
+        if (list) {
+            let index = list.findIndex((t) => t.timerId === timer);
+            if (index >= 0) {
+                list.splice(index, 1);
+                this._numberOfTimers = Math.max(0, this._numberOfTimers - 1);
+            }
+        }
+    }
+
+    getBotTimers(id: string): BotTimer[] {
+        return this._botTimerMap.get(id) || [];
+    }
+
+    cancelBotTimers(id: string): void {
+        let list = this._botTimerMap.get(id);
+        if (list) {
+            this._clearTimers(list);
+        }
+        this._botTimerMap.delete(id);
+    }
+
+    cancelAllBotTimers() {
+        for (let list of this._botTimerMap.values()) {
+            this._clearTimers(list);
+        }
+
+        this._botTimerMap.clear();
+    }
+
+    getNumberOfActiveTimers() {
+        return this._numberOfTimers;
+    }
+
+    private _clearTimers(list: BotTimer[]) {
+        this._numberOfTimers = Math.max(0, this._numberOfTimers - list.length);
+        for (let timer of list) {
+            if (timer.type === 'timeout') {
+                clearTimeout(timer.timerId);
+            } else if (timer.type === 'interval') {
+                clearInterval(timer.timerId);
             }
         }
     }
@@ -503,6 +598,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         if (mode === RealtimeEditMode.Immediate) {
             this.bots.splice(index, 1);
             delete this.state[bot.id];
+            this.cancelBotTimers(bot.id);
 
             if (bot.listeners) {
                 for (let key in bot.listeners) {

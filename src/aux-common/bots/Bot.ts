@@ -270,7 +270,7 @@ export interface BotTags {
     // Normal bot tags
     ['color']?: unknown;
     ['draggable']?: unknown;
-    ['draggableMode']?: BotDragMode;
+    ['draggableMode']?: unknown;
     ['positioningMode']?: unknown;
     ['destroyable']?: unknown;
     ['editable']?: unknown;
@@ -516,7 +516,7 @@ export type BotAnchorPoint =
     | 'right'
     | 'bottom'
     | 'center'
-    | [number, number, number];
+    | readonly [number, number, number];
 
 /**
  * Defines the possible meet portal anchor points.

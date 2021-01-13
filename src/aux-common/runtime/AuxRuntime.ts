@@ -43,7 +43,7 @@ import {
     CompiledBotListener,
     DNA_TAG_PREFIX,
 } from '../bots';
-import { Observable, Subject, SubscriptionLike } from 'rxjs';
+import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
 import {
     AuxGlobalContext,
@@ -62,8 +62,6 @@ import {
 import { CompiledBot, CompiledBotsState } from './CompiledBot';
 import sortBy from 'lodash/sortBy';
 import transform from 'lodash/transform';
-import { BatchingZoneSpec } from './BatchingZoneSpec';
-import { CleanupZoneSpec } from './CleanupZoneSpec';
 import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
@@ -98,8 +96,6 @@ export class AuxRuntime
     private _errorBatch: ScriptError[] = [];
 
     private _userId: string;
-    private _zone: Zone;
-    private _globalVariablesSpec: ZoneSpec;
     private _sub: SubscriptionLike;
     private _currentVersion: RuntimeStateVersion = {
         localSites: {},
@@ -160,83 +156,9 @@ export class AuxRuntime
         this._onActions = new Subject();
         this._onErrors = new Subject();
 
-        const cleanupSpec = new CleanupZoneSpec();
-        this._sub = cleanupSpec;
-
-        const cleanupZone = Zone.current.fork(cleanupSpec);
-
-        const batchingZone = cleanupZone.fork(
-            new BatchingZoneSpec(() => {
-                this._processBatch();
-            })
-        );
-
-        const wrapInvoke = (targetZone: Zone, fn: Function) => {
-            const previousBot = this._globalContext.currentBot;
-            this._globalContext.currentBot =
-                targetZone.get('currentBot') || null;
-
-            const wasEditable = this._globalContext.allowsEditing;
-            this._globalContext.allowsEditing = targetZone.get('allowsEditing');
-            try {
-                return fn();
-            } finally {
-                this._globalContext.currentBot = previousBot || null;
-                this._globalContext.allowsEditing = wasEditable;
-            }
-        };
-
-        this._globalVariablesSpec = {
-            name: 'GlobalVariablesZone',
-            onScheduleTask: (
-                parentZoneDelegate: ZoneDelegate,
-                currentZone: Zone,
-                targetZone: Zone,
-                task: Task
-            ) => {
-                if (targetZone.get('allowsEditing') === false) {
-                    task.cancelScheduleRequest();
-                    return task;
-                }
-                return parentZoneDelegate.scheduleTask(targetZone, task);
-            },
-            onInvoke: (
-                parentZoneDelegate,
-                currentZone,
-                targetZone,
-                target,
-                applyThis,
-                applyArgs
-            ) => {
-                return wrapInvoke(targetZone, () =>
-                    parentZoneDelegate.invoke(
-                        targetZone,
-                        target,
-                        applyThis,
-                        applyArgs
-                    )
-                );
-            },
-            onInvokeTask: (
-                parentZoneDelegate,
-                currentZone,
-                targetZone,
-                task,
-                applyThis,
-                applyArgs
-            ) => {
-                return wrapInvoke(targetZone, () =>
-                    parentZoneDelegate.invokeTask(
-                        targetZone,
-                        task,
-                        applyThis,
-                        applyArgs
-                    )
-                );
-            },
-        };
-
-        this._zone = batchingZone;
+        this._sub = new Subscription(() => {
+            this._globalContext.cancelAllBotTimers();
+        });
     }
 
     getShoutTimers(): { [shout: string]: number } {
@@ -294,19 +216,22 @@ export class AuxRuntime
      * @param actions The actions to process.
      */
     process(actions: BotAction[]) {
-        this._zone.run(() => {
-            for (let action of actions) {
-                let { rejected, newActions } = this._rejectAction(action);
-                for (let newAction of newActions) {
-                    this._processAction(newAction);
-                }
-                if (rejected) {
-                    continue;
-                }
+        this._processCore(actions);
+        this._processBatch();
+    }
 
-                this._processAction(action);
+    private _processCore(actions: BotAction[]) {
+        for (let action of actions) {
+            let { rejected, newActions } = this._rejectAction(action);
+            for (let newAction of newActions) {
+                this._processAction(newAction);
             }
-        });
+            if (rejected) {
+                continue;
+            }
+
+            this._processAction(action);
+        }
     }
 
     private _processAction(action: BotAction) {
@@ -317,10 +242,10 @@ export class AuxRuntime
                 action.argument,
                 false
             );
-            this.process(result.actions);
+            this._processCore(result.actions);
         } else if (action.type === 'run_script') {
             const result = this._execute(action.script, false, false);
-            this.process(result.actions);
+            this._processCore(result.actions);
             if (hasValue(action.taskId)) {
                 this._globalContext.resolveTask(
                     action.taskId,
@@ -330,7 +255,7 @@ export class AuxRuntime
             }
         } else if (action.type === 'apply_state') {
             const events = breakIntoIndividualEvents(this.currentState, action);
-            this.process(events);
+            this._processCore(events);
         } else if (action.type === 'async_result') {
             const value =
                 action.mapBotsInResult === true
@@ -428,9 +353,7 @@ export class AuxRuntime
         let fn: () => any;
 
         try {
-            fn = this._compile(null, null, script, {
-                allowsEditing: true,
-            });
+            fn = this._compile(null, null, script, {});
         } catch (ex) {
             let errors = [
                 {
@@ -630,7 +553,11 @@ export class AuxRuntime
         for (let bot of bots) {
             const existing = this._compiledState[bot.id];
             if (!!existing) {
-                removeFromContext(this._globalContext, existing.script);
+                removeFromContext(
+                    this._globalContext,
+                    [existing.script],
+                    false
+                );
                 delete this._compiledState[bot.id];
 
                 const index = newBots.findIndex(([b]) => b === existing);
@@ -688,7 +615,7 @@ export class AuxRuntime
         for (let id of botIds) {
             const bot = this._compiledState[id];
             if (bot) {
-                removeFromContext(this._globalContext, bot.script);
+                removeFromContext(this._globalContext, [bot.script]);
             }
             delete this._compiledState[id];
             nextUpdate.state[id] = null;
@@ -848,7 +775,7 @@ export class AuxRuntime
     notifyChange(): void {
         if (!this._batchPending) {
             this._batchPending = true;
-            Zone.root.scheduleMicroTask('AuxRuntime#notifyChange', () => {
+            queueMicrotask(() => {
                 this._processBatch();
             });
         }
@@ -903,7 +830,7 @@ export class AuxRuntime
         // run at a later time with the actions.
         // This ensures that we don't block other flush operations
         // due to handlers running synchronously.
-        Zone.root.scheduleMicroTask('AuxRuntime#_processBatch', () => {
+        queueMicrotask(() => {
             this._onActions.next(actions);
             this._onErrors.next(errors);
         });
@@ -914,16 +841,14 @@ export class AuxRuntime
         batch: boolean,
         resetEnergy: boolean
     ): { result: T; actions: BotAction[]; errors: ScriptError[] } {
-        return this._zone.run(() => {
-            const results = this._calculateScriptResults(callback, resetEnergy);
+        const results = this._calculateScriptResults(callback, resetEnergy);
 
-            if (batch) {
-                this._actionBatch.push(...results.actions);
-            }
-            this._errorBatch.push(...results.errors);
+        if (batch) {
+            this._actionBatch.push(...results.actions);
+        }
+        this._errorBatch.push(...results.errors);
 
-            return results;
-        });
+        return results;
     }
 
     private _calculateScriptResults<T>(
@@ -1062,17 +987,14 @@ export class AuxRuntime
     }
 
     updateTag(bot: CompiledBot, tag: string, newValue: any): RealtimeEditMode {
-        if (this._globalContext.allowsEditing) {
-            const space = getBotSpace(bot);
-            const mode = this._editModeProvider.getEditMode(space);
-            if (mode === RealtimeEditMode.Immediate) {
-                this._compileTag(bot, tag, newValue);
-            }
-            this._updatedBots.set(bot.id, bot.script);
-            this.notifyChange();
-            return mode;
+        const space = getBotSpace(bot);
+        const mode = this._editModeProvider.getEditMode(space);
+        if (mode === RealtimeEditMode.Immediate) {
+            this._compileTag(bot, tag, newValue);
         }
-        return RealtimeEditMode.None;
+        this._updatedBots.set(bot.id, bot.script);
+        this.notifyChange();
+        return mode;
     }
 
     getValue(bot: CompiledBot, tag: string): any {
@@ -1089,31 +1011,27 @@ export class AuxRuntime
         spaces: string[],
         value: any
     ): RealtimeEditMode {
-        if (this._globalContext.allowsEditing) {
-            let updated = false;
-            for (let space of spaces) {
-                const mode = this._editModeProvider.getEditMode(space);
-                if (mode === RealtimeEditMode.Immediate) {
-                    if (!bot.masks) {
-                        bot.masks = {};
-                    }
-                    if (!bot.masks[space]) {
-                        bot.masks[space] = {};
-                    }
-                    bot.masks[space][tag] = value;
-                    updated = true;
+        let updated = false;
+        for (let space of spaces) {
+            const mode = this._editModeProvider.getEditMode(space);
+            if (mode === RealtimeEditMode.Immediate) {
+                if (!bot.masks) {
+                    bot.masks = {};
                 }
+                if (!bot.masks[space]) {
+                    bot.masks[space] = {};
+                }
+                bot.masks[space][tag] = value;
+                updated = true;
             }
-            if (updated) {
-                this._compileTagOrMask(bot, bot, tag);
-                this._updatedBots.set(bot.id, bot.script);
-                this.notifyChange();
-            }
-
-            return RealtimeEditMode.Immediate;
+        }
+        if (updated) {
+            this._compileTagOrMask(bot, bot, tag);
+            this._updatedBots.set(bot.id, bot.script);
+            this.notifyChange();
         }
 
-        return RealtimeEditMode.None;
+        return RealtimeEditMode.Immediate;
     }
 
     getTagMask(bot: CompiledBot, tag: string): RealtimeEditMode {
@@ -1241,9 +1159,7 @@ export class AuxRuntime
             }
         } else if (isScript(value)) {
             try {
-                listener = this._compile(bot, tag, value, {
-                    allowsEditing: true,
-                });
+                listener = this._compile(bot, tag, value, {});
             } catch (ex) {
                 value = ex;
             }
@@ -1284,27 +1200,12 @@ export class AuxRuntime
                 config: null as RuntimeBot,
             },
             before: (ctx) => {
-                // if (!options.allowsEditing) {
-                //     ctx.wasEditable = ctx.global.allowsEditing;
-                //     ctx.global.allowsEditing = false;
-                // }
                 ctx.creator = ctx.bot
                     ? this._getRuntimeBot(ctx.bot.script.tags.creator)
                     : null;
                 ctx.config = ctx.bot
                     ? this._getRuntimeBot(ctx.bot.script.tags.configBot)
                     : null;
-            },
-            invoke: (fn, ctx) => {
-                return Zone.current
-                    .fork({
-                        ...this._globalVariablesSpec,
-                        properties: {
-                            currentBot: ctx.bot,
-                            allowsEditing: options.allowsEditing,
-                        },
-                    })
-                    .run(() => fn());
             },
             onError: (err, ctx, meta) => {
                 if (err instanceof RanOutOfEnergyError) {
@@ -1352,6 +1253,7 @@ export class AuxRuntime
                 tagName: tag,
             },
             variables: {
+                ...this._library.tagSpecificApi,
                 this: (ctx) => (ctx.bot ? ctx.bot.script : null),
                 bot: (ctx) => (ctx.bot ? ctx.bot.script : null),
                 tags: (ctx) => (ctx.bot ? ctx.bot.script.tags : null),
@@ -1464,13 +1366,7 @@ export class AuxRuntime
 /**
  * Options that are used to influence the behavior of the compiled script.
  */
-interface CompileOptions {
-    /**
-     * Whether the script allows editing the bot.
-     * If false, then the script will set the bot's editable value to false for the duration of the script.
-     */
-    allowsEditing: boolean;
-}
+interface CompileOptions {}
 
 interface UncompiledScript {
     bot: CompiledBot;
