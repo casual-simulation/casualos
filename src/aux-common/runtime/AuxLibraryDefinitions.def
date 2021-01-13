@@ -2222,13 +2222,20 @@ declare global {
      * Animates the given tag. Returns a promise when the animation is finished.
      * @param bot The bot or list of bots that should be animated.
      * @param tag The tag that should be animated.
-     * @param options The options for the animation.
+     * @param options The options for the animation. If given null, then any running animations for the given tag will be canceled.
      */
     function animateTag(
-        bot: Bot | Bot[] | string[] | string,
+        bot: Bot | (Bot | string)[] | string,
         tag: string,
         options: AnimateTagFunctionOptions
     ): Promise<void[]>;
+
+    /**
+     * Cancels the animations that are running on the given bot(s).
+     * @param bot The bot or list of bots that should cancel their animations.
+     * @param tag The tag that the animations should be canceld for. If omitted then all tags will be canceled.
+     */
+    function clearAnimations(bot: Bot | (Bot | string)[] | string, tag?: string): void;
 
     /**
      * Sends the given operation to all the devices that matches the given selector.

@@ -1,4 +1,9 @@
-import { AuxGlobalContext, AsyncTask, BotTimer } from './AuxGlobalContext';
+import {
+    AuxGlobalContext,
+    AsyncTask,
+    BotTimer,
+    TimeoutOrIntervalTimer,
+} from './AuxGlobalContext';
 import {
     hasValue,
     trimTag,
@@ -505,6 +510,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             uuid,
             sleep,
             animateTag,
+            clearAnimations,
 
             __energyCheck,
 
@@ -701,7 +707,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     };
 
     function botTimer(
-        type: BotTimer['type'],
+        type: TimeoutOrIntervalTimer['type'],
         func: (handler: Function, timeout: number, ...args: any[]) => number,
         clearAfterHandlerIsRun: boolean
     ) {
@@ -720,7 +726,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                             try {
                                 handler(...arguments);
                             } finally {
-                                context.removeBotTimer(options.bot.id, timer);
+                                context.removeBotTimer(
+                                    options.bot.id,
+                                    type,
+                                    timer
+                                );
                             }
                         },
                         timeout,
@@ -2961,6 +2971,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         tag: string,
         options: AnimateTagFunctionOptions
     ): Promise<void> {
+        if (!options) {
+            clearAnimations(bot, tag);
+            return Promise.resolve();
+        }
+
         return new Promise<void>((resolve, reject) => {
             let valueHolder = {
                 [tag]: hasValue(options.fromValue)
@@ -3000,10 +3015,55 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     }
                 })
                 .onComplete(() => {
+                    context.removeBotTimer(bot.id, 'animation', tween.getId());
                     resolve();
                 })
                 .start(context.localTime);
+
+            context.recordBotTimer(bot.id, {
+                type: 'animation',
+                timerId: tween.getId(),
+                tag: tag,
+                cancel: () => {
+                    tween.stop();
+                    reject(new Error('The animation was canceled.'));
+                },
+            });
         });
+    }
+
+    /**
+     * Cancels the animations that are running on the given bot(s).
+     * @param bot The bot or list of bots that should cancel their animations.
+     * @param tag The tag that the animations should be canceld for. If omitted then all tags will be canceled.
+     */
+    function clearAnimations(
+        bot: RuntimeBot | (RuntimeBot | string)[] | string,
+        tag?: string
+    ) {
+        const bots = Array.isArray(bot)
+            ? bot
+                  .map((b) => (typeof b === 'string' ? getBot('id', b) : b))
+                  .filter((b) => !!b)
+            : typeof bot === 'string'
+            ? getBots('id', bot)
+            : [bot];
+
+        for (let bot of bots) {
+            const timers = context.getBotTimers(bot.id);
+            for (let timer of timers) {
+                if (timer.type === 'animation' && timer.cancel) {
+                    if (!hasValue(tag) || timer.tag === tag) {
+                        timer.cancel();
+                        context.removeBotTimer(
+                            bot.id,
+                            timer.type,
+                            timer.timerId
+                        );
+                    }
+                }
+            }
+        }
     }
 
     // /**

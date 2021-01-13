@@ -134,9 +134,10 @@ export interface AuxGlobalContext {
     /**
      * Removes the given bot timer from the bot.
      * @param id The ID of the bot.
+     * @param type The type of the timer.
      * @param timer The timer to remove.
      */
-    removeBotTimer(id: string, timer: number): void;
+    removeBotTimer(id: string, type: BotTimer['type'], timerId: number): void;
 
     /**
      * Gets the list of bot timers for the given bot.
@@ -242,7 +243,12 @@ export interface AsyncTask {
 /**
  * Defines an interface for a timer that was created by a bot (e.g. setTimeout() or setInterval()).
  */
-export interface BotTimer {
+export type BotTimer = TimeoutOrIntervalTimer | AnimationTimer;
+
+/**
+ * Defines an interface for a setTimeout() or setInterval() timer that was created by a bot.
+ */
+export interface TimeoutOrIntervalTimer {
     /**
      * The ID of the timer.
      */
@@ -252,6 +258,31 @@ export interface BotTimer {
      * The type of the timer.
      */
     type: 'timeout' | 'interval';
+}
+
+/**
+ * Defines an interface for a animation timer that was created by a bot.
+ */
+export interface AnimationTimer {
+    /**
+     * The ID of the timer.
+     */
+    timerId: number;
+
+    /**
+     * The type of the timer.
+     */
+    type: 'animation';
+
+    /**
+     * The tag that the timer is for.
+     */
+    tag: string;
+
+    /**
+     * A function used to cancel the timer.
+     */
+    cancel: () => void;
 }
 
 /**
@@ -469,10 +500,16 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this._numberOfTimers += 1;
     }
 
-    removeBotTimer(id: string, timer: number): void {
+    removeBotTimer(
+        id: string,
+        type: BotTimer['type'],
+        timer: number | string
+    ): void {
         let list = this._botTimerMap.get(id);
         if (list) {
-            let index = list.findIndex((t) => t.timerId === timer);
+            let index = list.findIndex(
+                (t) => t.type === type && t.timerId === timer
+            );
             if (index >= 0) {
                 list.splice(index, 1);
                 this._numberOfTimers = Math.max(0, this._numberOfTimers - 1);
@@ -481,7 +518,11 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     }
 
     getBotTimers(id: string): BotTimer[] {
-        return this._botTimerMap.get(id) || [];
+        let timers = this._botTimerMap.get(id);
+        if (timers) {
+            return timers.slice();
+        }
+        return [];
     }
 
     cancelBotTimers(id: string): void {
@@ -511,6 +552,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
                 clearTimeout(timer.timerId);
             } else if (timer.type === 'interval') {
                 clearInterval(timer.timerId);
+            } else if (timer.type === 'animation') {
+                timer.cancel();
             }
         }
     }
