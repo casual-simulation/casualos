@@ -546,16 +546,169 @@ const id = uuid();
 player.toast(id);
 ```
 
+## Utility Actions
 
+### `animateTag(bot, tag, options)`
 
+Animates the tag on the given bot based on the specified parameters.
+Returns a promise that resolves when the animation is finished and throws an error when the animation is canceled.
+This is useful for gradually changing a tag on a bot over time. For example, moving a bot from point A to point B without teleporting it.
 
+<ActionLink action='animateTag(bot, tag, options)'/> is fully integrated with tag masks.
+This lets you animate tag values in the `tempLocal`, `local`, `player`, and `shared` spaces.
 
+The **first parameter** is the bot or list of bots that the tag should be animated on.
+
+The **second parameter** is the tag that should be animated.
+
+The **third parameter** are the options that should be used to animate the tag.
+If `null` is used, then any active animations for the tag on these bots will be canceled.
+It should be an object with the following properties:
+
+```typescript
+let options: {
+
+    /**
+     * The value that the animation should start at.
+     * If omitted, then the current tag value will be used.
+     */
+    fromValue?: number;
+
+    /**
+     * The value that the animation should end at.
+     */
+    toValue: number;
+
+    /**
+     * The number of seconds that the animation should take to complete.
+     */
+    duration: number;
+
+    /**
+     * The space that the tag should be animated in.
+     * If not specified, then "tempLocal" will be used.
+     * If set to false, then the bot will be edited instead of using tag masks.
+     * Additionally, if the specified space is the same as the space the bot lives in
+     * then the bot will be edited directly.
+     */
+    tagMaskSpace?: 'tempLocal' | 'local' | 'player' | 'shared' | false;
+
+    /**
+     * The options for easing.
+     * Can be an "easing type" or an object that specifies the type and mode.
+     * If an easing type is specified, then "inout" mode is used.
+     * If omitted, then "linear" "inout" is used.
+     */
+    easing?: 'linear'
+            | 'quadratic'
+            | 'cubic'
+            | 'quartic'
+            | 'quintic'
+            | 'sinusoidal'
+            | 'exponential'
+            | 'circular'
+            | 'elastic' 
+            | {
+        /**
+         * The type of easing.
+        */
+        type: 'linear'
+            | 'quadratic'
+            | 'cubic'
+            | 'quartic'
+            | 'quintic'
+            | 'sinusoidal'
+            | 'exponential'
+            | 'circular'
+            | 'elastic';
+
+        /**
+         * Whether to apply the easing at the
+         * start (in), end (out), or start and end (inout) of the tween.
+         */
+        mode: 'in' | 'out' | 'inout';
+    }
+};
+```
 
 #### Examples:
 
+1. Animate the `#count` tag from 0 to 1 over 5 seconds.
 ```typescript
+await animateTag(bot, "count", {
+    fromValue: 0,
+    toValue: 1,
+    duration: 5
+});
+
+player.toast("Animation finished!");
 ```
 
+2. Run 2 animations in sequence.
+```typescript
+await animateTag(bot, "homeX", {
+    fromValue: 0,
+    toValue: 5,
+    duration: 2
+});
+
+await animateTag(bot, "homeY", {
+    fromValue: 0,
+    toValue: 5,
+    duration: 2
+});
+```
+
+3. Run an animation while the `#loop` tag is true.
+```typescript
+while(tags.loop) {
+    await animateTag(bot, "homeX", {
+        fromValue: 0,
+        toValue: 5,
+        duration: 2
+    });
+}
+```
+
+4. Run an animation with a "bouncy" easing mode.
+```typescript
+await animateTag(bot, "homeX", {
+    fromValue: 0,
+    toValue: 5,
+    duration: 2,
+    easing: {
+        mode: "elastic",
+        type: "out"
+    }
+});
+```
+
+5. Animate a tag in `player` space.
+```typescript
+await animateTag(bot, "homeX", {
+    fromValue: 0,
+    toValue: 5,
+    duration: 2,
+    tagMaskSpace: 'player'
+});
+```
+
+6. Cancel animations on the `#homeX` tag.
+```typescript
+animateTag(bot, "homeX", {
+    fromValue: 0,
+    toValue: 5,
+    duration: 2
+}).then(() => {
+    player.toast("Animation Finished!");
+}).catch(() => {
+    player.toast("Animation Canceled!");
+});
+
+await sleep(500);
+
+animateTag(bot, "homeX", null);
+```
 
 ### `setTag(bot, tag, value)`
 
