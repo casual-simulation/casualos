@@ -10,6 +10,19 @@
     -   The Terms of Service are available at `/terms` (or at `/terms-of-service.txt`).
     -   The Privacy Policy is available at `/privacy-policy` (or at `/privacy-policy.txt`).
 -   Added the ability to keep track of the number of `setTimeout()` and `setInterval()` timers that are currently active via the `numberOfActiveTimers` property returned from `perf.getStats()`.
+-   Added the `animateTag(bot, tag, options)` and `clearAnimations(bot, tag?)` functions.
+    -   `animateTag(bot, tag, options)` - Iteratively changes a tag mask value over time based on the options you provide.
+        -   `bot` is the bot or list of bots that should be animated.
+        -   `tag` is the tag that should be animated.
+        -   `options` is an object that specifies how the tag should be animated. It has the following properties:
+            -   `fromValue` - The starting value for the animation.
+            -   `toValue` - The ending value.
+            -   `duration` - The number of seconds that it should take for the tag to go from the starting value to the ending value.
+            -   `easing` - The options for easing the animation.
+            -   `tagMaskSpace` - The space that the tag should be changed in. If set to `false` then the tag on the bot will be directly edited.
+    -   `clearAnimations(bot, tag?)` - Cancels animations on a bot.
+        -   `bot` - The bot or list of bots that should have their animations canceled.
+        -   `tag` - Is optional and is the tag that the animations should be canceled for.
 
 ### :bug: Bug Fixes
 

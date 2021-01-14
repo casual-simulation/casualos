@@ -21,6 +21,15 @@ import { AuxDevice } from './AuxDevice';
 import { ScriptError, RanOutOfEnergyError } from './AuxResults';
 import uuid from 'uuid/v4';
 import { sortBy, sortedIndex, sortedIndexOf } from 'lodash';
+import './PerformanceNowPolyfill';
+import { Observable, Subscription, SubscriptionLike } from 'rxjs';
+import { tap } from 'rxjs/operators';
+import TWEEN from '@tweenjs/tween.js';
+
+/**
+ * The interval between animation frames in miliseconds when using setInterval().
+ */
+export const SET_INTERVAL_ANIMATION_FRAME_TIME: number = 16;
 
 /**
  * Holds global values that need to be accessible from the runtime.
@@ -55,6 +64,11 @@ export interface AuxGlobalContext {
      * The current energy that the context has.
      */
     energy: number;
+
+    /**
+     * The number of miliseconds since the session has started.
+     */
+    localTime: number;
 
     /**
      * Enqueues the given action.
@@ -120,9 +134,10 @@ export interface AuxGlobalContext {
     /**
      * Removes the given bot timer from the bot.
      * @param id The ID of the bot.
+     * @param type The type of the timer.
      * @param timer The timer to remove.
      */
-    removeBotTimer(id: string, timer: number): void;
+    removeBotTimer(id: string, type: BotTimer['type'], timerId: number): void;
 
     /**
      * Gets the list of bot timers for the given bot.
@@ -188,6 +203,11 @@ export interface AuxGlobalContext {
      * @param ms The number of miliseconds to add.
      */
     addShoutTime(shout: string, ms: number): void;
+
+    /**
+     * Starts the animation loop for the context.
+     */
+    startAnimationLoop(): SubscriptionLike;
 }
 
 /**
@@ -223,7 +243,12 @@ export interface AsyncTask {
 /**
  * Defines an interface for a timer that was created by a bot (e.g. setTimeout() or setInterval()).
  */
-export interface BotTimer {
+export type BotTimer = TimeoutOrIntervalTimer | AnimationTimer;
+
+/**
+ * Defines an interface for a setTimeout() or setInterval() timer that was created by a bot.
+ */
+export interface TimeoutOrIntervalTimer {
     /**
      * The ID of the timer.
      */
@@ -233,6 +258,31 @@ export interface BotTimer {
      * The type of the timer.
      */
     type: 'timeout' | 'interval';
+}
+
+/**
+ * Defines an interface for a animation timer that was created by a bot.
+ */
+export interface AnimationTimer {
+    /**
+     * The ID of the timer.
+     */
+    timerId: number;
+
+    /**
+     * The type of the timer.
+     */
+    type: 'animation';
+
+    /**
+     * The tag that the timer is for.
+     */
+    tag: string;
+
+    /**
+     * A function used to cancel the timer.
+     */
+    cancel: () => void;
 }
 
 /**
@@ -348,6 +398,10 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      */
     energy: number = DEFAULT_ENERGY;
 
+    get localTime() {
+        return performance.now() - this._startTime;
+    }
+
     private _taskCounter: number = 0;
     private _scriptFactory: RuntimeBotFactory;
     private _batcher: RuntimeBatcher;
@@ -357,6 +411,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     private _listenerMap: Map<string, string[]>;
     private _botTimerMap: Map<string, BotTimer[]>;
     private _numberOfTimers: number = 0;
+    private _startTime: number;
+    private _animationLoop: Subscription;
 
     /**
      * Creates a new global context.
@@ -377,6 +433,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this._batcher = batcher;
         this._listenerMap = new Map();
         this._botTimerMap = new Map();
+        this._startTime = performance.now();
     }
 
     getBotIdsWithListener(tag: string): string[] {
@@ -443,10 +500,16 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this._numberOfTimers += 1;
     }
 
-    removeBotTimer(id: string, timer: number): void {
+    removeBotTimer(
+        id: string,
+        type: BotTimer['type'],
+        timer: number | string
+    ): void {
         let list = this._botTimerMap.get(id);
         if (list) {
-            let index = list.findIndex((t) => t.timerId === timer);
+            let index = list.findIndex(
+                (t) => t.type === type && t.timerId === timer
+            );
             if (index >= 0) {
                 list.splice(index, 1);
                 this._numberOfTimers = Math.max(0, this._numberOfTimers - 1);
@@ -455,7 +518,11 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     }
 
     getBotTimers(id: string): BotTimer[] {
-        return this._botTimerMap.get(id) || [];
+        let timers = this._botTimerMap.get(id);
+        if (timers) {
+            return timers.slice();
+        }
+        return [];
     }
 
     cancelBotTimers(id: string): void {
@@ -485,6 +552,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
                 clearTimeout(timer.timerId);
             } else if (timer.type === 'interval') {
                 clearInterval(timer.timerId);
+            } else if (timer.type === 'animation') {
+                timer.cancel();
             }
         }
     }
@@ -648,4 +717,54 @@ export class MemoryGlobalContext implements AuxGlobalContext {
 
         this._shoutTimers[shout] += ms;
     }
+
+    startAnimationLoop(): SubscriptionLike {
+        if (!this._animationLoop) {
+            const sub = animationLoop()
+                .pipe(tap(() => this._updateAnimationLoop()))
+                .subscribe();
+
+            this._animationLoop = new Subscription(() => {
+                sub.unsubscribe();
+                this._animationLoop = null;
+            });
+        }
+
+        return this._animationLoop;
+    }
+
+    private _updateAnimationLoop() {
+        TWEEN.update(this.localTime);
+    }
+}
+
+function animationLoop(): Observable<void> {
+    return new Observable<void>((observer) => {
+        if (globalThis.requestAnimationFrame) {
+            let running = true;
+            let handlerId: number;
+
+            const handler = () => {
+                if (!running) {
+                    return;
+                }
+                observer.next();
+                handlerId = globalThis.requestAnimationFrame(handler);
+            };
+            handlerId = globalThis.requestAnimationFrame(handler);
+
+            return () => {
+                running = false;
+                globalThis.cancelAnimationFrame(handlerId);
+            };
+        } else {
+            let interval = setInterval(() => {
+                observer.next();
+            }, SET_INTERVAL_ANIMATION_FRAME_TIME);
+
+            return () => {
+                clearInterval(interval);
+            };
+        }
+    });
 }

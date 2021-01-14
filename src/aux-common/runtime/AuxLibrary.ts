@@ -1,4 +1,9 @@
-import { AuxGlobalContext, AsyncTask, BotTimer } from './AuxGlobalContext';
+import {
+    AuxGlobalContext,
+    AsyncTask,
+    BotTimer,
+    TimeoutOrIntervalTimer,
+} from './AuxGlobalContext';
 import {
     hasValue,
     trimTag,
@@ -58,6 +63,7 @@ import {
     revokeCertificate as calcRevokeCertificate,
     localPositionTween as calcLocalPositionTween,
     localRotationTween as calcLocalRotationTween,
+    animateTag as calcAnimateTag,
     clearSpace,
     loadBots,
     BotAction,
@@ -156,6 +162,8 @@ import {
     EDIT_TAG_SYMBOL,
     BotSpace,
     EDIT_TAG_MASK_SYMBOL,
+    AnimateTagOptions,
+    EaseType,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -167,7 +175,7 @@ import uuidv4 from 'uuid/v4';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
-import { convertToCopiableValue } from './Utils';
+import { convertToCopiableValue, getEasing } from './Utils';
 import { sha256 as hashSha256, sha512 as hashSha512, hmac } from 'hash.js';
 import stableStringify from 'fast-json-stable-stringify';
 import {
@@ -180,6 +188,8 @@ import {
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, del, insert, preserve } from '../aux-format-2';
 import { Euler, Vector3, Plane, Ray } from 'three';
+import TWEEN from '@tweenjs/tween.js';
+import './PerformanceNowPolyfill';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -334,6 +344,40 @@ export interface WebhookOptions {
     responseShout?: string;
 }
 
+/**
+ * Defines a set of options for animateTag().
+ */
+export interface AnimateTagFunctionOptions {
+    /**
+     * The value that should be animated from.
+     * If not specified then the current tag value will be used.
+     */
+    fromValue?: any;
+
+    /**
+     * The value that should be animated to.
+     */
+    toValue: any;
+
+    /**
+     * The duration of the animation in seconds.
+     */
+    duration: number;
+
+    /**
+     * The type of easing to use.
+     * If not specified then "linear" "inout" will be used.
+     */
+    easing?: EaseType | Easing;
+
+    /**
+     * The space that the tag should be animated in.
+     * If not specified then "tempLocal" will be used.
+     * If false, then the bot will be edited instead of using tag masks.
+     */
+    tagMaskSpace?: BotSpace | false;
+}
+
 export interface BotFilterFunction {
     (bot: Bot): boolean;
     sort?: (bot: Bot) => any;
@@ -407,14 +451,6 @@ export interface TagSpecificApiOptions {
  * @param context The global context that should be used.
  */
 export function createDefaultLibrary(context: AuxGlobalContext) {
-    if (!globalThis.performance) {
-        globalThis.performance = {
-            now() {
-                return Date.now();
-            },
-        } as any;
-    }
-
     webhook.post = function (
         url: string,
         data?: any,
@@ -473,6 +509,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             webhook,
             uuid,
             sleep,
+            animateTag,
+            clearAnimations,
 
             __energyCheck,
 
@@ -669,7 +707,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     };
 
     function botTimer(
-        type: BotTimer['type'],
+        type: TimeoutOrIntervalTimer['type'],
         func: (handler: Function, timeout: number, ...args: any[]) => number,
         clearAfterHandlerIsRun: boolean
     ) {
@@ -688,7 +726,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                             try {
                                 handler(...arguments);
                             } finally {
-                                context.removeBotTimer(options.bot.id, timer);
+                                context.removeBotTimer(
+                                    options.bot.id,
+                                    type,
+                                    timer
+                                );
                             }
                         },
                         timeout,
@@ -2892,6 +2934,138 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return sleepy;
     }
 
+    /**
+     * Animates the given tag. Returns a promise when the animation is finished.
+     * @param bot The bot or list of bots that should be animated.
+     * @param tag The tag that should be animated.
+     * @param options The options for the animation.
+     */
+    function animateTag(
+        bot: RuntimeBot | (RuntimeBot | string)[] | string,
+        tag: string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void> {
+        if (Array.isArray(bot)) {
+            const bots = bot
+                .map((b) => (typeof b === 'string' ? getBot('id', b) : b))
+                .filter((b) => !!b);
+
+            const promises = bots.map((b) => animateBotTag(b, tag, options));
+
+            const allPromises = Promise.all(promises);
+            return <Promise<void>>(<any>allPromises);
+        } else if (typeof bot === 'string') {
+            const finalBot = getBot('id', bot);
+            if (finalBot) {
+                return animateBotTag(finalBot, tag, options);
+            } else {
+                return Promise.resolve();
+            }
+        } else {
+            return animateBotTag(bot, tag, options);
+        }
+    }
+
+    function animateBotTag(
+        bot: RuntimeBot,
+        tag: string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void> {
+        if (!options) {
+            clearAnimations(bot, tag);
+            return Promise.resolve();
+        }
+
+        return new Promise<void>((resolve, reject) => {
+            let valueHolder = {
+                [tag]: hasValue(options.fromValue)
+                    ? options.fromValue
+                    : bot.tags[tag],
+            };
+            const easing: Easing = hasValue(options.easing)
+                ? typeof options.easing === 'string'
+                    ? {
+                          mode: 'inout',
+                          type: options.easing,
+                      }
+                    : options.easing
+                : {
+                      mode: 'inout',
+                      type: 'linear',
+                  };
+            const tween = new TWEEN.Tween<any>(valueHolder)
+                .to({
+                    [tag]: options.toValue,
+                })
+                .duration(options.duration * 1000)
+                .easing(getEasing(easing))
+                .onUpdate(() => {
+                    if (
+                        options.tagMaskSpace === false ||
+                        options.tagMaskSpace === getBotSpace(bot)
+                    ) {
+                        setTag(bot, tag, valueHolder[tag]);
+                    } else {
+                        setTagMask(
+                            bot,
+                            tag,
+                            valueHolder[tag],
+                            options.tagMaskSpace || 'tempLocal'
+                        );
+                    }
+                })
+                .onComplete(() => {
+                    context.removeBotTimer(bot.id, 'animation', tween.getId());
+                    resolve();
+                })
+                .start(context.localTime);
+
+            context.recordBotTimer(bot.id, {
+                type: 'animation',
+                timerId: tween.getId(),
+                tag: tag,
+                cancel: () => {
+                    tween.stop();
+                    reject(new Error('The animation was canceled.'));
+                },
+            });
+        });
+    }
+
+    /**
+     * Cancels the animations that are running on the given bot(s).
+     * @param bot The bot or list of bots that should cancel their animations.
+     * @param tag The tag that the animations should be canceld for. If omitted then all tags will be canceled.
+     */
+    function clearAnimations(
+        bot: RuntimeBot | (RuntimeBot | string)[] | string,
+        tag?: string
+    ) {
+        const bots = Array.isArray(bot)
+            ? bot
+                  .map((b) => (typeof b === 'string' ? getBot('id', b) : b))
+                  .filter((b) => !!b)
+            : typeof bot === 'string'
+            ? getBots('id', bot)
+            : [bot];
+
+        for (let bot of bots) {
+            const timers = context.getBotTimers(bot.id);
+            for (let timer of timers) {
+                if (timer.type === 'animation' && timer.cancel) {
+                    if (!hasValue(tag) || timer.tag === tag) {
+                        timer.cancel();
+                        context.removeBotTimer(
+                            bot.id,
+                            timer.type,
+                            timer.timerId
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     // /**
     //  * Sends a web request based on the given options.
     //  * @param options The options that specify where and what to send in the web request.
@@ -2939,7 +3113,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param action The action to reject.
      */
     function reject(action: any) {
-        const event = calcReject(getOriginalObject(action));
+        const original = getOriginalObject(action);
+        const event = Array.isArray(original)
+            ? calcReject(...original)
+            : calcReject(original);
         return addAction(event);
     }
 
