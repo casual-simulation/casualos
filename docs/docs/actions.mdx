@@ -546,25 +546,16 @@ const id = uuid();
 player.toast(id);
 ```
 
-### `sleep(time)`
 
 
-Waits the amount of time provided, in ms.
 
-Returns a promise that resolves when the time has been waited.
 
-The **first parameter** is time in ms to wait. 1 second is 1000ms.
 
 #### Examples:
 
-1. Wait 2 seconds before proceeding.
 ```typescript
-player.toast("Stop!");
-await sleep(2000);
-player.toast("Hammer Time!");
 ```
 
-## Utility Actions
 
 ### `setTag(bot, tag, value)`
 
@@ -758,6 +749,23 @@ deleteTagText(bot, "myTag", tags.myTag.length - 2, 2);
 2. Delete the first 3 characters from a tag mask in the `local` space.
 ```typescript
 deleteTagText(bot, "myTag", 0, 3, "local");
+```
+
+### `sleep(time)`
+
+Waits the amount of time provided, in [miliseconds](https://en.wikipedia.org/wiki/Millisecond).
+
+Returns a promise that resolves when the time has been waited.
+
+The **first parameter** is time in ms to wait. 1 second is 1000ms.
+
+#### Examples:
+
+1. Wait 2 seconds before proceeding.
+```typescript
+player.toast("Stop!");
+await sleep(2000);
+player.toast("Hammer Time!");
 ```
 
 ## Bot Filters
