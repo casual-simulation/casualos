@@ -710,6 +710,32 @@ await sleep(500);
 animateTag(bot, "homeX", null);
 ```
 
+### `clearAnimations(bot, tag?)`
+
+Cancels the animations that are running on the given bot(s).
+If a tag is specified then only animations for the given tag will be canceled.
+
+The **first parameter** is the bot or list of bots that should cancel their animations.
+
+The **second parameter** is optional and is the tag that the animations should be canceled for.
+
+#### Examples:
+
+1. Cancel all animations on a bot.
+```typescript
+clearAnimations(bot);
+```
+
+2. Cancel animations for `#myTag` on a bot.
+```typescript
+clearAnimations(bot, 'myTag');
+```
+
+3. Cancel animations on all bots.
+```typescript
+clearAnimations(getBots());
+```
+
 ### `setTag(bot, tag, value)`
 
 
