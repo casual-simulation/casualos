@@ -1,8 +1,13 @@
-import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
+import {
+    AuxLibrary,
+    createDefaultLibrary,
+    TagSpecificApiOptions,
+} from './AuxLibrary';
 import {
     AuxGlobalContext,
     addToContext,
     MemoryGlobalContext,
+    SET_INTERVAL_ANIMATION_FRAME_TIME,
 } from './AuxGlobalContext';
 import {
     toast,
@@ -129,6 +134,7 @@ import {
     RuntimeBot,
     SET_TAG_MASK_SYMBOL,
     CLEAR_CHANGES_SYMBOL,
+    animateTag,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -150,6 +156,8 @@ import { decryptV1, keypair } from '@casual-simulation/crypto';
 import { CERTIFIED_SPACE } from '../aux-format-2/AuxWeaveReducer';
 import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { RanOutOfEnergyError } from './AuxResults';
+import { Subscription, SubscriptionLike } from 'rxjs';
+import { waitAsync } from '../test/TestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -189,26 +197,23 @@ describe('AuxLibrary', () => {
         uuidMock.mockReset();
     });
 
-    const falsyCases = [
-        ['false', false],
-        ['0', 0],
-    ];
+    const falsyCases = [['false', false] as const, ['0', 0] as const];
     const emptyCases = [
-        ['null', null],
-        ['empty string', ''],
+        ['null', null as any] as const,
+        ['empty string', ''] as const,
     ];
     const numberCases = [
-        ['0', 0],
-        ['1', 1],
-        ['true', true],
-        ['false', false],
+        ['0', 0] as const,
+        ['1', 1] as const,
+        ['true', true] as const,
+        ['false', false] as const,
     ];
     const trimEventCases = [
-        ['parenthesis', 'sayHello()'],
-        ['hashtag', '#sayHello'],
-        ['hashtag and parenthesis', '#sayHello()'],
-        ['@ symbol', '@sayHello'],
-        ['@ symbol and parenthesis', '@sayHello()'],
+        ['parenthesis', 'sayHello()'] as const,
+        ['hashtag', '#sayHello'] as const,
+        ['hashtag and parenthesis', '#sayHello()'] as const,
+        ['@ symbol', '@sayHello'] as const,
+        ['@ symbol and parenthesis', '@sayHello()'] as const,
     ];
 
     describe('getBots()', () => {
@@ -515,8 +520,8 @@ describe('AuxLibrary', () => {
         });
 
         const emptyCases = [
-            ['null', null],
-            ['empty string', ''],
+            ['null', null as any] as const,
+            ['empty string', ''] as const,
         ];
 
         it.each(emptyCases)(
@@ -884,10 +889,10 @@ describe('AuxLibrary', () => {
             });
 
             const directionCases = [
-                ['front', 0, -1],
-                ['back', 0, 1],
-                ['left', 1, 0],
-                ['right', -1, 0],
+                ['front', 0, -1] as const,
+                ['back', 0, 1] as const,
+                ['left', 1, 0] as const,
+                ['right', -1, 0] as const,
             ];
 
             describe.each(directionCases)('%s', (direction, x, y) => {
@@ -4236,6 +4241,481 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('animateTag()', () => {
+            let sub: SubscriptionLike;
+            beforeEach(() => {
+                jest.useFakeTimers('modern');
+            });
+
+            afterEach(() => {
+                jest.clearAllTimers();
+                if (sub) {
+                    sub.unsubscribe();
+                }
+            });
+
+            afterAll(() => {
+                jest.useRealTimers();
+            });
+
+            it('should animate the given tag to the given value over the duration', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(10);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: 10,
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should use tempLocal space by default', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(10);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: 10,
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should animate the tag directly on the bot if given false for tagMaskSpace', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: false,
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.tags.abc).toEqual(10);
+                expect(bot1.changes).toEqual({
+                    abc: 10,
+                });
+                expect(bot1.masks.abc).toBeUndefined();
+                expect(bot1.raw.abc).toEqual(10);
+            });
+
+            it('should start with the current value if fromValue is omitted', async () => {
+                bot1.tags.abc = 5;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.runOnlyPendingTimers();
+
+                expect(resolved).toBe(false);
+                expect(bot1.masks.abc).toBeCloseTo(5, 1);
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(10);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: 10,
+                    },
+                });
+                expect(bot1.tags.abc).toEqual(5);
+                expect(bot1.raw.abc).toEqual(5);
+            });
+
+            it('should use linear easing by default', async () => {
+                bot1.tags.abc = 5;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: 0,
+                    toValue: 1,
+                    duration: 1,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.runOnlyPendingTimers();
+
+                expect(resolved).toBe(false);
+
+                // 16ms per frame, 1 frame has been executed, duration is 1000ms, final value is 1
+                expect(bot1.masks.abc).toBeCloseTo(
+                    ((SET_INTERVAL_ANIMATION_FRAME_TIME * 1) / 1000) * 1
+                );
+
+                jest.runOnlyPendingTimers();
+
+                expect(resolved).toBe(false);
+
+                // 16ms per frame, 1 frames have been executed, duration is 1000ms, final value is 1
+                expect(bot1.masks.abc).toBeCloseTo(
+                    ((SET_INTERVAL_ANIMATION_FRAME_TIME * 2) / 1000) * 1
+                );
+
+                jest.advanceTimersByTime(
+                    1000 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(1);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: 1,
+                    },
+                });
+                expect(bot1.tags.abc).toEqual(5);
+                expect(bot1.raw.abc).toEqual(5);
+            });
+
+            it('should animate multiple bots at a time', async () => {
+                bot1.tags.abc = 0;
+                bot2.tags.abc = 0;
+                const promise = library.api.animateTag([bot1, bot2], 'abc', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(10);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: 10,
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+                expect(bot2.masks.abc).toEqual(10);
+                expect(bot2.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: 10,
+                    },
+                });
+                expect(bot2.raw.abc).toEqual(0);
+            });
+
+            it('should support using null options to cancel an animation', async () => {
+                bot1.tags.abc = 0;
+                bot2.tags.abc = 0;
+                const promise = library.api.animateTag([bot1, bot2], 'abc', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let errored = false;
+                let resolved = false;
+
+                promise.catch(() => {
+                    errored = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                let promise2 = library.api.animateTag(
+                    [bot1, bot2],
+                    'abc',
+                    null
+                );
+
+                promise2.then(() => {
+                    resolved = true;
+                });
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+                await Promise.resolve();
+
+                expect(errored).toBe(true);
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toBeUndefined();
+                expect(bot1.raw.abc).toEqual(0);
+                expect(bot2.masks.abc).toBeUndefined();
+                expect(bot2.raw.abc).toEqual(0);
+            });
+        });
+
+        describe('clearAnimations()', () => {
+            let sub: SubscriptionLike;
+            beforeEach(() => {
+                jest.useFakeTimers('modern');
+            });
+
+            afterEach(() => {
+                jest.clearAllTimers();
+                if (sub) {
+                    sub.unsubscribe();
+                }
+            });
+
+            afterAll(() => {
+                jest.useRealTimers();
+            });
+
+            it('should stop all the animations for the given bot', async () => {
+                bot1.tags.abc = 0;
+                const promise1 = library.api.animateTag(bot1, 'abc', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+                const promise2 = library.api.animateTag(bot1, 'other', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let errored = false;
+
+                promise1.catch(() => {
+                    errored = true;
+                });
+                promise2.catch(() => {
+                    errored = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                library.api.clearAnimations(bot1);
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(errored).toBe(true);
+                expect(bot1.masks.abc).toBeUndefined();
+                expect(bot1.masks.other).toBeUndefined();
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should stop animations for multiple bots', async () => {
+                bot1.tags.abc = 0;
+                bot2.tags.abc = 0;
+                const promise1 = library.api.animateTag([bot1, bot2], 'abc', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+                const promise2 = library.api.animateTag([bot1, bot2], 'other', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let errored = false;
+
+                promise1.catch(() => {
+                    errored = true;
+                });
+                promise2.catch(() => {
+                    errored = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                library.api.clearAnimations([bot1, bot2]);
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+                await Promise.resolve();
+
+                expect(errored).toBe(true);
+                expect(bot1.masks.abc).toBeUndefined();
+                expect(bot1.masks.other).toBeUndefined();
+                expect(bot1.raw.abc).toEqual(0);
+                expect(bot2.masks.abc).toBeUndefined();
+                expect(bot2.masks.other).toBeUndefined();
+                expect(bot2.raw.abc).toEqual(0);
+            });
+
+            it('should stop animations for the specified tag', async () => {
+                bot1.tags.abc = 0;
+                const promise1 = library.api.animateTag(bot1, 'abc', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+                const promise2 = library.api.animateTag(bot1, 'other', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let errored = false;
+                let resolved = false;
+
+                promise1.catch(() => {
+                    errored = true;
+                });
+                promise2.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                library.api.clearAnimations(bot1, 'abc');
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+                await Promise.resolve();
+
+                expect(errored).toBe(true);
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toBeUndefined();
+                expect(bot1.masks.other).toEqual(10);
+                expect(bot1.raw.abc).toEqual(0);
+            });
+        });
+
         describe('action.perform()', () => {
             it('should add the given event to the list', () => {
                 const action = library.api.action.perform({
@@ -4295,7 +4775,21 @@ describe('AuxLibrary', () => {
                 const expected = reject(original);
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
-                expect(action.action).toBe(original);
+                expect(action.actions).toEqual([original]);
+            });
+
+            it('should be able to reject multiple original actions', () => {
+                const original1 = toast('abc');
+                const original2 = toast('def');
+                const action = library.api.action.reject({
+                    type: 'show_toast',
+                    message: 'abc',
+                    [ORIGINAL_OBJECT]: [original1, original2],
+                });
+                const expected = reject(original1, original2);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+                expect(action.actions).toEqual([original1, original2]);
             });
         });
 
@@ -4603,39 +5097,54 @@ describe('AuxLibrary', () => {
 
         describe('experiment.getAnchorPointPosition()', () => {
             const cases = [
-                ['top', 'top', { x: 1, y: 1, z: 1 }, { x: 1, y: 1, z: 0.5 }],
+                [
+                    'top',
+                    'top',
+                    { x: 1, y: 1, z: 1 },
+                    { x: 1, y: 1, z: 0.5 },
+                ] as const,
                 [
                     'bottom',
                     'bottom',
                     { x: 1, y: 1, z: 1 },
                     { x: 1, y: 1, z: 1.5 },
-                ],
+                ] as const,
                 [
                     'center',
                     'center',
                     { x: 1, y: 1, z: 1 },
                     { x: 1, y: 1, z: 1 },
-                ],
+                ] as const,
                 [
                     'front',
                     'front',
                     { x: 1, y: 1, z: 1 },
                     { x: 1, y: 1.5, z: 1 },
-                ],
-                ['back', 'back', { x: 1, y: 1, z: 1 }, { x: 1, y: 0.5, z: 1 }],
-                ['left', 'left', { x: 1, y: 1, z: 1 }, { x: 1.5, y: 1, z: 1 }],
+                ] as const,
+                [
+                    'back',
+                    'back',
+                    { x: 1, y: 1, z: 1 },
+                    { x: 1, y: 0.5, z: 1 },
+                ] as const,
+                [
+                    'left',
+                    'left',
+                    { x: 1, y: 1, z: 1 },
+                    { x: 1.5, y: 1, z: 1 },
+                ] as const,
                 [
                     'right',
                     'right',
                     { x: 1, y: 1, z: 1 },
                     { x: 0.5, y: 1, z: 1 },
-                ],
+                ] as const,
                 [
                     '[1, 2, 3]',
                     [1, 2, 3],
                     { x: 1, y: 1, z: 1 },
                     { x: 0, y: 3, z: -2 },
-                ],
+                ] as const,
             ];
 
             describe.each(cases)(
@@ -5798,9 +6307,20 @@ describe('AuxLibrary', () => {
     });
 
     describe('create()', () => {
+        let tagContext: TagSpecificApiOptions;
+
+        beforeEach(() => {
+            tagContext = {
+                bot: null,
+                config: null,
+                creator: null,
+                tag: null,
+            };
+        });
+
         it('should return the created bot', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create({
+            const bot = library.tagSpecificApi.create(tagContext)({
                 abc: 'def',
             });
             expect(bot).toEqual(
@@ -5809,13 +6329,14 @@ describe('AuxLibrary', () => {
                 })
             );
         });
+
         it('should automatically set the creator to the current bot ID', () => {
             const creator = createDummyRuntimeBot('creator');
             addToContext(context, creator);
-            context.currentBot = creator;
+            tagContext.bot = creator;
 
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create({
+            const bot = library.tagSpecificApi.create(tagContext)({
                 abc: 'def',
             });
             expect(bot).toEqual(
@@ -5828,12 +6349,15 @@ describe('AuxLibrary', () => {
         it('should ignore strings because they are no longer used to set the creator ID', () => {
             const creator = createDummyRuntimeBot('creator');
             addToContext(context, creator);
-            context.currentBot = creator;
+            tagContext.bot = creator;
 
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create('otherBot' as any, {
-                abc: 'def',
-            });
+            const bot = library.tagSpecificApi.create(tagContext)(
+                'otherBot' as any,
+                {
+                    abc: 'def',
+                }
+            );
             expect(bot).toEqual(
                 createDummyRuntimeBot('uuid', {
                     creator: 'creator',
@@ -5843,7 +6367,7 @@ describe('AuxLibrary', () => {
         });
         it('should support multiple arguments', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create(
+            const bot = library.tagSpecificApi.create(tagContext)(
                 {
                     abc: 'def',
                 },
@@ -5864,7 +6388,7 @@ describe('AuxLibrary', () => {
             other.tags.num = 1;
 
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create(other);
+            const bot = library.tagSpecificApi.create(tagContext)(other);
             expect(bot).toEqual(
                 createDummyRuntimeBot('uuid', {
                     abc: 'def',
@@ -5875,7 +6399,9 @@ describe('AuxLibrary', () => {
 
         it('should support modifying the returned bot', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create({ abc: 'def' }) as RuntimeBot;
+            const bot = library.tagSpecificApi.create(tagContext)({
+                abc: 'def',
+            }) as RuntimeBot;
             bot.tags.fun = true;
 
             expect(bot).toEqual({
@@ -5899,7 +6425,9 @@ describe('AuxLibrary', () => {
         });
         it('should add the new bot to the context', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create({ abc: 'def' });
+            const bot = library.tagSpecificApi.create(tagContext)({
+                abc: 'def',
+            });
 
             const bots = library.api.getBots('abc', 'def');
             expect(bots[0]).toBe(bot);
@@ -5907,7 +6435,10 @@ describe('AuxLibrary', () => {
         it('should trigger onCreate() on the created bot.', () => {
             uuidMock.mockReturnValue('uuid');
             const callback = jest.fn();
-            const bot = library.api.create({ abc: 'def', onCreate: callback });
+            const bot = library.tagSpecificApi.create(tagContext)({
+                abc: 'def',
+                onCreate: callback,
+            });
 
             expect(callback).toBeCalled();
             expect(bot).toEqual({
@@ -5938,7 +6469,9 @@ describe('AuxLibrary', () => {
             const onAnyCreate1 = (bot1.listeners.onAnyCreate = jest.fn());
             context.recordListenerPresense(bot1.id, 'onAnyCreate', true);
 
-            const bot = library.api.create({ abc: 'def' });
+            const bot = library.tagSpecificApi.create(tagContext)({
+                abc: 'def',
+            });
 
             expect(onAnyCreate1).toBeCalledWith({
                 bot: bot,
@@ -5946,7 +6479,10 @@ describe('AuxLibrary', () => {
         });
         it('should support arrays of diffs as arguments', () => {
             uuidMock.mockReturnValueOnce('uuid1').mockReturnValueOnce('uuid2');
-            const bots = library.api.create([{ abc: 'def' }, { abc: 123 }]);
+            const bots = library.tagSpecificApi.create(tagContext)([
+                { abc: 'def' },
+                { abc: 123 },
+            ]);
 
             expect(bots).toEqual([
                 createDummyRuntimeBot('uuid1', {
@@ -5960,7 +6496,7 @@ describe('AuxLibrary', () => {
         it('should create every combination of diff', () => {
             let num = 1;
             uuidMock.mockImplementation(() => `uuid-${num++}`);
-            const bots = library.api.create(
+            const bots = library.tagSpecificApi.create(tagContext)(
                 [{ hello: true }, { hello: false }],
                 { abc: 'def' },
                 [{ wow: 1 }, { oh: 'haha' }, { test: 'a' }]
@@ -6009,7 +6545,10 @@ describe('AuxLibrary', () => {
             addToContext(context, first, second);
 
             uuidMock.mockReturnValueOnce('uuid1').mockReturnValueOnce('uuid2');
-            const bots = library.api.create([first, second]);
+            const bots = library.tagSpecificApi.create(tagContext)([
+                first,
+                second,
+            ]);
 
             expect(bots).toEqual([
                 createDummyRuntimeBot('uuid1', {
@@ -6031,7 +6570,7 @@ describe('AuxLibrary', () => {
             addToContext(context, other);
 
             uuidMock.mockReturnValueOnce('uuid1');
-            const bots = library.api.create([other]);
+            const bots = library.tagSpecificApi.create(tagContext)([other]);
             expect(bots).toEqual(
                 createDummyRuntimeBot(
                     'uuid1',
@@ -6054,7 +6593,9 @@ describe('AuxLibrary', () => {
             addToContext(context, other);
 
             uuidMock.mockReturnValueOnce('uuid1');
-            const bots = library.api.create([other]) as RuntimeBot;
+            const bots = library.tagSpecificApi.create(tagContext)([
+                other,
+            ]) as RuntimeBot;
             bots.tags.hello = true;
             expect(other).toEqual(
                 createDummyRuntimeBot(
@@ -6070,7 +6611,7 @@ describe('AuxLibrary', () => {
         it('should be able to shout to a new bot', () => {
             uuidMock.mockReturnValue('uuid');
             const abc = jest.fn();
-            library.api.create({ abc: abc, test: true });
+            library.tagSpecificApi.create(tagContext)({ abc: abc, test: true });
             library.api.shout('abc');
 
             expect(abc).toBeCalled();
@@ -6081,7 +6622,7 @@ describe('AuxLibrary', () => {
             it('should be able to shout to a new bot that is just now listening', () => {
                 uuidMock.mockReturnValue('uuid');
                 const abc = jest.fn();
-                library.api.create(
+                library.tagSpecificApi.create(tagContext)(
                     { [tag]: false, abc: abc, test: true },
                     { [tag]: true }
                 );
@@ -6098,7 +6639,10 @@ describe('AuxLibrary', () => {
 
             const abc = jest.fn();
             bot1.listeners.create = jest.fn(() => {
-                library.api.create({ test: true, abc: abc });
+                library.tagSpecificApi.create(tagContext)({
+                    test: true,
+                    abc: abc,
+                });
             });
             context.recordListenerPresense(bot1.id, 'create', true);
 
@@ -6116,7 +6660,12 @@ describe('AuxLibrary', () => {
             const abc = jest.fn();
             const def = jest.fn();
             bot1.listeners.create = jest.fn(() => {
-                library.api.create({ test: true, abc, def, space: 'custom' });
+                library.tagSpecificApi.create(tagContext)({
+                    test: true,
+                    abc,
+                    def,
+                    space: 'custom',
+                });
             });
             context.recordListenerPresense(bot1.id, 'create', true);
 
@@ -6135,7 +6684,10 @@ describe('AuxLibrary', () => {
 
             const abc = jest.fn();
             bot1.listeners.create = jest.fn(() => {
-                return library.api.create({ test: true, abc });
+                return library.tagSpecificApi.create(tagContext)({
+                    test: true,
+                    abc,
+                });
             });
             context.recordListenerPresense(bot1.id, 'create', true);
 
@@ -6155,7 +6707,11 @@ describe('AuxLibrary', () => {
             });
             const def = jest.fn();
             bot1.listeners.create = jest.fn(() => {
-                return library.api.create({ test: true, abc, def });
+                return library.tagSpecificApi.create(tagContext)({
+                    test: true,
+                    abc,
+                    def,
+                });
             });
             context.recordListenerPresense(bot1.id, 'create', true);
 
@@ -6182,7 +6738,7 @@ describe('AuxLibrary', () => {
                         library.api.bySpace('custom')
                     );
                     if (!b) {
-                        b = library.api.create(
+                        b = library.tagSpecificApi.create(tagContext)(
                             {
                                 test: true,
                                 otherPart,
@@ -6208,7 +6764,7 @@ describe('AuxLibrary', () => {
 
         it('should ignore null mods', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create(null, {
+            const bot = library.tagSpecificApi.create(tagContext)(null, {
                 abc: 'def',
             });
 
@@ -6222,13 +6778,13 @@ describe('AuxLibrary', () => {
         it('should throw an error if creating a bot with no tags', () => {
             uuidMock.mockReturnValue('uuid');
             expect(() => {
-                library.api.create({});
+                library.tagSpecificApi.create(tagContext)({});
             }).toThrow();
         });
 
         it('should be able to create a bot that has tags but is given a mod with no tags', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create(
+            const bot = library.tagSpecificApi.create(tagContext)(
                 {
                     abc: 'def',
                 },
@@ -6244,14 +6800,17 @@ describe('AuxLibrary', () => {
         it('should throw an error if given an array with a mod that has no tags', () => {
             uuidMock.mockReturnValue('uuid');
             expect(() => {
-                library.api.create([{}]);
+                library.tagSpecificApi.create(tagContext)([{}]);
             }).toThrow();
         });
 
         describe('space', () => {
             it('should set the space of the bot', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ space: 'local', abc: 'def' });
+                const bot = library.tagSpecificApi.create(tagContext)({
+                    space: 'local',
+                    abc: 'def',
+                });
                 expect(bot).toEqual(
                     createDummyRuntimeBot('uuid', { abc: 'def' }, 'local')
                 );
@@ -6259,7 +6818,7 @@ describe('AuxLibrary', () => {
 
             it('should use the last space', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create(
+                const bot = library.tagSpecificApi.create(tagContext)(
                     { space: 'tempLocal' },
                     { space: 'local' },
                     { abc: 'def' }
@@ -6277,7 +6836,7 @@ describe('AuxLibrary', () => {
 
             it('should use the last space even if it is null', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create(
+                const bot = library.tagSpecificApi.create(tagContext)(
                     { space: 'tempLocal' },
                     { space: null },
                     { abc: 'def' }
@@ -6299,7 +6858,7 @@ describe('AuxLibrary', () => {
                 'should treat %s as the default type',
                 (desc, value) => {
                     uuidMock.mockReturnValueOnce('uuid');
-                    const bot = library.api.create({
+                    const bot = library.tagSpecificApi.create(tagContext)({
                         space: value,
                         abc: 'def',
                     });
@@ -6321,12 +6880,14 @@ describe('AuxLibrary', () => {
                 bot1 = createDummyRuntimeBot('bot1');
                 addToContext(context, current, bot1);
 
-                context.currentBot = current;
+                tagContext.bot = bot1;
             });
 
             it('should set the creator to the given bot', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ creator: bot1.id });
+                const bot = library.tagSpecificApi.create(tagContext)({
+                    creator: bot1.id,
+                });
                 expect(bot).toEqual(
                     createDummyRuntimeBot('uuid', {
                         creator: 'bot1',
@@ -6336,7 +6897,10 @@ describe('AuxLibrary', () => {
 
             it('should be able to set the creator to null', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ creator: null, abc: 'def' });
+                const bot = library.tagSpecificApi.create(tagContext)({
+                    creator: null,
+                    abc: 'def',
+                });
                 expect(bot).toEqual(
                     createDummyRuntimeBot('uuid', {
                         abc: 'def',
@@ -6346,7 +6910,7 @@ describe('AuxLibrary', () => {
 
             it('should set creator to null if it references a bot in a different space', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({
+                const bot = library.tagSpecificApi.create(tagContext)({
                     creator: bot1.id,
                     space: 'local',
                     abc: 'def',
@@ -6364,7 +6928,7 @@ describe('AuxLibrary', () => {
 
             it('should set creator to null if it references a bot that does not exist', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({
+                const bot = library.tagSpecificApi.create(tagContext)({
                     creator: 'missing',
                     abc: 'def',
                 });
@@ -6465,7 +7029,12 @@ describe('AuxLibrary', () => {
 
         it('should be able to destroy a bot that was just created', () => {
             uuidMock.mockReturnValueOnce('uuid');
-            const newBot = library.api.create({
+            const newBot = library.tagSpecificApi.create({
+                bot: null,
+                config: null,
+                creator: null,
+                tag: null,
+            })({
                 abc: 'def',
             });
             library.api.destroy(newBot);
@@ -6777,11 +7346,17 @@ describe('AuxLibrary', () => {
 
         it('should handle when a bot is created during a shout', () => {
             uuidMock.mockReturnValueOnce('test0').mockReturnValueOnce('test5');
+            const tagContext: TagSpecificApiOptions = {
+                bot: null,
+                config: null,
+                creator: null,
+                tag: null,
+            };
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {
-                library.api.create({
+                library.tagSpecificApi.create(tagContext)({
                     num: 1,
                 });
-                library.api.create({
+                library.tagSpecificApi.create(tagContext)({
                     num: 2,
                 });
             }));
@@ -7223,6 +7798,173 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('setTimeout()', () => {
+        let tagContext: TagSpecificApiOptions;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeAll(() => {
+            jest.useFakeTimers('modern');
+        });
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+
+            tagContext = {
+                bot: bot1,
+                config: null,
+                creator: null,
+                tag: null,
+            };
+        });
+
+        afterEach(() => {
+            jest.clearAllTimers();
+        });
+
+        afterAll(() => {
+            jest.useRealTimers();
+        });
+
+        it('should add a timer to the list of timers for the current bot', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setTimeout(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'timeout',
+                },
+            ]);
+        });
+
+        it('should clear the timer when the timeout is finished', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setTimeout(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'timeout',
+                },
+            ]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(1);
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('should clear the timer when the bot is destroyed', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setTimeout(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'timeout',
+                },
+            ]);
+
+            library.api.destroy(bot1);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(0);
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+    });
+
+    describe('setInterval()', () => {
+        let tagContext: TagSpecificApiOptions;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeAll(() => {
+            jest.useFakeTimers('modern');
+        });
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+
+            tagContext = {
+                bot: bot1,
+                config: null,
+                creator: null,
+                tag: null,
+            };
+        });
+
+        afterEach(() => {
+            jest.clearAllTimers();
+        });
+
+        afterAll(() => {
+            jest.useRealTimers();
+        });
+
+        it('should add a timer to the list of timers for the current bot', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setInterval(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'interval',
+                },
+            ]);
+        });
+
+        it('should not clear the timer when the interval has run', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setInterval(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'interval',
+                },
+            ]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(1);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'interval',
+                },
+            ]);
+
+            jest.advanceTimersByTime(500);
+            expect(fn).toBeCalledTimes(2);
+        });
+    });
+
     describe('player.inSheet()', () => {
         let player: RuntimeBot;
 
@@ -7606,58 +8348,58 @@ describe('AuxLibrary', () => {
                 'left',
                 {
                     mousePointer_left: 'down',
-                },
+                } as any,
                 'down',
-            ],
-            ['mousePointer', 'left', {}, null],
+            ] as const,
+            ['mousePointer', 'left', {} as any, null as any] as const,
             [
                 'mousePointer',
                 'right',
                 {
                     mousePointer_right: 'held',
-                },
+                } as any,
                 'held',
-            ],
+            ] as const,
             [
                 'leftPointer',
                 'primary',
                 {
                     leftPointer_primary: 'held',
-                },
+                } as any,
                 'held',
-            ],
+            ] as const,
             [
                 'rightPointer',
                 'primary',
                 {
                     rightPointer_primary: 'down',
-                },
+                } as any,
                 'down',
-            ],
+            ] as const,
             [
                 'keyboard',
                 'a',
                 {
                     keyboard_a: 'down',
-                },
+                } as any,
                 'down',
-            ],
+            ] as const,
             [
                 'touch',
                 '0',
                 {
                     touch_0: 'down',
-                },
+                } as any,
                 'down',
-            ],
+            ] as const,
             [
                 'touch',
                 '1',
                 {
                     touch_1: 'held',
-                },
+                } as any,
                 'held',
-            ],
+            ] as const,
         ];
 
         it.each(cases)(
@@ -7768,16 +8510,16 @@ describe('AuxLibrary', () => {
 
     describe('math.getAnchorPointOffset()', () => {
         const cases = [
-            ['center', { x: 0, y: -0, z: 0 }],
-            ['front', { x: 0, y: 0.5, z: 0 }],
-            ['back', { x: 0, y: -0.5, z: 0 }],
-            ['bottom', { x: 0, y: -0, z: 0.5 }],
-            ['top', { x: 0, y: -0, z: -0.5 }],
-            ['left', { x: 0.5, y: -0, z: 0 }],
-            ['right', { x: -0.5, y: -0, z: 0 }],
+            ['center', { x: 0, y: -0, z: 0 }] as const,
+            ['front', { x: 0, y: 0.5, z: 0 }] as const,
+            ['back', { x: 0, y: -0.5, z: 0 }] as const,
+            ['bottom', { x: 0, y: -0, z: 0.5 }] as const,
+            ['top', { x: 0, y: -0, z: -0.5 }] as const,
+            ['left', { x: 0.5, y: -0, z: 0 }] as const,
+            ['right', { x: -0.5, y: -0, z: 0 }] as const,
 
             // Should mirror the coordinates when using literals
-            [[1, 2, 3], { x: -1, y: 2, z: -3 }],
+            [[1, 2, 3], { x: -1, y: 2, z: -3 }] as const,
         ];
 
         it.each(cases)('should support %s', (mode: any, expected: any) => {
@@ -7792,59 +8534,59 @@ describe('AuxLibrary', () => {
             [
                 ['hello'],
                 '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824',
-            ],
+            ] as const,
             [
                 ['🙂'],
                 'd06f1525f791397809f9bc98682b5c13318eca4c3123433467fd4dffda44fd14',
-            ],
+            ] as const,
             [
                 ['abc', 'def'],
                 'bef57ec7f53a6d40beb640a780a639c83bc29ac8a9816f1fc6c5c6dcd93c4721',
-            ],
+            ] as const,
             [
                 [67],
                 '49d180ecf56132819571bf39d9b7b342522a2ac6d23c1418d3338251bfe469c8',
-            ],
+            ] as const,
             [
                 [true],
                 'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
-            ],
+            ] as const,
             [
                 [false],
                 'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa',
-            ],
+            ] as const,
             [
                 [Number.POSITIVE_INFINITY],
                 'd0067cad9a63e0813759a2bb841051ca73570c0da2e08e840a8eb45db6a7a010',
-            ],
+            ] as const,
             [
                 [Number.NEGATIVE_INFINITY],
                 'c64ddf11bcd45660f0cf66dd0c22d2b4570ef3d3fc6527a9a6f6c722aefa3c39',
-            ],
+            ] as const,
             [
                 [Number.NaN],
                 'd5b592c05dc25b5032553f1b27f4139be95e881f73db33b02b05ab20c3f9981e',
-            ],
+            ] as const,
             [
                 [{ abc: 'def' }],
                 '2c3fbda5f48b04e39d3a87f89e5bd00b48b6e5e3c4a093de65de0a87b8cc8b3b',
-            ],
+            ] as const,
             [
                 [{ zyx: '123', abc: 'def' }],
                 'c7e4f397690dce3230846bd71f7d28b6d0fbd14763e58d41fb2713fc74015718',
-            ],
+            ] as const,
             [
                 [{ zyx: '123', abc: 'def' }],
                 'c7e4f397690dce3230846bd71f7d28b6d0fbd14763e58d41fb2713fc74015718',
-            ],
+            ] as const,
             [
-                [null],
+                [null as any],
                 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-            ],
+            ] as const,
             [
-                [undefined],
+                [undefined as any],
                 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-            ],
+            ] as const,
         ];
 
         it.each(cases)('should hash %s', (given, expected) => {
@@ -7855,35 +8597,35 @@ describe('AuxLibrary', () => {
             [
                 { zyx: '123', abc: 'def' },
                 'c7e4f397690dce3230846bd71f7d28b6d0fbd14763e58d41fb2713fc74015718',
-            ],
+            ] as const,
             [
                 { abc: 'def', zyx: '123' },
                 'c7e4f397690dce3230846bd71f7d28b6d0fbd14763e58d41fb2713fc74015718',
-            ],
+            ] as const,
             [
                 { '123': 'hello', '456': 'world' },
                 '0540a6ab3ec4db750b5092cb479c4dd10c1a7ccfe9731cff1927df0e125648a5',
-            ],
+            ] as const,
             [
                 { '456': 'world', '123': 'hello' },
                 '0540a6ab3ec4db750b5092cb479c4dd10c1a7ccfe9731cff1927df0e125648a5',
-            ],
+            ] as const,
             [
                 { '🙂': 'hello', '✌': 'world' },
                 '83b4bdacd5dacdc99ede50fcf65f06989aaede20b002de17c9805a2d019054d5',
-            ],
+            ] as const,
             [
                 { '✌': 'world', '🙂': 'hello' },
                 '83b4bdacd5dacdc99ede50fcf65f06989aaede20b002de17c9805a2d019054d5',
-            ],
+            ] as const,
             [
                 ['world', 'hello'],
                 'be3181b8eb39bf890c9d366a0fd33daea5ab5486d537c44c52d9e85af8da96c2',
-            ],
+            ] as const,
             [
                 ['hello', 'world'],
                 '94bedb26fb1cb9547b5b77902e89522f313c7f7fe2e9f0175cfb0a244878ee07',
-            ],
+            ] as const,
         ];
 
         it.each(objectCases)('should hash %s consistently', (obj, expected) => {
@@ -7938,55 +8680,55 @@ describe('AuxLibrary', () => {
             [
                 ['hello'],
                 '9b71d224bd62f3785d96d46ad3ea3d73319bfbc2890caadae2dff72519673ca72323c3d99ba5c11d7c7acc6e14b8c5da0c4663475c2e5c3adef46f73bcdec043',
-            ],
+            ] as const,
             [
                 ['🙂'],
                 '5bed63c241f2830e8eb29ac8d9fea5e9441e8bb9104768c593dd46f6c97f947a160def7ce58dcba5e9d33a88e2b75fc62802d67ab30460442d23f66403b415f4',
-            ],
+            ] as const,
             [
                 ['abc', 'def'],
                 'e32ef19623e8ed9d267f657a81944b3d07adbb768518068e88435745564e8d4150a0a703be2a7d88b61e3d390c2bb97e2d4c311fdc69d6b1267f05f59aa920e7',
-            ],
+            ] as const,
             [
                 [67],
                 'ce4dd661e4d69073c7999282048ea9ee91932db0d699f8b13b2db70fe532d987ac4a0aef309b82e1ad2aa6c2f2f60473093cd1e399a737cff3f9e70585d36be7',
-            ],
+            ] as const,
             [
                 [true],
                 '9120cd5faef07a08e971ff024a3fcbea1e3a6b44142a6d82ca28c6c42e4f852595bcf53d81d776f10541045abdb7c37950629415d0dc66c8d86c64a5606d32de',
-            ],
+            ] as const,
             [
                 [false],
                 '719fa67eef49c4b2a2b83f0c62bddd88c106aaadb7e21ae057c8802b700e36f81fe3f144812d8b05d66dc663d908b25645e153262cf6d457aa34e684af9e328d',
-            ],
+            ] as const,
             [
                 [Number.POSITIVE_INFINITY],
                 '7de872ed1c41ce3901bb7f12f20b0c0106331fe5b5ecc5fbbcf3ce6c79df4da595ebb7e221ab8b7fc5d918583eac6890ade1c26436335d3835828011204b7679',
-            ],
+            ] as const,
             [
                 [Number.NEGATIVE_INFINITY],
                 '280bcf3496f0fbe479df09e4e6e87f48179e6364a0065ae14d9eab5902f98a74e8e8919cf35b9d881a06562e8c3b11a04d073c03ddf393791e7619d8dc215d61',
-            ],
+            ] as const,
             [
                 [Number.NaN],
                 '441dfabd0126a33e4677d76d73e4e340c5805efdf58fe84bf4a1f7815e676f0e159be74b2de6bed17d1ff766ff1d4915ca04cb781c0c5d045e1d14886eb1f31c',
-            ],
+            ] as const,
             [
                 [{ abc: 'def' }],
                 '3f51fd341818ef13b5943ceb3fd0972a6a2be1c3453554261b9f2a7012f3d351b5e4a8a34fce35310bcd80f85afed4b9c4e615622ca52a3fa5ea586774ada743',
-            ],
+            ] as const,
             [
                 [{ zyx: '123', abc: 'def' }],
                 '8f2534f5d8f10fe6f78abf70de8f2c70b2286aa19ef02df494ef8e0992cb29a1e5614cdf216719b1d33d2e266a1e873c04eb08ce421bee91c52b26a702a979fc',
-            ],
+            ] as const,
             [
-                [null],
+                [null as any],
                 'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e',
-            ],
+            ] as const,
             [
-                [undefined],
+                [undefined as any],
                 'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e',
-            ],
+            ] as const,
         ];
 
         it.each(cases)('should hash %s', (given, expected) => {
@@ -7997,35 +8739,35 @@ describe('AuxLibrary', () => {
             [
                 { zyx: '123', abc: 'def' },
                 '8f2534f5d8f10fe6f78abf70de8f2c70b2286aa19ef02df494ef8e0992cb29a1e5614cdf216719b1d33d2e266a1e873c04eb08ce421bee91c52b26a702a979fc',
-            ],
+            ] as const,
             [
                 { abc: 'def', zyx: '123' },
                 '8f2534f5d8f10fe6f78abf70de8f2c70b2286aa19ef02df494ef8e0992cb29a1e5614cdf216719b1d33d2e266a1e873c04eb08ce421bee91c52b26a702a979fc',
-            ],
+            ] as const,
             [
                 { '123': 'hello', '456': 'world' },
                 '82a6687d1edca06e611f569200cdac8e15451d8537066582aca318c6236beb602f0c1cffbc8da338ffe32f80c324badc3ba3e69f03d20ecee993910d60b9702f',
-            ],
+            ] as const,
             [
                 { '456': 'world', '123': 'hello' },
                 '82a6687d1edca06e611f569200cdac8e15451d8537066582aca318c6236beb602f0c1cffbc8da338ffe32f80c324badc3ba3e69f03d20ecee993910d60b9702f',
-            ],
+            ] as const,
             [
                 { '🙂': 'hello', '✌': 'world' },
                 'ef52465917f42013430afe76278a58657cf8de3c3f84b1709d0aacae3a88bee5e61a31e0f9f265b58672f6630bb8d5ea2384317c1b97e30fce3eaa4a646ff6c1',
-            ],
+            ] as const,
             [
                 { '✌': 'world', '🙂': 'hello' },
                 'ef52465917f42013430afe76278a58657cf8de3c3f84b1709d0aacae3a88bee5e61a31e0f9f265b58672f6630bb8d5ea2384317c1b97e30fce3eaa4a646ff6c1',
-            ],
+            ] as const,
             [
                 ['world', 'hello'],
                 'be00d2974eb4998e3e629e559067f04766bf91913f9f5ce10befd6e6c048d63603178f6cf7b4d353db15e032831c63f9647204812db09212d29df1114142b754',
-            ],
+            ] as const,
             [
                 ['hello', 'world'],
                 'f3ea9708eb605ce26918a18a24e3ca6a5f00f0455966b6fb8c65d5fe637a19a60a47b12913d5493a72acda9789bccb725feaca3a8d66a5cf94d2963fbc0cf4e6',
-            ],
+            ] as const,
         ];
 
         it.each(objectCases)('should hash %s consistently', (obj, expected) => {
@@ -8081,67 +8823,67 @@ describe('AuxLibrary', () => {
                 ['hello'],
                 'key',
                 '9307b3b915efb5171ff14d8cb55fbcc798c6c0ef1456d66ded1a6aa723a58b7b',
-            ],
+            ] as const,
             [
                 ['🙂'],
                 'key',
                 '79ec106e8106784f99972a5259331c1325d63514e3eec745ea9d44dbd884c29a',
-            ],
+            ] as const,
             [
                 ['abc', 'def'],
                 'key',
                 '4c5277d3e85316d1762c7e219862a9440546171f5ae5f1b29499ff9fbdd4c56a',
-            ],
+            ] as const,
             [
                 [67],
                 'key',
                 'ecc541509c57f9b9d47ed5354d112bb55b6a65f75365cf07833676f64461c8a8',
-            ],
+            ] as const,
             [
                 [true],
                 'key',
                 '205c94f3b0222e3b464c33da902a1ae1b3a04a4494dcf7145e4228ad23333258',
-            ],
+            ] as const,
             [
                 [false],
                 'key',
                 '2efa4359b49cb498c7ffdd1b1ad6920b9d52764bfee7a7a2ee64117237fdf23c',
-            ],
+            ] as const,
             [
                 [Number.POSITIVE_INFINITY],
                 'key',
                 '38c0a7feea67ce43c10292ff37a136743b962313f1b77486e68780ded5810402',
-            ],
+            ] as const,
             [
                 [Number.NEGATIVE_INFINITY],
                 'key',
                 '4e36d71a0d8a7bf596975426c22ed528d7ab2d41b58e6dc8ff3cf073c8746035',
-            ],
+            ] as const,
             [
                 [Number.NaN],
                 'key',
                 '7f5ef14748c13f8a903dcea8a0d22a25334be45d07371fc59cafaf0b776473ee',
-            ],
+            ] as const,
             [
                 [{ abc: 'def' }],
                 'key',
                 '12bb607ecb4f82ecda3cc248821267a24e253f02c90d39264f5125a504055d54',
-            ],
+            ] as const,
             [
                 [{ zyx: '123', abc: 'def' }],
                 'key',
                 '179c61a016c55c4e92525f84ff987a32e3fbd158555186b7386558931bca66cd',
-            ],
+            ] as const,
             [
-                [null],
+                [null as any],
                 'key',
                 '5d5d139563c95b5967b9bd9a8c9b233a9dedb45072794cd232dc1b74832607d0',
-            ],
+            ] as const,
             [
-                [undefined],
+                [undefined as any],
                 'key',
                 '5d5d139563c95b5967b9bd9a8c9b233a9dedb45072794cd232dc1b74832607d0',
-            ],
+            ] as const,
         ];
 
         it.each(cases)('should hash %s', (given, key, expected) => {
@@ -8153,42 +8895,42 @@ describe('AuxLibrary', () => {
                 { zyx: '123', abc: 'def' },
                 'key',
                 '179c61a016c55c4e92525f84ff987a32e3fbd158555186b7386558931bca66cd',
-            ],
+            ] as const,
             [
                 { abc: 'def', zyx: '123' },
                 'key',
                 '179c61a016c55c4e92525f84ff987a32e3fbd158555186b7386558931bca66cd',
-            ],
+            ] as const,
             [
                 { '123': 'hello', '456': 'world' },
                 'key',
                 'd22a7cc6eaaa04f29e382a829ae5404e623971036f0d8d1448d1c82564ed71ca',
-            ],
+            ] as const,
             [
                 { '456': 'world', '123': 'hello' },
                 'key',
                 'd22a7cc6eaaa04f29e382a829ae5404e623971036f0d8d1448d1c82564ed71ca',
-            ],
+            ] as const,
             [
                 { '🙂': 'hello', '✌': 'world' },
                 'key',
                 '2bffd8725c1d6583e2264fffebf5617d0eea6f71f258df9041ed5107379e8698',
-            ],
+            ] as const,
             [
                 { '✌': 'world', '🙂': 'hello' },
                 'key',
                 '2bffd8725c1d6583e2264fffebf5617d0eea6f71f258df9041ed5107379e8698',
-            ],
+            ] as const,
             [
                 ['world', 'hello'],
                 'key',
                 '153fc5c11827588a37808916ef8814d775f6e3a72f884530544860d476d2130a',
-            ],
+            ] as const,
             [
                 ['hello', 'world'],
                 'key',
                 '66fddc9dc92816d844d6c1fa2e6f123df58c3d5afb9387a34488a6828a60baef',
-            ],
+            ] as const,
         ];
 
         it.each(objectCases)(
@@ -8293,67 +9035,67 @@ describe('AuxLibrary', () => {
                 ['hello'],
                 'key',
                 'ff06ab36757777815c008d32c8e14a705b4e7bf310351a06a23b612dc4c7433e7757d20525a5593b71020ea2ee162d2311b247e9855862b270122419652c0c92',
-            ],
+            ] as const,
             [
                 ['🙂'],
                 'key',
                 'bdc92de9e2218fdd4d55de8d98f624219479cad87c6a7b4d814f559c4bc2e175b1dc283668cab48edfc420cafbff1afdca5842857bf348e9f0b0e8ada532d648',
-            ],
+            ] as const,
             [
                 ['abc', 'def'],
                 'key',
                 'e97348dbd79dff60a3c8e89f4e248b230d8c89c6021615f492510270dd82cf8154b28461fb625ff5554649225a0c3709e42f7f5d405a6f5fbaa1184e59976826',
-            ],
+            ] as const,
             [
                 [67],
                 'key',
                 'd7fb21b12a486cfca737b567354334a8e97e0bac1e55bc0a6c647e2b5a3013f532069fc0a07f24892d525976a2ea0824953ca56608500556bfd28d9829299824',
-            ],
+            ] as const,
             [
                 [true],
                 'key',
                 '92a84cd18c579c1fa626fab2b0facdb960b727e3cac7f8f21cea543382fedd18d99a1948a771ba540e5a285529c18a15bf6c275131e11f5ba13065a92327ed03',
-            ],
+            ] as const,
             [
                 [false],
                 'key',
                 '9000cf009e127f9e69a2fb3c1c5f13db96a253b9e60c477ea2ae745d845226e56112e9d0dd569c9a0f1840122bd806dae21ff53c98c94b12f607c80275cd7ef2',
-            ],
+            ] as const,
             [
                 [Number.POSITIVE_INFINITY],
                 'key',
                 'ad03855ee09aa097fab9d33768ed5e420d2965c43810640f36b56bbd6815a971df96a3af535672f90458283be5ce6cd3fa230d261a69add1484f30d0138f00e9',
-            ],
+            ] as const,
             [
                 [Number.NEGATIVE_INFINITY],
                 'key',
                 'eab4848252a948f1e0ae4af937c1b00820ee5580512a05965c29013d523a3055353834bfa87f9d2e89fec95f361682970b611839b790313053b675b6a01c2335',
-            ],
+            ] as const,
             [
                 [Number.NaN],
                 'key',
                 '7c8698212d4dd6dc82443c02a202c737bc10db008f45d2c76e39d0a237c0355360b88aa580bfd85790c7f4b566f6adb87ba706c58935747b95056b87ca33087d',
-            ],
+            ] as const,
             [
                 [{ abc: 'def' }],
                 'key',
                 'bf358fbab3ee5dcb98521e68a8e2dd4c14fa907d3d524b34958a8ac00f87be421a9ea59a17ea77889ec510800ea18b341598cbb75397d8e74313ef6245122f9b',
-            ],
+            ] as const,
             [
                 [{ zyx: '123', abc: 'def' }],
                 'key',
                 '41db5a3c3855fbf4dd4b0b4883323c46bbef513edbb17aa8ea2bc2420c4e12c78e3f3c944dc86ec74e152bd3dfd4f358e704467bef4810d0aac43f5fcbb30ef2',
-            ],
+            ] as const,
             [
-                [null],
+                [null as any],
                 'key',
                 '84fa5aa0279bbc473267d05a53ea03310a987cecc4c1535ff29b6d76b8f1444a728df3aadb89d4a9a6709e1998f373566e8f824a8ca93b1821f0b69bc2a2f65e',
-            ],
+            ] as const,
             [
-                [undefined],
+                [undefined as any],
                 'key',
                 '84fa5aa0279bbc473267d05a53ea03310a987cecc4c1535ff29b6d76b8f1444a728df3aadb89d4a9a6709e1998f373566e8f824a8ca93b1821f0b69bc2a2f65e',
-            ],
+            ] as const,
         ];
 
         it.each(cases)('should hash %s', (given, key, expected) => {
@@ -8365,42 +9107,42 @@ describe('AuxLibrary', () => {
                 { zyx: '123', abc: 'def' },
                 'key',
                 '41db5a3c3855fbf4dd4b0b4883323c46bbef513edbb17aa8ea2bc2420c4e12c78e3f3c944dc86ec74e152bd3dfd4f358e704467bef4810d0aac43f5fcbb30ef2',
-            ],
+            ] as const,
             [
                 { abc: 'def', zyx: '123' },
                 'key',
                 '41db5a3c3855fbf4dd4b0b4883323c46bbef513edbb17aa8ea2bc2420c4e12c78e3f3c944dc86ec74e152bd3dfd4f358e704467bef4810d0aac43f5fcbb30ef2',
-            ],
+            ] as const,
             [
                 { '123': 'hello', '456': 'world' },
                 'key',
                 '3305ed6725612d54962de298fbdc7d60caa1c1638e424a147062ea42fa35ce19fc2dcfd5eecb16787068c0b05edec6847b3953161d2f8464803ba5fe13a94ad6',
-            ],
+            ] as const,
             [
                 { '456': 'world', '123': 'hello' },
                 'key',
                 '3305ed6725612d54962de298fbdc7d60caa1c1638e424a147062ea42fa35ce19fc2dcfd5eecb16787068c0b05edec6847b3953161d2f8464803ba5fe13a94ad6',
-            ],
+            ] as const,
             [
                 { '🙂': 'hello', '✌': 'world' },
                 'key',
                 '319ce31fa5ac3573c8dfc8423b5eb6af0b8ead7d10a571139c61d079c2f60cbe0120471aaf44279c20849b54add37d768b768c320d22cbfae559ed351ff77162',
-            ],
+            ] as const,
             [
                 { '✌': 'world', '🙂': 'hello' },
                 'key',
                 '319ce31fa5ac3573c8dfc8423b5eb6af0b8ead7d10a571139c61d079c2f60cbe0120471aaf44279c20849b54add37d768b768c320d22cbfae559ed351ff77162',
-            ],
+            ] as const,
             [
                 ['world', 'hello'],
                 'key',
                 'd988342d1941c41b2f599dddb1402870379e9bfe11dd32aca6a22f4c5ed1b7b0655f84e81d0d8b37fb3be15705fce0842ba92ddf6bc0f55b81d2693c1f7be024',
-            ],
+            ] as const,
             [
                 ['hello', 'world'],
                 'key',
                 'dd68ae93fad71176f9be8f97c2c6bddbadb6a021ffced6c37efa78628d6f7273afa72f431e1f4e4c20c79cfb6f056bb7672fd359fb355be4cdf9e08b8349b533',
-            ],
+            ] as const,
         ];
 
         it.each(objectCases)(
@@ -8867,11 +9609,33 @@ describe('AuxLibrary', () => {
             const result = library.api.perf.getStats();
 
             // only counts the bots in the context
-            expect(result.shoutTimers).toEqual([
+            expect(result.shoutTimes).toEqual([
                 { tag: 'abc', timeMs: 99 },
                 { tag: 'def', timeMs: 123 },
                 { tag: 'haha', timeMs: 999 },
             ]);
+        });
+
+        it('should include the total number of interval and timeout timers', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            const bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+
+            context.recordBotTimer(bot1.id, {
+                timerId: 1,
+                type: 'timeout',
+            });
+
+            context.recordBotTimer(bot2.id, {
+                timerId: 4,
+                type: 'timeout',
+            });
+
+            const result = library.api.perf.getStats();
+
+            // only counts the bots in the context
+            expect(result.numberOfActiveTimers).toBe(2);
         });
     });
 });

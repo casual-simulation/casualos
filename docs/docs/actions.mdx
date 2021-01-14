@@ -546,10 +546,393 @@ const id = uuid();
 player.toast(id);
 ```
 
+## Utility Actions
+
+### `animateTag(bot, tag, options)`
+
+Animates the tag on the given bot based on the specified parameters.
+Returns a promise that resolves when the animation is finished and throws an error when the animation is canceled.
+This is useful for gradually changing a tag on a bot over time. For example, moving a bot from point A to point B without teleporting it.
+
+<ActionLink action='animateTag(bot, tag, options)'/> is fully integrated with tag masks.
+This lets you animate tag values in the `tempLocal`, `local`, `player`, and `shared` spaces.
+
+The **first parameter** is the bot or list of bots that the tag should be animated on.
+
+The **second parameter** is the tag that should be animated.
+
+The **third parameter** are the options that should be used to animate the tag.
+If `null` is used, then any active animations for the tag on these bots will be canceled.
+It should be an object with the following properties:
+
+```typescript
+let options: {
+
+    /**
+     * The value that the animation should start at.
+     * If omitted, then the current tag value will be used.
+     */
+    fromValue?: number;
+
+    /**
+     * The value that the animation should end at.
+     */
+    toValue: number;
+
+    /**
+     * The number of seconds that the animation should take to complete.
+     */
+    duration: number;
+
+    /**
+     * The space that the tag should be animated in.
+     * If not specified, then "tempLocal" will be used.
+     * If set to false, then the bot will be edited instead of using tag masks.
+     * Additionally, if the specified space is the same as the space the bot lives in
+     * then the bot will be edited directly.
+     */
+    tagMaskSpace?: 'tempLocal' | 'local' | 'player' | 'shared' | false;
+
+    /**
+     * The options for easing.
+     * Can be an "easing type" or an object that specifies the type and mode.
+     * If an easing type is specified, then "inout" mode is used.
+     * If omitted, then "linear" "inout" is used.
+     */
+    easing?: 'linear'
+            | 'quadratic'
+            | 'cubic'
+            | 'quartic'
+            | 'quintic'
+            | 'sinusoidal'
+            | 'exponential'
+            | 'circular'
+            | 'elastic' 
+            | {
+        /**
+         * The type of easing.
+        */
+        type: 'linear'
+            | 'quadratic'
+            | 'cubic'
+            | 'quartic'
+            | 'quintic'
+            | 'sinusoidal'
+            | 'exponential'
+            | 'circular'
+            | 'elastic';
+
+        /**
+         * Whether to apply the easing at the
+         * start (in), end (out), or start and end (inout) of the tween.
+         */
+        mode: 'in' | 'out' | 'inout';
+    }
+};
+```
+
+#### Examples:
+
+1. Animate the `#count` tag from 0 to 1 over 5 seconds.
+```typescript
+await animateTag(bot, "count", {
+    fromValue: 0,
+    toValue: 1,
+    duration: 5
+});
+
+player.toast("Animation finished!");
+```
+
+2. Run 2 animations in sequence.
+```typescript
+await animateTag(bot, "homeX", {
+    fromValue: 0,
+    toValue: 5,
+    duration: 2
+});
+
+await animateTag(bot, "homeY", {
+    fromValue: 0,
+    toValue: 5,
+    duration: 2
+});
+```
+
+3. Run an animation while the `#loop` tag is true.
+```typescript
+while(tags.loop) {
+    await animateTag(bot, "homeX", {
+        fromValue: 0,
+        toValue: 5,
+        duration: 2
+    });
+}
+```
+
+4. Run an animation with a "bouncy" easing mode.
+```typescript
+await animateTag(bot, "homeX", {
+    fromValue: 0,
+    toValue: 5,
+    duration: 2,
+    easing: {
+        mode: "elastic",
+        type: "out"
+    }
+});
+```
+
+5. Animate a tag in `player` space.
+```typescript
+await animateTag(bot, "homeX", {
+    fromValue: 0,
+    toValue: 5,
+    duration: 2,
+    tagMaskSpace: 'player'
+});
+```
+
+6. Cancel animations on the `#homeX` tag.
+```typescript
+animateTag(bot, "homeX", {
+    fromValue: 0,
+    toValue: 5,
+    duration: 2
+}).then(() => {
+    player.toast("Animation Finished!");
+}).catch(() => {
+    player.toast("Animation Canceled!");
+});
+
+await sleep(500);
+
+animateTag(bot, "homeX", null);
+```
+
+### `clearAnimations(bot, tag?)`
+
+Cancels the animations that are running on the given bot(s).
+If a tag is specified then only animations for the given tag will be canceled.
+
+The **first parameter** is the bot or list of bots that should cancel their animations.
+
+The **second parameter** is optional and is the tag that the animations should be canceled for.
+
+#### Examples:
+
+1. Cancel all animations on a bot.
+```typescript
+clearAnimations(bot);
+```
+
+2. Cancel animations for `#myTag` on a bot.
+```typescript
+clearAnimations(bot, 'myTag');
+```
+
+3. Cancel animations on all bots.
+```typescript
+clearAnimations(getBots());
+```
+
+### `setTag(bot, tag, value)`
+
+
+Sets the given tag to the given value on the given bot, list of bots, or mod.
+
+The **first parameter** is the bot, list of bots, or mod that the tag should be set on.
+
+The **second parameter** is the tag that should be changed.
+
+The **third parameter** is the value that should be placed into the tag(s).
+
+#### Examples:
+
+1. Set a bot's <TagLink tag='color'/> to `green`.
+```typescript
+setTag(this, "#color", "green");
+```
+
+### `getTag(bot, tag)`
+
+
+Gets the given tag value from the given bot.
+
+The **first parameter** is the bot that the tag should be retrieved from.
+
+The **second parameter** is the tag that should be retrieved.
+
+#### Examples:
+
+1. Get the <TagLink tag='color'/> tag from `this` bot.
+```typescript
+const color = getTag(this, "#color");
+```
+
+### `setTagMask(bot, tag, value, space?)`
+
+Sets the given tag mask to the given value on the given bot or list of bots.
+If a space is specified, then the tag mask will be set inside that space.
+
+The **first parameter** is the bot or list of bots that the tag mask should be set on.
+
+The **second parameter** is the tag that should be changed.
+
+The **third parameter** is the value that should be placed into the tag(s).
+
+The **fourth parameter** is optional and is the space that the tag mask should exist in.
+If omitted, then the tag mask will be created in the `tempLocal` space.
+
+#### Examples:
+
+1. Set a bot's <TagLink tag='color'/> to `green`.
+```typescript
+setTagMask(this, "#color", "green");
+```
+
+2. Set a bot's <TagLink tag='color'/> to `green` in the `local` space.
+```typescript
+setTagMask(this, "#color", "green", "local");
+```
+
+### `clearTagMasks(bot, space?)`
+
+Clears the tag masks on the given bot or list of bots.
+If a space is specified, then only the tag masks in that space will be deleted.
+
+The **first parameter** is the bot or list of bots that the tag mask should be set on.
+
+The **fourth parameter** is optional and is the space that the tag mask should exist in.
+If omitted, then the tag masks in all spaces will be deleted.
+
+#### Examples:
+
+1. Clear all tag masks on a bot.
+```typescript
+clearTagMasks(this);
+```
+
+2. Clear all tag masks in the local space/
+```typescript
+clearTagMasks(this, "local");
+```
+
+### `insertTagText(bot, tag, index, text)`
+
+Inserts the given text into the tag at the given index.
+Useful for editing the text in a tag without interrupting other players that are editing the same tag.
+Returns the resulting raw tag value.
+
+The **first parameter** is the bot that should be edited.
+
+The **second parameter** is the tag that should be edited.
+
+The **third parameter** is the zero-based index that the text should be inserted at.
+
+The **fourth parameter** is the string of text that should be inserted.
+
+#### Examples:
+
+1. Add some text to the end of a tag.
+```typescript
+insertTagText(bot, "myTag", tags.myTag.length, "xyz");
+```
+
+2. Add some text to the beginning of a tag.
+```typescript
+insertTagText(bot, "myTag", 0, "abc");
+```
+
+### `insertTagMaskText(bot, tag, index, text, space?)`
+
+Inserts the given text into the tag mask at the given index.
+Useful for editing the text in a tag without interrupting other players that are editing the same tag.
+If a space is specified, then only the tag mask in that space will be changed.
+
+Returns the resulting raw tag value.
+
+The **first parameter** is the bot that should be edited.
+
+The **second parameter** is the tag that should be edited.
+
+The **third parameter** is the zero-based index that the text should be inserted at.
+
+The **fourth parameter** is the string of text that should be inserted.
+
+The **fifth parameter** is the space that the tag mask is in. If omitted, then the `tempLocal` space will be used.
+
+#### Examples:
+
+1. Add some text to the end of a tag mask.
+```typescript
+insertTagMaskText(bot, "myTag", tags.myTag.length, "xyz");
+```
+
+2. Add some text to the beginning of a tag mask that is in the `local` space.
+```typescript
+insertTagMaskText(bot, "myTag", 0, "abc", "local");
+```
+
+### `deleteTagText(bot, tag, index, count)`
+
+Deletes the specified number of characters from the given tag at the given index.
+Useful for editing the text in a tag without interrupting other players that are editing the same tag.
+Returns the resulting raw tag value.
+
+The **first parameter** is the bot that should be edited.
+
+The **second parameter** is the tag that should be edited.
+
+The **third parameter** is the zero-based index that the text should be deleted at.
+
+The **fourth parameter** is the number of characters that should be deleted.
+
+#### Examples:
+
+1. Delete the last two characters from a tag.
+```typescript
+deleteTagText(bot, "myTag", tags.myTag.length - 2, 2);
+```
+
+2. Delete the first 3 characters from a tag.
+```typescript
+deleteTagText(bot, "myTag", 0, 3);
+```
+
+### `deleteTagMaskText(bot, tag, index, count, space?)`
+
+Deletes the specified number of characters from the given tag mask at the given index.
+Useful for editing the text in a tag without interrupting other players that are editing the same tag.
+If a space is specified, then only the tag mask in that space will be changed.
+
+Returns the resulting raw tag value.
+
+The **first parameter** is the bot that should be edited.
+
+The **second parameter** is the tag that should be edited.
+
+The **third parameter** is the zero-based index that the text should be deleted at.
+
+The **fourth parameter** is the number of characters that should be deleted.
+
+The **fifth parameter** is the space that the tag mask is in. If omitted, then the `tempLocal` space will be used.
+
+#### Examples:
+
+1. Delete the last two characters from a tag mask.
+```typescript
+deleteTagText(bot, "myTag", tags.myTag.length - 2, 2);
+```
+
+2. Delete the first 3 characters from a tag mask in the `local` space.
+```typescript
+deleteTagText(bot, "myTag", 0, 3, "local");
+```
+
 ### `sleep(time)`
 
-
-Waits the amount of time provided, in ms.
+Waits the amount of time provided, in [miliseconds](https://en.wikipedia.org/wiki/Millisecond).
 
 Returns a promise that resolves when the time has been waited.
 
@@ -3731,202 +4114,6 @@ const players = await server.players();
 player.toast("Players " + players.join(','));
 ```
 
-## Utility Actions
-
-### `setTag(bot, tag, value)`
-
-
-Sets the given tag to the given value on the given bot, list of bots, or mod.
-
-The **first parameter** is the bot, list of bots, or mod that the tag should be set on.
-
-The **second parameter** is the tag that should be changed.
-
-The **third parameter** is the value that should be placed into the tag(s).
-
-#### Examples:
-
-1. Set a bot's <TagLink tag='color'/> to `green`.
-```typescript
-setTag(this, "#color", "green");
-```
-
-### `getTag(bot, tag)`
-
-
-Gets the given tag value from the given bot.
-
-The **first parameter** is the bot that the tag should be retrieved from.
-
-The **second parameter** is the tag that should be retrieved.
-
-#### Examples:
-
-1. Get the <TagLink tag='color'/> tag from `this` bot.
-```typescript
-const color = getTag(this, "#color");
-```
-
-### `setTagMask(bot, tag, value, space?)`
-
-Sets the given tag mask to the given value on the given bot or list of bots.
-If a space is specified, then the tag mask will be set inside that space.
-
-The **first parameter** is the bot or list of bots that the tag mask should be set on.
-
-The **second parameter** is the tag that should be changed.
-
-The **third parameter** is the value that should be placed into the tag(s).
-
-The **fourth parameter** is optional and is the space that the tag mask should exist in.
-If omitted, then the tag mask will be created in the `tempLocal` space.
-
-#### Examples:
-
-1. Set a bot's <TagLink tag='color'/> to `green`.
-```typescript
-setTagMask(this, "#color", "green");
-```
-
-2. Set a bot's <TagLink tag='color'/> to `green` in the `local` space.
-```typescript
-setTagMask(this, "#color", "green", "local");
-```
-
-### `clearTagMasks(bot, space?)`
-
-Clears the tag masks on the given bot or list of bots.
-If a space is specified, then only the tag masks in that space will be deleted.
-
-The **first parameter** is the bot or list of bots that the tag mask should be set on.
-
-The **fourth parameter** is optional and is the space that the tag mask should exist in.
-If omitted, then the tag masks in all spaces will be deleted.
-
-#### Examples:
-
-1. Clear all tag masks on a bot.
-```typescript
-clearTagMasks(this);
-```
-
-2. Clear all tag masks in the local space/
-```typescript
-clearTagMasks(this, "local");
-```
-
-### `insertTagText(bot, tag, index, text)`
-
-Inserts the given text into the tag at the given index.
-Useful for editing the text in a tag without interrupting other players that are editing the same tag.
-Returns the resulting raw tag value.
-
-The **first parameter** is the bot that should be edited.
-
-The **second parameter** is the tag that should be edited.
-
-The **third parameter** is the zero-based index that the text should be inserted at.
-
-The **fourth parameter** is the string of text that should be inserted.
-
-#### Examples:
-
-1. Add some text to the end of a tag.
-```typescript
-insertTagText(bot, "myTag", tags.myTag.length, "xyz");
-```
-
-2. Add some text to the beginning of a tag.
-```typescript
-insertTagText(bot, "myTag", 0, "abc");
-```
-
-### `insertTagMaskText(bot, tag, index, text, space?)`
-
-Inserts the given text into the tag mask at the given index.
-Useful for editing the text in a tag without interrupting other players that are editing the same tag.
-If a space is specified, then only the tag mask in that space will be changed.
-
-Returns the resulting raw tag value.
-
-The **first parameter** is the bot that should be edited.
-
-The **second parameter** is the tag that should be edited.
-
-The **third parameter** is the zero-based index that the text should be inserted at.
-
-The **fourth parameter** is the string of text that should be inserted.
-
-The **fifth parameter** is the space that the tag mask is in. If omitted, then the `tempLocal` space will be used.
-
-#### Examples:
-
-1. Add some text to the end of a tag mask.
-```typescript
-insertTagMaskText(bot, "myTag", tags.myTag.length, "xyz");
-```
-
-2. Add some text to the beginning of a tag mask that is in the `local` space.
-```typescript
-insertTagMaskText(bot, "myTag", 0, "abc", "local");
-```
-
-### `deleteTagText(bot, tag, index, count)`
-
-Deletes the specified number of characters from the given tag at the given index.
-Useful for editing the text in a tag without interrupting other players that are editing the same tag.
-Returns the resulting raw tag value.
-
-The **first parameter** is the bot that should be edited.
-
-The **second parameter** is the tag that should be edited.
-
-The **third parameter** is the zero-based index that the text should be deleted at.
-
-The **fourth parameter** is the number of characters that should be deleted.
-
-#### Examples:
-
-1. Delete the last two characters from a tag.
-```typescript
-deleteTagText(bot, "myTag", tags.myTag.length - 2, 2);
-```
-
-2. Delete the first 3 characters from a tag.
-```typescript
-deleteTagText(bot, "myTag", 0, 3);
-```
-
-### `deleteTagMaskText(bot, tag, index, count, space?)`
-
-Deletes the specified number of characters from the given tag mask at the given index.
-Useful for editing the text in a tag without interrupting other players that are editing the same tag.
-If a space is specified, then only the tag mask in that space will be changed.
-
-Returns the resulting raw tag value.
-
-The **first parameter** is the bot that should be edited.
-
-The **second parameter** is the tag that should be edited.
-
-The **third parameter** is the zero-based index that the text should be deleted at.
-
-The **fourth parameter** is the number of characters that should be deleted.
-
-The **fifth parameter** is the space that the tag mask is in. If omitted, then the `tempLocal` space will be used.
-
-#### Examples:
-
-1. Delete the last two characters from a tag mask.
-```typescript
-deleteTagText(bot, "myTag", tags.myTag.length - 2, 2);
-```
-
-2. Delete the first 3 characters from a tag mask in the `local` space.
-```typescript
-deleteTagText(bot, "myTag", 0, 3, "local");
-```
-
 ## Math Actions
 
 ### `math.sum(list)`
@@ -4842,10 +5029,15 @@ let stats: {
      * A list shouts and their associated execution time (in miliseconds).
      * Sorted from largest time to smallest.
      */
-    shoutTimers: {
+    shoutTimes: {
         tag: string,
         timeMs: number
     }[];
+
+    /**
+     * The total number of active setTimeout() and setInterval() timers that are active.
+     */
+    numberOfActiveTimers: number;
 };
 ```
 

@@ -130,7 +130,10 @@ describe('Atom2', () => {
     });
 
     describe('atomId()', () => {
-        const excludePriorityCases = [['null', null], ['undefined', undefined]];
+        const excludePriorityCases = [
+            ['null', null as any] as const,
+            ['undefined', undefined as any] as const,
+        ];
         it.each(excludePriorityCases)(
             'should exclude the priority if it is %s',
             (desc, val) => {

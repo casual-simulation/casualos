@@ -1335,11 +1335,11 @@ describe('AuxHelper', () => {
             });
 
             const falsyTests = [
-                ['0'],
-                ['""'],
-                ['null'],
-                ['undefined'],
-                ['NaN'],
+                ['0'] as const,
+                ['""'] as const,
+                ['null'] as const,
+                ['undefined'] as const,
+                ['NaN'] as const,
             ];
 
             it.each(falsyTests)(

@@ -101,6 +101,16 @@ export class Text3D extends Object3D {
     }
 
     /**
+     * The bounding box of this text 3d in local space.
+     */
+    private get _localBoundingBox(): Box3 {
+        if (this._mesh) {
+            return this._mesh.geometry.boundingBox;
+        }
+        return new Box3();
+    }
+
+    /**
      * Create text 3d.
      * @param font what font to use for the text3d.
      */
@@ -299,14 +309,14 @@ export class Text3D extends Object3D {
 
     /**
      * Calculates the font size required so that this text fits the given target bounding box.
-     * @param target The target bounding box.
+     * @param height The target height that the text should fit in.
      * @param minFontSize The minimum allowed font size.
      * @param maxFontSize The maximum allowed font size.
      * @param fit The maximum difference in font size between a perfect fit to the target and the calculated fit.
      * @param maxIterations The maximum number of iterations that the binary search should perform.
      */
     public async calculateFontSizeToFit(
-        target: Box3,
+        height: number,
         minFontSize = 0.1 * Text3D.defaultFontSize,
         maxFontSize = 2 * Text3D.defaultFontSize,
         fit: number = 0.01,
@@ -320,17 +330,13 @@ export class Text3D extends Object3D {
         text.updateMatrixWorld(true);
 
         try {
-            const targetBoundingBox = target;
-            const targetSize = new Vector3();
-            targetBoundingBox.getSize(targetSize);
-
             let lowerBound = 0;
             let upperBound = maxFontSize;
             let current = midpoint(lowerBound, upperBound);
             let currentSize = new Vector3();
             let bestFit = Infinity;
             let bestFitSize = current;
-            text._boundingBox.getSize(currentSize);
+            text._localBoundingBox.getSize(currentSize);
 
             for (let i = 0; i < maxIterations; i++) {
                 // update the font size
@@ -338,9 +344,10 @@ export class Text3D extends Object3D {
                 await text.sync();
 
                 // check the bounding box size compared to the bot
-                text._boundingBox.getSize(currentSize);
+                text._localBoundingBox.getSize(currentSize);
 
-                const delta = currentSize.z - targetSize.z;
+                // axis is always Y because we are comparing in local space
+                const delta = currentSize.y - height;
 
                 // While the best fit is larger than the target
                 // box, choose the smallest delta
