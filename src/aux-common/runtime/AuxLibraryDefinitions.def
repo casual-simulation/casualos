@@ -1,3 +1,5 @@
+import { ShowUploadFileAction } from '../bots';
+
 /**
  * Contains information about the version of AUX that is running.
  */
@@ -1355,6 +1357,26 @@ declare interface RunScriptAction extends AsyncAction {
  */
 declare interface ShowUploadAuxFileAction {
     type: 'show_upload_aux_file';
+}
+
+/**
+ * Defines an interface that represents a file that was uploaded.
+ */
+declare interface UploadedFile {
+    /**
+     * The name of the file that was uploaded.
+     */
+    name: string;
+
+    /**
+     * The size of the file in bytes.
+     */
+    size: number;
+
+    /**
+     * The data that the file contains.
+     */
+    data: string | ArrayBuffer;
 }
 
 /**
@@ -2975,6 +2997,11 @@ declare global {
          * Shows the "Upload AUX File" dialog.
          */
         showUploadAuxFile(): ShowUploadAuxFileAction;
+
+        /**
+         * Shows the "Upload Files" dialog.
+         */
+        showUploadFiles(): Promise<UploadedFile[]>;
 
         /**
          * Loads the server with the given ID.
