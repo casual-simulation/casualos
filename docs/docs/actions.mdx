@@ -1957,6 +1957,52 @@ The **first parameter** is the text that should be copied to the player's clipbo
 player.setClipboard("hello");
 ```
 
+### `player.showUploadFiles()`
+
+Shows the "Upload Files" dialog which lets the user select some files to upload to the server.
+Returns a promise that resolves with the list of files that were uploaded.
+
+Each file is an object with the following structure:
+```typescript
+let file: {
+    /**
+     * The name of the file.
+     */
+    name: string;
+
+    /**
+     * The size of the file in bytes.
+     */
+    size: number;
+
+    /**
+     * The data in the file.
+     * If the file is a text file, the data will be a string.
+     * If the file is not a text file, then the data will be an ArrayBuffer.
+     *
+     * Text files have one of the following extensions:
+     * .txt
+     * .json
+     * .md
+     * .aux
+     * .html
+     * .js
+     * .ts
+     * All the other file extensions map to an ArrayBuffer.
+     */
+    data: string | ArrayBuffer;
+};
+```
+
+#### Examples:
+
+1. Show the "Upload Files" dialog.
+```typescript
+const files = await player.showUploadFiles();
+
+player.toast("You uploaded " + files.length + " file(s)!");
+```
+
 ### `player.showUploadAuxFile()`
 
 
