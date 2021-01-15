@@ -1,5 +1,16 @@
 # CasualOS Changelog
 
+## V1.3.13
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `player.showUploadFiles()` function.
+    -   Shows a dialog that can be used to upload arbitrary files.
+    -   Returns a promise that resolves with the list of files that were uploaded.
+    -   See the documentation for more info.
+
 ## V1.3.12
 
 #### Date: 1/13/2021
