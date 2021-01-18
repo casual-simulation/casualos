@@ -260,24 +260,27 @@ export abstract class Simulation3D
         this._subs.push(sub);
         return new Subscription(() => {
             sub.unsubscribe();
-            const group = this.dimensionGroupForBotAndTag(
-                bot3D.bot.id,
-                portalTag
-            );
-            if (group) {
-                this._dimensionsUpdated({
-                    calc: null,
-                    updatedBots: [],
-                    events: [...group.dimensions.values()].map((d) => ({
-                        type: 'dimension_removed',
-                        dimensionBot: bot3D.bot,
-                        dimensionTag: portalTag,
-                        dimension: d,
-                    })),
-                });
+            if (bot3D instanceof AuxBot3D) {
+                const groups = bot3D.container.children.filter(
+                    (c) => c instanceof DimensionGroup3D && c.boundBot === bot3D
+                ) as DimensionGroup3D[];
+                if (groups.length > 0) {
+                    const group = groups[0];
+                    this._dimensionsUpdated({
+                        calc: this._currentContext,
+                        updatedBots: [],
+                        events: [...group.dimensions.values()].map((d) => ({
+                            type: 'dimension_removed',
+                            dimensionBot: bot3D.bot,
+                            dimensionTag: portalTag,
+                            dimension: d,
+                        })),
+                    });
+
+                    // TODO: Support multiple dimensions for a bot.
+                    this._registeredBotDimensions.delete(bot3D.bot.id);
+                }
             }
-            // TODO: Support multiple dimensions for a bot.
-            this._registeredBotDimensions.delete(bot3D.bot.id);
         });
     }
 
@@ -367,6 +370,7 @@ export abstract class Simulation3D
                 const bots = this.findBotsById(group.bot.id);
                 for (let b of bots) {
                     if (b instanceof AuxBot3D) {
+                        group.boundBot = b;
                         b.container.add(group);
                         added = true;
                         break;

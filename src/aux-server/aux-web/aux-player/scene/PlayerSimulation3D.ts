@@ -193,19 +193,26 @@ export class PlayerSimulation3D extends Simulation3D {
         bot: PrecalculatedBot,
         event: DimensionAddedEvent
     ) {
-        let group = this._playerDimensionGroups.get(event.dimensionTag);
-        if (group) {
-            return null;
+        if (bot === this.simulation.helper.userBot) {
+            let group = this._playerDimensionGroups.get(event.dimensionTag);
+            if (group) {
+                return null;
+            }
+
+            group = this._constructDimensionGroup(event.dimensionTag, bot);
+            this._playerDimensionGroups.set(event.dimensionTag, group);
+
+            // TODO: Update to support locking dimensions
+            return group;
         }
 
-        group = this._constructDimensionGroup(event.dimensionTag, bot);
-        this._playerDimensionGroups.set(event.dimensionTag, group);
-
-        // TODO: Update to support locking dimensions
-        return group;
+        return this._constructDimensionGroup(event.dimensionTag, bot);
     }
 
-    protected _constructDimensionGroup(portalTag: string, bot: Bot) {
+    protected _constructDimensionGroup(
+        portalTag: string,
+        bot: Bot
+    ): DimensionGroup3D {
         return new DimensionGroup3D(
             this,
             bot,
