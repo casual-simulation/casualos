@@ -18,6 +18,7 @@
 
 -   Fixed an issue where bot labels would flicker when scaling the bot.
 -   Fixed an issue where tag masks would be incorrectly recorded by the UI as being removed in some cases.
+-   Fixed an issue where lines would render incorrectly on the first frame they were setup on.
 
 ## V1.3.12
 
