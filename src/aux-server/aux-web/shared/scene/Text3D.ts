@@ -112,18 +112,11 @@ export class Text3D extends Object3D {
 
     /**
      * Create text 3d.
-     * @param font what font to use for the text3d.
      */
-    constructor(width?: number) {
+    constructor() {
         super();
 
-        if (width === undefined) {
-            width = Text3D.defaultWidth;
-        } else if (width < Text3D.minWidth) {
-            width = Text3D.minWidth;
-        }
-
-        this.currentWidth = width;
+        let width = Text3D.defaultWidth;
 
         this._mesh = new TextMesh();
 
@@ -305,6 +298,26 @@ export class Text3D extends Object3D {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Sets the width of the text.
+     * @param width The width that the text should be.
+     */
+    public setWidth(width: number): boolean {
+        if (this.currentWidth !== width) {
+            if (width === undefined) {
+                width = Text3D.defaultWidth;
+            } else if (width < Text3D.minWidth) {
+                width = Text3D.minWidth;
+            }
+
+            this.currentWidth = width;
+            this._mesh.maxWidth = width;
+            return true;
+        }
+
+        return false;
     }
 
     /**
