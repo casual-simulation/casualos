@@ -3,6 +3,7 @@ import {
     Bot,
     LocalActions,
 } from '@casual-simulation/aux-common';
+import { DimensionGroup } from './DimensionGroup';
 
 /**
  * Defines an interface for a visualizer for a bot.
@@ -12,6 +13,11 @@ export interface AuxBotVisualizer {
      * The bot used by this visualizer.
      */
     bot: Bot;
+
+    /**
+     * The dimension group that this visualization belongs to.
+     */
+    dimensionGroup: DimensionGroup;
 
     /**
      * Indicates to the visualizer that the bot was updated.

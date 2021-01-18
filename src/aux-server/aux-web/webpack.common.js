@@ -115,6 +115,26 @@ function playerConfig() {
                         from: path.resolve(__dirname, 'aux-player', 'legal'),
                         to: path.resolve(__dirname, 'dist'),
                     },
+                    {
+                        from: path.resolve(
+                            __dirname,
+                            'aux-player',
+                            'legal',
+                            'terms-of-service.txt'
+                        ),
+                        to: path.resolve(__dirname, 'dist', 'terms'),
+                        toType: 'file',
+                    },
+                    {
+                        from: path.resolve(
+                            __dirname,
+                            'aux-player',
+                            'legal',
+                            'privacy-policy.txt'
+                        ),
+                        to: path.resolve(__dirname, 'dist', 'privacy-policy'),
+                        toType: 'file',
+                    },
                 ],
             }),
         ],

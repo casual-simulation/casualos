@@ -88,7 +88,7 @@
             <md-dialog-confirm
                 v-if="simulationToRemove"
                 :md-active.sync="showRemoveSimulation"
-                md-title="Remove Channel"
+                md-title="Remove Server"
                 :md-content="`Remove ${simulationToRemove.displayName}?`"
                 @md-confirm="finishRemoveSimulation()"
             />

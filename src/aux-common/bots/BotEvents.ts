@@ -176,7 +176,8 @@ export type AsyncActions =
     | BufferSoundAction
     | CancelSoundAction
     | LocalPositionTweenAction
-    | LocalRotationTweenAction;
+    | LocalRotationTweenAction
+    | ShowUploadFilesAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2007,6 +2008,13 @@ export interface RunScriptAction extends AsyncAction {
  */
 export interface ShowUploadAuxFileAction {
     type: 'show_upload_aux_file';
+}
+
+/**
+ * Defines an event that shows the "uplaod file" dialog.
+ */
+export interface ShowUploadFilesAction extends AsyncAction {
+    type: 'show_upload_files';
 }
 
 /**
@@ -4073,6 +4081,18 @@ export function runScript(
 export function showUploadAuxFile(): ShowUploadAuxFileAction {
     return {
         type: 'show_upload_aux_file',
+    };
+}
+
+/**
+ * Creates a ShowUploadFilesAction.
+ */
+export function showUploadFiles(
+    taskId: number | string
+): ShowUploadFilesAction {
+    return {
+        type: 'show_upload_files',
+        taskId,
     };
 }
 

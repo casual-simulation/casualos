@@ -135,6 +135,7 @@ import {
     SET_TAG_MASK_SYMBOL,
     CLEAR_CHANGES_SYMBOL,
     animateTag,
+    showUploadFiles,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1746,6 +1747,15 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.showUploadAuxFile();
                 expect(action).toEqual(showUploadAuxFile());
                 expect(context.actions).toEqual([showUploadAuxFile()]);
+            });
+        });
+
+        describe('player.showUploadFiles()', () => {
+            it('should emit a ShowUploadFileAction', () => {
+                const promise: any = library.api.player.showUploadFiles();
+                const expected = showUploadFiles(context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

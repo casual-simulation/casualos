@@ -77,15 +77,9 @@ export class LabelDecorator
             botLength = botSize.z;
         }
 
-        if (this.text3D) {
-            if (botWidth != this.text3D.currentWidth) {
-                this.disposeText3D();
-            }
-        }
-
         if (label) {
             if (!this.text3D) {
-                this.text3D = new Text3D(botWidth);
+                this.text3D = new Text3D();
                 // Parent the labels directly to the bot.
                 // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that
                 // without worrying about what the AuxBot3D scale is etc.
@@ -93,7 +87,9 @@ export class LabelDecorator
                 this._initialSetup = true;
             }
 
-            let updateNeeded = this.text3D.setText(label, alignment);
+            let updateNeeded = this.text3D.setWidth(botWidth);
+            updateNeeded =
+                this.text3D.setText(label, alignment) || updateNeeded;
 
             // Update auto size mode.
             this._autoSizeMode =
@@ -150,6 +146,7 @@ export class LabelDecorator
                     // Hide the text while it is being setup
                     // for the first time.
                     this.text3D.visible = false;
+                    this._initialSetup = false;
                 }
                 this.text3D
                     .calculateFontSizeToFit(

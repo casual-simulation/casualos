@@ -1,5 +1,25 @@
 # CasualOS Changelog
 
+## V1.3.13
+
+#### Date: 1/18/2021
+
+### :rocket: Improvements
+
+-   Added the `player.showUploadFiles()` function.
+    -   Shows a dialog that can be used to upload arbitrary files.
+    -   Returns a promise that resolves with the list of files that were uploaded.
+    -   See the documentation for more info.
+-   Added the `portal` form.
+    -   Displays an entire dimension in place of the bot form.
+    -   When set, `#formAddress` will be used as the dimension that should be loaded.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bot labels would flicker when scaling the bot.
+-   Fixed an issue where tag masks would be incorrectly recorded by the UI as being removed in some cases.
+-   Fixed an issue where lines would render incorrectly on the first frame they were setup on.
+
 ## V1.3.12
 
 #### Date: 1/13/2021

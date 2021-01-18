@@ -64,6 +64,7 @@ import {
     localPositionTween as calcLocalPositionTween,
     localRotationTween as calcLocalRotationTween,
     animateTag as calcAnimateTag,
+    showUploadFiles as calcShowUploadFiles,
     clearSpace,
     loadBots,
     BotAction,
@@ -536,6 +537,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 downloadBots,
                 downloadServer,
                 showUploadAuxFile,
+                showUploadFiles,
                 openQRCodeScanner,
                 closeQRCodeScanner,
                 showQRCode,
@@ -1330,6 +1332,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function showUploadAuxFile() {
         return addAction(calcShowUploadAuxFile());
+    }
+
+    /**
+     * Shows the "Upload File" dialog.
+     */
+    function showUploadFiles() {
+        const task = context.createTask();
+        const action = calcShowUploadFiles(task.taskId);
+        return addAsyncAction(task, action);
     }
 
     /**

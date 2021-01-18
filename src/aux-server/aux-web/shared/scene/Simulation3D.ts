@@ -8,7 +8,7 @@ import {
     BotIndexEvent,
     LocalActions,
 } from '@casual-simulation/aux-common';
-import { SubscriptionLike, Subject, Observable } from 'rxjs';
+import { SubscriptionLike, Subject, Observable, Subscription } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
 import flatMap from 'lodash/flatMap';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -101,6 +101,10 @@ export abstract class Simulation3D
     private _sceneBackground: Color | Texture = null;
     private _updateList: Set<string> = new Set();
     private _updatedList: Set<string> = new Set();
+    /**
+     * The map of bot IDs to portal tags that have registered a dimension for themselves.
+     */
+    private _registeredBotDimensions: Map<string, string> = new Map();
     private isLoaded: boolean = false;
 
     /**
@@ -239,11 +243,55 @@ export abstract class Simulation3D
         );
     }
 
+    /**
+     * Registers the given bot as a dimension and uses the given portal tag for it.
+     * @param bot The bot to use.
+     * @param portalTag The portal tag to use.
+     */
+    registerDimensionForBot(
+        bot3D: AuxBotVisualizer,
+        portalTag: string
+    ): SubscriptionLike {
+        this._registeredBotDimensions.set(bot3D.bot.id, portalTag);
+        let sub = this.simulation.dimensions
+            .watchDimensions([portalTag], (bot) => bot === bot3D.bot)
+            .pipe(tap((update) => this._dimensionsUpdated(update)))
+            .subscribe(null, (err) => console.log(err));
+        this._subs.push(sub);
+        return new Subscription(() => {
+            sub.unsubscribe();
+            if (bot3D instanceof AuxBot3D) {
+                const groups = bot3D.container.children.filter(
+                    (c) => c instanceof DimensionGroup3D && c.boundBot === bot3D
+                ) as DimensionGroup3D[];
+                if (groups.length > 0) {
+                    const group = groups[0];
+                    this._dimensionsUpdated({
+                        calc: this._currentContext,
+                        updatedBots: [],
+                        events: [...group.dimensions.values()].map((d) => ({
+                            type: 'dimension_removed',
+                            dimensionBot: bot3D.bot,
+                            dimensionTag: portalTag,
+                            dimension: d,
+                        })),
+                    });
+
+                    // TODO: Support multiple dimensions for a bot.
+                    this._registeredBotDimensions.delete(bot3D.bot.id);
+                }
+            }
+        });
+    }
+
     private _dimensionsUpdated(update: BotDimensionsUpdate): void {
         this._currentContext = update.calc;
         const calc = update.calc;
         for (let event of update.events) {
-            if (!this._filterDimensionEvent(calc, event)) {
+            if (
+                !this._isDimensionEventForRegisteredBot(calc, event) &&
+                !this._filterDimensionEvent(calc, event)
+            ) {
                 continue;
             }
             if (event.type === 'dimension_added') {
@@ -316,13 +364,44 @@ export abstract class Simulation3D
      */
     protected _bindDimensionGroup(group: DimensionGroup) {
         if (group instanceof DimensionGroup3D) {
-            this.add(group);
+            let added = false;
+            const portalTag = this._registeredBotDimensions.get(group.bot.id);
+            if (portalTag === group.portalTag) {
+                const bots = this.findBotsById(group.bot.id);
+                for (let b of bots) {
+                    if (b instanceof AuxBot3D) {
+                        group.boundBot = b;
+                        b.container.add(group);
+                        added = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!added) {
+                this.add(group);
+            }
         }
     }
 
     protected _unbindDimensionGroup(group: DimensionGroup) {
         if (group instanceof DimensionGroup3D) {
-            this.remove(group);
+            let removed = false;
+            const portalTag = this._registeredBotDimensions.get(group.bot.id);
+            if (portalTag === group.portalTag) {
+                const bots = this.findBotsById(group.bot.id);
+                for (let b of bots) {
+                    if (b instanceof AuxBot3D) {
+                        b.container.remove(group);
+                        removed = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!removed) {
+                this.remove(group);
+            }
         }
     }
 
@@ -462,6 +541,28 @@ export abstract class Simulation3D
      */
     protected _getDimensionTags(): string[] {
         return ['auxDimensionConfig'];
+    }
+
+    /**
+     * Determines if the given dimension event is for a dimension that was registered using registerDimensionForBot().
+     * @param calc The calculation context.
+     * @param event The event.
+     */
+    protected _isDimensionEventForRegisteredBot(
+        calc: BotCalculationContext,
+        event: BotDimensionEvent
+    ): boolean {
+        if (
+            event.type === 'dimension_added' ||
+            event.type === 'dimension_removed'
+        ) {
+            const tag = this._registeredBotDimensions.get(
+                event.dimensionBot.id
+            );
+            return tag === event.dimensionTag;
+        }
+
+        return false;
     }
 
     /**

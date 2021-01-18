@@ -473,7 +473,7 @@ export default class PlayerApp extends Vue {
     removeSimulation(info: SimulationInfo) {
         if (appManager.simulationManager.primary.id === info.id) {
             this.snackbar = {
-                message: `You cannot remove the primary channel.`,
+                message: `You cannot remove the primary server.`,
                 visible: true,
             };
         } else {
@@ -544,13 +544,13 @@ export default class PlayerApp extends Vue {
                     console.log('[PlayerApp] Not authorized.');
                     if (state.authorizationError === 'channel_doesnt_exist') {
                         this.snackbar = {
-                            message: 'This channel does not exist.',
+                            message: 'This server does not exist.',
                             visible: true,
                         };
                     } else {
                         this.snackbar = {
                             message:
-                                'You are not authorized to view this channel.',
+                                'You are not authorized to view this server.',
                             visible: true,
                         };
                     }
@@ -902,7 +902,7 @@ export default class PlayerApp extends Vue {
     private _showConnectionRegained(info: SimulationInfo) {
         this.snackbar = {
             visible: true,
-            message: `Connection to ${info.displayName} regained. You are connected to the channel.`,
+            message: `Connection to ${info.displayName} regained. You are connected to the server.`,
         };
     }
 
