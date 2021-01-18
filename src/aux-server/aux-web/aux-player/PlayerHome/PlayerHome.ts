@@ -313,22 +313,4 @@ export default class PlayerHome extends Vue {
             });
         }
     }
-
-    async mounted() {
-        // this._updateChannels(this.channels);
-    }
-
-    // private async _updateChannels(newChannels: string | string[]) {
-    //     newChannels = newChannels || [];
-
-    //     if (!Array.isArray(newChannels)) {
-    //         newChannels = [newChannels];
-    //     }
-
-    //     for (let i = 0; i < newChannels.length; i++) {
-    //         await appManager.simulationManager.primary.helper.createSimulation(
-    //             newChannels[i]
-    //         );
-    //     }
-    // }
 }

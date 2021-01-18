@@ -161,8 +161,8 @@ export class AppManager {
      */
     async downloadState(): Promise<void> {
         const stored = await this.simulationManager.primary.export();
-        const channelId = this._simulationManager.primary.id;
-        downloadAuxState(stored, `${this.user.name}-${channelId || 'default'}`);
+        const serverId = this._simulationManager.primary.id;
+        downloadAuxState(stored, `${this.user.name}-${serverId || 'default'}`);
     }
 
     /**
@@ -308,25 +308,25 @@ export class AppManager {
         }
     }
 
-    async setPrimarySimulation(channelId: string) {
-        channelId = channelId || 'default';
+    async setPrimarySimulation(serverId: string) {
+        serverId = serverId || 'default';
         if (
             (this.simulationManager.primary &&
-                this.simulationManager.primary.id === channelId) ||
-            this.simulationManager.primaryId === channelId
+                this.simulationManager.primary.id === serverId) ||
+            this.simulationManager.primaryId === serverId
         ) {
             return await this._primaryPromise;
         }
-        this.simulationManager.primaryId = channelId;
-        this._primaryPromise = this._setPrimarySimulation(channelId);
+        this.simulationManager.primaryId = serverId;
+        this._primaryPromise = this._setPrimarySimulation(serverId);
 
         return await this._primaryPromise;
     }
 
-    private async _setPrimarySimulation(channelId: string) {
-        this._sendProgress('Requesting channel...', 0.1);
+    private async _setPrimarySimulation(serverId: string) {
+        this._sendProgress('Requesting server...', 0.1);
 
-        console.log('[AppManager] Setting primary simulation:', channelId);
+        console.log('[AppManager] Setting primary simulation:', serverId);
 
         const user = await this._getCurrentUserOrGuest();
         this._user = user;
@@ -335,7 +335,7 @@ export class AppManager {
 
         await this._setCurrentUser(user);
         await this.simulationManager.clear();
-        await this.simulationManager.setPrimary(channelId);
+        await this.simulationManager.setPrimary(serverId);
 
         this._userSubject.next(this._user);
 
@@ -482,50 +482,6 @@ export class AppManager {
         this._user = user;
         this._userSubject.next(user);
     }
-
-    // async loginOrCreateUser(
-    //     username: string,
-    //     channelId?: string,
-    //     grant?: string
-    // ): Promise<void> {
-    //     this.loadingProgress.set(0, 'Checking current user...', null);
-    //     this.loadingProgress.show = true;
-
-    //     if (this._simulationManager.simulations.has(channelId)) {
-    //         this.loadingProgress.set(100, 'Complete!', null);
-    //         return null;
-    //     }
-
-    //     channelId = channelId ? channelId.trim() : null;
-
-    //     try {
-    //         this.loadingProgress.set(10, 'Creating user...', null);
-
-    //         this._user =
-    //             (await this._getUser(username)) ||
-    //             this._createUser(username, grant);
-
-    //         await this._setCurrentUser(this._user);
-
-    //         channelId = channelId || 'default';
-
-    //         this.loadingProgress.set(40, 'Loading Bots...', null);
-
-    //         return await this._setPrimarySimulation(channelId);
-    //     } catch (ex) {
-    //         Sentry.captureException(ex);
-    //         console.error(ex);
-
-    //         this.loadingProgress.set(
-    //             0,
-    //             'Exception occured while logging in.',
-    //             this._exceptionMessage(ex)
-    //         );
-    //         this.loadingProgress.show = false;
-    //         this._user = null;
-    //         await this._setCurrentUsername(null);
-    //     }
-    // }
 
     private _createUser(username: string) {
         let user: AuxUser = {

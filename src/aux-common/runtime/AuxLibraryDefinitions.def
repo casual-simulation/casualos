@@ -68,7 +68,7 @@ declare interface DeviceInfo {
 
 /**
  * Defines an interface that represents an event.
- * That is, a time-ordered action in a channel.
+ * That is, a time-ordered action in a server.
  * @deprecated
  */
 declare interface Action {
@@ -138,7 +138,7 @@ declare interface RemoteAction extends Action, DeviceSelector {
 declare type LocalActions = BotActions | ExtraActions | AsyncActions;
 
 /**
- * Defines a union type for all the possible events that can be emitted from a bots channel.
+ * Defines a union type for all the possible events that can be emitted from a bots server.
  */
 declare type BotAction =
     | BotActions
@@ -390,7 +390,7 @@ declare interface ApplyStateAction extends Action {
 }
 
 /**
- * The options for pasting bots state into a channel.
+ * The options for pasting bots state into a server.
  */
 declare interface PasteStateOptions {
     /**
@@ -580,7 +580,7 @@ declare interface CheckoutSubmittedAction extends Action {
     token: string;
 
     /**
-     * The channel that processing should happen in.
+     * The server that processing should happen in.
      */
     processingServer: string;
 }
@@ -1265,18 +1265,18 @@ declare interface RejectAction {
 }
 
 /**
- * Defines an event that creates a channel if it doesn't exist.
+ * Defines an event that creates a server if it doesn't exist.
  */
 declare interface SetupChannelAction {
     type: 'setup_server';
 
     /**
-     * The channel that should be created.
+     * The server that should be created.
      */
     channel: string;
 
     /**
-     * The bot or mod that should be cloned into the new channel.
+     * The bot or mod that should be cloned into the new server.
      */
     botOrMod?: Bot | BotTags;
 }
