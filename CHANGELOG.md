@@ -11,6 +11,10 @@
     -   Returns a promise that resolves with the list of files that were uploaded.
     -   See the documentation for more info.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where bot labels would flicker when scaling the bot.
+
 ## V1.3.12
 
 #### Date: 1/13/2021
