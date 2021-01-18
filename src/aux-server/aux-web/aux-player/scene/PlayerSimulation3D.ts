@@ -107,7 +107,7 @@ export class PlayerSimulation3D extends Simulation3D {
         }
 
         this._portalTags =
-            typeof portalTags === 'string' ? [portalTags] : portalTags;
+            typeof portalTags === 'string' ? [portalTags] : portalTags.slice();
         this._playerDimensionGroups = new Map();
 
         this._subs.push(
@@ -198,17 +198,17 @@ export class PlayerSimulation3D extends Simulation3D {
             return null;
         }
 
-        group = this._constructDimensionGroup(event.dimensionTag);
+        group = this._constructDimensionGroup(event.dimensionTag, bot);
         this._playerDimensionGroups.set(event.dimensionTag, group);
 
         // TODO: Update to support locking dimensions
         return group;
     }
 
-    protected _constructDimensionGroup(portalTag: string) {
+    protected _constructDimensionGroup(portalTag: string, bot: Bot) {
         return new DimensionGroup3D(
             this,
-            this.simulation.helper.userBot,
+            bot,
             'player',
             this.decoratorFactory,
             portalTag
