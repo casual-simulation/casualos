@@ -1,5 +1,5 @@
 import { Bot } from './Bot';
-import { tagsOnBot, hasValue } from './BotCalculations';
+import { tagsOnBot, hasValue, calculateBotValue } from './BotCalculations';
 import { Subject, Observable } from 'rxjs';
 import { filter, startWith, map } from 'rxjs/operators';
 import flatMap from 'lodash/flatMap';
@@ -64,9 +64,9 @@ export class BotIndex {
 
     get events(): Observable<BotIndexEvent[]> {
         let bots = [...this._botMap.values()];
-        let events = flatMap(bots, b =>
+        let events = flatMap(bots, (b) =>
             tagsOnBot(b).map(
-                t =>
+                (t) =>
                     ({
                         type: 'bot_tag_added',
                         bot: b,
@@ -76,7 +76,7 @@ export class BotIndex {
         );
         return this._events.pipe(
             startWith(events),
-            filter(e => e.length > 0)
+            filter((e) => e.length > 0)
         );
     }
 
@@ -91,7 +91,7 @@ export class BotIndex {
      */
     findBotsWithTag(tag: string): Bot[] {
         const list = this._botList(tag);
-        return [...list.values()].map(id => this._botMap.get(id));
+        return [...list.values()].map((id) => this._botMap.get(id));
     }
 
     /**
@@ -153,7 +153,7 @@ export class BotIndex {
 
             for (let tag of tags) {
                 let list = this._botList(tag);
-                let val = bot.tags[tag];
+                let val = calculateBotValue(null, bot, tag);
                 if (hasValue(val)) {
                     if (!list.has(bot.id)) {
                         list.add(bot.id);
@@ -222,11 +222,11 @@ export class BotIndex {
      */
     watchTag(tag: string) {
         return this._events.pipe(
-            map(events => events.filter(e => e.tag === tag)),
-            filter(events => events.length > 0),
+            map((events) => events.filter((e) => e.tag === tag)),
+            filter((events) => events.length > 0),
             startWith(
                 this.findBotsWithTag(tag).map(
-                    bot =>
+                    (bot) =>
                         <BotIndexEvent>{
                             type: 'bot_tag_added',
                             bot: bot,
