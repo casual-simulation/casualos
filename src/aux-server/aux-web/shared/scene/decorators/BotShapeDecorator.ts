@@ -69,6 +69,7 @@ import HelixUrl from '../../public/meshes/dna_form.glb';
 import EggUrl from '../../public/meshes/egg.glb';
 import { Axial, HexMesh } from '../hex';
 import { sortBy } from 'lodash';
+import { SubscriptionLike } from 'rxjs';
 
 const gltfPool = getGLTFPool('main');
 
@@ -92,6 +93,7 @@ export class BotShapeDecorator
     private _iframe: HtmlMixer.Plane;
 
     private _game: Game;
+    private _shapeSubscription: SubscriptionLike;
 
     container: Group;
     mesh: Mesh | FrustumHelper;
@@ -120,9 +122,7 @@ export class BotShapeDecorator
 
     constructor(bot3D: AuxBot3D, game: Game) {
         super(bot3D);
-
         this._game = game;
-        this._rebuildShape('cube', null, null, null, null);
     }
 
     frameUpdate() {
@@ -409,6 +409,11 @@ export class BotShapeDecorator
             this.bot3D.colliders.splice(index, 1);
         }
 
+        if (this._shapeSubscription) {
+            this._shapeSubscription.unsubscribe();
+            this._shapeSubscription = null;
+        }
+
         this.bot3D.display.remove(this.container);
         disposeMesh(this.mesh);
         disposeMesh(this.stroke);
@@ -449,7 +454,7 @@ export class BotShapeDecorator
         this._scaleMode = scaleMode;
         this._address = address;
         this._gltfVersion = version;
-        if (this.mesh || this.scene) {
+        if (this.mesh || this.scene || this._shapeSubscription) {
             this.dispose();
         }
 
@@ -488,6 +493,8 @@ export class BotShapeDecorator
             this._createEgg();
         } else if (this._shape === 'hex') {
             this._createHex();
+        } else if (this._shape === 'portal') {
+            this._createPortal();
         }
 
         this.onMeshUpdated.invoke(this);
@@ -677,6 +684,20 @@ export class BotShapeDecorator
         // Stroke
         this.stroke = null;
         this._canHaveStroke = false;
+    }
+
+    private _createPortal() {
+        this.stroke = null;
+        this.mesh = null;
+        this._canHaveStroke = false;
+
+        const sim = this.bot3D.dimensionGroup?.simulation3D;
+        if (sim) {
+            this._shapeSubscription = sim.registerDimensionForBot(
+                this.bot3D,
+                'formAddress'
+            );
+        }
     }
 }
 

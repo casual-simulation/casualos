@@ -58,7 +58,7 @@ import {
     getPlayers,
     action,
     ON_REMOTE_WHISPER_ACTION_NAME,
-    getStoryStatuses,
+    getServerStatuses,
     AsyncAction,
     createCertificate,
     signTag,
@@ -712,7 +712,7 @@ describe('RemoteCausalRepoPartition', () => {
 
                     await partition.sendRemoteEvents([
                         remote(
-                            getStoryStatuses(),
+                            getServerStatuses(),
                             undefined,
                             undefined,
                             'task1'
@@ -799,7 +799,7 @@ describe('RemoteCausalRepoPartition', () => {
 
                     await partition.sendRemoteEvents([
                         remote(
-                            getStoryStatuses(),
+                            getServerStatuses(),
                             undefined,
                             undefined,
                             'task1'
@@ -837,11 +837,11 @@ describe('RemoteCausalRepoPartition', () => {
                     expect(events).toEqual([
                         asyncResult('task1', [
                             {
-                                story: 'abc',
+                                server: 'abc',
                                 lastUpdateTime: new Date(2019, 1, 1),
                             },
                             {
-                                story: 'def',
+                                server: 'def',
                                 lastUpdateTime: new Date(2019, 1, 1),
                             },
                         ]),

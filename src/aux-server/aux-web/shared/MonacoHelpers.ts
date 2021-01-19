@@ -4,6 +4,7 @@ import {
     tagsOnBot,
     isFormula,
     Transpiler,
+    replaceMacros,
     KNOWN_TAGS,
     isScript,
     hasValue,
@@ -17,6 +18,7 @@ import {
     calculateNumericalTagValue,
     calculateStringTagValue,
     calculateFormattedBotValue,
+    DNA_TAG_PREFIX,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
 import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
@@ -59,113 +61,7 @@ import {
 import { CurrentVersion } from '@casual-simulation/causal-trees';
 import { Color } from 'three';
 import { invertColor } from './scene/ColorUtils';
-
-let cursorColors = document.createElement('style');
-document.body.appendChild(cursorColors);
-
-let availableColors = new Map<string, string>();
-let availableLabels = new Map<string, HTMLStyleElement>();
-let stylesheet = '';
-
-function createColorClass(
-    name: string,
-    backgroundColor: Color,
-    alpha: number
-): [string, string] {
-    const bRed = backgroundColor.r * 255;
-    const bGreen = backgroundColor.g * 255;
-    const bBlue = backgroundColor.b * 255;
-    return [
-        name,
-        `.${name} {
-        background-color: rgba(${bRed}, ${bGreen}, ${bBlue}, ${alpha});
-    }
-    
-    .${name}::after {
-        border-color: rgba(${bRed}, ${bGreen}, ${bBlue}, ${alpha});
-    }`,
-    ];
-}
-
-function createHoverClass(
-    name: string,
-    backgroundColor: Color,
-    foregroundColor: Color,
-    label: string
-): string {
-    const bRed = backgroundColor.r * 255;
-    const bGreen = backgroundColor.g * 255;
-    const bBlue = backgroundColor.b * 255;
-    const fRed = foregroundColor.r * 255;
-    const fGreen = foregroundColor.g * 255;
-    const fBlue = foregroundColor.b * 255;
-    return `.${name}:hover::after {
-        content: '${label}';
-        background-color: rgb(${bRed}, ${bGreen}, ${bBlue});
-        color: rgb(${fRed}, ${fGreen}, ${fBlue});
-        border-width: 0;
-        border-radius: 0;
-        font-size: 12px;
-        line-height: 12px;
-        padding: 1px;
-        left: -2px;
-        top: -13px;
-        overflow: hidden;
-        width: auto;
-        height: auto;
-    }`;
-}
-
-function getColorClass(
-    prefix: string,
-    color: string,
-    alpha: number = 0.5
-): string {
-    const c = new Color(color);
-    const hex = c.getHexString();
-    const name = prefix + hex;
-    if (availableColors.has(name)) {
-        return availableColors.get(name);
-    } else {
-        const [colorClass, colorStyle] = createColorClass(name, c, alpha);
-        stylesheet += '\n' + colorStyle;
-        cursorColors.innerHTML = stylesheet;
-        availableColors.set(name, colorClass);
-
-        return colorClass;
-    }
-}
-
-function getLabelStyle(name: string): HTMLStyleElement {
-    if (availableLabels.has(name)) {
-        return availableLabels.get(name);
-    } else {
-        const style = document.createElement('style');
-        document.body.appendChild(style);
-        availableLabels.set(name, style);
-        return style;
-    }
-}
-
-function getLabelClass(
-    prefix: string,
-    id: string,
-    foregroundColor: string,
-    backgroundColor: string,
-    label: string
-): string {
-    const foreground = new Color(foregroundColor);
-    const background = new Color(backgroundColor);
-    const name = prefix + id;
-    const styleElement = getLabelStyle(name);
-
-    const style = createHoverClass(name, background, foreground, label);
-    if (styleElement.innerHTML !== style) {
-        styleElement.innerHTML = style;
-    }
-
-    return name;
-}
+import { getCursorColorClass, getCursorLabelClass } from './StyleHelpers';
 
 export function setup() {
     // Tell monaco how to create the web workers
@@ -246,7 +142,6 @@ interface ModelInfo {
 let subs: SubscriptionLike[] = [];
 let activeModel: monaco.editor.ITextModel = null;
 let models: Map<string, ModelInfo> = new Map();
-let transpiler = new Transpiler();
 
 /**
  * The model that should be marked as active.
@@ -276,77 +171,6 @@ export function watchSimulation(
                 }
             }
         });
-
-    let referencesDisposable = monaco.languages.registerReferenceProvider(
-        'javascript',
-        {
-            async provideReferences(
-                model: monaco.editor.ITextModel,
-                position: monaco.Position,
-                context: monaco.languages.ReferenceContext,
-                token: monaco.CancellationToken
-            ): Promise<monaco.languages.Location[]> {
-                const line = model.getLineContent(position.lineNumber);
-                let startIndex = position.column;
-                let endIndex = position.column;
-                for (; startIndex >= 0; startIndex -= 1) {
-                    if (
-                        line[startIndex] === '"' ||
-                        line[startIndex] === "'" ||
-                        line[startIndex] === '`'
-                    ) {
-                        break;
-                    }
-                }
-                for (; endIndex < line.length; endIndex += 1) {
-                    if (
-                        line[endIndex] === '"' ||
-                        line[endIndex] === "'" ||
-                        line[endIndex] === '`'
-                    ) {
-                        break;
-                    }
-                }
-
-                const word = line.substring(startIndex + 1, endIndex);
-                if (word) {
-                    const result = await simulation.code.getReferences(word);
-                    let locations: monaco.languages.Location[] = [];
-                    for (let id in result.references) {
-                        for (let tag of result.references[id]) {
-                            const bot = simulation.helper.botsState[id];
-                            // TODO: Support references to tag masks
-                            let m = loadModel(
-                                simulation,
-                                bot,
-                                tag,
-                                null,
-                                getEditor
-                            );
-                            locations.push(
-                                ...m
-                                    .findMatches(
-                                        result.tag,
-                                        true,
-                                        false,
-                                        true,
-                                        null,
-                                        false
-                                    )
-                                    .map((r) => ({
-                                        range: r.range,
-                                        uri: m.uri,
-                                    }))
-                            );
-                        }
-                    }
-                    return locations;
-                }
-
-                return [];
-            },
-        }
-    );
 
     let completionDisposable = monaco.languages.registerCompletionItemProvider(
         'javascript',
@@ -417,7 +241,6 @@ export function watchSimulation(
     );
 
     sub.add(() => {
-        referencesDisposable.dispose();
         completionDisposable.dispose();
     });
 
@@ -483,7 +306,10 @@ export function watchEditor(
             const botDecorators = debouncedStates.pipe(
                 map((state) => {
                     let decorators = [] as monaco.editor.IModelDeltaDecoration[];
-                    let offset = info?.isScript || info?.isFormula ? 1 : 0;
+                    let offset =
+                        info?.isScript || info?.isFormula
+                            ? DNA_TAG_PREFIX.length
+                            : 0;
                     for (let bot of getActiveObjects(state)) {
                         const cursorStart = calculateNumericalTagValue(
                             null,
@@ -519,12 +345,12 @@ export function watchEditor(
                             'color',
                             'black'
                         );
-                        const colorClass = getColorClass(
+                        const colorClass = getCursorColorClass(
                             'bot-cursor-color-',
                             color,
                             0.1
                         );
-                        const notchColorClass = getColorClass(
+                        const notchColorClass = getCursorColorClass(
                             'bot-notch-cursor-color-',
                             color,
                             1
@@ -549,7 +375,7 @@ export function watchEditor(
 
                         let labelClass = '';
                         if (hasValue(label)) {
-                            labelClass = getLabelClass(
+                            labelClass = getCursorLabelClass(
                                 'bot-notch-label',
                                 bot.id,
                                 labelForeground,
@@ -612,7 +438,10 @@ export function watchEditor(
                     e.selection.getEndPosition()
                 );
 
-                const offset = info?.isScript || info?.isFormula ? 1 : 0;
+                const offset =
+                    info?.isScript || info?.isFormula
+                        ? DNA_TAG_PREFIX.length
+                        : 0;
                 let finalStartIndex = offset + startIndex;
                 let finalEndIndex = offset + endIndex;
 
@@ -678,8 +507,10 @@ export function loadModel(
 }
 
 function tagScriptLanguage(tag: string, script: any): string {
-    return isFormula(script) || isScript(script)
+    return isScript(script)
         ? 'javascript'
+        : isFormula(script)
+        ? 'json'
         : tag.indexOf('.') >= 0
         ? undefined
         : 'plaintext';
@@ -790,7 +621,11 @@ function watchModel(
                     );
 
                     for (let ops of update.operations) {
-                        let index = info.isFormula || info.isScript ? -1 : 0;
+                        let index = info.isFormula
+                            ? -DNA_TAG_PREFIX.length
+                            : info.isScript
+                            ? -1
+                            : 0;
                         for (let op of ops) {
                             if (op.type === 'preserve') {
                                 index += op.count;
@@ -898,7 +733,11 @@ function watchModel(
                 }
                 let operations = [] as TagEditOp[][];
                 let index = 0;
-                let offset = info.isFormula || info.isScript ? 1 : 0;
+                let offset = info.isFormula
+                    ? DNA_TAG_PREFIX.length
+                    : info.isScript
+                    ? 1
+                    : 0;
                 const changes = sortBy(e.changes, (c) => c.rangeOffset);
                 for (let change of changes) {
                     operations.push([
@@ -1009,12 +848,17 @@ function updateDecorators(
         info.isScript = false;
         if (!wasFormula) {
             const text = model.getValue();
-            if (text.indexOf('=') === 0) {
+            if (isFormula(text)) {
                 // Delete the first character from the model cause
                 // it is a formula marker
                 model.applyEdits([
                     {
-                        range: new monaco.Range(1, 1, 1, 2),
+                        range: new monaco.Range(
+                            1,
+                            1,
+                            1,
+                            1 + DNA_TAG_PREFIX.length
+                        ),
                         text: '',
                     },
                 ]);
@@ -1037,7 +881,7 @@ function updateDecorators(
 
         if (!wasScript) {
             const text = model.getValue();
-            if (text.indexOf('@') === 0) {
+            if (isScript(text)) {
                 // Delete the first character from the model cause
                 // it is a script marker
                 model.applyEdits([
@@ -1088,7 +932,7 @@ export function getScript(bot: Bot, tag: string, space: string) {
             str = JSON.stringify(val);
         }
         if (isFormula(str)) {
-            return transpiler.replaceMacros(str);
+            return replaceMacros(str);
         } else {
             return str;
         }

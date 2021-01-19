@@ -35,7 +35,7 @@ export class SetupChannelModule2 implements AuxModule2 {
             simulation.localEvents
                 .pipe(
                     concatMap(async (event) => {
-                        if (event.type === 'setup_story') {
+                        if (event.type === 'setup_server') {
                             await this._setupChannel(simulation, event);
                         }
                     })
@@ -120,7 +120,7 @@ export class SetupChannelModule2 implements AuxModule2 {
                         remoteError(
                             {
                                 error: 'failure',
-                                exception: 'The story already exists.',
+                                exception: 'The server already exists.',
                             },
                             {
                                 sessionId: event.playerId,

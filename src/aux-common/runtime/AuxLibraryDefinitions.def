@@ -1,3 +1,5 @@
+import { ShowUploadFileAction } from '../bots';
+
 /**
  * Contains information about the version of AUX that is running.
  */
@@ -66,7 +68,7 @@ declare interface DeviceInfo {
 
 /**
  * Defines an interface that represents an event.
- * That is, a time-ordered action in a channel.
+ * That is, a time-ordered action in a server.
  * @deprecated
  */
 declare interface Action {
@@ -136,7 +138,7 @@ declare interface RemoteAction extends Action, DeviceSelector {
 declare type LocalActions = BotActions | ExtraActions | AsyncActions;
 
 /**
- * Defines a union type for all the possible events that can be emitted from a bots channel.
+ * Defines a union type for all the possible events that can be emitted from a bots server.
  */
 declare type BotAction =
     | BotActions
@@ -173,8 +175,8 @@ declare type ExtraActions =
     | OpenBarcodeScannerAction
     | ShowQRCodeAction
     | ShowBarcodeAction
-    | LoadStoryAction
-    | UnloadStoryAction
+    | LoadServerAction
+    | UnloadServerAction
     | SuperShoutAction
     | SendWebhookAction
     | LoadFileAction
@@ -388,7 +390,7 @@ declare interface ApplyStateAction extends Action {
 }
 
 /**
- * The options for pasting bots state into a channel.
+ * The options for pasting bots state into a server.
  */
 declare interface PasteStateOptions {
     /**
@@ -509,9 +511,9 @@ declare interface StartCheckoutOptions {
     description: string;
 
     /**
-     * The story that the payment processing should occur in.
+     * The server that the payment processing should occur in.
      */
-    processingStory: string;
+    processingServer: string;
 
     /**
      * Whether to request the payer's billing address.
@@ -578,9 +580,9 @@ declare interface CheckoutSubmittedAction extends Action {
     token: string;
 
     /**
-     * The channel that processing should happen in.
+     * The server that processing should happen in.
      */
-    processingStory: string;
+    processingServer: string;
 }
 
 /**
@@ -805,8 +807,8 @@ declare interface ShowBarcodeAction extends Action {
 /**
  * An event that is used to load a simulation.
  */
-declare interface LoadStoryAction extends Action {
-    type: 'load_story';
+declare interface LoadServerAction extends Action {
+    type: 'load_server';
 
     /**
      * The ID of the simulation to load.
@@ -817,8 +819,8 @@ declare interface LoadStoryAction extends Action {
 /**
  * An event that is used to unload a simulation.
  */
-declare interface UnloadStoryAction extends Action {
-    type: 'unload_story';
+declare interface UnloadServerAction extends Action {
+    type: 'unload_server';
 
     /**
      * The ID of the simulation to unload.
@@ -897,6 +899,40 @@ declare interface WebhookOptions {
      * The shout that should be made when the request finishes.
      */
     responseShout?: string;
+}
+
+/**
+ * Defines a set of options for animateTag().
+ */
+declare interface AnimateTagFunctionOptions {
+    /**
+     * The value that should be animated from.
+     * If not specified then the current tag value will be used.
+     */
+    fromValue?: any;
+
+    /**
+     * The value that should be animated to.
+     */
+    toValue: any;
+
+    /**
+     * The duration of the animation in seconds.
+     */
+    duration: number;
+
+    /**
+     * The type of easing to use.
+     * If not specified then "linear" "inout" will be used.
+     */
+    easing?: EaseType | Easing;
+
+    /**
+     * The space that the tag should be animated in.
+     * If not specified then "tempLocal" will be used.
+     * If false, then the bot will be edited instead of using tag masks.
+     */
+    tagMaskSpace?: BotSpace | false;
 }
 
 /**
@@ -1175,7 +1211,7 @@ declare interface ShowInputOptions {
 /**
  * Defines the possible input types.
  */
-declare type ShowInputType = 'text' | 'color';
+declare type ShowInputType = 'text' | 'color' | 'secret';
 
 /**
  * Defines the possible input types.
@@ -1229,18 +1265,18 @@ declare interface RejectAction {
 }
 
 /**
- * Defines an event that creates a channel if it doesn't exist.
+ * Defines an event that creates a server if it doesn't exist.
  */
 declare interface SetupChannelAction {
-    type: 'setup_story';
+    type: 'setup_server';
 
     /**
-     * The channel that should be created.
+     * The server that should be created.
      */
     channel: string;
 
     /**
-     * The bot or mod that should be cloned into the new channel.
+     * The bot or mod that should be cloned into the new server.
      */
     botOrMod?: Bot | BotTags;
 }
@@ -1277,6 +1313,11 @@ declare interface ShowChatBarAction {
      * The text that the bar should have as the placeholder.
      */
     placeholder?: string;
+
+    /**
+     * The color to use for the placeholder.
+     */
+    placeholderColor?: string;
 }
 
 /**
@@ -1292,6 +1333,11 @@ declare interface ShowChatOptions {
      * The text that the bar should have as the placeholder.
      */
     placeholder?: string;
+
+    /**
+     * The color to use for the placeholder.
+     */
+    placeholderColor?: string;
 }
 
 /**
@@ -1314,6 +1360,26 @@ declare interface ShowUploadAuxFileAction {
 }
 
 /**
+ * Defines an interface that represents a file that was uploaded.
+ */
+declare interface UploadedFile {
+    /**
+     * The name of the file that was uploaded.
+     */
+    name: string;
+
+    /**
+     * The size of the file in bytes.
+     */
+    size: number;
+
+    /**
+     * The data that the file contains.
+     */
+    data: string | ArrayBuffer;
+}
+
+/**
  * Defines an event that marks a specific point in history.
  */
 declare interface MarkHistoryAction {
@@ -1326,7 +1392,7 @@ declare interface MarkHistoryAction {
 }
 
 /**
- * Defines an event that loads the history into the story.
+ * Defines an event that loads the history into the server.
  */
 declare interface BrowseHistoryAction {
     type: 'browse_history';
@@ -1344,14 +1410,14 @@ declare interface RestoreHistoryMarkAction {
     mark: string;
 
     /**
-     * The story that the mark should be restored to.
-     * If not specified, then the current story will be used.
+     * The server that the mark should be restored to.
+     * If not specified, then the current server will be used.
      */
-    story?: string;
+    server?: string;
 }
 
 /**
- * Defines an event that loads a space into the story.
+ * Defines an event that loads a space into the server.
  */
 declare interface LoadSpaceAction {
     type: 'load_space';
@@ -1578,15 +1644,15 @@ declare interface EnableVRAction {
 }
 
 /**
- * Defines an event that shows a QR code that is a link to a story & dimension.
+ * Defines an event that shows a QR code that is a link to a server & dimension.
  */
 declare interface ShowJoinCodeAction {
     type: 'show_join_code';
 
     /**
-     * The story that should be joined.
+     * The server that should be joined.
      */
-    story?: string;
+    server?: string;
 
     /**
      * The dimension that should be joined.
@@ -1662,9 +1728,9 @@ declare interface CheckoutOptions {
     description: string;
 
     /**
-     * The story that the payment should be processed on.
+     * The server that the payment should be processed on.
      */
-    processingStory: string;
+    processingServer: string;
 
     /**
      * Whether to request the payer's billing address.
@@ -1833,7 +1899,7 @@ declare interface BotsState {
 /**
  * The possible bot spaces.
  */
-declare type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history' | 'error' | 'admin' | 'player' | 'otherPlayers';
+declare type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history' | 'admin' | 'player' | 'otherPlayers';
 
 /**
  * The possible portal types.
@@ -1927,6 +1993,30 @@ declare interface Point3D {
      * The Z position of the point.
      */
     z: number;
+}
+
+/**
+ * Defines an interface that contains performance statistics about a server.
+ */
+declare interface PerformanceStats {
+    /**
+     * The number of bots in the server.
+     */
+    numberOfBots: number;
+
+    /**
+     * A list of listen tags and the amount of time spent executing them (in miliseconds).
+     * Useful to guage if a listen tag is causing the server to slow down.
+     */
+    shoutTimes: {
+        tag: string;
+        timeMs: number;
+    }[];
+
+    /**
+     * The total number of active setTimeout() and setInterval() timers that are active.
+     */
+    numberOfActiveTimers: number;
 }
 
 declare global {
@@ -2034,7 +2124,7 @@ declare global {
     function getJSON(data: any): string;
 
     /**
-     * Asks every bot in the story to run the given action.
+     * Asks every bot in the server to run the given action.
      * In effect, this is like shouting to a bunch of people in a room.
      *
      * @param name The event name.
@@ -2149,6 +2239,25 @@ declare global {
      * @param time Time in ms. 1 second is 1000ms.
      */
     function sleep(time: number): Promise<void>;
+
+    /**
+     * Animates the given tag. Returns a promise when the animation is finished.
+     * @param bot The bot or list of bots that should be animated.
+     * @param tag The tag that should be animated.
+     * @param options The options for the animation. If given null, then any running animations for the given tag will be canceled.
+     */
+    function animateTag(
+        bot: Bot | (Bot | string)[] | string,
+        tag: string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void[]>;
+
+    /**
+     * Cancels the animations that are running on the given bot(s).
+     * @param bot The bot or list of bots that should cancel their animations.
+     * @param tag The tag that the animations should be canceld for. If omitted then all tags will be canceled.
+     */
+    function clearAnimations(bot: Bot | (Bot | string)[] | string, tag?: string): void;
 
     /**
      * Sends the given operation to all the devices that matches the given selector.
@@ -2268,7 +2377,7 @@ declare global {
      * Gets a list of all the bots.
      *
      * @example
-     * // Gets all the bots in the story.
+     * // Gets all the bots in the server.
      * let bots = getBots();
      */
     function getBots(): Bot[];
@@ -2704,7 +2813,7 @@ declare global {
          * // Play a cow "moo"
          * player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
          */
-        playSound(url: string): Promise<void>;
+        playSound(url: string): Promise<string>;
 
         /**
          * Preloads the audio for the given URL.
@@ -2730,12 +2839,12 @@ declare global {
         cancelSound(soundID: number): Promise<void>;
 
         /**
-         * Shows a QR Code that contains a link to a story and dimension.
-         * @param story The story that should be joined. Defaults to the current story.
+         * Shows a QR Code that contains a link to a server and dimension.
+         * @param server The server that should be joined. Defaults to the current server.
          * @param dimension The dimension that should be joined. Defaults to the current dimension.
          */
         showJoinCode(
-            story?: string,
+            server?: string,
             dimension?: string
         ): ShowJoinCodeAction;
 
@@ -2889,7 +2998,7 @@ declare global {
          */
         downloadBots(bots: Bot[], filename: string): DownloadAction;
 
-        downloadStory(): DownloadAction;
+        downloadServer(): DownloadAction;
 
         /**
          * Shows the "Upload AUX File" dialog.
@@ -2897,16 +3006,21 @@ declare global {
         showUploadAuxFile(): ShowUploadAuxFileAction;
 
         /**
-         * Loads the story with the given ID.
-         * @param id The ID of the story to load.
+         * Shows the "Upload Files" dialog.
          */
-        loadStory(id: string): LoadStoryAction;
+        showUploadFiles(): Promise<UploadedFile[]>;
 
         /**
-         * Unloads the story with the given ID.
-         * @param id The ID of the story to unload.
+         * Loads the server with the given ID.
+         * @param id The ID of the server to load.
          */
-        unloadStory(id: string): UnloadStoryAction;
+        loadServer(id: string): LoadServerAction;
+
+        /**
+         * Unloads the server with the given ID.
+         * @param id The ID of the server to unload.
+         */
+        unloadServer(id: string): UnloadServerAction;
 
         /**
          * Imports the AUX from the given URL or JSON
@@ -3006,7 +3120,7 @@ declare global {
          *   productId: '10_cookies',
          *   title: '10 Cookies',
          *   description: '$5.00',
-         *   processingStory: 'cookies_checkout'
+         *   processingServer: 'cookies_checkout'
          * });
          *
          */
@@ -3018,9 +3132,9 @@ declare global {
         getCurrentDimension(): string;
 
         /**
-         * Gets the story that the player is currently in.
+         * Gets the server that the player is currently in.
          */
-        getCurrentStory(): string;
+        getCurrentServer(): string;
 
         /**
          * Gets the distance that the player bot is from the given dimension.
@@ -3058,11 +3172,11 @@ declare global {
      */
     const server: {
         /**
-         * Sends an event to the server to setup a new story if it does not exist.
-         * @param story The story.
-         * @param botOrMod The bot or mod that should be cloned into the new story.
+         * Sends an event to the server to setup a new server if it does not exist.
+         * @param server The server.
+         * @param botOrMod The bot or mod that should be cloned into the new server.
          */
-        setupStory(story: string, botOrMod?: Mod): Promise<void>;
+        setupServer(server: string, botOrMod?: Mod): Promise<void>;
     
         /**
          * Sends an event to the server to export a pin (BCM) as input or output.
@@ -3453,24 +3567,12 @@ declare global {
          * Backs up all the AUX stories to a zip bot.
          */
         backupAsDownload(target: SessionSelector): BackupAsDownloadAction;
-    
-        /**
-         * Clears all the errors in the story.
-         */
-        destroyErrors(): Promise<void>;
-    
-        /**
-         * Loads the errors for the given bot and tag.
-         * @param bot The bot that the errors should be loaded for.
-         * @param tag The tag that the errors should be loaded for.
-         */
-        loadErrors(bot: string | Bot, tag: string): Promise<Bot[]>;
 
         /**
-         * Gets the number of players that are viewing the current story.
-         * @param story The story to get the statistics for. If omitted, then the current story is used.
+         * Gets the number of players that are viewing the current server.
+         * @param server The server to get the statistics for. If omitted, then the current server is used.
          */
-        storyPlayerCount(story?: string): Promise<number>;
+        serverPlayerCount(server?: string): Promise<number>;
 
         /**
          * Gets the total number of players that are connected to the server.
@@ -3485,13 +3587,13 @@ declare global {
         /**
          * Gets the list of stories that are on the server.
          */
-        storyStatuses(): Promise<{
-            story: string,
+        serverStatuses(): Promise<{
+            server: string,
             lastUpdateTime: Date
         }[]>;
 
         /**
-         * Gets the list of player IDs that are connected to the story.
+         * Gets the list of player IDs that are connected to the server.
          */
         players(): Promise<string[]>;
     
@@ -3541,7 +3643,7 @@ declare global {
         markHistory(options: MarkHistoryOptions): MarkHistoryAction;
     
         /**
-         * Loads the "history" space into the story.
+         * Loads the "history" space into the server.
          */
         browseHistory(): Promise<void>;
     
@@ -3554,11 +3656,11 @@ declare global {
         /**
          * Restores the current state to the given mark.
          * @param mark The bot or bot ID that represents the mark that should be restored.
-         * @param story The story that the mark should be restored to.
+         * @param server The server that the mark should be restored to.
          */
-        restoreHistoryMarkToStory(
+        restoreHistoryMarkToServer(
             mark: Bot | string,
-            story: string
+            server: string
         ): Promise<void>;
     };
 
@@ -3695,7 +3797,7 @@ declare global {
          * Calculates the HMAC SHA-256 hash of the given data.
          * HMAC is commonly used to verify that a message was created with a specific key.
          * Returns the hexadecimal string of the hash.
-         * @param key The password that should be used to sign the message.
+         * @param key The key that should be used to sign the message.
          * @param data The data that should be hashed.
          */
         hmacSha256(key: string, ...data: unknown[]): string;
@@ -3704,39 +3806,39 @@ declare global {
          * Calculates the HMAC SHA-512 hash of the given data.
          * HMAC is commonly used to verify that a message was created with a specific key.
          * Returns the hexadecimal string of the hash.
-         * @param key The password that should be used to sign the message.
+         * @param key The key that should be used to sign the message.
          * @param data The data that should be hashed.
          */
         hmacSha512(key: string, ...data: unknown[]): string;
 
         /**
-         * Encrypts the given data with the given password and returns the result.
+         * Encrypts the given data with the given secret and returns the result.
          * 
-         * @description Always choose a strong unique password. Use a password manager such as LastPass or 1Password to
+         * @description Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to
          * help you create and keep track of them.
          * 
-         * Assuming the above, this method will return a string of encrypted data that is confidential (unreadable without the password),
-         * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the password was used to encrypt the data).
+         * Assuming the above, this method will return a string of encrypted data that is confidential (unreadable without the secret),
+         * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the secret was used to encrypt the data).
          * 
-         * As a consequence, encrypting the same data with the same password will produce different results.
+         * As a consequence, encrypting the same data with the same secret will produce different results.
          * This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
          * 
          * Encrypts the given data using an authenticated encryption mechanism 
          * based on XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
          * 
-         * @param password The password to use to secure the data.
+         * @param secret The secret to use to secure the data.
          * @param data The data to encrypt.
          */
-        encrypt(password: string, data: string): string;
+        encrypt(secret: string, data: string): string;
 
         /**
-         * Decrypts the given data using the given password and returns the result.
+         * Decrypts the given data using the given secret and returns the result.
          * If the data was unable to be decrypted, null will be returned.
          *
-         * @param password The password to use to decrypt the data.
+         * @param secret The secret to use to decrypt the data.
          * @param data The data to decrypt.
          */
-        decrypt(password: string, data: string): string;
+        decrypt(secret: string, data: string): string;
 
         /**
          * Creates a new keypair that can be used for signing and verifying data.
@@ -3746,15 +3848,15 @@ declare global {
          * The private key is a special value that can be used to create digital signatures and
          * the public key is a related value that can be used to verify that a digitital signature was created by the private key.
          *
-         * The private key is called "private" because it is encrypted using the given password
+         * The private key is called "private" because it is encrypted using the given secret
          * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
          *
          * Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
          * they have access to it.
          *
-         * @param password The password that should be used to encrypt the private key.
+         * @param secret The secret that should be used to encrypt the private key.
          */
-        keypair(password: string): string;
+        keypair(secret: string): string;
 
         /**
          * Creates a digital signature for the given data using the private key from the given keypair.
@@ -3768,13 +3870,13 @@ declare global {
          * the data was encrypted (i.e. signed) by the corresponding private key.
          * 
          * And since the public key is available to everyone but the private
-         * key is only usable when you have the password, we can use this to prove that a particular piece of data was signed by whoever knows the password.
+         * key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.
          *
          * @param keypair The keypair that should be used to create the signature.
-         * @param password The password that was used when creating the keypair. Used to decrypt the private key.
+         * @param secret The secret that was used when creating the keypair. Used to decrypt the private key.
          * @param data The data to sign.
          */
-        sign(keypair: string, password: string, data: string): string;
+        sign(keypair: string, secret: string, data: string): string;
 
         /**
          * Validates that the given signature for the given data was created by the given keypair.
@@ -3789,21 +3891,21 @@ declare global {
          * @param certificate The certified bot that the new certificate should be signed with. 
          *                    This is commonly known as the signing certificate.
          *                    If given null, then the new certificate will be self-signed.
-         * @param password The signing certificate's password. This is the password that was used to create
+         * @param secret The signing certificate's secret. This is the secret that was used to create
          *                 the keypair for the signing certificate. If the new certificate will be self-signed, then this
-         *                 is the password that was used to create the given keypair.
+         *                 is the secret that was used to create the given keypair.
          * @param keypair The keypair that the new certificate should use.
          */
-        createCertificate(certificate: Bot | string, password: string, keypair: string): Promise<Bot>;
+        createCertificate(certificate: Bot | string, secret: string, keypair: string): Promise<Bot>;
 
         /**
-         * Signs the tag on the given bot using the given certificate and password.
+         * Signs the tag on the given bot using the given certificate and secret.
          * @param certificate The certificate to use to create the signature.
-         * @param password The password to use to decrypt the certificate's private key.
+         * @param secret The secret to use to decrypt the certificate's private key.
          * @param bot The bot that should be signed.
          * @param tag The tag that should be signed.
          */
-        signTag(certificate: Bot | string, password: string, bot: Bot | string, tag: string): Promise<void>;
+        signTag(certificate: Bot | string, secret: string, bot: Bot | string, tag: string): Promise<void>;
 
         /**
          * Verifies that the given tag on the given bot has been signed by a certificate.
@@ -3813,8 +3915,8 @@ declare global {
         verifyTag(bot: Bot | string, tag: string): boolean;
 
         /**
-         * Revokes the given certificate using the given password.
-         * In effect, this deletes the certificate bot from the story.
+         * Revokes the given certificate using the given secret.
+         * In effect, this deletes the certificate bot from the server.
          * Additionally, any tags signed with the given certificate will no longer be verified.
          * 
          * If given a signer, then the specified certificate will be used to sign the revocation.
@@ -3823,12 +3925,12 @@ declare global {
          * If no signer is given, then the certificate will be used to revoke itself.
          * 
          * @param certificate The certificate that should be revoked.
-         * @param password The password that should be used to decrypt the corresponding certificate's private key.
-         *                 If given a signer, then this is the password for the signer certificate. If no signer is given,
-         *                 then this is the password for the revoked certificate.
+         * @param secret The secret that should be used to decrypt the corresponding certificate's private key.
+         *                 If given a signer, then this is the secret for the signer certificate. If no signer is given,
+         *                 then this is the secret for the revoked certificate.
          * @param signer The certificate that should be used to revoke the aforementioned certificate. If not specified then the revocation will be self-signed.
          */
-        revokeCertificate(certificate: Bot | string, password: string, signer?: Bot | string): Promise<void>;
+        revokeCertificate(certificate: Bot | string, secret: string, signer?: Bot | string): Promise<void>;
     };
 
     /**
@@ -3885,5 +3987,15 @@ declare global {
             dimension: string,
             anchorPoint: BotAnchorPoint
         ): {x: number, y: number, z: number};
+    };
+
+    /**
+     * Defines a set of performance related functions.
+     */
+    const perf: {
+        /**
+         * Gets the performance stats for the server.
+         */
+        getStats(): PerformanceStats;
     };
 }

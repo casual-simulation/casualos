@@ -80,11 +80,6 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
     You need to use the <ActionLink action='server.browseHistory()'/> function to load it.
     Additionally, the history space is read-only. This means that bots cannot be added or removed from it and they also cannot be edited.
   </PossibleValueCode>
-  <PossibleValueCode value='error'>
-    The bot represents an error.
-    Whenever an error occurs in a script, a new bot is created and placed in error space.
-    Note that once a bot is added to error space it is unable to be changed.
-  </PossibleValueCode>
   <PossibleValueCode value='admin'>
     The bot is saved on the AUXPlayer and is shared across all stories.
     Admin space is initially locked whenever a new session starts. While locked, it is impossible to create, update, or destroy bots in the admin space.
@@ -251,7 +246,7 @@ Determines whether this bot responds to whispers or shouts. If this tag is set t
 ### `configBot`
 
 The ID of the bot that "configures" this bot.
-When set, the `config` variable will be available in scripts and formulas as a shortcut to the specified bot.
+When set, the `config` variable will be available in scripts as a shortcut to the specified bot.
 
 ## Visualization Tags
 
@@ -367,13 +362,31 @@ The color of the text in the label.
   <AnyColorValues/>
 </PossibleValuesTable>
 
+### `labelFontSize`
+
+The font size of the text in the label.
+Changing this value scales the text characters in the label which changes the text layout.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='auto'>
+    The label font size is automatically scaled to fit the text in the bot. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>
+    The label will use the given font size.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `labelSize`
 
 <Badges>
   <VideoBadge url='https://youtu.be/ql5R8t6RP-c' />
 </Badges>
 
-The size of the label font. Default is 1.
+The size of the label. Default is 1.
+Changing this value scales the label text in size without changing the text layout.
+This is useful for floating labels where you want the bubble to be larger without changing the size of the font.
 
 ### `labelSizeMode`
 
@@ -441,6 +454,24 @@ If the current font does not support a specific character, the character will be
   <PossibleValue value='Any URL'>
     Specifies that the font to be used should be downloaded from the given URL.
     Currently supports <a href="https://en.wikipedia.org/wiki/Web_Open_Font_Format">WOFF</a> and <a href="https://en.wikipedia.org/wiki/OpenType">OTF</a> fonts.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `labelWordWrapMode`
+
+The word wrapping mode that the label should use. Useful for automatically fitting the text onto the bot.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='breakCharacters'>
+    Line breaks may be inserted inside a word to fit the label on the bot. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='breakWords'>
+    Line breaks may be inserted between words to fit the label on the bot.
+  </PossibleValueCode>
+  <PossibleValue value='none'>
+    Line breaks will not be inserted.
   </PossibleValue>
 </PossibleValuesTable>
 
@@ -538,6 +569,9 @@ The shape that the bot should be displayed as.
   </PossibleValueCode>
   <PossibleValueCode id="iframe-form" value='iframe'>
     A webpage loaded into a 3D iframe. See <TagLink tag="formSubtype"/> for additional options.
+  </PossibleValueCode>
+  <PossibleValueCode value='portal'>
+    The bot will display the dimension specified by <TagLink tag='formAddress'/>.
   </PossibleValueCode>
   <PossibleValueCode value='cursor'>
     The bot will appear as a cursor in the multi-line editor.
@@ -790,7 +824,7 @@ Only applies to bots that are being shown in the menu portal.
 This is useful for positioning and styling the item in ways that are not possible using normal tags.
 Overridden by conflicting properties like <TagLink tag='color'/> or <TagLink tag='labelColor'/>.
 
-When setting this tag via the sheet, it is useful to utilize formulas to ensure that the resulting value is considered an object.
+When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1292,7 +1326,7 @@ The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that s
 This is useful for positioning the meet portal in ways that are not possible using <TagLink tag='meetPortalAnchorPoint'/>.
 Overridden by conflicting properties set by <TagLink tag='meetPortalAnchorPoint'/>.
 
-When setting this tag via the sheet, it is useful to utilize formulas to ensure that the resulting value is considered an object.
+When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1364,7 +1398,7 @@ The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that s
 This is useful for positioning the tag portal in ways that are not possible using <TagLink tag='tagPortalAnchorPoint'/>.
 Overridden by conflicting properties set by <TagLink tag='tagPortalAnchorPoint'/>.
 
-When setting this tag via the sheet, it is useful to utilize formulas to ensure that the resulting value is considered an object.
+When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1565,13 +1599,13 @@ All tags on the player bot will be synced with the URL query parameters.
 This means that setting the `#abc` tag on the player bot to `hello` will update the URL to include `abc=hello`.
 It also means that putting `inventoryPortal=myDimension` into the query string will set the <TagLink tag='inventoryPortal'/> tag to `myDimension`.
 
-### `story`
+### `server`
 
 <Badges>
   <UserBotBadge/>
 </Badges>
 
-The story that is loaded into CasualOS.
+The server that is loaded into CasualOS.
 
 ### `pagePortal`
 
@@ -1687,7 +1721,7 @@ playerBot.tags.tagPortalSpace = "tempLocal";
 ### `dataPortal`
 
 The data portal is a special portal that can be used in a web request to get bot data directly from the server.
-Similar to webhooks, you specify the story and data portal in the query string of the URL.
+Similar to webhooks, you specify the server and data portal in the query string of the URL.
 
 If given a bot ID, then the bot will be returned as JSON.
 
@@ -1703,17 +1737,17 @@ If there is only one tag and it ends with an extension like specified above then
 
 1. Request the JSON of the Bot with the given ID:
 ```
-https://auxplayer.com?story=my-story&dataPortal=bf68e5cc-993b-42fd-a142-a23de6d2cdcb
+https://auxplayer.com?server=my-server&dataPortal=bf68e5cc-993b-42fd-a142-a23de6d2cdcb
 ```
 
 2. Request all the <TagLink tag='label'/> tags values.
 ```
-https://auxplayer.com?story=my-story&dataPortal=label
+https://auxplayer.com?server=my-server&dataPortal=label
 ```
 
 3. Request a web page from the `test.html` tag.
 ```
-https://auxplayer.com?story=my-story&dataPortal=test.html
+https://auxplayer.com?server=my-server&dataPortal=test.html
 ```
 
 ### `pagePortalConfigBot`
@@ -2235,7 +2269,7 @@ Whether to force all shared scripts to have been signed by a certificate in orde
 This option only takes effect if it is set in the query string of the URL.
 Additionally, changing the tag value has no effect.
 
-If the story is loaded with `forceSignedScripts` set to `true`, then scripts will be required to be signed for the entire session.
+If the server is loaded with `forceSignedScripts` set to `true`, then scripts will be required to be signed for the entire session.
 
 `tempLocal` and `local` spaces are exempt from this requirement.
 

@@ -1691,19 +1691,19 @@ describe('AuxCausalTree2', () => {
                     123,
                     edit({}, preserve(1), insert('abc')),
                     '1abc23',
-                ],
+                ] as const,
                 [
                     'booleans',
                     true,
                     edit({}, preserve(1), insert('abc')),
                     'tabcrue',
-                ],
+                ] as const,
                 [
                     'objects',
                     { prop: 'yes' },
                     edit({}, preserve(1), insert('abc')),
                     '{abc"prop":"yes"}',
-                ],
+                ] as const,
             ];
 
             it.each(valueCases)(
@@ -2676,6 +2676,56 @@ describe('AuxCausalTree2', () => {
                 {
                     type: 'atom_added',
                     atom: delete1,
+                },
+            ]);
+        });
+
+        it('should support adding atoms in reverse order', () => {
+            const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+            const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+            const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+            ({ tree, updates, results } = applyAtoms(tree, [
+                value1,
+                tag1,
+                bot1,
+            ]));
+
+            expect(tree.site).toEqual({
+                id: 'a',
+                time: 3,
+            });
+            expect(tree.version).toEqual({
+                a: 3,
+            });
+            expect(tree.state).toEqual({
+                bot1: createBot('bot1', {
+                    tag1: 'abc',
+                }),
+            });
+            expect(updates).toEqual({
+                addedBots: [
+                    createBot('bot1', {
+                        tag1: 'abc',
+                    }),
+                ],
+                updatedBots: [],
+                removedBots: [],
+            });
+            expect(results).toEqual([
+                {
+                    type: 'cause_not_found',
+                    atom: value1,
+                    savedInReorderBuffer: true,
+                },
+                {
+                    type: 'cause_not_found',
+                    atom: tag1,
+                    savedInReorderBuffer: true,
+                },
+                {
+                    type: 'atoms_added',
+                    atoms: [bot1, tag1, value1],
                 },
             ]);
         });

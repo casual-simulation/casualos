@@ -61,6 +61,9 @@ import {
     calculateBotIdTagValue,
     getBotTagPortalAnchorPoint,
     getBotTagPortalAnchorPointOffset,
+    createPrecalculatedBot,
+    calculateLabelFontSize,
+    calculateLabelWordWrapMode,
 } from '../BotCalculations';
 import {
     Bot,
@@ -223,13 +226,13 @@ export function botCalculationContextTests(
             expect(falseValue).toBe(false);
         });
 
-        it('should convert arrays into arrays', () => {
+        it('should keep arrays as strings', () => {
             const bot = createBot();
             bot.tags.tag = '[test(a, b, c), 1.23, true]';
             const context = createPrecalculatedContext([bot]);
             const value = calculateBotValue(context, bot, 'tag');
 
-            expect(value).toEqual(['test(a', 'b', 'c)', 1.23, true]);
+            expect(value).toEqual('[test(a, b, c), 1.23, true]');
         });
 
         it('should return the bot ID for the id tag', () => {
@@ -260,75 +263,103 @@ export function botCalculationContextTests(
                 expect(value).toEqual('local');
             });
         });
+    });
 
-        describe('filterBotsBySelection()', () => {
-            it('should return the bots that have the given selection ID set to a truthy value', () => {
-                const selectionId = 'abcdefg1234';
-                const bot1 = createBot('test1');
-                const bot2 = createBot('test2');
-                const bot3 = createBot('test3');
-                const bot4 = createBot('test4');
-                const bot5 = createBot('test5');
-                const bot6 = createBot('test6');
+    describe('filterBotsBySelection()', () => {
+        it('should return the bots that have the given selection ID set in a tag', () => {
+            const selectionId = 'abcdefg1234';
+            const bot1 = createBot('test1');
+            const bot2 = createBot('test2');
+            const bot3 = createBot('test3');
+            const bot4 = createBot('test4');
+            const bot5 = createBot('test5');
+            const bot6 = createBot('test6');
+            const bot7 = createBot('test7');
 
-                bot1.tags[selectionId] = true;
-                bot2.tags[selectionId] = 1;
-                bot3.tags[selectionId] = -1;
-                bot4.tags[selectionId] = 'hello';
-                bot5.tags[selectionId] = false;
+            bot1.tags[selectionId] = true;
+            bot2.tags[selectionId] = 1;
+            bot3.tags[selectionId] = -1;
+            bot4.tags[selectionId] = 'hello';
+            bot5.tags[selectionId] = false;
+            bot6.tags[selectionId] = '';
 
-                const selected = filterBotsBySelection(
-                    [bot1, bot2, bot3, bot4, bot5, bot6],
-                    selectionId
-                );
+            const selected = filterBotsBySelection(
+                [bot1, bot2, bot3, bot4, bot5, bot6, bot7],
+                selectionId
+            );
 
-                expect(selected).toEqual([bot1, bot2, bot3, bot4]);
-            });
+            expect(selected).toEqual([bot1, bot2, bot3, bot4, bot5]);
+        });
 
-            it('should return bots that have the same ID as the selection', () => {
-                const selectionId = 'abcdefg1234';
-                const bot1 = createBot('test1');
-                const bot2 = createBot('abcdefg1234');
+        it('should return bots that have the same ID as the selection', () => {
+            const selectionId = 'abcdefg1234';
+            const bot1 = createBot('test1');
+            const bot2 = createBot('abcdefg1234');
 
-                bot1.tags[selectionId] = true;
+            bot1.tags[selectionId] = true;
 
-                const selected = filterBotsBySelection(
-                    [bot1, bot2],
-                    selectionId
-                );
+            const selected = filterBotsBySelection([bot1, bot2], selectionId);
 
-                expect(selected).toEqual([bot1, bot2]);
-            });
+            expect(selected).toEqual([bot1, bot2]);
+        });
 
-            it('should support the id tag', () => {
-                const selectionId = 'id';
-                const bot1 = createBot('test1');
-                const bot2 = createBot('abcdefg1234');
+        it('should support the id tag', () => {
+            const selectionId = 'id';
+            const bot1 = createBot('test1');
+            const bot2 = createBot('abcdefg1234');
 
-                bot1.tags[selectionId] = true;
+            bot1.tags[selectionId] = true;
 
-                const selected = filterBotsBySelection(
-                    [bot1, bot2],
-                    selectionId
-                );
+            const selected = filterBotsBySelection([bot1, bot2], selectionId);
 
-                expect(selected).toEqual([bot1, bot2]);
-            });
+            expect(selected).toEqual([bot1, bot2]);
+        });
 
-            it('should support the space tag', () => {
-                const selectionId = 'space';
-                const bot1 = createBot('test1');
-                const bot2 = createBot('abcdefg1234');
+        it('should support the space tag', () => {
+            const selectionId = 'space';
+            const bot1 = createBot('test1');
+            const bot2 = createBot('abcdefg1234');
 
-                bot1.tags[selectionId] = true;
+            bot1.tags[selectionId] = true;
 
-                const selected = filterBotsBySelection(
-                    [bot1, bot2],
-                    selectionId
-                );
+            const selected = filterBotsBySelection([bot1, bot2], selectionId);
 
-                expect(selected).toEqual([bot1, bot2]);
-            });
+            expect(selected).toEqual([bot1, bot2]);
+        });
+
+        it('should support tag masks', () => {
+            const selectionId = 'abc';
+            const bot1 = createPrecalculatedBot('test1', {}, {});
+            const bot2 = createPrecalculatedBot('abcdefg1234', {}, {});
+
+            bot1.values[selectionId] = true;
+            bot1.masks = {
+                tempLocal: {
+                    [selectionId]: true,
+                },
+            };
+
+            const selected = filterBotsBySelection([bot1, bot2], selectionId);
+
+            expect(selected).toEqual([bot1]);
+        });
+
+        it('should include bots that have a tag but no value', () => {
+            const selectionId = 'abc';
+            const bot1 = createPrecalculatedBot(
+                'test1',
+                {
+                    [selectionId]: null,
+                },
+                {
+                    [selectionId]: 'abc',
+                }
+            );
+            const bot2 = createPrecalculatedBot('abcdefg1234', {}, {});
+
+            const selected = filterBotsBySelection([bot1, bot2], selectionId);
+
+            expect(selected).toEqual([bot1]);
         });
     });
 
@@ -476,16 +507,16 @@ export function botCalculationContextTests(
 
     describe('isPickupable()', () => {
         const cases = [
-            [true, true],
-            [true, 'move'],
-            [true, 'any'],
-            [false, 'none'],
-            [true, 'drag'],
-            [false, 'moveOnly'],
-            [true, 'clone'],
-            [true, 'pickup'],
-            [true, 'pickupOnly'],
-            [true, false],
+            [true, true] as const,
+            [true, 'move'] as const,
+            [true, 'any'] as const,
+            [false, 'none'] as const,
+            [true, 'drag'] as const,
+            [false, 'moveOnly'] as const,
+            [true, 'clone'] as const,
+            [true, 'pickup'] as const,
+            [true, 'pickupOnly'] as const,
+            [true, false] as const,
         ];
 
         it.each(cases)('should return %s if set to %s', (expected, value) => {
@@ -545,10 +576,10 @@ export function botCalculationContextTests(
         ];
 
         it.each(cases)(
-            'should map story:%s to %s',
+            'should map server:%s to %s',
             (value: string, expected: boolean) => {
                 let bot = createBot('test', {
-                    story: value,
+                    server: value,
                 });
 
                 const calc = createPrecalculatedContext([bot]);
@@ -766,17 +797,17 @@ export function botCalculationContextTests(
 
     describe('getBotDragMode()', () => {
         const cases = [
-            ['all', 'all'],
-            ['all', 'adfsdfa'],
-            ['all', true],
-            ['none', 'none'],
-            ['all', 0],
-            ['all', 'clone'],
-            ['pickupOnly', 'pickupOnly'],
-            ['moveOnly', 'moveOnly'],
-            ['all', 'diff'],
-            ['all', 'cloneMod'],
-            ['all', false],
+            ['all', 'all'] as const,
+            ['all', 'adfsdfa'] as const,
+            ['all', true] as const,
+            ['none', 'none'] as const,
+            ['all', 0] as const,
+            ['all', 'clone'] as const,
+            ['pickupOnly', 'pickupOnly'] as const,
+            ['moveOnly', 'moveOnly'] as const,
+            ['all', 'diff'] as const,
+            ['all', 'cloneMod'] as const,
+            ['all', false] as const,
         ];
 
         it.each(cases)('should return %s for %s', (expected, val) => {
@@ -911,6 +942,7 @@ export function botCalculationContextTests(
             ['helix'],
             ['hex'],
             ['cursor'],
+            ['portal'],
         ];
         const tagCases = ['auxForm', 'form'];
 
@@ -1011,7 +1043,10 @@ export function botCalculationContextTests(
             ['top', 'top'],
             ['left', 'left'],
             ['right', 'right'],
-            ['[1, 2, 3]', [1, 2, 3]],
+            [
+                [1, 2, 3],
+                [1, 2, 3],
+            ],
         ];
         const tagCases = ['auxAnchorPoint', 'anchorPoint'];
 
@@ -1048,16 +1083,40 @@ export function botCalculationContextTests(
         ['bottom', 'bottom'],
         ['bottomRight', 'bottomRight'],
         ['bottomLeft', 'bottomLeft'],
-        ['[1]', [1, 0, 0, 0]],
-        ['[1, 2]', [1, 2, 0, 0]],
-        ['[1, 2, 3]', [1, 2, 3, 0]],
-        ['[1, 2, 3, 4]', [1, 2, 3, 4]],
-        ['[1, 2, 3, 4, 5]', [1, 2, 3, 4]],
-        ['[a]', ['a', 0, 0, 0]],
-        ['[a, b]', ['a', 'b', 0, 0]],
-        ['[a, b, c]', ['a', 'b', 'c', 0]],
-        ['[a, b, c, d]', ['a', 'b', 'c', 'd']],
-        ['[a, b, c, d, e]', ['a', 'b', 'c', 'd']],
+        [[1], [1, 0, 0, 0]],
+        [
+            [1, 2],
+            [1, 2, 0, 0],
+        ],
+        [
+            [1, 2, 3],
+            [1, 2, 3, 0],
+        ],
+        [
+            [1, 2, 3, 4],
+            [1, 2, 3, 4],
+        ],
+        [
+            [1, 2, 3, 4, 5],
+            [1, 2, 3, 4],
+        ],
+        [['a'], ['a', 0, 0, 0]],
+        [
+            ['a', 'b'],
+            ['a', 'b', 0, 0],
+        ],
+        [
+            ['a', 'b', 'c'],
+            ['a', 'b', 'c', 0],
+        ],
+        [
+            ['a', 'b', 'c', 'd'],
+            ['a', 'b', 'c', 'd'],
+        ],
+        [
+            ['a', 'b', 'c', 'd', 'e'],
+            ['a', 'b', 'c', 'd'],
+        ],
     ];
 
     describe('getMeetPortalAnchorPoint()', () => {
@@ -1131,23 +1190,20 @@ export function botCalculationContextTests(
             ['right', { x: -0.5, y: 0, z: 0 }],
 
             // Should mirror the coordinates when using literals
-            ['[1, 2, 3]', { x: -1, y: -2, z: -3 }],
+            [[1, 2, 3], { x: -1, y: -2, z: -3 }],
         ];
         const tagCases = ['auxAnchorPoint', 'anchorPoint'];
 
         describe.each(tagCases)('%s', (tag: string) => {
-            it.each(cases)(
-                'should support %s',
-                (mode: string, expected: any) => {
-                    const bot = createBot('test', {
-                        [tag]: <any>mode,
-                    });
+            it.each(cases)('should support %s', (mode: any, expected: any) => {
+                const bot = createBot('test', {
+                    [tag]: <any>mode,
+                });
 
-                    const calc = createPrecalculatedContext([bot]);
+                const calc = createPrecalculatedContext([bot]);
 
-                    expect(getAnchorPointOffset(calc, bot)).toEqual(expected);
-                }
-            );
+                expect(getAnchorPointOffset(calc, bot)).toEqual(expected);
+            });
         });
 
         it('should default to bottom', () => {
@@ -1169,8 +1225,11 @@ export function botCalculationContextTests(
             'fullscreen',
             { top: '0px', bottom: '0px', left: '0px', right: '0px' },
         ],
-        ['[1, 2, 3]', { top: '1px', bottom: '3px', left: '0px', right: '2px' }],
-        ['[1%, 2%, 3%]', { top: '1%', bottom: '3%', left: '0px', right: '2%' }],
+        [[1, 2, 3], { top: '1px', bottom: '3px', left: '0px', right: '2px' }],
+        [
+            ['1%', '2%', '3%'],
+            { top: '1%', bottom: '3%', left: '0px', right: '2%' },
+        ],
 
         [
             'top',
@@ -1356,6 +1415,80 @@ export function botCalculationContextTests(
         });
     });
 
+    describe('calculateLabelFontSize()', () => {
+        const cases = [['auto'] as const, [10] as const, [1] as const];
+        const tagCases = ['auxLabelFontSize', 'labelFontSize'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (mode: string | number) => {
+                const bot = createBot('test', {
+                    [tag]: <any>mode,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(calculateLabelFontSize(calc, bot)).toBe(mode);
+            });
+
+            it('should return 0.001 for 0', () => {
+                const bot = createBot('test', {
+                    [tag]: 0,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+                const shape = calculateLabelFontSize(calc, bot);
+
+                expect(shape).toBe(0.001);
+            });
+
+            it('should return 0.001 for 0.0001', () => {
+                const bot = createBot('test', {
+                    [tag]: 0.0001,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+                const shape = calculateLabelFontSize(calc, bot);
+
+                expect(shape).toBe(0.001);
+            });
+        });
+
+        it('should default to auto', () => {
+            const bot = createBot();
+
+            const calc = createPrecalculatedContext([bot]);
+            const shape = calculateLabelFontSize(calc, bot);
+
+            expect(shape).toBe('auto');
+        });
+    });
+
+    describe('calculateLabelWordWrapMode()', () => {
+        const cases = [['breakCharacters'], ['breakWords'], ['none']];
+        const tagCases = ['auxLabelWordWrapMode', 'labelWordWrapMode'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (mode: string) => {
+                const bot = createBot('test', {
+                    [tag]: <any>mode,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(calculateLabelWordWrapMode(calc, bot)).toBe(mode);
+            });
+        });
+
+        it('should default to breakCharacters', () => {
+            const bot = createBot();
+
+            const calc = createPrecalculatedContext([bot]);
+            const shape = calculateLabelWordWrapMode(calc, bot);
+
+            expect(shape).toBe('breakCharacters');
+        });
+    });
+
     describe('getBotPosition()', () => {
         it('should return the contextX, contextY, and contextZ values', () => {
             const bot = createBot('test', {
@@ -1500,7 +1633,7 @@ export function botCalculationContextTests(
     describe('getChannelBotById()', () => {
         it('should return the first bot that matches', () => {
             const channel = createBot('channel', {
-                story: 'test',
+                server: 'test',
                 'aux.channels': true,
             });
 
@@ -1512,7 +1645,7 @@ export function botCalculationContextTests(
 
         it('should return null if there are no matches', () => {
             const channel = createBot('channel', {
-                story: 'test',
+                server: 'test',
                 'aux.channels': true,
             });
 
@@ -1829,10 +1962,10 @@ export function botCalculationContextTests(
         });
 
         let cases = [
-            [1.1, ['1.1']],
-            [false, ['false']],
-            ['abc', ['abc']],
-            ['[abc]', ['abc']],
+            [1.1, ['1.1']] as const,
+            [false, ['false']] as const,
+            ['abc', ['abc']] as const,
+            [['abc'], ['abc']] as const,
         ];
 
         it.each(cases)('should convert %s', (value, expected) => {
@@ -2433,13 +2566,13 @@ export function botCalculationContextTests(
     describe('BotLookupTable', () => {
         describe('buildLookupTable()', () => {
             const dataTypes = [
-                ['support strings', 'jkl', 'pqr'],
-                ['support integers', 123, 456],
-                ['support floats', 123.65, 456.789],
-                ['support booleans', false, true],
-                ['support nulls', null, null],
-                ['support mixed types', 'hello', 987],
-                ['support zero', 0, 0],
+                ['support strings', 'jkl', 'pqr'] as const,
+                ['support integers', 123, 456] as const,
+                ['support floats', 123.65, 456.789] as const,
+                ['support booleans', false, true] as const,
+                ['support nulls', null as any, null as any] as const,
+                ['support mixed types', 'hello', 987] as const,
+                ['support zero', 0, 0] as const,
             ];
 
             it.each(dataTypes)('should %s (%s, %s)', (desc, first, second) => {

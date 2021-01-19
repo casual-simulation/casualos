@@ -67,6 +67,7 @@ function playerConfig() {
                 template: path.resolve(__dirname, 'aux-player', 'index.html'),
                 title: 'CasualOS',
                 filename: 'player.html',
+                favicon: path.resolve(__dirname, 'aux-player', 'favicon.ico'),
             }),
             new HtmlWebpackPlugin({
                 chunks: ['vm', 'vendors'],
@@ -118,6 +119,30 @@ function playerConfig() {
                             'draco'
                         ),
                         to: path.resolve(__dirname, 'dist', 'gltf-draco'),
+                    },
+                    {
+                        from: path.resolve(__dirname, 'aux-player', 'legal'),
+                        to: path.resolve(__dirname, 'dist'),
+                    },
+                    {
+                        from: path.resolve(
+                            __dirname,
+                            'aux-player',
+                            'legal',
+                            'terms-of-service.txt'
+                        ),
+                        to: path.resolve(__dirname, 'dist', 'terms'),
+                        toType: 'file',
+                    },
+                    {
+                        from: path.resolve(
+                            __dirname,
+                            'aux-player',
+                            'legal',
+                            'privacy-policy.txt'
+                        ),
+                        to: path.resolve(__dirname, 'dist', 'privacy-policy'),
+                        toType: 'file',
                     },
                 ],
             }),

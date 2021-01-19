@@ -1,4 +1,9 @@
-import { AuxGlobalContext, AsyncTask } from './AuxGlobalContext';
+import {
+    AuxGlobalContext,
+    AsyncTask,
+    BotTimer,
+    TimeoutOrIntervalTimer,
+} from './AuxGlobalContext';
 import {
     hasValue,
     trimTag,
@@ -38,7 +43,7 @@ import {
     playSound as calcPlaySound,
     bufferSound as calcBufferSound,
     cancelSound as calcCancelSound,
-    setupStory as calcSetupStory,
+    setupServer as calcSetupServer,
     shell as calcShell,
     backupToGithub as calcBackupToGithub,
     backupAsDownload as calcBackupAsDownload,
@@ -59,6 +64,8 @@ import {
     revokeCertificate as calcRevokeCertificate,
     localPositionTween as calcLocalPositionTween,
     localRotationTween as calcLocalRotationTween,
+    animateTag as calcAnimateTag,
+    showUploadFiles as calcShowUploadFiles,
     clearSpace,
     loadBots,
     BotAction,
@@ -92,7 +99,7 @@ import {
     getStories,
     getPlayers,
     action,
-    getStoryStatuses,
+    getServerStatuses,
     setSpacePassword,
     exportGpioPin,
     unexportGpioPin,
@@ -157,6 +164,8 @@ import {
     EDIT_TAG_SYMBOL,
     BotSpace,
     EDIT_TAG_MASK_SYMBOL,
+    AnimateTagOptions,
+    EaseType,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -168,7 +177,7 @@ import uuidv4 from 'uuid/v4';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
-import { convertToCopiableValue } from './Utils';
+import { convertToCopiableValue, getEasing } from './Utils';
 import { sha256 as hashSha256, sha512 as hashSha512, hmac } from 'hash.js';
 import stableStringify from 'fast-json-stable-stringify';
 import {
@@ -181,12 +190,16 @@ import {
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, del, insert, preserve } from '../aux-format-2';
 import { Euler, Vector3, Plane, Ray } from 'three';
-import { Runtime } from 'inspector';
+import TWEEN from '@tweenjs/tween.js';
+import './PerformanceNowPolyfill';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
  */
 export interface AuxLibrary {
+    /**
+     * The functions that are part of the general API.
+     */
     api: {
         whisper(
             bot: (Bot | string)[] | Bot | string,
@@ -196,6 +209,13 @@ export interface AuxLibrary {
         shout(name: string, arg?: any): any[];
         __energyCheck(): void;
         [key: string]: any;
+    };
+
+    /**
+     * The functions that are part of the bot-specific API.
+     */
+    tagSpecificApi: {
+        [key: string]: (options: TagSpecificApiOptions) => any;
     };
     typeDefinitions?: string;
 }
@@ -326,6 +346,40 @@ export interface WebhookOptions {
     responseShout?: string;
 }
 
+/**
+ * Defines a set of options for animateTag().
+ */
+export interface AnimateTagFunctionOptions {
+    /**
+     * The value that should be animated from.
+     * If not specified then the current tag value will be used.
+     */
+    fromValue?: any;
+
+    /**
+     * The value that should be animated to.
+     */
+    toValue: any;
+
+    /**
+     * The duration of the animation in seconds.
+     */
+    duration: number;
+
+    /**
+     * The type of easing to use.
+     * If not specified then "linear" "inout" will be used.
+     */
+    easing?: EaseType | Easing;
+
+    /**
+     * The space that the tag should be animated in.
+     * If not specified then "tempLocal" will be used.
+     * If false, then the bot will be edited instead of using tag masks.
+     */
+    tagMaskSpace?: BotSpace | false;
+}
+
 export interface BotFilterFunction {
     (bot: Bot): boolean;
     sort?: (bot: Bot) => any;
@@ -344,6 +398,54 @@ export interface TweenOptions {
      * The duration of the tween in seconds.
      */
     duration?: number;
+}
+
+/**
+ * Defines an interface that contains performance statistics about a server.
+ */
+export interface PerformanceStats {
+    /**
+     * The number of bots in the server.
+     */
+    numberOfBots: number;
+
+    /**
+     * A list of listen tags and the amount of time spent executing them (in miliseconds).
+     * Useful to guage if a listen tag is causing the server to slow down.
+     */
+    shoutTimes: {
+        tag: string;
+        timeMs: number;
+    }[];
+
+    /**
+     * The total number of active setTimeout() and setInterval() timers that are active.
+     */
+    numberOfActiveTimers: number;
+}
+
+/**
+ * Options needed for the Bot-specific API.
+ */
+export interface TagSpecificApiOptions {
+    /**
+     * The Bot that the API is for.
+     */
+    bot: Bot;
+    /**
+     * The tag that the API is for.
+     */
+    tag: string;
+
+    /**
+     * The bot that is set as the creator of the current bot.
+     */
+    creator: RuntimeBot;
+
+    /**
+     * The bot that is set as the config of the current bot.
+     */
+    config: RuntimeBot;
 }
 
 /**
@@ -386,7 +488,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             applyMod,
             subtractMods,
 
-            create,
             destroy,
             changeState,
             superShout,
@@ -410,6 +511,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             webhook,
             uuid,
             sleep,
+            animateTag,
+            clearAnimations,
 
             __energyCheck,
 
@@ -433,8 +536,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 enableVR,
                 disableVR,
                 downloadBots,
-                downloadStory,
+                downloadServer,
                 showUploadAuxFile,
+                showUploadFiles,
                 openQRCodeScanner,
                 closeQRCodeScanner,
                 showQRCode,
@@ -443,15 +547,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 closeBarcodeScanner,
                 showBarcode,
                 hideBarcode,
-                loadStory,
-                unloadStory,
+                loadServer,
+                unloadServer,
                 importAUX,
                 replaceDragBot,
 
                 getBot: getPlayerBot,
                 isInDimension,
                 getCurrentDimension,
-                getCurrentStory,
+                getCurrentServer,
                 getMenuDimension,
                 getInventoryDimension,
                 getPortalDimension,
@@ -481,7 +585,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             },
 
             server: {
-                setupStory,
+                setupServer,
                 exportGpio,
                 unexportGpio,
                 setGpio,
@@ -537,15 +641,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 markHistory,
                 browseHistory,
                 restoreHistoryMark,
-                restoreHistoryMarkToStory,
+                restoreHistoryMarkToServer,
                 loadFile,
                 saveFile,
-                destroyErrors,
-                loadErrors,
-                storyPlayerCount,
+                serverPlayerCount,
                 totalPlayerCount,
                 stories,
-                storyStatuses,
+                serverStatuses,
                 players,
             },
 
@@ -594,14 +696,67 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 verifyTag,
                 revokeCertificate,
             },
+
+            perf: {
+                getStats,
+            },
+        },
+
+        tagSpecificApi: {
+            create: (options: TagSpecificApiOptions) => (...args: any[]) =>
+                create(options.bot?.id, ...args),
+            setTimeout: botTimer('timeout', setTimeout, true),
+            setInterval: botTimer('interval', setInterval, false),
         },
     };
+
+    function botTimer(
+        type: TimeoutOrIntervalTimer['type'],
+        func: (handler: Function, timeout: number, ...args: any[]) => number,
+        clearAfterHandlerIsRun: boolean
+    ) {
+        return (options: TagSpecificApiOptions) =>
+            function (handler: Function, timeout?: number, ...args: any[]) {
+                if (!options.bot) {
+                    throw new Error(
+                        `Timers are not supported when there is no current bot.`
+                    );
+                }
+
+                let timer: number;
+                if (clearAfterHandlerIsRun) {
+                    timer = func(
+                        function () {
+                            try {
+                                handler(...arguments);
+                            } finally {
+                                context.removeBotTimer(
+                                    options.bot.id,
+                                    type,
+                                    timer
+                                );
+                            }
+                        },
+                        timeout,
+                        ...args
+                    );
+                } else {
+                    timer = func(handler, timeout, ...args);
+                }
+                context.recordBotTimer(options.bot.id, {
+                    timerId: timer,
+                    type: type,
+                });
+
+                return timer;
+            };
+    }
 
     /**
      * Gets a list of all the bots.
      *
      * @example
-     * // Gets all the bots in the story.
+     * // Gets all the bots in the server.
      * let bots = getBots();
      */
     function getBots(...args: any[]): RuntimeBot[] {
@@ -633,6 +788,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (hasValue(filter)) {
             if (typeof filter === 'function') {
                 return context.bots.filter((b) => filter(b.tags[tag]));
+            } else if (tag === 'id' && typeof filter === 'string') {
+                const bot = context.state[filter];
+                return bot ? [bot] : [];
             } else {
                 return context.bots.filter((b) => b.tags[tag] === filter);
             }
@@ -987,12 +1145,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows a QR Code that contains a link to a story and dimension.
-     * @param story The story that should be joined. Defaults to the current story.
+     * Shows a QR Code that contains a link to a server and dimension.
+     * @param server The server that should be joined. Defaults to the current server.
      * @param dimension The dimension that should be joined. Defaults to the current dimension.
      */
-    function showJoinCode(story?: string, dimension?: string) {
-        return addAction(calcShowJoinCode(story, dimension));
+    function showJoinCode(server?: string, dimension?: string) {
+        return addAction(calcShowJoinCode(server, dimension));
     }
 
     /**
@@ -1164,10 +1322,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         );
     }
 
-    function downloadStory() {
+    function downloadServer() {
         return downloadBots(
             getBots(bySpace('shared')),
-            `${getCurrentStory()}.aux`
+            `${getCurrentServer()}.aux`
         );
     }
 
@@ -1176,6 +1334,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function showUploadAuxFile() {
         return addAction(calcShowUploadAuxFile());
+    }
+
+    /**
+     * Shows the "Upload File" dialog.
+     */
+    function showUploadFiles() {
+        const task = context.createTask();
+        const action = calcShowUploadFiles(task.taskId);
+        return addAsyncAction(task, action);
     }
 
     /**
@@ -1248,19 +1415,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Loads the story with the given ID.
-     * @param id The ID of the story to load.
+     * Loads the server with the given ID.
+     * @param id The ID of the server to load.
      */
-    function loadStory(id: string) {
+    function loadServer(id: string) {
         const event = loadSimulation(id);
         return addAction(event);
     }
 
     /**
-     * Unloads the story with the given ID.
-     * @param id The ID of the story to unload.
+     * Unloads the server with the given ID.
+     * @param id The ID of the server to unload.
      */
-    function unloadStory(id: string) {
+    function unloadServer(id: string) {
         const event = unloadSimulation(id);
         return addAction(event);
     }
@@ -1327,14 +1494,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the story that the player is currently in.
+     * Gets the server that the player is currently in.
      */
-    function getCurrentStory(): string {
+    function getCurrentServer(): string {
         const user = context.playerBot;
         if (user) {
-            let story = getTag(user, 'story');
-            if (hasValue(story)) {
-                return story.toString();
+            let server = getTag(user, 'server');
+            if (hasValue(server)) {
+                return server.toString();
             }
             return undefined;
         }
@@ -1527,7 +1694,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *   productId: '10_cookies',
      *   title: '10 Cookies',
      *   description: '$5.00',
-     *   processingStory: 'cookies_checkout'
+     *   processingServer: 'cookies_checkout'
      * });
      *
      */
@@ -1622,14 +1789,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sends an event to the server to setup a new story if it does not exist.
-     * @param story The story.
-     * @param botOrMod The bot or mod that should be cloned into the new story.
+     * Sends an event to the server to setup a new server if it does not exist.
+     * @param server The server.
+     * @param botOrMod The bot or mod that should be cloned into the new server.
      */
-    function setupStory(story: string, botOrMod?: Mod) {
+    function setupServer(server: string, botOrMod?: Mod) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            calcSetupStory(story, convertToCopiableValue(botOrMod)),
+            calcSetupServer(server, convertToCopiableValue(botOrMod)),
             undefined,
             undefined,
             task.taskId
@@ -2530,7 +2697,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Loads the "history" space into the story.
+     * Loads the "history" space into the server.
      */
     function browseHistory() {
         const task = context.createTask(true, true);
@@ -2562,13 +2729,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Restores the current state to the given mark.
      * @param mark The bot or bot ID that represents the mark that should be restored.
-     * @param story The story that the mark should be restored to.
+     * @param server The server that the mark should be restored to.
      */
-    function restoreHistoryMarkToStory(mark: Bot | string, story: string) {
+    function restoreHistoryMarkToServer(mark: Bot | string, server: string) {
         const id = getID(mark);
         const task = context.createTask(true, true);
         const event = calcRemote(
-            calcRestoreHistoryMark(id, story),
+            calcRestoreHistoryMark(id, server),
             undefined,
             undefined,
             task.taskId
@@ -2617,51 +2784,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Destroys all the errors in the story.
+     * Gets the number of players that are viewing the current server.
+     * @param server The server to get the statistics for. If omitted, then the current server is used.
      */
-    function destroyErrors() {
-        const task = context.createTask();
-        const event = clearSpace('error', task.taskId);
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Loads the errors for the given bot and tag.
-     * @param bot The bot that the errors should be loaded for.
-     * @param tag The tag that the errors should be loaded for.
-     */
-    function loadErrors(bot: string | Bot, tag: string): Promise<Bot[]> {
-        const task = context.createTask();
-        const event = loadBots(
-            'error',
-            [
-                {
-                    tag: 'error',
-                    value: true,
-                },
-                {
-                    tag: 'errorBot',
-                    value: getID(bot),
-                },
-                {
-                    tag: 'errorTag',
-                    value: tag,
-                },
-            ],
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Gets the number of players that are viewing the current story.
-     * @param story The story to get the statistics for. If omitted, then the current story is used.
-     */
-    function storyPlayerCount(story?: string): Promise<number> {
+    function serverPlayerCount(server?: string): Promise<number> {
         const task = context.createTask(true, true);
-        const actualStory = hasValue(story) ? story : getCurrentStory();
+        const actualServer = hasValue(server) ? server : getCurrentServer();
         const event = calcRemote(
-            getPlayerCount(actualStory),
+            getPlayerCount(actualServer),
             undefined,
             undefined,
             task.taskId
@@ -2700,15 +2830,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Gets the list of stories that are on the server.
      */
-    function storyStatuses(): Promise<
+    function serverStatuses(): Promise<
         {
-            story: string;
+            server: string;
             lastUpdateTime: Date;
         }[]
     > {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            getStoryStatuses(),
+            getServerStatuses(),
             undefined,
             undefined,
             task.taskId
@@ -2717,7 +2847,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the list of player IDs that are connected to the story.
+     * Gets the list of player IDs that are connected to the server.
      */
     function players(): Promise<string[]> {
         const task = context.createTask(true, true);
@@ -2828,6 +2958,138 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return sleepy;
     }
 
+    /**
+     * Animates the given tag. Returns a promise when the animation is finished.
+     * @param bot The bot or list of bots that should be animated.
+     * @param tag The tag that should be animated.
+     * @param options The options for the animation.
+     */
+    function animateTag(
+        bot: RuntimeBot | (RuntimeBot | string)[] | string,
+        tag: string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void> {
+        if (Array.isArray(bot)) {
+            const bots = bot
+                .map((b) => (typeof b === 'string' ? getBot('id', b) : b))
+                .filter((b) => !!b);
+
+            const promises = bots.map((b) => animateBotTag(b, tag, options));
+
+            const allPromises = Promise.all(promises);
+            return <Promise<void>>(<any>allPromises);
+        } else if (typeof bot === 'string') {
+            const finalBot = getBot('id', bot);
+            if (finalBot) {
+                return animateBotTag(finalBot, tag, options);
+            } else {
+                return Promise.resolve();
+            }
+        } else {
+            return animateBotTag(bot, tag, options);
+        }
+    }
+
+    function animateBotTag(
+        bot: RuntimeBot,
+        tag: string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void> {
+        if (!options) {
+            clearAnimations(bot, tag);
+            return Promise.resolve();
+        }
+
+        return new Promise<void>((resolve, reject) => {
+            let valueHolder = {
+                [tag]: hasValue(options.fromValue)
+                    ? options.fromValue
+                    : bot.tags[tag],
+            };
+            const easing: Easing = hasValue(options.easing)
+                ? typeof options.easing === 'string'
+                    ? {
+                          mode: 'inout',
+                          type: options.easing,
+                      }
+                    : options.easing
+                : {
+                      mode: 'inout',
+                      type: 'linear',
+                  };
+            const tween = new TWEEN.Tween<any>(valueHolder)
+                .to({
+                    [tag]: options.toValue,
+                })
+                .duration(options.duration * 1000)
+                .easing(getEasing(easing))
+                .onUpdate(() => {
+                    if (
+                        options.tagMaskSpace === false ||
+                        options.tagMaskSpace === getBotSpace(bot)
+                    ) {
+                        setTag(bot, tag, valueHolder[tag]);
+                    } else {
+                        setTagMask(
+                            bot,
+                            tag,
+                            valueHolder[tag],
+                            options.tagMaskSpace || 'tempLocal'
+                        );
+                    }
+                })
+                .onComplete(() => {
+                    context.removeBotTimer(bot.id, 'animation', tween.getId());
+                    resolve();
+                })
+                .start(context.localTime);
+
+            context.recordBotTimer(bot.id, {
+                type: 'animation',
+                timerId: tween.getId(),
+                tag: tag,
+                cancel: () => {
+                    tween.stop();
+                    reject(new Error('The animation was canceled.'));
+                },
+            });
+        });
+    }
+
+    /**
+     * Cancels the animations that are running on the given bot(s).
+     * @param bot The bot or list of bots that should cancel their animations.
+     * @param tag The tag that the animations should be canceld for. If omitted then all tags will be canceled.
+     */
+    function clearAnimations(
+        bot: RuntimeBot | (RuntimeBot | string)[] | string,
+        tag?: string
+    ) {
+        const bots = Array.isArray(bot)
+            ? bot
+                  .map((b) => (typeof b === 'string' ? getBot('id', b) : b))
+                  .filter((b) => !!b)
+            : typeof bot === 'string'
+            ? getBots('id', bot)
+            : [bot];
+
+        for (let bot of bots) {
+            const timers = context.getBotTimers(bot.id);
+            for (let timer of timers) {
+                if (timer.type === 'animation' && timer.cancel) {
+                    if (!hasValue(tag) || timer.tag === tag) {
+                        timer.cancel();
+                        context.removeBotTimer(
+                            bot.id,
+                            timer.type,
+                            timer.timerId
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     // /**
     //  * Sends a web request based on the given options.
     //  * @param options The options that specify where and what to send in the web request.
@@ -2875,7 +3137,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param action The action to reject.
      */
     function reject(action: any) {
-        const event = calcReject(getOriginalObject(action));
+        const original = getOriginalObject(action);
+        const event = Array.isArray(original)
+            ? calcReject(...original)
+            : calcReject(original);
         return addAction(event);
     }
 
@@ -3182,7 +3447,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Calculates the HMAC SHA-256 hash of the given data.
      * HMAC is commonly used to verify that a message was created with a specific key.
-     * @param key The password that should be used to sign the message.
+     * @param key The key that should be used to sign the message.
      * @param data The data that should be hashed.
      */
     function hmacSha256(key: string, ...data: unknown[]): string {
@@ -3199,7 +3464,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Calculates the HMAC SHA-512 hash of the given data.
      * HMAC is commonly used to verify that a message was created with a specific key.
-     * @param key The password that should be used to sign the message.
+     * @param key The key that should be used to sign the message.
      * @param data The data that should be hashed.
      */
     function hmacSha512(key: string, ...data: unknown[]): string {
@@ -3214,43 +3479,43 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Encrypts the given data with the given password and returns the result.
+     * Encrypts the given data with the given secret and returns the result.
      *
-     * @description Always choose a strong unique password. Use a password manager such as LastPass or 1Password to
+     * @description Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to
      * help you create and keep track of them.
      *
-     * Assuming the above, this method will return a string of encrypted data that is confidential (unreadable without the password),
-     * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the password was used to encrypt the data).
+     * Assuming the above, this method will return a string of encrypted data that is confidential (unreadable without the secret),
+     * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the secret was used to encrypt the data).
      *
-     * As a consequence, encrypting the same data with the same password will produce different results.
+     * As a consequence, encrypting the same data with the same secret will produce different results.
      * This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
      *
      * Encrypts the given data using an authenticated encryption mechanism
      * based on XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
      *
-     * @param password The password to use to secure the data.
+     * @param secret The secret to use to secure the data.
      * @param data The data to encrypt.
      */
-    function encrypt(password: string, data: string): string {
+    function encrypt(secret: string, data: string): string {
         if (typeof data === 'string') {
             const encoder = new TextEncoder();
             const bytes = encoder.encode(data);
-            return realEncrypt(password, bytes);
+            return realEncrypt(secret, bytes);
         } else {
             throw new Error('The data to encrypt must be a string.');
         }
     }
 
     /**
-     * Decrypts the given data using the given password and returns the result.
+     * Decrypts the given data using the given secret and returns the result.
      * If the data was unable to be decrypted, null will be returned.
      *
-     * @param password The password to use to decrypt the data.
+     * @param secret The secret to use to decrypt the data.
      * @param data The data to decrypt.
      */
-    function decrypt(password: string, data: string): string {
+    function decrypt(secret: string, data: string): string {
         if (typeof data === 'string') {
-            const bytes = realDecrypt(password, data);
+            const bytes = realDecrypt(secret, data);
             if (!bytes) {
                 return null;
             }
@@ -3269,16 +3534,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * The private key is a special value that can be used to create digital signatures and
      * the public key is a related value that can be used to verify that a digitital signature was created by the private key.
      *
-     * The private key is called "private" because it is encrypted using the given password
+     * The private key is called "private" because it is encrypted using the given secret
      * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
      *
      * Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
      * they have access to it.
      *
-     * @param password The password that should be used to encrypt the private key.
+     * @param secret The secret that should be used to encrypt the private key.
      */
-    function keypair(password: string): string {
-        return realKeypair(password);
+    function keypair(secret: string): string {
+        return realKeypair(secret);
     }
 
     /**
@@ -3290,17 +3555,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * This works by leveraging asymetric encryption but in reverse.
      * If we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that
      * the data was encrypted (i.e. signed) by the corresponding private key. And since the public key is available to everyone but the private
-     * key is only usable when you have the password, we can use this to prove that a particular piece of data was signed by whoever knows the password.
+     * key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.
      *
      * @param keypair The keypair that should be used to create the signature.
-     * @param password The password that was used when creating the keypair. Used to decrypt the private key.
+     * @param secret The secret that was used when creating the keypair. Used to decrypt the private key.
      * @param data The data to sign.
      */
-    function sign(keypair: string, password: string, data: string): string {
+    function sign(keypair: string, secret: string, data: string): string {
         if (typeof data === 'string') {
             const encoder = new TextEncoder();
             const bytes = encoder.encode(data);
-            return realSign(keypair, password, bytes);
+            return realSign(keypair, secret, bytes);
         } else {
             throw new Error('The data to encrypt must be a string.');
         }
@@ -3327,14 +3592,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param certificate The certified bot that the new certificate should be signed with.
      *                    This is commonly known as the signing certificate.
      *                    If given null, then the new certificate will be self-signed.
-     * @param password The signing certificate's password. This is the password that was used to create
+     * @param secret The signing certificate's secret. This is the secret that was used to create
      *                 the keypair for the signing certificate. If the new certificate will be self-signed, then this
-     *                 is the password that was used to create the given keypair.
+     *                 is the secret that was used to create the given keypair.
      * @param keypair The keypair that the new certificate should use.
      */
     function createCertificate(
         certificate: Bot | string,
-        password: string,
+        secret: string,
         keypair: string
     ): Promise<RuntimeBot> {
         const signingBotId = getID(certificate);
@@ -3344,14 +3609,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                   {
                       keypair: keypair,
                       signingBotId: signingBotId,
-                      signingPassword: password,
+                      signingPassword: secret,
                   },
                   task.taskId
               )
             : calcCreateCertificate(
                   {
                       keypair: keypair,
-                      signingPassword: password,
+                      signingPassword: secret,
                   },
                   task.taskId
               );
@@ -3360,15 +3625,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Signs the tag on the given bot using the given certificate and password.
+     * Signs the tag on the given bot using the given certificate and secret.
      * @param certificate The certificate to use to create the signature.
-     * @param password The password to use to decrypt the certificate's private key.
+     * @param secret The secret to use to decrypt the certificate's private key.
      * @param bot The bot that should be signed.
      * @param tag The tag that should be signed.
      */
     function signTag(
         certificate: Bot | string,
-        password: string,
+        secret: string,
         bot: Bot | string,
         tag: string
     ): Promise<void> {
@@ -3379,7 +3644,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const action = calcSignTag(
             signingBotId,
-            password,
+            secret,
             realBot.id,
             tag,
             value,
@@ -3406,8 +3671,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Revokes the given certificate using the given password.
-     * In effect, this deletes the certificate bot from the story.
+     * Revokes the given certificate using the given secret.
+     * In effect, this deletes the certificate bot from the server.
      * Additionally, any tags signed with the given certificate will no longer be verified.
      *
      * If given a signer, then the specified certificate will be used to sign the revocation.
@@ -3416,14 +3681,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * If no signer is given, then the certificate will be used to revoke itself.
      *
      * @param certificate The certificate that should be revoked.
-     * @param password The password that should be used to decrypt the corresponding certificate's private key.
-     *                 If given a signer, then this is the password for the signer certificate. If no signer is given,
-     *                 then this is the password for the revoked certificate.
+     * @param secret The secret that should be used to decrypt the corresponding certificate's private key.
+     *                 If given a signer, then this is the secret for the signer certificate. If no signer is given,
+     *                 then this is the secret for the revoked certificate.
      * @param signer The certificate that should be used to revoke the aforementioned certificate. If not specified then the revocation will be self-signed.
      */
     function revokeCertificate(
         certificate: Bot | string,
-        password: string,
+        secret: string,
         signer?: Bot | string
     ): Promise<void> {
         const certId = getID(certificate);
@@ -3431,11 +3696,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const action = calcRevokeCertificate(
             signerId,
-            password,
+            secret,
             certId,
             task.taskId
         );
         return addAsyncAction(task, action);
+    }
+
+    /**
+     * Gets performance stats from the runtime.
+     */
+    function getStats(): PerformanceStats {
+        return {
+            numberOfBots: context.bots.length,
+            shoutTimes: context.getShoutTimers(),
+            numberOfActiveTimers: context.getNumberOfActiveTimers(),
+        };
     }
 
     function _hash(hash: MessageDigest<any>, data: unknown[]): string {
@@ -3775,13 +4051,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * ]);
      *
      */
-    function create(...mods: Mod[]) {
-        return createBase(() => uuidv4(), ...mods);
+    function create(botId: string, ...mods: Mod[]) {
+        return createBase(botId, () => uuidv4(), ...mods);
     }
 
-    function createBase(idFactory: () => string, ...datas: Mod[]) {
-        let parent = context.currentBot;
-        let parentDiff = parent ? { creator: getID(parent) } : {};
+    function createBase(
+        botId: string,
+        idFactory: () => string,
+        ...datas: Mod[]
+    ) {
+        let parentDiff = botId ? { creator: botId } : {};
         return createFromMods(idFactory, parentDiff, ...datas);
     }
 
@@ -3992,7 +4271,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Asks every bot in the story to run the given action.
+     * Asks every bot in the server to run the given action.
      * In effect, this is like shouting to a bunch of people in a room.
      *
      * @param name The event name.
@@ -4212,6 +4491,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         arg?: any,
         sendListenEvents: boolean = true
     ) {
+        const startTime = globalThis.performance.now();
+        let tag = trimEvent(name);
+
         let ids = !!bots
             ? bots.map((bot) => {
                   return !!bot
@@ -4220,10 +4502,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                           : bot.id
                       : null;
               })
-            : context.bots.map((b) => b.id);
+            : context.getBotIdsWithListener(tag);
 
         let results = [] as any[];
-        let tag = trimEvent(name);
 
         let targets = [] as RuntimeBot[];
         let listeners = [] as RuntimeBot[];
@@ -4261,6 +4542,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 listeners.push(bot);
             }
         }
+
+        const endTime = globalThis.performance.now();
+        const delta = endTime - startTime;
+        context.addShoutTime(name, delta);
 
         if (sendListenEvents) {
             const listenArg = {

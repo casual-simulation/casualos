@@ -6,6 +6,7 @@ import {
     idEquals,
     RejectedAtom,
     RejectionReason,
+    atomId,
 } from './Atom2';
 import { createIndex, AtomIndex } from './AtomIndex';
 
@@ -14,6 +15,7 @@ import { createIndex, AtomIndex } from './AtomIndex';
  */
 export type WeaveResult =
     | AtomAddedResult
+    | AtomsAddedResult
     | AlreadyAddedResult
     | AtomRemovedResult
     | CauseNotFoundResult
@@ -35,11 +37,19 @@ export interface AtomRemovedResult {
 }
 
 /**
- * Defines an interface that indicates the given atom was added to the weave.
+ * Defines an interface that indicates the given atoms were added to the weave.
  */
 export interface AtomAddedResult {
     type: 'atom_added';
     atom: Atom<any>;
+}
+
+/**
+ * Defines an interface that indicates the given atom was added to the weave.
+ */
+export interface AtomsAddedResult {
+    type: 'atoms_added';
+    atoms: Atom<any>[];
 }
 
 /**
@@ -56,6 +66,13 @@ export interface AlreadyAddedResult {
 export interface CauseNotFoundResult {
     type: 'cause_not_found';
     atom: Atom<any>;
+
+    /**
+     * Whether the atom was saved in the reorder buffer.
+     * If true, then the atom will potentially be included in a atoms_added result when the cause atom is added to the weave.
+     * If false, then the atom has been discarded.
+     */
+    savedInReorderBuffer: boolean;
 }
 
 /**
@@ -170,6 +187,21 @@ interface CardinalityStats {
 }
 
 /**
+ * Options for a weave.
+ */
+export interface WeaveOptions {
+    /**
+     * The maximum number of causeless atoms that can be stored in the reorder buffer.
+     */
+    maxReorderBufferSize: number;
+}
+
+/**
+ * The default size of the reorder buffer in a weave.
+ */
+export const DEFAULT_REORDER_BUFFER_SIZE = 10;
+
+/**
  * Defines a weave.
  * That is, the depth-first preorder traversal of a causal tree.
  *
@@ -181,6 +213,12 @@ export class Weave<T> {
     private _cardinality: Map<string, CardinalityStats>;
     private _idMap: Map<string, WeaveNode<T>>;
     private _hashMap: Map<string, WeaveNode<T>>;
+
+    /**
+     * A map of atom IDs to nodes that are waiting for a cause.
+     */
+    private _reorderBuffer: Map<string, WeaveNode<T>>;
+    private _maxReorderBufferSize: number;
 
     /**
      * Gets the root nodes used by this weave.
@@ -215,11 +253,14 @@ export class Weave<T> {
     /**
      * Creates a new weave.
      */
-    constructor() {
+    constructor(options?: WeaveOptions) {
         this._roots = [];
         this._idMap = new Map();
         this._hashMap = new Map();
         this._cardinality = new Map();
+        this._reorderBuffer = new Map();
+        this._maxReorderBufferSize =
+            options?.maxReorderBufferSize || DEFAULT_REORDER_BUFFER_SIZE;
     }
 
     /**
@@ -282,7 +323,23 @@ export class Weave<T> {
             }
 
             // Atom is a root
-            this._addRoot(atom);
+            const atomNode = this._addRoot(atom);
+
+            // Check the reorder buffer for atoms that should be under this atom
+            if (this._reorderBuffer.size > 0) {
+                const foundMissingChildren = this._addMissingChildren(
+                    atomNode,
+                    false
+                );
+                if (foundMissingChildren) {
+                    return {
+                        type: 'atoms_added',
+                        atoms: [atomNode, ...iterateCausalGroup(atomNode)].map(
+                            (n) => n.atom
+                        ),
+                    };
+                }
+            }
 
             return {
                 type: 'atom_added',
@@ -292,9 +349,47 @@ export class Weave<T> {
 
         const causeNode = this.getNode(atom.cause);
         if (!causeNode) {
+            if (this._reorderBuffer.size >= this._maxReorderBufferSize) {
+                return {
+                    type: 'cause_not_found',
+                    atom: atom,
+                    savedInReorderBuffer: false,
+                };
+            }
+
+            const causeNode = this._reorderBuffer.get(
+                atomIdToString(atom.cause)
+            );
+
+            if (causeNode) {
+                const cause = causeNode.atom;
+                if (!atomMatchesHash(atom, cause)) {
+                    return {
+                        type: 'hash_failed',
+                        atom: atom,
+                    };
+                }
+
+                if (atom.id.timestamp <= cause.id.timestamp) {
+                    return {
+                        type: 'invalid_timestamp',
+                        atom: atom,
+                    };
+                }
+            }
+
+            const atomNode = this._addToReorderBuffer(atom);
+
+            if (causeNode) {
+                this._insertNodeUnder(causeNode, atomNode, atomNode);
+            }
+
+            this._addMissingChildren(atomNode, true);
+
             return {
                 type: 'cause_not_found',
                 atom: atom,
+                savedInReorderBuffer: true,
             };
         }
 
@@ -318,7 +413,23 @@ export class Weave<T> {
             return this._resolveConflict(existing, atom, causeNode);
         }
 
-        this._insertUnder(causeNode, atom);
+        const atomNode = this._insertUnder(causeNode, atom, false);
+
+        // Check the reorder buffer for atoms that should be under this atom
+        if (this._reorderBuffer.size > 0) {
+            const foundMissingChildren = this._addMissingChildren(
+                atomNode,
+                false
+            );
+            if (foundMissingChildren) {
+                return {
+                    type: 'atoms_added',
+                    atoms: [atomNode, ...iterateCausalGroup(atomNode)].map(
+                        (n) => n.atom
+                    ),
+                };
+            }
+        }
 
         return {
             type: 'atom_added',
@@ -329,7 +440,43 @@ export class Weave<T> {
     private _addRoot(atom: Atom<T>) {
         const node: WeaveNode<T> = _createNode(atom, null, null);
         this._roots.push(node);
-        this._addNodeToMaps(node);
+        this._addNodeToMaps(node, false);
+        return node;
+    }
+
+    private _addToReorderBuffer(atom: Atom<T>) {
+        const node: WeaveNode<T> = _createNode(atom, null, null);
+        this._addNodeToMaps(node, true);
+        return node;
+    }
+
+    /**
+     * Finds atoms in the reorder buffer that are children of the given node.
+     * @param atomNode The
+     * @param reorderBuffer Whether the added atoms should still be part of the reorder buffer or not.
+     */
+    private _addMissingChildren(
+        atomNode: WeaveNode<T>,
+        reorderBuffer: boolean
+    ) {
+        let foundMissingChildren = false;
+        let nodes = [...this._reorderBuffer.values()];
+        for (let node of nodes) {
+            if (idEquals(atomNode.atom.id, node.atom.cause)) {
+                foundMissingChildren = true;
+                let last: WeaveNode<T>;
+                for (let n of iterateFrom(node)) {
+                    if (!reorderBuffer) {
+                        this._removeNodeIdFromMaps(n, true);
+                        this._addNodeToMaps(n, false);
+                    }
+                    last = n;
+                }
+                this._insertNodeUnder(atomNode, node, last);
+            }
+        }
+
+        return foundMissingChildren;
     }
 
     /**
@@ -482,7 +629,7 @@ export class Weave<T> {
                 this._remove(existing);
 
                 if (causeNode) {
-                    this._insertUnder(causeNode, atom);
+                    this._insertUnder(causeNode, atom, false);
                 } else {
                     this._addRoot(atom);
                 }
@@ -508,43 +655,107 @@ export class Weave<T> {
      * @param cause The cause.
      * @param atom The atom.
      */
-    private _insertUnder(cause: WeaveNode<T>, atom: Atom<T>) {
+    private _insertUnder(
+        cause: WeaveNode<T>,
+        atom: Atom<T>,
+        reorderBuffer: boolean
+    ) {
         let last: WeaveNode<T>;
         for (let node of iterateCausalGroup(cause)) {
             if (idEquals(node.atom.cause, cause.atom.id)) {
                 if (_compareAtomIds(atom.id, node.atom.id) < 0) {
-                    return this._insertBefore(node, atom);
+                    return this._insertBefore(node, atom, reorderBuffer);
                 }
             }
             last = node;
         }
 
         if (last) {
-            return this._insertAfter(last, atom);
+            return this._insertAfter(last, atom, reorderBuffer);
         } else {
-            return this._insertAfter(cause, atom);
+            return this._insertAfter(cause, atom, reorderBuffer);
         }
     }
 
-    private _insertBefore(pos: WeaveNode<T>, atom: Atom<T>) {
+    private _insertNodeUnder(
+        cause: WeaveNode<T>,
+        start: WeaveNode<T>,
+        end: WeaveNode<T> = last(iterateFrom(start))
+    ) {
+        let last: WeaveNode<T>;
+        for (let node of iterateCausalGroup(cause)) {
+            if (idEquals(node.atom.cause, cause.atom.id)) {
+                if (_compareAtomIds(start.atom.id, node.atom.id) < 0) {
+                    return this._insertNodeBefore(node, start, end);
+                }
+            }
+            last = node;
+        }
+
+        if (last) {
+            return this._insertNodeAfter(last, start, end);
+        } else {
+            return this._insertNodeAfter(cause, start, end);
+        }
+    }
+
+    private _insertNodeBefore(
+        pos: WeaveNode<T>,
+        start: WeaveNode<T>,
+        end: WeaveNode<T>
+    ) {
+        const prev = pos.prev;
+        if (prev) {
+            prev.next = start;
+            start.prev = prev;
+        }
+        end.next = pos;
+        pos.prev = end;
+        return start;
+    }
+
+    private _insertNodeAfter(
+        pos: WeaveNode<T>,
+        start: WeaveNode<T>,
+        end: WeaveNode<T>
+    ) {
+        const next = pos.next;
+        if (next) {
+            next.prev = end;
+        }
+        pos.next = start;
+        start.prev = pos;
+        end.next = next;
+        return start;
+    }
+
+    private _insertBefore(
+        pos: WeaveNode<T>,
+        atom: Atom<T>,
+        reorderBuffer: boolean
+    ) {
         const prev = pos.prev;
         const node: WeaveNode<T> = _createNode(atom, pos, prev);
         if (prev) {
             prev.next = node;
         }
         pos.prev = node;
-        this._addNodeToMaps(node);
+        this._addNodeToMaps(node, reorderBuffer);
         return node;
     }
 
-    private _insertAfter(pos: WeaveNode<T>, atom: Atom<T>) {
+    private _insertAfter(
+        pos: WeaveNode<T>,
+        atom: Atom<T>,
+        reorderBuffer: boolean
+    ) {
         const next = pos.next;
         const node: WeaveNode<T> = _createNode(atom, next, pos);
         if (next) {
             next.prev = node;
         }
         pos.next = node;
-        this._addNodeToMaps(node);
+        this._addNodeToMaps(node, reorderBuffer);
         return node;
     }
 
@@ -564,7 +775,7 @@ export class Weave<T> {
         }
         start.prev = null;
         end.next = null;
-        this._removeListFromMaps(start);
+        this._removeListFromMaps(start, false);
         if (!start.atom.cause) {
             const index = this._roots.indexOf(start);
             if (index >= 0) {
@@ -574,21 +785,39 @@ export class Weave<T> {
         return start;
     }
 
-    private _addNodeToMaps(node: WeaveNode<T>) {
-        this._idMap.set(atomIdToString(node.atom.id), node);
-        this._hashMap.set(node.atom.hash, node);
-    }
-
-    private _removeListFromMaps(node: WeaveNode<T>) {
-        this._removeNodeIdFromMaps(node);
-        for (let n of iterateFrom(node)) {
-            this._removeNodeIdFromMaps(n);
+    /**
+     * Adds the given node to the lookup maps.
+     * @param node The node to add.
+     * @param reorderBuffer Whether to add the node to the reorder buffer instead of the normal buffers.
+     */
+    private _addNodeToMaps(node: WeaveNode<T>, reorderBuffer: boolean) {
+        if (reorderBuffer) {
+            this._reorderBuffer.set(atomIdToString(node.atom.id), node);
+        } else {
+            this._idMap.set(atomIdToString(node.atom.id), node);
+            this._hashMap.set(node.atom.hash, node);
         }
     }
 
-    private _removeNodeIdFromMaps(node: WeaveNode<T>) {
-        this._idMap.delete(atomIdToString(node.atom.id));
-        this._hashMap.delete(node.atom.hash);
+    /**
+     * Removes the given node and all linked nodes from the lookup maps.
+     * @param node The nodes to remove.
+     * @param reorderBuffer Whether to remove them from the reorder buffer instead of the normal buffers.
+     */
+    private _removeListFromMaps(node: WeaveNode<T>, reorderBuffer: boolean) {
+        this._removeNodeIdFromMaps(node, reorderBuffer);
+        for (let n of iterateFrom(node)) {
+            this._removeNodeIdFromMaps(n, reorderBuffer);
+        }
+    }
+
+    private _removeNodeIdFromMaps(node: WeaveNode<T>, reorderBuffer: boolean) {
+        if (reorderBuffer) {
+            this._reorderBuffer.delete(atomIdToString(node.atom.id));
+        } else {
+            this._idMap.delete(atomIdToString(node.atom.id));
+            this._hashMap.delete(node.atom.hash);
+        }
     }
 }
 
@@ -735,7 +964,7 @@ export function* iterateReverse<T>(start: WeaveNode<T>) {
  * Returns null if no atom was added.
  * @param result The weave result.
  */
-export function addedAtom(result: WeaveResult): Atom<any> {
+export function addedAtom(result: WeaveResult): Atom<any> | Atom<any>[] {
     if (!result) {
         return null;
     }
@@ -743,6 +972,27 @@ export function addedAtom(result: WeaveResult): Atom<any> {
         return result.atom;
     } else if (result.type === 'conflict') {
         return result.winner;
+    } else if (result.type === 'atoms_added') {
+        return result.atoms;
+    }
+    return null;
+}
+
+/**
+ * Calculates the atom that was added to the tree from the given result.
+ * Returns null if no atom was added.
+ * @param result The weave result.
+ */
+export function addedWeaveAtoms(result: WeaveResult): Atom<any>[] {
+    if (!result) {
+        return null;
+    }
+    if (result.type === 'atom_added') {
+        return [result.atom];
+    } else if (result.type === 'conflict') {
+        return [result.winner];
+    } else if (result.type === 'atoms_added') {
+        return result.atoms;
     }
     return null;
 }

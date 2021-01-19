@@ -174,7 +174,7 @@ export class RemoteCausalRepoHistoryPartitionImpl
                 }
                 const hash = bot.tags.markHash;
                 this._client
-                    .restore(restoreMark.story || this._branch, hash)
+                    .restore(restoreMark.server || this._branch, hash)
                     .subscribe(
                         () => {
                             if (hasValue(event.taskId)) {

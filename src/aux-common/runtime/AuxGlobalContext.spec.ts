@@ -62,7 +62,7 @@ describe('AuxGlobalContext', () => {
             const bot3 = createDummyRuntimeBot('test3');
             addToContext(context, bot1, bot3, bot2);
 
-            removeFromContext(context, bot2);
+            removeFromContext(context, [bot2]);
 
             expect(context.bots).toEqual([bot1, bot3]);
         });
@@ -73,9 +73,155 @@ describe('AuxGlobalContext', () => {
             const bot3 = createDummyRuntimeBot('test3');
             addToContext(context, bot1, bot3);
 
-            removeFromContext(context, bot2);
+            removeFromContext(context, [bot2]);
 
             expect(context.bots).toEqual([bot1, bot3]);
+        });
+
+        describe('timers', () => {
+            beforeEach(() => {
+                jest.useFakeTimers('modern');
+            });
+            afterEach(() => {
+                jest.clearAllTimers();
+            });
+
+            afterAll(() => {
+                jest.useRealTimers();
+            });
+
+            it('should keep track of the total number of timers', () => {
+                const bot1 = createDummyRuntimeBot('test1');
+                const bot2 = createDummyRuntimeBot('test2');
+                addToContext(context, bot1, bot2);
+
+                const fn = jest.fn();
+                const timer = <any>setTimeout(fn, 500);
+
+                context.recordBotTimer(bot1.id, {
+                    timerId: timer,
+                    type: 'timeout',
+                });
+
+                context.recordBotTimer(bot1.id, {
+                    timerId: timer,
+                    type: 'timeout',
+                });
+
+                expect(context.getNumberOfActiveTimers()).toBe(2);
+
+                context.cancelAllBotTimers();
+
+                expect(context.getNumberOfActiveTimers()).toBe(0);
+
+                context.recordBotTimer(bot1.id, {
+                    timerId: timer,
+                    type: 'timeout',
+                });
+
+                context.recordBotTimer(bot2.id, {
+                    timerId: timer,
+                    type: 'timeout',
+                });
+
+                expect(context.getNumberOfActiveTimers()).toBe(2);
+
+                context.cancelBotTimers(bot1.id);
+
+                expect(context.getNumberOfActiveTimers()).toBe(1);
+            });
+
+            it('should cancel setTimeout() timers', () => {
+                const bot1 = createDummyRuntimeBot('test1');
+                addToContext(context, bot1);
+
+                const fn = jest.fn();
+                const timer = <any>setTimeout(fn, 500);
+
+                context.recordBotTimer(bot1.id, {
+                    timerId: timer,
+                    type: 'timeout',
+                });
+
+                removeFromContext(context, [bot1]);
+
+                expect(fn).not.toBeCalled();
+                expect(context.getBotTimers(bot1.id)).toEqual([]);
+
+                jest.advanceTimersByTime(500);
+
+                expect(fn).not.toBeCalled();
+                expect(context.getBotTimers(bot1.id)).toEqual([]);
+            });
+
+            it('should cancel setInterval() timers', () => {
+                const bot1 = createDummyRuntimeBot('test1');
+                addToContext(context, bot1);
+
+                const fn = jest.fn();
+                const timer = <any>setInterval(fn, 500);
+
+                context.recordBotTimer(bot1.id, {
+                    timerId: timer,
+                    type: 'interval',
+                });
+
+                removeFromContext(context, [bot1]);
+
+                expect(fn).not.toBeCalled();
+                expect(context.getBotTimers(bot1.id)).toEqual([]);
+
+                jest.advanceTimersByTime(500);
+
+                expect(fn).not.toBeCalled();
+                expect(context.getBotTimers(bot1.id)).toEqual([]);
+            });
+
+            it('should not cancel setInterval() timers if specified', () => {
+                const bot1 = createDummyRuntimeBot('test1');
+                addToContext(context, bot1);
+
+                const fn = jest.fn();
+                const timer = <any>setInterval(fn, 500);
+
+                context.recordBotTimer(bot1.id, {
+                    timerId: timer,
+                    type: 'interval',
+                });
+
+                removeFromContext(context, [bot1], false);
+
+                expect(fn).not.toBeCalled();
+                expect(context.getBotTimers(bot1.id)).toEqual([
+                    {
+                        timerId: timer,
+                        type: 'interval',
+                    },
+                ]);
+            });
+
+            it('should not cancel setTimeout() timers if specified', () => {
+                const bot1 = createDummyRuntimeBot('test1');
+                addToContext(context, bot1);
+
+                const fn = jest.fn();
+                const timer = <any>setTimeout(fn, 500);
+
+                context.recordBotTimer(bot1.id, {
+                    timerId: timer,
+                    type: 'timeout',
+                });
+
+                removeFromContext(context, [bot1], false);
+
+                expect(fn).not.toBeCalled();
+                expect(context.getBotTimers(bot1.id)).toEqual([
+                    {
+                        timerId: timer,
+                        type: 'timeout',
+                    },
+                ]);
+            });
         });
     });
 
@@ -139,10 +285,23 @@ describe('AuxGlobalContext', () => {
 
             expect(notifier.notifyChange).toBeCalledTimes(1);
         });
+
+        it('should record listeners for new bots', () => {
+            context.createBot(
+                createBot('test1', {
+                    value: 123,
+                    func1: jest.fn(),
+                    func2: jest.fn(),
+                })
+            );
+
+            expect(context.getBotIdsWithListener('func1')).toEqual(['test1']);
+            expect(context.getBotIdsWithListener('func2')).toEqual(['test1']);
+        });
     });
 
     describe('destroyBot()', () => {
-        it('should not remove the bot from the context', () => {
+        it('should remove the bot from the context', () => {
             const bot1 = createDummyRuntimeBot('test1');
             const bot2 = createDummyRuntimeBot('test2');
             const bot3 = createDummyRuntimeBot('test3');
@@ -196,6 +355,22 @@ describe('AuxGlobalContext', () => {
             context.destroyBot(bot1);
 
             expect(notifier.notifyChange).toBeCalledTimes(1);
+        });
+
+        it('should remove listeners for the bot', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            bot1.listeners.func1 = jest.fn();
+            bot1.listeners.func2 = jest.fn();
+
+            addToContext(context, bot1);
+
+            context.recordListenerPresense('test1', 'func1', true);
+            context.recordListenerPresense('test1', 'func2', true);
+
+            context.destroyBot(bot1);
+
+            expect(context.getBotIdsWithListener('func1')).toEqual([]);
+            expect(context.getBotIdsWithListener('func2')).toEqual([]);
         });
     });
 
@@ -323,6 +498,143 @@ describe('AuxGlobalContext', () => {
             await waitAsync();
 
             expect(fn).toBeCalledWith('abc');
+        });
+    });
+
+    describe('getBotIdsWithListener()', () => {
+        it('should return an empty set if there are no bots with listeners', () => {
+            expect(context.getBotIdsWithListener('missing')).toEqual([]);
+        });
+
+        it('should return a set with the recorded bot IDs', () => {
+            context.recordListenerPresense('test1', 'abc', true);
+            context.recordListenerPresense('test2', 'abc', true);
+            context.recordListenerPresense('test3', 'def', true);
+
+            expect(context.getBotIdsWithListener('abc')).toEqual([
+                'test1',
+                'test2',
+            ]);
+        });
+
+        it('should return the IDs in alphabetical order', () => {
+            context.recordListenerPresense('test3', 'abc', true);
+            context.recordListenerPresense('test1', 'abc', true);
+            context.recordListenerPresense('test2', 'abc', true);
+
+            expect(context.getBotIdsWithListener('abc')).toEqual([
+                'test1',
+                'test2',
+                'test3',
+            ]);
+        });
+
+        it('should only include IDs that have a listener', () => {
+            context.recordListenerPresense('test1', 'abc', true);
+            context.recordListenerPresense('test2', 'abc', true);
+            context.recordListenerPresense('test3', 'abc', true);
+            context.recordListenerPresense('test3', 'abc', false);
+
+            expect(context.getBotIdsWithListener('abc')).toEqual([
+                'test1',
+                'test2',
+            ]);
+        });
+
+        it('should return a copy of the array', () => {
+            context.recordListenerPresense('test1', 'abc', true);
+            context.recordListenerPresense('test2', 'abc', true);
+            context.recordListenerPresense('test3', 'abc', true);
+            context.recordListenerPresense('test3', 'abc', false);
+
+            const arr = context.getBotIdsWithListener('abc');
+
+            arr.push('wrong');
+
+            expect(context.getBotIdsWithListener('abc')).not.toEqual(arr);
+        });
+    });
+
+    describe('cancelAllBotTimers', () => {
+        beforeEach(() => {
+            jest.useFakeTimers('modern');
+        });
+        afterEach(() => {
+            jest.clearAllTimers();
+        });
+
+        afterAll(() => {
+            jest.useRealTimers();
+        });
+
+        it('should cancel setTimeout() timers', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            const bot2 = createDummyRuntimeBot('test2');
+            addToContext(context, bot1, bot2);
+
+            const fn1 = jest.fn();
+            const fn2 = jest.fn();
+            const timer1 = <any>setTimeout(fn1, 500);
+            const timer2 = <any>setTimeout(fn2, 500);
+
+            context.recordBotTimer(bot1.id, {
+                timerId: timer1,
+                type: 'timeout',
+            });
+
+            context.recordBotTimer(bot2.id, {
+                timerId: timer2,
+                type: 'timeout',
+            });
+
+            context.cancelAllBotTimers();
+
+            expect(fn1).not.toBeCalled();
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+            expect(fn2).not.toBeCalled();
+            expect(context.getBotTimers(bot2.id)).toEqual([]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn1).not.toBeCalled();
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+            expect(fn2).not.toBeCalled();
+            expect(context.getBotTimers(bot2.id)).toEqual([]);
+        });
+
+        it('should cancel setInterval() timers', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            const bot2 = createDummyRuntimeBot('test2');
+            addToContext(context, bot1, bot2);
+
+            const fn1 = jest.fn();
+            const fn2 = jest.fn();
+            const timer1 = <any>setInterval(fn1, 500);
+            const timer2 = <any>setInterval(fn2, 500);
+
+            context.recordBotTimer(bot1.id, {
+                timerId: timer1,
+                type: 'interval',
+            });
+
+            context.recordBotTimer(bot2.id, {
+                timerId: timer2,
+                type: 'interval',
+            });
+
+            context.cancelAllBotTimers();
+
+            expect(fn1).not.toBeCalled();
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+            expect(fn2).not.toBeCalled();
+            expect(context.getBotTimers(bot2.id)).toEqual([]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn1).not.toBeCalled();
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+            expect(fn2).not.toBeCalled();
+            expect(context.getBotTimers(bot2.id)).toEqual([]);
         });
     });
 });

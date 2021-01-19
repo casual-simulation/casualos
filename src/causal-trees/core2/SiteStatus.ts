@@ -37,10 +37,21 @@ export function newSite(id?: string, time?: number): SiteStatus {
 export function updateSite(site: SiteStatus, result: WeaveResult): SiteStatus {
     const added = addedAtom(result);
     if (added) {
-        return {
-            id: site.id,
-            time: calculateTime(site, added),
-        };
+        if (Array.isArray(added)) {
+            let time = -1;
+            for (let a of added) {
+                time = Math.max(time, calculateTime(site, a));
+            }
+            return {
+                id: site.id,
+                time: time,
+            };
+        } else {
+            return {
+                id: site.id,
+                time: calculateTime(site, added),
+            };
+        }
     }
     return site;
 }
@@ -51,7 +62,15 @@ export function calculateResultTime(
 ): number {
     const added = addedAtom(result);
     if (added) {
-        return calculateTime(site, added);
+        if (Array.isArray(added)) {
+            let time = -1;
+            for (let a of added) {
+                time = Math.max(time, calculateTime(site, a));
+            }
+            return time;
+        } else {
+            return calculateTime(site, added);
+        }
     }
     return site.time;
 }

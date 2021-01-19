@@ -389,13 +389,13 @@ describe('DirectoryService', () => {
                 'IP address matches the entry IP',
                 '192.168.1.1',
                 '192.168.1.1',
-            ],
+            ] as const,
             [
                 false,
                 'IP address does not match the entry IP',
                 '192.168.1.1',
                 '192.168.1.2',
-            ],
+            ] as const,
         ];
 
         it.each(cases)(

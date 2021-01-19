@@ -193,18 +193,6 @@ describe('AuxCompiler', () => {
             expect(func()).toEqual(3);
         });
 
-        it('should support formulas', () => {
-            const func = compiler.compile('=1 + 2');
-
-            expect(func()).toEqual(3);
-        });
-
-        it('should support multi-line formulas', () => {
-            const func = compiler.compile('=1 + 2 +\n 5;');
-
-            expect(func()).toEqual(8);
-        });
-
         it('should support arguments in listeners', () => {
             const func = compiler.compile('return args.length');
 

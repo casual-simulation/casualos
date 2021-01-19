@@ -18,6 +18,7 @@ import {
 import {
     BotLabelAnchor,
     BotLabelAlignment,
+    BotLabelWordWrap,
 } from '@casual-simulation/aux-common';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { Text as TextMesh } from 'troika-three-text';
@@ -48,7 +49,8 @@ export class Text3D extends Object3D {
      * Number chosen by expirementation to place 5-6 characters on a bot.
      */
     public static readonly defaultFontSize: number = 0.325;
-    public static readonly defaultWidth: number = Text3D.defaultFontSize * 6;
+    public static readonly defaultWidth: number = 1;
+    public static readonly minWidth: number = 0.01;
 
     public static readonly defaultScale: number = 1;
 
@@ -65,6 +67,9 @@ export class Text3D extends Object3D {
 
     // The anchor position for the text 3d.
     private _anchor: BotLabelAnchor = 'top';
+
+    // The word wrapping mode for the text 3d.
+    private _wordWrap: BotLabelWordWrap = 'breakCharacters';
 
     private _renderedThisFrame: boolean = false;
 
@@ -96,30 +101,36 @@ export class Text3D extends Object3D {
     }
 
     /**
-     * Create text 3d.
-     * @param font what font to use for the text3d.
+     * The bounding box of this text 3d in local space.
      */
-    constructor(width?: number) {
+    private get _localBoundingBox(): Box3 {
+        if (this._mesh) {
+            return this._mesh.geometry.boundingBox;
+        }
+        return new Box3();
+    }
+
+    /**
+     * Create text 3d.
+     */
+    constructor() {
         super();
 
-        if (width === undefined || width < Text3D.defaultWidth) {
-            width = Text3D.defaultWidth;
-        }
-
-        this.currentWidth = width;
+        let width = Text3D.defaultWidth;
 
         this._mesh = new TextMesh();
 
         this._mesh.text = '';
         this._mesh.textAlign = 'center';
         this._mesh.font = Roboto;
-        this._mesh.fontSize = 0.325;
+        this._mesh.fontSize = Text3D.defaultFontSize;
         this._mesh.maxWidth = width;
         this._mesh.anchorX = 'center';
         this._mesh.anchorY = 'middle';
+        this._mesh.whiteSpace = 'normal';
+        this._mesh.overflowWrap = 'break-word';
 
         this.add(this._mesh);
-        this.setScale(Text3D.defaultScale);
 
         this._mesh.position.set(0, 0, 0);
 
@@ -128,6 +139,7 @@ export class Text3D extends Object3D {
 
     /**
      * Sets the position of the text based on the size of the given bounding box.
+     * Returns whether a call to sync() is required.
      * @param obj The object that this text's position should be set for.
      * @param offset An arbitrary offset to apply to the text.
      */
@@ -164,11 +176,11 @@ export class Text3D extends Object3D {
         this._mesh.anchorX = anchor;
         this._mesh.rotation.copy(new Euler(rotation.x, rotation.y, rotation.z));
 
-        if (changed) {
-            this._mesh.sync(() => this._onSync());
-        } else {
+        if (!changed) {
             this.updateBoundingBox();
         }
+
+        return changed;
     }
 
     public setWorldPosition(worldPos: Vector3) {
@@ -197,24 +209,22 @@ export class Text3D extends Object3D {
      */
     public updateBoundingBox(): void {
         this.updateMatrixWorld(true);
-        this._mesh.geometry.computeBoundingSphere();
-        let box = new Box3();
-        this._mesh.geometry.boundingSphere.getBoundingBox(box);
+        this._mesh.geometry.computeBoundingBox();
+        if (!this._boundingBox) {
+            this._boundingBox = new Box3();
+        }
+        this._boundingBox.copy(this._mesh.geometry.boundingBox);
         // box.min.z = -1;
         // box.max.z = 1;
 
         // Apply the matrix to the bounding box.
         let matrix = this._mesh.matrixWorld;
-        box.applyMatrix4(matrix);
-
-        if (!this._boundingBox) {
-            this._boundingBox = new Box3();
-        }
-        this._boundingBox.copy(box);
+        this._boundingBox.applyMatrix4(matrix);
     }
 
     /**
      * Set the text to display with this 3d text.
+     * Returns whether an update was needed.
      * @param text the text to display.
      * @param alignment The alignment to set.
      */
@@ -223,26 +233,23 @@ export class Text3D extends Object3D {
         if (
             this._unprocessedText === text &&
             this._mesh.textAlign === alignment
-        )
-            return;
+        ) {
+            return false;
+        }
 
         this._unprocessedText = text;
 
         if (text) {
-            if (text.toString().includes('guest_')) {
-                text = 'Guest';
-            }
-
             // Text has value, enable the mesh and update the geometry.
             this.visible = true;
             this._mesh.text = text;
             this._mesh.textAlign = alignment;
-            this._mesh.sync(() => this._onSync());
             this.updateBoundingBox();
         } else {
             // Disable the text's rendering.
             this.visible = false;
         }
+        return true;
     }
 
     /**
@@ -254,22 +261,169 @@ export class Text3D extends Object3D {
     }
 
     /**
-     * Sets the text's font.
+     * Sets the text's font. Returns whether a call to sync() is needed.
      * @param fontUrl The URL to the font file that should be used. Supports .otf and .woff.
      */
-    public setFont(fontUrl: string) {
+    public setFont(fontUrl: string): boolean {
+        if (this._mesh.font === fontUrl) {
+            return false;
+        }
         this._mesh.font = fontUrl;
-        this._mesh.sync(() => this._onSync());
+        return true;
     }
 
     /**
      * Set the scale of the text.
+     * Returns whether a call to sync() is needed.
      * @param scale The scale of the text mesh. (default is 0.004)
      */
-    public setScale(scale: number) {
+    public setScale(scale: number): boolean {
         if (this.scale.x !== scale) {
             this.scale.setScalar(scale);
             this.updateBoundingBox();
+        }
+
+        return false;
+    }
+
+    /**
+     * Set the font size of the text.
+     * Returns whether a call to sync() is needed.
+     * @param size The font size of the text.
+     */
+    public setFontSize(size: number): boolean {
+        if (this._mesh.fontSize !== size) {
+            this._mesh.fontSize = size;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Sets the width of the text.
+     * @param width The width that the text should be.
+     */
+    public setWidth(width: number): boolean {
+        if (this.currentWidth !== width) {
+            if (width === undefined) {
+                width = Text3D.defaultWidth;
+            } else if (width < Text3D.minWidth) {
+                width = Text3D.minWidth;
+            }
+
+            this.currentWidth = width;
+            this._mesh.maxWidth = width;
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Calculates the font size required so that this text fits the given target bounding box.
+     * @param height The target height that the text should fit in.
+     * @param minFontSize The minimum allowed font size.
+     * @param maxFontSize The maximum allowed font size.
+     * @param fit The maximum difference in font size between a perfect fit to the target and the calculated fit.
+     * @param maxIterations The maximum number of iterations that the binary search should perform.
+     */
+    public async calculateFontSizeToFit(
+        height: number,
+        minFontSize = 0.1 * Text3D.defaultFontSize,
+        maxFontSize = 2 * Text3D.defaultFontSize,
+        fit: number = 0.01,
+        maxIterations: number = 5
+    ): Promise<number> {
+        const text = new Text3D();
+        text.copy(this);
+
+        text.parent = this.parent;
+        text.visible = false;
+        text.updateMatrixWorld(true);
+
+        try {
+            let lowerBound = 0;
+            let upperBound = maxFontSize;
+            let current = midpoint(lowerBound, upperBound);
+            let currentSize = new Vector3();
+            let bestFit = Infinity;
+            let bestFitSize = current;
+            text._localBoundingBox.getSize(currentSize);
+
+            for (let i = 0; i < maxIterations; i++) {
+                // update the font size
+                text.setFontSize(current);
+                await text.sync();
+
+                // check the bounding box size compared to the bot
+                text._localBoundingBox.getSize(currentSize);
+
+                // axis is always Y because we are comparing in local space
+                const delta = currentSize.y - height;
+
+                // While the best fit is larger than the target
+                // box, choose the smallest delta
+                if (bestFit > 0) {
+                    if (delta < bestFit) {
+                        bestFit = delta;
+                        bestFitSize = current;
+                    }
+
+                    // otherwise only take sizes that are smaller than the
+                    // target box
+                } else if (delta < 0) {
+                    if (delta > bestFit) {
+                        bestFit = delta;
+                        bestFitSize = current;
+                    }
+                }
+
+                if (delta < 0 && Math.abs(delta) < fit) {
+                    // We fit inside the area and have met a target size we can break now.
+                    break;
+                }
+
+                // We have reached the minimum allowed font size but still need to go smaller.
+                // break to prevent smaller sizes
+                if (current <= minFontSize) {
+                    break;
+                }
+
+                if (current >= maxFontSize) {
+                    break;
+                }
+
+                if (Math.abs(lowerBound - upperBound) < 0.001) {
+                    // Short curcuit for when the lower bounds and the upper bounds have crossed
+                    break;
+                }
+
+                if (delta < 0) {
+                    // Too small
+                    lowerBound = current;
+                    current = midpoint(lowerBound, upperBound);
+
+                    // Clamp the current size to the max font size
+                    if (current >= maxFontSize) {
+                        current = maxFontSize;
+                    }
+                } else {
+                    // we are still too large, need to reduce the bounds and font size.
+                    upperBound = current;
+                    current = midpoint(lowerBound, upperBound);
+
+                    // Clamp the current size to the minimum font size
+                    if (current <= minFontSize) {
+                        current = minFontSize;
+                    }
+                }
+            }
+
+            return bestFitSize;
+        } finally {
+            text.parent = null;
+            text.dispose();
         }
     }
 
@@ -292,9 +446,13 @@ export class Text3D extends Object3D {
     /**
      * Sets the anchor position that this text should use.
      * Requires updating the position by calling setPositionForBounds after changing the anchor.
+     * Returns whether a call to sync() is required.
      * @param anchor The anchor.
      */
-    public setAnchor(anchor: BotLabelAnchor) {
+    public setAnchor(anchor: BotLabelAnchor): boolean {
+        if (this._anchor === anchor) {
+            return false;
+        }
         this._anchor = anchor;
 
         if (anchor === 'floating') {
@@ -302,13 +460,71 @@ export class Text3D extends Object3D {
         } else {
             this._mesh.anchorY = 'middle';
         }
+        return true;
+    }
 
-        this._mesh.sync(() => this._onSync());
+    /**
+     * Sets the word wrapping mode that this text should use.
+     * Returns whether a call to sync() is required.
+     * @param mode The word wrap mode.
+     */
+    public setWordWrapMode(mode: BotLabelWordWrap): boolean {
+        if (this._wordWrap === mode) {
+            return false;
+        }
+        this._wordWrap = mode;
+
+        if (this._wordWrap === 'breakCharacters') {
+            this._mesh.whiteSpace = 'normal';
+            this._mesh.overflowWrap = 'break-word';
+        } else if (this._wordWrap === 'breakWords') {
+            this._mesh.whiteSpace = 'normal';
+            this._mesh.overflowWrap = 'normal';
+        } else if (this._wordWrap === 'none') {
+            this._mesh.whiteSpace = 'nowrap';
+        }
+
+        return true;
     }
 
     public dispose(): void {
         this._mesh.dispose();
         this._mesh = null;
+    }
+
+    public copy(other: this, recursive?: boolean): this {
+        this._mesh.text = other._mesh.text;
+        this._mesh.textAlign = other._mesh.textAlign;
+        this._mesh.font = other._mesh.font;
+        this._mesh.fontSize = other._mesh.fontSize;
+        this._mesh.maxWidth = other._mesh.maxWidth;
+        this._mesh.anchorX = other._mesh.anchorX;
+        this._mesh.anchorY = other._mesh.anchorY;
+        this._mesh.whiteSpace = other._mesh.whiteSpace;
+        this._mesh.overflowWrap = other._mesh.overflowWrap;
+        this._mesh.color = other._mesh.color;
+        this._mesh.rotation.copy(other._mesh.rotation);
+        this._anchor = other._anchor;
+        this._unprocessedText = other._unprocessedText;
+        this.currentWidth = other.currentWidth;
+        this._boundingBox = other.boundingBox.clone();
+        this.scale.copy(other.scale);
+        this.position.copy(other.position);
+        this.rotation.copy(other.rotation);
+
+        return this;
+    }
+
+    /**
+     * Syncs the updated properties with the mesh geometry.
+     */
+    public sync(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this._mesh.sync(() => {
+                this._onSync();
+                resolve();
+            });
+        });
     }
 
     private _onSync() {
@@ -486,4 +702,9 @@ export class Text3D extends Object3D {
         final.add(alignOffset);
         return [final, anchor] as const;
     }
+}
+
+function midpoint(lower: number, upper: number) {
+    let half = (upper - lower) * 0.5;
+    return lower + half;
 }

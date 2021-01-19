@@ -38,6 +38,11 @@ export class DimensionGroup3D extends GameObject implements DimensionGroup {
 
     simulation3D: Simulation3D;
 
+    /**
+     * The bot that this dimension group was created for.
+     */
+    boundBot: AuxBot3D;
+
     get bot() {
         return this._helper.bot;
     }

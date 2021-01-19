@@ -208,7 +208,6 @@ export interface UpdatedBot {
  * - "local" means that the bot is stored in the local storage partition.
  * - "tempLocal" means that the bot is stored in the temporary partition.
  * - "history" means that the bot represents a version of another space.
- * - "error" means that the bot represents an error.
  * - "admin" means that the bot is shared across all stories.
  * - "player" means that the bot is temporary and shared with other players.
  * - "otherPlayers" means that the bot is temporary and shared with this player from another player.
@@ -219,7 +218,6 @@ export type BotSpace =
     | 'local'
     | 'tempLocal'
     | 'history'
-    | 'error'
     | 'admin'
     | 'player'
     | 'otherPlayers'
@@ -272,7 +270,7 @@ export interface BotTags {
     // Normal bot tags
     ['color']?: unknown;
     ['draggable']?: unknown;
-    ['draggableMode']?: BotDragMode;
+    ['draggableMode']?: unknown;
     ['positioningMode']?: unknown;
     ['destroyable']?: unknown;
     ['editable']?: unknown;
@@ -313,7 +311,7 @@ export interface BotTags {
     ['auxPlayerActive']?: boolean;
     ['pagePortal']?: string | boolean;
     ['sheetPortal']?: string | boolean;
-    ['story']?: string | string[];
+    ['server']?: string | string[];
     ['inventoryPortal']?: string;
     ['menuPortal']?: string;
     ['leftWristPortal']?: string;
@@ -437,6 +435,7 @@ export type BotShape =
     | 'egg'
     | 'hex'
     | 'cursor'
+    | 'portal'
     | 'nothing';
 
 /**
@@ -492,6 +491,13 @@ export type BotLabelAlignment = 'center' | 'left' | 'right';
 export type BotLabelFontAddress = 'roboto' | 'noto-sans-kr' | string;
 
 /**
+ * Defines the possible label font sizes.
+ */
+export type BotLabelFontSize = 'auto' | number;
+
+export type BotLabelWordWrap = 'breakWords' | 'breakCharacters' | 'none';
+
+/**
  * Defines the possible bot orientation modes.
  */
 export type BotOrientationMode =
@@ -511,7 +517,7 @@ export type BotAnchorPoint =
     | 'right'
     | 'bottom'
     | 'center'
-    | [number, number, number];
+    | readonly [number, number, number];
 
 /**
  * Defines the possible meet portal anchor points.
@@ -594,6 +600,16 @@ export const DEFAULT_PORTAL_POINTER_DRAG_MODE: PortalPointerDragMode = 'world';
  * The default bot label font address.
  */
 export const DEFAULT_LABEL_FONT_ADDRESS: BotLabelFontAddress = 'rotobo';
+
+/**
+ * The default bot label font address.
+ */
+export const DEFAULT_LABEL_FONT_SIZE: BotLabelFontSize = 'auto';
+
+/**
+ * The default bot label word wrapping mode.
+ */
+export const DEFAULT_LABEL_WORD_WRAP_MODE: BotLabelWordWrap = 'breakCharacters';
 
 /**
  * Whether canvas transparency is disabled by default.
@@ -770,11 +786,6 @@ export const COOKIE_BOT_PARTITION_ID = 'local';
 export const TEMPORARY_BOT_PARTITION_ID = 'tempLocal';
 
 /**
- * The partition ID for error bots.
- */
-export const ERROR_BOT_PARTITION_ID = 'error';
-
-/**
  * The partition ID for admin bots.
  */
 export const ADMIN_PARTITION_ID = 'admin';
@@ -785,7 +796,7 @@ export const ADMIN_PARTITION_ID = 'admin';
 export const PLAYER_PARTITION_ID = 'player';
 
 /**
- * The partition ID for bots that are automatically added to the story.
+ * The partition ID for bots that are automatically added to the server.
  */
 export const BOOTSTRAP_PARTITION_ID = 'bootstrap';
 
@@ -997,7 +1008,7 @@ export const ON_SHOUT_ACTION_NAME: string = 'onListen';
 /**
  * The name of the event that is triggered before an action is executed.
  */
-export const ON_ACTION_ACTION_NAME: string = 'onStoryAction';
+export const ON_ACTION_ACTION_NAME: string = 'onServerAction';
 
 /**
  * The name of the event that is triggered when a remote whisper is executed.
@@ -1007,22 +1018,23 @@ export const ON_REMOTE_WHISPER_ACTION_NAME: string = 'onRemoteWhisper';
 /**
  * The name of the event that is triggered when a channel becomes synced.
  */
-export const ON_STORY_STREAMING_ACTION_NAME: string = 'onStoryStreaming';
+export const ON_SERVER_STREAMING_ACTION_NAME: string = 'onServerStreaming';
 
 /**
  * The name of the event that is triggered when a channel has become unsynced.
  */
-export const ON_STORY_STREAM_LOST_ACTION_NAME: string = 'onStoryStreamLost';
+export const ON_SERVER_STREAM_LOST_ACTION_NAME: string = 'onServerStreamLost';
 
 /**
  * The name of the event that is triggered when a channel is loaded.
  */
-export const ON_STORY_SUBSCRIBED_ACTION_NAME: string = 'onStorySubscribed';
+export const ON_SERVER_SUBSCRIBED_ACTION_NAME: string = 'onServerSubscribed';
 
 /**
  * The name of the event that is triggered when a channel is unloaded.
  */
-export const ON_STORY_UNSUBSCRIBED_ACTION_NAME: string = 'onStoryUnsubscribed';
+export const ON_SERVER_UNSUBSCRIBED_ACTION_NAME: string =
+    'onServerUnsubscribed';
 
 /**
  * The name of the event that is triggered when portal tag is changed on the player.
@@ -1216,6 +1228,11 @@ export const DATA_PORTAL: string = 'dataPortal';
 export const SHEET_PORTAL: string = 'sheetPortal';
 
 /**
+ * The prefix for DNA Tags.
+ */
+export const DNA_TAG_PREFIX: string = '🧬';
+
+/**
  * The list of all portal tags.
  */
 export const KNOWN_PORTALS: string[] = [
@@ -1247,7 +1264,7 @@ export const KNOWN_TAGS: string[] = [
     'playerActive',
     'pagePortal',
     'sheetPortal',
-    'story',
+    'server',
     'inventoryPortal',
     'menuPortal',
     'leftWristPortal',
@@ -1386,10 +1403,12 @@ export const KNOWN_TAGS: string[] = [
     'lineColor',
     'label',
     'labelColor',
+    'labelFontSize',
     'labelSize',
     'labelSizeMode',
     'labelPosition',
     'labelAlignment',
+    'labelWordWrapMode',
     'labelFontAddress',
     'listening',
     'scale',
@@ -1477,10 +1496,10 @@ export const KNOWN_TAGS: string[] = [
     ON_ANY_POINTER_EXIT,
     'onPointerDown',
     'onPointerUp',
-    ON_STORY_STREAMING_ACTION_NAME,
-    ON_STORY_STREAM_LOST_ACTION_NAME,
-    ON_STORY_SUBSCRIBED_ACTION_NAME,
-    ON_STORY_UNSUBSCRIBED_ACTION_NAME,
+    ON_SERVER_STREAMING_ACTION_NAME,
+    ON_SERVER_STREAM_LOST_ACTION_NAME,
+    ON_SERVER_SUBSCRIBED_ACTION_NAME,
+    ON_SERVER_UNSUBSCRIBED_ACTION_NAME,
     ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
     'onKeyDown',
     'onKeyUp',
@@ -1570,27 +1589,27 @@ export function onDropArg(
     };
 }
 
-export function onStoryStreamingArg(story: string) {
+export function onServerStreamingArg(server: string) {
     return {
-        story,
+        server,
     };
 }
 
-export function onStoryStreamLostArg(story: string) {
+export function onServerStreamLostArg(server: string) {
     return {
-        story,
+        server,
     };
 }
 
-export function onStorySubscribedArg(story: string) {
+export function onServerSubscribedArg(server: string) {
     return {
-        story,
+        server,
     };
 }
 
-export function onStoryUnsubscribedArg(story: string) {
+export function onServerUnsubscribedArg(server: string) {
     return {
-        story,
+        server,
     };
 }
 

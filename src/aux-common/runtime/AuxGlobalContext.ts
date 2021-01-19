@@ -20,16 +20,21 @@ import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { ScriptError, RanOutOfEnergyError } from './AuxResults';
 import uuid from 'uuid/v4';
+import { sortBy, sortedIndex, sortedIndexOf } from 'lodash';
+import './PerformanceNowPolyfill';
+import { Observable, Subscription, SubscriptionLike } from 'rxjs';
+import { tap } from 'rxjs/operators';
+import TWEEN from '@tweenjs/tween.js';
+
+/**
+ * The interval between animation frames in miliseconds when using setInterval().
+ */
+export const SET_INTERVAL_ANIMATION_FRAME_TIME: number = 16;
 
 /**
  * Holds global values that need to be accessible from the runtime.
  */
 export interface AuxGlobalContext {
-    /**
-     * Whether editing is currently allowed.
-     */
-    allowsEditing: boolean;
-
     /**
      * The ordered list of script bots.
      */
@@ -56,14 +61,14 @@ export interface AuxGlobalContext {
     playerBot: RuntimeBot;
 
     /**
-     * The current bot.
-     */
-    currentBot: RuntimeBot;
-
-    /**
      * The current energy that the context has.
      */
     energy: number;
+
+    /**
+     * The number of miliseconds since the session has started.
+     */
+    localTime: number;
 
     /**
      * Enqueues the given action.
@@ -106,6 +111,57 @@ export interface AuxGlobalContext {
     destroyBot(bot: RuntimeBot): void;
 
     /**
+     * Gets the list of bot IDs that have a listener for the given tag.
+     * @param tag The tag.
+     */
+    getBotIdsWithListener(tag: string): string[];
+
+    /**
+     * Records whether the given ID has a listener for the given tag.
+     * @param id The ID of the bot.
+     * @param tag The tag that the bot has a listener for.
+     * @param hasListener Whether the bot has a listener for the  given tag.
+     */
+    recordListenerPresense(id: string, tag: string, hasListener: boolean): void;
+
+    /**
+     * Records the given bot timer for the bot.
+     * @param id The ID of the bot.
+     * @param info The timer info.
+     */
+    recordBotTimer(id: string, info: BotTimer): void;
+
+    /**
+     * Removes the given bot timer from the bot.
+     * @param id The ID of the bot.
+     * @param type The type of the timer.
+     * @param timer The timer to remove.
+     */
+    removeBotTimer(id: string, type: BotTimer['type'], timerId: number): void;
+
+    /**
+     * Gets the list of bot timers for the given bot.
+     * @param id The ID of the bot.
+     */
+    getBotTimers(id: string): BotTimer[];
+
+    /**
+     * Cancels the list of timers for the given bot ID.
+     * @param id The ID of the bot.
+     */
+    cancelBotTimers(id: string): void;
+
+    /**
+     * Cancels all the timers that bots have created.
+     */
+    cancelAllBotTimers(): void;
+
+    /**
+     * Gets the number of timers.
+     */
+    getNumberOfActiveTimers(): number;
+
+    /**
      * Creates a new task.
      * @param Whether to use an unguessable task ID. Defaults to false.
      * @param Whether the task is allowed to be resolved via a remote action result. Defaults to false.
@@ -132,6 +188,26 @@ export interface AuxGlobalContext {
      *               This should be true if resolveTask() is being called in response to a remote or device action.
      */
     rejectTask(taskId: number | string, error: any, remote: boolean): void;
+
+    /**
+     * Gets a list of timers that contains the amount of time a tag has run for in miliseconds.
+     */
+    getShoutTimers(): {
+        tag: string;
+        timeMs: number;
+    }[];
+
+    /**
+     * Adds the given number of miliseconds to the timer for the given shout.
+     * @param shout The name of the shout.
+     * @param ms The number of miliseconds to add.
+     */
+    addShoutTime(shout: string, ms: number): void;
+
+    /**
+     * Starts the animation loop for the context.
+     */
+    startAnimationLoop(): SubscriptionLike;
 }
 
 /**
@@ -162,6 +238,51 @@ export interface AsyncTask {
      * The function that is used to reject the task with an error.
      */
     reject: (err: any) => void;
+}
+
+/**
+ * Defines an interface for a timer that was created by a bot (e.g. setTimeout() or setInterval()).
+ */
+export type BotTimer = TimeoutOrIntervalTimer | AnimationTimer;
+
+/**
+ * Defines an interface for a setTimeout() or setInterval() timer that was created by a bot.
+ */
+export interface TimeoutOrIntervalTimer {
+    /**
+     * The ID of the timer.
+     */
+    timerId: number;
+
+    /**
+     * The type of the timer.
+     */
+    type: 'timeout' | 'interval';
+}
+
+/**
+ * Defines an interface for a animation timer that was created by a bot.
+ */
+export interface AnimationTimer {
+    /**
+     * The ID of the timer.
+     */
+    timerId: number;
+
+    /**
+     * The type of the timer.
+     */
+    type: 'animation';
+
+    /**
+     * The tag that the timer is for.
+     */
+    tag: string;
+
+    /**
+     * A function used to cancel the timer.
+     */
+    cancel: () => void;
 }
 
 /**
@@ -202,7 +323,8 @@ export function addToContext(context: AuxGlobalContext, ...bots: RuntimeBot[]) {
  */
 export function removeFromContext(
     context: AuxGlobalContext,
-    ...bots: RuntimeBot[]
+    bots: RuntimeBot[],
+    cancelTimers: boolean = true
 ) {
     for (let bot of bots) {
         const index = indexInContext(context, bot);
@@ -211,6 +333,10 @@ export function removeFromContext(
         }
         context.bots.splice(index, 1);
         delete context.state[bot.id];
+
+        if (cancelTimers) {
+            context.cancelBotTimers(bot.id);
+        }
     }
 }
 
@@ -227,11 +353,6 @@ export function isInContext(context: AuxGlobalContext, bot: Bot) {
  * Defines a global context that stores all information in memory.
  */
 export class MemoryGlobalContext implements AuxGlobalContext {
-    /**
-     * Whether editing is currently allowed.
-     */
-    allowsEditing: boolean = true;
-
     /**
      * The ordered list of script bots.
      */
@@ -273,18 +394,25 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     playerBot: RuntimeBot = null;
 
     /**
-     * The current bot.
-     */
-    currentBot: RuntimeBot = null;
-
-    /**
      * The current energy that the context has.
      */
     energy: number = DEFAULT_ENERGY;
 
+    get localTime() {
+        return performance.now() - this._startTime;
+    }
+
     private _taskCounter: number = 0;
     private _scriptFactory: RuntimeBotFactory;
     private _batcher: RuntimeBatcher;
+    private _shoutTimers: {
+        [shout: string]: number;
+    } = {};
+    private _listenerMap: Map<string, string[]>;
+    private _botTimerMap: Map<string, BotTimer[]>;
+    private _numberOfTimers: number = 0;
+    private _startTime: number;
+    private _animationLoop: Subscription;
 
     /**
      * Creates a new global context.
@@ -303,6 +431,131 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this.device = device;
         this._scriptFactory = scriptFactory;
         this._batcher = batcher;
+        this._listenerMap = new Map();
+        this._botTimerMap = new Map();
+        this._startTime = performance.now();
+    }
+
+    getBotIdsWithListener(tag: string): string[] {
+        const set = this._listenerMap.get(tag);
+        if (!set) {
+            return [];
+        }
+
+        return set.slice();
+    }
+
+    recordListenerPresense(
+        id: string,
+        tag: string,
+        hasListener: boolean
+    ): void {
+        let set = this._listenerMap.get(tag);
+        if (!hasListener && !set) {
+            // we don't have a listener to record
+            // and there is no list for the tag
+            // so there is nothing to do.
+            return;
+        }
+
+        if (!set) {
+            set = [];
+            this._listenerMap.set(tag, set);
+        }
+
+        if (hasListener) {
+            const index = sortedIndex(set, id);
+
+            // ensure that our indexing is in bounds
+            // to prevent the array from being put into slow-mode
+            // see https://stackoverflow.com/a/26737403/1832856
+            if (index < set.length && index >= 0) {
+                const current = set[index];
+                if (current !== id) {
+                    set.splice(index, 0, id);
+                }
+            } else {
+                set.splice(index, 0, id);
+            }
+        } else {
+            const index = sortedIndexOf(set, id);
+            if (index >= 0) {
+                set.splice(index, 1);
+            }
+
+            // Delete the tag from the list if there are no more IDs
+            if (set.length <= 0) {
+                this._listenerMap.delete(tag);
+            }
+        }
+    }
+
+    recordBotTimer(id: string, info: BotTimer): void {
+        let list = this._botTimerMap.get(id);
+        if (!list) {
+            list = [];
+            this._botTimerMap.set(id, list);
+        }
+        list.push(info);
+        this._numberOfTimers += 1;
+    }
+
+    removeBotTimer(
+        id: string,
+        type: BotTimer['type'],
+        timer: number | string
+    ): void {
+        let list = this._botTimerMap.get(id);
+        if (list) {
+            let index = list.findIndex(
+                (t) => t.type === type && t.timerId === timer
+            );
+            if (index >= 0) {
+                list.splice(index, 1);
+                this._numberOfTimers = Math.max(0, this._numberOfTimers - 1);
+            }
+        }
+    }
+
+    getBotTimers(id: string): BotTimer[] {
+        let timers = this._botTimerMap.get(id);
+        if (timers) {
+            return timers.slice();
+        }
+        return [];
+    }
+
+    cancelBotTimers(id: string): void {
+        let list = this._botTimerMap.get(id);
+        if (list) {
+            this._clearTimers(list);
+        }
+        this._botTimerMap.delete(id);
+    }
+
+    cancelAllBotTimers() {
+        for (let list of this._botTimerMap.values()) {
+            this._clearTimers(list);
+        }
+
+        this._botTimerMap.clear();
+    }
+
+    getNumberOfActiveTimers() {
+        return this._numberOfTimers;
+    }
+
+    private _clearTimers(list: BotTimer[]) {
+        this._numberOfTimers = Math.max(0, this._numberOfTimers - list.length);
+        for (let timer of list) {
+            if (timer.type === 'timeout') {
+                clearTimeout(timer.timerId);
+            } else if (timer.type === 'interval') {
+                clearInterval(timer.timerId);
+            } else if (timer.type === 'animation') {
+                timer.cancel();
+            }
+        }
     }
 
     /**
@@ -367,6 +620,14 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         const script = this._scriptFactory.createRuntimeBot(bot) || null;
         if (script) {
             addToContext(this, script);
+
+            if (script.listeners) {
+                for (let key in script.listeners) {
+                    if (typeof script.listeners[key] === 'function') {
+                        this.recordListenerPresense(script.id, key, true);
+                    }
+                }
+            }
         }
         this.enqueueAction(botAdded(bot));
         return script;
@@ -385,6 +646,15 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         if (mode === RealtimeEditMode.Immediate) {
             this.bots.splice(index, 1);
             delete this.state[bot.id];
+            this.cancelBotTimers(bot.id);
+
+            if (bot.listeners) {
+                for (let key in bot.listeners) {
+                    if (typeof bot.listeners[key] === 'function') {
+                        this.recordListenerPresense(bot.id, key, false);
+                    }
+                }
+            }
         }
         this.enqueueAction(botRemoved(bot.id));
     }
@@ -426,4 +696,75 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             task.reject(error);
         }
     }
+
+    getShoutTimers() {
+        const keys = Object.keys(this._shoutTimers);
+        const list = keys.map((k) => ({
+            tag: k,
+            timeMs: this._shoutTimers[k],
+        }));
+
+        return sortBy(list, (timer) => -timer.timeMs);
+    }
+
+    addShoutTime(shout: string, ms: number) {
+        if (ms < 0) {
+            throw new Error('Cannot add negative time to a shout timer.');
+        }
+        if (!(shout in this._shoutTimers)) {
+            this._shoutTimers[shout] = 0;
+        }
+
+        this._shoutTimers[shout] += ms;
+    }
+
+    startAnimationLoop(): SubscriptionLike {
+        if (!this._animationLoop) {
+            const sub = animationLoop()
+                .pipe(tap(() => this._updateAnimationLoop()))
+                .subscribe();
+
+            this._animationLoop = new Subscription(() => {
+                sub.unsubscribe();
+                this._animationLoop = null;
+            });
+        }
+
+        return this._animationLoop;
+    }
+
+    private _updateAnimationLoop() {
+        TWEEN.update(this.localTime);
+    }
+}
+
+function animationLoop(): Observable<void> {
+    return new Observable<void>((observer) => {
+        if (globalThis.requestAnimationFrame) {
+            let running = true;
+            let handlerId: number;
+
+            const handler = () => {
+                if (!running) {
+                    return;
+                }
+                observer.next();
+                handlerId = globalThis.requestAnimationFrame(handler);
+            };
+            handlerId = globalThis.requestAnimationFrame(handler);
+
+            return () => {
+                running = false;
+                globalThis.cancelAnimationFrame(handlerId);
+            };
+        } else {
+            let interval = setInterval(() => {
+                observer.next();
+            }, SET_INTERVAL_ANIMATION_FRAME_TIME);
+
+            return () => {
+                clearInterval(interval);
+            };
+        }
+    });
 }

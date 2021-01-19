@@ -20,6 +20,7 @@ import {
     first,
     calculateTimeFromId,
     iterateChildren,
+    addedWeaveAtoms,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxOp,
@@ -266,7 +267,9 @@ export function applyEvents(
             if (!currentVal) {
                 const valueResult = addAtom(updatedTree, node.atom, value(''));
                 updatedTree = applyTreeResult(updatedTree, valueResult);
-                const newAtom = addedAtom(valueResult.results[0]);
+                const newAtom = addedAtom(valueResult.results[0]) as Atom<
+                    AuxOp
+                >;
                 currentVal = updatedTree.weave.getNode(newAtom.id);
                 for (let result of valueResult.results) {
                     update = reducer(updatedTree.weave, result, update, space);
@@ -382,7 +385,7 @@ export function applyEvents(
 
                 result = mergeAuxResults(result, tagResult);
 
-                const newAtom = addedAtom(tagResult.results[0]);
+                const newAtom = addedAtom(tagResult.results[0]) as Atom<AuxOp>;
 
                 if (!newAtom) {
                     continue;
@@ -428,7 +431,7 @@ export function applyEvents(
 
                 result = mergeAuxResults(result, tagResult);
 
-                const newAtom = addedAtom(tagResult.results[0]);
+                const newAtom = addedAtom(tagResult.results[0]) as Atom<AuxOp>;
 
                 if (!newAtom) {
                     continue;
@@ -445,7 +448,9 @@ export function applyEvents(
                 const valueResult = updateTag(node, currentVal, val);
                 result = mergeAuxResults(result, valueResult);
 
-                const newAtom = addedAtom(valueResult.results[0]);
+                const newAtom = addedAtom(valueResult.results[0]) as Atom<
+                    AuxOp
+                >;
                 if (newAtom && newAtom.value.type === AuxOpType.Value) {
                     const weaveResult = tree.weave.removeSiblingsBefore(
                         newAtom
@@ -471,7 +476,7 @@ export function applyEvents(
         if (event.type === 'add_bot') {
             const botResult = addAtomToTree(null, bot(event.id));
 
-            const botAtom = addedAtom(botResult.results[0]);
+            const botAtom = addedAtom(botResult.results[0]) as Atom<AuxOp>;
 
             if (botAtom) {
                 const botNode = tree.weave.getNode(botAtom.id) as WeaveNode<
@@ -500,7 +505,7 @@ export function applyEvents(
             for (let node of findBotNodes(tree.weave, event.id)) {
                 newResult = addAtomToTree(node.atom, deleteOp(), 1);
 
-                const newAtom = addedAtom(newResult.results[0]);
+                const newAtom = addedAtom(newResult.results[0]) as Atom<AuxOp>;
                 if (newAtom) {
                     const weaveResult = tree.weave.removeSiblingsBefore(
                         newAtom
@@ -531,7 +536,7 @@ export function applyEvents(
                     group: 'certificates',
                     number: 1,
                 });
-                const newAtom = addedAtom(newResult.results[0]);
+                const newAtom = addedAtom(newResult.results[0]) as Atom<AuxOp>;
                 if (newAtom) {
                     const id = certificateId(newAtom);
                     const newBot = tree.state[id];
@@ -577,7 +582,9 @@ export function applyEvents(
                         continue;
                     }
                     newResult = addAtomToTree(signingBot.tags.atom, certOp);
-                    const newAtom = addedAtom(newResult.results[0]);
+                    const newAtom = addedAtom(newResult.results[0]) as Atom<
+                        AuxOp
+                    >;
                     if (newAtom) {
                         const id = certificateId(newAtom);
                         const newBot = tree.state[id];
@@ -665,7 +672,7 @@ export function applyEvents(
                 }
 
                 newResult = addAtomToTree(signingBot.tags.atom, signOp);
-                const newAtom = addedAtom(newResult.results[0]);
+                const newAtom = addedAtom(newResult.results[0]) as Atom<AuxOp>;
                 if (newAtom) {
                     enqueueAsyncResult(returnActions, event, undefined);
                 } else {
@@ -722,7 +729,7 @@ export function applyEvents(
                 }
 
                 newResult = addAtomToTree(signingBot.tags.atom, revokeOp);
-                const newAtom = addedAtom(newResult.results[0]);
+                const newAtom = addedAtom(newResult.results[0]) as Atom<AuxOp>;
                 if (newAtom) {
                     enqueueAsyncResult(returnActions, event, undefined);
                 } else {
@@ -781,50 +788,36 @@ export function applyAtoms(
     if (atoms) {
         for (let atom of atoms) {
             const result = tree.weave.insert(atom);
+            if (
+                result.type === 'cause_not_found' &&
+                !result.savedInReorderBuffer
+            ) {
+                console.warn(
+                    '[AuxCausalTree] Atom cause was not found and was not saved in reorder buffer! This may cause sync failure.',
+                    result
+                );
+            }
             results.push(result);
             reducer(tree.weave, result, update, space, initial);
-            const added = addedAtom(result);
-            if (added) {
-                tree.site.time = calculateTimeFromId(
-                    tree.site.id,
-                    tree.site.time,
-                    added.id.site,
-                    added.id.timestamp
-                );
-                tree.version[added.id.site] = Math.max(
-                    added.id.timestamp,
-                    tree.version[added.id.site] || 0
-                );
+            const addedAtoms = addedWeaveAtoms(result);
+            if (addedAtoms) {
+                for (let added of addedAtoms) {
+                    tree.site.time = calculateTimeFromId(
+                        tree.site.id,
+                        tree.site.time,
+                        added.id.site,
+                        added.id.timestamp
+                    );
+                    tree.version[added.id.site] = Math.max(
+                        added.id.timestamp,
+                        tree.version[added.id.site] || 0
+                    );
 
-                // If this is the initial load then
-                // we should check the added atoms to see if
-                // there are any inserts that we need to resolve the final value of later.
-                if (initial) {
-                    if (atom.value.type === AuxOpType.Insert) {
-                        const {
-                            botId,
-                            tag,
-                            isTagMask,
-                            value,
-                        } = getBotIdAndTagNameForEdit(
-                            tree.weave,
-                            atom as Atom<InsertOp>
-                        );
-
-                        if (!!botId && !!tag) {
-                            editedTags.set(`${botId}.${tag}`, [
-                                botId,
-                                tag,
-                                isTagMask,
-                                value,
-                            ]);
-                        }
-                    } else if (atom.value.type === AuxOpType.Delete) {
-                        const parent = tree.weave.getNode(atom.cause);
-                        if (
-                            parent.atom.value.type === AuxOpType.Insert ||
-                            parent.atom.value.type === AuxOpType.Value
-                        ) {
+                    // If this is the initial load then
+                    // we should check the added atoms to see if
+                    // there are any inserts that we need to resolve the final value of later.
+                    if (initial) {
+                        if (atom.value.type === AuxOpType.Insert) {
                             const {
                                 botId,
                                 tag,
@@ -832,8 +825,9 @@ export function applyAtoms(
                                 value,
                             } = getBotIdAndTagNameForEdit(
                                 tree.weave,
-                                atom as Atom<DeleteOp>
+                                atom as Atom<InsertOp>
                             );
+
                             if (!!botId && !!tag) {
                                 editedTags.set(`${botId}.${tag}`, [
                                     botId,
@@ -841,6 +835,30 @@ export function applyAtoms(
                                     isTagMask,
                                     value,
                                 ]);
+                            }
+                        } else if (atom.value.type === AuxOpType.Delete) {
+                            const parent = tree.weave.getNode(atom.cause);
+                            if (
+                                parent.atom.value.type === AuxOpType.Insert ||
+                                parent.atom.value.type === AuxOpType.Value
+                            ) {
+                                const {
+                                    botId,
+                                    tag,
+                                    isTagMask,
+                                    value,
+                                } = getBotIdAndTagNameForEdit(
+                                    tree.weave,
+                                    atom as Atom<DeleteOp>
+                                );
+                                if (!!botId && !!tag) {
+                                    editedTags.set(`${botId}.${tag}`, [
+                                        botId,
+                                        tag,
+                                        isTagMask,
+                                        value,
+                                    ]);
+                                }
                             }
                         }
                     }

@@ -14,7 +14,7 @@ import { appManager } from '../../AppManager';
 import BotTable from '../BotTable/BotTable';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import { Input } from '../../scene/Input';
-import { readFileArrayBuffer, readFileText } from '../../DownloadHelpers';
+import { getFileData } from '../../DownloadHelpers';
 
 @Component({
     components: {},
@@ -137,7 +137,7 @@ export default class UploadFiles extends Vue {
 
             if (files.length > 0) {
                 const finalFiles = await Promise.all(
-                    files.map(async f => {
+                    files.map(async (f) => {
                         const data = await getFileData(f);
                         return {
                             name: f.name,
@@ -149,7 +149,7 @@ export default class UploadFiles extends Vue {
 
                 for (let sim of appManager.simulationManager.simulations.values()) {
                     let actions: ShoutAction[] = sim.helper.actions(
-                        finalFiles.map(f => ({
+                        finalFiles.map((f) => ({
                             bots: null,
                             eventName: ON_FILE_UPLOAD_ACTION_NAME,
                             arg: {
@@ -163,34 +163,4 @@ export default class UploadFiles extends Vue {
             }
         }
     }
-}
-
-const textFileExtensions = new Set([
-    '.aux',
-    '.json',
-    '.txt',
-    '.md',
-    '.html',
-    '.js',
-    '.ts',
-]);
-
-async function getFileData(file: File): Promise<string | ArrayBuffer | object> {
-    try {
-        let textData: string = null;
-        for (let textExt of textFileExtensions) {
-            if (file.name.endsWith(textExt)) {
-                textData = await readFileText(file);
-                break;
-            }
-        }
-
-        if (textData !== null) {
-            return textData;
-        }
-    } catch {
-        return await readFileArrayBuffer(file);
-    }
-
-    return await readFileArrayBuffer(file);
 }

@@ -48,10 +48,10 @@ function destroyChildren(
     id: string
 ) {
     const result = calc.objects.filter(
-        o => calculateBotValue(calc, o, 'creator') === id
+        (o) => calculateBotValue(calc, o, 'creator') === id
     );
 
-    result.forEach(child => {
+    result.forEach((child) => {
         if (!isDestroyable(calc, child)) {
             return;
         }
@@ -75,7 +75,9 @@ export function resolveRejectedActions(actions: BotAction[]): BotAction[] {
         if (rejections.has(action)) {
             rejections.delete(action);
         } else if (action.type === 'reject') {
-            rejections.add(<BotAction>action.action);
+            for (let a of action.actions) {
+                rejections.add(<BotAction>a);
+            }
         } else {
             final.unshift(action);
         }

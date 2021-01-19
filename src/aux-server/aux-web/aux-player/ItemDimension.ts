@@ -76,7 +76,10 @@ export class ItemDimension implements SubscriptionLike {
 
         sub.add(
             sim.dimensions
-                .watchDimensions(...this._dimensionTags)
+                .watchDimensions(
+                    this._dimensionTags,
+                    (bot) => bot.id === sim.helper.userId
+                )
                 .pipe(tap((update) => this._updateMenuDimensions(sim, update)))
                 .subscribe()
         );

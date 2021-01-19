@@ -15,15 +15,15 @@ import {
     ON_BARCODE_SCANNER_OPENED_ACTION_NAME,
     ON_BARCODE_SCANNER_CLOSED_ACTION_NAME,
     ON_BARCODE_SCANNED_ACTION_NAME,
-    ON_STORY_SUBSCRIBED_ACTION_NAME,
-    ON_STORY_STREAMING_ACTION_NAME,
-    ON_STORY_STREAM_LOST_ACTION_NAME,
-    ON_STORY_UNSUBSCRIBED_ACTION_NAME,
+    ON_SERVER_SUBSCRIBED_ACTION_NAME,
+    ON_SERVER_STREAMING_ACTION_NAME,
+    ON_SERVER_STREAM_LOST_ACTION_NAME,
+    ON_SERVER_UNSUBSCRIBED_ACTION_NAME,
     CameraType,
-    onStoryStreamingArg,
-    onStoryStreamLostArg,
-    onStorySubscribedArg,
-    onStoryUnsubscribedArg,
+    onServerStreamingArg,
+    onServerStreamLostArg,
+    onServerSubscribedArg,
+    onServerUnsubscribedArg,
     calculateStringListTagValue,
     asyncError,
     asyncResult,
@@ -50,7 +50,7 @@ import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/Au
 import { sendWebhook } from '../../../shared/WebhookUtils';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 import ClipboardModal from '../../shared/vue-components/ClipboardModal/ClipboardModal';
-import UploadStoryModal from '../../shared/vue-components/UploadStoryModal/UploadStoryModal';
+import UploadServerModal from '../../shared/vue-components/UploadServerModal/UploadServerModal';
 import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 import download from 'downloadjs';
 import BotChat from '../../shared/vue-components/BotChat/BotChat';
@@ -72,7 +72,7 @@ import merge from 'lodash/merge';
         barcode: VueBarcode,
         'barcode-stream': BarcodeScanner,
         'html-modal': HtmlModal,
-        'upload-story-modal': UploadStoryModal,
+        'upload-server-modal': UploadServerModal,
         'clipboard-modal': ClipboardModal,
         'bot-chat': BotChat,
         'bot-sheet': BotSheet,
@@ -183,6 +183,7 @@ export default class PlayerApp extends Vue {
     showChatBar: boolean = false;
     chatBarPrefill: string = null;
     chatBarPlaceholder: string = null;
+    chatBarPlaceholderColor: string = null;
 
     showConsole: boolean = false;
     loginInfo: DeviceInfo = null;
@@ -429,33 +430,33 @@ export default class PlayerApp extends Vue {
 
     async finishAddSimulation(id: string) {
         console.log('[PlayerApp] Add simulation!');
-        this._addStoryToSimulation(appManager.simulationManager.primary, id);
+        this._addServerToSimulation(appManager.simulationManager.primary, id);
     }
 
-    private _addStoryToSimulation(sim: BrowserSimulation, id: string) {
+    private _addServerToSimulation(sim: BrowserSimulation, id: string) {
         const calc = sim.helper.createContext();
         const list = calculateStringListTagValue(
             calc,
             sim.helper.userBot,
-            'story',
+            'server',
             []
         );
         if (list.indexOf(id) < 0) {
             list.push(id);
             sim.helper.updateBot(sim.helper.userBot, {
                 tags: {
-                    story: list,
+                    server: list,
                 },
             });
         }
     }
 
-    private _removeStoryFromSimulation(sim: BrowserSimulation, id: string) {
+    private _removeServerFromSimulation(sim: BrowserSimulation, id: string) {
         const calc = sim.helper.createContext();
         const list = calculateStringListTagValue(
             calc,
             sim.helper.userBot,
-            'story',
+            'server',
             []
         );
         const index = list.indexOf(id);
@@ -463,7 +464,7 @@ export default class PlayerApp extends Vue {
             list.splice(index, 1);
             sim.helper.updateBot(sim.helper.userBot, {
                 tags: {
-                    story: list,
+                    server: list,
                 },
             });
         }
@@ -472,7 +473,7 @@ export default class PlayerApp extends Vue {
     removeSimulation(info: SimulationInfo) {
         if (appManager.simulationManager.primary.id === info.id) {
             this.snackbar = {
-                message: `You cannot remove the primary channel.`,
+                message: `You cannot remove the primary server.`,
                 visible: true,
             };
         } else {
@@ -486,7 +487,7 @@ export default class PlayerApp extends Vue {
     }
 
     removeSimulationById(id: string) {
-        this._removeStoryFromSimulation(
+        this._removeServerFromSimulation(
             appManager.simulationManager.primary,
             id
         );
@@ -543,13 +544,13 @@ export default class PlayerApp extends Vue {
                     console.log('[PlayerApp] Not authorized.');
                     if (state.authorizationError === 'channel_doesnt_exist') {
                         this.snackbar = {
-                            message: 'This channel does not exist.',
+                            message: 'This server does not exist.',
                             visible: true,
                         };
                     } else {
                         this.snackbar = {
                             message:
-                                'You are not authorized to view this channel.',
+                                'You are not authorized to view this server.',
                             visible: true,
                         };
                     }
@@ -590,9 +591,9 @@ export default class PlayerApp extends Vue {
                             // automatically.
                         }
                     }
-                } else if (e.type === 'load_story') {
+                } else if (e.type === 'load_server') {
                     this.finishAddSimulation(e.id);
-                } else if (e.type === 'unload_story') {
+                } else if (e.type === 'unload_server') {
                     this.removeSimulationById(e.id);
                 } else if (e.type === 'super_shout') {
                     this._superAction(e.eventName, e.argument);
@@ -617,7 +618,11 @@ export default class PlayerApp extends Vue {
                     navigateToUrl(e.url, '_blank', 'noreferrer');
                 } else if (e.type === 'download') {
                     console.log(`[BuilderApp] Downloading ${e.filename}...`);
-                    download(e.data, e.filename, e.mimeType);
+                    const data =
+                        typeof e.data === 'string'
+                            ? new Blob([e.data], { type: e.mimeType })
+                            : e.data;
+                    download(data, e.filename, e.mimeType);
                 } else if (e.type === 'open_console') {
                     this.showConsole = e.open;
                 } else if (e.type === 'send_webhook') {
@@ -626,6 +631,7 @@ export default class PlayerApp extends Vue {
                     this.showChatBar = e.visible;
                     this.chatBarPrefill = e.prefill;
                     this.chatBarPlaceholder = e.placeholder;
+                    this.chatBarPlaceholderColor = e.placeholderColor;
                     const chatBar = this.$refs.chatBar as BotChat;
                     if (chatBar) {
                         await chatBar.setPrefill(e.prefill);
@@ -633,15 +639,15 @@ export default class PlayerApp extends Vue {
                 } else if (e.type === 'show_join_code') {
                     const player = simulation.helper.userBot;
                     const calc = simulation.helper.createContext();
-                    const story =
-                        e.story || calculateBotValue(calc, player, 'story');
+                    const server =
+                        e.server || calculateBotValue(calc, player, 'server');
                     const dimension =
                         e.dimension ||
                         calculateBotValue(calc, player, 'pagePortal');
                     const code = `${location.protocol}//${
                         location.host
-                    }?story=${encodeURIComponent(
-                        story
+                    }?server=${encodeURIComponent(
+                        server
                     )}&pagePortal=${encodeURIComponent(dimension)}`;
                     this._showQRCode(code);
                 } else if (e.type === 'request_fullscreen_mode') {
@@ -757,8 +763,8 @@ export default class PlayerApp extends Vue {
                         if (info.subscribed) {
                             info.lostConnection = true;
                             await this._superAction(
-                                ON_STORY_STREAM_LOST_ACTION_NAME,
-                                onStoryStreamLostArg(simulation.id)
+                                ON_SERVER_STREAM_LOST_ACTION_NAME,
+                                onServerStreamLostArg(simulation.id)
                             );
                         }
                     } else {
@@ -767,8 +773,8 @@ export default class PlayerApp extends Vue {
                         if (!info.subscribed) {
                             info.subscribed = true;
                             await this._superAction(
-                                ON_STORY_SUBSCRIBED_ACTION_NAME,
-                                onStorySubscribedArg(simulation.id)
+                                ON_SERVER_SUBSCRIBED_ACTION_NAME,
+                                onServerSubscribedArg(simulation.id)
                             );
 
                             for (let info of this.simulations) {
@@ -779,16 +785,16 @@ export default class PlayerApp extends Vue {
                                     continue;
                                 }
                                 await simulation.helper.action(
-                                    ON_STORY_SUBSCRIBED_ACTION_NAME,
+                                    ON_SERVER_SUBSCRIBED_ACTION_NAME,
                                     null,
-                                    onStorySubscribedArg(info.id)
+                                    onServerSubscribedArg(info.id)
                                 );
                             }
                         }
 
                         await this._superAction(
-                            ON_STORY_STREAMING_ACTION_NAME,
-                            onStoryStreamingArg(simulation.id)
+                            ON_SERVER_STREAMING_ACTION_NAME,
+                            onServerStreamingArg(simulation.id)
                         );
                     }
                 }
@@ -801,8 +807,8 @@ export default class PlayerApp extends Vue {
             }),
             new Subscription(async () => {
                 await this._superAction(
-                    ON_STORY_UNSUBSCRIBED_ACTION_NAME,
-                    onStoryUnsubscribedArg(simulation.id)
+                    ON_SERVER_UNSUBSCRIBED_ACTION_NAME,
+                    onServerUnsubscribedArg(simulation.id)
                 );
             })
         );
@@ -906,7 +912,7 @@ export default class PlayerApp extends Vue {
     private _showConnectionRegained(info: SimulationInfo) {
         this.snackbar = {
             visible: true,
-            message: `Connection to ${info.displayName} regained. You are connected to the channel.`,
+            message: `Connection to ${info.displayName} regained. You are connected to the server.`,
         };
     }
 

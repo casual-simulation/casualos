@@ -352,6 +352,14 @@ export class ClientServer {
             res.sendStatus(404);
         });
 
+        this._app.get('/terms', (req, res) => {
+            res.sendFile(path.join(this._config.dist, 'terms-of-service.txt'));
+        });
+
+        this._app.get('/privacy-policy', (req, res) => {
+            res.sendFile(path.join(this._config.dist, 'privacy-policy.txt'));
+        });
+
         this._app.get('*', (req, res) => {
             res.sendFile(path.join(this._config.dist, this._player.index));
         });
@@ -656,7 +664,7 @@ export class Server {
     }
 
     private async _handleDataPortal(req: Request, res: Response) {
-        const id = req.query.story;
+        const id = req.query.server;
         if (!id) {
             res.sendStatus(400);
             return;
@@ -741,7 +749,7 @@ export class Server {
     }
 
     private async _handleWebhook(req: Request, res: Response) {
-        const id = req.query.story;
+        const id = req.query.server;
         if (!id) {
             res.sendStatus(400);
             return;
@@ -1228,7 +1236,7 @@ function getWebhooksUser(): AuxUser {
  */
 function dataPortalMiddleware(func: express.Handler) {
     return function (req: Request, res: Response, next: NextFunction) {
-        if (hasValue(req.query.story) && hasValue(req.query[DATA_PORTAL])) {
+        if (hasValue(req.query.server) && hasValue(req.query[DATA_PORTAL])) {
             return func(req, res, next);
         } else {
             return next();

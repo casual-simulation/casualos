@@ -22,9 +22,16 @@ export default class BotChat extends Vue {
     text: string = '';
 
     @Prop({ default: null }) placeholder: string;
+    @Prop({ default: null }) placeholderColor: string;
     @Prop({ default: null }) prefill: string;
 
     private _updatingText: boolean = false;
+
+    get styleVariables() {
+        return {
+            '--chat-placeholder-color': this.placeholderColor || '#448aff',
+        };
+    }
 
     async sendMessage(dropFocus: boolean) {
         if (dropFocus) {
@@ -33,7 +40,7 @@ export default class BotChat extends Vue {
                 input.$el.blur();
             }
         }
-        await this._ignoreTextUpdates(async text => {
+        await this._ignoreTextUpdates(async (text) => {
             this.text = '';
             await appManager.simulationManager.primary.helper.action(
                 ON_CHAT_ACTION_NAME,
@@ -43,7 +50,6 @@ export default class BotChat extends Vue {
         });
     }
 
-    @Watch('text')
     async onTextUpdated() {
         if (!this._updatingText) {
             await appManager.simulationManager.primary.helper.action(
@@ -55,7 +61,7 @@ export default class BotChat extends Vue {
     }
 
     async setPrefill(prefill: string) {
-        await this._ignoreTextUpdates(async text => {
+        await this._ignoreTextUpdates(async (text) => {
             if (!prefill) {
                 return;
             }

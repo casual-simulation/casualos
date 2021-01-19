@@ -1,14 +1,12 @@
 import {
     isFormula,
     isNumber,
-    isArray,
     createBot,
     calculateBotValue,
     validateTag,
     botTags,
     isHiddenTag,
     getActiveObjects,
-    parseArray,
     doBotsAppearEqual,
     isTagWellKnown,
     calculateStateDiff,
@@ -36,7 +34,7 @@ import {
     getUpdateForTagAndSpace,
     hasMaskForTag,
 } from './BotCalculations';
-import { Bot, BotsState } from './Bot';
+import { Bot, BotsState, DNA_TAG_PREFIX } from './Bot';
 import uuid from 'uuid/v4';
 import { botCalculationContextTests } from './test/BotCalculationContextTests';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
@@ -51,12 +49,12 @@ const dateNowMock = (Date.now = jest.fn());
 
 describe('BotCalculations', () => {
     describe('isFormula()', () => {
-        it('should be true when value starts with a "=" sign', () => {
-            expect(isFormula('=')).toBeTruthy();
-            expect(isFormula('a=')).toBeFalsy();
+        it('should be true when value starts with a "🧬" sign', () => {
+            expect(isFormula(DNA_TAG_PREFIX)).toBeTruthy();
+            expect(isFormula(`a${DNA_TAG_PREFIX}`)).toBeFalsy();
         });
 
-        it('should be false when value does not start with a "=" sign', () => {
+        it('should be false when value does not start with a "🧬" sign', () => {
             expect(isFormula('abc')).toBeFalsy();
         });
     });
@@ -85,22 +83,22 @@ describe('BotCalculations', () => {
 
     describe('isNumber()', () => {
         const cases = [
-            [true, '123'],
-            [true, '0'],
-            [true, '-12'],
-            [true, '19.325'],
-            [true, '-27.981'],
-            [true, '27.0'],
-            [false, '1.'],
-            [true, '.01'],
-            [true, '.567'],
-            [true, 'infinity'],
-            [true, 'Infinity'],
-            [true, 'InFIniTy'],
-            [false, '$123'],
-            [false, 'abc'],
-            [false, '.'],
-            [false, '-'],
+            [true, '123'] as const,
+            [true, '0'] as const,
+            [true, '-12'] as const,
+            [true, '19.325'] as const,
+            [true, '-27.981'] as const,
+            [true, '27.0'] as const,
+            [false, '1.'] as const,
+            [true, '.01'] as const,
+            [true, '.567'] as const,
+            [true, 'infinity'] as const,
+            [true, 'Infinity'] as const,
+            [true, 'InFIniTy'] as const,
+            [false, '$123'] as const,
+            [false, 'abc'] as const,
+            [false, '.'] as const,
+            [false, '-'] as const,
         ];
 
         it.each(cases)(
@@ -109,28 +107,6 @@ describe('BotCalculations', () => {
                 expect(isNumber(value)).toBe(expected);
             }
         );
-    });
-
-    describe('isArray()', () => {
-        it('should be true if the value is a simple list surrounded by square brackets', () => {
-            expect(isArray('[1,2,3]')).toBeTruthy();
-            expect(isArray('[1]')).toBeTruthy();
-            expect(isArray('[]')).toBeTruthy();
-            expect(isArray('[eggs, milk, ham]')).toBeTruthy();
-            expect(isArray('[(eggs), milk, ham]')).toBeTruthy();
-            expect(isArray('[(eggs), (milk, -ham)]')).toBeTruthy();
-
-            expect(isArray('')).toBeFalsy();
-            expect(isArray('abc, def, ghi')).toBeFalsy();
-            expect(isArray('1,2,3')).toBeFalsy();
-            expect(isArray('clone(this, { something: true })')).toBeFalsy();
-        });
-    });
-
-    describe('parseArray()', () => {
-        it('should handle empty arrays properly', () => {
-            expect(parseArray('[]')).toEqual([]);
-        });
     });
 
     describe('isBot()', () => {
@@ -867,23 +843,23 @@ describe('BotCalculations', () => {
         );
 
         const normalCases = [
-            [false, 'auxDraggable'],
-            [false, 'auxStackable'],
-            [false, 'auxColor'],
-            [false, 'auxLabelColor'],
-            [false, 'aux.line'],
-            [false, 'auxScaleX'],
-            [false, 'auxScaleY'],
-            [false, 'auxScaleZ'],
-            [false, 'auxScale'],
-            [true, 'aux._hidden'],
-            [false, '+(#tag:"value")'],
-            [false, 'onCombine(#tag:"value")'],
-            [true, '_context_test'],
-            [true, '_context_ something else'],
-            [true, '_context_ 😊😜😢'],
-            [true, '_selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8'],
-            [false, '📦'],
+            [false, 'auxDraggable'] as const,
+            [false, 'auxStackable'] as const,
+            [false, 'auxColor'] as const,
+            [false, 'auxLabelColor'] as const,
+            [false, 'aux.line'] as const,
+            [false, 'auxScaleX'] as const,
+            [false, 'auxScaleY'] as const,
+            [false, 'auxScaleZ'] as const,
+            [false, 'auxScale'] as const,
+            [true, 'aux._hidden'] as const,
+            [false, '+(#tag:"value")'] as const,
+            [false, 'onCombine(#tag:"value")'] as const,
+            [true, '_context_test'] as const,
+            [true, '_context_ something else'] as const,
+            [true, '_context_ 😊😜😢'] as const,
+            [true, '_selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8'] as const,
+            [false, '📦'] as const,
         ];
         it.each(normalCases)(
             'should return %s for %',
@@ -1126,7 +1102,7 @@ describe('BotCalculations', () => {
                 host: 'https://example.com',
             });
 
-            result = parseSimulationId('https://example.com?story=sim');
+            result = parseSimulationId('https://example.com?server=sim');
             expect(result).toEqual({
                 success: true,
                 host: 'https://example.com',
@@ -1134,7 +1110,7 @@ describe('BotCalculations', () => {
             });
 
             result = parseSimulationId(
-                'https://example.com:3000?story=sim/dimension'
+                'https://example.com:3000?server=sim/dimension'
             );
             expect(result).toEqual({
                 success: true,
@@ -1171,7 +1147,7 @@ describe('BotCalculations', () => {
             };
 
             expect(simulationIdToString(id)).toBe(
-                `https://example.com?story=${encodeURIComponent('test/abc')}`
+                `https://example.com?server=${encodeURIComponent('test/abc')}`
             );
         });
 

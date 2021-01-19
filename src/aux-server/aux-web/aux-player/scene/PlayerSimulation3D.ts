@@ -107,11 +107,11 @@ export class PlayerSimulation3D extends Simulation3D {
         }
 
         this._portalTags =
-            typeof portalTags === 'string' ? [portalTags] : portalTags;
+            typeof portalTags === 'string' ? [portalTags] : portalTags.slice();
         this._playerDimensionGroups = new Map();
 
         this._subs.push(
-            this.onDimensionGroupRemoved.subscribe(group => {
+            this.onDimensionGroupRemoved.subscribe((group) => {
                 this._playerDimensionGroups.delete(group.portalTag);
             })
         );
@@ -183,27 +183,39 @@ export class PlayerSimulation3D extends Simulation3D {
         return super._filterDimensionEvent(calc, event);
     }
 
+    protected _filterDimensionBot(bot: Bot): boolean {
+        // Only allow dimensions defined on the user's bot
+        return bot.id === this.simulation.helper.userId;
+    }
+
     protected _createDimensionGroup(
         calc: BotCalculationContext,
         bot: PrecalculatedBot,
         event: DimensionAddedEvent
     ) {
-        let group = this._playerDimensionGroups.get(event.dimensionTag);
-        if (group) {
-            return null;
+        if (bot === this.simulation.helper.userBot) {
+            let group = this._playerDimensionGroups.get(event.dimensionTag);
+            if (group) {
+                return null;
+            }
+
+            group = this._constructDimensionGroup(event.dimensionTag, bot);
+            this._playerDimensionGroups.set(event.dimensionTag, group);
+
+            // TODO: Update to support locking dimensions
+            return group;
         }
 
-        group = this._constructDimensionGroup(event.dimensionTag);
-        this._playerDimensionGroups.set(event.dimensionTag, group);
-
-        // TODO: Update to support locking dimensions
-        return group;
+        return this._constructDimensionGroup(event.dimensionTag, bot);
     }
 
-    protected _constructDimensionGroup(portalTag: string) {
+    protected _constructDimensionGroup(
+        portalTag: string,
+        bot: Bot
+    ): DimensionGroup3D {
         return new DimensionGroup3D(
             this,
-            this.simulation.helper.userBot,
+            bot,
             'player',
             this.decoratorFactory,
             portalTag
@@ -222,7 +234,7 @@ export class PlayerSimulation3D extends Simulation3D {
             this._subs.push(
                 config,
                 config.onGridScaleUpdated.subscribe(() => {
-                    this.ensureUpdate(this.bots.map(b => b.bot.id));
+                    this.ensureUpdate(this.bots.map((b) => b.bot.id));
                 })
             );
         }

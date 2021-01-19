@@ -9,6 +9,7 @@
                                 ref="chatBar"
                                 :prefill="chatBarPrefill"
                                 :placeholder="chatBarPlaceholder"
+                                :placeholderColor="chatBarPlaceholderColor"
                             ></bot-chat>
                         </div>
                     </md-toolbar>
@@ -87,7 +88,7 @@
             <md-dialog-confirm
                 v-if="simulationToRemove"
                 :md-active.sync="showRemoveSimulation"
-                md-title="Remove Channel"
+                md-title="Remove Server"
                 :md-content="`Remove ${simulationToRemove.displayName}?`"
                 @md-confirm="finishRemoveSimulation()"
             />
@@ -130,7 +131,7 @@
 
             <html-modal></html-modal>
             <clipboard-modal></clipboard-modal>
-            <upload-story-modal></upload-story-modal>
+            <upload-server-modal></upload-server-modal>
         </load-app>
     </div>
 </template>

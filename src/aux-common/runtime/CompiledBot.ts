@@ -31,12 +31,6 @@ export interface CompiledBotsState {
  */
 export interface CompiledBot extends PrecalculatedBot {
     /**
-     * The tags that have been compiled.
-     * Formulas and other tag values get stored here as an intermediate state.
-     */
-    compiledValues: CompiledBotValues;
-
-    /**
      * The tags that are listeners and have been compiled into functions.
      */
     listeners: CompiledBotListeners;
@@ -46,21 +40,6 @@ export interface CompiledBot extends PrecalculatedBot {
      */
     script: RuntimeBot;
 }
-
-/**
- * An interface that maps tag names to the compiled values for a bot.
- * A compiled value is the parsed value that was stored in a tag.
- * For normal values like strings, numbers, booleans, this is the parsed value.
- * For formulas, this is a function that when executed returns the formula result.
- */
-export interface CompiledBotValues {
-    [tag: string]: CompiledBotFormula | any;
-}
-
-/**
- * The type of a compiled bot formula.
- */
-export type CompiledBotFormula = () => any;
 
 /**
  * Creates a new compiled bot with the given values.
@@ -77,7 +56,6 @@ export function createCompiledBot(
     values: PrecalculatedTags = {},
     tags?: Bot['tags'],
     space?: BotSpace,
-    compiledValues: CompiledBotValues = {},
     listeners: CompiledBotListeners = {},
     signatures?: BotSignatures
 ): CompiledBot {
@@ -88,10 +66,6 @@ export function createCompiledBot(
             precalculated: true,
             tags: tags || values,
             values,
-            compiledValues: {
-                ...values,
-                ...compiledValues,
-            },
             listeners: listeners,
             signatures,
             script: null,
@@ -102,10 +76,6 @@ export function createCompiledBot(
         precalculated: true,
         tags: tags || values,
         values,
-        compiledValues: {
-            ...values,
-            ...compiledValues,
-        },
         listeners: listeners,
         signatures,
         script: null,
