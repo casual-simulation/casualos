@@ -131,6 +131,59 @@ describe('PortalBundler', () => {
                 expect(func1).toHaveBeenNthCalledWith(1, 'first');
                 expect(func1).toHaveBeenNthCalledWith(2, 'second');
             });
+
+            it('should be able to import scripts from other tags', async () => {
+                bundler.registerCustomPortal('test');
+
+                bundler.addEntryPoint('test', { tag: '📖main' });
+
+                bundler.stateUpdated(
+                    stateUpdatedEvent({
+                        abc: createPrecalculatedBot('abc', {
+                            main:
+                                '📖import "📖other"; globalThis.func1("main");',
+                            other: '📖globalThis.func1("other");',
+                        }),
+                    })
+                );
+
+                await waitAsync();
+
+                expect(bundles.length).toBe(1);
+
+                eval(bundles[0].source);
+
+                expect(func1).toBeCalledTimes(2);
+                expect(func1).toHaveBeenNthCalledWith(1, 'other');
+                expect(func1).toHaveBeenNthCalledWith(2, 'main');
+            });
+
+            it('should handle modules that reference each other', async () => {
+                bundler.registerCustomPortal('test');
+
+                bundler.addEntryPoint('test', { tag: '📖main' });
+
+                bundler.stateUpdated(
+                    stateUpdatedEvent({
+                        abc: createPrecalculatedBot('abc', {
+                            main:
+                                '📖import "📖other"; globalThis.func1("main");',
+                            other:
+                                '📖import "📖main"; globalThis.func1("other");',
+                        }),
+                    })
+                );
+
+                await waitAsync();
+
+                expect(bundles.length).toBe(1);
+
+                eval(bundles[0].source);
+
+                expect(func1).toBeCalledTimes(2);
+                expect(func1).toHaveBeenNthCalledWith(1, 'other');
+                expect(func1).toHaveBeenNthCalledWith(2, 'main');
+            });
         });
     });
 });

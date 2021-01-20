@@ -65,14 +65,14 @@ export class PortalBundler {
             }
 
             if (hasEntrypointUpdate) {
-                let modules = new Map<string, string>();
+                let entryModules = new Set<string>();
                 let entryCode = '';
                 let bots = sortBy(values(this._state), (b) => b.id);
 
                 for (let entrypoint of portal.entrypoints) {
                     let tagModules = bots
                         .map((b) => ({
-                            name: `${b.id}-${entrypoint.tag}`,
+                            name: auxModuleId(b.id, entrypoint.tag),
                             code: b.values[entrypoint.tag],
                         }))
                         .filter((value) => isEntrypointTag(value.code))
@@ -82,41 +82,61 @@ export class PortalBundler {
                         }));
 
                     for (let m of tagModules) {
-                        modules.set(m.name, m.code);
+                        entryModules.add(m.name);
                     }
                 }
 
-                for (let [name, code] of modules) {
+                for (let name of entryModules) {
                     entryCode += `import ${JSON.stringify(name)};\n`;
                 }
 
                 // bundle it
                 rollup({
-                    input: 'main',
+                    input: '__entry',
                     plugins: [
                         {
                             name: 'test',
-                            resolveId(importee, importer) {
+                            resolveId: (importee, importer) => {
                                 if (!importer) {
                                     return importee;
                                 }
 
+                                if (isEntrypointTag(importee)) {
+                                    const tag = trimEntrypointTag(importee);
+                                    const bot = bots.find((b) =>
+                                        isEntrypointTag(b.values[tag])
+                                    );
+
+                                    if (!bot) {
+                                        throw new Error(
+                                            `Unable to resolve "📖${tag}". No matching script could be found.`
+                                        );
+                                    }
+
+                                    return auxModuleId(bot.id, tag);
+                                }
+
                                 return importee;
                             },
-                            load(id) {
-                                if (id === 'main') {
+                            load: (id) => {
+                                if (id === '__entry') {
                                     return entryCode;
                                 }
-
-                                const code = modules.get(id);
-
-                                if (!code) {
-                                    throw new Error(
-                                        `Missing module ${id}. Maybe it was not a script?`
-                                    );
+                                const { botId, tag } = parseAuxModuleId(id);
+                                if (botId && tag) {
+                                    const bot = this._state[botId];
+                                    if (!bot) {
+                                        throw new Error(
+                                            `Unable to import "📖${tag}". No matching script could be found.`
+                                        );
+                                    }
+                                    const code = bot.values[tag];
+                                    return trimEntrypointTag(code);
                                 }
 
-                                return code;
+                                throw new Error(
+                                    `Unable to import "${id}". Did you forget to use 📖 when importing?`
+                                );
                             },
                         },
                     ],
@@ -180,4 +200,22 @@ export function trimEntrypointTag(tag: string): string {
 
 export function isEntrypointTag(value: unknown): value is string {
     return typeof value === 'string' && value.startsWith('📖');
+}
+
+function auxModuleId(botId: string, tag: string) {
+    return `${botId}.${tag}?auxmodule`;
+}
+
+function parseAuxModuleId(id: string): { botId: string; tag: string } {
+    if (id.endsWith('?auxmodule')) {
+        const dotIndex = id.indexOf('.');
+        const botId = id.slice(0, dotIndex);
+        const tag = id.slice(dotIndex + 1, id.length - '?auxmodule'.length);
+
+        return {
+            botId,
+            tag,
+        };
+    }
+    return { botId: null, tag: null };
 }
