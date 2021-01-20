@@ -105,7 +105,8 @@ export type AsyncActions =
     | AsyncErrorAction
     | ShowInputAction
     | ShareAction
-    | RegisterCustomPortal
+    | RegisterCustomPortalAction
+    | AddEntryPointAction
     | RunScriptAction
     | LoadBotsAction
     | ClearSpaceAction
@@ -2343,17 +2344,34 @@ export interface ShareAction extends AsyncAction, ShareOptions {
 /**
  * Defines an event that creates a custom portal using the given source code.
  */
-export interface RegisterCustomPortal extends AsyncAction {
+export interface RegisterCustomPortalAction extends AsyncAction {
     type: 'register_custom_portal';
     /**
-     * The id of the portal.
+     * The ID of the portal.
      */
-    id: string;
+    portalId: string;
+}
+
+/**
+ * Defines an event that adds an entry point to a custom portal.
+ */
+export interface AddEntryPointAction extends AsyncAction {
+    type: 'add_entry_point';
 
     /**
-     * The source code that the portal should have.
+     * The ID of the portal
      */
-    source: string;
+    portalId: string;
+
+    /**
+     * The ID of the bot that should the entry point is in.
+     */
+    botId?: string;
+
+    /**
+     * The tag that should be used as the entry point.
+     */
+    tag: string;
 }
 
 /**z
@@ -4525,21 +4543,49 @@ export function share(
 
 /**
  * Creates an action that registers a custom portal.
- * @param id The ID of the portal,
- * @param code The source code of the portal.
+ * @param portalId The ID of the portal,
  * @param taskId The ID of the task.
  */
 export function registerCustomPortal(
-    id: string,
-    code: string,
+    portalId: string,
     taskId?: number | string
-): RegisterCustomPortal {
+): RegisterCustomPortalAction {
     return {
         type: 'register_custom_portal',
-        id,
-        source: code,
+        portalId,
         taskId,
     };
+}
+
+/**
+ * Creates an action that adds an entry point to a custom portal.
+ * @param portalId The ID of the portal.
+ * @param botId The ID of the bot that the entry point is in. If null then all bots will be used.
+ * @param tag The tag that should be used as the entry point.
+ * @param taskId The ID of the task.
+ */
+export function addEntryPoint(
+    portalId: string,
+    botId: string | null,
+    tag: string,
+    taskId?: number | string
+): AddEntryPointAction {
+    if (hasValue(botId)) {
+        return {
+            type: 'add_entry_point',
+            portalId,
+            botId,
+            tag,
+            taskId,
+        };
+    } else {
+        return {
+            type: 'add_entry_point',
+            portalId,
+            tag,
+            taskId,
+        };
+    }
 }
 
 /**

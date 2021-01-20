@@ -59,6 +59,7 @@ import {
     superShout as calcSuperShout,
     share as calcShare,
     registerCustomPortal as calcRegisterCustomPortal,
+    addEntryPoint as calcAddEntryPoint,
     createCertificate as calcCreateCertificate,
     signTag as calcSignTag,
     revokeCertificate as calcRevokeCertificate,
@@ -572,7 +573,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 cancelSound,
                 hasBotInInventory,
                 share,
-                registerCustomPortal,
                 inSheet,
 
                 getCameraPosition,
@@ -582,6 +582,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPointerDirection,
                 getInputState,
                 getInputList,
+            },
+
+            portal: {
+                register: registerCustomPortal,
+                addEntryPoint,
             },
 
             server: {
@@ -1779,13 +1784,76 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Registers a custom portal with the given source code.
-     * @param id The ID of the portal.
-     * @param source The source code that the portal should use.
+     * @param portalId The ID of the portal.
      */
-    function registerCustomPortal(id: string, source: string): Promise<void> {
+    function registerCustomPortal(portalId: string): Promise<void> {
         const task = context.createTask();
-        const event = calcRegisterCustomPortal(id, source, task.taskId);
+        const event = calcRegisterCustomPortal(portalId, task.taskId);
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Adds the given tag as an entry point for the portal.
+     * That is, scripts in the specified tag will be run automatically.
+     * @param portalId The ID of the portal.
+     * @param tag The tag that should be used as the entry point.
+     */
+    function addEntryPoint(portalId: string, tag: string): Promise<void>;
+
+    /**
+     * Adds the given tag as an entry point for the portal.
+     * That is, scripts in the specified tag will be run automatically.
+     * @param portalId The ID of the portal.
+     * @param bot The bot or bot ID that the entry point is in.
+     * @param tag The tag that should be used as the entry point.
+     */
+    function addEntryPoint(
+        portalId: string,
+        bot: Bot | string,
+        tag: string
+    ): Promise<void>;
+
+    /**
+     * Adds the given tag as an entry point for the portal.
+     * That is, scripts in the specified tag will be run automatically.
+     * @param portalId The ID of the portal.
+     * @param tagOrBot The tag or bot that the entry point is in.
+     * @param tagIfBotSpecified The tag that should be used if a bot was specified.
+     */
+    function addEntryPoint(
+        portalId: string,
+        tagOrBot: string | Bot,
+        tagIfBotSpecified?: string
+    ): Promise<void> {
+        if (arguments.length >= 3) {
+            let botOrBotId = tagOrBot;
+            let tag = tagIfBotSpecified;
+
+            let bot: Bot;
+            if (typeof botOrBotId === 'string') {
+                bot = getBot('id', botOrBotId);
+            } else {
+                bot = botOrBotId;
+            }
+
+            if (!bot) {
+                throw new Error('The specified bot does not exist.');
+            }
+
+            const task = context.createTask();
+            const event = calcAddEntryPoint(portalId, bot.id, tag, task.taskId);
+            return addAsyncAction(task, event);
+        } else {
+            let tag = tagOrBot;
+
+            if (typeof tag !== 'string') {
+                throw new Error('A tag name must be provided.');
+            }
+
+            const task = context.createTask();
+            const event = calcAddEntryPoint(portalId, null, tag, task.taskId);
+            return addAsyncAction(task, event);
+        }
     }
 
     /**

@@ -124,7 +124,11 @@ export class AuxVMNode implements AuxVM {
     }
     closed: boolean;
 
-    registerCustomPortal(id: string, source: string): Promise<void> {
+    registerCustomPortal(id: string): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    updatePortalSource(id: string, source: string): Promise<void> {
         throw new Error('Method not implemented.');
     }
 }

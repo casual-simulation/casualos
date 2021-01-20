@@ -137,6 +137,7 @@ import {
     registerCustomPortal,
     animateTag,
     showUploadFiles,
+    addEntryPoint,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2466,19 +2467,76 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.registerCustomPortal()', () => {
+        describe('portal.register()', () => {
             it('should return a RegisterCustomPortal action', () => {
-                const promise: any = library.api.player.registerCustomPortal(
-                    'test',
-                    'console.log("Hi!")'
-                );
+                const promise: any = library.api.portal.register('test');
                 const expected = registerCustomPortal(
                     'test',
-                    'console.log("Hi!")',
                     context.tasks.size
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('portal.addEntryPoint()', () => {
+            it('should return a AddEntryPoint action', () => {
+                const promise: any = library.api.portal.addEntryPoint(
+                    'test',
+                    'abc'
+                );
+                const expected = addEntryPoint(
+                    'test',
+                    null,
+                    'abc',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support bot IDs', () => {
+                const promise: any = library.api.portal.addEntryPoint(
+                    'test',
+                    bot1.id,
+                    'def'
+                );
+                const expected = addEntryPoint(
+                    'test',
+                    bot1.id,
+                    'def',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support bots', () => {
+                const promise: any = library.api.portal.addEntryPoint(
+                    'test',
+                    bot1,
+                    'def'
+                );
+                const expected = addEntryPoint(
+                    'test',
+                    bot1.id,
+                    'def',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if given a bot ID that does not exist', () => {
+                expect(() => {
+                    library.api.portal.addEntryPoint('test', 'missing', 'def');
+                }).toThrow();
+            });
+
+            it('should throw an error if given a bot when using only tags', () => {
+                expect(() => {
+                    (<any>library.api.portal.addEntryPoint)('test', bot1);
+                }).toThrow();
             });
         });
 

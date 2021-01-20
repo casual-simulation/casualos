@@ -263,16 +263,17 @@ export class AuxVMImpl implements AuxVM {
         this._localEvents = null;
     }
 
-    async registerCustomPortal(id: string, source: string): Promise<void> {
-        if (!this._iframe) {
-            console.warn('[AuxVMImpl] Not initalized!');
-            return;
-        }
-
-        await loadScript(this._iframe.contentWindow, `script/${id}`, source);
-        // await registerIFramePortal(this._iframe.contentWindow, id, source);
-        console.log(`[AuxVMImpl] Registered portal: ${id}`);
+    async registerCustomPortal(portalId: string): Promise<void> {
+        // if (!this._iframe) {
+        //     console.warn('[AuxVMImpl] Not initalized!');
+        //     return;
+        // }
+        // await loadScript(this._iframe.contentWindow, `script/${id}`, source);
+        // // await registerIFramePortal(this._iframe.contentWindow, id, source);
+        // console.log(`[AuxVMImpl] Registered portal: ${id}`);
     }
+
+    async updatePortalSource(portalId: string, source: string): Promise<void> {}
 
     private async _initManifest() {
         console.log('[AuxVMImpl] Fetching manifest...');
@@ -296,7 +297,7 @@ export class AuxVMImpl implements AuxVM {
 
     private async _fetchManifestFromServer(): Promise<any> {
         try {
-            const result = await axios.get<any>(`/api/manifest`);
+            const result = await axios.get<any>(`/assets-manifest.json`);
             if (result.status === 200) {
                 return result.data;
             } else {

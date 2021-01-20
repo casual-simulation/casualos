@@ -44,6 +44,7 @@ import merge from 'lodash/merge';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subject } from 'rxjs';
 import { cloneDeep } from 'lodash';
+import { TestAuxVM } from './test/TestAuxVM';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -858,6 +859,36 @@ describe('BaseAuxChannel', () => {
                 await waitAsync();
 
                 expect(resolved).toBe(true);
+            });
+        });
+
+        describe('register_custom_portal', () => {
+            let vm: TestAuxVM;
+            let registerCustomPortal: jest.Mock<any>;
+            let updatePortalSource: jest.Mock<any>;
+
+            beforeEach(async () => {
+                vm = new TestAuxVM();
+                registerCustomPortal = vm.registerCustomPortal = jest.fn();
+                updatePortalSource = vm.updatePortalSource = jest.fn();
+                await channel.registerVm(vm);
+            });
+
+            it('should handle register_custom_portal events', async () => {
+                await channel.initAndWait();
+
+                await channel.sendEvents([
+                    {
+                        type: 'register_custom_portal',
+                        portalId: 'test',
+                        taskId: 'task',
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(registerCustomPortal).toBeCalledTimes(1);
+                expect(registerCustomPortal).toBeCalledWith('test');
             });
         });
     });

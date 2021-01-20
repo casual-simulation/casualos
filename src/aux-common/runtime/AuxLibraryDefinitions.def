@@ -1,5 +1,3 @@
-import { ShowUploadFileAction } from '../bots';
-
 /**
  * Contains information about the version of AUX that is running.
  */
@@ -2866,13 +2864,6 @@ declare global {
         share(options: ShareOptions): ShareAction;
 
         /**
-         * Registers a custom portal with the given source code.
-         * @param id The ID of the portal.
-         * @param source The source code that the portal should use.
-         */
-        registerCustomPortal(id: string, source: string): Promise<void>;
-
-        /**
          * Shows some HTML to the user.
          * @param html The HTML to show.
          */
@@ -3165,6 +3156,43 @@ declare global {
          * Gets the name of the dimension that is used for the current user's inventory.
          */
         getInventoryDimension(): string;
+    };
+
+    /**
+     * Defines a set of functions that relate to custom portal operations.
+     */
+    const portal: {
+        /**
+         * Registers a custom portal with the given source code.
+         * @param portalId The ID of the portal.
+         */
+        registerCustomPortal(portalId: string): Promise<void>;
+
+        /**
+         * Adds the given tag as an entry point for the portal.
+         * That is, scripts in the specified tag will be run automatically.
+         * @param portalId The ID of the portal.
+         * @param tag The tag that should be used as the entry point.
+         */
+        addEntryPoint(portalId: string, tag: string): Promise<void>;
+
+        /**
+         * Adds the given tag as an entry point for the portal.
+         * That is, scripts in the specified tag will be run automatically.
+         * @param portalId The ID of the portal.
+         * @param bot The bot or bot ID that the entry point is in.
+         * @param tag The tag that should be used as the entry point.
+         */
+        addEntryPoint(portalId: string, bot: Bot | string, tag: string): Promise<void>;
+
+        /**
+         * Adds the given tag as an entry point for the portal.
+         * That is, scripts in the specified tag will be run automatically.
+         * @param portalId The ID of the portal.
+         * @param tagOrBot The tag or bot that the entry point is in.
+         * @param tagIfBotSpecified The tag that should be used if a bot was specified.
+         */
+        addEntryPoint(portalId: string, tagOrBot: string | Bot, tagIfBotSpecified?: string): Promise<void>;
     };
 
     /**
