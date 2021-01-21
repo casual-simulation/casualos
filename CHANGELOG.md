@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.3.14
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where animations would not run while in VR/AR.
+
 ## V1.3.13
 
 #### Date: 1/18/2021
