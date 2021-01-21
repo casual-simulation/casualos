@@ -740,31 +740,12 @@ export class MemoryGlobalContext implements AuxGlobalContext {
 
 function animationLoop(): Observable<void> {
     return new Observable<void>((observer) => {
-        if (globalThis.requestAnimationFrame) {
-            let running = true;
-            let handlerId: number;
+        let interval = setInterval(() => {
+            observer.next();
+        }, SET_INTERVAL_ANIMATION_FRAME_TIME);
 
-            const handler = () => {
-                if (!running) {
-                    return;
-                }
-                observer.next();
-                handlerId = globalThis.requestAnimationFrame(handler);
-            };
-            handlerId = globalThis.requestAnimationFrame(handler);
-
-            return () => {
-                running = false;
-                globalThis.cancelAnimationFrame(handlerId);
-            };
-        } else {
-            let interval = setInterval(() => {
-                observer.next();
-            }, SET_INTERVAL_ANIMATION_FRAME_TIME);
-
-            return () => {
-                clearInterval(interval);
-            };
-        }
+        return () => {
+            clearInterval(interval);
+        };
     });
 }
