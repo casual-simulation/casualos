@@ -102,7 +102,7 @@
         "rpio": "2.2.0",
         "rxjs": "^6.5.2",
         "serialport": "9.0.2",
-        "socket.io": "2.1.1",
+        "socket.io": "2.4.0",
         "socket.io-client": "2.1.1",
         "stripe": "7.9.0",
         "three": "0.117.1",
