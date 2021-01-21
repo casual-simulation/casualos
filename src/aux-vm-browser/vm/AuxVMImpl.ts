@@ -19,7 +19,12 @@ import {
     AuxChannelErrorType,
     StoredAux,
 } from '@casual-simulation/aux-vm';
-import { loadScript, setupChannel, waitForLoad } from '../html/IFrameHelpers';
+import {
+    loadScript,
+    reload,
+    setupChannel,
+    waitForLoad,
+} from '../html/IFrameHelpers';
 import {
     StatusUpdate,
     remapProgressPercent,
@@ -46,6 +51,7 @@ export class AuxVMImpl implements AuxVM {
     private _proxy: Remote<AuxChannel>;
     private _initialUser: AuxUser;
     private _manifest: { [key: string]: string };
+    private _customPortalIframes: Map<string, HTMLIFrameElement>;
     closed: boolean;
 
     /**
@@ -65,6 +71,7 @@ export class AuxVMImpl implements AuxVM {
         this._versionUpdated = new Subject<RuntimeStateVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
+        this._customPortalIframes = new Map();
     }
 
     get connectionStateChanged(): Observable<StatusUpdate> {
@@ -148,6 +155,8 @@ export class AuxVMImpl implements AuxVM {
             this._initialUser,
             processPartitions(this._config)
         );
+
+        await this._proxy.registerVm(proxy(this));
 
         let statusMapper = remapProgressPercent(0.2, 1);
         return await this._proxy.init(
@@ -264,6 +273,17 @@ export class AuxVMImpl implements AuxVM {
     }
 
     async registerCustomPortal(portalId: string): Promise<void> {
+        if (!this._customPortalIframes.has(portalId)) {
+            // TODO: handle race conditions
+            const iframe = await this._setupCustomIframe({
+                id: `${portalId}-iframe`,
+                className: 'custom-portal',
+            });
+
+            this._customPortalIframes.set(portalId, iframe);
+            console.log(`[AuxVMImpl] Registered portal: ${portalId}`);
+        }
+
         // if (!this._iframe) {
         //     console.warn('[AuxVMImpl] Not initalized!');
         //     return;
@@ -273,7 +293,13 @@ export class AuxVMImpl implements AuxVM {
         // console.log(`[AuxVMImpl] Registered portal: ${id}`);
     }
 
-    async updatePortalSource(portalId: string, source: string): Promise<void> {}
+    async updatePortalSource(portalId: string, source: string): Promise<void> {
+        const iframe = this._customPortalIframes.get(portalId);
+        if (iframe) {
+            await reload(iframe);
+            await loadScript(iframe.contentWindow, 'main', source);
+        }
+    }
 
     private async _initManifest() {
         console.log('[AuxVMImpl] Fetching manifest...');
@@ -348,6 +374,47 @@ export class AuxVMImpl implements AuxVM {
             );
             return null;
         }
+    }
+
+    private async _setupCustomIframe(properties?: Partial<HTMLIFrameElement>) {
+        const origin = this._config.config.vmOrigin || location.origin;
+        const iframeUrl = new URL('/aux-vm-iframe.html', origin).href;
+
+        await this._initManifest();
+
+        const iframe = document.createElement('iframe');
+        iframe.src = iframeUrl;
+        iframe.style.display = 'none';
+
+        if (properties) {
+            for (let key in properties) {
+                (<any>iframe)[key] = (<any>properties)[key];
+            }
+        }
+
+        // Allow the iframe to run scripts, but do nothing else.
+        // Because we're not allowing the same origin, this prevents the VM from talking to
+        // storage like IndexedDB and therefore prevents different VMs from affecting each other.
+        // iframe.sandbox.add('allow-scripts');
+
+        // const bowserResult = Bowser.parse(navigator.userAgent);
+
+        // Safari requires the allow-same-origin option in order to load
+        // web workers using a blob.
+        // if (
+        //     bowserResult.browser.name === 'Safari' ||
+        //     bowserResult.os.name === 'iOS'
+        // ) {
+        //     console.warn('[AuxVMImpl] Adding allow-same-origin for Safari');
+        //     iframe.sandbox.add('allow-same-origin');
+        // }
+
+        let promise = waitForLoad(iframe);
+        document.body.insertBefore(iframe, document.body.firstChild);
+
+        await promise;
+
+        return iframe;
     }
 }
 

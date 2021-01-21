@@ -6,3 +6,4 @@ export * from './BaseAuxChannel';
 export * from './AuxChannelErrorTypes';
 export * from './AuxModule';
 export * from './AuxModule2';
+export * from './PortalBundler';

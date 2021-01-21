@@ -65,11 +65,16 @@ export class PortalBundler {
      * Registers a custom portal with the given ID.
      * @param portalId The ID of the portal.
      */
-    registerCustomPortal(portalId: string): void {
-        this._portals.set(portalId, {
-            portalId,
-            entrypoints: [],
-        });
+    registerCustomPortal(portalId: string): boolean {
+        if (!this._portals.has(portalId)) {
+            this._portals.set(portalId, {
+                portalId,
+                entrypoints: [],
+            });
+            return true;
+        }
+
+        return false;
     }
 
     /**

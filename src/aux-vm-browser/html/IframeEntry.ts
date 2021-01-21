@@ -23,5 +23,7 @@ globalThis.addEventListener('message', (message) => {
             },
             message.origin
         );
+    } else if (message.data.type === 'reload') {
+        location.reload();
     }
 });

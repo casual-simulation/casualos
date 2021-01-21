@@ -3166,7 +3166,7 @@ declare global {
          * Registers a custom portal with the given source code.
          * @param portalId The ID of the portal.
          */
-        registerCustomPortal(portalId: string): Promise<void>;
+        register(portalId: string): Promise<void>;
 
         /**
          * Adds the given tag as an entry point for the portal.

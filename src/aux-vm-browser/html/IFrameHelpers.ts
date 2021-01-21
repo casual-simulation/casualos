@@ -77,6 +77,23 @@ export function loadScript(iframeWindow: Window, id: string, source: string) {
     });
 }
 
+/**
+ * Reloads the iframe.
+ * @param iframeWindow The iframe to reload.
+ */
+export function reload(iframeWindow: HTMLIFrameElement) {
+    const promise = waitForLoad(iframeWindow);
+
+    iframeWindow.contentWindow.postMessage(
+        {
+            type: 'reload',
+        },
+        '*'
+    );
+
+    return promise;
+}
+
 // /**
 //  * Loads the script into the iframe window as a portal.
 //  * @param iframeWindow The iframe.

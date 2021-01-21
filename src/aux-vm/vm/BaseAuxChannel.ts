@@ -22,6 +22,8 @@ import {
     addDebugApi,
     RuntimeStateVersion,
     RegisterCustomPortalAction,
+    asyncError,
+    AddEntryPointAction,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
@@ -43,12 +45,9 @@ import flatMap from 'lodash/flatMap';
 import { RealtimeEditMode } from '@casual-simulation/aux-common/runtime/RuntimeBot';
 import { mergeVersions } from '@casual-simulation/aux-common/aux-format-2';
 import { AuxVM } from './AuxVM';
+import { Portal, PortalBundler } from './PortalBundler';
 
 export interface AuxChannelOptions {}
-
-interface Portal {
-    id: string;
-}
 
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
@@ -73,7 +72,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _onConnectionStateChanged: Subject<StatusUpdate>;
     private _onError: Subject<AuxChannelErrorType>;
     private _vm: ChannelVM;
-    private _portals: Map<string, Portal>;
+    private _portalBundler: PortalBundler;
 
     get onLocalEvents() {
         return this._onLocalEvents;
@@ -119,7 +118,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onVersionUpdated = new Subject<RuntimeStateVersion>();
         this._onConnectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
-        this._portals = new Map();
+        this._portalBundler = new PortalBundler();
         this._eventBuffer = [];
         this._hasInitialState = false;
         this._version = {
@@ -151,6 +150,27 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 message: err.toString(),
             });
         });
+
+        this._portalBundler.onBundleUpdated.subscribe(
+            (bundle) => {
+                if (this._vm) {
+                    if (bundle.source) {
+                        this._vm.updatePortalSource(
+                            bundle.portalId,
+                            bundle.source
+                        );
+                    } else {
+                        // TODO: Update portal warnings/errors
+                    }
+                }
+            },
+            (err) => {
+                this._onError.next({
+                    type: 'general',
+                    message: err.toString(),
+                });
+            }
+        );
 
         addDebugApi('getChannel', () => this);
     }
@@ -508,6 +528,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected _handleStateUpdated(event: StateUpdatedEvent) {
+        this._portalBundler.stateUpdated(event);
         this._onStateUpdated.next(event);
         if (!this._hasInitialState) {
             this._hasInitialState = true;
@@ -548,6 +569,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 this._loadPartition(event.space, event.config, event);
             } else if (event.type === 'register_custom_portal') {
                 this._registerCustomPortal(event);
+            } else if (event.type === 'add_entry_point') {
+                this._addEntryPoint(event);
             }
         }
         this._onLocalEvents.next(e);
@@ -607,18 +630,47 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected async _registerCustomPortal(
         event: RegisterCustomPortalAction
     ): Promise<void> {
-        if (!this._portals.has(event.portalId)) {
-            this._portals.set(event.portalId, {
-                id: event.portalId,
-            });
+        try {
             if (!this._vm) {
                 console.warn(
                     '[BaseAuxChannel] Unable to register custom portal because VM is not registered!'
                 );
+                throw new Error(
+                    '[BaseAuxChannel] Unable to register custom portal because VM is not registered!'
+                );
             } else {
+                this._portalBundler.registerCustomPortal(event.portalId);
                 await this._vm.registerCustomPortal(event.portalId);
-                console.log(`[BaseAuxChannel] Custom portal registered!`);
+                console.log(
+                    `[BaseAuxChannel] Portal ${event.portalId} registered!`
+                );
             }
+            await this._helper.transaction(asyncResult(event.taskId, null));
+        } catch (err) {
+            await this._helper.transaction(asyncError(event.taskId, err));
+        }
+    }
+
+    protected async _addEntryPoint(event: AddEntryPointAction) {
+        try {
+            if (!this._vm) {
+                console.warn(
+                    '[BaseAuxChannel] Unable to register custom portal because VM is not registered!'
+                );
+                throw new Error(
+                    '[BaseAuxChannel] Unable to register custom portal because VM is not registered!'
+                );
+            } else {
+                this._portalBundler.addEntryPoint(event.portalId, event);
+                console.log(
+                    `[BaseAuxChannel] ${event.botId ? event.botId + ':' : ''}${
+                        event.tag
+                    } entrypoint registered for ${event.portalId}!`
+                );
+            }
+            await this._helper.transaction(asyncResult(event.taskId, null));
+        } catch (err) {
+            await this._helper.transaction(asyncError(event.taskId, err));
         }
     }
 

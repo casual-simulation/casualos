@@ -70,9 +70,9 @@ function returnResponse() {
     if (responseIndex !== null && responseIndex < responses.length) {
         const resp = responses[responseIndex];
         responseIndex += 1;
-        return resp;
+        return Promise.resolve(resp);
     }
-    return response;
+    return Promise.resolve(response);
 }
 
 module.exports = axios;

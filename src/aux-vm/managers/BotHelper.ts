@@ -208,7 +208,11 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     }
 
     async registerCustomPortal(id: string, source: string): Promise<void> {
-        await this._vm.registerCustomPortal(id, source);
+        await this._vm.registerCustomPortal(id);
+    }
+
+    async updatePortalSource(portalId: string, source: string): Promise<void> {
+        await this._vm.updatePortalSource(portalId, source);
     }
 
     /**

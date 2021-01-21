@@ -41,6 +41,17 @@ describe('PortalBundler', () => {
             delete (<any>globalThis).func1;
         });
 
+        describe('registerCustomPortal()', () => {
+            it('should return true if the portal is new', () => {
+                expect(bundler.registerCustomPortal('test')).toBe(true);
+            });
+
+            it('should return false if the portal already exists', () => {
+                expect(bundler.registerCustomPortal('test')).toBe(true);
+                expect(bundler.registerCustomPortal('test')).toBe(false);
+            });
+        });
+
         describe('stateUpdated()', () => {
             it('should emit a bundle containing the code of the specified tags', async () => {
                 bundler.registerCustomPortal('test');
