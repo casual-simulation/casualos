@@ -1,5 +1,7 @@
 import {
     applyUpdates,
+    BotIndex,
+    BotIndexEvent,
     BotsState,
     PrecalculatedBotsState,
     stateUpdatedEvent,
@@ -8,7 +10,7 @@ import {
 import { Observable, Subject } from 'rxjs';
 import { rollup } from 'rollup';
 import values from 'lodash/values';
-import { sortBy } from 'lodash';
+import { pick, sortBy } from 'lodash';
 import axios from 'axios';
 
 export interface PortalEntrypoint {
@@ -39,6 +41,8 @@ export class PortalBundler {
     private _state: PrecalculatedBotsState;
     private _onBundleUpdated: Subject<Bundle>;
     private _baseModuleUrl: string = DEFAULT_BASE_MODULE_URL;
+    private _httpCache: Map<string, Promise<string>>;
+    private _index: BotIndex;
 
     /**
      * An observable that emits when a bundle is updated.
@@ -49,6 +53,8 @@ export class PortalBundler {
 
     constructor() {
         this._portals = new Map();
+        this._httpCache = new Map();
+        this._index = new BotIndex();
         this._onBundleUpdated = new Subject();
     }
 
@@ -57,8 +63,32 @@ export class PortalBundler {
      */
     stateUpdated(event: StateUpdatedEvent) {
         this._state = applyUpdates(this._state, event);
+        const batch = this._index.batch(() => {
+            const added = event.addedBots.map((id) => this._state[id]);
+            const tagUpdates = event.updatedBots
+                .map((id) => {
+                    let u = event.state[id];
+                    let tags = u && u.tags ? Object.keys(u.tags) : [];
+                    let valueTags = u && u.values ? Object.keys(u.values) : [];
+                    let bot = this._state[id];
+                    return {
+                        bot,
+                        tags: new Set([...tags, ...valueTags]),
+                    };
+                })
+                .filter((u) => !!u.bot);
+            if (added.length > 0) {
+                this._index.addBots(added);
+            }
+            if (event.removedBots.length > 0) {
+                this._index.removeBots(event.removedBots);
+            }
+            if (tagUpdates.length > 0) {
+                this._index.updateBots(tagUpdates);
+            }
+        });
 
-        this._updateBundles(event);
+        this._updateBundles(event, batch);
     }
 
     /**
@@ -90,28 +120,34 @@ export class PortalBundler {
                 botId: entrypoint.botId,
             });
 
-            this._updateBundle(stateUpdatedEvent(this._state), portal);
-        }
-    }
-
-    private _updateBundles(event: StateUpdatedEvent) {
-        for (let portal of this._portals.values()) {
-            this._updateBundle(event, portal);
-        }
-    }
-
-    private _updateBundle(event: StateUpdatedEvent, portal: Portal) {
-        let hasEntrypointUpdate = false;
-        for (let id in event.state) {
-            const updatedBot = event.state[id];
-            hasEntrypointUpdate = portal.entrypoints.some((e) =>
-                isEntrypointTag(updatedBot.values[e.tag])
+            this._updateBundle(
+                stateUpdatedEvent(this._state),
+                this._index.initialEvents(),
+                portal
             );
-
-            if (hasEntrypointUpdate) {
-                break;
-            }
         }
+    }
+
+    private _updateBundles(
+        event: StateUpdatedEvent,
+        indexEvents: BotIndexEvent[]
+    ) {
+        for (let portal of this._portals.values()) {
+            this._updateBundle(event, indexEvents, portal);
+        }
+    }
+
+    private _updateBundle(
+        event: StateUpdatedEvent,
+        indexEvents: BotIndexEvent[],
+        portal: Portal
+    ) {
+        // TODO: Handle updates for referenced modules
+        let hasEntrypointUpdate = portal.entrypoints.some((entrypoint) => {
+            return indexEvents.some((event) => {
+                return event.tag === entrypoint.tag;
+            });
+        });
 
         if (hasEntrypointUpdate) {
             let entryModules = new Set<string>();
@@ -213,15 +249,30 @@ export class PortalBundler {
 
                             if (/https?/.test(id)) {
                                 try {
-                                    let response = await axios.get(id);
-
-                                    if (typeof response.data === 'string') {
-                                        return response.data;
-                                    } else {
-                                        this.error(
-                                            `The module server did not return a string.`
-                                        );
+                                    const cached = _this._httpCache.get(id);
+                                    if (typeof cached !== 'undefined') {
+                                        return await cached;
                                     }
+
+                                    let promise = axios
+                                        .get(id)
+                                        .then((response) => {
+                                            if (
+                                                typeof response.data ===
+                                                'string'
+                                            ) {
+                                                const script = response.data;
+                                                return script;
+                                            } else {
+                                                throw new Error(
+                                                    `The module server did not return a string.`
+                                                );
+                                            }
+                                        });
+
+                                    _this._httpCache.set(id, promise);
+
+                                    return await promise;
                                 } catch (err) {
                                     this.error(`${err}`);
                                 }

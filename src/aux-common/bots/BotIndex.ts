@@ -22,7 +22,7 @@ export interface BotTagAddedEvent {
 }
 
 /**
- * Defines an event that indicatese a bot has removed the value for a tag.
+ * Defines an event that indicates a bot has removed the value for a tag.
  */
 export interface BotTagRemovedEvent {
     type: 'bot_tag_removed';
@@ -32,7 +32,7 @@ export interface BotTagRemovedEvent {
 }
 
 /**
- * Defines an event that indicatese a bot has updated the value for a tag.
+ * Defines an event that indicates a bot has updated the value for a tag.
  */
 export interface BotTagUpdatedEvent {
     type: 'bot_tag_updated';
@@ -63,6 +63,14 @@ export class BotIndex {
     private _batch: BotIndexEvent[] = null;
 
     get events(): Observable<BotIndexEvent[]> {
+        let events = this.initialEvents();
+        return this._events.pipe(
+            startWith(events),
+            filter((e) => e.length > 0)
+        );
+    }
+
+    initialEvents() {
         let bots = [...this._botMap.values()];
         let events = flatMap(bots, (b) =>
             tagsOnBot(b).map(
@@ -74,10 +82,7 @@ export class BotIndex {
                     } as BotTagAddedEvent)
             )
         );
-        return this._events.pipe(
-            startWith(events),
-            filter((e) => e.length > 0)
-        );
+        return events;
     }
 
     constructor() {
