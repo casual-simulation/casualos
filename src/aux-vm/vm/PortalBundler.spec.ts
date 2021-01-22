@@ -237,8 +237,7 @@ describe('PortalBundler', () => {
                 expect(bundles[0].warnings.length).toBeGreaterThan(0);
             });
 
-            // TODO: Implement a proper version of this
-            it.skip('should not emit a bundle if none of the tags changed', async () => {
+            it('should not emit a bundle if none of the tags are script tags', async () => {
                 bundler.registerCustomPortal('test');
 
                 bundler.addEntryPoint('test', { tag: '📖main' });
@@ -313,6 +312,100 @@ describe('PortalBundler', () => {
                     	'use strict';
 
                     	console.log(\\"abc\\");
+
+                    }());
+                    ",
+                      "warnings": Array [],
+                    }
+                `);
+            });
+
+            it('should emit a bundle if a module stopped being a library', async () => {
+                bundler.registerCustomPortal('test');
+
+                bundler.addEntryPoint('test', { tag: '📖main' });
+
+                bundler.stateUpdated(
+                    stateUpdatedEvent({
+                        bot1: createPrecalculatedBot('bot1', {
+                            main: '📖console.log("abc")',
+                        }),
+                        bot2: createPrecalculatedBot('bot2', {
+                            main: '📖console.log("def")',
+                        }),
+                    })
+                );
+
+                await waitAsync();
+
+                bundler.stateUpdated(
+                    stateUpdatedEvent({
+                        bot2: {
+                            values: {
+                                main: 'console.log("def")',
+                            },
+                        },
+                    })
+                );
+
+                await waitAsync();
+
+                expect(bundles.length).toBe(2);
+                expect(bundles[0]).not.toEqual(bundles[1]);
+                expect(bundles[1]).toMatchInlineSnapshot(`
+                    Object {
+                      "portalId": "test",
+                      "source": "(function () {
+                    	'use strict';
+
+                    	console.log(\\"abc\\");
+
+                    }());
+                    ",
+                      "warnings": Array [],
+                    }
+                `);
+            });
+
+            it('should emit a bundle when an arbitrary module tag is updated', async () => {
+                bundler.registerCustomPortal('test');
+
+                bundler.stateUpdated(
+                    stateUpdatedEvent({
+                        bot1: createPrecalculatedBot('bot1', {
+                            main: '📖console.log("abc")',
+                        }),
+                        bot2: createPrecalculatedBot('bot2', {
+                            main: '📖console.log("def")',
+                        }),
+                    })
+                );
+
+                bundler.addEntryPoint('test', { tag: '📖main' });
+
+                await waitAsync();
+
+                bundler.stateUpdated(
+                    stateUpdatedEvent({
+                        bot3: createPrecalculatedBot('bot3', {
+                            other: '📖let num = 1 + 2',
+                        }),
+                    })
+                );
+
+                await waitAsync();
+
+                expect(bundles.length).toBe(2);
+                expect(bundles[0]).toEqual(bundles[1]);
+                expect(bundles[1]).toMatchInlineSnapshot(`
+                    Object {
+                      "portalId": "test",
+                      "source": "(function () {
+                    	'use strict';
+
+                    	console.log(\\"abc\\");
+
+                    	console.log(\\"def\\");
 
                     }());
                     ",
@@ -737,8 +830,7 @@ describe('PortalBundler', () => {
                 expect(bundles[0].warnings.length).toBeGreaterThan(0);
             });
 
-            // TODO: Implement a proper version of this
-            it.skip('should not emit a bundle if none of the tags changed', async () => {
+            it('should not emit a bundle if none of the tags are script tags', async () => {
                 bundler.registerCustomPortal('test');
 
                 bundler.stateUpdated(
@@ -773,6 +865,143 @@ describe('PortalBundler', () => {
                 await waitAsync();
 
                 expect(bundles).toEqual([]);
+            });
+
+            it('should emit a bundle if a bot containing code was deleted', async () => {
+                bundler.registerCustomPortal('test');
+
+                bundler.stateUpdated(
+                    stateUpdatedEvent({
+                        bot1: createPrecalculatedBot('bot1', {
+                            main: '📖console.log("abc")',
+                        }),
+                        bot2: createPrecalculatedBot('bot2', {
+                            main: '📖console.log("def")',
+                        }),
+                    })
+                );
+
+                bundler.addEntryPoint('test', { tag: '📖main' });
+
+                await waitAsync();
+
+                bundler.stateUpdated(
+                    stateUpdatedEvent({
+                        bot2: null,
+                    })
+                );
+
+                await waitAsync();
+
+                expect(bundles.length).toBe(2);
+                expect(bundles[0]).not.toEqual(bundles[1]);
+                expect(bundles[1]).toMatchInlineSnapshot(`
+                    Object {
+                      "portalId": "test",
+                      "source": "(function () {
+                    	'use strict';
+
+                    	console.log(\\"abc\\");
+
+                    }());
+                    ",
+                      "warnings": Array [],
+                    }
+                `);
+            });
+
+            it('should emit a bundle if a module stopped being a library', async () => {
+                bundler.registerCustomPortal('test');
+
+                bundler.stateUpdated(
+                    stateUpdatedEvent({
+                        bot1: createPrecalculatedBot('bot1', {
+                            main: '📖console.log("abc")',
+                        }),
+                        bot2: createPrecalculatedBot('bot2', {
+                            main: '📖console.log("def")',
+                        }),
+                    })
+                );
+
+                bundler.addEntryPoint('test', { tag: '📖main' });
+
+                await waitAsync();
+
+                bundler.stateUpdated(
+                    stateUpdatedEvent({
+                        bot2: {
+                            values: {
+                                main: 'console.log("def")',
+                            },
+                        },
+                    })
+                );
+
+                await waitAsync();
+
+                expect(bundles.length).toBe(2);
+                expect(bundles[0]).not.toEqual(bundles[1]);
+                expect(bundles[1]).toMatchInlineSnapshot(`
+                    Object {
+                      "portalId": "test",
+                      "source": "(function () {
+                    	'use strict';
+
+                    	console.log(\\"abc\\");
+
+                    }());
+                    ",
+                      "warnings": Array [],
+                    }
+                `);
+            });
+
+            it('should emit a bundle when an arbitrary module tag is updated', async () => {
+                bundler.registerCustomPortal('test');
+
+                bundler.stateUpdated(
+                    stateUpdatedEvent({
+                        bot1: createPrecalculatedBot('bot1', {
+                            main: '📖console.log("abc")',
+                        }),
+                        bot2: createPrecalculatedBot('bot2', {
+                            main: '📖console.log("def")',
+                        }),
+                    })
+                );
+
+                bundler.addEntryPoint('test', { tag: '📖main' });
+
+                await waitAsync();
+
+                bundler.stateUpdated(
+                    stateUpdatedEvent({
+                        bot3: createPrecalculatedBot('bot3', {
+                            other: '📖let num = 1 + 2',
+                        }),
+                    })
+                );
+
+                await waitAsync();
+
+                expect(bundles.length).toBe(2);
+                expect(bundles[0]).toEqual(bundles[1]);
+                expect(bundles[1]).toMatchInlineSnapshot(`
+                    Object {
+                      "portalId": "test",
+                      "source": "(function () {
+                    	'use strict';
+
+                    	console.log(\\"abc\\");
+
+                    	console.log(\\"def\\");
+
+                    }());
+                    ",
+                      "warnings": Array [],
+                    }
+                `);
             });
 
             describe('imports', () => {

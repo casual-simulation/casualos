@@ -3,6 +3,7 @@ import {
     BotIndex,
     BotIndexEvent,
     BotsState,
+    calculateBotValue,
     PrecalculatedBotsState,
     stateUpdatedEvent,
     StateUpdatedEvent,
@@ -132,9 +133,13 @@ export class PortalBundler {
         event: StateUpdatedEvent,
         indexEvents: BotIndexEvent[]
     ) {
+        let promises = [] as Promise<void>[];
         for (let portal of this._portals.values()) {
-            this._updateBundle(event, indexEvents, portal);
+            if (portal.entrypoints.length > 0) {
+                promises.push(this._updateBundle(event, indexEvents, portal));
+            }
         }
+        return Promise.all(promises);
     }
 
     private _updateBundle(
@@ -142,14 +147,29 @@ export class PortalBundler {
         indexEvents: BotIndexEvent[],
         portal: Portal
     ) {
-        // TODO: Handle updates for referenced modules
-        let hasEntrypointUpdate = portal.entrypoints.some((entrypoint) => {
-            return indexEvents.some((event) => {
-                return event.tag === entrypoint.tag;
-            });
+        let hasUpdate = indexEvents.some((event) => {
+            if (event.type === 'bot_tag_added') {
+                return isEntrypointTag(
+                    calculateBotValue(null, event.bot, event.tag)
+                );
+            } else if (event.type === 'bot_tag_removed') {
+                return isEntrypointTag(
+                    calculateBotValue(null, event.oldBot, event.tag)
+                );
+            } else if (event.type === 'bot_tag_updated') {
+                const wasEntrypointTag = calculateBotValue(
+                    null,
+                    event.oldBot,
+                    event.tag
+                );
+                const isEntrypoint = isEntrypointTag(
+                    calculateBotValue(null, event.bot, event.tag)
+                );
+                return isEntrypoint || wasEntrypointTag;
+            }
         });
 
-        if (hasEntrypointUpdate) {
+        if (hasUpdate) {
             let entryModules = new Set<string>();
             let entryCode = '';
             let bots = sortBy(values(this._state), (b) => b.id);
@@ -180,7 +200,7 @@ export class PortalBundler {
             const _this = this;
 
             // bundle it
-            rollup({
+            return rollup({
                 input: '__entry',
                 onwarn: (warning, defaultHandler) => {
                     warnings.push(warning.message);
@@ -313,6 +333,8 @@ export class PortalBundler {
                     });
                 });
         }
+
+        return Promise.resolve();
     }
 }
 

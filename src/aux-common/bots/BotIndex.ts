@@ -212,6 +212,7 @@ export class BotIndex {
                 events.push({
                     type: 'bot_tag_removed',
                     bot: bot,
+                    oldBot: bot,
                     tag: tag,
                 });
             }
