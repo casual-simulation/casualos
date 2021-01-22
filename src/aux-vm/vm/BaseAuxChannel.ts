@@ -118,7 +118,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onVersionUpdated = new Subject<RuntimeStateVersion>();
         this._onConnectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
-        this._portalBundler = new PortalBundler({ debounce: true });
+        this._portalBundler = new PortalBundler();
         this._eventBuffer = [];
         this._hasInitialState = false;
         this._version = {
