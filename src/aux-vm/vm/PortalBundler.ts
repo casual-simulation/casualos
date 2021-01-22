@@ -203,6 +203,7 @@ export class PortalBundler {
             return rollup({
                 input: '__entry',
                 cache: this._buildCache.get(portal.portalId),
+                perf: true,
                 onwarn: (warning, defaultHandler) => {
                     warnings.push(warning.message);
                 },
@@ -308,6 +309,12 @@ export class PortalBundler {
             })
                 .then(async (bundle) => {
                     this._buildCache.set(portal.portalId, bundle.cache);
+
+                    if (bundle.getTimings) {
+                        const timings = bundle.getTimings();
+                        console.log(timings);
+                    }
+
                     const result = await bundle.generate({
                         format: 'iife',
                     });
