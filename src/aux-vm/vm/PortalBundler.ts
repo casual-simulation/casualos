@@ -43,6 +43,7 @@ export class PortalBundler {
     private _onBundleUpdated: Subject<Bundle>;
     private _baseModuleUrl: string = DEFAULT_BASE_MODULE_URL;
     private _httpCache: Map<string, Promise<string>>;
+    private _buildCache: Map<string, any>;
     private _index: BotIndex;
 
     /**
@@ -55,6 +56,7 @@ export class PortalBundler {
     constructor() {
         this._portals = new Map();
         this._httpCache = new Map();
+        this._buildCache = new Map();
         this._index = new BotIndex();
         this._onBundleUpdated = new Subject();
     }
@@ -200,6 +202,7 @@ export class PortalBundler {
             // bundle it
             return rollup({
                 input: '__entry',
+                cache: this._buildCache.get(portal.portalId),
                 onwarn: (warning, defaultHandler) => {
                     warnings.push(warning.message);
                 },
@@ -304,6 +307,7 @@ export class PortalBundler {
                 ],
             })
                 .then(async (bundle) => {
+                    this._buildCache.set(portal.portalId, bundle.cache);
                     const result = await bundle.generate({
                         format: 'iife',
                     });
