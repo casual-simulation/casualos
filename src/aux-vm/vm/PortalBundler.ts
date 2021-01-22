@@ -157,10 +157,8 @@ export class PortalBundler {
                     calculateBotValue(null, event.oldBot, event.tag)
                 );
             } else if (event.type === 'bot_tag_updated') {
-                const wasEntrypointTag = calculateBotValue(
-                    null,
-                    event.oldBot,
-                    event.tag
+                const wasEntrypointTag = isEntrypointTag(
+                    calculateBotValue(null, event.oldBot, event.tag)
                 );
                 const isEntrypoint = isEntrypointTag(
                     calculateBotValue(null, event.bot, event.tag)

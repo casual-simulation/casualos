@@ -414,6 +414,110 @@ describe('PortalBundler', () => {
                 `);
             });
 
+            it('should not emit a bundle when an arbitrary non module tag is updated', async () => {
+                bundler.registerCustomPortal('test');
+
+                bundler.stateUpdated(
+                    stateUpdatedEvent({
+                        bot1: createPrecalculatedBot('bot1', {
+                            main: '📖console.log("abc")',
+                        }),
+                        bot2: createPrecalculatedBot('bot2', {
+                            main: '📖console.log("def")',
+                            other: 123,
+                        }),
+                    })
+                );
+
+                bundler.addEntryPoint('test', { tag: '📖main' });
+
+                await waitAsync();
+
+                bundler.stateUpdated(
+                    stateUpdatedEvent({
+                        bot2: {
+                            tags: {
+                                other: 456,
+                            },
+                            values: {
+                                other: 456,
+                            },
+                        },
+                    })
+                );
+
+                await waitAsync();
+
+                expect(bundles.length).toBe(1);
+                expect(bundles[0]).toMatchInlineSnapshot(`
+                    Object {
+                      "portalId": "test",
+                      "source": "(function () {
+                    	'use strict';
+
+                    	console.log(\\"abc\\");
+
+                    	console.log(\\"def\\");
+
+                    }());
+                    ",
+                      "warnings": Array [],
+                    }
+                `);
+            });
+
+            it('should emit a bundle when an arbitrary tag becomes a module tag', async () => {
+                bundler.registerCustomPortal('test');
+
+                bundler.stateUpdated(
+                    stateUpdatedEvent({
+                        bot1: createPrecalculatedBot('bot1', {
+                            main: '📖console.log("abc")',
+                        }),
+                        bot2: createPrecalculatedBot('bot2', {
+                            other: 'console.log("def")',
+                        }),
+                    })
+                );
+
+                bundler.addEntryPoint('test', { tag: '📖main' });
+
+                await waitAsync();
+
+                bundler.stateUpdated(
+                    stateUpdatedEvent({
+                        bot2: {
+                            tags: {
+                                other: '📖console.log("def")',
+                            },
+                            values: {
+                                other: '📖console.log("def")',
+                            },
+                        },
+                    })
+                );
+
+                await waitAsync();
+
+                expect(bundles.length).toBe(2);
+
+                // Bundles are the same because the 📖other tag is not imported
+                expect(bundles[0]).toEqual(bundles[1]);
+                expect(bundles[1]).toMatchInlineSnapshot(`
+                    Object {
+                      "portalId": "test",
+                      "source": "(function () {
+                    	'use strict';
+
+                    	console.log(\\"abc\\");
+
+                    }());
+                    ",
+                      "warnings": Array [],
+                    }
+                `);
+            });
+
             describe('imports', () => {
                 beforeEach(() => {
                     require('axios').__reset();
