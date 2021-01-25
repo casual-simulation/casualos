@@ -47,6 +47,7 @@ import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subject, Subscription } from 'rxjs';
 import { cloneDeep } from 'lodash';
 import { TestAuxVM } from './test/TestAuxVM';
+import { PortalEvent } from './PortalEvents';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -865,22 +866,14 @@ describe('BaseAuxChannel', () => {
         });
 
         describe('register_custom_portal', () => {
-            let vm: TestAuxVM;
-            let registerCustomPortal: jest.Mock<any>;
-            let updatePortalSource: jest.Mock<any>;
-
-            let events = [] as LocalActions[][];
+            let events = [] as PortalEvent[][];
             let sub: Subscription;
 
             beforeEach(async () => {
-                sub = channel.onLocalEvents.subscribe((e) => {
+                events = [];
+                sub = channel.onPortalEvents.subscribe((e) => {
                     events.push(e);
                 });
-
-                vm = new TestAuxVM();
-                registerCustomPortal = vm.registerCustomPortal = jest.fn();
-                updatePortalSource = vm.updatePortalSource = jest.fn();
-                await channel.registerVm(vm);
             });
 
             afterEach(() => {
@@ -900,8 +893,9 @@ describe('BaseAuxChannel', () => {
 
                 await waitAsync();
 
-                expect(registerCustomPortal).toBeCalledTimes(1);
-                expect(registerCustomPortal).toBeCalledWith('test');
+                expect(events).toEqual([
+                    [{ type: 'register_portal', portalId: 'test' }],
+                ]);
             });
 
             it('should not de-duplicate register_custom_portal events', async () => {
@@ -922,29 +916,22 @@ describe('BaseAuxChannel', () => {
 
                 await waitAsync();
 
-                expect(registerCustomPortal).toBeCalledTimes(2);
-                expect(registerCustomPortal).toHaveBeenNthCalledWith(1, 'test');
-                expect(registerCustomPortal).toHaveBeenNthCalledWith(2, 'test');
+                expect(events).toEqual([
+                    [{ type: 'register_portal', portalId: 'test' }],
+                    [{ type: 'register_portal', portalId: 'test' }],
+                ]);
             });
         });
 
         describe('add_entry_point', () => {
-            let vm: TestAuxVM;
-            let registerCustomPortal: jest.Mock<any>;
-            let updatePortalSource: jest.Mock<any>;
-
-            let events = [] as LocalActions[][];
+            let events = [] as PortalEvent[][];
             let sub: Subscription;
 
             beforeEach(async () => {
-                sub = channel.onLocalEvents.subscribe((e) => {
+                events = [];
+                sub = channel.onPortalEvents.subscribe((e) => {
                     events.push(e);
                 });
-
-                vm = new TestAuxVM();
-                registerCustomPortal = vm.registerCustomPortal = jest.fn();
-                updatePortalSource = vm.updatePortalSource = jest.fn();
-                await channel.registerVm(vm);
             });
 
             afterEach(() => {
@@ -975,11 +962,18 @@ describe('BaseAuxChannel', () => {
 
                 await waitAsync();
 
-                expect(updatePortalSource).toBeCalledTimes(1);
-                expect(updatePortalSource).toBeCalledWith(
-                    'test',
-                    expect.stringContaining('console.log("Hi!");')
-                );
+                expect(events).toEqual([
+                    [{ type: 'register_portal', portalId: 'test' }],
+                    [
+                        {
+                            type: 'update_portal_source',
+                            portalId: 'test',
+                            source: expect.stringContaining(
+                                'console.log("Hi!");'
+                            ),
+                        },
+                    ],
+                ]);
             });
         });
     });

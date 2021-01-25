@@ -19,12 +19,7 @@ import {
     AuxChannelErrorType,
     StoredAux,
 } from '@casual-simulation/aux-vm';
-import {
-    loadScript,
-    reload,
-    setupChannel,
-    waitForLoad,
-} from '../html/IFrameHelpers';
+import { loadScript, setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import {
     StatusUpdate,
     remapProgressPercent,
@@ -33,6 +28,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import Bowser from 'bowser';
 import axios from 'axios';
+import { PortalEvent } from '@casual-simulation/aux-vm/vm';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -45,13 +41,13 @@ export class AuxVMImpl implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _versionUpdated: Subject<RuntimeStateVersion>;
     private _onError: Subject<AuxChannelErrorType>;
+    private _portalEvents: Subject<PortalEvent[]>;
     private _config: AuxConfig;
     private _iframe: HTMLIFrameElement;
     private _channel: MessageChannel;
     private _proxy: Remote<AuxChannel>;
     private _initialUser: AuxUser;
     private _manifest: { [key: string]: string };
-    private _customPortalIframes: Map<string, HTMLIFrameElement>;
     closed: boolean;
 
     /**
@@ -71,7 +67,11 @@ export class AuxVMImpl implements AuxVM {
         this._versionUpdated = new Subject<RuntimeStateVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
-        this._customPortalIframes = new Map();
+        this._portalEvents = new Subject();
+    }
+
+    get portalEvents(): Observable<PortalEvent[]> {
+        return this._portalEvents;
     }
 
     get connectionStateChanged(): Observable<StatusUpdate> {
@@ -156,8 +156,6 @@ export class AuxVMImpl implements AuxVM {
             processPartitions(this._config)
         );
 
-        await this._proxy.registerVm(proxy(this));
-
         let statusMapper = remapProgressPercent(0.2, 1);
         return await this._proxy.init(
             proxy((events) => this._localEvents.next(events)),
@@ -167,6 +165,7 @@ export class AuxVMImpl implements AuxVM {
             proxy((state) =>
                 this._connectionStateChanged.next(statusMapper(state))
             ),
+            proxy((events) => this._portalEvents.next(events)),
             proxy((err) => this._onError.next(err))
         );
     }
@@ -270,35 +269,6 @@ export class AuxVMImpl implements AuxVM {
         this._connectionStateChanged = null;
         this._localEvents.unsubscribe();
         this._localEvents = null;
-    }
-
-    async registerCustomPortal(portalId: string): Promise<void> {
-        if (!this._customPortalIframes.has(portalId)) {
-            // TODO: handle race conditions
-            const iframe = await this._setupCustomIframe({
-                id: `${portalId}-iframe`,
-                className: 'custom-portal',
-            });
-
-            this._customPortalIframes.set(portalId, iframe);
-            console.log(`[AuxVMImpl] Registered portal: ${portalId}`);
-        }
-
-        // if (!this._iframe) {
-        //     console.warn('[AuxVMImpl] Not initalized!');
-        //     return;
-        // }
-        // await loadScript(this._iframe.contentWindow, `script/${id}`, source);
-        // // await registerIFramePortal(this._iframe.contentWindow, id, source);
-        // console.log(`[AuxVMImpl] Registered portal: ${id}`);
-    }
-
-    async updatePortalSource(portalId: string, source: string): Promise<void> {
-        const iframe = this._customPortalIframes.get(portalId);
-        if (iframe) {
-            await reload(iframe);
-            await loadScript(iframe.contentWindow, 'main', source);
-        }
     }
 
     private async _initManifest() {

@@ -1,6 +1,6 @@
 import { Subject, SubscriptionLike } from 'rxjs';
 import { tap, first } from 'rxjs/operators';
-import { AuxChannel, ChannelActionResult, ChannelVM } from './AuxChannel';
+import { AuxChannel, ChannelActionResult } from './AuxChannel';
 import { AuxUser } from '../AuxUser';
 import {
     LocalActions,
@@ -46,6 +46,7 @@ import { RealtimeEditMode } from '@casual-simulation/aux-common/runtime/RuntimeB
 import { mergeVersions } from '@casual-simulation/aux-common/aux-format-2';
 import { AuxVM } from './AuxVM';
 import { Portal, PortalBundler } from './PortalBundler';
+import { PortalEvent } from './PortalEvents';
 
 export interface AuxChannelOptions {}
 
@@ -70,8 +71,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _onStateUpdated: Subject<StateUpdatedEvent>;
     private _onVersionUpdated: Subject<RuntimeStateVersion>;
     private _onConnectionStateChanged: Subject<StatusUpdate>;
+    private _onPortalEvent: Subject<PortalEvent[]>;
     private _onError: Subject<AuxChannelErrorType>;
-    private _vm: ChannelVM;
     private _portalBundler: PortalBundler;
 
     get onLocalEvents() {
@@ -92,6 +93,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     get onConnectionStateChanged() {
         return this._onConnectionStateChanged;
+    }
+
+    get onPortalEvents() {
+        return this._onPortalEvent;
     }
 
     get onError() {
@@ -117,6 +122,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onStateUpdated = new Subject<StateUpdatedEvent>();
         this._onVersionUpdated = new Subject<RuntimeStateVersion>();
         this._onConnectionStateChanged = new Subject<StatusUpdate>();
+        this._onPortalEvent = new Subject();
         this._onError = new Subject<AuxChannelErrorType>();
         this._portalBundler = new PortalBundler();
         this._eventBuffer = [];
@@ -153,16 +159,14 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
         this._portalBundler.onBundleUpdated.subscribe(
             (bundle) => {
-                if (this._vm) {
-                    if (bundle.source) {
-                        this._vm.updatePortalSource(
-                            bundle.portalId,
-                            bundle.source
-                        );
-                    } else {
-                        // TODO: Update portal warnings/errors
-                    }
-                }
+                this._onPortalEvent.next([
+                    {
+                        type: 'update_portal_source',
+                        portalId: bundle.portalId,
+                        source: bundle.source,
+                    },
+                ]);
+                // TODO: Update portal warnings/errors
             },
             (err) => {
                 this._onError.next({
@@ -181,6 +185,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
+        onPortalEvents?: (events: PortalEvent[]) => void,
         onError?: (err: AuxChannelErrorType) => void
     ): Promise<void> {
         if (onLocalEvents) {
@@ -196,6 +201,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this.onConnectionStateChanged.subscribe((s) =>
                 onConnectionStateChanged(s)
             );
+        }
+        if (onPortalEvents) {
+            this.onPortalEvents.subscribe((e) => onPortalEvents(e));
         }
         if (onDeviceEvents) {
             this.onDeviceEvents.subscribe((e) => onDeviceEvents(e));
@@ -213,6 +221,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
+        onPortalEvents?: (events: PortalEvent[]) => void,
         onError?: (err: AuxChannelErrorType) => void
     ) {
         const promise = this.onConnectionStateChanged
@@ -224,13 +233,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             onStateUpdated,
             onVersionUpdated,
             onConnectionStateChanged,
+            onPortalEvents,
             onError
         );
         await promise;
-    }
-
-    async registerVm(vm: ChannelVM): Promise<void> {
-        this._vm = vm;
     }
 
     private async _init(): Promise<void> {
@@ -631,20 +637,13 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         event: RegisterCustomPortalAction
     ): Promise<void> {
         try {
-            if (!this._vm) {
-                console.warn(
-                    '[BaseAuxChannel] Unable to register custom portal because VM is not registered!'
-                );
-                throw new Error(
-                    '[BaseAuxChannel] Unable to register custom portal because VM is not registered!'
-                );
-            } else {
-                this._portalBundler.registerCustomPortal(event.portalId);
-                await this._vm.registerCustomPortal(event.portalId);
-                console.log(
-                    `[BaseAuxChannel] Portal ${event.portalId} registered!`
-                );
-            }
+            this._portalBundler.registerCustomPortal(event.portalId);
+            this._onPortalEvent.next([
+                { type: 'register_portal', portalId: event.portalId },
+            ]);
+            console.log(
+                `[BaseAuxChannel] Portal ${event.portalId} registered!`
+            );
             await this._helper.transaction(asyncResult(event.taskId, null));
         } catch (err) {
             await this._helper.transaction(asyncError(event.taskId, err));
@@ -653,21 +652,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     protected async _addEntryPoint(event: AddEntryPointAction) {
         try {
-            if (!this._vm) {
-                console.warn(
-                    '[BaseAuxChannel] Unable to register custom portal because VM is not registered!'
-                );
-                throw new Error(
-                    '[BaseAuxChannel] Unable to register custom portal because VM is not registered!'
-                );
-            } else {
-                this._portalBundler.addEntryPoint(event.portalId, event);
-                console.log(
-                    `[BaseAuxChannel] ${event.botId ? event.botId + ':' : ''}${
-                        event.tag
-                    } entrypoint registered for ${event.portalId}!`
-                );
-            }
+            this._portalBundler.addEntryPoint(event.portalId, event);
             await this._helper.transaction(asyncResult(event.taskId, null));
         } catch (err) {
             await this._helper.transaction(asyncError(event.taskId, err));

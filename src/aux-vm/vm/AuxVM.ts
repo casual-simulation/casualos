@@ -11,6 +11,7 @@ import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
 import { StoredAux } from '../StoredAux';
 import { ChannelActionResult } from './AuxChannel';
+import { PortalEvent } from './PortalEvents';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -30,6 +31,11 @@ export interface AuxVM extends Initable {
      * Gets the observable list of device events from the simulation.
      */
     deviceEvents: Observable<DeviceAction[]>;
+
+    /**
+     * Gets the observable list of portal events from the simulation.
+     */
+    portalEvents: Observable<PortalEvent[]>;
 
     /**
      * Gets the observable list of state updates from the simulation.
@@ -110,18 +116,4 @@ export interface AuxVM extends Initable {
      * Gets the list of tags that are currently in use.
      */
     getTags(): Promise<string[]>;
-
-    /**
-     * Registers a custom portal with the given ID.
-     * @param portalId The ID of the portal.
-     */
-    registerCustomPortal(portalId: string): Promise<void>;
-
-    /**
-     * Updates the source code for the portal.
-     * This will trigger a reload of the portal and will re-execute the code.
-     * @param portalId The ID of the portal.
-     * @param source The source code that the portal should use.
-     */
-    updatePortalSource(portalId: string, source: string): Promise<void>;
 }
