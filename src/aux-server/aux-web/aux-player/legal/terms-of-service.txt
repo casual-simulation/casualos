@@ -1,7 +1,7 @@
 ﻿CasualOS.com Terms of Service
 
 
-Last updated on January 6th, 2021 
+Last updated on January 25th, 2021 
 
 
 1. About these terms
@@ -19,10 +19,19 @@ These Terms of Service, and any rights and licenses granted hereunder, may not b
 You can access these terms at any time at www.casualos.com/terms. We can make changes to these terms at any time and your continued use of our Services shall confirm your acceptance of the updated terms, whether you have read them or not. 
 
 
-2. Personal use only
+2. Personal use only 
 
 
-The Site is made available for your personal use only, so that individuals may learn about and experiment with the Services. You may not “scrape” the Services without written permission by us. CasualOS.com is an implementation of CasualOS (https://github.com/casual-simulation/casualos) and we grant individuals permission to use the Services to create, display, copy, and download content for personal, non-commercial, and commercial use provided that you not remove or alter any copyright or other proprietary notices contained in the content. Any organization that would like to make commercial use of our Services must enter into a separate agreement with us in advance. Please contact us at hello@casualsimulation.com and we will promptly follow up with you. 
+The Site is made available for your personal use only, so that individuals may learn about and experiment with the Services. You may not “scrape” the Services without written permission by us. CasualOS.com is an implementation of CasualOS (https://github.com/casual-simulation/casualos) and we grant individuals permission to use the Services to create, display, copy, and download content for personal, non-commercial, and commercial use provided that you not remove or alter any copyright or other proprietary notices contained in the content. 
+
+
+ANY ORGANIZATION THAT WOULD LIKE TO MAKE MAKE USE OF OUR SERVICES MUST NOTIFY US AND, IF APPLICABLE, ALLOW US TO ENTER INTO A SEPARATE AGREEMENT IN ADVANCE TO ENSURE GENERAL QUALITY OF SERVICE IS NOT ADVERSELY IMPACTED. 
+
+
+Our Services are intended to be free of charge to the general public, governments, public institutions, educational institutions, and nonprofits so long as we have the means and funds to provide said Services. Our Services as regards commercial entities are intended to cover our costs and ensure continued development and improvement of our Services. If you represent an organization (even an organization we intend to provide free Services to) you must notify us before using our Services on behalf of your organization so we may ensure we can support your use case(s) without adversely impacting our Services intended to be provided free of charge.
+
+
+Any organization that would like to make commercial use of our Services must enter into a separate agreement with us in advance to ensure general quality of service is not adversely impacted. Please contact us at hello@casualsimulation.com and we will promptly follow up with you. 
 
 
 3. About accessing and using our Services

@@ -1,7 +1,7 @@
 ﻿CasualOS.com Privacy Policy
 
 
-Last updated on January 11th, 2021 
+Last updated on January 25th, 2021 
 
 
 1. Introduction
@@ -19,24 +19,32 @@ We do not collect personal information via the Services. YOU SHALL NOT PROVIDE U
 If you would like to contact us you may do so separately at www.casualsimulation.org.
 
 
-3. Cookies 
+3. Cashed Data 
 
 
-We use cookies and other similar technologies to make our Services easier to use. Cookies are small files which store some information on your computer or mobile device.
+We sometimes create and utilize cashed data on your device as may be necessary, at times, to use our Services or otherwise make our Services easier to use. Cashed data is similar to Cookies in that data is stored locally on your device depending upon what portions of the Services you use.
 
 
-We use cookies and similar technologies:
-* to allow us to recognize you and your device, for example by identifying your IP address;
-* to allow our Services to interact with a third party social network or platform (where you have chosen to allow such interaction);
-* to allow our payment processors to process your payment instructions;
+We will NOT use cashed data or similar technologies to:
+* identify your IP address or track you
+* store any personally identifiable information except as may be temporarily necessary to facilitate a transaction. 
+
+
+We or those who use are Services may use cashed data and similar technologies:
+* to provide you with a better experience via reduced loading times and allow for offline capability
+* to store local data on your device related to a specific experience contained within our Services
+* to allow our Services to interact with a third party social network or platform;
+* to allow a payment processor to process your payment instructions;
 * to provide you with more customized Services, for example to provide our Services in the correct language;
 * to obtain data which will allow us to understand how people are using our Services so that we can improve them.
 
 
-By accessing or using our Services you consent to our use of cookies in accordance with this Privacy Policy. You can disable cookies through your web or phone browser settings but you may find you are not able to enjoy all the features of our Services if you do so.
+By accessing or using our Services you consent to our use of cashed data in accordance with this Privacy Policy. You can clear cashed data by deleting it from your device. 
 
 
 4. Links from our Services
+
+
 
 
 We may provide links to third party websites or services from our Services. You understand that when you click on these links any data which you provide thereafter is subject to such third party's privacy policy and not to ours. Although we will endeavor only to link to reputable Services, Cas Sim takes no responsibility for the content, safety or security of any third party Services.
