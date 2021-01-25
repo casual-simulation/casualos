@@ -1,5 +1,17 @@
 # CasualOS Changelog
 
+## V1.3.14
+
+#### Date: 1/25/2021
+
+### :rocket: Improvements
+
+-   Updated the Terms of Service and Privacy Policy documents.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where animations would not run while in VR/AR.
+
 ## V1.3.13
 
 #### Date: 1/18/2021
