@@ -194,8 +194,6 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      */
     async transaction(...events: BotAction[]): Promise<void> {
         await this._vm.sendEvents(events);
-        // await this._tree.addEvents(events);
-        // this._sendLocalEvents(events);
     }
 
     /**
@@ -204,15 +202,6 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      */
     async addState(state: BotsState): Promise<void> {
         await this._vm.sendEvents([addState(state)]);
-        // await this._tree.addEvents([]);
-    }
-
-    async registerCustomPortal(id: string, source: string): Promise<void> {
-        await this._vm.registerCustomPortal(id);
-    }
-
-    async updatePortalSource(portalId: string, source: string): Promise<void> {
-        await this._vm.updatePortalSource(portalId, source);
     }
 
     /**
