@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Updated the Terms of Service and Privacy Policy documents.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where animations would not run while in VR/AR.
