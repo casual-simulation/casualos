@@ -6,6 +6,7 @@ import {
     calculateBotValue,
     PrecalculatedBot,
     PrecalculatedBotsState,
+    RegisterCustomPortalOptions,
     stateUpdatedEvent,
     StateUpdatedEvent,
 } from '@casual-simulation/aux-common';
@@ -30,6 +31,7 @@ export interface Bundle {
 export interface Portal {
     portalId: string;
     entrypoints: PortalEntrypoint[];
+    scriptPrefixes: string[];
 }
 
 export const DEFAULT_BASE_MODULE_URL: string = 'https://cdn.skypack.dev';
@@ -98,17 +100,17 @@ export class PortalBundler {
     /**
      * Registers a custom portal with the given ID.
      * @param portalId The ID of the portal.
+     * @param options The options for the portal.
      */
-    registerCustomPortal(portalId: string): boolean {
-        if (!this._portals.has(portalId)) {
-            this._portals.set(portalId, {
-                portalId,
-                entrypoints: [],
-            });
-            return true;
-        }
-
-        return false;
+    registerCustomPortal(
+        portalId: string,
+        options: RegisterCustomPortalOptions
+    ): void {
+        this._portals.set(portalId, {
+            portalId,
+            entrypoints: [],
+            scriptPrefixes: options.scriptPrefixes,
+        });
     }
 
     /**
@@ -123,7 +125,7 @@ export class PortalBundler {
         let portal = this._portals.get(portalId);
         if (portal) {
             portal.entrypoints.push({
-                tag: trimEntrypointTag(entrypoint.tag),
+                tag: trimEntrypointTag(portal.scriptPrefixes, entrypoint.tag),
                 botId: entrypoint.botId,
             });
 
@@ -148,7 +150,11 @@ export class PortalBundler {
         return Promise.all(promises);
     }
 
-    private _plugin(entryCode: string, bots: PrecalculatedBot[]) {
+    private _plugin(
+        prefixes: string[],
+        entryCode: string,
+        bots: PrecalculatedBot[]
+    ) {
         let _this = this;
         return {
             name: 'test',
@@ -165,21 +171,24 @@ export class PortalBundler {
                 return importee;
             }
 
-            if (isEntrypointTag(importee)) {
-                const tag = trimEntrypointTag(importee);
-                const bot = bots.find((b) => isEntrypointTag(b.values[tag]));
+            if (isAuxModuleId(importee)) {
+                return importee;
+            }
+
+            const prefix = getScriptPrefix(prefixes, importee);
+            if (prefix) {
+                const tag = trimPrefixedTag(prefix, importee);
+                const bot = bots.find((b) =>
+                    isEntrypointTag(prefix, b.values[tag])
+                );
 
                 if (!bot) {
                     this.error(
-                        `Unable to resolve "📖${tag}". No matching script could be found.`
+                        `Unable to resolve "${prefixes[0]}${tag}". No matching script could be found.`
                     );
                 }
 
-                return auxModuleId(bot.id, tag);
-            }
-
-            if (isAuxModuleId(importee)) {
-                return importee;
+                return auxModuleId(prefix, bot.id, tag);
             }
 
             if (/https?/.test(importee)) {
@@ -203,16 +212,16 @@ export class PortalBundler {
             if (id === '__entry') {
                 return entryCode;
             }
-            const { botId, tag } = parseAuxModuleId(id);
-            if (botId && tag) {
+            const { prefix, botId, tag } = parseAuxModuleId(prefixes, id);
+            if (prefix && botId && tag) {
                 const bot = _this._state[botId];
                 if (!bot) {
                     return this.error(
-                        `Unable to import "📖${tag}". No matching script could be found.`
+                        `Unable to import "${prefix}${tag}". No matching script could be found.`
                     );
                 }
                 const code = bot.values[tag];
-                return trimEntrypointTag(code);
+                return trimPrefixedTag(prefix, code);
             }
 
             if (/https?/.test(id)) {
@@ -252,18 +261,22 @@ export class PortalBundler {
     ) {
         let hasUpdate = indexEvents.some((event) => {
             if (event.type === 'bot_tag_added') {
-                return isEntrypointTag(
+                return hasEntrypointTag(
+                    portal.scriptPrefixes,
                     calculateBotValue(null, event.bot, event.tag)
                 );
             } else if (event.type === 'bot_tag_removed') {
-                return isEntrypointTag(
+                return hasEntrypointTag(
+                    portal.scriptPrefixes,
                     calculateBotValue(null, event.oldBot, event.tag)
                 );
             } else if (event.type === 'bot_tag_updated') {
-                const wasEntrypointTag = isEntrypointTag(
+                const wasEntrypointTag = hasEntrypointTag(
+                    portal.scriptPrefixes,
                     calculateBotValue(null, event.oldBot, event.tag)
                 );
-                const isEntrypoint = isEntrypointTag(
+                const isEntrypoint = hasEntrypointTag(
+                    portal.scriptPrefixes,
                     calculateBotValue(null, event.bot, event.tag)
                 );
                 return isEntrypoint || wasEntrypointTag;
@@ -278,13 +291,18 @@ export class PortalBundler {
             for (let entrypoint of portal.entrypoints) {
                 let tagModules = bots
                     .map((b) => ({
-                        name: auxModuleId(b.id, entrypoint.tag),
+                        prefix: getScriptPrefix(
+                            portal.scriptPrefixes,
+                            b.values[entrypoint.tag]
+                        ),
+                        tag: entrypoint.tag,
+                        id: b.id,
                         code: b.values[entrypoint.tag],
                     }))
-                    .filter((value) => isEntrypointTag(value.code))
+                    .filter((value) => value.prefix !== null)
                     .map((m) => ({
-                        ...m,
-                        code: trimEntrypointTag(m.code),
+                        name: auxModuleId(m.prefix, m.id, m.tag),
+                        code: trimPrefixedTag(m.prefix, m.code),
                     }));
 
                 for (let m of tagModules) {
@@ -307,7 +325,13 @@ export class PortalBundler {
                         onwarn: (warning, defaultHandler) => {
                             warnings.push(warning.message);
                         },
-                        plugins: [this._plugin(entryCode, bots)],
+                        plugins: [
+                            this._plugin(
+                                portal.scriptPrefixes,
+                                entryCode,
+                                bots
+                            ),
+                        ],
                     })
                         .then(async (bundle) => {
                             this._buildCache.set(portal.portalId, bundle.cache);
@@ -365,37 +389,79 @@ export class PortalBundler {
 /**
  * Trims the leading script symbol off the given tag.
  */
-export function trimEntrypointTag(tag: string): string {
-    if (tag.startsWith('📖')) {
-        return tag.substring('📖'.length);
+export function trimEntrypointTag(
+    scriptPrefixes: string[],
+    tag: string
+): string {
+    const prefix = getScriptPrefix(scriptPrefixes, tag);
+    if (prefix) {
+        return tag.substring(prefix.length);
+    }
+    return tag;
+}
+
+/**
+ * Trims the leading script symbol off the given tag.
+ */
+export function trimPrefixedTag(prefix: string, tag: string): string {
+    if (tag.startsWith(prefix)) {
+        return tag.substring(prefix.length);
     }
     return tag;
 }
 
 /**
  * Determines if the given value is for a script entrypoint.
+ * @param prefix The prefix to check against.
  * @param value The value to check.
  */
-export function isEntrypointTag(value: unknown): boolean {
-    return typeof value === 'string' && value.startsWith('📖');
+export function isEntrypointTag(prefix: string, value: unknown): boolean {
+    return typeof value === 'string' && value.startsWith(prefix);
 }
 
-function auxModuleId(botId: string, tag: string) {
-    return `${botId}.${tag}?auxmodule`;
+export function hasEntrypointTag(prefixes: string[], value: unknown): boolean {
+    return getScriptPrefix(prefixes, value) !== null;
 }
 
-function parseAuxModuleId(id: string): { botId: string; tag: string } {
-    if (isAuxModuleId(id)) {
-        const dotIndex = id.indexOf('.');
-        const botId = id.slice(0, dotIndex);
-        const tag = id.slice(dotIndex + 1, id.length - '?auxmodule'.length);
-
-        return {
-            botId,
-            tag,
-        };
+export function getScriptPrefix(prefixes: string[], value: unknown): string {
+    if (typeof value === 'string') {
+        for (let prefix of prefixes) {
+            if (value.startsWith(prefix)) {
+                return prefix;
+            }
+        }
     }
-    return { botId: null, tag: null };
+    return null;
+}
+
+function auxModuleId(prefix: string, botId: string, tag: string) {
+    return `${prefix}${botId}.${tag}?auxmodule`;
+}
+
+function parseAuxModuleId(
+    prefixes: string[],
+    id: string
+): { prefix: string; botId: string; tag: string } {
+    if (isAuxModuleId(id)) {
+        for (let prefix of prefixes) {
+            if (id.startsWith(prefix)) {
+                id = id.substring(prefix.length);
+                const dotIndex = id.indexOf('.');
+                const botId = id.slice(0, dotIndex);
+                const tag = id.slice(
+                    dotIndex + 1,
+                    id.length - '?auxmodule'.length
+                );
+
+                return {
+                    prefix,
+                    botId,
+                    tag,
+                };
+            }
+        }
+    }
+    return { prefix: null, botId: null, tag: null };
 }
 
 function isAuxModuleId(id: string) {
