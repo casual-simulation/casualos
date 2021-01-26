@@ -1,3 +1,7 @@
+import {
+    calculateMeetPortalAnchorPointOffset,
+    DEFAULT_CUSTOM_PORTAL_ANCHOR_POINT,
+} from '@casual-simulation/aux-common';
 import { loadScript, reload } from '@casual-simulation/aux-vm-browser';
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
@@ -19,6 +23,8 @@ export default class CustomPortal extends Vue {
     @Prop({ default: {} })
     extraStyle: any;
 
+    defaultStyle: any;
+
     private _loaded: boolean;
 
     get iframeUrl(): string {
@@ -27,12 +33,19 @@ export default class CustomPortal extends Vue {
         return iframeUrl.href;
     }
 
+    get iframeStyle() {
+        return Object.assign({}, this.defaultStyle, this.extraStyle);
+    }
+
     private get _iframe() {
-        return this.$el as HTMLIFrameElement;
+        return this.$refs.iframe as HTMLIFrameElement;
     }
 
     created() {
         this._loaded = false;
+        this.defaultStyle = calculateMeetPortalAnchorPointOffset(
+            DEFAULT_CUSTOM_PORTAL_ANCHOR_POINT
+        );
     }
 
     onLoad() {

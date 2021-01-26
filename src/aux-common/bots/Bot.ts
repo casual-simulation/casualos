@@ -746,6 +746,11 @@ export const DEFAULT_TAG_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint =
     'fullscreen';
 
 /**
+ * The default anchor point for custom portals.
+ */
+export const DEFAULT_CUSTOM_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint = 'top';
+
+/**
  * The default bot LOD.
  */
 export const DEFAULT_BOT_LOD: BotLOD = 'normal';

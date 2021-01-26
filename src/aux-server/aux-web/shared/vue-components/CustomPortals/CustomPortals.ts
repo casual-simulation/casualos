@@ -102,6 +102,7 @@ export default class CustomPortals extends Vue {
             (p) => p.portalId === update.portal.id
         );
         portal.source = update.portal.source;
+        portal.style = update.portal.style;
     }
 }
 

@@ -1,4 +1,10 @@
 .custom-portal {
+    border: none;
+    width: 100%;
+    height: 100%;
+}
+
+.custom-portal-wrapper {
     position: absolute;
     z-index: 3;
     overflow: hidden;
