@@ -49,7 +49,6 @@ export class BrowserAuxChannel extends RemoteAuxChannel {
 
     protected _createPortalBundler() {
         return new PortalBundler({
-            type: 'esbuild',
             esbuildWasmUrl: new URL(
                 ESBuildWasmURL,
                 this._config.config.vmOrigin || this._defaultHost
