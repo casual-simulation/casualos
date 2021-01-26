@@ -75,7 +75,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _onConnectionStateChanged: Subject<StatusUpdate>;
     private _onPortalEvent: Subject<PortalEvent[]>;
     private _onError: Subject<AuxChannelErrorType>;
-    protected _portalBundler: PortalBundler;
+    private _portalBundler: PortalBundler;
 
     get onLocalEvents() {
         return this._onLocalEvents;
@@ -126,7 +126,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onConnectionStateChanged = new Subject<StatusUpdate>();
         this._onPortalEvent = new Subject();
         this._onError = new Subject<AuxChannelErrorType>();
-        this._portalBundler = new PortalBundler();
         this._eventBuffer = [];
         this._hasInitialState = false;
         this._version = {
@@ -158,25 +157,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 message: err.toString(),
             });
         });
-
-        this._portalBundler.onBundleUpdated.subscribe(
-            (bundle) => {
-                this._onPortalEvent.next([
-                    {
-                        type: 'update_portal_source',
-                        portalId: bundle.portalId,
-                        source: bundle.source,
-                    },
-                ]);
-                // TODO: Update portal warnings/errors
-            },
-            (err) => {
-                this._onError.next({
-                    type: 'general',
-                    message: err.toString(),
-                });
-            }
-        );
 
         addDebugApi('getChannel', () => this);
     }
@@ -421,6 +401,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return helper;
     }
 
+    protected _createPortalBundler() {
+        return new PortalBundler();
+    }
+
     protected _registerSubscriptions() {
         this._subs.push(
             this._helper.localEvents.subscribe(
@@ -433,7 +417,26 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             ),
             this._helper.remoteEvents.subscribe((e) => {
                 this._sendRemoteEvents(e);
-            })
+            }),
+            this._portalBundler.onBundleUpdated.subscribe(
+                (bundle) => {
+                        this._onPortalEvent.next([
+                            {
+                                type: 'update_portal_source',
+                                portalId: bundle.portalId,
+                                source: bundle.source,
+                            },
+                        ]);
+                    
+                    // TODO: Update portal warnings/errors
+                },
+                (err) => {
+                    this._onError.next({
+                        type: 'general',
+                        message: err.toString(),
+                    });
+                }
+            )
         );
         for (let [, partition] of iteratePartitions(this._partitions)) {
             this._registerStateSubscriptionsForPartition(partition);
@@ -476,6 +479,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
         if (!this._helper) {
             this._helper = this._createAuxHelper();
+        }
+        if (!this._portalBundler) {
+            this._portalBundler = this._createPortalBundler();
         }
 
         this._handleStatusUpdated({

@@ -12,12 +12,11 @@ import { createProxyClientPartition } from '../partitions/ProxyClientPartition';
 import ESBuildWasmURL from 'esbuild-wasm/esbuild.wasm';
 
 export class BrowserAuxChannel extends RemoteAuxChannel {
+    private _defaultHost: string;
+
     constructor(defaultHost: string, user: AuxUser, config: AuxConfig) {
         super(user, config, {});
-        this._portalBundler = new PortalBundler({
-            type: 'esbuild',
-            esbuildWasmUrl: ESBuildWasmURL,
-        });
+        this._defaultHost = defaultHost;
     }
 
     // TODO: Move this logic to an AuxModule
@@ -46,5 +45,15 @@ export class BrowserAuxChannel extends RemoteAuxChannel {
         }
 
         return partition;
+    }
+
+    protected _createPortalBundler() {
+        return new PortalBundler({
+            type: 'esbuild',
+            esbuildWasmUrl: new URL(
+                ESBuildWasmURL,
+                this._config.config.vmOrigin || this._defaultHost
+            ).href,
+        });
     }
 }
