@@ -4788,6 +4788,80 @@ try {
 }
 ```
 
+## Custom Portal Actions
+
+Custom portals are a way to create your own portals inside CasualOS.
+Unlike listen tags, they provide the ability to interact directly with HTML and make it easy to reuse code.
+This makes them very powerful for creating experiences that you have full control over.
+
+### `portal.register(portalId, options?)`
+
+Registers a custom portal with the given ID and options. Returns a promise that resolves when the portal has been registered.
+Can be called multiple times with new options to override previous options.
+
+The **first parameter** is the ID that the portal should have. This is used to distinguish portals from each other.
+
+The **second parameter** is optional and is the options that the portal should use. It is an object and should have the following structure:
+
+```typescript
+let options: {
+    /**
+     * The script prefixes that should be used for the portal.
+     * Defaults to ["📖"] if not specified.
+     */
+    scriptPrefixes?: string[];
+
+    /**
+     * The CSS styles that should be used for the portal.
+     */
+    style?: any;
+};
+```
+
+#### Examples:
+
+1. Register a custom portal.
+```typescript
+await portal.register("my-portal");
+```
+
+2. Register a custom portal with custom script prefixes.
+```typescript
+await portal.register("my-portal", {
+    scriptPrefixes: ["🐦"]
+});
+```
+
+### `portal.addEntryPoint(portalId, tag)`
+
+Specifies that the given tag should be an entry point for the portal with the given ID. Returns a promise that resolves when the entry point has been registered.
+Portals support multiple entry points, although it should be noted that the order that each entry point runs in is not guaranteed.
+
+After calling this function for a portal, CasualOS will look for tag values that start
+with one of the script prefixes that were specified in <ActionLink action='portal.register(portalId, options?)'/> and produce a script bundle that is injected into the portal.
+Additionally, whenever a tag with the specified script prefixes is changed the portal will be reloaded with the new bundle.
+
+The **first parameter** is the ID of the portal.
+
+The **second parameter** is the tag that the portal should use as an entry point. That is, the piece of code that gets run first and references all the other code for the portal.
+Similarly to <ActionLink action='shout(name, arg?)'/>, this parameter can be prefixed with one of the script prefixes that the portal is registered with. 
+
+#### Examples:
+
+1. Add the `main` tag as an entry point.
+```typescript
+await portal.addEntryPoint("my-portal", "main");
+```
+
+2. Register a portal and add an entry point.
+```typescript
+await portal.register("my-portal");
+
+// Inject scripts in "#main" tags that start with "📖"
+// into the portal.
+await portal.addEntryPoint("my-portal", "📖main");
+```
+
 ## Experimental Actions
 
 ### `experiment.localFormAnimation(bot, animation)`
