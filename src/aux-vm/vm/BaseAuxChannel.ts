@@ -649,12 +649,15 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         event: RegisterCustomPortalAction
     ): Promise<void> {
         try {
+            let currentPortal = this._portalBundler.getPortal(event.portalId);
             const options: RegisterCustomPortalOptions = {
                 scriptPrefixes:
                     event.options.scriptPrefixes ||
+                    currentPortal?.scriptPrefixes ||
                     DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
-                style: event.options.style || {},
+                style: event.options.style || currentPortal?.style || {},
             };
+
             this._portalBundler.registerCustomPortal(event.portalId, options);
             this._onPortalEvent.next([
                 {

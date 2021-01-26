@@ -102,6 +102,10 @@ export class PortalBundler {
         return this._updateBundles(event, batch);
     }
 
+    getPortal(portalId: string) {
+        return this._portals.get(portalId);
+    }
+
     /**
      * Registers a custom portal with the given ID.
      * @param portalId The ID of the portal.

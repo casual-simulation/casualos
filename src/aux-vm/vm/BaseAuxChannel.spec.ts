@@ -982,6 +982,52 @@ describe('BaseAuxChannel', () => {
                     ],
                 ]);
             });
+
+            it('should use the previous portal script prefixes if register is called again without specifying prefixes', async () => {
+                await channel.initAndWait();
+
+                await channel.sendEvents([
+                    {
+                        type: 'register_custom_portal',
+                        portalId: 'test',
+                        options: {
+                            scriptPrefixes: ['abc'],
+                        },
+                        taskId: 'task',
+                    },
+                    {
+                        type: 'register_custom_portal',
+                        portalId: 'test',
+                        options: {},
+                        taskId: 'task',
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        {
+                            type: 'register_portal',
+                            portalId: 'test',
+                            options: {
+                                scriptPrefixes: ['abc'],
+                                style: {},
+                            },
+                        },
+                    ],
+                    [
+                        {
+                            type: 'register_portal',
+                            portalId: 'test',
+                            options: {
+                                scriptPrefixes: ['abc'],
+                                style: {},
+                            },
+                        },
+                    ],
+                ]);
+            });
         });
 
         describe('add_entry_point', () => {
