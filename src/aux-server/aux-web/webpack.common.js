@@ -88,7 +88,7 @@ function playerConfig() {
             }),
             ...commonPlugins(),
             new webpack.NormalModuleReplacementPlugin(
-                'esbuild',
+                /^esbuild$/,
                 'esbuild-wasm'
             ),
             new WorkboxPlugin.GenerateSW({
