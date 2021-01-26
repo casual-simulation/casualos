@@ -433,8 +433,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                             },
                         ]);
                     }
-
-                    // TODO: Update portal warnings/errors
                 },
                 (err) => {
                     this._onError.next({
