@@ -2364,11 +2364,6 @@ export interface AddEntryPointAction extends AsyncAction {
     portalId: string;
 
     /**
-     * The ID of the bot that should the entry point is in.
-     */
-    botId?: string;
-
-    /**
      * The tag that should be used as the entry point.
      */
     tag: string;
@@ -4566,26 +4561,15 @@ export function registerCustomPortal(
  */
 export function addEntryPoint(
     portalId: string,
-    botId: string | null,
     tag: string,
     taskId?: number | string
 ): AddEntryPointAction {
-    if (hasValue(botId)) {
-        return {
-            type: 'add_entry_point',
-            portalId,
-            botId,
-            tag,
-            taskId,
-        };
-    } else {
-        return {
-            type: 'add_entry_point',
-            portalId,
-            tag,
-            taskId,
-        };
-    }
+    return {
+        type: 'add_entry_point',
+        portalId,
+        tag,
+        taskId,
+    };
 }
 
 /**

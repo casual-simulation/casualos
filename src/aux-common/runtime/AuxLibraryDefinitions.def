@@ -3175,24 +3175,6 @@ declare global {
          * @param tag The tag that should be used as the entry point.
          */
         addEntryPoint(portalId: string, tag: string): Promise<void>;
-
-        /**
-         * Adds the given tag as an entry point for the portal.
-         * That is, scripts in the specified tag will be run automatically.
-         * @param portalId The ID of the portal.
-         * @param bot The bot or bot ID that the entry point is in.
-         * @param tag The tag that should be used as the entry point.
-         */
-        addEntryPoint(portalId: string, bot: Bot | string, tag: string): Promise<void>;
-
-        /**
-         * Adds the given tag as an entry point for the portal.
-         * That is, scripts in the specified tag will be run automatically.
-         * @param portalId The ID of the portal.
-         * @param tagOrBot The tag or bot that the entry point is in.
-         * @param tagIfBotSpecified The tag that should be used if a bot was specified.
-         */
-        addEntryPoint(portalId: string, tagOrBot: string | Bot, tagIfBotSpecified?: string): Promise<void>;
     };
 
     /**

@@ -1798,62 +1798,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portalId The ID of the portal.
      * @param tag The tag that should be used as the entry point.
      */
-    function addEntryPoint(portalId: string, tag: string): Promise<void>;
-
-    /**
-     * Adds the given tag as an entry point for the portal.
-     * That is, scripts in the specified tag will be run automatically.
-     * @param portalId The ID of the portal.
-     * @param bot The bot or bot ID that the entry point is in.
-     * @param tag The tag that should be used as the entry point.
-     */
-    function addEntryPoint(
-        portalId: string,
-        bot: Bot | string,
-        tag: string
-    ): Promise<void>;
-
-    /**
-     * Adds the given tag as an entry point for the portal.
-     * That is, scripts in the specified tag will be run automatically.
-     * @param portalId The ID of the portal.
-     * @param tagOrBot The tag or bot that the entry point is in.
-     * @param tagIfBotSpecified The tag that should be used if a bot was specified.
-     */
-    function addEntryPoint(
-        portalId: string,
-        tagOrBot: string | Bot,
-        tagIfBotSpecified?: string
-    ): Promise<void> {
-        if (arguments.length >= 3) {
-            let botOrBotId = tagOrBot;
-            let tag = tagIfBotSpecified;
-
-            let bot: Bot;
-            if (typeof botOrBotId === 'string') {
-                bot = getBot('id', botOrBotId);
-            } else {
-                bot = botOrBotId;
-            }
-
-            if (!bot) {
-                throw new Error('The specified bot does not exist.');
-            }
-
-            const task = context.createTask();
-            const event = calcAddEntryPoint(portalId, bot.id, tag, task.taskId);
-            return addAsyncAction(task, event);
-        } else {
-            let tag = tagOrBot;
-
-            if (typeof tag !== 'string') {
-                throw new Error('A tag name must be provided.');
-            }
-
-            const task = context.createTask();
-            const event = calcAddEntryPoint(portalId, null, tag, task.taskId);
-            return addAsyncAction(task, event);
+    function addEntryPoint(portalId: string, tag: string): Promise<void> {
+        if (typeof tag !== 'string') {
+            throw new Error('A tag name must be provided.');
         }
+
+        const task = context.createTask();
+        const event = calcAddEntryPoint(portalId, tag, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**

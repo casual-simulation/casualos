@@ -2487,56 +2487,11 @@ describe('AuxLibrary', () => {
                 );
                 const expected = addEntryPoint(
                     'test',
-                    null,
                     'abc',
                     context.tasks.size
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
-            });
-
-            it('should support bot IDs', () => {
-                const promise: any = library.api.portal.addEntryPoint(
-                    'test',
-                    bot1.id,
-                    'def'
-                );
-                const expected = addEntryPoint(
-                    'test',
-                    bot1.id,
-                    'def',
-                    context.tasks.size
-                );
-                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should support bots', () => {
-                const promise: any = library.api.portal.addEntryPoint(
-                    'test',
-                    bot1,
-                    'def'
-                );
-                const expected = addEntryPoint(
-                    'test',
-                    bot1.id,
-                    'def',
-                    context.tasks.size
-                );
-                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should throw an error if given a bot ID that does not exist', () => {
-                expect(() => {
-                    library.api.portal.addEntryPoint('test', 'missing', 'def');
-                }).toThrow();
-            });
-
-            it('should throw an error if given a bot when using only tags', () => {
-                expect(() => {
-                    (<any>library.api.portal.addEntryPoint)('test', bot1);
-                }).toThrow();
             });
         });
 
