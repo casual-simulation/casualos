@@ -61,6 +61,7 @@ import UploadFiles from '../../shared/vue-components/UploadFiles/UploadFiles';
 import ShowInputModal from '../../shared/vue-components/ShowInputModal/ShowInputModal';
 import MeetPortal from '../../shared/vue-components/MeetPortal/MeetPortal';
 import TagPortal from '../../shared/vue-components/TagPortal/TagPortal';
+import CustomPortals from '../../shared/vue-components/CustomPortals/CustomPortals';
 
 import merge from 'lodash/merge';
 
@@ -80,6 +81,7 @@ import merge from 'lodash/merge';
         'show-input': ShowInputModal,
         'meet-portal': MeetPortal,
         'tag-portal': TagPortal,
+        'custom-portals': CustomPortals,
         console: Console,
         tagline: Tagline,
         checkout: Checkout,
@@ -207,6 +209,10 @@ export default class PlayerApp extends Vue {
 
     get isAdmin() {
         return this.loginInfo && this.loginInfo.roles.indexOf(ADMIN_ROLE) >= 0;
+    }
+
+    vmOrigin() {
+        return appManager.config?.vmOrigin;
     }
 
     /**

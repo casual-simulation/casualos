@@ -1,6 +1,7 @@
 <template>
     <div id="app">
         <load-app>
+            <custom-portals :vmOrigin="vmOrigin()"></custom-portals>
             <meet-portal>
                 <tag-portal>
                     <md-toolbar v-if="showChatBar">

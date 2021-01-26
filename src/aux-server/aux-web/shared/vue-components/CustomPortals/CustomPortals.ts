@@ -4,7 +4,7 @@ import {
     loadScript,
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
-import { appManager } from 'aux-web/shared/AppManager';
+import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
 import { concatMap, tap } from 'rxjs/operators';
 import Vue, { ComponentOptions } from 'vue';
@@ -18,12 +18,17 @@ import CustomPortal from '../CustomPortal/CustomPortal';
     },
 })
 export default class CustomPortals extends Vue {
-    portals: CustomPortalData[];
-    private _simulations: Map<BrowserSimulation, Subscription> = new Map();
+    @Prop({ default: null })
+    vmOrigin: string;
+
+    portals: CustomPortalData[] = [];
+
+    private _simulations: Map<BrowserSimulation, Subscription>;
     private _sub: Subscription;
 
     created() {
         this.portals = [];
+        this._simulations = new Map();
         this._sub = new Subscription();
 
         this._sub.add(
