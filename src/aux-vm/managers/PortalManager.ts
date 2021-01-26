@@ -69,23 +69,29 @@ export class PortalManager implements SubscriptionLike {
                         ...currentPortal,
                         source: event.source,
                     };
-                    this._portals.set(event.portalId, nextPortal);
-
-                    if (hasValue(currentPortal.source)) {
-                        // it is an update
-                        let currentUpdate = updatedPortals.get(event.portalId);
-                        if (!currentUpdate) {
-                            currentUpdate = {
-                                oldPortal: currentPortal,
-                                portal: nextPortal,
-                            };
-                            updatedPortals.set(event.portalId, currentUpdate);
+                    if (hasValue(nextPortal.source)) {
+                        this._portals.set(event.portalId, nextPortal);
+                        if (hasValue(currentPortal.source)) {
+                            // it is an update
+                            let currentUpdate = updatedPortals.get(
+                                event.portalId
+                            );
+                            if (!currentUpdate) {
+                                currentUpdate = {
+                                    oldPortal: currentPortal,
+                                    portal: nextPortal,
+                                };
+                                updatedPortals.set(
+                                    event.portalId,
+                                    currentUpdate
+                                );
+                            } else {
+                                currentUpdate.portal = nextPortal;
+                            }
                         } else {
-                            currentUpdate.portal = nextPortal;
+                            // it is a portal that does not have source yet
+                            newPortals.push(nextPortal);
                         }
-                    } else {
-                        // it is a portal that does not have source yet
-                        newPortals.push(nextPortal);
                     }
                 }
             }

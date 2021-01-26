@@ -1042,6 +1042,42 @@ describe('BaseAuxChannel', () => {
                     ],
                 ]);
             });
+
+            it('should not send a update_portal_source event if the bundle is invalid', async () => {
+                await channel.initAndWait();
+
+                await channel.sendEvents([
+                    botAdded(
+                        createBot('bot1', {
+                            main: '📖console.log("Hi!',
+                        })
+                    ),
+                    {
+                        type: 'register_custom_portal',
+                        portalId: 'test',
+                        options: {},
+                        taskId: 'otherTask',
+                    },
+                    {
+                        type: 'add_entry_point',
+                        portalId: 'test',
+                        taskId: 'task',
+                        tag: '📖main',
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        {
+                            type: 'register_portal',
+                            portalId: 'test',
+                            options: expect.any(Object),
+                        },
+                    ],
+                ]);
+            });
         });
     });
 

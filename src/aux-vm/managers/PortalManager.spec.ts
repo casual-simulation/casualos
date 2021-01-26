@@ -152,6 +152,40 @@ describe('PortalManager', () => {
                 ],
             ]);
         });
+
+        it('should not resolve portals that had no source', async () => {
+            vm.portalEvents.next([
+                {
+                    type: 'register_portal',
+                    portalId: 'test-portal',
+                    options: {},
+                },
+                {
+                    type: 'update_portal_source',
+                    portalId: 'test-portal',
+                    source: 'abc',
+                },
+                {
+                    type: 'update_portal_source',
+                    portalId: 'test-portal',
+                    source: '',
+                },
+                {
+                    type: 'update_portal_source',
+                    portalId: 'test-portal',
+                    source: 'def',
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(portals).toEqual([
+                {
+                    id: 'test-portal',
+                    source: 'abc',
+                },
+            ]);
+        });
     });
 
     describe('onPortalUpdated', () => {
