@@ -1,5 +1,11 @@
 <template>
-    <div class="custom-portal">Hello!</div>
+    <iframe
+        class="custom-portal"
+        :src="iframeUrl"
+        :title="portalId"
+        @load="onLoad()"
+        :style="extraStyle"
+    ></iframe>
 </template>
-<script src="./CustomPortal.ts"></script>
+<script lang="ts" src="./CustomPortal.ts"></script>
 <style src="./CustomPortal.css" scoped></style>

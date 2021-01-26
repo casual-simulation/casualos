@@ -94,6 +94,53 @@ export function reload(iframeWindow: HTMLIFrameElement) {
     return promise;
 }
 
+/**
+ * Creates
+ * @param options
+ * @param properties
+ */
+export async function setupCustomIframe(
+    options: { vmOrigin: string },
+    properties?: Partial<HTMLIFrameElement>
+) {
+    const origin = options.vmOrigin || location.origin;
+    const iframeUrl = new URL('/aux-vm-iframe.html', origin).href;
+
+    const iframe = document.createElement('iframe');
+    iframe.src = iframeUrl;
+    iframe.style.display = 'none';
+
+    if (properties) {
+        for (let key in properties) {
+            (<any>iframe)[key] = (<any>properties)[key];
+        }
+    }
+
+    // Allow the iframe to run scripts, but do nothing else.
+    // Because we're not allowing the same origin, this prevents the VM from talking to
+    // storage like IndexedDB and therefore prevents different VMs from affecting each other.
+    // iframe.sandbox.add('allow-scripts');
+
+    // const bowserResult = Bowser.parse(navigator.userAgent);
+
+    // Safari requires the allow-same-origin option in order to load
+    // web workers using a blob.
+    // if (
+    //     bowserResult.browser.name === 'Safari' ||
+    //     bowserResult.os.name === 'iOS'
+    // ) {
+    //     console.warn('[AuxVMImpl] Adding allow-same-origin for Safari');
+    //     iframe.sandbox.add('allow-same-origin');
+    // }
+
+    let promise = waitForLoad(iframe);
+    document.body.insertBefore(iframe, document.body.firstChild);
+
+    await promise;
+
+    return iframe;
+}
+
 // /**
 //  * Loads the script into the iframe window as a portal.
 //  * @param iframeWindow The iframe.

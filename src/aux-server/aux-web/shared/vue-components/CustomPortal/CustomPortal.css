@@ -1,0 +1,6 @@
+.custom-portal {
+    position: absolute;
+    z-index: 3;
+    overflow: hidden;
+    background: #fff;
+}
