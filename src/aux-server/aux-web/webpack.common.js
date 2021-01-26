@@ -87,10 +87,6 @@ function playerConfig() {
                 THREE: 'three',
             }),
             ...commonPlugins(),
-            new webpack.NormalModuleReplacementPlugin(
-                /^esbuild$/,
-                'esbuild-wasm'
-            ),
             new WorkboxPlugin.GenerateSW({
                 clientsClaim: true,
                 skipWaiting: true,
@@ -178,6 +174,7 @@ function commonPlugins() {
             GIT_TAG: JSON.stringify(latestTag),
             PROXY_CORS_REQUESTS: process.env.PROXY_CORS_REQUESTS !== 'false',
         }),
+        new webpack.NormalModuleReplacementPlugin(/^esbuild$/, 'esbuild-wasm'),
     ];
 }
 
