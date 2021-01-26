@@ -35,6 +35,12 @@ describe('PortalManager', () => {
                 {
                     type: 'register_portal',
                     portalId: 'test-portal',
+                    options: {
+                        scriptPrefixes: ['🙂'],
+                        style: {
+                            abc: 'def',
+                        },
+                    },
                 },
             ]);
 
@@ -56,6 +62,10 @@ describe('PortalManager', () => {
                 {
                     id: 'test-portal',
                     source: 'abc',
+                    scriptPrefixes: ['🙂'],
+                    style: {
+                        abc: 'def',
+                    },
                 },
             ]);
         });
@@ -67,6 +77,7 @@ describe('PortalManager', () => {
                 {
                     type: 'register_portal',
                     portalId: 'test-portal',
+                    options: {},
                 },
                 {
                     type: 'update_portal_source',
@@ -76,6 +87,7 @@ describe('PortalManager', () => {
                 {
                     type: 'register_portal',
                     portalId: 'other-portal',
+                    options: {},
                 },
                 {
                     type: 'update_portal_source',
@@ -103,6 +115,7 @@ describe('PortalManager', () => {
                 {
                     type: 'register_portal',
                     portalId: 'test-portal',
+                    options: {},
                 },
                 {
                     type: 'update_portal_source',
@@ -112,6 +125,7 @@ describe('PortalManager', () => {
                 {
                     type: 'register_portal',
                     portalId: 'other-portal',
+                    options: {},
                 },
                 {
                     type: 'update_portal_source',
@@ -153,6 +167,7 @@ describe('PortalManager', () => {
                 {
                     type: 'register_portal',
                     portalId: 'test-portal',
+                    options: {},
                 },
                 {
                     type: 'update_portal_source',
@@ -162,6 +177,7 @@ describe('PortalManager', () => {
                 {
                     type: 'register_portal',
                     portalId: 'other-portal',
+                    options: {},
                 },
                 {
                     type: 'update_portal_source',

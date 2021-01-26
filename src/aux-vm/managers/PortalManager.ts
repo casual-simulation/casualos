@@ -55,6 +55,8 @@ export class PortalManager implements SubscriptionLike {
                     const newPortal: PortalData = {
                         id: event.portalId,
                         source: null,
+                        scriptPrefixes: event.options.scriptPrefixes,
+                        style: event.options.style,
                     };
 
                     this._portals.set(event.portalId, newPortal);
@@ -122,6 +124,16 @@ export interface PortalData {
      * The source code that the portal should use.
      */
     source: string;
+
+    /**
+     * The possible script prefixes for the portal.
+     */
+    scriptPrefixes: string[];
+
+    /**
+     * The CSS styles that the portal iframe should have.
+     */
+    style: any;
 }
 
 /**
