@@ -87,6 +87,10 @@ function playerConfig() {
                 THREE: 'three',
             }),
             ...commonPlugins(),
+            new webpack.NormalModuleReplacementPlugin(
+                'esbuild',
+                'esbuild-wasm'
+            ),
             new WorkboxPlugin.GenerateSW({
                 clientsClaim: true,
                 skipWaiting: true,
@@ -246,7 +250,7 @@ function baseConfig() {
                     use: 'exports-loader?vg=vg',
                 },
                 {
-                    test: /\.(gltf|glb)$/,
+                    test: /\.(gltf|glb|wasm)$/,
                     use: [
                         {
                             loader: 'file-loader',

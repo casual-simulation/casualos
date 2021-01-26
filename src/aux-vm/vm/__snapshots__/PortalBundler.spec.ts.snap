@@ -1,0 +1,943 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PortalBundler library emoji esbuild onBundleUpdated addEntryPoint() should emit a bundle containing the code of the specified tags 1`] = `
+Array [
+  Object {
+    "portalId": "test",
+    "source": "(() => {
+  // aux-ns:📖bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:📖bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler library emoji esbuild onBundleUpdated addEntryPoint() should emit a bundle if a bot containing code was deleted 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:📖bot1.main?auxmodule
+  console.log(\\"abc\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler library emoji esbuild onBundleUpdated addEntryPoint() should emit a bundle if a module stopped being a library 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:📖bot1.main?auxmodule
+  console.log(\\"abc\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler library emoji esbuild onBundleUpdated addEntryPoint() should emit a bundle when an arbitrary module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:📖bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:📖bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler library emoji esbuild onBundleUpdated stateUpdated() should emit a bundle containing the build error 1`] = `
+Array [
+  Object {
+    "error": "Error: Build failed with 1 error:
+aux-ns:📖bot1.main?auxmodule:1:15: error: Unterminated string literal",
+    "portalId": "test",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler library emoji esbuild onBundleUpdated stateUpdated() should emit a bundle containing the code of the specified tags 1`] = `
+Array [
+  Object {
+    "portalId": "test",
+    "source": "(() => {
+  // aux-ns:📖bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:📖bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler library emoji esbuild onBundleUpdated stateUpdated() should emit a bundle if a bot containing code was deleted 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:📖bot1.main?auxmodule
+  console.log(\\"abc\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler library emoji esbuild onBundleUpdated stateUpdated() should emit a bundle if a module stopped being a library 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:📖bot1.main?auxmodule
+  console.log(\\"abc\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler library emoji esbuild onBundleUpdated stateUpdated() should emit a bundle when an arbitrary module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:📖bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:📖bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler library emoji esbuild onBundleUpdated stateUpdated() should emit a bundle when an arbitrary tag becomes a module tag 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:📖bot1.main?auxmodule
+  console.log(\\"abc\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler library emoji esbuild onBundleUpdated stateUpdated() should not emit a bundle when an arbitrary non module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:📖bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:📖bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler library emoji rollup onBundleUpdated addEntryPoint() should emit a bundle containing the code of the specified tags 1`] = `
+Array [
+  Object {
+    "portalId": "test",
+    "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+	console.log(\\"def\\");
+
+}());
+",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler library emoji rollup onBundleUpdated addEntryPoint() should emit a bundle if a bot containing code was deleted 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler library emoji rollup onBundleUpdated addEntryPoint() should emit a bundle if a module stopped being a library 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler library emoji rollup onBundleUpdated addEntryPoint() should emit a bundle when an arbitrary module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+	console.log(\\"def\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler library emoji rollup onBundleUpdated stateUpdated() should emit a bundle containing the build error 1`] = `
+Array [
+  Object {
+    "error": [Error: Unterminated string constant (Note that you need plugins to import files that are not JavaScript)],
+    "portalId": "test",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler library emoji rollup onBundleUpdated stateUpdated() should emit a bundle containing the code of the specified tags 1`] = `
+Array [
+  Object {
+    "portalId": "test",
+    "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+	console.log(\\"def\\");
+
+}());
+",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler library emoji rollup onBundleUpdated stateUpdated() should emit a bundle if a bot containing code was deleted 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler library emoji rollup onBundleUpdated stateUpdated() should emit a bundle if a module stopped being a library 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler library emoji rollup onBundleUpdated stateUpdated() should emit a bundle when an arbitrary module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+	console.log(\\"def\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler library emoji rollup onBundleUpdated stateUpdated() should emit a bundle when an arbitrary tag becomes a module tag 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler library emoji rollup onBundleUpdated stateUpdated() should not emit a bundle when an arbitrary non module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+	console.log(\\"def\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler multiple emoji esbuild onBundleUpdated addEntryPoint() should emit a bundle containing the code of the specified tags 1`] = `
+Array [
+  Object {
+    "portalId": "test",
+    "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:📖bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler multiple emoji esbuild onBundleUpdated addEntryPoint() should emit a bundle if a bot containing code was deleted 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler multiple emoji esbuild onBundleUpdated addEntryPoint() should emit a bundle if a module stopped being a library 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler multiple emoji esbuild onBundleUpdated addEntryPoint() should emit a bundle when an arbitrary module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:📖bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler multiple emoji esbuild onBundleUpdated stateUpdated() should emit a bundle containing the build error 1`] = `
+Array [
+  Object {
+    "error": "Error: Build failed with 1 error:
+aux-ns:🙂bot1.main?auxmodule:1:15: error: Unterminated string literal",
+    "portalId": "test",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler multiple emoji esbuild onBundleUpdated stateUpdated() should emit a bundle containing the code of the specified tags 1`] = `
+Array [
+  Object {
+    "portalId": "test",
+    "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:📖bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler multiple emoji esbuild onBundleUpdated stateUpdated() should emit a bundle if a bot containing code was deleted 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler multiple emoji esbuild onBundleUpdated stateUpdated() should emit a bundle if a module stopped being a library 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler multiple emoji esbuild onBundleUpdated stateUpdated() should emit a bundle when an arbitrary module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:📖bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler multiple emoji esbuild onBundleUpdated stateUpdated() should emit a bundle when an arbitrary tag becomes a module tag 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler multiple emoji esbuild onBundleUpdated stateUpdated() should not emit a bundle when an arbitrary non module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:📖bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler multiple emoji rollup onBundleUpdated addEntryPoint() should emit a bundle containing the code of the specified tags 1`] = `
+Array [
+  Object {
+    "portalId": "test",
+    "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+	console.log(\\"def\\");
+
+}());
+",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler multiple emoji rollup onBundleUpdated addEntryPoint() should emit a bundle if a bot containing code was deleted 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler multiple emoji rollup onBundleUpdated addEntryPoint() should emit a bundle if a module stopped being a library 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler multiple emoji rollup onBundleUpdated addEntryPoint() should emit a bundle when an arbitrary module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+	console.log(\\"def\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler multiple emoji rollup onBundleUpdated stateUpdated() should emit a bundle containing the build error 1`] = `
+Array [
+  Object {
+    "error": [Error: Unterminated string constant (Note that you need plugins to import files that are not JavaScript)],
+    "portalId": "test",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler multiple emoji rollup onBundleUpdated stateUpdated() should emit a bundle containing the code of the specified tags 1`] = `
+Array [
+  Object {
+    "portalId": "test",
+    "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+	console.log(\\"def\\");
+
+}());
+",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler multiple emoji rollup onBundleUpdated stateUpdated() should emit a bundle if a bot containing code was deleted 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler multiple emoji rollup onBundleUpdated stateUpdated() should emit a bundle if a module stopped being a library 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler multiple emoji rollup onBundleUpdated stateUpdated() should emit a bundle when an arbitrary module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+	console.log(\\"def\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler multiple emoji rollup onBundleUpdated stateUpdated() should emit a bundle when an arbitrary tag becomes a module tag 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler multiple emoji rollup onBundleUpdated stateUpdated() should not emit a bundle when an arbitrary non module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+	console.log(\\"def\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler smile emoji esbuild onBundleUpdated addEntryPoint() should emit a bundle containing the code of the specified tags 1`] = `
+Array [
+  Object {
+    "portalId": "test",
+    "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:🙂bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler smile emoji esbuild onBundleUpdated addEntryPoint() should emit a bundle if a bot containing code was deleted 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler smile emoji esbuild onBundleUpdated addEntryPoint() should emit a bundle if a module stopped being a library 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler smile emoji esbuild onBundleUpdated addEntryPoint() should emit a bundle when an arbitrary module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:🙂bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler smile emoji esbuild onBundleUpdated stateUpdated() should emit a bundle containing the build error 1`] = `
+Array [
+  Object {
+    "error": "Error: Build failed with 1 error:
+aux-ns:🙂bot1.main?auxmodule:1:15: error: Unterminated string literal",
+    "portalId": "test",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler smile emoji esbuild onBundleUpdated stateUpdated() should emit a bundle containing the code of the specified tags 1`] = `
+Array [
+  Object {
+    "portalId": "test",
+    "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:🙂bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler smile emoji esbuild onBundleUpdated stateUpdated() should emit a bundle if a bot containing code was deleted 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler smile emoji esbuild onBundleUpdated stateUpdated() should emit a bundle if a module stopped being a library 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler smile emoji esbuild onBundleUpdated stateUpdated() should emit a bundle when an arbitrary module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:🙂bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler smile emoji esbuild onBundleUpdated stateUpdated() should emit a bundle when an arbitrary tag becomes a module tag 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler smile emoji esbuild onBundleUpdated stateUpdated() should not emit a bundle when an arbitrary non module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:🙂bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler smile emoji rollup onBundleUpdated addEntryPoint() should emit a bundle containing the code of the specified tags 1`] = `
+Array [
+  Object {
+    "portalId": "test",
+    "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+	console.log(\\"def\\");
+
+}());
+",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler smile emoji rollup onBundleUpdated addEntryPoint() should emit a bundle if a bot containing code was deleted 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler smile emoji rollup onBundleUpdated addEntryPoint() should emit a bundle if a module stopped being a library 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler smile emoji rollup onBundleUpdated addEntryPoint() should emit a bundle when an arbitrary module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+	console.log(\\"def\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler smile emoji rollup onBundleUpdated stateUpdated() should emit a bundle containing the build error 1`] = `
+Array [
+  Object {
+    "error": [Error: Unterminated string constant (Note that you need plugins to import files that are not JavaScript)],
+    "portalId": "test",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler smile emoji rollup onBundleUpdated stateUpdated() should emit a bundle containing the code of the specified tags 1`] = `
+Array [
+  Object {
+    "portalId": "test",
+    "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+	console.log(\\"def\\");
+
+}());
+",
+    "warnings": Array [],
+  },
+]
+`;
+
+exports[`PortalBundler smile emoji rollup onBundleUpdated stateUpdated() should emit a bundle if a bot containing code was deleted 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler smile emoji rollup onBundleUpdated stateUpdated() should emit a bundle if a module stopped being a library 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler smile emoji rollup onBundleUpdated stateUpdated() should emit a bundle when an arbitrary module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+	console.log(\\"def\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler smile emoji rollup onBundleUpdated stateUpdated() should emit a bundle when an arbitrary tag becomes a module tag 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;
+
+exports[`PortalBundler smile emoji rollup onBundleUpdated stateUpdated() should not emit a bundle when an arbitrary non module tag is updated 1`] = `
+Object {
+  "portalId": "test",
+  "source": "(function () {
+	'use strict';
+
+	console.log(\\"abc\\");
+
+	console.log(\\"def\\");
+
+}());
+",
+  "warnings": Array [],
+}
+`;

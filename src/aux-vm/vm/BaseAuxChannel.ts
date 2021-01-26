@@ -75,7 +75,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _onConnectionStateChanged: Subject<StatusUpdate>;
     private _onPortalEvent: Subject<PortalEvent[]>;
     private _onError: Subject<AuxChannelErrorType>;
-    private _portalBundler: PortalBundler;
+    protected _portalBundler: PortalBundler;
 
     get onLocalEvents() {
         return this._onLocalEvents;

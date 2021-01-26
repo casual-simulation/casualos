@@ -15,6 +15,8 @@ import { rollup, Plugin, PluginContext } from 'rollup';
 import values from 'lodash/values';
 import { pick, sortBy } from 'lodash';
 import axios from 'axios';
+import type ESBuild from 'esbuild';
+import * as esbuild from 'esbuild';
 
 export interface PortalEntrypoint {
     botId?: string;
@@ -41,6 +43,7 @@ export const DEFAULT_BASE_MODULE_URL: string = 'https://cdn.skypack.dev';
  * It listens for state updates and is able to asynchrounously emit bundles that should be injected into custom portals.
  */
 export class PortalBundler {
+    private _esbuildService: ESBuild.Service;
     private _portals: Map<string, Portal>;
     private _state: PrecalculatedBotsState;
     private _onBundleUpdated: Subject<Bundle>;
@@ -48,6 +51,8 @@ export class PortalBundler {
     private _httpCache: Map<string, Promise<string>>;
     private _buildCache: Map<string, any>;
     private _index: BotIndex;
+    private _esbuildWasmUrl: string;
+    private _buildType: 'rollup' | 'esbuild';
 
     /**
      * An observable that emits when a bundle is updated.
@@ -56,12 +61,16 @@ export class PortalBundler {
         return this._onBundleUpdated;
     }
 
-    constructor() {
+    constructor(
+        options: { type?: 'rollup' | 'esbuild'; esbuildWasmUrl?: string } = {}
+    ) {
         this._portals = new Map();
         this._httpCache = new Map();
         this._buildCache = new Map();
         this._index = new BotIndex();
         this._onBundleUpdated = new Subject();
+        this._esbuildWasmUrl = options.esbuildWasmUrl || null;
+        this._buildType = options.type || 'rollup';
     }
 
     /**
@@ -150,14 +159,361 @@ export class PortalBundler {
         return Promise.all(promises);
     }
 
-    private _plugin(
+    private _updateBundle(
+        event: StateUpdatedEvent,
+        indexEvents: BotIndexEvent[],
+        portal: Portal
+    ) {
+        let hasUpdate = indexEvents.some((event) => {
+            if (event.type === 'bot_tag_added') {
+                return hasEntrypointTag(
+                    portal.scriptPrefixes,
+                    calculateBotValue(null, event.bot, event.tag)
+                );
+            } else if (event.type === 'bot_tag_removed') {
+                return hasEntrypointTag(
+                    portal.scriptPrefixes,
+                    calculateBotValue(null, event.oldBot, event.tag)
+                );
+            } else if (event.type === 'bot_tag_updated') {
+                const wasEntrypointTag = hasEntrypointTag(
+                    portal.scriptPrefixes,
+                    calculateBotValue(null, event.oldBot, event.tag)
+                );
+                const isEntrypoint = hasEntrypointTag(
+                    portal.scriptPrefixes,
+                    calculateBotValue(null, event.bot, event.tag)
+                );
+                return isEntrypoint || wasEntrypointTag;
+            }
+        });
+
+        if (hasUpdate) {
+            let entryModules = new Set<string>();
+            let entryCode = '';
+            let bots = sortBy(values(this._state), (b) => b.id);
+
+            for (let entrypoint of portal.entrypoints) {
+                let tagModules = bots
+                    .map((b) => ({
+                        prefix: getScriptPrefix(
+                            portal.scriptPrefixes,
+                            b.values[entrypoint.tag]
+                        ),
+                        tag: entrypoint.tag,
+                        id: b.id,
+                        code: b.values[entrypoint.tag],
+                    }))
+                    .filter((value) => value.prefix !== null)
+                    .map((m) => ({
+                        name: auxModuleId(m.prefix, m.id, m.tag),
+                        code: trimPrefixedTag(m.prefix, m.code),
+                    }));
+
+                for (let m of tagModules) {
+                    entryModules.add(m.name);
+                }
+            }
+
+            for (let name of entryModules) {
+                entryCode += `import ${JSON.stringify(name)};\n`;
+            }
+
+            if (this._buildType === 'rollup') {
+                return this._rollup(portal, entryCode, bots);
+            } else {
+                return this._esbuild(portal, entryCode, bots);
+            }
+        }
+
+        return Promise.resolve();
+    }
+
+    private async _esbuild(
+        portal: Portal,
+        entryCode: string,
+        bots: PrecalculatedBot[]
+    ) {
+        if (!this._esbuildService) {
+            let options: ESBuild.ServiceOptions = {};
+            if (this._esbuildWasmUrl) {
+                options.wasmURL = this._esbuildWasmUrl;
+            }
+            this._esbuildService = await esbuild.startService(options);
+        }
+
+        try {
+            const result = await this._esbuildService.build({
+                entryPoints: ['__entry'],
+                bundle: true,
+                format: 'iife',
+                write: false,
+                plugins: [
+                    this._esbuildPlugin(portal.scriptPrefixes, entryCode, bots),
+                ],
+            });
+
+            let final = '';
+            for (let file of result.outputFiles) {
+                final += file.text;
+            }
+
+            const warnings = result.warnings.map((w) => w.text);
+
+            this._onBundleUpdated.next({
+                portalId: portal.portalId,
+                source: final,
+                warnings: warnings,
+            });
+        } catch (err) {
+            this._onBundleUpdated.next({
+                portalId: portal.portalId,
+                warnings: [],
+                error: err.toString(),
+            });
+        }
+    }
+
+    private _esbuildPlugin(
+        prefixes: string[],
+        entryCode: string,
+        bots: PrecalculatedBot[]
+    ): ESBuild.Plugin {
+        return {
+            name: 'casualos',
+            setup: (build) => {
+                build.onResolve({ filter: /^__entry$/ }, (args) => ({
+                    path: args.path,
+                    namespace: 'entry-ns',
+                }));
+
+                build.onLoad(
+                    { filter: /^__entry$/, namespace: 'entry-ns' },
+                    (args) => ({
+                        contents: entryCode,
+                        loader: 'js',
+                    })
+                );
+
+                build.onResolve({ filter: /\\?auxmodule$/ }, (args) => ({
+                    path: args.path,
+                    namespace: 'aux-ns',
+                }));
+
+                for (let p of prefixes) {
+                    let prefix = p;
+                    build.onResolve(
+                        { filter: new RegExp(`^${prefix}`) },
+                        (args) => {
+                            const tag = trimPrefixedTag(prefix, args.path);
+                            const bot = bots.find((b) =>
+                                isEntrypointTag(prefix, b.values[tag])
+                            );
+
+                            if (!bot) {
+                                return {
+                                    errors: [
+                                        {
+                                            text: `Unable to resolve "${prefixes[0]}${tag}". No matching script could be found.`,
+                                        },
+                                    ],
+                                };
+                            }
+
+                            return {
+                                path: auxModuleId(prefix, bot.id, tag),
+                                namespace: 'aux-ns',
+                            };
+                        }
+                    );
+                }
+
+                build.onLoad(
+                    { filter: /\\?auxmodule$/, namespace: 'aux-ns' },
+                    (args) => {
+                        const { prefix, botId, tag } = parseAuxModuleId(
+                            prefixes,
+                            args.path
+                        );
+                        if (prefix && botId && tag) {
+                            const bot = this._state[botId];
+                            if (!bot) {
+                                return {
+                                    errors: [
+                                        {
+                                            text: `Unable to import "${prefix}${tag}". No matching script could be found.`,
+                                        },
+                                    ],
+                                };
+                            }
+                            const code = bot.values[tag];
+                            return {
+                                contents: trimPrefixedTag(prefix, code),
+                                loader: 'js',
+                            };
+                        }
+
+                        return {
+                            errors: [
+                                {
+                                    text: `Did you forget to use 📖 when importing?`,
+                                },
+                            ],
+                        };
+                    }
+                );
+
+                build.onResolve({ filter: /^https?/ }, (args) => ({
+                    path: args.path,
+                    namespace: 'http-ns',
+                }));
+
+                build.onResolve({ filter: /.*/ }, (args) => {
+                    const importee = args.path;
+                    let importer = args.importer;
+                    // convert to HTTP(S) import.
+                    if (importee.startsWith('/') || importee.startsWith('./')) {
+                        // use importer as base URL
+                        if (!importer.endsWith('/')) {
+                            importer = importer + '/';
+                        }
+                        const url = new URL(importee, importer);
+                        return { path: url.href, namespace: 'http-ns' };
+                    } else {
+                        return {
+                            path: `${this._baseModuleUrl}/${importee}`,
+                            namespace: 'http-ns',
+                        };
+                    }
+                });
+
+                build.onLoad(
+                    { filter: /^https?/, namespace: 'http-ns' },
+                    async (args) => {
+                        try {
+                            const cached = this._httpCache.get(args.path);
+                            if (typeof cached !== 'undefined') {
+                                return {
+                                    contents: await cached,
+                                    loader: 'js',
+                                };
+                            }
+
+                            let promise = axios
+                                .get(args.path)
+                                .then((response) => {
+                                    if (typeof response.data === 'string') {
+                                        const script = response.data;
+                                        return script;
+                                    } else {
+                                        throw new Error(
+                                            `The module server did not return a string.`
+                                        );
+                                    }
+                                });
+
+                            this._httpCache.set(args.path, promise);
+
+                            const script = await promise;
+                            return {
+                                contents: script,
+                                loader: 'js',
+                            };
+                        } catch (err) {
+                            return {
+                                errors: [
+                                    {
+                                        text: `${err}`,
+                                    },
+                                ],
+                            };
+                        }
+                    }
+                );
+            },
+        };
+    }
+
+    private _rollup(
+        portal: Portal,
+        entryCode: string,
+        bots: PrecalculatedBot[]
+    ) {
+        return new Promise<void>((resolve, reject) => {
+            let warnings = [] as string[];
+            try {
+                // bundle it
+                rollup({
+                    input: '__entry',
+                    cache: this._buildCache.get(portal.portalId),
+                    onwarn: (warning, defaultHandler) => {
+                        warnings.push(warning.message);
+                    },
+                    plugins: [
+                        this._rollupPlugin(
+                            portal.scriptPrefixes,
+                            entryCode,
+                            bots
+                        ),
+                    ],
+                })
+                    .then(async (bundle) => {
+                        this._buildCache.set(portal.portalId, bundle.cache);
+
+                        if (bundle.getTimings) {
+                            const timings = bundle.getTimings();
+                            console.log(timings);
+                        }
+
+                        const result = await bundle.generate({
+                            format: 'iife',
+                        });
+
+                        const { output } = result;
+
+                        let final = '';
+                        for (let chunkOrAsset of output) {
+                            if (chunkOrAsset.type === 'chunk') {
+                                final += chunkOrAsset.code;
+                            }
+                        }
+
+                        this._onBundleUpdated.next({
+                            portalId: portal.portalId,
+                            source: final,
+                            warnings: warnings,
+                        });
+                        resolve();
+                    })
+                    .catch((err) => {
+                        const bundle = {
+                            portalId: portal.portalId,
+                            warnings: warnings,
+                            error: err,
+                        };
+                        this._onBundleUpdated.next(bundle);
+                        resolve();
+                    });
+            } catch (err) {
+                const bundle = {
+                    portalId: portal.portalId,
+                    warnings: warnings,
+                    error: err,
+                };
+                this._onBundleUpdated.next(bundle);
+                resolve();
+            }
+        });
+    }
+
+    private _rollupPlugin(
         prefixes: string[],
         entryCode: string,
         bots: PrecalculatedBot[]
     ) {
         let _this = this;
         return {
-            name: 'test',
+            name: 'casualos',
             resolveId,
             load,
         } as Plugin;
@@ -252,137 +608,6 @@ export class PortalBundler {
 
             return this.error(`Did you forget to use 📖 when importing?`);
         }
-    }
-
-    private _updateBundle(
-        event: StateUpdatedEvent,
-        indexEvents: BotIndexEvent[],
-        portal: Portal
-    ) {
-        let hasUpdate = indexEvents.some((event) => {
-            if (event.type === 'bot_tag_added') {
-                return hasEntrypointTag(
-                    portal.scriptPrefixes,
-                    calculateBotValue(null, event.bot, event.tag)
-                );
-            } else if (event.type === 'bot_tag_removed') {
-                return hasEntrypointTag(
-                    portal.scriptPrefixes,
-                    calculateBotValue(null, event.oldBot, event.tag)
-                );
-            } else if (event.type === 'bot_tag_updated') {
-                const wasEntrypointTag = hasEntrypointTag(
-                    portal.scriptPrefixes,
-                    calculateBotValue(null, event.oldBot, event.tag)
-                );
-                const isEntrypoint = hasEntrypointTag(
-                    portal.scriptPrefixes,
-                    calculateBotValue(null, event.bot, event.tag)
-                );
-                return isEntrypoint || wasEntrypointTag;
-            }
-        });
-
-        if (hasUpdate) {
-            let entryModules = new Set<string>();
-            let entryCode = '';
-            let bots = sortBy(values(this._state), (b) => b.id);
-
-            for (let entrypoint of portal.entrypoints) {
-                let tagModules = bots
-                    .map((b) => ({
-                        prefix: getScriptPrefix(
-                            portal.scriptPrefixes,
-                            b.values[entrypoint.tag]
-                        ),
-                        tag: entrypoint.tag,
-                        id: b.id,
-                        code: b.values[entrypoint.tag],
-                    }))
-                    .filter((value) => value.prefix !== null)
-                    .map((m) => ({
-                        name: auxModuleId(m.prefix, m.id, m.tag),
-                        code: trimPrefixedTag(m.prefix, m.code),
-                    }));
-
-                for (let m of tagModules) {
-                    entryModules.add(m.name);
-                }
-            }
-
-            for (let name of entryModules) {
-                entryCode += `import ${JSON.stringify(name)};\n`;
-            }
-
-            let warnings = [] as string[];
-
-            return new Promise<void>((resolve, reject) => {
-                try {
-                    // bundle it
-                    rollup({
-                        input: '__entry',
-                        cache: this._buildCache.get(portal.portalId),
-                        onwarn: (warning, defaultHandler) => {
-                            warnings.push(warning.message);
-                        },
-                        plugins: [
-                            this._plugin(
-                                portal.scriptPrefixes,
-                                entryCode,
-                                bots
-                            ),
-                        ],
-                    })
-                        .then(async (bundle) => {
-                            this._buildCache.set(portal.portalId, bundle.cache);
-
-                            if (bundle.getTimings) {
-                                const timings = bundle.getTimings();
-                                console.log(timings);
-                            }
-
-                            const result = await bundle.generate({
-                                format: 'iife',
-                            });
-
-                            const { output } = result;
-
-                            let final = '';
-                            for (let chunkOrAsset of output) {
-                                if (chunkOrAsset.type === 'chunk') {
-                                    final += chunkOrAsset.code;
-                                }
-                            }
-
-                            this._onBundleUpdated.next({
-                                portalId: portal.portalId,
-                                source: final,
-                                warnings: warnings,
-                            });
-                            resolve();
-                        })
-                        .catch((err) => {
-                            const bundle = {
-                                portalId: portal.portalId,
-                                warnings: warnings,
-                                error: err,
-                            };
-                            this._onBundleUpdated.next(bundle);
-                            resolve();
-                        });
-                } catch (err) {
-                    const bundle = {
-                        portalId: portal.portalId,
-                        warnings: warnings,
-                        error: err,
-                    };
-                    this._onBundleUpdated.next(bundle);
-                    resolve();
-                }
-            });
-        }
-
-        return Promise.resolve();
     }
 }
 
