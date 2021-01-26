@@ -44,6 +44,7 @@ export default class CustomPortal extends Vue {
 
     @Watch('source')
     async onSourceChanged() {
+        this._loaded = false;
         await reload(this._iframe);
     }
 
