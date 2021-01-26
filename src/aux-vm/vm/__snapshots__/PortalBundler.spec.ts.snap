@@ -56,6 +56,18 @@ Object {
 }
 `;
 
+exports[`PortalBundler library emoji esbuild onBundleUpdated registerCustomPortal() should emit a bundle if the script prefixes have changed 1`] = `
+Array [
+  Object {
+    "portalId": "test",
+    "source": "(() => {
+})();
+",
+    "warnings": Array [],
+  },
+]
+`;
+
 exports[`PortalBundler library emoji esbuild onBundleUpdated stateUpdated() should emit a bundle containing the build error 1`] = `
 Array [
   Object {
@@ -206,6 +218,18 @@ Object {
 }
 `;
 
+exports[`PortalBundler multiple emoji esbuild onBundleUpdated registerCustomPortal() should emit a bundle if the script prefixes have changed 1`] = `
+Array [
+  Object {
+    "portalId": "test",
+    "source": "(() => {
+})();
+",
+    "warnings": Array [],
+  },
+]
+`;
+
 exports[`PortalBundler multiple emoji esbuild onBundleUpdated stateUpdated() should emit a bundle containing the build error 1`] = `
 Array [
   Object {
@@ -354,6 +378,18 @@ Object {
 ",
   "warnings": Array [],
 }
+`;
+
+exports[`PortalBundler smile emoji esbuild onBundleUpdated registerCustomPortal() should emit a bundle if the script prefixes have changed 1`] = `
+Array [
+  Object {
+    "portalId": "test",
+    "source": "(() => {
+})();
+",
+    "warnings": Array [],
+  },
+]
 `;
 
 exports[`PortalBundler smile emoji esbuild onBundleUpdated stateUpdated() should emit a bundle containing the build error 1`] = `

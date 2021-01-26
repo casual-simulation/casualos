@@ -12,7 +12,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import values from 'lodash/values';
-import { pick, sortBy } from 'lodash';
+import { isEqual, pick, sortBy } from 'lodash';
 import axios from 'axios';
 import type ESBuild from 'esbuild';
 import * as esbuild from 'esbuild';
@@ -33,6 +33,7 @@ export interface Portal {
     portalId: string;
     entrypoints: PortalEntrypoint[];
     scriptPrefixes: string[];
+    style: any;
 }
 
 export const DEFAULT_BASE_MODULE_URL: string = 'https://cdn.skypack.dev';
@@ -109,12 +110,39 @@ export class PortalBundler {
     registerCustomPortal(
         portalId: string,
         options: RegisterCustomPortalOptions
-    ): void {
-        this._portals.set(portalId, {
-            portalId,
-            entrypoints: [],
-            scriptPrefixes: options.scriptPrefixes,
-        });
+    ): Promise<void> {
+        const currentPortal = this._portals.get(portalId);
+
+        if (currentPortal) {
+            const prefixesChanged = !isEqual(
+                currentPortal.scriptPrefixes,
+                options.scriptPrefixes
+            );
+            const newPortal: Portal = {
+                ...currentPortal,
+                scriptPrefixes: options.scriptPrefixes,
+                style: options.style,
+            };
+
+            this._portals.set(portalId, newPortal);
+
+            if (prefixesChanged && newPortal.entrypoints.length > 0) {
+                return this._updateBundle(
+                    stateUpdatedEvent(this._state),
+                    this._index.initialEvents(),
+                    newPortal
+                );
+            }
+        } else {
+            this._portals.set(portalId, {
+                portalId,
+                entrypoints: [],
+                scriptPrefixes: options.scriptPrefixes,
+                style: options.style,
+            });
+        }
+
+        return Promise.resolve();
     }
 
     /**

@@ -62,22 +62,56 @@ describe('PortalBundler', () => {
                         delete (<any>globalThis).func1;
                     });
 
-                    // describe('registerCustomPortal()', () => {
-                    //     it('should return true if the portal is new', () => {
-                    //         expect(
-                    //             bundler.registerCustomPortal('test', options)
-                    //         ).toBe(true);
-                    //     });
+                    describe('registerCustomPortal()', () => {
+                        it('should not emit a bundle if the portal has no entrypoints', async () => {
+                            await bundler.stateUpdated(
+                                stateUpdatedEvent({
+                                    bot1: createPrecalculatedBot('bot1', {
+                                        main: `${firstPrefix}console.log("abc")`,
+                                    }),
+                                    bot2: createPrecalculatedBot('bot2', {
+                                        main: `${secondPrefix}console.log("def")`,
+                                    }),
+                                })
+                            );
 
-                    //     it('should return false if the portal already exists', () => {
-                    //         expect(
-                    //             bundler.registerCustomPortal('test', options)
-                    //         ).toBe(true);
-                    //         expect(
-                    //             bundler.registerCustomPortal('test', options)
-                    //         ).toBe(false);
-                    //     });
-                    // });
+                            bundler.registerCustomPortal('test', options);
+
+                            await waitAsync();
+
+                            expect(bundles.length).toBe(0);
+                        });
+
+                        it('should emit a bundle if the script prefixes have changed', async () => {
+                            await bundler.registerCustomPortal('test', {
+                                scriptPrefixes: ['😎'],
+                                style: {},
+                            });
+
+                            await bundler.stateUpdated(
+                                stateUpdatedEvent({
+                                    bot1: createPrecalculatedBot('bot1', {
+                                        main: `${firstPrefix}console.log("abc")`,
+                                    }),
+                                    bot2: createPrecalculatedBot('bot2', {
+                                        main: `${secondPrefix}console.log("def")`,
+                                    }),
+                                })
+                            );
+
+                            await bundler.addEntryPoint('test', {
+                                tag: `${firstPrefix}main`,
+                            });
+
+                            await waitAsync();
+                            expect(bundles.length).toBe(0);
+
+                            await bundler.registerCustomPortal('test', options);
+
+                            expect(bundles.length).toBe(1);
+                            expect(bundles).toMatchSnapshot();
+                        });
+                    });
 
                     describe('stateUpdated()', () => {
                         it('should emit a bundle containing the code of the specified tags', async () => {
