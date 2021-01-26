@@ -11,7 +11,6 @@ import {
     StateUpdatedEvent,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
-import { rollup, Plugin, PluginContext } from 'rollup';
 import values from 'lodash/values';
 import { pick, sortBy } from 'lodash';
 import axios from 'axios';
@@ -52,7 +51,6 @@ export class PortalBundler {
     private _buildCache: Map<string, any>;
     private _index: BotIndex;
     private _esbuildWasmUrl: string;
-    private _buildType: 'rollup' | 'esbuild';
 
     /**
      * An observable that emits when a bundle is updated.
@@ -61,16 +59,13 @@ export class PortalBundler {
         return this._onBundleUpdated;
     }
 
-    constructor(
-        options: { type?: 'rollup' | 'esbuild'; esbuildWasmUrl?: string } = {}
-    ) {
+    constructor(options: { esbuildWasmUrl?: string } = {}) {
         this._portals = new Map();
         this._httpCache = new Map();
         this._buildCache = new Map();
         this._index = new BotIndex();
         this._onBundleUpdated = new Subject();
         this._esbuildWasmUrl = options.esbuildWasmUrl || null;
-        this._buildType = options.type || 'rollup';
     }
 
     /**
@@ -219,11 +214,7 @@ export class PortalBundler {
                 entryCode += `import ${JSON.stringify(name)};\n`;
             }
 
-            if (this._buildType === 'rollup') {
-                return this._rollup(portal, entryCode, bots);
-            } else {
-                return this._esbuild(portal, entryCode, bots);
-            }
+            return this._esbuild(portal, entryCode, bots);
         }
 
         return Promise.resolve();
@@ -432,182 +423,6 @@ export class PortalBundler {
                 );
             },
         };
-    }
-
-    private _rollup(
-        portal: Portal,
-        entryCode: string,
-        bots: PrecalculatedBot[]
-    ) {
-        return new Promise<void>((resolve, reject) => {
-            let warnings = [] as string[];
-            try {
-                // bundle it
-                rollup({
-                    input: '__entry',
-                    cache: this._buildCache.get(portal.portalId),
-                    onwarn: (warning, defaultHandler) => {
-                        warnings.push(warning.message);
-                    },
-                    plugins: [
-                        this._rollupPlugin(
-                            portal.scriptPrefixes,
-                            entryCode,
-                            bots
-                        ),
-                    ],
-                })
-                    .then(async (bundle) => {
-                        this._buildCache.set(portal.portalId, bundle.cache);
-
-                        if (bundle.getTimings) {
-                            const timings = bundle.getTimings();
-                            console.log(timings);
-                        }
-
-                        const result = await bundle.generate({
-                            format: 'iife',
-                        });
-
-                        const { output } = result;
-
-                        let final = '';
-                        for (let chunkOrAsset of output) {
-                            if (chunkOrAsset.type === 'chunk') {
-                                final += chunkOrAsset.code;
-                            }
-                        }
-
-                        this._onBundleUpdated.next({
-                            portalId: portal.portalId,
-                            source: final,
-                            warnings: warnings,
-                        });
-                        resolve();
-                    })
-                    .catch((err) => {
-                        const bundle = {
-                            portalId: portal.portalId,
-                            warnings: warnings,
-                            error: err,
-                        };
-                        this._onBundleUpdated.next(bundle);
-                        resolve();
-                    });
-            } catch (err) {
-                const bundle = {
-                    portalId: portal.portalId,
-                    warnings: warnings,
-                    error: err,
-                };
-                this._onBundleUpdated.next(bundle);
-                resolve();
-            }
-        });
-    }
-
-    private _rollupPlugin(
-        prefixes: string[],
-        entryCode: string,
-        bots: PrecalculatedBot[]
-    ) {
-        let _this = this;
-        return {
-            name: 'casualos',
-            resolveId,
-            load,
-        } as Plugin;
-
-        function resolveId(
-            this: PluginContext,
-            importee: string,
-            importer: string
-        ) {
-            if (!importer) {
-                return importee;
-            }
-
-            if (isAuxModuleId(importee)) {
-                return importee;
-            }
-
-            const prefix = getScriptPrefix(prefixes, importee);
-            if (prefix) {
-                const tag = trimPrefixedTag(prefix, importee);
-                const bot = bots.find((b) =>
-                    isEntrypointTag(prefix, b.values[tag])
-                );
-
-                if (!bot) {
-                    this.error(
-                        `Unable to resolve "${prefixes[0]}${tag}". No matching script could be found.`
-                    );
-                }
-
-                return auxModuleId(prefix, bot.id, tag);
-            }
-
-            if (/https?/.test(importee)) {
-                return importee;
-            }
-
-            // convert to HTTP(S) import.
-            if (importee.startsWith('/') || importee.startsWith('./')) {
-                // use importer as base URL
-                if (!importer.endsWith('/')) {
-                    importer = importer + '/';
-                }
-                const url = new URL(importee, importer);
-                return url.href;
-            } else {
-                return `${_this._baseModuleUrl}/${importee}`;
-            }
-        }
-
-        async function load(this: PluginContext, id: string) {
-            if (id === '__entry') {
-                return entryCode;
-            }
-            const { prefix, botId, tag } = parseAuxModuleId(prefixes, id);
-            if (prefix && botId && tag) {
-                const bot = _this._state[botId];
-                if (!bot) {
-                    return this.error(
-                        `Unable to import "${prefix}${tag}". No matching script could be found.`
-                    );
-                }
-                const code = bot.values[tag];
-                return trimPrefixedTag(prefix, code);
-            }
-
-            if (/https?/.test(id)) {
-                try {
-                    const cached = _this._httpCache.get(id);
-                    if (typeof cached !== 'undefined') {
-                        return await cached;
-                    }
-
-                    let promise = axios.get(id).then((response) => {
-                        if (typeof response.data === 'string') {
-                            const script = response.data;
-                            return script;
-                        } else {
-                            throw new Error(
-                                `The module server did not return a string.`
-                            );
-                        }
-                    });
-
-                    _this._httpCache.set(id, promise);
-
-                    return await promise;
-                } catch (err) {
-                    return this.error(`${err}`);
-                }
-            }
-
-            return this.error(`Did you forget to use 📖 when importing?`);
-        }
     }
 }
 

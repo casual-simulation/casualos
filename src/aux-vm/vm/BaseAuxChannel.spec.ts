@@ -49,6 +49,7 @@ import { Subject, Subscription } from 'rxjs';
 import { cloneDeep } from 'lodash';
 import { TestAuxVM } from './test/TestAuxVM';
 import { PortalEvent } from './PortalEvents';
+import { take } from 'rxjs/operators';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -988,6 +989,7 @@ describe('BaseAuxChannel', () => {
             let sub: Subscription;
 
             beforeEach(async () => {
+                jest.useFakeTimers();
                 events = [];
                 sub = channel.onPortalEvents.subscribe((e) => {
                     events.push(e);
@@ -995,11 +997,16 @@ describe('BaseAuxChannel', () => {
             });
 
             afterEach(() => {
+                jest.useRealTimers();
                 sub.unsubscribe();
             });
 
             it('should handle add_entry_point events', async () => {
                 await channel.initAndWait();
+
+                const promise = channel.onPortalEvents
+                    .pipe(take(2))
+                    .toPromise();
 
                 await channel.sendEvents([
                     botAdded(
@@ -1021,7 +1028,7 @@ describe('BaseAuxChannel', () => {
                     },
                 ]);
 
-                await waitAsync();
+                await promise;
 
                 expect(events).toEqual([
                     [
