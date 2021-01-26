@@ -54,7 +54,6 @@ export function loadScript(iframeWindow: Window, id: string, source: string) {
     return new Promise<void>((resolve, reject) => {
         const listener = (message: MessageEvent) => {
             if (message.source !== iframeWindow) {
-                debugger;
                 return;
             }
             if (
