@@ -3,9 +3,9 @@
 // See https://github.com/facebook/jest/issues/4422
 'use strict';
 
-const JSDOMEnvironment = require('jest-environment-jsdom');
+const NodeEnvironment = require('jest-environment-node');
 
-class TestEnvironment extends JSDOMEnvironment {
+class TestEnvironment extends NodeEnvironment {
     constructor(config) {
         super(
             Object.assign({}, config, {
