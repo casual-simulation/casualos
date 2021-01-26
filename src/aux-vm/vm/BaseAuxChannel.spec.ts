@@ -38,6 +38,7 @@ import {
     RuntimeStateVersion,
     LocalActions,
     asyncResult,
+    DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
@@ -887,6 +888,12 @@ describe('BaseAuxChannel', () => {
                     {
                         type: 'register_custom_portal',
                         portalId: 'test',
+                        options: {
+                            scriptPrefixes: ['🙂'],
+                            style: {
+                                abc: 'def',
+                            },
+                        },
                         taskId: 'task',
                     },
                 ]);
@@ -894,7 +901,46 @@ describe('BaseAuxChannel', () => {
                 await waitAsync();
 
                 expect(events).toEqual([
-                    [{ type: 'register_portal', portalId: 'test' }],
+                    [
+                        {
+                            type: 'register_portal',
+                            portalId: 'test',
+                            options: {
+                                scriptPrefixes: ['🙂'],
+                                style: {
+                                    abc: 'def',
+                                },
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            it('should provide defaults for scriptPrefixes and style', async () => {
+                await channel.initAndWait();
+
+                await channel.sendEvents([
+                    {
+                        type: 'register_custom_portal',
+                        portalId: 'test',
+                        options: {},
+                        taskId: 'task',
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        {
+                            type: 'register_portal',
+                            portalId: 'test',
+                            options: {
+                                scriptPrefixes: DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
+                                style: {},
+                            },
+                        },
+                    ],
                 ]);
             });
 
@@ -905,11 +951,13 @@ describe('BaseAuxChannel', () => {
                     {
                         type: 'register_custom_portal',
                         portalId: 'test',
+                        options: {},
                         taskId: 'task',
                     },
                     {
                         type: 'register_custom_portal',
                         portalId: 'test',
+                        options: {},
                         taskId: 'task',
                     },
                 ]);
@@ -917,8 +965,20 @@ describe('BaseAuxChannel', () => {
                 await waitAsync();
 
                 expect(events).toEqual([
-                    [{ type: 'register_portal', portalId: 'test' }],
-                    [{ type: 'register_portal', portalId: 'test' }],
+                    [
+                        {
+                            type: 'register_portal',
+                            portalId: 'test',
+                            options: expect.any(Object),
+                        },
+                    ],
+                    [
+                        {
+                            type: 'register_portal',
+                            portalId: 'test',
+                            options: expect.any(Object),
+                        },
+                    ],
                 ]);
             });
         });
@@ -950,6 +1010,7 @@ describe('BaseAuxChannel', () => {
                     {
                         type: 'register_custom_portal',
                         portalId: 'test',
+                        options: {},
                         taskId: 'otherTask',
                     },
                     {
@@ -963,7 +1024,13 @@ describe('BaseAuxChannel', () => {
                 await waitAsync();
 
                 expect(events).toEqual([
-                    [{ type: 'register_portal', portalId: 'test' }],
+                    [
+                        {
+                            type: 'register_portal',
+                            portalId: 'test',
+                            options: expect.any(Object),
+                        },
+                    ],
                     [
                         {
                             type: 'update_portal_source',

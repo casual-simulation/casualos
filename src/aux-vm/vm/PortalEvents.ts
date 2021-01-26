@@ -1,3 +1,5 @@
+import { RegisterCustomPortalOptions } from '@casual-simulation/aux-common';
+
 /**
  * Defines a list of portal events.
  */
@@ -13,6 +15,11 @@ export interface RegisterPortalEvent {
      * The ID of the portal to register.
      */
     portalId: string;
+
+    /**
+     * The options for the portal.
+     */
+    options: RegisterCustomPortalOptions;
 }
 
 /**

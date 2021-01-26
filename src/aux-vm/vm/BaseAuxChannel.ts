@@ -24,6 +24,8 @@ import {
     RegisterCustomPortalAction,
     asyncError,
     AddEntryPointAction,
+    RegisterCustomPortalOptions,
+    DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
@@ -637,9 +639,19 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         event: RegisterCustomPortalAction
     ): Promise<void> {
         try {
-            this._portalBundler.registerCustomPortal(event.portalId);
+            const options: RegisterCustomPortalOptions = {
+                scriptPrefixes:
+                    event.options.scriptPrefixes ||
+                    DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
+                style: event.options.style || {},
+            };
+            this._portalBundler.registerCustomPortal(event.portalId, options);
             this._onPortalEvent.next([
-                { type: 'register_portal', portalId: event.portalId },
+                {
+                    type: 'register_portal',
+                    portalId: event.portalId,
+                    options: options,
+                },
             ]);
             console.log(
                 `[BaseAuxChannel] Portal ${event.portalId} registered!`
