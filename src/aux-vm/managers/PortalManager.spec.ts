@@ -250,6 +250,42 @@ describe('PortalManager', () => {
             ]);
         });
 
+        it('should resolve settings updates to a portal', async () => {
+            expect(updates).toEqual([]);
+
+            vm.portalEvents.next([
+                {
+                    type: 'register_portal',
+                    portalId: 'test-portal',
+                    options: {
+                        scriptPrefixes: ['custom'],
+                        style: {
+                            anything: true,
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(updates).toEqual([
+                {
+                    oldPortal: {
+                        id: 'test-portal',
+                        source: 'abc',
+                    },
+                    portal: {
+                        id: 'test-portal',
+                        source: 'abc',
+                        scriptPrefixes: ['custom'],
+                        style: {
+                            anything: true,
+                        },
+                    },
+                },
+            ]);
+        });
+
         it('should collapse multiple source updates', async () => {
             expect(updates).toEqual([]);
 

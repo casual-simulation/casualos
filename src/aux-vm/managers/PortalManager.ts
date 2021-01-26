@@ -50,7 +50,27 @@ export class PortalManager implements SubscriptionLike {
         for (let event of events) {
             if (event.type === 'register_portal') {
                 if (this._portals.has(event.portalId)) {
+                    const currentPortal = this._portals.get(event.portalId);
                     // TODO: update properties
+                    const nextPortal: PortalData = {
+                        id: event.portalId,
+                        source: currentPortal.source,
+                        scriptPrefixes: event.options.scriptPrefixes,
+                        style: event.options.style,
+                    };
+
+                    this._portals.set(event.portalId, nextPortal);
+
+                    let currentUpdate = updatedPortals.get(event.portalId);
+                    if (!currentUpdate) {
+                        currentUpdate = {
+                            oldPortal: currentPortal,
+                            portal: nextPortal,
+                        };
+                        updatedPortals.set(event.portalId, currentUpdate);
+                    } else {
+                        currentUpdate.portal = nextPortal;
+                    }
                 } else {
                     const newPortal: PortalData = {
                         id: event.portalId,
