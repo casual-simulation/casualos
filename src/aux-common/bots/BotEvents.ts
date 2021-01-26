@@ -2342,6 +2342,21 @@ export interface ShareAction extends AsyncAction, ShareOptions {
 }
 
 /**
+ * The possible options for a custom portal.
+ */
+export interface RegisterCustomPortalOptions {
+    /**
+     * The script prefixes that should be used for the portal.
+     */
+    scriptPrefixes?: string[];
+
+    /**
+     * The CSS styles that should be used for the portal.
+     */
+    style?: any;
+}
+
+/**
  * Defines an event that creates a custom portal using the given source code.
  */
 export interface RegisterCustomPortalAction extends AsyncAction {
@@ -2350,6 +2365,11 @@ export interface RegisterCustomPortalAction extends AsyncAction {
      * The ID of the portal.
      */
     portalId: string;
+
+    /**
+     * The options for the portal.
+     */
+    options: RegisterCustomPortalOptions;
 }
 
 /**
@@ -4539,15 +4559,18 @@ export function share(
 /**
  * Creates an action that registers a custom portal.
  * @param portalId The ID of the portal,
+ * @param options The options for the portal.
  * @param taskId The ID of the task.
  */
 export function registerCustomPortal(
     portalId: string,
+    options: RegisterCustomPortalOptions,
     taskId?: number | string
 ): RegisterCustomPortalAction {
     return {
         type: 'register_custom_portal',
         portalId,
+        options,
         taskId,
     };
 }

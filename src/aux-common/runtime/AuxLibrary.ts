@@ -167,6 +167,7 @@ import {
     EDIT_TAG_MASK_SYMBOL,
     AnimateTagOptions,
     EaseType,
+    RegisterCustomPortalOptions,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -1785,10 +1786,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Registers a custom portal with the given source code.
      * @param portalId The ID of the portal.
+     * @param options The options for the portal.
      */
-    function registerCustomPortal(portalId: string): Promise<void> {
+    function registerCustomPortal(
+        portalId: string,
+        options: RegisterCustomPortalOptions = {}
+    ): Promise<void> {
         const task = context.createTask();
-        const event = calcRegisterCustomPortal(portalId, task.taskId);
+        const event = calcRegisterCustomPortal(portalId, options, task.taskId);
         return addAsyncAction(task, event);
     }
 

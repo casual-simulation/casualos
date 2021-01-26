@@ -1233,6 +1233,11 @@ export const SHEET_PORTAL: string = 'sheetPortal';
 export const DNA_TAG_PREFIX: string = '🧬';
 
 /**
+ * The default script prefixes for custom portals.
+ */
+export const DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES: string[] = ['📖'];
+
+/**
  * The list of all portal tags.
  */
 export const KNOWN_PORTALS: string[] = [

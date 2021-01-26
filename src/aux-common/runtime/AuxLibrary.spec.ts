@@ -2472,6 +2472,22 @@ describe('AuxLibrary', () => {
                 const promise: any = library.api.portal.register('test');
                 const expected = registerCustomPortal(
                     'test',
+                    {},
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should include the specified options', () => {
+                const promise: any = library.api.portal.register('test', {
+                    scriptPrefixes: ['123', '🙂'],
+                });
+                const expected = registerCustomPortal(
+                    'test',
+                    {
+                        scriptPrefixes: ['123', '🙂'],
+                    },
                     context.tasks.size
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
