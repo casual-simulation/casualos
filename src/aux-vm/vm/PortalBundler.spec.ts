@@ -12,6 +12,7 @@ import {
     PortalBundler,
 } from './PortalBundler';
 
+console.log = jest.fn();
 jest.mock('axios');
 
 describe('PortalBundler', () => {
