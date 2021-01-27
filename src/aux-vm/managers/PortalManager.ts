@@ -64,6 +64,10 @@ export class PortalManager implements SubscriptionLike {
         return this._prefixesRemoved;
     }
 
+    get scriptPrefixes(): ScriptPrefix[] {
+        return [...this._prefixes.values()];
+    }
+
     constructor(vm: AuxVM) {
         this._portals = new Map();
         this._prefixes = new Map();

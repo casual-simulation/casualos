@@ -513,6 +513,54 @@ export function parseFormulaSafe(value: string): string {
 }
 
 /**
+ * Trims the leading script symbol off the given tag.
+ */
+export function trimPortalScript(
+    scriptPrefixes: string[],
+    tag: string
+): string {
+    const prefix = getScriptPrefix(scriptPrefixes, tag);
+    if (prefix) {
+        return tag.substring(prefix.length);
+    }
+    return tag;
+}
+
+/**
+ * Trims the leading script symbol off the given tag.
+ */
+export function trimPrefixedScript(prefix: string, tag: string): string {
+    if (tag.startsWith(prefix)) {
+        return tag.substring(prefix.length);
+    }
+    return tag;
+}
+
+/**
+ * Determines if the given value is for a script entrypoint.
+ * @param prefix The prefix to check against.
+ * @param value The value to check.
+ */
+export function isPortalScript(prefix: string, value: unknown): boolean {
+    return typeof value === 'string' && value.startsWith(prefix);
+}
+
+export function hasPortalScript(prefixes: string[], value: unknown): boolean {
+    return getScriptPrefix(prefixes, value) !== null;
+}
+
+export function getScriptPrefix(prefixes: string[], value: unknown): string {
+    if (typeof value === 'string') {
+        for (let prefix of prefixes) {
+            if (value.startsWith(prefix)) {
+                return prefix;
+            }
+        }
+    }
+    return null;
+}
+
+/**
  * Determines if the given value represents a number.
  */
 export function isNumber(value: string): boolean {

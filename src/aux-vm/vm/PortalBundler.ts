@@ -4,11 +4,16 @@ import {
     BotIndexEvent,
     BotsState,
     calculateBotValue,
+    getScriptPrefix,
+    hasPortalScript,
+    isPortalScript,
     PrecalculatedBot,
     PrecalculatedBotsState,
     RegisterCustomPortalOptions,
     stateUpdatedEvent,
     StateUpdatedEvent,
+    trimPortalScript,
+    trimPrefixedScript,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import values from 'lodash/values';
@@ -161,7 +166,7 @@ export class PortalBundler {
         let portal = this._portals.get(portalId);
         if (portal) {
             portal.entrypoints.push({
-                tag: trimEntrypointTag(portal.scriptPrefixes, entrypoint.tag),
+                tag: trimPortalScript(portal.scriptPrefixes, entrypoint.tag),
                 botId: entrypoint.botId,
             });
 
@@ -193,21 +198,21 @@ export class PortalBundler {
     ) {
         let hasUpdate = indexEvents.some((event) => {
             if (event.type === 'bot_tag_added') {
-                return hasEntrypointTag(
+                return hasPortalScript(
                     portal.scriptPrefixes,
                     calculateBotValue(null, event.bot, event.tag)
                 );
             } else if (event.type === 'bot_tag_removed') {
-                return hasEntrypointTag(
+                return hasPortalScript(
                     portal.scriptPrefixes,
                     calculateBotValue(null, event.oldBot, event.tag)
                 );
             } else if (event.type === 'bot_tag_updated') {
-                const wasEntrypointTag = hasEntrypointTag(
+                const wasEntrypointTag = hasPortalScript(
                     portal.scriptPrefixes,
                     calculateBotValue(null, event.oldBot, event.tag)
                 );
-                const isEntrypoint = hasEntrypointTag(
+                const isEntrypoint = hasPortalScript(
                     portal.scriptPrefixes,
                     calculateBotValue(null, event.bot, event.tag)
                 );
@@ -234,7 +239,7 @@ export class PortalBundler {
                     .filter((value) => value.prefix !== null)
                     .map((m) => ({
                         name: auxModuleId(m.prefix, m.id, m.tag),
-                        code: trimPrefixedTag(m.prefix, m.code),
+                        code: trimPrefixedScript(m.prefix, m.code),
                     }));
 
                 for (let m of tagModules) {
@@ -328,9 +333,9 @@ export class PortalBundler {
                     build.onResolve(
                         { filter: new RegExp(`^${prefix}`) },
                         (args) => {
-                            const tag = trimPrefixedTag(prefix, args.path);
+                            const tag = trimPrefixedScript(prefix, args.path);
                             const bot = bots.find((b) =>
-                                isEntrypointTag(prefix, b.values[tag])
+                                isPortalScript(prefix, b.values[tag])
                             );
 
                             if (!bot) {
@@ -371,7 +376,7 @@ export class PortalBundler {
                             }
                             const code = bot.values[tag];
                             return {
-                                contents: trimPrefixedTag(prefix, code),
+                                contents: trimPrefixedScript(prefix, code),
                                 loader: 'js',
                             };
                         }
@@ -456,54 +461,6 @@ export class PortalBundler {
             },
         };
     }
-}
-
-/**
- * Trims the leading script symbol off the given tag.
- */
-export function trimEntrypointTag(
-    scriptPrefixes: string[],
-    tag: string
-): string {
-    const prefix = getScriptPrefix(scriptPrefixes, tag);
-    if (prefix) {
-        return tag.substring(prefix.length);
-    }
-    return tag;
-}
-
-/**
- * Trims the leading script symbol off the given tag.
- */
-export function trimPrefixedTag(prefix: string, tag: string): string {
-    if (tag.startsWith(prefix)) {
-        return tag.substring(prefix.length);
-    }
-    return tag;
-}
-
-/**
- * Determines if the given value is for a script entrypoint.
- * @param prefix The prefix to check against.
- * @param value The value to check.
- */
-export function isEntrypointTag(prefix: string, value: unknown): boolean {
-    return typeof value === 'string' && value.startsWith(prefix);
-}
-
-export function hasEntrypointTag(prefixes: string[], value: unknown): boolean {
-    return getScriptPrefix(prefixes, value) !== null;
-}
-
-export function getScriptPrefix(prefixes: string[], value: unknown): string {
-    if (typeof value === 'string') {
-        for (let prefix of prefixes) {
-            if (value.startsWith(prefix)) {
-                return prefix;
-            }
-        }
-    }
-    return null;
 }
 
 function auxModuleId(prefix: string, botId: string, tag: string) {
