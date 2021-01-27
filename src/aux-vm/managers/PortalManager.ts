@@ -2,16 +2,34 @@ import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { startWith, tap } from 'rxjs/operators';
 import { PortalEvent } from '../vm/PortalEvents';
 import { AuxVM } from '../vm/AuxVM';
-import { hasValue } from '@casual-simulation/aux-common';
+import { DNA_TAG_PREFIX, hasValue } from '@casual-simulation/aux-common';
+import { remove } from 'lodash';
+
+/**
+ * The list of default script prefixes.
+ */
+export const DEFAULT_SCRIPT_PREFIXES: ScriptPrefix[] = [
+    {
+        prefix: '@',
+        language: 'javascript',
+    },
+    {
+        prefix: DNA_TAG_PREFIX,
+        language: 'json',
+    },
+];
 
 /**
  * Defines a class that is able to manage portals and their interactions.
  */
 export class PortalManager implements SubscriptionLike {
     private _portals: Map<string, PortalData>;
+    private _prefixes: Map<string, ScriptPrefix>;
 
     private _portalsDiscovered: Subject<PortalData[]>;
     private _portalsUpdated: Subject<PortalUpdate[]>;
+    private _prefixesDiscovered: Subject<ScriptPrefix[]>;
+    private _prefixesRemoved: Subject<string[]>;
     private _sub: Subscription;
 
     /**
@@ -30,11 +48,34 @@ export class PortalManager implements SubscriptionLike {
         return this._portalsUpdated;
     }
 
+    /**
+     * Gets an observable that resolves when a script prefix has been discovered.
+     */
+    get prefixesDiscovered(): Observable<ScriptPrefix[]> {
+        return this._prefixesDiscovered.pipe(
+            startWith([...this._prefixes.values()])
+        );
+    }
+
+    /**
+     * Gets an observable that resolves when a script prefix has been removed.
+     */
+    get prefixesRemoved(): Observable<string[]> {
+        return this._prefixesRemoved;
+    }
+
     constructor(vm: AuxVM) {
         this._portals = new Map();
+        this._prefixes = new Map();
         this._portalsDiscovered = new Subject();
         this._portalsUpdated = new Subject();
+        this._prefixesDiscovered = new Subject();
+        this._prefixesRemoved = new Subject();
         this._sub = new Subscription();
+
+        for (let p of DEFAULT_SCRIPT_PREFIXES) {
+            this._prefixes.set(p.prefix, p);
+        }
 
         this._sub.add(
             vm.portalEvents
@@ -45,7 +86,9 @@ export class PortalManager implements SubscriptionLike {
 
     private _onPortalEvents(events: PortalEvent[]): void {
         let newPortals: PortalData[] = [];
+        let newPrefixes: ScriptPrefix[] = [];
         let updatedPortals: Map<string, PortalUpdate> = new Map();
+        let removedPrefixes: Set<string> = new Set();
 
         for (let event of events) {
             if (event.type === 'register_portal') {
@@ -71,6 +114,28 @@ export class PortalManager implements SubscriptionLike {
                     } else {
                         currentUpdate.portal = nextPortal;
                     }
+
+                    if (currentPortal.scriptPrefixes) {
+                        for (let prefix of currentPortal.scriptPrefixes) {
+                            this._prefixes.delete(prefix);
+                            removedPrefixes.add(prefix);
+                        }
+                    }
+
+                    if (nextPortal.scriptPrefixes) {
+                        for (let prefix of nextPortal.scriptPrefixes) {
+                            let prefixData: ScriptPrefix = {
+                                prefix,
+                                language: 'javascript',
+                            };
+                            this._prefixes.set(prefix, prefixData);
+                            if (removedPrefixes.has(prefix)) {
+                                removedPrefixes.delete(prefix);
+                            } else {
+                                newPrefixes.push(prefixData);
+                            }
+                        }
+                    }
                 } else {
                     const newPortal: PortalData = {
                         id: event.portalId,
@@ -80,6 +145,21 @@ export class PortalManager implements SubscriptionLike {
                     };
 
                     this._portals.set(event.portalId, newPortal);
+
+                    if (newPortal.scriptPrefixes) {
+                        for (let prefix of newPortal.scriptPrefixes) {
+                            let prefixData: ScriptPrefix = {
+                                prefix,
+                                language: 'javascript',
+                            };
+                            this._prefixes.set(prefix, prefixData);
+                            if (removedPrefixes.has(prefix)) {
+                                removedPrefixes.delete(prefix);
+                            } else {
+                                newPrefixes.push(prefixData);
+                            }
+                        }
+                    }
                 }
             } else if (event.type === 'update_portal_source') {
                 const currentPortal = this._portals.get(event.portalId);
@@ -123,6 +203,12 @@ export class PortalManager implements SubscriptionLike {
         if (updatedPortals.size > 0) {
             this._portalsUpdated.next([...updatedPortals.values()]);
         }
+        if (newPrefixes.length > 0) {
+            this._prefixesDiscovered.next(newPrefixes);
+        }
+        if (removedPrefixes.size > 0) {
+            this._prefixesRemoved.next([...removedPrefixes.values()]);
+        }
     }
 
     unsubscribe(): void {
@@ -135,6 +221,21 @@ export class PortalManager implements SubscriptionLike {
     get closed(): boolean {
         return this._sub.closed;
     }
+}
+
+/**
+ * Defines data about a script prefix.
+ */
+export interface ScriptPrefix {
+    /**
+     * The prefix.
+     */
+    prefix: string;
+
+    /**
+     * The language that the prefix is for.
+     */
+    language: 'javascript' | 'json' | 'plaintext';
 }
 
 /**

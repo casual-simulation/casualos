@@ -1,7 +1,14 @@
+import { DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES } from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subscription } from 'rxjs';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
-import { PortalData, PortalManager, PortalUpdate } from './PortalManager';
+import {
+    DEFAULT_SCRIPT_PREFIXES,
+    PortalData,
+    PortalManager,
+    PortalUpdate,
+    ScriptPrefix,
+} from './PortalManager';
 
 describe('PortalManager', () => {
     let manager: PortalManager;
@@ -18,7 +25,7 @@ describe('PortalManager', () => {
         sub.unsubscribe();
     });
 
-    describe('onPortalDiscovered', () => {
+    describe('portalsDiscovered', () => {
         let portals = [] as PortalData[];
 
         beforeEach(() => {
@@ -188,7 +195,7 @@ describe('PortalManager', () => {
         });
     });
 
-    describe('onPortalUpdated', () => {
+    describe('portalsUpdated', () => {
         let updates = [] as PortalUpdate[];
 
         beforeEach(async () => {
@@ -321,6 +328,113 @@ describe('PortalManager', () => {
                     },
                 },
             ]);
+        });
+    });
+
+    describe('prefixes', () => {
+        let prefixes = [] as ScriptPrefix[];
+        let removedPrefixes = [] as string[];
+
+        beforeEach(() => {
+            prefixes = [];
+            sub.add(
+                manager.prefixesDiscovered.subscribe((p) => prefixes.push(...p))
+            );
+            sub.add(
+                manager.prefixesRemoved.subscribe((p) =>
+                    removedPrefixes.push(...p)
+                )
+            );
+        });
+
+        it('should resolve with the default prefixes', async () => {
+            await waitAsync();
+            expect(prefixes).toEqual(DEFAULT_SCRIPT_PREFIXES);
+        });
+
+        it('should resolve when a new portal is added', async () => {
+            vm.portalEvents.next([
+                {
+                    type: 'register_portal',
+                    portalId: 'test',
+                    options: {
+                        scriptPrefixes: ['🐦', '🔺'],
+                        style: {},
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(prefixes.slice(DEFAULT_SCRIPT_PREFIXES.length)).toEqual([
+                {
+                    prefix: '🐦',
+                    language: 'javascript',
+                },
+                {
+                    prefix: '🔺',
+                    language: 'javascript',
+                },
+            ]);
+        });
+
+        it('should do nothing when a portal is updated but the prefixes stay the same', async () => {
+            vm.portalEvents.next([
+                {
+                    type: 'register_portal',
+                    portalId: 'test',
+                    options: {
+                        scriptPrefixes: ['🐦', '🔺'],
+                        style: {},
+                    },
+                },
+                {
+                    type: 'register_portal',
+                    portalId: 'test',
+                    options: {
+                        scriptPrefixes: ['🐦', '🔺'],
+                        style: {},
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(prefixes.slice(DEFAULT_SCRIPT_PREFIXES.length)).toEqual([
+                {
+                    prefix: '🐦',
+                    language: 'javascript',
+                },
+                {
+                    prefix: '🔺',
+                    language: 'javascript',
+                },
+            ]);
+        });
+
+        it('should emit an event for when a prefix is removed', async () => {
+            vm.portalEvents.next([
+                {
+                    type: 'register_portal',
+                    portalId: 'test',
+                    options: {
+                        scriptPrefixes: ['🐦', '🔺'],
+                        style: {},
+                    },
+                },
+                {
+                    type: 'register_portal',
+                    portalId: 'test',
+                    options: {
+                        scriptPrefixes: ['🐦'],
+                        style: {},
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(removedPrefixes).toEqual(['🔺']);
         });
     });
 });
