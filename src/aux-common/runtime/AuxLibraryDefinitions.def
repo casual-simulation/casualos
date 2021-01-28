@@ -1,5 +1,3 @@
-import { ShowUploadFileAction } from '../bots';
-
 /**
  * Contains information about the version of AUX that is running.
  */
@@ -230,7 +228,9 @@ declare type AsyncActions =
     | SetSpacePasswordAction
     | BufferSoundAction
     | PlaySoundAction
-    | CancelSoundAction;
+    | CancelSoundAction
+    | RegisterCustomPortalAction
+    | AddEntryPointAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1703,6 +1703,55 @@ declare interface ShareAction extends AsyncAction, ShareOptions {
     type: 'share';
 }
 
+
+/**
+ * The possible options for a custom portal.
+ */
+export interface RegisterCustomPortalOptions {
+    /**
+     * The script prefixes that should be used for the portal.
+     */
+    scriptPrefixes?: string[];
+
+    /**
+     * The CSS styles that should be used for the portal.
+     */
+    style?: any;
+}
+
+/**
+ * Defines an event that creates a custom portal using the given source code.
+ */
+export interface RegisterCustomPortalAction extends AsyncAction {
+    type: 'register_custom_portal';
+    /**
+     * The ID of the portal.
+     */
+    portalId: string;
+
+    /**
+     * The options for the portal.
+     */
+    options: RegisterCustomPortalOptions;
+}
+
+/**
+ * Defines an event that adds an entry point to a custom portal.
+ */
+export interface AddEntryPointAction extends AsyncAction {
+    type: 'add_entry_point';
+
+    /**
+     * The ID of the portal
+     */
+    portalId: string;
+
+    /**
+     * The tag that should be used as the entry point.
+     */
+    tag: string;
+}
+
 /**
  * Defines an interface for options that show a payment box.
  */
@@ -3158,6 +3207,26 @@ declare global {
          * Gets the name of the dimension that is used for the current user's inventory.
          */
         getInventoryDimension(): string;
+    };
+
+    /**
+     * Defines a set of functions that relate to custom portal operations.
+     */
+    const portal: {
+        /**
+         * Registers a custom portal with the given source code.
+         * @param portalId The ID of the portal.
+         * @param options The options for the portal.
+         */
+        register(portalId: string, options?: RegisterCustomPortalOptions): Promise<void>;
+
+        /**
+         * Adds the given tag as an entry point for the portal.
+         * That is, scripts in the specified tag will be run automatically.
+         * @param portalId The ID of the portal.
+         * @param tag The tag that should be used as the entry point.
+         */
+        addEntryPoint(portalId: string, tag: string): Promise<void>;
     };
 
     /**

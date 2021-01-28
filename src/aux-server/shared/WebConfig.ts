@@ -23,4 +23,9 @@ export interface WebConfig {
      * The URL that should be used for realtime connections.
      */
     causalRepoConnectionUrl?: string;
+
+    /**
+     * The HTTP Origin that should be used for VM Iframes.
+     */
+    vmOrigin?: string;
 }

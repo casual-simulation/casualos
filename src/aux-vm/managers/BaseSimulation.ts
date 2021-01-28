@@ -22,6 +22,7 @@ import { Simulation } from './Simulation';
 import { CodeLanguageManager } from './CodeLanguageManager';
 import { StoredAux } from '../StoredAux';
 import { BotDimensionManager } from './BotDimensionManager';
+import { PortalManager } from './PortalManager';
 
 /**
  * Defines a class that interfaces with an AUX VM to reactively edit bots.
@@ -34,6 +35,7 @@ export class BaseSimulation implements Simulation {
     protected _contexts: BotDimensionManager;
     protected _connection: ConnectionManager;
     protected _code: CodeLanguageManager;
+    protected _portals: PortalManager;
 
     protected _subscriptions: SubscriptionLike[];
     private _status: string;
@@ -109,6 +111,10 @@ export class BaseSimulation implements Simulation {
         return this._code;
     }
 
+    get portals() {
+        return this._portals;
+    }
+
     get localEvents() {
         return this._vm.localEvents.pipe(flatMap((e) => e));
     }
@@ -150,6 +156,7 @@ export class BaseSimulation implements Simulation {
         this._contexts = new BotDimensionManager(this._helper, this._index);
         this._connection = new ConnectionManager(this._vm);
         this._code = new CodeLanguageManager(this._vm);
+        this._portals = new PortalManager(this._vm);
     }
 
     /**

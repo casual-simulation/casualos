@@ -99,20 +99,31 @@ export class AppManager {
             if (forceSignedScripts) {
                 console.log('[AppManager] Forcing signed scripts for ' + id);
             }
-            return new BotManager(this._user, id, {
-                version: this.version.latestTaggedVersion,
-                versionHash: this.version.gitCommit,
-                device: this._deviceConfig,
-                builder: JSON.stringify(builder),
-                bootstrapState: bootstrap,
-                forceSignedScripts,
-                causalRepoConnectionProtocol: this._config
-                    .causalRepoConnectionProtocol,
-                causalRepoConnectionUrl: this._config.causalRepoConnectionUrl,
-            });
+            return new BotManager(
+                this._user,
+                id,
+                this.createSimulationConfig({ forceSignedScripts })
+            );
         });
         this._userSubject = new BehaviorSubject<AuxUser>(null);
         this._db = new AppDatabase();
+    }
+
+    createSimulationConfig(options: {
+        forceSignedScripts: boolean;
+    }): AuxConfig['config'] {
+        return {
+            version: this.version.latestTaggedVersion,
+            versionHash: this.version.gitCommit,
+            device: this._deviceConfig,
+            builder: JSON.stringify(builder),
+            bootstrapState: bootstrap,
+            forceSignedScripts: options.forceSignedScripts,
+            causalRepoConnectionProtocol: this._config
+                .causalRepoConnectionProtocol,
+            causalRepoConnectionUrl: this._config.causalRepoConnectionUrl,
+            vmOrigin: this._config.vmOrigin,
+        };
     }
 
     get simulationManager(): SimulationManager<BotManager> {

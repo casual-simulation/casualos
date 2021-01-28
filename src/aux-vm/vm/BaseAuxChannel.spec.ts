@@ -36,14 +36,20 @@ import {
     MemoryPartitionImpl,
     MemoryPartitionStateConfig,
     RuntimeStateVersion,
+    LocalActions,
+    asyncResult,
+    DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
 import uuid from 'uuid/v4';
 import merge from 'lodash/merge';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { cloneDeep } from 'lodash';
+import { TestAuxVM } from './test/TestAuxVM';
+import { PortalEvent } from './PortalEvents';
+import { take } from 'rxjs/operators';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -858,6 +864,272 @@ describe('BaseAuxChannel', () => {
                 await waitAsync();
 
                 expect(resolved).toBe(true);
+            });
+        });
+
+        describe('register_custom_portal', () => {
+            let events = [] as PortalEvent[][];
+            let sub: Subscription;
+
+            beforeEach(async () => {
+                events = [];
+                sub = channel.onPortalEvents.subscribe((e) => {
+                    events.push(e);
+                });
+            });
+
+            afterEach(() => {
+                sub.unsubscribe();
+            });
+
+            it('should handle register_custom_portal events', async () => {
+                await channel.initAndWait();
+
+                await channel.sendEvents([
+                    {
+                        type: 'register_custom_portal',
+                        portalId: 'test',
+                        options: {
+                            scriptPrefixes: ['🙂'],
+                            style: {
+                                abc: 'def',
+                            },
+                        },
+                        taskId: 'task',
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        {
+                            type: 'register_portal',
+                            portalId: 'test',
+                            options: {
+                                scriptPrefixes: ['🙂'],
+                                style: {
+                                    abc: 'def',
+                                },
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            it('should provide defaults for scriptPrefixes and style', async () => {
+                await channel.initAndWait();
+
+                await channel.sendEvents([
+                    {
+                        type: 'register_custom_portal',
+                        portalId: 'test',
+                        options: {},
+                        taskId: 'task',
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        {
+                            type: 'register_portal',
+                            portalId: 'test',
+                            options: {
+                                scriptPrefixes: DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
+                                style: {},
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            it('should not de-duplicate register_custom_portal events', async () => {
+                await channel.initAndWait();
+
+                await channel.sendEvents([
+                    {
+                        type: 'register_custom_portal',
+                        portalId: 'test',
+                        options: {},
+                        taskId: 'task',
+                    },
+                    {
+                        type: 'register_custom_portal',
+                        portalId: 'test',
+                        options: {},
+                        taskId: 'task',
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        {
+                            type: 'register_portal',
+                            portalId: 'test',
+                            options: expect.any(Object),
+                        },
+                    ],
+                    [
+                        {
+                            type: 'register_portal',
+                            portalId: 'test',
+                            options: expect.any(Object),
+                        },
+                    ],
+                ]);
+            });
+
+            it('should use the previous portal script prefixes if register is called again without specifying prefixes', async () => {
+                await channel.initAndWait();
+
+                await channel.sendEvents([
+                    {
+                        type: 'register_custom_portal',
+                        portalId: 'test',
+                        options: {
+                            scriptPrefixes: ['abc'],
+                        },
+                        taskId: 'task',
+                    },
+                    {
+                        type: 'register_custom_portal',
+                        portalId: 'test',
+                        options: {},
+                        taskId: 'task',
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        {
+                            type: 'register_portal',
+                            portalId: 'test',
+                            options: {
+                                scriptPrefixes: ['abc'],
+                                style: {},
+                            },
+                        },
+                    ],
+                    [
+                        {
+                            type: 'register_portal',
+                            portalId: 'test',
+                            options: {
+                                scriptPrefixes: ['abc'],
+                                style: {},
+                            },
+                        },
+                    ],
+                ]);
+            });
+        });
+
+        describe('add_entry_point', () => {
+            let events = [] as PortalEvent[][];
+            let sub: Subscription;
+
+            beforeEach(async () => {
+                jest.useFakeTimers();
+                events = [];
+                sub = channel.onPortalEvents.subscribe((e) => {
+                    events.push(e);
+                });
+            });
+
+            afterEach(() => {
+                jest.useRealTimers();
+                sub.unsubscribe();
+            });
+
+            it('should handle add_entry_point events', async () => {
+                await channel.initAndWait();
+
+                const promise = channel.onPortalEvents
+                    .pipe(take(2))
+                    .toPromise();
+
+                await channel.sendEvents([
+                    botAdded(
+                        createBot('bot1', {
+                            main: '📖console.log("Hi!");',
+                        })
+                    ),
+                    {
+                        type: 'register_custom_portal',
+                        portalId: 'test',
+                        options: {},
+                        taskId: 'otherTask',
+                    },
+                    {
+                        type: 'add_entry_point',
+                        portalId: 'test',
+                        taskId: 'task',
+                        tag: '📖main',
+                    },
+                ]);
+
+                await promise;
+
+                expect(events).toEqual([
+                    [
+                        {
+                            type: 'register_portal',
+                            portalId: 'test',
+                            options: expect.any(Object),
+                        },
+                    ],
+                    [
+                        {
+                            type: 'update_portal_source',
+                            portalId: 'test',
+                            source: expect.stringContaining(
+                                'console.log("Hi!");'
+                            ),
+                        },
+                    ],
+                ]);
+            });
+
+            it('should not send a update_portal_source event if the bundle is invalid', async () => {
+                await channel.initAndWait();
+
+                await channel.sendEvents([
+                    botAdded(
+                        createBot('bot1', {
+                            main: '📖console.log("Hi!',
+                        })
+                    ),
+                    {
+                        type: 'register_custom_portal',
+                        portalId: 'test',
+                        options: {},
+                        taskId: 'otherTask',
+                    },
+                    {
+                        type: 'add_entry_point',
+                        portalId: 'test',
+                        taskId: 'task',
+                        tag: '📖main',
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        {
+                            type: 'register_portal',
+                            portalId: 'test',
+                            options: expect.any(Object),
+                        },
+                    ],
+                ]);
             });
         });
     });

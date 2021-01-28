@@ -30,6 +30,7 @@ import {
     getTagValueForSpace,
     TAG_MASK_SPACE_PRIORITIES,
     BotSpace,
+    getScriptPrefix,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../EventBus';
 
@@ -52,7 +53,7 @@ import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import { first } from 'rxjs/operators';
 import sumBy from 'lodash/sumBy';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
-import { sortBy } from 'lodash';
+import { groupBy, sortBy } from 'lodash';
 
 @Component({
     components: {
@@ -195,6 +196,39 @@ export default class BotTable extends Vue {
             !hasValue(getTagValueForSpace(b, tag, space)) ? 1 : 0
         );
         return numFormulas > 0 && this.bots.length === numFormulas + emptyTags;
+    }
+
+    getTagPrefix(tag: string, space: string) {
+        const prefixes = this._simulation.portals.scriptPrefixes.map(
+            (p) => p.prefix
+        );
+        let allSamePrefix = true;
+        let currentPrefix = null;
+        for (let bot of this.bots) {
+            const value = getTagValueForSpace(bot, tag, space);
+            if (!hasValue(value)) {
+                continue;
+            }
+            const prefix = getScriptPrefix(prefixes, value);
+
+            if (!currentPrefix) {
+                if (!prefix) {
+                    allSamePrefix = false;
+                    break;
+                } else {
+                    currentPrefix = prefix;
+                }
+            } else if (currentPrefix !== prefix) {
+                allSamePrefix = false;
+                break;
+            }
+        }
+
+        if (allSamePrefix) {
+            return currentPrefix;
+        } else {
+            return null;
+        }
     }
 
     get showID() {

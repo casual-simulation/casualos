@@ -134,8 +134,10 @@ import {
     RuntimeBot,
     SET_TAG_MASK_SYMBOL,
     CLEAR_CHANGES_SYMBOL,
+    registerCustomPortal,
     animateTag,
     showUploadFiles,
+    addEntryPoint,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2458,6 +2460,50 @@ describe('AuxLibrary', () => {
                         url: 'http://example.com',
                         title: 'Example',
                     },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('portal.register()', () => {
+            it('should return a RegisterCustomPortal action', () => {
+                const promise: any = library.api.portal.register('test');
+                const expected = registerCustomPortal(
+                    'test',
+                    {},
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should include the specified options', () => {
+                const promise: any = library.api.portal.register('test', {
+                    scriptPrefixes: ['123', '🙂'],
+                });
+                const expected = registerCustomPortal(
+                    'test',
+                    {
+                        scriptPrefixes: ['123', '🙂'],
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('portal.addEntryPoint()', () => {
+            it('should return a AddEntryPoint action', () => {
+                const promise: any = library.api.portal.addEntryPoint(
+                    'test',
+                    'abc'
+                );
+                const expected = addEntryPoint(
+                    'test',
+                    'abc',
                     context.tasks.size
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);

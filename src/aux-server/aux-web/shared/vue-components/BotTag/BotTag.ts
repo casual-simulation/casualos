@@ -14,6 +14,7 @@ export default class BotTag extends Vue {
 
     @Prop({ default: false }) isScript: boolean;
     @Prop({ default: false }) isFormula: boolean;
+    @Prop({ default: null }) prefix: string;
 
     /**
      * Whether the tag is allowed to be dragged from the bot table into the world.

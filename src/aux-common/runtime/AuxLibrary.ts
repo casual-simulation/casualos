@@ -58,6 +58,8 @@ import {
     webhook as calcWebhook,
     superShout as calcSuperShout,
     share as calcShare,
+    registerCustomPortal as calcRegisterCustomPortal,
+    addEntryPoint as calcAddEntryPoint,
     createCertificate as calcCreateCertificate,
     signTag as calcSignTag,
     revokeCertificate as calcRevokeCertificate,
@@ -165,6 +167,7 @@ import {
     EDIT_TAG_MASK_SYMBOL,
     AnimateTagOptions,
     EaseType,
+    RegisterCustomPortalOptions,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -580,6 +583,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPointerDirection,
                 getInputState,
                 getInputList,
+            },
+
+            portal: {
+                register: registerCustomPortal,
+                addEntryPoint,
             },
 
             server: {
@@ -1772,6 +1780,36 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function share(options: ShareOptions): Promise<void> {
         const task = context.createTask();
         const event = calcShare(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Registers a custom portal with the given source code.
+     * @param portalId The ID of the portal.
+     * @param options The options for the portal.
+     */
+    function registerCustomPortal(
+        portalId: string,
+        options: RegisterCustomPortalOptions = {}
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = calcRegisterCustomPortal(portalId, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Adds the given tag as an entry point for the portal.
+     * That is, scripts in the specified tag will be run automatically.
+     * @param portalId The ID of the portal.
+     * @param tag The tag that should be used as the entry point.
+     */
+    function addEntryPoint(portalId: string, tag: string): Promise<void> {
+        if (typeof tag !== 'string') {
+            throw new Error('A tag name must be provided.');
+        }
+
+        const task = context.createTask();
+        const event = calcAddEntryPoint(portalId, tag, task.taskId);
         return addAsyncAction(task, event);
     }
 
