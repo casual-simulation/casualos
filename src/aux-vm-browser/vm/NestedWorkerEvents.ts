@@ -5,7 +5,7 @@
 // Copied from https://github.com/microsoft/vscode/blob/42cdda5ab0f45bf472204d3d1175dcd581492dd5/src/vs/workbench/services/extensions/common/polyfillNestedWorker.protocol.ts
 
 export interface NewWorkerMessage {
-    type: '_newWorker';
+    type: 'new_worker';
     id: string;
     port: any /* MessagePort */;
     url: string;
@@ -13,6 +13,6 @@ export interface NewWorkerMessage {
 }
 
 export interface TerminateWorkerMessage {
-    type: '_terminateWorker';
+    type: 'terminate_worker';
     id: string;
 }

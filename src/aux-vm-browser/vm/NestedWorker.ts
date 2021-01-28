@@ -48,7 +48,7 @@ const _bootstrapFnSource = function _bootstrapFn(workerUrl: string) {
         self.Worker = <any>class {
             constructor() {
                 throw new TypeError(
-                    'Nested workers from within nested worker are NOT supported.'
+                    'Nested workers from within nested worker are not supported.'
                 );
             }
         };
@@ -86,7 +86,7 @@ export class NestedWorker extends EventTarget implements Worker {
         const id = blobUrl; // works because blob url is unique, needs ID pool otherwise
 
         const msg: NewWorkerMessage = {
-            type: '_newWorker',
+            type: 'new_worker',
             id,
             port: channel.port2,
             url: blobUrl,
@@ -98,7 +98,7 @@ export class NestedWorker extends EventTarget implements Worker {
         this.postMessage = channel.port1.postMessage.bind(channel.port1);
         this.terminate = () => {
             const msg: TerminateWorkerMessage = {
-                type: '_terminateWorker',
+                type: 'terminate_worker',
                 id,
             };
             channel.port1.postMessage(msg);
