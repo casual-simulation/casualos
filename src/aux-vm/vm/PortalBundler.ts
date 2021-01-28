@@ -276,6 +276,7 @@ export class PortalBundler {
                 bundle: true,
                 format: 'iife',
                 write: false,
+                logLevel: 'silent',
                 plugins: [
                     this._esbuildPlugin(portal.scriptPrefixes, entryCode, bots),
                 ],
