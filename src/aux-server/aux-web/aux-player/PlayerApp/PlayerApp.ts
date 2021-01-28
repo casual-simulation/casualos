@@ -61,6 +61,7 @@ import UploadFiles from '../../shared/vue-components/UploadFiles/UploadFiles';
 import ShowInputModal from '../../shared/vue-components/ShowInputModal/ShowInputModal';
 import MeetPortal from '../../shared/vue-components/MeetPortal/MeetPortal';
 import TagPortal from '../../shared/vue-components/TagPortal/TagPortal';
+import CustomPortals from '../../shared/vue-components/CustomPortals/CustomPortals';
 
 import merge from 'lodash/merge';
 
@@ -80,6 +81,7 @@ import merge from 'lodash/merge';
         'show-input': ShowInputModal,
         'meet-portal': MeetPortal,
         'tag-portal': TagPortal,
+        'custom-portals': CustomPortals,
         console: Console,
         tagline: Tagline,
         checkout: Checkout,
@@ -183,6 +185,7 @@ export default class PlayerApp extends Vue {
     showChatBar: boolean = false;
     chatBarPrefill: string = null;
     chatBarPlaceholder: string = null;
+    chatBarPlaceholderColor: string = null;
 
     showConsole: boolean = false;
     loginInfo: DeviceInfo = null;
@@ -206,6 +209,10 @@ export default class PlayerApp extends Vue {
 
     get isAdmin() {
         return this.loginInfo && this.loginInfo.roles.indexOf(ADMIN_ROLE) >= 0;
+    }
+
+    vmOrigin() {
+        return appManager.config?.vmOrigin;
     }
 
     /**
@@ -472,7 +479,7 @@ export default class PlayerApp extends Vue {
     removeSimulation(info: SimulationInfo) {
         if (appManager.simulationManager.primary.id === info.id) {
             this.snackbar = {
-                message: `You cannot remove the primary channel.`,
+                message: `You cannot remove the primary server.`,
                 visible: true,
             };
         } else {
@@ -543,13 +550,13 @@ export default class PlayerApp extends Vue {
                     console.log('[PlayerApp] Not authorized.');
                     if (state.authorizationError === 'channel_doesnt_exist') {
                         this.snackbar = {
-                            message: 'This channel does not exist.',
+                            message: 'This server does not exist.',
                             visible: true,
                         };
                     } else {
                         this.snackbar = {
                             message:
-                                'You are not authorized to view this channel.',
+                                'You are not authorized to view this server.',
                             visible: true,
                         };
                     }
@@ -617,7 +624,11 @@ export default class PlayerApp extends Vue {
                     navigateToUrl(e.url, '_blank', 'noreferrer');
                 } else if (e.type === 'download') {
                     console.log(`[BuilderApp] Downloading ${e.filename}...`);
-                    download(e.data, e.filename, e.mimeType);
+                    const data =
+                        typeof e.data === 'string'
+                            ? new Blob([e.data], { type: e.mimeType })
+                            : e.data;
+                    download(data, e.filename, e.mimeType);
                 } else if (e.type === 'open_console') {
                     this.showConsole = e.open;
                 } else if (e.type === 'send_webhook') {
@@ -626,6 +637,7 @@ export default class PlayerApp extends Vue {
                     this.showChatBar = e.visible;
                     this.chatBarPrefill = e.prefill;
                     this.chatBarPlaceholder = e.placeholder;
+                    this.chatBarPlaceholderColor = e.placeholderColor;
                     const chatBar = this.$refs.chatBar as BotChat;
                     if (chatBar) {
                         await chatBar.setPrefill(e.prefill);
@@ -896,7 +908,7 @@ export default class PlayerApp extends Vue {
     private _showConnectionRegained(info: SimulationInfo) {
         this.snackbar = {
             visible: true,
-            message: `Connection to ${info.displayName} regained. You are connected to the channel.`,
+            message: `Connection to ${info.displayName} regained. You are connected to the server.`,
         };
     }
 

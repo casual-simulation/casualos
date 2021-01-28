@@ -66,7 +66,7 @@ declare interface DeviceInfo {
 
 /**
  * Defines an interface that represents an event.
- * That is, a time-ordered action in a channel.
+ * That is, a time-ordered action in a server.
  * @deprecated
  */
 declare interface Action {
@@ -136,7 +136,7 @@ declare interface RemoteAction extends Action, DeviceSelector {
 declare type LocalActions = BotActions | ExtraActions | AsyncActions;
 
 /**
- * Defines a union type for all the possible events that can be emitted from a bots channel.
+ * Defines a union type for all the possible events that can be emitted from a bots server.
  */
 declare type BotAction =
     | BotActions
@@ -228,7 +228,9 @@ declare type AsyncActions =
     | SetSpacePasswordAction
     | BufferSoundAction
     | PlaySoundAction
-    | CancelSoundAction;
+    | CancelSoundAction
+    | RegisterCustomPortalAction
+    | AddEntryPointAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -388,7 +390,7 @@ declare interface ApplyStateAction extends Action {
 }
 
 /**
- * The options for pasting bots state into a channel.
+ * The options for pasting bots state into a server.
  */
 declare interface PasteStateOptions {
     /**
@@ -578,7 +580,7 @@ declare interface CheckoutSubmittedAction extends Action {
     token: string;
 
     /**
-     * The channel that processing should happen in.
+     * The server that processing should happen in.
      */
     processingServer: string;
 }
@@ -897,6 +899,40 @@ declare interface WebhookOptions {
      * The shout that should be made when the request finishes.
      */
     responseShout?: string;
+}
+
+/**
+ * Defines a set of options for animateTag().
+ */
+declare interface AnimateTagFunctionOptions {
+    /**
+     * The value that should be animated from.
+     * If not specified then the current tag value will be used.
+     */
+    fromValue?: any;
+
+    /**
+     * The value that should be animated to.
+     */
+    toValue: any;
+
+    /**
+     * The duration of the animation in seconds.
+     */
+    duration: number;
+
+    /**
+     * The type of easing to use.
+     * If not specified then "linear" "inout" will be used.
+     */
+    easing?: EaseType | Easing;
+
+    /**
+     * The space that the tag should be animated in.
+     * If not specified then "tempLocal" will be used.
+     * If false, then the bot will be edited instead of using tag masks.
+     */
+    tagMaskSpace?: BotSpace | false;
 }
 
 /**
@@ -1229,18 +1265,18 @@ declare interface RejectAction {
 }
 
 /**
- * Defines an event that creates a channel if it doesn't exist.
+ * Defines an event that creates a server if it doesn't exist.
  */
 declare interface SetupChannelAction {
     type: 'setup_server';
 
     /**
-     * The channel that should be created.
+     * The server that should be created.
      */
     channel: string;
 
     /**
-     * The bot or mod that should be cloned into the new channel.
+     * The bot or mod that should be cloned into the new server.
      */
     botOrMod?: Bot | BotTags;
 }
@@ -1277,6 +1313,11 @@ declare interface ShowChatBarAction {
      * The text that the bar should have as the placeholder.
      */
     placeholder?: string;
+
+    /**
+     * The color to use for the placeholder.
+     */
+    placeholderColor?: string;
 }
 
 /**
@@ -1292,6 +1333,11 @@ declare interface ShowChatOptions {
      * The text that the bar should have as the placeholder.
      */
     placeholder?: string;
+
+    /**
+     * The color to use for the placeholder.
+     */
+    placeholderColor?: string;
 }
 
 /**
@@ -1311,6 +1357,26 @@ declare interface RunScriptAction extends AsyncAction {
  */
 declare interface ShowUploadAuxFileAction {
     type: 'show_upload_aux_file';
+}
+
+/**
+ * Defines an interface that represents a file that was uploaded.
+ */
+declare interface UploadedFile {
+    /**
+     * The name of the file that was uploaded.
+     */
+    name: string;
+
+    /**
+     * The size of the file in bytes.
+     */
+    size: number;
+
+    /**
+     * The data that the file contains.
+     */
+    data: string | ArrayBuffer;
 }
 
 /**
@@ -1637,6 +1703,55 @@ declare interface ShareAction extends AsyncAction, ShareOptions {
     type: 'share';
 }
 
+
+/**
+ * The possible options for a custom portal.
+ */
+export interface RegisterCustomPortalOptions {
+    /**
+     * The script prefixes that should be used for the portal.
+     */
+    scriptPrefixes?: string[];
+
+    /**
+     * The CSS styles that should be used for the portal.
+     */
+    style?: any;
+}
+
+/**
+ * Defines an event that creates a custom portal using the given source code.
+ */
+export interface RegisterCustomPortalAction extends AsyncAction {
+    type: 'register_custom_portal';
+    /**
+     * The ID of the portal.
+     */
+    portalId: string;
+
+    /**
+     * The options for the portal.
+     */
+    options: RegisterCustomPortalOptions;
+}
+
+/**
+ * Defines an event that adds an entry point to a custom portal.
+ */
+export interface AddEntryPointAction extends AsyncAction {
+    type: 'add_entry_point';
+
+    /**
+     * The ID of the portal
+     */
+    portalId: string;
+
+    /**
+     * The tag that should be used as the entry point.
+     */
+    tag: string;
+}
+
 /**
  * Defines an interface for options that show a payment box.
  */
@@ -1942,10 +2057,15 @@ declare interface PerformanceStats {
      * A list of listen tags and the amount of time spent executing them (in miliseconds).
      * Useful to guage if a listen tag is causing the server to slow down.
      */
-    shoutTimers: {
+    shoutTimes: {
         tag: string;
         timeMs: number;
     }[];
+
+    /**
+     * The total number of active setTimeout() and setInterval() timers that are active.
+     */
+    numberOfActiveTimers: number;
 }
 
 declare global {
@@ -2168,6 +2288,25 @@ declare global {
      * @param time Time in ms. 1 second is 1000ms.
      */
     function sleep(time: number): Promise<void>;
+
+    /**
+     * Animates the given tag. Returns a promise when the animation is finished.
+     * @param bot The bot or list of bots that should be animated.
+     * @param tag The tag that should be animated.
+     * @param options The options for the animation. If given null, then any running animations for the given tag will be canceled.
+     */
+    function animateTag(
+        bot: Bot | (Bot | string)[] | string,
+        tag: string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void[]>;
+
+    /**
+     * Cancels the animations that are running on the given bot(s).
+     * @param bot The bot or list of bots that should cancel their animations.
+     * @param tag The tag that the animations should be canceld for. If omitted then all tags will be canceled.
+     */
+    function clearAnimations(bot: Bot | (Bot | string)[] | string, tag?: string): void;
 
     /**
      * Sends the given operation to all the devices that matches the given selector.
@@ -2909,6 +3048,11 @@ declare global {
         showUploadAuxFile(): ShowUploadAuxFileAction;
 
         /**
+         * Shows the "Upload Files" dialog.
+         */
+        showUploadFiles(): Promise<UploadedFile[]>;
+
+        /**
          * Loads the server with the given ID.
          * @param id The ID of the server to load.
          */
@@ -3063,6 +3207,26 @@ declare global {
          * Gets the name of the dimension that is used for the current user's inventory.
          */
         getInventoryDimension(): string;
+    };
+
+    /**
+     * Defines a set of functions that relate to custom portal operations.
+     */
+    const portal: {
+        /**
+         * Registers a custom portal with the given source code.
+         * @param portalId The ID of the portal.
+         * @param options The options for the portal.
+         */
+        register(portalId: string, options?: RegisterCustomPortalOptions): Promise<void>;
+
+        /**
+         * Adds the given tag as an entry point for the portal.
+         * That is, scripts in the specified tag will be run automatically.
+         * @param portalId The ID of the portal.
+         * @param tag The tag that should be used as the entry point.
+         */
+        addEntryPoint(portalId: string, tag: string): Promise<void>;
     };
 
     /**

@@ -13,6 +13,7 @@ import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
 import { CodeLanguageManager } from './CodeLanguageManager';
 import { BotDimensionManager } from './BotDimensionManager';
 import { StoredAux } from '../StoredAux';
+import { PortalManager } from './PortalManager';
 
 /**
  * Defines an interface for objects that represent bot simulations.
@@ -69,6 +70,11 @@ export interface Simulation extends Initable {
      * Gets the manager in charge of code services.
      */
     code: CodeLanguageManager;
+
+    /**
+     * Gets the manager in charge of custom portals.
+     */
+    portals: PortalManager;
 
     /**
      * Gets the observable list of events that should have an effect on the UI.

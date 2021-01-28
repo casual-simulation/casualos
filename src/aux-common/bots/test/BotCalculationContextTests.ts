@@ -507,16 +507,16 @@ export function botCalculationContextTests(
 
     describe('isPickupable()', () => {
         const cases = [
-            [true, true],
-            [true, 'move'],
-            [true, 'any'],
-            [false, 'none'],
-            [true, 'drag'],
-            [false, 'moveOnly'],
-            [true, 'clone'],
-            [true, 'pickup'],
-            [true, 'pickupOnly'],
-            [true, false],
+            [true, true] as const,
+            [true, 'move'] as const,
+            [true, 'any'] as const,
+            [false, 'none'] as const,
+            [true, 'drag'] as const,
+            [false, 'moveOnly'] as const,
+            [true, 'clone'] as const,
+            [true, 'pickup'] as const,
+            [true, 'pickupOnly'] as const,
+            [true, false] as const,
         ];
 
         it.each(cases)('should return %s if set to %s', (expected, value) => {
@@ -797,17 +797,17 @@ export function botCalculationContextTests(
 
     describe('getBotDragMode()', () => {
         const cases = [
-            ['all', 'all'],
-            ['all', 'adfsdfa'],
-            ['all', true],
-            ['none', 'none'],
-            ['all', 0],
-            ['all', 'clone'],
-            ['pickupOnly', 'pickupOnly'],
-            ['moveOnly', 'moveOnly'],
-            ['all', 'diff'],
-            ['all', 'cloneMod'],
-            ['all', false],
+            ['all', 'all'] as const,
+            ['all', 'adfsdfa'] as const,
+            ['all', true] as const,
+            ['none', 'none'] as const,
+            ['all', 0] as const,
+            ['all', 'clone'] as const,
+            ['pickupOnly', 'pickupOnly'] as const,
+            ['moveOnly', 'moveOnly'] as const,
+            ['all', 'diff'] as const,
+            ['all', 'cloneMod'] as const,
+            ['all', false] as const,
         ];
 
         it.each(cases)('should return %s for %s', (expected, val) => {
@@ -942,6 +942,7 @@ export function botCalculationContextTests(
             ['helix'],
             ['hex'],
             ['cursor'],
+            ['portal'],
         ];
         const tagCases = ['auxForm', 'form'];
 
@@ -1415,7 +1416,7 @@ export function botCalculationContextTests(
     });
 
     describe('calculateLabelFontSize()', () => {
-        const cases = [['auto'], [10], [1]];
+        const cases = [['auto'] as const, [10] as const, [1] as const];
         const tagCases = ['auxLabelFontSize', 'labelFontSize'];
 
         describe.each(tagCases)('%s', (tag: string) => {
@@ -1961,10 +1962,10 @@ export function botCalculationContextTests(
         });
 
         let cases = [
-            [1.1, ['1.1']],
-            [false, ['false']],
-            ['abc', ['abc']],
-            [['abc'], ['abc']],
+            [1.1, ['1.1']] as const,
+            [false, ['false']] as const,
+            ['abc', ['abc']] as const,
+            [['abc'], ['abc']] as const,
         ];
 
         it.each(cases)('should convert %s', (value, expected) => {
@@ -2565,13 +2566,13 @@ export function botCalculationContextTests(
     describe('BotLookupTable', () => {
         describe('buildLookupTable()', () => {
             const dataTypes = [
-                ['support strings', 'jkl', 'pqr'],
-                ['support integers', 123, 456],
-                ['support floats', 123.65, 456.789],
-                ['support booleans', false, true],
-                ['support nulls', null, null],
-                ['support mixed types', 'hello', 987],
-                ['support zero', 0, 0],
+                ['support strings', 'jkl', 'pqr'] as const,
+                ['support integers', 123, 456] as const,
+                ['support floats', 123.65, 456.789] as const,
+                ['support booleans', false, true] as const,
+                ['support nulls', null as any, null as any] as const,
+                ['support mixed types', 'hello', 987] as const,
+                ['support zero', 0, 0] as const,
             ];
 
             it.each(dataTypes)('should %s (%s, %s)', (desc, first, second) => {

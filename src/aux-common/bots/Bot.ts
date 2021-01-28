@@ -270,7 +270,7 @@ export interface BotTags {
     // Normal bot tags
     ['color']?: unknown;
     ['draggable']?: unknown;
-    ['draggableMode']?: BotDragMode;
+    ['draggableMode']?: unknown;
     ['positioningMode']?: unknown;
     ['destroyable']?: unknown;
     ['editable']?: unknown;
@@ -435,6 +435,7 @@ export type BotShape =
     | 'egg'
     | 'hex'
     | 'cursor'
+    | 'portal'
     | 'nothing';
 
 /**
@@ -516,7 +517,7 @@ export type BotAnchorPoint =
     | 'right'
     | 'bottom'
     | 'center'
-    | [number, number, number];
+    | readonly [number, number, number];
 
 /**
  * Defines the possible meet portal anchor points.
@@ -743,6 +744,11 @@ export const DEFAULT_MEET_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint =
  */
 export const DEFAULT_TAG_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint =
     'fullscreen';
+
+/**
+ * The default anchor point for custom portals.
+ */
+export const DEFAULT_CUSTOM_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint = 'top';
 
 /**
  * The default bot LOD.
@@ -1230,6 +1236,11 @@ export const SHEET_PORTAL: string = 'sheetPortal';
  * The prefix for DNA Tags.
  */
 export const DNA_TAG_PREFIX: string = '🧬';
+
+/**
+ * The default script prefixes for custom portals.
+ */
+export const DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES: string[] = ['📖'];
 
 /**
  * The list of all portal tags.

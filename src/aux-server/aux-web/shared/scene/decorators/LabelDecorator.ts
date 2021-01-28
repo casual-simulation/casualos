@@ -43,6 +43,8 @@ export class LabelDecorator
     private _autoSizeMode: boolean;
     private _initialSetup: boolean;
     private _lastFontSize: BotLabelFontSize;
+    private _lastHeight: number;
+    private _lastLength: number;
 
     constructor(bot3D: AuxBot3D, game: Game) {
         super(bot3D);
@@ -61,31 +63,23 @@ export class LabelDecorator
         const anchor = getBotLabelAnchor(calc, this.bot3D.bot);
         const alignment = getBotLabelAlignment(calc, this.bot3D.bot);
 
-        let botWidth = calculateNumericalTagValue(
-            calc,
-            this.bot3D.bot,
-            'auxScaleX',
-            1
-        );
+        const botSize = getBotScale(calc, this.bot3D.bot);
+
+        let botWidth = botSize.x;
+        let botHeight = botSize.z;
+        let botLength = botSize.y;
 
         if (anchor === 'left' || anchor === 'right') {
-            botWidth = calculateNumericalTagValue(
-                calc,
-                this.bot3D.bot,
-                'auxScaleY',
-                1
-            );
+            botWidth = botLength;
         }
-
-        if (this.text3D) {
-            if (botWidth != this.text3D.currentWidth) {
-                this.disposeText3D();
-            }
+        if (anchor === 'top') {
+            botHeight = botSize.y;
+            botLength = botSize.z;
         }
 
         if (label) {
             if (!this.text3D) {
-                this.text3D = new Text3D(botWidth);
+                this.text3D = new Text3D();
                 // Parent the labels directly to the bot.
                 // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that
                 // without worrying about what the AuxBot3D scale is etc.
@@ -93,7 +87,9 @@ export class LabelDecorator
                 this._initialSetup = true;
             }
 
-            let updateNeeded = this.text3D.setText(label, alignment);
+            let updateNeeded = this.text3D.setWidth(botWidth);
+            updateNeeded =
+                this.text3D.setText(label, alignment) || updateNeeded;
 
             // Update auto size mode.
             this._autoSizeMode =
@@ -127,6 +123,8 @@ export class LabelDecorator
             let fontSize = calculateLabelFontSize(calc, this.bot3D.bot);
 
             updateNeeded = updateNeeded || fontSize !== this._lastFontSize;
+            updateNeeded = updateNeeded || botHeight !== this._lastHeight;
+            updateNeeded = updateNeeded || botLength !== this._lastLength;
 
             if (typeof fontSize === 'number') {
                 updateNeeded =
@@ -148,10 +146,11 @@ export class LabelDecorator
                     // Hide the text while it is being setup
                     // for the first time.
                     this.text3D.visible = false;
+                    this._initialSetup = false;
                 }
                 this.text3D
                     .calculateFontSizeToFit(
-                        this.bot3D.boundingBox,
+                        botHeight,
                         0.1 * Text3D.defaultFontSize,
                         2 * Text3D.defaultFontSize,
                         0.025
@@ -170,6 +169,8 @@ export class LabelDecorator
             }
 
             this._lastFontSize = fontSize;
+            this._lastHeight = botHeight;
+            this._lastLength = botLength;
         } else {
             this.disposeText3D();
         }

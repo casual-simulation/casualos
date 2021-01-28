@@ -47,6 +47,11 @@ export interface AuxConfigParameters {
      * The URL that causal repo partitions should connect to.
      */
     causalRepoConnectionUrl?: string;
+
+    /**
+     * The origin that the VM iframe should be loaded from.
+     */
+    vmOrigin?: string;
 }
 
 export function buildVersionNumber(config: AuxConfigParameters) {

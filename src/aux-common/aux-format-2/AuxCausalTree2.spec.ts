@@ -1691,19 +1691,19 @@ describe('AuxCausalTree2', () => {
                     123,
                     edit({}, preserve(1), insert('abc')),
                     '1abc23',
-                ],
+                ] as const,
                 [
                     'booleans',
                     true,
                     edit({}, preserve(1), insert('abc')),
                     'tabcrue',
-                ],
+                ] as const,
                 [
                     'objects',
                     { prop: 'yes' },
                     edit({}, preserve(1), insert('abc')),
                     '{abc"prop":"yes"}',
-                ],
+                ] as const,
             ];
 
             it.each(valueCases)(

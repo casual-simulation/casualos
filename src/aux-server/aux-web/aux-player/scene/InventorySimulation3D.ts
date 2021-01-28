@@ -169,8 +169,8 @@ export class InventorySimulation3D extends PlayerSimulation3D {
         this._subs.push(
             userBotChanged(this.simulation)
                 .pipe(
-                    filter(bot => !!bot),
-                    tap(bot => {
+                    filter((bot) => !!bot),
+                    tap((bot) => {
                         const userInventoryDimensionValue =
                             bot.values['inventoryPortal'];
                         const previousDimension = this.inventoryDimension;
@@ -188,10 +188,10 @@ export class InventorySimulation3D extends PlayerSimulation3D {
         super.init();
     }
 
-    protected _constructDimensionGroup(portalTag: string) {
+    protected _constructDimensionGroup(portalTag: string, bot: Bot) {
         return new InventoryContextGroup3D(
             this,
-            this.simulation.helper.userBot,
+            bot,
             'player',
             this.decoratorFactory,
             portalTag

@@ -105,10 +105,13 @@ export type AsyncActions =
     | AsyncErrorAction
     | ShowInputAction
     | ShareAction
+    | RegisterCustomPortalAction
+    | AddEntryPointAction
     | RunScriptAction
     | LoadBotsAction
     | ClearSpaceAction
     | SendWebhookAction
+    | AnimateTagAction
     | UnlockSpaceAction
     | SetSpacePasswordAction
     | LoadFileAction
@@ -175,7 +178,8 @@ export type AsyncActions =
     | BufferSoundAction
     | CancelSoundAction
     | LocalPositionTweenAction
-    | LocalRotationTweenAction;
+    | LocalRotationTweenAction
+    | ShowUploadFilesAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -863,6 +867,59 @@ export interface WebhookOptions {
 }
 
 /**
+ * Defines an event that animates a tag on a bot over some time.
+ */
+export interface AnimateTagAction extends AsyncAction {
+    type: 'animate_tag';
+
+    /**
+     * The ID of the bot to animate.
+     */
+    botId: string;
+
+    /**
+     * The tag to animate.
+     */
+    tag: string;
+
+    /**
+     * The options to use for the animation.
+     */
+    options: AnimateTagOptions;
+}
+
+/**
+ * Defines the options that can be used to animate a tag.
+ */
+export interface AnimateTagOptions {
+    /**
+     * The value to animate from.
+     */
+    fromValue: any;
+
+    /**
+     * The value to animate to.
+     */
+    toValue: any;
+
+    /**
+     * The number of seconds that the animation executes over.
+     */
+    duration: number;
+
+    /**
+     * The easing that should be used.
+     */
+    easing: Easing;
+
+    /**
+     * The space that the tag should be animated in.
+     * If set to false, then the tag on the bot will be modified.
+     */
+    tagMaskSpace: BotSpace | false;
+}
+
+/**
  * Defines an event that is used to load a file.
  */
 export interface LoadFileAction extends AsyncAction {
@@ -1202,9 +1259,9 @@ export interface RejectAction {
     type: 'reject';
 
     /**
-     * The action to prevent.
+     * The actions to prevent.
      */
-    action: Action;
+    actions: Action[];
 }
 
 /**
@@ -1909,6 +1966,11 @@ export interface ShowChatBarAction {
      * The text that the bar should have as the placeholder.
      */
     placeholder?: string;
+
+    /**
+     * The color to use for the placeholder.
+     */
+    placeholderColor?: string;
 }
 
 /**
@@ -1924,6 +1986,11 @@ export interface ShowChatOptions {
      * The text that the bar should have as the placeholder.
      */
     placeholder?: string;
+
+    /**
+     * The color to use for the placeholder.
+     */
+    placeholderColor?: string;
 }
 
 /**
@@ -1943,6 +2010,13 @@ export interface RunScriptAction extends AsyncAction {
  */
 export interface ShowUploadAuxFileAction {
     type: 'show_upload_aux_file';
+}
+
+/**
+ * Defines an event that shows the "uplaod file" dialog.
+ */
+export interface ShowUploadFilesAction extends AsyncAction {
+    type: 'show_upload_files';
 }
 
 /**
@@ -2267,6 +2341,54 @@ export interface ShareAction extends AsyncAction, ShareOptions {
     type: 'share';
 }
 
+/**
+ * The possible options for a custom portal.
+ */
+export interface RegisterCustomPortalOptions {
+    /**
+     * The script prefixes that should be used for the portal.
+     */
+    scriptPrefixes?: string[];
+
+    /**
+     * The CSS styles that should be used for the portal.
+     */
+    style?: any;
+}
+
+/**
+ * Defines an event that creates a custom portal using the given source code.
+ */
+export interface RegisterCustomPortalAction extends AsyncAction {
+    type: 'register_custom_portal';
+    /**
+     * The ID of the portal.
+     */
+    portalId: string;
+
+    /**
+     * The options for the portal.
+     */
+    options: RegisterCustomPortalOptions;
+}
+
+/**
+ * Defines an event that adds an entry point to a custom portal.
+ */
+export interface AddEntryPointAction extends AsyncAction {
+    type: 'add_entry_point';
+
+    /**
+     * The ID of the portal
+     */
+    portalId: string;
+
+    /**
+     * The tag that should be used as the entry point.
+     */
+    tag: string;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -2343,10 +2465,10 @@ export function action(
  * Creates a new RejectAction.
  * @param event The action to reject.
  */
-export function reject(event: Action): RejectAction {
+export function reject(...events: Action[]): RejectAction {
     return {
         type: 'reject',
-        action: event,
+        actions: events,
     };
 }
 
@@ -2874,6 +2996,28 @@ export function webhook(
     return {
         type: 'send_webhook',
         options: options,
+        taskId,
+    };
+}
+
+/**
+ * Animates the given tag on the given bot using the given options.
+ * @param botId The ID of the bot.
+ * @param tag The tag to animate.
+ * @param options The options.
+ * @param taskId The ID of the task that this event represents.
+ */
+export function animateTag(
+    botId: string,
+    tag: string,
+    options: AnimateTagOptions,
+    taskId?: number | string
+): AnimateTagAction {
+    return {
+        type: 'animate_tag',
+        botId,
+        tag,
+        options,
         taskId,
     };
 }
@@ -3991,6 +4135,18 @@ export function showUploadAuxFile(): ShowUploadAuxFileAction {
 }
 
 /**
+ * Creates a ShowUploadFilesAction.
+ */
+export function showUploadFiles(
+    taskId: number | string
+): ShowUploadFilesAction {
+    return {
+        type: 'show_upload_files',
+        taskId,
+    };
+}
+
+/**
  * Creates a MarkHistoryAction.
  * @param options The options to use.
  */
@@ -4397,6 +4553,45 @@ export function share(
         type: 'share',
         taskId,
         ...options,
+    };
+}
+
+/**
+ * Creates an action that registers a custom portal.
+ * @param portalId The ID of the portal,
+ * @param options The options for the portal.
+ * @param taskId The ID of the task.
+ */
+export function registerCustomPortal(
+    portalId: string,
+    options: RegisterCustomPortalOptions,
+    taskId?: number | string
+): RegisterCustomPortalAction {
+    return {
+        type: 'register_custom_portal',
+        portalId,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that adds an entry point to a custom portal.
+ * @param portalId The ID of the portal.
+ * @param botId The ID of the bot that the entry point is in. If null then all bots will be used.
+ * @param tag The tag that should be used as the entry point.
+ * @param taskId The ID of the task.
+ */
+export function addEntryPoint(
+    portalId: string,
+    tag: string,
+    taskId?: number | string
+): AddEntryPointAction {
+    return {
+        type: 'add_entry_point',
+        portalId,
+        tag,
+        taskId,
     };
 }
 

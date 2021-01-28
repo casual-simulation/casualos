@@ -279,6 +279,7 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
                 this.bot3D.add(targetArrow);
                 this.arrows.push(targetArrow);
                 this._arrows.set(targetBot, targetArrow);
+                targetArrow.updateMatrixWorld(true);
             }
 
             if (targetArrow) {

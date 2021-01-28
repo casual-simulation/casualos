@@ -6,6 +6,7 @@
                     :tag="tag"
                     :isScript="isScript"
                     :isFormula="isFormula"
+                    :prefix="currentPrefix"
                     :allowCloning="false"
                 ></bot-tag>
                 <div v-if="!!space" class="bot-space">
@@ -22,7 +23,7 @@
                 <md-button
                     @click="makeNormalTag()"
                     class="md-dense"
-                    :class="{ active: !(isScript || isFormula) }"
+                    :class="{ active: !(isScript || isFormula || isAnyPrefix) }"
                 >
                     <md-tooltip>Make Normal Tag</md-tooltip>
                     <span class="hashtag">#</span>
@@ -34,6 +35,16 @@
                 <md-button @click="makeScriptTag()" class="md-dense" :class="{ active: isScript }">
                     <md-tooltip>Make Listen Tag</md-tooltip>
                     <span class="at-symbol">@</span>
+                </md-button>
+                <md-button
+                    v-for="prefix in scriptPrefixes"
+                    :key="prefix.prefix"
+                    @click="makePrefixTag(prefix)"
+                    class="md-dense"
+                    :class="{ active: isPrefix(prefix) }"
+                >
+                    <md-tooltip>Make Custom Portal Tag</md-tooltip>
+                    <span>{{ prefix.prefix }}</span>
                 </md-button>
             </div>
             <div v-if="signed" class="editor-signed">

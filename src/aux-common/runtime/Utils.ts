@@ -2,6 +2,8 @@ import { RealtimeEditMode } from './RuntimeBot';
 import { isBot, isRuntimeBot } from '../bots/BotCalculations';
 import { AuxPartitionRealtimeStrategy } from '../partitions/AuxPartition';
 import forOwn from 'lodash/forOwn';
+import { Easing, EaseMode } from '../bots';
+import TWEEN, { Easing as TweenEasing } from '@tweenjs/tween.js';
 
 /**
  * Converts the given value to a copiable value.
@@ -84,5 +86,48 @@ export function realtimeStrategyToRealtimeEditMode(
 export class DeepObjectError extends Error {
     constructor() {
         super('Object too deeply nested.');
+    }
+}
+
+export function getEasing(easing: Easing): any {
+    switch (easing.type) {
+        case 'linear':
+        default:
+            return TWEEN.Easing.Linear.None;
+        case 'circular':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Circular);
+        case 'cubic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Cubic);
+        case 'exponential':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Exponential);
+        case 'elastic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Elastic);
+        case 'quadratic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Quadratic);
+        case 'quartic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Quartic);
+        case 'quintic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Quintic);
+        case 'sinusoidal':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Sinusoidal);
+    }
+}
+
+function resolveEaseType(
+    mode: EaseMode,
+    val: typeof TweenEasing.Circular | typeof TweenEasing.Linear
+): any {
+    if ('None' in val) {
+        return val.None;
+    } else {
+        switch (mode) {
+            case 'in':
+                return val.In;
+            case 'out':
+                return val.Out;
+            case 'inout':
+            default:
+                return val.InOut;
+        }
     }
 }

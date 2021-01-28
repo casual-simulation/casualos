@@ -1,4 +1,9 @@
-import { AuxGlobalContext, AsyncTask } from './AuxGlobalContext';
+import {
+    AuxGlobalContext,
+    AsyncTask,
+    BotTimer,
+    TimeoutOrIntervalTimer,
+} from './AuxGlobalContext';
 import {
     hasValue,
     trimTag,
@@ -53,11 +58,15 @@ import {
     webhook as calcWebhook,
     superShout as calcSuperShout,
     share as calcShare,
+    registerCustomPortal as calcRegisterCustomPortal,
+    addEntryPoint as calcAddEntryPoint,
     createCertificate as calcCreateCertificate,
     signTag as calcSignTag,
     revokeCertificate as calcRevokeCertificate,
     localPositionTween as calcLocalPositionTween,
     localRotationTween as calcLocalRotationTween,
+    animateTag as calcAnimateTag,
+    showUploadFiles as calcShowUploadFiles,
     clearSpace,
     loadBots,
     BotAction,
@@ -156,6 +165,9 @@ import {
     EDIT_TAG_SYMBOL,
     BotSpace,
     EDIT_TAG_MASK_SYMBOL,
+    AnimateTagOptions,
+    EaseType,
+    RegisterCustomPortalOptions,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -167,7 +179,7 @@ import uuidv4 from 'uuid/v4';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
-import { convertToCopiableValue } from './Utils';
+import { convertToCopiableValue, getEasing } from './Utils';
 import { sha256 as hashSha256, sha512 as hashSha512, hmac } from 'hash.js';
 import stableStringify from 'fast-json-stable-stringify';
 import {
@@ -180,12 +192,16 @@ import {
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, del, insert, preserve } from '../aux-format-2';
 import { Euler, Vector3, Plane, Ray } from 'three';
-import { Runtime } from 'inspector';
+import TWEEN from '@tweenjs/tween.js';
+import './PerformanceNowPolyfill';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
  */
 export interface AuxLibrary {
+    /**
+     * The functions that are part of the general API.
+     */
     api: {
         whisper(
             bot: (Bot | string)[] | Bot | string,
@@ -195,6 +211,13 @@ export interface AuxLibrary {
         shout(name: string, arg?: any): any[];
         __energyCheck(): void;
         [key: string]: any;
+    };
+
+    /**
+     * The functions that are part of the bot-specific API.
+     */
+    tagSpecificApi: {
+        [key: string]: (options: TagSpecificApiOptions) => any;
     };
     typeDefinitions?: string;
 }
@@ -325,6 +348,40 @@ export interface WebhookOptions {
     responseShout?: string;
 }
 
+/**
+ * Defines a set of options for animateTag().
+ */
+export interface AnimateTagFunctionOptions {
+    /**
+     * The value that should be animated from.
+     * If not specified then the current tag value will be used.
+     */
+    fromValue?: any;
+
+    /**
+     * The value that should be animated to.
+     */
+    toValue: any;
+
+    /**
+     * The duration of the animation in seconds.
+     */
+    duration: number;
+
+    /**
+     * The type of easing to use.
+     * If not specified then "linear" "inout" will be used.
+     */
+    easing?: EaseType | Easing;
+
+    /**
+     * The space that the tag should be animated in.
+     * If not specified then "tempLocal" will be used.
+     * If false, then the bot will be edited instead of using tag masks.
+     */
+    tagMaskSpace?: BotSpace | false;
+}
+
 export interface BotFilterFunction {
     (bot: Bot): boolean;
     sort?: (bot: Bot) => any;
@@ -358,10 +415,39 @@ export interface PerformanceStats {
      * A list of listen tags and the amount of time spent executing them (in miliseconds).
      * Useful to guage if a listen tag is causing the server to slow down.
      */
-    shoutTimers: {
+    shoutTimes: {
         tag: string;
         timeMs: number;
     }[];
+
+    /**
+     * The total number of active setTimeout() and setInterval() timers that are active.
+     */
+    numberOfActiveTimers: number;
+}
+
+/**
+ * Options needed for the Bot-specific API.
+ */
+export interface TagSpecificApiOptions {
+    /**
+     * The Bot that the API is for.
+     */
+    bot: Bot;
+    /**
+     * The tag that the API is for.
+     */
+    tag: string;
+
+    /**
+     * The bot that is set as the creator of the current bot.
+     */
+    creator: RuntimeBot;
+
+    /**
+     * The bot that is set as the config of the current bot.
+     */
+    config: RuntimeBot;
 }
 
 /**
@@ -369,14 +455,6 @@ export interface PerformanceStats {
  * @param context The global context that should be used.
  */
 export function createDefaultLibrary(context: AuxGlobalContext) {
-    if (!globalThis.performance) {
-        globalThis.performance = {
-            now() {
-                return Date.now();
-            },
-        } as any;
-    }
-
     webhook.post = function (
         url: string,
         data?: any,
@@ -412,7 +490,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             applyMod,
             subtractMods,
 
-            create,
             destroy,
             changeState,
             superShout,
@@ -436,6 +513,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             webhook,
             uuid,
             sleep,
+            animateTag,
+            clearAnimations,
 
             __energyCheck,
 
@@ -461,6 +540,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 downloadBots,
                 downloadServer,
                 showUploadAuxFile,
+                showUploadFiles,
                 openQRCodeScanner,
                 closeQRCodeScanner,
                 showQRCode,
@@ -503,6 +583,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPointerDirection,
                 getInputState,
                 getInputList,
+            },
+
+            portal: {
+                register: registerCustomPortal,
+                addEntryPoint,
             },
 
             server: {
@@ -622,7 +707,56 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getStats,
             },
         },
+
+        tagSpecificApi: {
+            create: (options: TagSpecificApiOptions) => (...args: any[]) =>
+                create(options.bot?.id, ...args),
+            setTimeout: botTimer('timeout', setTimeout, true),
+            setInterval: botTimer('interval', setInterval, false),
+        },
     };
+
+    function botTimer(
+        type: TimeoutOrIntervalTimer['type'],
+        func: (handler: Function, timeout: number, ...args: any[]) => number,
+        clearAfterHandlerIsRun: boolean
+    ) {
+        return (options: TagSpecificApiOptions) =>
+            function (handler: Function, timeout?: number, ...args: any[]) {
+                if (!options.bot) {
+                    throw new Error(
+                        `Timers are not supported when there is no current bot.`
+                    );
+                }
+
+                let timer: number;
+                if (clearAfterHandlerIsRun) {
+                    timer = func(
+                        function () {
+                            try {
+                                handler(...arguments);
+                            } finally {
+                                context.removeBotTimer(
+                                    options.bot.id,
+                                    type,
+                                    timer
+                                );
+                            }
+                        },
+                        timeout,
+                        ...args
+                    );
+                } else {
+                    timer = func(handler, timeout, ...args);
+                }
+                context.recordBotTimer(options.bot.id, {
+                    timerId: timer,
+                    type: type,
+                });
+
+                return timer;
+            };
+    }
 
     /**
      * Gets a list of all the bots.
@@ -1209,6 +1343,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Shows the "Upload File" dialog.
+     */
+    function showUploadFiles() {
+        const task = context.createTask();
+        const action = calcShowUploadFiles(task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
      * Opens the QR Code Scanner.
      * @param camera The camera that should be used.
      */
@@ -1637,6 +1780,36 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function share(options: ShareOptions): Promise<void> {
         const task = context.createTask();
         const event = calcShare(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Registers a custom portal with the given source code.
+     * @param portalId The ID of the portal.
+     * @param options The options for the portal.
+     */
+    function registerCustomPortal(
+        portalId: string,
+        options: RegisterCustomPortalOptions = {}
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = calcRegisterCustomPortal(portalId, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Adds the given tag as an entry point for the portal.
+     * That is, scripts in the specified tag will be run automatically.
+     * @param portalId The ID of the portal.
+     * @param tag The tag that should be used as the entry point.
+     */
+    function addEntryPoint(portalId: string, tag: string): Promise<void> {
+        if (typeof tag !== 'string') {
+            throw new Error('A tag name must be provided.');
+        }
+
+        const task = context.createTask();
+        const event = calcAddEntryPoint(portalId, tag, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -2810,6 +2983,138 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return sleepy;
     }
 
+    /**
+     * Animates the given tag. Returns a promise when the animation is finished.
+     * @param bot The bot or list of bots that should be animated.
+     * @param tag The tag that should be animated.
+     * @param options The options for the animation.
+     */
+    function animateTag(
+        bot: RuntimeBot | (RuntimeBot | string)[] | string,
+        tag: string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void> {
+        if (Array.isArray(bot)) {
+            const bots = bot
+                .map((b) => (typeof b === 'string' ? getBot('id', b) : b))
+                .filter((b) => !!b);
+
+            const promises = bots.map((b) => animateBotTag(b, tag, options));
+
+            const allPromises = Promise.all(promises);
+            return <Promise<void>>(<any>allPromises);
+        } else if (typeof bot === 'string') {
+            const finalBot = getBot('id', bot);
+            if (finalBot) {
+                return animateBotTag(finalBot, tag, options);
+            } else {
+                return Promise.resolve();
+            }
+        } else {
+            return animateBotTag(bot, tag, options);
+        }
+    }
+
+    function animateBotTag(
+        bot: RuntimeBot,
+        tag: string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void> {
+        if (!options) {
+            clearAnimations(bot, tag);
+            return Promise.resolve();
+        }
+
+        return new Promise<void>((resolve, reject) => {
+            let valueHolder = {
+                [tag]: hasValue(options.fromValue)
+                    ? options.fromValue
+                    : bot.tags[tag],
+            };
+            const easing: Easing = hasValue(options.easing)
+                ? typeof options.easing === 'string'
+                    ? {
+                          mode: 'inout',
+                          type: options.easing,
+                      }
+                    : options.easing
+                : {
+                      mode: 'inout',
+                      type: 'linear',
+                  };
+            const tween = new TWEEN.Tween<any>(valueHolder)
+                .to({
+                    [tag]: options.toValue,
+                })
+                .duration(options.duration * 1000)
+                .easing(getEasing(easing))
+                .onUpdate(() => {
+                    if (
+                        options.tagMaskSpace === false ||
+                        options.tagMaskSpace === getBotSpace(bot)
+                    ) {
+                        setTag(bot, tag, valueHolder[tag]);
+                    } else {
+                        setTagMask(
+                            bot,
+                            tag,
+                            valueHolder[tag],
+                            options.tagMaskSpace || 'tempLocal'
+                        );
+                    }
+                })
+                .onComplete(() => {
+                    context.removeBotTimer(bot.id, 'animation', tween.getId());
+                    resolve();
+                })
+                .start(context.localTime);
+
+            context.recordBotTimer(bot.id, {
+                type: 'animation',
+                timerId: tween.getId(),
+                tag: tag,
+                cancel: () => {
+                    tween.stop();
+                    reject(new Error('The animation was canceled.'));
+                },
+            });
+        });
+    }
+
+    /**
+     * Cancels the animations that are running on the given bot(s).
+     * @param bot The bot or list of bots that should cancel their animations.
+     * @param tag The tag that the animations should be canceld for. If omitted then all tags will be canceled.
+     */
+    function clearAnimations(
+        bot: RuntimeBot | (RuntimeBot | string)[] | string,
+        tag?: string
+    ) {
+        const bots = Array.isArray(bot)
+            ? bot
+                  .map((b) => (typeof b === 'string' ? getBot('id', b) : b))
+                  .filter((b) => !!b)
+            : typeof bot === 'string'
+            ? getBots('id', bot)
+            : [bot];
+
+        for (let bot of bots) {
+            const timers = context.getBotTimers(bot.id);
+            for (let timer of timers) {
+                if (timer.type === 'animation' && timer.cancel) {
+                    if (!hasValue(tag) || timer.tag === tag) {
+                        timer.cancel();
+                        context.removeBotTimer(
+                            bot.id,
+                            timer.type,
+                            timer.timerId
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     // /**
     //  * Sends a web request based on the given options.
     //  * @param options The options that specify where and what to send in the web request.
@@ -2857,7 +3162,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param action The action to reject.
      */
     function reject(action: any) {
-        const event = calcReject(getOriginalObject(action));
+        const original = getOriginalObject(action);
+        const event = Array.isArray(original)
+            ? calcReject(...original)
+            : calcReject(original);
         return addAction(event);
     }
 
@@ -3426,7 +3734,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getStats(): PerformanceStats {
         return {
             numberOfBots: context.bots.length,
-            shoutTimers: context.getShoutTimers(),
+            shoutTimes: context.getShoutTimers(),
+            numberOfActiveTimers: context.getNumberOfActiveTimers(),
         };
     }
 
@@ -3767,13 +4076,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * ]);
      *
      */
-    function create(...mods: Mod[]) {
-        return createBase(() => uuidv4(), ...mods);
+    function create(botId: string, ...mods: Mod[]) {
+        return createBase(botId, () => uuidv4(), ...mods);
     }
 
-    function createBase(idFactory: () => string, ...datas: Mod[]) {
-        let parent = context.currentBot;
-        let parentDiff = parent ? { creator: getID(parent) } : {};
+    function createBase(
+        botId: string,
+        idFactory: () => string,
+        ...datas: Mod[]
+    ) {
+        let parentDiff = botId ? { creator: botId } : {};
         return createFromMods(idFactory, parentDiff, ...datas);
     }
 

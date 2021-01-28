@@ -20,15 +20,15 @@ export function readFileText(data: File): Promise<string> {
         try {
             const reader = new FileReader();
 
-            reader.onerror = e => {
+            reader.onerror = (e) => {
                 reject(reader.error);
             };
 
-            reader.onabort = e => {
+            reader.onabort = (e) => {
                 reject(new Error('The file read operation was aborted.'));
             };
 
-            reader.onload = e => {
+            reader.onload = (e) => {
                 resolve(<string>reader.result);
             };
 
@@ -44,15 +44,15 @@ export function readFileArrayBuffer(data: File): Promise<ArrayBuffer> {
         try {
             const reader = new FileReader();
 
-            reader.onerror = e => {
+            reader.onerror = (e) => {
                 reject(reader.error);
             };
 
-            reader.onabort = e => {
+            reader.onabort = (e) => {
                 reject(new Error('The file read operation was aborted.'));
             };
 
-            reader.onload = e => {
+            reader.onload = (e) => {
                 resolve(<ArrayBuffer>reader.result);
             };
 
@@ -61,4 +61,36 @@ export function readFileArrayBuffer(data: File): Promise<ArrayBuffer> {
             reject(ex);
         }
     });
+}
+
+const textFileExtensions = new Set([
+    '.aux',
+    '.json',
+    '.txt',
+    '.md',
+    '.html',
+    '.js',
+    '.ts',
+]);
+
+export async function getFileData(
+    file: File
+): Promise<string | ArrayBuffer | object> {
+    try {
+        let textData: string = null;
+        for (let textExt of textFileExtensions) {
+            if (file.name.endsWith(textExt)) {
+                textData = await readFileText(file);
+                break;
+            }
+        }
+
+        if (textData !== null) {
+            return textData;
+        }
+    } catch {
+        return await readFileArrayBuffer(file);
+    }
+
+    return await readFileArrayBuffer(file);
 }

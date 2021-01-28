@@ -155,6 +155,10 @@ export class ClientServer {
             })
         );
 
+        this._app.get('/api/manifest', (req, res) => {
+            res.sendFile(path.join(this._config.dist, this._player.manifest));
+        });
+
         this._app.use(express.static(this._config.dist));
 
         const driveMiddleware = [
@@ -343,6 +347,18 @@ export class ClientServer {
             })
         );
         */
+
+        this._app.get('/api/*', (req, res) => {
+            res.sendStatus(404);
+        });
+
+        this._app.get('/terms', (req, res) => {
+            res.sendFile(path.join(this._config.dist, 'terms-of-service.txt'));
+        });
+
+        this._app.get('/privacy-policy', (req, res) => {
+            res.sendFile(path.join(this._config.dist, 'privacy-policy.txt'));
+        });
 
         this._app.get('*', (req, res) => {
             res.sendFile(path.join(this._config.dist, this._player.index));

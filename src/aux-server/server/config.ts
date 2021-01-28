@@ -63,6 +63,7 @@ export interface TLSOptions {
 
 export interface ClientConfig {
     index: string;
+    manifest: string;
     web: WebConfig;
 }
 

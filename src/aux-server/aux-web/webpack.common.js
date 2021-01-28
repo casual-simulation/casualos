@@ -9,6 +9,7 @@ const WorkboxPlugin = require('workbox-webpack-plugin');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 const webpack = require('webpack');
 const { merge } = require('webpack-merge');
+const WebpackAssetsManifest = require('webpack-assets-manifest');
 
 const commitHash = childProcess
     .execSync('git rev-parse HEAD')
@@ -34,11 +35,19 @@ function playerConfig() {
                 '..',
                 'aux-vm-browser',
                 'html',
-                'IframeEntry.ts'
+                'IframeEntry.js'
             ),
             'service-worker': path.resolve(
                 __dirname,
                 './shared/service-worker.ts'
+            ),
+            worker: path.resolve(
+                __dirname,
+                '..',
+                '..',
+                'aux-vm-browser',
+                'vm',
+                'WorkerEntry.ts'
             ),
         },
         plugins: [
@@ -111,8 +120,33 @@ function playerConfig() {
                         ),
                         to: path.resolve(__dirname, 'dist', 'gltf-draco'),
                     },
+                    {
+                        from: path.resolve(__dirname, 'aux-player', 'legal'),
+                        to: path.resolve(__dirname, 'dist'),
+                    },
+                    {
+                        from: path.resolve(
+                            __dirname,
+                            'aux-player',
+                            'legal',
+                            'terms-of-service.txt'
+                        ),
+                        to: path.resolve(__dirname, 'dist', 'terms'),
+                        toType: 'file',
+                    },
+                    {
+                        from: path.resolve(
+                            __dirname,
+                            'aux-player',
+                            'legal',
+                            'privacy-policy.txt'
+                        ),
+                        to: path.resolve(__dirname, 'dist', 'privacy-policy'),
+                        toType: 'file',
+                    },
                 ],
             }),
+            new WebpackAssetsManifest(),
         ],
     });
 }
@@ -140,6 +174,7 @@ function commonPlugins() {
             GIT_TAG: JSON.stringify(latestTag),
             PROXY_CORS_REQUESTS: process.env.PROXY_CORS_REQUESTS !== 'false',
         }),
+        new webpack.NormalModuleReplacementPlugin(/^esbuild$/, 'esbuild-wasm'),
     ];
 }
 
@@ -212,7 +247,7 @@ function baseConfig() {
                     use: 'exports-loader?vg=vg',
                 },
                 {
-                    test: /\.(gltf|glb)$/,
+                    test: /\.(gltf|glb|wasm)$/,
                     use: [
                         {
                             loader: 'file-loader',

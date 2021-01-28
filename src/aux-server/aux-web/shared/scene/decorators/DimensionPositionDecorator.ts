@@ -31,6 +31,7 @@ import {
     LocalRotationTweenAction,
     LocalPositionTweenAction,
     enqueueAsyncError,
+    getEasing,
 } from '@casual-simulation/aux-common';
 import {
     Vector3,
@@ -385,49 +386,6 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
             this.bot3D.dimensionGroup.simulation3D.simulation.helper.transaction(
                 ...list
             );
-        }
-    }
-}
-
-function getEasing(easing: Easing): any {
-    switch (easing.type) {
-        case 'linear':
-        default:
-            return TWEEN.Easing.Linear.None;
-        case 'circular':
-            return resolveEaseType(easing.mode, TWEEN.Easing.Circular);
-        case 'cubic':
-            return resolveEaseType(easing.mode, TWEEN.Easing.Cubic);
-        case 'exponential':
-            return resolveEaseType(easing.mode, TWEEN.Easing.Exponential);
-        case 'elastic':
-            return resolveEaseType(easing.mode, TWEEN.Easing.Elastic);
-        case 'quadratic':
-            return resolveEaseType(easing.mode, TWEEN.Easing.Quadratic);
-        case 'quartic':
-            return resolveEaseType(easing.mode, TWEEN.Easing.Quartic);
-        case 'quintic':
-            return resolveEaseType(easing.mode, TWEEN.Easing.Quintic);
-        case 'sinusoidal':
-            return resolveEaseType(easing.mode, TWEEN.Easing.Sinusoidal);
-    }
-}
-
-function resolveEaseType(
-    mode: EaseMode,
-    val: typeof TWEEN.Easing.Circular | typeof TWEEN.Easing.Linear
-): any {
-    if ('None' in val) {
-        return val.None;
-    } else {
-        switch (mode) {
-            case 'in':
-                return val.In;
-            case 'out':
-                return val.Out;
-            case 'inout':
-            default:
-                return val.InOut;
         }
     }
 }

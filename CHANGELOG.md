@@ -1,5 +1,79 @@
 # CasualOS Changelog
 
+## V1.4.0
+
+#### Date: 1/27/2021
+
+### :rocket: Improvements
+
+-   Added an initial implementation of custom portals.
+    -   Custom portals are a way to write scripts that can interact directly with the web browser. This gives you the ability to do anything that is possible from inside a web browser.
+    -   The following functions are now available:
+        -   `portal.register(portalID, options?)`
+        -   `portal.addEntryPoint(portalID, tag)`
+        -   See the documentation for usage information.
+
+## V1.3.14
+
+#### Date: 1/25/2021
+
+### :rocket: Improvements
+
+-   Updated the Terms of Service and Privacy Policy documents.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where animations would not run while in VR/AR.
+
+## V1.3.13
+
+#### Date: 1/18/2021
+
+### :rocket: Improvements
+
+-   Added the `player.showUploadFiles()` function.
+    -   Shows a dialog that can be used to upload arbitrary files.
+    -   Returns a promise that resolves with the list of files that were uploaded.
+    -   See the documentation for more info.
+-   Added the `portal` form.
+    -   Displays an entire dimension in place of the bot form.
+    -   When set, `#formAddress` will be used as the dimension that should be loaded.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bot labels would flicker when scaling the bot.
+-   Fixed an issue where tag masks would be incorrectly recorded by the UI as being removed in some cases.
+-   Fixed an issue where lines would render incorrectly on the first frame they were setup on.
+
+## V1.3.12
+
+#### Date: 1/13/2021
+
+### :rocket: Improvements
+
+-   Added the Terms of Service and Privacy Policy documents.
+    -   The Terms of Service are available at `/terms` (or at `/terms-of-service.txt`).
+    -   The Privacy Policy is available at `/privacy-policy` (or at `/privacy-policy.txt`).
+-   Added the ability to keep track of the number of `setTimeout()` and `setInterval()` timers that are currently active via the `numberOfActiveTimers` property returned from `perf.getStats()`.
+-   Added the `animateTag(bot, tag, options)` and `clearAnimations(bot, tag?)` functions.
+    -   `animateTag(bot, tag, options)` - Iteratively changes a tag mask value over time based on the options you provide.
+        -   `bot` is the bot or list of bots that should be animated.
+        -   `tag` is the tag that should be animated.
+        -   `options` is an object that specifies how the tag should be animated. It has the following properties:
+            -   `fromValue` - The starting value for the animation.
+            -   `toValue` - The ending value.
+            -   `duration` - The number of seconds that it should take for the tag to go from the starting value to the ending value.
+            -   `easing` - The options for easing the animation.
+            -   `tagMaskSpace` - The space that the tag should be changed in. If set to `false` then the tag on the bot will be directly edited.
+    -   `clearAnimations(bot, tag?)` - Cancels animations on a bot.
+        -   `bot` - The bot or list of bots that should have their animations canceled.
+        -   `tag` - Is optional and is the tag that the animations should be canceled for.
+
+### :bug: Bug Fixes
+
+-   Fixed issues with `#labelFontSize = auto` when `#labelPosition != front` or when the bot is rotated.
+-   Fixed an issue where non-ASCII characters were being corrupted on download.
+
 ## V1.3.11
 
 #### Date: 1/5/2021
@@ -14,6 +88,8 @@
         -   `breakCharacters` - Specifies that the system should insert line breaks inside words if needed.
         -   `breakWords` - Specifies that the system should insert line breaks between words if needed.
         -   `none` - Specifies that the system should not insert line breaks.
+-   Added the ability to control the color of the placeholder text in the chat bar.
+    -   Use the `placeholderColor` option when calling `player.showChat()`.
 
 ### :bug: Bug Fixes
 

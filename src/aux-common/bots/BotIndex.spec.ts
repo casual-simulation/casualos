@@ -1,5 +1,5 @@
 import { BotIndex, BotIndexEvent } from './BotIndex';
-import { createBot } from './BotCalculations';
+import { createBot, createPrecalculatedBot } from './BotCalculations';
 import { merge } from '../utils';
 import { skip } from 'rxjs/operators';
 
@@ -125,6 +125,36 @@ describe('BotIndex', () => {
 
             expect(results).toEqual([final]);
         });
+
+        it('should use the calculated tag values', () => {
+            const test = createPrecalculatedBot('test', {
+                ghi: 'jkl',
+                mno: 'pqr',
+            });
+            subject.addBots([test]);
+
+            const update = {
+                values: {
+                    abc: 123,
+                },
+            } as const;
+
+            const final = merge(test, update);
+            const events = subject.updateBots([
+                {
+                    bot: final,
+                    tags: new Set(['abc']),
+                },
+            ]);
+
+            expect(events).toEqual([
+                {
+                    bot: final,
+                    tag: 'abc',
+                    type: 'bot_tag_added',
+                },
+            ]);
+        });
     });
 
     describe('removeBots()', () => {
@@ -154,7 +184,7 @@ describe('BotIndex', () => {
         it('should issue bot_tag_added events when a bot is added for the tag', () => {
             let events: BotIndexEvent[] = [];
 
-            subject.watchTag('abc').subscribe(e => events.push(...e));
+            subject.watchTag('abc').subscribe((e) => events.push(...e));
 
             const test = createBot('test', {
                 abc: 'def',
@@ -182,7 +212,7 @@ describe('BotIndex', () => {
             });
             subject.addBots([test]);
 
-            subject.watchTag('abc').subscribe(e => events.push(...e));
+            subject.watchTag('abc').subscribe((e) => events.push(...e));
             expect(events).toEqual([
                 {
                     type: 'bot_tag_added',
@@ -205,7 +235,7 @@ describe('BotIndex', () => {
             subject
                 .watchTag('abc')
                 .pipe(skip(1))
-                .subscribe(e => events.push(...e));
+                .subscribe((e) => events.push(...e));
 
             subject.removeBots(['test']);
 
@@ -213,6 +243,7 @@ describe('BotIndex', () => {
                 {
                     type: 'bot_tag_removed',
                     bot: test,
+                    oldBot: test,
                     tag: 'abc',
                 },
             ]);
@@ -231,7 +262,7 @@ describe('BotIndex', () => {
             subject
                 .watchTag('abc')
                 .pipe(skip(1))
-                .subscribe(e => events.push(...e));
+                .subscribe((e) => events.push(...e));
 
             let update = {
                 tags: {
@@ -266,7 +297,7 @@ describe('BotIndex', () => {
 
             let events: BotIndexEvent[] = [];
 
-            subject.watchTag('abc').subscribe(e => events.push(...e));
+            subject.watchTag('abc').subscribe((e) => events.push(...e));
 
             let update = {
                 tags: {
@@ -304,7 +335,7 @@ describe('BotIndex', () => {
             subject
                 .watchTag('abc')
                 .pipe(skip(1))
-                .subscribe(e => events.push(...e));
+                .subscribe((e) => events.push(...e));
 
             let update = {
                 tags: {
@@ -341,7 +372,7 @@ describe('BotIndex', () => {
             subject.addBots([test]);
 
             let events: BotIndexEvent[] = [];
-            subject.events.subscribe(e => events.push(...e));
+            subject.events.subscribe((e) => events.push(...e));
 
             expect(events).toEqual([
                 {

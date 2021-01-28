@@ -1,6 +1,7 @@
 <template>
     <div id="app">
         <load-app>
+            <custom-portals :vmOrigin="vmOrigin()"></custom-portals>
             <meet-portal>
                 <tag-portal>
                     <md-toolbar v-if="showChatBar">
@@ -9,6 +10,7 @@
                                 ref="chatBar"
                                 :prefill="chatBarPrefill"
                                 :placeholder="chatBarPlaceholder"
+                                :placeholderColor="chatBarPlaceholderColor"
                             ></bot-chat>
                         </div>
                     </md-toolbar>
@@ -87,7 +89,7 @@
             <md-dialog-confirm
                 v-if="simulationToRemove"
                 :md-active.sync="showRemoveSimulation"
-                md-title="Remove Channel"
+                md-title="Remove Server"
                 :md-content="`Remove ${simulationToRemove.displayName}?`"
                 @md-confirm="finishRemoveSimulation()"
             />
