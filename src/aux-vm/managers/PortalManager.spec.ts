@@ -368,10 +368,12 @@ describe('PortalManager', () => {
 
             expect(prefixes.slice(DEFAULT_SCRIPT_PREFIXES.length)).toEqual([
                 {
+                    portalId: 'test',
                     prefix: '🐦',
                     language: 'javascript',
                 },
                 {
+                    portalId: 'test',
                     prefix: '🔺',
                     language: 'javascript',
                 },
@@ -402,10 +404,12 @@ describe('PortalManager', () => {
 
             expect(prefixes.slice(DEFAULT_SCRIPT_PREFIXES.length)).toEqual([
                 {
+                    portalId: 'test',
                     prefix: '🐦',
                     language: 'javascript',
                 },
                 {
+                    portalId: 'test',
                     prefix: '🔺',
                     language: 'javascript',
                 },

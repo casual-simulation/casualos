@@ -10,10 +10,12 @@ import { remove } from 'lodash';
  */
 export const DEFAULT_SCRIPT_PREFIXES: ScriptPrefix[] = [
     {
+        portalId: null,
         prefix: '@',
         language: 'javascript',
     },
     {
+        portalId: null,
         prefix: DNA_TAG_PREFIX,
         language: 'json',
     },
@@ -64,6 +66,9 @@ export class PortalManager implements SubscriptionLike {
         return this._prefixesRemoved;
     }
 
+    /**
+     * Gets the script prefixes that are currently in use.
+     */
     get scriptPrefixes(): ScriptPrefix[] {
         return [...this._prefixes.values()];
     }
@@ -129,6 +134,7 @@ export class PortalManager implements SubscriptionLike {
                     if (nextPortal.scriptPrefixes) {
                         for (let prefix of nextPortal.scriptPrefixes) {
                             let prefixData: ScriptPrefix = {
+                                portalId: nextPortal.id,
                                 prefix,
                                 language: 'javascript',
                             };
@@ -153,6 +159,7 @@ export class PortalManager implements SubscriptionLike {
                     if (newPortal.scriptPrefixes) {
                         for (let prefix of newPortal.scriptPrefixes) {
                             let prefixData: ScriptPrefix = {
+                                portalId: newPortal.id,
                                 prefix,
                                 language: 'javascript',
                             };
@@ -231,6 +238,12 @@ export class PortalManager implements SubscriptionLike {
  * Defines data about a script prefix.
  */
 export interface ScriptPrefix {
+    /**
+     * The ID of the portal that defines this script prefix.
+     * If null, then it is system defined.
+     */
+    portalId: string | null;
+
     /**
      * The prefix.
      */

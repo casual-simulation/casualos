@@ -6,6 +6,10 @@
         <span v-else-if="isScript">
             <span class="at-symbol">@</span><span class="tag-name">{{ tag }}</span>
         </span>
+        <span v-else-if="prefix">
+            <span>{{ prefix }}</span
+            ><span class="tag-name">{{ tag }}</span>
+        </span>
         <span v-else>
             <span class="hashtag">#</span><span class="tag-name">{{ tag }}</span>
         </span>
