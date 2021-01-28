@@ -74,6 +74,7 @@ describe('PortalManager', () => {
                     style: {
                         abc: 'def',
                     },
+                    error: null,
                 },
             ]);
         });
@@ -112,10 +113,12 @@ describe('PortalManager', () => {
                 {
                     id: 'test-portal',
                     source: 'abc',
+                    error: null,
                 },
                 {
                     id: 'other-portal',
                     source: 'def',
+                    error: null,
                 },
             ]);
         });
@@ -156,10 +159,12 @@ describe('PortalManager', () => {
                     {
                         id: 'test-portal',
                         source: 'abc',
+                        error: null,
                     },
                     {
                         id: 'other-portal',
                         source: 'def',
+                        error: null,
                     },
                 ],
             ]);
@@ -198,6 +203,7 @@ describe('PortalManager', () => {
                 {
                     id: 'test-portal',
                     source: 'abc',
+                    error: null,
                 },
             ]);
         });
@@ -259,10 +265,12 @@ describe('PortalManager', () => {
                     oldPortal: {
                         id: 'test-portal',
                         source: 'abc',
+                        error: null,
                     },
                     portal: {
                         id: 'test-portal',
                         source: 'different',
+                        error: null,
                     },
                 },
             ]);
@@ -291,6 +299,7 @@ describe('PortalManager', () => {
                     oldPortal: {
                         id: 'test-portal',
                         source: 'abc',
+                        error: null,
                     },
                     portal: {
                         id: 'test-portal',
@@ -299,6 +308,7 @@ describe('PortalManager', () => {
                         style: {
                             anything: true,
                         },
+                        error: null,
                     },
                 },
             ]);
@@ -335,10 +345,12 @@ describe('PortalManager', () => {
                     oldPortal: {
                         id: 'test-portal',
                         source: 'abc',
+                        error: null,
                     },
                     portal: {
                         id: 'test-portal',
                         source: 'different3',
+                        error: null,
                     },
                 },
             ]);
