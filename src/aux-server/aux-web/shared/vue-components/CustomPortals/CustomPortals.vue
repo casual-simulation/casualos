@@ -6,6 +6,7 @@
             :portalId="portal.portalId"
             :vmOrigin="vmOrigin"
             :source="portal.source"
+            :error="portal.error"
             :extraStyle="portal.style"
         >
         </custom-portal>

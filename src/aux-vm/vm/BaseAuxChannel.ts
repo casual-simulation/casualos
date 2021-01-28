@@ -421,15 +421,21 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this._portalBundler.onBundleUpdated.subscribe(
                 (bundle) => {
                     if (bundle.error) {
-                        console.error(
-                            `[BaseAuxChannel] Error with bundle: ${bundle.error}`
-                        );
+                        this._onPortalEvent.next([
+                            {
+                                type: 'update_portal_source',
+                                portalId: bundle.portalId,
+                                source: bundle.source,
+                                error: bundle.error,
+                            },
+                        ]);
                     } else {
                         this._onPortalEvent.next([
                             {
                                 type: 'update_portal_source',
                                 portalId: bundle.portalId,
                                 source: bundle.source,
+                                error: bundle.error,
                             },
                         ]);
                     }

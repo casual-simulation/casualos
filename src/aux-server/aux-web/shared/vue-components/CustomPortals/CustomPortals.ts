@@ -90,6 +90,7 @@ export default class CustomPortals extends Vue {
             simulationId: sim.id,
             portalId: portal.id,
             source: portal.source,
+            error: portal.error,
             style: {},
         });
     }
@@ -103,6 +104,7 @@ export default class CustomPortals extends Vue {
         );
         portal.source = update.portal.source;
         portal.style = update.portal.style;
+        portal.error = update.portal.error;
     }
 }
 
@@ -110,5 +112,6 @@ interface CustomPortalData {
     simulationId: string;
     portalId: string;
     source: string;
+    error: string;
     style: any;
 }

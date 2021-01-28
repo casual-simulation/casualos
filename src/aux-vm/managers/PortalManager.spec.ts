@@ -60,6 +60,7 @@ describe('PortalManager', () => {
                     type: 'update_portal_source',
                     portalId: 'test-portal',
                     source: 'abc',
+                    error: null,
                 },
             ]);
 
@@ -90,6 +91,7 @@ describe('PortalManager', () => {
                     type: 'update_portal_source',
                     portalId: 'test-portal',
                     source: 'abc',
+                    error: null,
                 },
                 {
                     type: 'register_portal',
@@ -100,6 +102,7 @@ describe('PortalManager', () => {
                     type: 'update_portal_source',
                     portalId: 'other-portal',
                     source: 'def',
+                    error: null,
                 },
             ]);
 
@@ -128,6 +131,7 @@ describe('PortalManager', () => {
                     type: 'update_portal_source',
                     portalId: 'test-portal',
                     source: 'abc',
+                    error: null,
                 },
                 {
                     type: 'register_portal',
@@ -138,6 +142,7 @@ describe('PortalManager', () => {
                     type: 'update_portal_source',
                     portalId: 'other-portal',
                     source: 'def',
+                    error: null,
                 },
             ]);
 
@@ -171,16 +176,19 @@ describe('PortalManager', () => {
                     type: 'update_portal_source',
                     portalId: 'test-portal',
                     source: 'abc',
+                    error: null,
                 },
                 {
                     type: 'update_portal_source',
                     portalId: 'test-portal',
                     source: '',
+                    error: null,
                 },
                 {
                     type: 'update_portal_source',
                     portalId: 'test-portal',
                     source: 'def',
+                    error: null,
                 },
             ]);
 
@@ -214,6 +222,7 @@ describe('PortalManager', () => {
                     type: 'update_portal_source',
                     portalId: 'test-portal',
                     source: 'abc',
+                    error: null,
                 },
                 {
                     type: 'register_portal',
@@ -224,6 +233,7 @@ describe('PortalManager', () => {
                     type: 'update_portal_source',
                     portalId: 'other-portal',
                     source: 'def',
+                    error: null,
                 },
             ]);
 
@@ -238,6 +248,7 @@ describe('PortalManager', () => {
                     type: 'update_portal_source',
                     portalId: 'test-portal',
                     source: 'different',
+                    error: null,
                 },
             ]);
 
@@ -301,16 +312,19 @@ describe('PortalManager', () => {
                     type: 'update_portal_source',
                     portalId: 'test-portal',
                     source: 'different1',
+                    error: null,
                 },
                 {
                     type: 'update_portal_source',
                     portalId: 'test-portal',
                     source: 'different2',
+                    error: null,
                 },
                 {
                     type: 'update_portal_source',
                     portalId: 'test-portal',
                     source: 'different3',
+                    error: null,
                 },
             ]);
 

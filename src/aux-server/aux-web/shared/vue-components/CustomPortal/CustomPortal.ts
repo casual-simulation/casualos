@@ -2,7 +2,11 @@ import {
     calculateMeetPortalAnchorPointOffset,
     DEFAULT_CUSTOM_PORTAL_ANCHOR_POINT,
 } from '@casual-simulation/aux-common';
-import { loadScript, reload } from '@casual-simulation/aux-vm-browser';
+import {
+    loadScript,
+    loadText,
+    reload,
+} from '@casual-simulation/aux-vm-browser';
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
@@ -19,6 +23,9 @@ export default class CustomPortal extends Vue {
 
     @Prop({ default: '' })
     source: string;
+
+    @Prop({ default: null })
+    error: string;
 
     @Prop({ default: {} })
     extraStyle: any;
@@ -51,7 +58,11 @@ export default class CustomPortal extends Vue {
     onLoad() {
         if (!this._loaded) {
             this._loaded = true;
-            this._injectScript();
+            if (this.error) {
+                this._injectError();
+            } else {
+                this._injectScript();
+            }
         }
     }
 
@@ -63,5 +74,9 @@ export default class CustomPortal extends Vue {
 
     private async _injectScript() {
         await loadScript(this._iframe.contentWindow, 'main', this.source);
+    }
+
+    private async _injectError() {
+        await loadText(this._iframe.contentWindow, 'error', this.error, 'pre');
     }
 }

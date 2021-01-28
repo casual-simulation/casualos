@@ -77,6 +77,42 @@ export function loadScript(iframeWindow: Window, id: string, source: string) {
 }
 
 /**
+ * Loads the script at the given URL into the given iframe window.
+ * @param iframeWindow The iframe.
+ * @param id The ID of the script.
+ * @param text The text to load.
+ * @param element The HTML element the text should be loaded in.
+ */
+export function loadText(
+    iframeWindow: Window,
+    id: string,
+    text: string,
+    element: string
+) {
+    return new Promise<void>((resolve, reject) => {
+        const listener = (message: MessageEvent) => {
+            if (message.source !== iframeWindow) {
+                return;
+            }
+            if (message.data.type === 'text_loaded' && message.data.id === id) {
+                globalThis.removeEventListener('message', listener);
+                resolve();
+            }
+        };
+        globalThis.addEventListener('message', listener);
+        iframeWindow.postMessage(
+            {
+                type: 'load_text',
+                id,
+                text,
+                element,
+            },
+            '*'
+        );
+    });
+}
+
+/**
  * Reloads the iframe.
  * @param iframeWindow The iframe to reload.
  */

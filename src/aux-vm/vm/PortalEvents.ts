@@ -37,4 +37,9 @@ export interface UpdatePortalSourceEvent {
      * The source code to use.
      */
     source: string;
+
+    /**
+     * The error that the portal ran into.
+     */
+    error: string;
 }

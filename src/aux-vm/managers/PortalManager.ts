@@ -107,6 +107,7 @@ export class PortalManager implements SubscriptionLike {
                     const nextPortal: PortalData = {
                         id: event.portalId,
                         source: currentPortal.source,
+                        error: null,
                         scriptPrefixes: event.options.scriptPrefixes,
                         style: event.options.style,
                     };
@@ -150,6 +151,7 @@ export class PortalManager implements SubscriptionLike {
                     const newPortal: PortalData = {
                         id: event.portalId,
                         source: null,
+                        error: null,
                         scriptPrefixes: event.options.scriptPrefixes,
                         style: event.options.style,
                     };
@@ -179,10 +181,17 @@ export class PortalManager implements SubscriptionLike {
                     const nextPortal: PortalData = {
                         ...currentPortal,
                         source: event.source,
+                        error: event.error,
                     };
-                    if (hasValue(nextPortal.source)) {
+                    if (
+                        hasValue(nextPortal.source) ||
+                        hasValue(nextPortal.error)
+                    ) {
                         this._portals.set(event.portalId, nextPortal);
-                        if (hasValue(currentPortal.source)) {
+                        if (
+                            hasValue(currentPortal.source) ||
+                            hasValue(currentPortal.error)
+                        ) {
                             // it is an update
                             let currentUpdate = updatedPortals.get(
                                 event.portalId
@@ -268,6 +277,11 @@ export interface PortalData {
      * The source code that the portal should use.
      */
     source: string;
+
+    /**
+     * The error the the portal ran into.
+     */
+    error: string;
 
     /**
      * The possible script prefixes for the portal.
