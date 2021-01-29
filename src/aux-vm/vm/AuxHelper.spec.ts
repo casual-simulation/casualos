@@ -28,6 +28,7 @@ import {
     revokeCertificate,
     setSpacePassword,
     updatedBot,
+    Bot,
 } from '@casual-simulation/aux-common';
 import { bot, tag, value } from '@casual-simulation/aux-common/aux-format-2';
 import { AuxHelper } from './AuxHelper';
@@ -713,6 +714,110 @@ describe('AuxHelper', () => {
                     <any>'TEST'
                 ),
                 userId: createBot('userId', undefined, 'shared'),
+            });
+        });
+
+        it('should ignore bots in partitions that are just tag masks', () => {
+            helper = createHelper({
+                def: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        test: <any>{
+                            masks: {
+                                incorrect: 1,
+                            },
+                        },
+                    },
+                }),
+                shared: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        test: <any>{
+                            masks: {
+                                incorrect: 2,
+                            },
+                        },
+                    },
+                }),
+                xyz: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        test: createBot('test', {
+                            correct: true,
+                        }),
+                    },
+                }),
+            });
+
+            expect(helper.botsState).toEqual({
+                test: {
+                    id: 'test',
+                    space: <any>'xyz',
+                    tags: {
+                        correct: true,
+                    },
+                    masks: {},
+                },
+            });
+            expect(Object.keys(helper.botsState)).toEqual(['test']);
+        });
+
+        it('should send update_bot events to the partition that stores the full bot', async () => {
+            const abc = createMemoryPartition({
+                type: 'memory',
+                initialState: {
+                    test: <any>{
+                        masks: {
+                            abc: {
+                                other: true,
+                            },
+                        },
+                    },
+                },
+            });
+            const shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {
+                    test: createBot('test'),
+                },
+            });
+            helper = createHelper({
+                abc,
+                shared,
+            });
+            helper.userId = 'test';
+
+            await helper.transaction(
+                botUpdated('test', {
+                    tags: {
+                        test: 123,
+                    },
+                })
+            );
+
+            await waitAsync();
+
+            expect(abc.state).toEqual({
+                test: <any>{
+                    masks: {
+                        abc: {
+                            other: true,
+                        },
+                    },
+                },
+            });
+            expect(shared.state).toEqual({
+                test: {
+                    id: 'test',
+                    tags: {
+                        test: 123,
+                    },
+                    masks: {
+                        abc: {
+                            other: true,
+                        },
+                    },
+                },
             });
         });
 
