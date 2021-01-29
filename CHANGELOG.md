@@ -13,6 +13,11 @@
         -   `portal.addEntryPoint(portalID, tag)`
         -   See the documentation for usage information.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue that broke bots in the `player` space when a `tempLocal` tag mask was put on them.
+-   Fixed an issue that prevented tag masks from being placed on new bots.
+
 ## V1.3.14
 
 #### Date: 1/25/2021
