@@ -16,8 +16,6 @@ import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
 import { Observable, SubscriptionLike } from 'rxjs';
 import { StoredAux } from '../StoredAux';
-import { AuxVM } from './AuxVM';
-import { PortalEvent } from './PortalEvents';
 
 /**
  * Defines an interface for the static members of an AUX.
@@ -60,11 +58,6 @@ export interface AuxChannel extends SubscriptionLike {
     onConnectionStateChanged: Observable<StatusUpdate>;
 
     /**
-     * The observable that should be triggered whenever a portal event occurs.
-     */
-    onPortalEvents: Observable<PortalEvent[]>;
-
-    /**
      * The observable that is resolved whenever an error occurs.
      */
     onError: Observable<AuxChannelErrorType>;
@@ -75,7 +68,6 @@ export interface AuxChannel extends SubscriptionLike {
      * @param onDeviceEvents The callback that should be triggered whenever a device event it emitted from the AUX.
      * @param onStateUpdated The callback that should be triggered whenever the bots state is updated.
      * @param onConnectionStateChanged The callback that should be triggered whenever the connection state changes.
-     * @param onPortalEvents The callback that should be triggered whenever a portal event occurs.
      * @param onError The callback that should be triggered whenever an error occurs.
      */
     init(
@@ -84,7 +76,6 @@ export interface AuxChannel extends SubscriptionLike {
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
-        onPortalEvents?: (events: PortalEvent[]) => void,
         onError?: (err: AuxChannelErrorType) => void
     ): Promise<void>;
 
@@ -94,7 +85,6 @@ export interface AuxChannel extends SubscriptionLike {
      * @param onDeviceEvents The callback that should be triggered whenever a device event it emitted from the AUX.
      * @param onStateUpdated The callback that should be triggered whenever the bots state is updated.
      * @param onConnectionStateChanged The callback that should be triggered whenever the connection state changes.
-     * @param onPortalEvents The callback that should be triggered whenever a portal event occurs.
      * @param onError The callback that should be triggered whenever an error occurs.
      */
     initAndWait(
@@ -103,7 +93,6 @@ export interface AuxChannel extends SubscriptionLike {
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
-        onPortalEvents?: (events: PortalEvent[]) => void,
         onError?: (err: AuxChannelErrorType) => void
     ): Promise<void>;
 

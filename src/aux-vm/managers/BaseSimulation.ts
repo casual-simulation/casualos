@@ -156,7 +156,7 @@ export class BaseSimulation implements Simulation {
         this._contexts = new BotDimensionManager(this._helper, this._index);
         this._connection = new ConnectionManager(this._vm);
         this._code = new CodeLanguageManager(this._vm);
-        this._portals = new PortalManager(this._vm);
+        // this._portals = new PortalManager(this._vm);
     }
 
     /**

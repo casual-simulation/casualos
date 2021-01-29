@@ -44,11 +44,6 @@ import { StatusHelper } from './StatusHelper';
 import { StoredAux } from '../StoredAux';
 import pick from 'lodash/pick';
 import flatMap from 'lodash/flatMap';
-import { RealtimeEditMode } from '@casual-simulation/aux-common/runtime/RuntimeBot';
-import { mergeVersions } from '@casual-simulation/aux-common/aux-format-2';
-import { AuxVM } from './AuxVM';
-import { Portal, PortalBundler } from './PortalBundler';
-import { PortalEvent } from './PortalEvents';
 
 export interface AuxChannelOptions {}
 
@@ -73,9 +68,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _onStateUpdated: Subject<StateUpdatedEvent>;
     private _onVersionUpdated: Subject<RuntimeStateVersion>;
     private _onConnectionStateChanged: Subject<StatusUpdate>;
-    private _onPortalEvent: Subject<PortalEvent[]>;
     private _onError: Subject<AuxChannelErrorType>;
-    private _portalBundler: PortalBundler;
 
     get onLocalEvents() {
         return this._onLocalEvents;
@@ -95,10 +88,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     get onConnectionStateChanged() {
         return this._onConnectionStateChanged;
-    }
-
-    get onPortalEvents() {
-        return this._onPortalEvent;
     }
 
     get onError() {
@@ -124,7 +113,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onStateUpdated = new Subject<StateUpdatedEvent>();
         this._onVersionUpdated = new Subject<RuntimeStateVersion>();
         this._onConnectionStateChanged = new Subject<StatusUpdate>();
-        this._onPortalEvent = new Subject();
         this._onError = new Subject<AuxChannelErrorType>();
         this._eventBuffer = [];
         this._hasInitialState = false;
@@ -167,7 +155,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
-        onPortalEvents?: (events: PortalEvent[]) => void,
         onError?: (err: AuxChannelErrorType) => void
     ): Promise<void> {
         if (onLocalEvents) {
@@ -183,9 +170,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this.onConnectionStateChanged.subscribe((s) =>
                 onConnectionStateChanged(s)
             );
-        }
-        if (onPortalEvents) {
-            this.onPortalEvents.subscribe((e) => onPortalEvents(e));
         }
         if (onDeviceEvents) {
             this.onDeviceEvents.subscribe((e) => onDeviceEvents(e));
@@ -203,7 +187,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
-        onPortalEvents?: (events: PortalEvent[]) => void,
         onError?: (err: AuxChannelErrorType) => void
     ) {
         const promise = this.onConnectionStateChanged
@@ -215,7 +198,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             onStateUpdated,
             onVersionUpdated,
             onConnectionStateChanged,
-            onPortalEvents,
             onError
         );
         await promise;
@@ -401,10 +383,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return helper;
     }
 
-    protected _createPortalBundler() {
-        return new PortalBundler();
-    }
-
     protected _registerSubscriptions() {
         this._subs.push(
             this._helper.localEvents.subscribe(
@@ -417,36 +395,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             ),
             this._helper.remoteEvents.subscribe((e) => {
                 this._sendRemoteEvents(e);
-            }),
-            this._portalBundler.onBundleUpdated.subscribe(
-                (bundle) => {
-                    if (bundle.error) {
-                        this._onPortalEvent.next([
-                            {
-                                type: 'update_portal_source',
-                                portalId: bundle.portalId,
-                                source: bundle.source,
-                                error: bundle.error,
-                            },
-                        ]);
-                    } else {
-                        this._onPortalEvent.next([
-                            {
-                                type: 'update_portal_source',
-                                portalId: bundle.portalId,
-                                source: bundle.source,
-                                error: bundle.error,
-                            },
-                        ]);
-                    }
-                },
-                (err) => {
-                    this._onError.next({
-                        type: 'general',
-                        message: err.toString(),
-                    });
-                }
-            )
+            })
         );
         for (let [, partition] of iteratePartitions(this._partitions)) {
             this._registerStateSubscriptionsForPartition(partition);
@@ -489,9 +438,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
         if (!this._helper) {
             this._helper = this._createAuxHelper();
-        }
-        if (!this._portalBundler) {
-            this._portalBundler = this._createPortalBundler();
         }
 
         this._handleStatusUpdated({
@@ -552,7 +498,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected _handleStateUpdated(event: StateUpdatedEvent) {
-        this._portalBundler.stateUpdated(event);
         this._onStateUpdated.next(event);
         if (!this._hasInitialState) {
             this._hasInitialState = true;
@@ -591,10 +536,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         for (let event of e) {
             if (event.type === 'load_space') {
                 this._loadPartition(event.space, event.config, event);
-            } else if (event.type === 'register_custom_portal') {
-                this._registerCustomPortal(event);
-            } else if (event.type === 'add_entry_point') {
-                this._addEntryPoint(event);
             }
         }
         this._onLocalEvents.next(e);
@@ -651,44 +592,44 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
     }
 
-    protected async _registerCustomPortal(
-        event: RegisterCustomPortalAction
-    ): Promise<void> {
-        try {
-            let currentPortal = this._portalBundler.getPortal(event.portalId);
-            const options: RegisterCustomPortalOptions = {
-                scriptPrefixes:
-                    event.options.scriptPrefixes ||
-                    currentPortal?.scriptPrefixes ||
-                    DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
-                style: event.options.style || currentPortal?.style || {},
-            };
+    // protected async _registerCustomPortal(
+    //     event: RegisterCustomPortalAction
+    // ): Promise<void> {
+    //     try {
+    //         let currentPortal = this._portalBundler.getPortal(event.portalId);
+    //         const options: RegisterCustomPortalOptions = {
+    //             scriptPrefixes:
+    //                 event.options.scriptPrefixes ||
+    //                 currentPortal?.scriptPrefixes ||
+    //                 DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
+    //             style: event.options.style || currentPortal?.style || {},
+    //         };
 
-            this._portalBundler.registerCustomPortal(event.portalId, options);
-            this._onPortalEvent.next([
-                {
-                    type: 'register_portal',
-                    portalId: event.portalId,
-                    options: options,
-                },
-            ]);
-            console.log(
-                `[BaseAuxChannel] Portal ${event.portalId} registered!`
-            );
-            await this._helper.transaction(asyncResult(event.taskId, null));
-        } catch (err) {
-            await this._helper.transaction(asyncError(event.taskId, err));
-        }
-    }
+    //         this._portalBundler.registerCustomPortal(event.portalId, options);
+    //         this._onPortalEvent.next([
+    //             {
+    //                 type: 'register_portal',
+    //                 portalId: event.portalId,
+    //                 options: options,
+    //             },
+    //         ]);
+    //         console.log(
+    //             `[BaseAuxChannel] Portal ${event.portalId} registered!`
+    //         );
+    //         await this._helper.transaction(asyncResult(event.taskId, null));
+    //     } catch (err) {
+    //         await this._helper.transaction(asyncError(event.taskId, err));
+    //     }
+    // }
 
-    protected async _addEntryPoint(event: AddEntryPointAction) {
-        try {
-            this._portalBundler.addEntryPoint(event.portalId, event);
-            await this._helper.transaction(asyncResult(event.taskId, null));
-        } catch (err) {
-            await this._helper.transaction(asyncError(event.taskId, err));
-        }
-    }
+    // protected async _addEntryPoint(event: AddEntryPointAction) {
+    //     try {
+    //         this._portalBundler.addEntryPoint(event.portalId, event);
+    //         await this._helper.transaction(asyncResult(event.taskId, null));
+    //     } catch (err) {
+    //         await this._helper.transaction(asyncError(event.taskId, err));
+    //     }
+    // }
 
     private async _initUserBot() {
         if (!this.user) {

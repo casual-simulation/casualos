@@ -25,7 +25,6 @@ import union from 'lodash/union';
 import { AuxUser } from '../../AuxUser';
 import { StoredAux } from '../../StoredAux';
 import { ChannelActionResult } from '../../vm';
-import { PortalEvent } from '../PortalEvents';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -43,7 +42,6 @@ export class TestAuxVM implements AuxVM {
     connectionStateChanged: Subject<StatusUpdate>;
     versionUpdated: Subject<RuntimeStateVersion>;
     onError: Subject<AuxChannelErrorType>;
-    portalEvents: Subject<PortalEvent[]>;
     grant: string;
     user: AuxUser;
 
@@ -75,7 +73,6 @@ export class TestAuxVM implements AuxVM {
         this.connectionStateChanged = new Subject<StatusUpdate>();
         this.onError = new Subject<AuxChannelErrorType>();
         this.versionUpdated = new Subject<RuntimeStateVersion>();
-        this.portalEvents = new Subject();
     }
 
     registerCustomPortal(id: string): Promise<void> {

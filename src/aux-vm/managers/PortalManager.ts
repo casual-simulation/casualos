@@ -1,9 +1,13 @@
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { startWith, tap } from 'rxjs/operators';
-import { PortalEvent } from '../vm/PortalEvents';
 import { AuxVM } from '../vm/AuxVM';
-import { DNA_TAG_PREFIX, hasValue } from '@casual-simulation/aux-common';
+import {
+    DNA_TAG_PREFIX,
+    hasValue,
+    LocalActions,
+} from '@casual-simulation/aux-common';
 import { remove } from 'lodash';
+import { Bundle, PortalBundler } from './PortalBundler';
 
 /**
  * The list of default script prefixes.
@@ -73,7 +77,7 @@ export class PortalManager implements SubscriptionLike {
         return [...this._prefixes.values()];
     }
 
-    constructor(vm: AuxVM) {
+    constructor(vm: AuxVM, onBundleUpdated: Observable<Bundle>) {
         this._portals = new Map();
         this._prefixes = new Map();
         this._portalsDiscovered = new Subject();
@@ -87,20 +91,23 @@ export class PortalManager implements SubscriptionLike {
         }
 
         this._sub.add(
-            vm.portalEvents
-                .pipe(tap((events) => this._onPortalEvents(events)))
+            onBundleUpdated
+                .pipe(tap((bundle) => this._onBundleUpdated(bundle)))
                 .subscribe()
+        );
+        this._sub.add(
+            vm.localEvents.pipe(tap((e) => this._onLocalEvents(e))).subscribe()
         );
     }
 
-    private _onPortalEvents(events: PortalEvent[]): void {
+    private _onLocalEvents(events: LocalActions[]): void {
         let newPortals: PortalData[] = [];
         let newPrefixes: ScriptPrefix[] = [];
         let updatedPortals: Map<string, PortalUpdate> = new Map();
         let removedPrefixes: Set<string> = new Set();
 
         for (let event of events) {
-            if (event.type === 'register_portal') {
+            if (event.type === 'register_custom_portal') {
                 if (this._portals.has(event.portalId)) {
                     const currentPortal = this._portals.get(event.portalId);
                     // TODO: update properties
@@ -174,45 +181,57 @@ export class PortalManager implements SubscriptionLike {
                         }
                     }
                 }
-            } else if (event.type === 'update_portal_source') {
-                const currentPortal = this._portals.get(event.portalId);
+            }
+        }
 
-                if (currentPortal) {
-                    const nextPortal: PortalData = {
-                        ...currentPortal,
-                        source: event.source,
-                        error: event.error,
-                    };
-                    if (
-                        hasValue(nextPortal.source) ||
-                        hasValue(nextPortal.error)
-                    ) {
-                        this._portals.set(event.portalId, nextPortal);
-                        if (
-                            hasValue(currentPortal.source) ||
-                            hasValue(currentPortal.error)
-                        ) {
-                            // it is an update
-                            let currentUpdate = updatedPortals.get(
-                                event.portalId
-                            );
-                            if (!currentUpdate) {
-                                currentUpdate = {
-                                    oldPortal: currentPortal,
-                                    portal: nextPortal,
-                                };
-                                updatedPortals.set(
-                                    event.portalId,
-                                    currentUpdate
-                                );
-                            } else {
-                                currentUpdate.portal = nextPortal;
-                            }
-                        } else {
-                            // it is a portal that does not have source yet
-                            newPortals.push(nextPortal);
-                        }
+        if (newPortals.length > 0) {
+            this._portalsDiscovered.next(newPortals);
+        }
+        if (updatedPortals.size > 0) {
+            this._portalsUpdated.next([...updatedPortals.values()]);
+        }
+        if (newPrefixes.length > 0) {
+            this._prefixesDiscovered.next(newPrefixes);
+        }
+        if (removedPrefixes.size > 0) {
+            this._prefixesRemoved.next([...removedPrefixes.values()]);
+        }
+    }
+
+    private _onBundleUpdated(bundle: Bundle): void {
+        let newPortals: PortalData[] = [];
+        let newPrefixes: ScriptPrefix[] = [];
+        let updatedPortals: Map<string, PortalUpdate> = new Map();
+        let removedPrefixes: Set<string> = new Set();
+
+        const currentPortal = this._portals.get(bundle.portalId);
+
+        if (currentPortal) {
+            const nextPortal: PortalData = {
+                ...currentPortal,
+                source: bundle.source,
+                error: bundle.error,
+            };
+            if (hasValue(nextPortal.source) || hasValue(nextPortal.error)) {
+                this._portals.set(bundle.portalId, nextPortal);
+                if (
+                    hasValue(currentPortal.source) ||
+                    hasValue(currentPortal.error)
+                ) {
+                    // it is an update
+                    let currentUpdate = updatedPortals.get(bundle.portalId);
+                    if (!currentUpdate) {
+                        currentUpdate = {
+                            oldPortal: currentPortal,
+                            portal: nextPortal,
+                        };
+                        updatedPortals.set(bundle.portalId, currentUpdate);
+                    } else {
+                        currentUpdate.portal = nextPortal;
                     }
+                } else {
+                    // it is a portal that does not have source yet
+                    newPortals.push(nextPortal);
                 }
             }
         }

@@ -1,7 +1,11 @@
-import { DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES } from '@casual-simulation/aux-common';
+import {
+    DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
+    LocalActions,
+} from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import { Subscription } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
+import { Bundle } from './PortalBundler';
 import {
     DEFAULT_SCRIPT_PREFIXES,
     PortalData,
@@ -14,11 +18,15 @@ describe('PortalManager', () => {
     let manager: PortalManager;
     let vm: TestAuxVM;
     let sub: Subscription;
+    let bundleUpdated: Subject<Bundle>;
+    let localEvents: Subject<LocalActions[]>;
 
     beforeEach(() => {
         sub = new Subscription();
         vm = new TestAuxVM();
-        manager = new PortalManager(vm);
+        localEvents = vm.localEvents = new Subject();
+        bundleUpdated = new Subject();
+        manager = new PortalManager(vm, bundleUpdated);
     });
 
     afterEach(() => {
@@ -38,10 +46,11 @@ describe('PortalManager', () => {
         it('should not resolve registered portals until they have some source', async () => {
             expect(portals).toEqual([]);
 
-            vm.portalEvents.next([
+            localEvents.next([
                 {
-                    type: 'register_portal',
+                    type: 'register_custom_portal',
                     portalId: 'test-portal',
+                    taskId: 'task',
                     options: {
                         scriptPrefixes: ['🙂'],
                         style: {
@@ -55,14 +64,12 @@ describe('PortalManager', () => {
 
             expect(portals).toEqual([]);
 
-            vm.portalEvents.next([
-                {
-                    type: 'update_portal_source',
-                    portalId: 'test-portal',
-                    source: 'abc',
-                    error: null,
-                },
-            ]);
+            bundleUpdated.next({
+                portalId: 'test-portal',
+                source: 'abc',
+                error: null,
+                warnings: [],
+            });
 
             await waitAsync();
 
@@ -82,30 +89,34 @@ describe('PortalManager', () => {
         it('should resolve multiple portals at the same time', async () => {
             expect(portals).toEqual([]);
 
-            vm.portalEvents.next([
+            localEvents.next([
                 {
-                    type: 'register_portal',
+                    type: 'register_custom_portal',
                     portalId: 'test-portal',
+                    taskId: 'task1',
                     options: {},
                 },
                 {
-                    type: 'update_portal_source',
-                    portalId: 'test-portal',
-                    source: 'abc',
-                    error: null,
-                },
-                {
-                    type: 'register_portal',
+                    type: 'register_custom_portal',
                     portalId: 'other-portal',
+                    taskId: 'task2',
                     options: {},
-                },
-                {
-                    type: 'update_portal_source',
-                    portalId: 'other-portal',
-                    source: 'def',
-                    error: null,
                 },
             ]);
+
+            bundleUpdated.next({
+                portalId: 'test-portal',
+                source: 'abc',
+                error: null,
+                warnings: [],
+            });
+
+            bundleUpdated.next({
+                portalId: 'other-portal',
+                source: 'def',
+                error: null,
+                warnings: [],
+            });
 
             await waitAsync();
 
@@ -124,30 +135,34 @@ describe('PortalManager', () => {
         });
 
         it('should resolve portals that already have source', async () => {
-            vm.portalEvents.next([
+            localEvents.next([
                 {
-                    type: 'register_portal',
+                    type: 'register_custom_portal',
                     portalId: 'test-portal',
+                    taskId: 'task1',
                     options: {},
                 },
                 {
-                    type: 'update_portal_source',
-                    portalId: 'test-portal',
-                    source: 'abc',
-                    error: null,
-                },
-                {
-                    type: 'register_portal',
+                    type: 'register_custom_portal',
                     portalId: 'other-portal',
+                    taskId: 'task1',
                     options: {},
-                },
-                {
-                    type: 'update_portal_source',
-                    portalId: 'other-portal',
-                    source: 'def',
-                    error: null,
                 },
             ]);
+
+            bundleUpdated.next({
+                portalId: 'test-portal',
+                source: 'abc',
+                error: null,
+                warnings: [],
+            });
+
+            bundleUpdated.next({
+                portalId: 'other-portal',
+                source: 'def',
+                error: null,
+                warnings: [],
+            });
 
             await waitAsync();
 
@@ -171,31 +186,33 @@ describe('PortalManager', () => {
         });
 
         it('should not resolve portals that had no source', async () => {
-            vm.portalEvents.next([
+            localEvents.next([
                 {
-                    type: 'register_portal',
+                    type: 'register_custom_portal',
                     portalId: 'test-portal',
+                    taskId: 'task1',
                     options: {},
                 },
-                {
-                    type: 'update_portal_source',
-                    portalId: 'test-portal',
-                    source: 'abc',
-                    error: null,
-                },
-                {
-                    type: 'update_portal_source',
-                    portalId: 'test-portal',
-                    source: '',
-                    error: null,
-                },
-                {
-                    type: 'update_portal_source',
-                    portalId: 'test-portal',
-                    source: 'def',
-                    error: null,
-                },
             ]);
+
+            bundleUpdated.next({
+                portalId: 'test-portal',
+                source: 'abc',
+                error: null,
+                warnings: [],
+            });
+            bundleUpdated.next({
+                portalId: 'test-portal',
+                source: '',
+                error: null,
+                warnings: [],
+            });
+            bundleUpdated.next({
+                portalId: 'test-portal',
+                source: 'def',
+                error: null,
+                warnings: [],
+            });
 
             await waitAsync();
 
@@ -218,30 +235,33 @@ describe('PortalManager', () => {
                 manager.portalsUpdated.subscribe((p) => updates.push(...p))
             );
 
-            vm.portalEvents.next([
+            localEvents.next([
                 {
-                    type: 'register_portal',
+                    type: 'register_custom_portal',
                     portalId: 'test-portal',
+                    taskId: 'task1',
                     options: {},
                 },
                 {
-                    type: 'update_portal_source',
-                    portalId: 'test-portal',
-                    source: 'abc',
-                    error: null,
-                },
-                {
-                    type: 'register_portal',
+                    type: 'register_custom_portal',
                     portalId: 'other-portal',
+                    taskId: 'task2',
                     options: {},
-                },
-                {
-                    type: 'update_portal_source',
-                    portalId: 'other-portal',
-                    source: 'def',
-                    error: null,
                 },
             ]);
+
+            bundleUpdated.next({
+                portalId: 'test-portal',
+                source: 'abc',
+                error: null,
+                warnings: [],
+            });
+            bundleUpdated.next({
+                portalId: 'other-portal',
+                source: 'def',
+                error: null,
+                warnings: [],
+            });
 
             await waitAsync();
         });
@@ -249,14 +269,12 @@ describe('PortalManager', () => {
         it('should resolve updates to a portal', async () => {
             expect(updates).toEqual([]);
 
-            vm.portalEvents.next([
-                {
-                    type: 'update_portal_source',
-                    portalId: 'test-portal',
-                    source: 'different',
-                    error: null,
-                },
-            ]);
+            bundleUpdated.next({
+                portalId: 'test-portal',
+                source: 'different',
+                error: null,
+                warnings: [],
+            });
 
             await waitAsync();
 
@@ -279,10 +297,11 @@ describe('PortalManager', () => {
         it('should resolve settings updates to a portal', async () => {
             expect(updates).toEqual([]);
 
-            vm.portalEvents.next([
+            localEvents.next([
                 {
-                    type: 'register_portal',
+                    type: 'register_custom_portal',
                     portalId: 'test-portal',
+                    taskId: 'task1',
                     options: {
                         scriptPrefixes: ['custom'],
                         style: {
@@ -317,26 +336,24 @@ describe('PortalManager', () => {
         it('should collapse multiple source updates', async () => {
             expect(updates).toEqual([]);
 
-            vm.portalEvents.next([
-                {
-                    type: 'update_portal_source',
-                    portalId: 'test-portal',
-                    source: 'different1',
-                    error: null,
-                },
-                {
-                    type: 'update_portal_source',
-                    portalId: 'test-portal',
-                    source: 'different2',
-                    error: null,
-                },
-                {
-                    type: 'update_portal_source',
-                    portalId: 'test-portal',
-                    source: 'different3',
-                    error: null,
-                },
-            ]);
+            bundleUpdated.next({
+                portalId: 'test-portal',
+                source: 'different1',
+                error: null,
+                warnings: [],
+            });
+            bundleUpdated.next({
+                portalId: 'test-portal',
+                source: 'different2',
+                error: null,
+                warnings: [],
+            });
+            bundleUpdated.next({
+                portalId: 'test-portal',
+                source: 'different3',
+                error: null,
+                warnings: [],
+            });
 
             await waitAsync();
 
@@ -345,6 +362,30 @@ describe('PortalManager', () => {
                     oldPortal: {
                         id: 'test-portal',
                         source: 'abc',
+                        error: null,
+                    },
+                    portal: {
+                        id: 'test-portal',
+                        source: 'different1',
+                        error: null,
+                    },
+                },
+                {
+                    oldPortal: {
+                        id: 'test-portal',
+                        source: 'different1',
+                        error: null,
+                    },
+                    portal: {
+                        id: 'test-portal',
+                        source: 'different2',
+                        error: null,
+                    },
+                },
+                {
+                    oldPortal: {
+                        id: 'test-portal',
+                        source: 'different2',
                         error: null,
                     },
                     portal: {
@@ -379,9 +420,10 @@ describe('PortalManager', () => {
         });
 
         it('should resolve when a new portal is added', async () => {
-            vm.portalEvents.next([
+            localEvents.next([
                 {
-                    type: 'register_portal',
+                    type: 'register_custom_portal',
+                    taskId: 'task1',
                     portalId: 'test',
                     options: {
                         scriptPrefixes: ['🐦', '🔺'],
@@ -407,9 +449,10 @@ describe('PortalManager', () => {
         });
 
         it('should do nothing when a portal is updated but the prefixes stay the same', async () => {
-            vm.portalEvents.next([
+            localEvents.next([
                 {
-                    type: 'register_portal',
+                    type: 'register_custom_portal',
+                    taskId: 'task1',
                     portalId: 'test',
                     options: {
                         scriptPrefixes: ['🐦', '🔺'],
@@ -417,7 +460,8 @@ describe('PortalManager', () => {
                     },
                 },
                 {
-                    type: 'register_portal',
+                    type: 'register_custom_portal',
+                    taskId: 'task2',
                     portalId: 'test',
                     options: {
                         scriptPrefixes: ['🐦', '🔺'],
@@ -443,18 +487,20 @@ describe('PortalManager', () => {
         });
 
         it('should emit an event for when a prefix is removed', async () => {
-            vm.portalEvents.next([
+            localEvents.next([
                 {
-                    type: 'register_portal',
+                    type: 'register_custom_portal',
                     portalId: 'test',
+                    taskId: 'task1',
                     options: {
                         scriptPrefixes: ['🐦', '🔺'],
                         style: {},
                     },
                 },
                 {
-                    type: 'register_portal',
+                    type: 'register_custom_portal',
                     portalId: 'test',
+                    taskId: 'task2',
                     options: {
                         scriptPrefixes: ['🐦'],
                         style: {},

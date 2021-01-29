@@ -17,7 +17,6 @@ import {
     DeviceAction,
 } from '@casual-simulation/causal-trees';
 import { AuxUser, BaseAuxChannel } from '@casual-simulation/aux-vm';
-import { PortalEvent } from '@casual-simulation/aux-vm/vm';
 
 export class AuxVMNode implements AuxVM {
     private _channel: BaseAuxChannel;
@@ -27,13 +26,8 @@ export class AuxVMNode implements AuxVM {
     private _versionUpdated: Subject<RuntimeStateVersion>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _onError: Subject<AuxChannelErrorType>;
-    private _portalEvents: Subject<PortalEvent[]>;
 
     id: string;
-
-    get portalEvents(): Observable<PortalEvent[]> {
-        return this._portalEvents;
-    }
 
     get localEvents(): Observable<LocalActions[]> {
         return this._localEvents;
@@ -71,7 +65,6 @@ export class AuxVMNode implements AuxVM {
         this._versionUpdated = new Subject<RuntimeStateVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
-        this._portalEvents = new Subject();
     }
 
     setUser(user: AuxUser): Promise<void> {
@@ -121,7 +114,6 @@ export class AuxVMNode implements AuxVM {
             (state) => this._stateUpdated.next(state),
             (version) => this._versionUpdated.next(version),
             (connection) => this._connectionStateChanged.next(connection),
-            (events) => this._portalEvents.next(events),
             (err) => this._onError.next(err)
         );
     }
