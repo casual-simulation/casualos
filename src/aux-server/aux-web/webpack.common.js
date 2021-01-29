@@ -96,7 +96,6 @@ function playerConfig() {
                     /\.css$/,
                     /\.json$/,
                     /\.js$/,
-                    /\.wasm$/,
                     /\.png$/,
                     /\.glb$/,
                     /\.ico$/,
@@ -107,6 +106,11 @@ function playerConfig() {
                     {
                         handler: 'CacheFirst',
                         urlPattern: /assets-manifest\.json$/,
+                        method: 'GET',
+                    },
+                    {
+                        handler: 'CacheFirst',
+                        urlPattern: /\.wasm$/,
                         method: 'GET',
                     },
                     {
