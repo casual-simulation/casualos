@@ -105,12 +105,12 @@ function playerConfig() {
                 runtimeCaching: [
                     {
                         handler: 'CacheFirst',
-                        urlPattern: /assets-manifest\.json$/,
+                        urlPattern: /\.wasm$/,
                         method: 'GET',
                     },
                     {
-                        handler: 'CacheFirst',
-                        urlPattern: /\.wasm$/,
+                        handler: 'NetworkFirst',
+                        urlPattern: /assets-manifest\.json$/,
                         method: 'GET',
                     },
                     {
