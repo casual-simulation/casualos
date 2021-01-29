@@ -30,6 +30,11 @@ import Bowser from 'bowser';
 import axios from 'axios';
 import { PortalEvent } from '@casual-simulation/aux-vm/vm';
 
+export const DEFAULT_IFRAME_ALLOW_ATTRIBUTE =
+    'accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking';
+export const DEFAULT_IFRAME_SANDBOX_ATTRIBUTE =
+    'allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts allow-downloads';
+
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
  * That is, the AUX is run inside a web worker.
@@ -113,23 +118,8 @@ export class AuxVMImpl implements AuxVM {
         this._iframe = document.createElement('iframe');
         this._iframe.src = iframeUrl;
         this._iframe.style.display = 'none';
-
-        // Allow the iframe to run scripts, but do nothing else.
-        // Because we're not allowing the same origin, this prevents the VM from talking to
-        // storage like IndexedDB and therefore prevents different VMs from affecting each other.
-        this._iframe.sandbox.add('allow-scripts');
-
-        const bowserResult = Bowser.parse(navigator.userAgent);
-
-        // Safari requires the allow-same-origin option in order to load
-        // web workers using a blob.
-        if (
-            bowserResult.browser.name === 'Safari' ||
-            bowserResult.os.name === 'iOS'
-        ) {
-            console.warn('[AuxVMImpl] Adding allow-same-origin for Safari');
-            this._iframe.sandbox.add('allow-same-origin');
-        }
+        this._iframe.setAttribute('allow', DEFAULT_IFRAME_ALLOW_ATTRIBUTE);
+        this._iframe.setAttribute('sandbox', DEFAULT_IFRAME_SANDBOX_ATTRIBUTE);
 
         let promise = waitForLoad(this._iframe);
         document.body.insertBefore(this._iframe, document.body.firstChild);
