@@ -67,6 +67,7 @@ import {
     localRotationTween as calcLocalRotationTween,
     animateTag as calcAnimateTag,
     showUploadFiles as calcShowUploadFiles,
+    buildBundle as calcBuildBundle,
     clearSpace,
     loadBots,
     BotAction,
@@ -454,6 +455,45 @@ export interface TagSpecificApiOptions {
 }
 
 /**
+ * Defines an interface that represents the list of bots and tags that are included in a bundle.
+ */
+export interface BundleModules {
+    [id: string]: Set<string>;
+}
+
+/**
+ * Defines an interface that represents a bundle of code.
+ */
+export interface CodeBundle {
+    /**
+     * The tag the bundle was built from.
+     */
+    tag: string;
+
+    /**
+     * The source code that the bundle contains.
+     * If an error occurred, then this will be null/undefined.
+     */
+    source?: string;
+
+    /**
+     * The error that occurred while building the bundle.
+     * Null/Undefined if an error did not happen.
+     */
+    error?: string;
+
+    /**
+     * The list of warnings that occurred while building the bundle.
+     */
+    warnings: string[];
+
+    /**
+     * The list of modules that the bundle contains.
+     */
+    modules: BundleModules;
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
@@ -591,6 +631,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             portal: {
                 open: openCustomPortal,
+                buildBundle,
                 registerPrefix,
             },
 
@@ -1845,6 +1886,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             },
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Builds a script bundle from the given tag.
+     * @param tag The tag that the bundle should be created from.
+     */
+    function buildBundle(tag: string): Promise<CodeBundle> {
+        const task = context.createTask();
+        const event = calcBuildBundle(tag, task.taskId);
         return addAsyncAction(task, event);
     }
 

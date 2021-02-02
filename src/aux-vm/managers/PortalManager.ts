@@ -2,8 +2,10 @@ import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { startWith, tap } from 'rxjs/operators';
 import { AuxVM } from '../vm/AuxVM';
 import {
+    BotAction,
     BotActions,
     BotIndex,
+    BuildBundleAction,
     DNA_TAG_PREFIX,
     enqueueAsyncError,
     enqueueAsyncResult,
@@ -297,6 +299,8 @@ export class PortalManager implements SubscriptionLike {
                 } catch (err) {
                     enqueueAsyncError(nextEvents, event, err);
                 }
+            } else if (event.type === 'build_bundle') {
+                this._buildBundle(event);
             }
         }
 
@@ -374,6 +378,24 @@ export class PortalManager implements SubscriptionLike {
         }
     }
 
+    private async _buildBundle(event: BuildBundleAction) {
+        let events: BotAction[] = [];
+        try {
+            const bundle = await this._bundler.bundleTag(
+                this._helper.botsState,
+                event.tag,
+                this.scriptPrefixes
+            );
+            enqueueAsyncResult(events, event, bundle);
+        } catch (err) {
+            enqueueAsyncError(events, event, err);
+        }
+
+        if (events.length > 0) {
+            this._vm.sendEvents(events);
+        }
+    }
+
     private _getTrimmedPortalTag(
         tag: string,
         scriptPrefixes = this.scriptPrefixes
@@ -381,58 +403,6 @@ export class PortalManager implements SubscriptionLike {
         const prefixes = scriptPrefixes.map((p) => p.prefix);
         return trimPortalScript(prefixes, tag);
     }
-
-    // private _onBundleUpdated(bundle: Bundle): void {
-    //     let newPortals: PortalData[] = [];
-    //     let newPrefixes: ScriptPrefix[] = [];
-    //     let updatedPortals: Map<string, PortalUpdate> = new Map();
-    //     let removedPrefixes: Set<string> = new Set();
-
-    //     const currentPortal = this._portals.get(bundle.portalId);
-
-    //     if (currentPortal) {
-    //         const nextPortal: PortalData = {
-    //             ...currentPortal,
-    //             source: bundle.source,
-    //             error: bundle.error,
-    //         };
-    //         if (hasValue(nextPortal.source) || hasValue(nextPortal.error)) {
-    //             this._portals.set(bundle.portalId, nextPortal);
-    //             if (
-    //                 hasValue(currentPortal.source) ||
-    //                 hasValue(currentPortal.error)
-    //             ) {
-    //                 // it is an update
-    //                 let currentUpdate = updatedPortals.get(bundle.portalId);
-    //                 if (!currentUpdate) {
-    //                     currentUpdate = {
-    //                         oldPortal: currentPortal,
-    //                         portal: nextPortal,
-    //                     };
-    //                     updatedPortals.set(bundle.portalId, currentUpdate);
-    //                 } else {
-    //                     currentUpdate.portal = nextPortal;
-    //                 }
-    //             } else {
-    //                 // it is a portal that does not have source yet
-    //                 newPortals.push(nextPortal);
-    //             }
-    //         }
-    //     }
-
-    //     if (newPortals.length > 0) {
-    //         this._portalsDiscovered.next(newPortals);
-    //     }
-    //     if (updatedPortals.size > 0) {
-    //         this._portalsUpdated.next([...updatedPortals.values()]);
-    //     }
-    //     if (newPrefixes.length > 0) {
-    //         this._prefixesDiscovered.next(newPrefixes);
-    //     }
-    //     if (removedPrefixes.size > 0) {
-    //         this._prefixesRemoved.next([...removedPrefixes.values()]);
-    //     }
-    // }
 
     unsubscribe(): void {
         if (this._sub) {

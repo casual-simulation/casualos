@@ -40,11 +40,35 @@ export interface BundleModules {
     [EXTERNAL_MODULE_SYMBOL]?: Set<string>;
 }
 
+/**
+ * Defines an interface that represents a bundle of code.
+ */
 export interface CodeBundle {
+    /**
+     * The tag the bundle was built from.
+     */
     tag: string;
+
+    /**
+     * The source code that the bundle contains.
+     * If an error occurred, then this will be null/undefined.
+     */
     source?: string;
+
+    /**
+     * The error that occurred while building the bundle.
+     * Null/Undefined if an error did not happen.
+     */
     error?: string;
+
+    /**
+     * The list of warnings that occurred while building the bundle.
+     */
     warnings: string[];
+
+    /**
+     * The list of modules that the bundle contains.
+     */
     modules: BundleModules;
 }
 

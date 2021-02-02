@@ -164,6 +164,50 @@ describe('PortalManager', () => {
         });
     });
 
+    describe('build_bundle', () => {
+        it('should build and resolve the given tag', async () => {
+            bundler.bundleTag.mockResolvedValueOnce({
+                tag: 'script',
+                source: 'abc',
+                modules: {},
+                warnings: [],
+            });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'build_bundle',
+                    tag: '🔺script',
+                    taskId: 'task2',
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(vm.events.slice(1)).toEqual([
+                asyncResult('task2', {
+                    tag: 'script',
+                    source: 'abc',
+                    warnings: [],
+                    modules: {},
+                }),
+            ]);
+        });
+    });
+
     describe('portalsDiscovered', () => {
         let portals = [] as PortalData[];
 

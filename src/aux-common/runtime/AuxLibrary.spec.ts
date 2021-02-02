@@ -138,6 +138,7 @@ import {
     animateTag,
     showUploadFiles,
     registerPrefix,
+    buildBundle,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2567,6 +2568,15 @@ describe('AuxLibrary', () => {
                     },
                     context.tasks.size
                 );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('portal.buildBundle()', () => {
+            it('should return a BuildBundleAction', () => {
+                const promise: any = library.api.portal.buildBundle('tag');
+                const expected = buildBundle('tag', context.tasks.size);
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

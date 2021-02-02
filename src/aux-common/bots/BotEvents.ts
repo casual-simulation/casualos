@@ -106,6 +106,7 @@ export type AsyncActions =
     | ShowInputAction
     | ShareAction
     | OpenCustomPortalAction
+    | BuildBundleAction
     | RegisterPrefixAction
     | RunScriptAction
     | LoadBotsAction
@@ -2373,6 +2374,17 @@ export interface OpenCustomPortalAction extends AsyncAction {
 }
 
 /**
+ * Defines an event that builds a bundle from a specified tag.
+ */
+export interface BuildBundleAction extends AsyncAction {
+    type: 'build_bundle';
+    /**
+     * The tag that the bundle should use.
+     */
+    tag: string;
+}
+
+/**
  * Defines an event that adds an entry point to a custom portal.
  */
 export interface RegisterPrefixAction extends AsyncAction {
@@ -4584,6 +4596,22 @@ export function openCustomPortal(
         portalId,
         tag,
         options,
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that builds a bundle from the specified tag.
+ * @param tag The tag that the bundle should be built from.
+ * @param taskId The ID of the task.
+ */
+export function buildBundle(
+    tag: string,
+    taskId?: number | string
+): BuildBundleAction {
+    return {
+        type: 'build_bundle',
+        tag,
         taskId,
     };
 }

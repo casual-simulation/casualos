@@ -1,7 +1,9 @@
 if (!globalThis.Blob) {
-    console.warn(
-        '[BlobPolyfill] Loading Blob stub! This should not happen in browser environments!'
-    );
+    if (typeof process === 'undefined') {
+        console.warn(
+            '[BlobPolyfill] Loading Blob stub! This should not happen in browser environments!'
+        );
+    }
     (<any>globalThis).Blob = class {
         type: string;
 
