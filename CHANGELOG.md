@@ -12,6 +12,9 @@
         -   `portal.open(portalID, tag, options?)`
         -   `portal.registerPrefix(prefix)`
         -   See the documentation for usage information.
+-   Added the `player.download(data, filename, mimeType?)` function.
+    -   Useful for downloading arbitrary data in any format you want.
+    -   See the documentation for more information.
 
 ### :bug: Bug Fixes
 
