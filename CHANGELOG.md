@@ -9,8 +9,8 @@
 -   Added an initial implementation of custom portals.
     -   Custom portals are a way to write scripts that can interact directly with the web browser. This gives you the ability to do anything that is possible from inside a web browser.
     -   The following functions are now available:
-        -   `portal.register(portalID, options?)`
-        -   `portal.addEntryPoint(portalID, tag)`
+        -   `portal.open(portalID, tag, options?)`
+        -   `portal.registerPrefix(prefix)`
         -   See the documentation for usage information.
 
 ### :bug: Bug Fixes
