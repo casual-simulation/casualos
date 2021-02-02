@@ -522,6 +522,44 @@ describe('ESBuildPortalBundler', () => {
             expect(bundle).toMatchSnapshot();
         });
 
+        it('should support JSX', async () => {
+            const state = {
+                bot1: createPrecalculatedBot('bot1', {
+                    main: `📖let element = (<h1>Hello!</h1>);`,
+                }),
+            };
+
+            const bundle = await bundler.bundleTag(state, 'main', [
+                {
+                    prefix: '📖',
+                    language: 'jsx',
+                },
+            ]);
+
+            expect(bundle).not.toEqual(null);
+            expect(bundle.source).toBeTruthy();
+            expect(bundle).toMatchSnapshot();
+        });
+
+        it('should support TSX', async () => {
+            const state = {
+                bot1: createPrecalculatedBot('bot1', {
+                    main: `📖let element: any = (<h1>Hello!</h1>);`,
+                }),
+            };
+
+            const bundle = await bundler.bundleTag(state, 'main', [
+                {
+                    prefix: '📖',
+                    language: 'tsx',
+                },
+            ]);
+
+            expect(bundle).not.toEqual(null);
+            expect(bundle.source).toBeTruthy();
+            expect(bundle).toMatchSnapshot();
+        });
+
         it('should support prefixes in the given tag name', async () => {
             const prefixes: ScriptPrefix[] = [
                 {

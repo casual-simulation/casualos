@@ -101,6 +101,36 @@ Object {
 }
 `;
 
+exports[`ESBuildPortalBundler bundleTag() should support JSX 1`] = `
+Object {
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+  },
+  "source": "(() => {
+})();
+",
+  "tag": "main",
+  "warnings": Array [],
+}
+`;
+
+exports[`ESBuildPortalBundler bundleTag() should support TSX 1`] = `
+Object {
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+  },
+  "source": "(() => {
+})();
+",
+  "tag": "main",
+  "warnings": Array [],
+}
+`;
+
 exports[`ESBuildPortalBundler bundleTag() should support typescript 1`] = `
 Object {
   "modules": Object {

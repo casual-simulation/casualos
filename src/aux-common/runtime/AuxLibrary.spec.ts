@@ -2506,7 +2506,28 @@ describe('AuxLibrary', () => {
         describe('portal.registerPrefix()', () => {
             it('should return a RegisterPrefix action', () => {
                 const promise: any = library.api.portal.registerPrefix('test');
-                const expected = registerPrefix('test', {}, context.tasks.size);
+                const expected = registerPrefix(
+                    'test',
+                    {
+                        language: 'javascript',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', () => {
+                const promise: any = library.api.portal.registerPrefix('test', {
+                    language: 'jsx',
+                });
+                const expected = registerPrefix(
+                    'test',
+                    {
+                        language: 'jsx',
+                    },
+                    context.tasks.size
+                );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

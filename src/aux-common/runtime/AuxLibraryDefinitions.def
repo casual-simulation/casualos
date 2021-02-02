@@ -1755,7 +1755,12 @@ export interface RegisterPrefixAction extends AsyncAction {
 /**
  * Defines an interface that contains options for register prefix actions.
  */
-export interface RegisterPrefixOptions {}
+export interface RegisterPrefixOptions {
+    /**
+     * The possible languages that prefixes can use.
+     */
+    language?: 'javascript' | 'typescript' | 'json' | 'jsx' | 'tsx' | 'text';
+}
 
 /**
  * Defines an interface for options that show a payment box.
@@ -3233,8 +3238,9 @@ declare global {
         /**
          * Specifies that the given prefix should be interpreted as code.
          * @param prefix The prefix that code tags should start with.
+         * @param options The options that should be used for the prefix.
          */
-        registerPrefix(prefix: string): Promise<void>;
+        registerPrefix(prefix: string, options?: RegisterPrefixOptions): Promise<void>;
     };
 
     /**

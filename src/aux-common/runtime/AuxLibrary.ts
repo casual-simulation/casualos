@@ -168,6 +168,7 @@ import {
     AnimateTagOptions,
     EaseType,
     OpenCustomPortalOptions,
+    RegisterPrefixOptions,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -1809,14 +1810,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Specifies that the given prefix should be interpreted as code.
      * @param prefix The prefix that code tags should start with.
+     * @param options The options for the prefix.
      */
-    function registerPrefix(prefix: string): Promise<void> {
+    function registerPrefix(
+        prefix: string,
+        options: RegisterPrefixOptions = {}
+    ): Promise<void> {
         if (typeof prefix !== 'string') {
             throw new Error('A prefix must be provided.');
         }
 
         const task = context.createTask();
-        const event = calcRegisterPrefix(prefix, {}, task.taskId);
+        const event = calcRegisterPrefix(
+            prefix,
+            {
+                language: options?.language || 'javascript',
+            },
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

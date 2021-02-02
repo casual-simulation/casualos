@@ -15,6 +15,7 @@ import {
     trimPortalScript,
     trimPrefixedScript,
     Bot,
+    RegisterPrefixOptions,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import values from 'lodash/values';
@@ -49,7 +50,7 @@ export interface CodeBundle {
 
 export interface ScriptPrefix {
     prefix: string;
-    language: 'javascript' | 'typescript' | 'json';
+    language: RegisterPrefixOptions['language'];
     isDefault?: boolean;
 }
 
@@ -294,6 +295,12 @@ export class ESBuildPortalBundler implements PortalBundler {
                                         ? 'ts'
                                         : prefix.language === 'json'
                                         ? 'json'
+                                        : prefix.language === 'jsx'
+                                        ? 'jsx'
+                                        : prefix.language === 'tsx'
+                                        ? 'tsx'
+                                        : prefix.language === 'text'
+                                        ? 'text'
                                         : DEFAULT_IMPORT_LANGUAGE,
                             };
                         }

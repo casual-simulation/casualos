@@ -2396,7 +2396,7 @@ export interface RegisterPrefixOptions {
     /**
      * The possible languages that prefixes can use.
      */
-    language?: 'javascript' | 'typescript' | 'json';
+    language?: 'javascript' | 'typescript' | 'json' | 'jsx' | 'tsx' | 'text';
 }
 
 /**z
