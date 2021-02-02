@@ -193,8 +193,10 @@ import {
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, del, insert, preserve } from '../aux-format-2';
 import { Euler, Vector3, Plane, Ray } from 'three';
+import mime from 'mime';
 import TWEEN from '@tweenjs/tween.js';
 import './PerformanceNowPolyfill';
+import './BlobPolyfill';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -538,6 +540,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 disableAR,
                 enableVR,
                 disableVR,
+                download: downloadData,
                 downloadBots,
                 downloadServer,
                 showUploadAuxFile,
@@ -1308,6 +1311,41 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function disableVR() {
         return addAction(calcDisableVR());
+    }
+
+    /**
+     * Downloads the given data.
+     * @param data The data to download. Objects will be formatted as JSON before downloading.
+     * @param filename The name of the file that the data should be downloaded as.
+     * @param mimeType The MIME type that should be used. If not specified then it will be inferred from the filename.
+     */
+    function downloadData(
+        data: string | object | ArrayBuffer | Blob,
+        filename: string,
+        mimeType: string = mime.getType(filename) || 'text/plain'
+    ) {
+        if (typeof filename !== 'string') {
+            throw new Error('The filename must be a string.');
+        }
+        if (typeof mimeType !== 'string') {
+            throw new Error('The mimeType must be a string.');
+        }
+
+        if (typeof data === 'string') {
+            return addAction(download(data, filename, mimeType));
+        } else if (data instanceof ArrayBuffer) {
+            return addAction(download(data, filename, mimeType));
+        } else if (data instanceof Blob) {
+            return addAction(download(data, filename, data.type));
+        } else if (typeof data === 'object') {
+            return addAction(
+                download(JSON.stringify(data), filename, mimeType)
+            );
+        }
+
+        throw new Error(
+            'The data must be either a string, object, or ArrayBuffer.'
+        );
     }
 
     /**
