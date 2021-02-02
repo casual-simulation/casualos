@@ -4900,6 +4900,54 @@ await portal.registerPrefix("📖");
 await portal.registerPrefix("myPrefix");
 ```
 
+### `portal.buildBundle(tag)`
+
+Builds a script bundle for the given tag and returns a promise that resolves when the build is done.
+This function is useful for getting the code that portals would use.
+
+Resolves with an object that has the following structure:
+```typescript
+let result: {
+    /**
+     * The tag the bundle was built from.
+     */
+    tag: string;
+
+    /**
+     * The source code that the bundle contains.
+     * If an error occurred, then this will be null/undefined.
+     */
+    source?: string;
+
+    /**
+     * The error that occurred while building the bundle.
+     * Null/Undefined if an error did not happen.
+     */
+    error?: string;
+
+    /**
+     * The list of warnings that occurred while building the bundle.
+     */
+    warnings: string[];
+
+    /**
+     * The map of Bot IDs to tags that are contained in the bundle.
+     */
+    modules: {
+        [id: string]: Set<string>;
+    };
+};
+```
+
+The **first parameter** is the tag that the bundle should be built from. This value can be prefixed with a registered prefix to limit which tags can be used as entrypoints.
+
+#### Examples:
+
+1. Get a script bundle for the `test` tag.
+```typescript
+const bundle = await portal.buildBundle("test");
+```
+
 ## Experimental Actions
 
 ### `experiment.localFormAnimation(bot, animation)`
