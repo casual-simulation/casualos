@@ -4810,29 +4810,28 @@ div.textContent = 'Hello, World!';
 
 Next, create an `onClick` tag and type this:
 ```
-@await portal.register('my-portal');
-await portal.registerPrefix('my-portal', 'main');
+@await portal.registerPrefix('📖');
+await portal.open('my-portal', '📖main');
 ```
 
 Finally, click the bot to start the portal. You should see a white frame appear over the top half of the screen and have the text "Hello, World!" in it.
 
-### `portal.register(portalId, options?)`
+### `portal.open(portalId, tag, options?)`
 
 Registers a custom portal with the given ID and options. Returns a promise that resolves when the portal has been registered.
 Can be called multiple times with new options to override previous options.
 
+After calling this function for a portal, CasualOS will look for tags that are referenced by the specified tag via import statements and produce a script bundle that is injected into the portal.
+Additionally, whenever one of those tags are changed the portal will be reloaded with the new bundle.
+
 The **first parameter** is the ID that the portal should have. This is used to distinguish portals from each other.
 
-The **second parameter** is optional and is the options that the portal should use. It is an object and should have the following structure:
+The **second parameter** is the tag that the portal should be loaded from. This value can be prefixed with a registered prefix to limit which tags can be used as entrypoints.
+
+The **third parameter** is optional and is the options that the portal should use. It is an object and should have the following structure:
 
 ```typescript
 let options: {
-    /**
-     * The script prefixes that should be used for the portal.
-     * Defaults to ["📖"] if not specified.
-     */
-    scriptPrefixes?: string[];
-
     /**
      * The CSS styles that should be used for the portal.
      */
@@ -4842,46 +4841,43 @@ let options: {
 
 #### Examples:
 
-1. Register a custom portal.
+1. Open a custom portal for the `test` tag.
 ```typescript
-await portal.register("my-portal");
+await portal.open("my-portal", "test");
 ```
 
-2. Register a custom portal with custom script prefixes.
+2. Open a custom portal for `test` tags that are prefixed with `🔺`.
 ```typescript
-await portal.register("my-portal", {
-    scriptPrefixes: ["🐦"]
+await portal.registerPrefix('🔺');
+await portal.open("my-portal", "🔺test");
+```
+
+3. Open a custom portal with a custom CSS style.
+```typescript
+await portal.open("my-portal", "test", {
+    style: {
+        height: '30%'
+    }
 });
 ```
 
-### `portal.registerPrefix(portalId, tag)`
+### `portal.registerPrefix(prefix)`
 
-Specifies that the given tag should be an entry point for the portal with the given ID. Returns a promise that resolves when the entry point has been registered.
-Portals support multiple entry points, although it should be noted that the order that each entry point runs in is not guaranteed.
+Specifies that the given prefix should be used to indicate that the tag contains script content that can be used in a custom portal.
+Use this function to specify custom prefixes that function similarly to `@` or `🧬`.
 
-After calling this function for a portal, CasualOS will look for tag values that start
-with one of the script prefixes that were specified in <ActionLink action='portal.register(portalId, options?)'/> and produce a script bundle that is injected into the portal.
-Additionally, whenever a tag with the specified script prefixes is changed the portal will be reloaded with the new bundle.
-
-The **first parameter** is the ID of the portal.
-
-The **second parameter** is the tag that the portal should use as an entry point. That is, the piece of code that gets run first and references all the other code for the portal.
-Similarly to <ActionLink action='shout(name, arg?)'/>, this parameter can be prefixed with one of the script prefixes that the portal is registered with. 
+The **first parameter** is the prefix that should indicate that the rest of the tag value is a script.
 
 #### Examples:
 
-1. Add the `main` tag as an entry point.
+1. Add `📖` as an script prefix.
 ```typescript
-await portal.registerPrefix("my-portal", "main");
+await portal.registerPrefix("📖");
 ```
 
-2. Register a portal and add an entry point.
+2. Register some arbitrary text as a prefix.
 ```typescript
-await portal.register("my-portal");
-
-// Inject scripts in "#main" tags that start with "📖"
-// into the portal.
-await portal.registerPrefix("my-portal", "📖main");
+await portal.registerPrefix("myPrefix");
 ```
 
 ## Experimental Actions
