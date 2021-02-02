@@ -374,6 +374,10 @@ function baseConfig() {
                     __dirname,
                     'shared/public/clipboard-polyfill/clipboard-polyfill.js'
                 ),
+
+                os: false,
+                constants: false,
+                fs: false,
             },
         },
     };

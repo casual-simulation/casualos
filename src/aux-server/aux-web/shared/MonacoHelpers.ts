@@ -63,6 +63,8 @@ import { CurrentVersion } from '@casual-simulation/causal-trees';
 import { Color } from 'three';
 import { invertColor } from './scene/ColorUtils';
 import { getCursorColorClass, getCursorLabelClass } from './StyleHelpers';
+import jscodeshift from 'jscodeshift';
+import MonacoJSXHighlighter from './public/monaco-jsx-highlighter/index';
 
 export function setup() {
     // Tell monaco how to create the web workers
@@ -99,6 +101,20 @@ export function setup() {
         checkJs: true,
         newLine: monaco.languages.typescript.NewLineKind.LineFeed,
         noEmit: true,
+        jsx: monaco.languages.typescript.JsxEmit.Preserve,
+    });
+    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+        target: monaco.languages.typescript.ScriptTarget.ES2015,
+
+        // Auto-import the given libraries
+        lib: ['defaultLib:lib.es2015.d.ts', 'file:///AuxDefinitions.d.ts'],
+
+        allowJs: true,
+        alwaysStrict: true,
+        checkJs: true,
+        newLine: monaco.languages.typescript.NewLineKind.LineFeed,
+        noEmit: true,
+        jsx: monaco.languages.typescript.JsxEmit.Preserve,
     });
 
     // Eagerly sync models to get intellisense for all models
@@ -139,6 +155,7 @@ interface ModelInfo {
     isCustomPortalScript: boolean;
     editOffset: number;
     model: monaco.editor.ITextModel;
+    language: string;
     sub: Subscription;
 }
 
@@ -258,10 +275,24 @@ export function watchEditor(
     simulation: Simulation,
     editor: monaco.editor.ICodeEditor
 ): Subscription {
+    const monacoJsxHighlighter = new MonacoJSXHighlighter(
+        monaco,
+        jscodeshift,
+        editor
+    );
+
     const modelChangeObservable = new Observable<
         monaco.editor.IModelChangedEvent
     >((sub) => {
         return toSubscription(editor.onDidChangeModel((e) => sub.next(e)));
+    });
+
+    const modelChangeLanguageObservable = new Observable<
+        monaco.editor.IModelLanguageChangedEvent
+    >((sub) => {
+        return toSubscription(
+            editor.onDidChangeModelLanguage((e) => sub.next(e))
+        );
     });
 
     const decorators = modelChangeObservable.pipe(
@@ -425,9 +456,51 @@ export function watchEditor(
         }, [] as string[])
     );
 
+    const modelInfos = merge(
+        modelChangeObservable.pipe(
+            filter((e) => !!e.newModelUrl),
+            map((e) => models.get(e.newModelUrl.toString())),
+            filter((info) => !!info),
+            filter((info) => !info.model.isDisposed())
+        ),
+        modelChangeLanguageObservable.pipe(
+            map((e) => editor.getModel()),
+            filter((model) => !!model),
+            map((model) => models.get(model.uri.toString())),
+            filter((info) => !!info),
+            filter((info) => !info.model.isDisposed())
+        )
+    );
+
+    const enableJsxHighlightingOnCorrectModels = modelInfos.pipe(
+        map(
+            (info) =>
+                info.language === 'javascript' || info.language === 'typescript'
+        ),
+        scan(
+            (acc, needsJsxHighlighting) => {
+                if (acc) {
+                    acc();
+                }
+                if (needsJsxHighlighting) {
+                    return monacoJsxHighlighter.highLightOnDidChangeModelContent(
+                        undefined,
+                        () => {},
+                        undefined,
+                        () => {}
+                    );
+                } else {
+                    return () => {};
+                }
+            },
+            () => {}
+        )
+    );
+
     const sub = new Subscription();
 
     sub.add(decorators.subscribe());
+    sub.add(enableJsxHighlightingOnCorrectModels.subscribe());
 
     sub.add(
         toSubscription(
@@ -495,17 +568,14 @@ export function loadModel(
     let model = monaco.editor.getModel(uri);
     if (!model) {
         let script = getScript(bot, tag, space);
-        model = monaco.editor.createModel(
-            script,
-            tagScriptLanguage(
-                simulation,
-                tag,
-                getTagValueForSpace(bot, tag, space)
-            ),
-            uri
+        let language = tagScriptLanguage(
+            simulation,
+            tag,
+            getTagValueForSpace(bot, tag, space)
         );
+        model = monaco.editor.createModel(script, language, uri);
 
-        watchModel(simulation, model, bot, tag, space, getEditor);
+        watchModel(simulation, model, bot, tag, space, language, getEditor);
     }
 
     return model;
@@ -526,7 +596,11 @@ function tagScriptLanguage(
 
     const prefix = getScriptPrefix(simulation, script);
     if (prefix) {
-        return prefix.language;
+        return prefix.language === 'text'
+            ? 'plaintext'
+            : prefix.language === 'jsx'
+            ? 'javascript'
+            : prefix.language;
     }
 
     return 'plaintext';
@@ -585,6 +659,7 @@ function watchModel(
     bot: Bot,
     tag: string,
     space: string,
+    language: string,
     getEditor: () => monaco.editor.ICodeEditor
 ) {
     let sub = new Subscription();
@@ -597,6 +672,7 @@ function watchModel(
         isCustomPortalScript: false,
         editOffset: 0,
         model: model,
+        language: language,
         sub: sub,
     };
 
@@ -881,6 +957,7 @@ function updateLanguage(
     }
     const currentLanguage = model.getModeId();
     const nextLanguage = tagScriptLanguage(simulation, tag, value);
+    info.language = nextLanguage;
     if (typeof nextLanguage === 'string' && nextLanguage !== currentLanguage) {
         monaco.editor.setModelLanguage(model, nextLanguage);
     }

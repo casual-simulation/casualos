@@ -94,7 +94,7 @@
         "jszip": "3.2.2",
         "lodash": "4.17.19",
         "mime": "2.4.6",
-        "monaco-editor": "0.21.2",
+        "monaco-editor": "0.22.3",
         "mongodb": "3.6.2",
         "onoff": "6.0.0",
         "quagga": "0.12.1",
@@ -121,7 +121,8 @@
         "vue-property-decorator": "^7.2.0",
         "vue-router": "^3.0.1",
         "vue-shortkey": "^3.1.6",
-        "workbox-webpack-plugin": "6.0.2"
+        "workbox-webpack-plugin": "6.0.2",
+        "jscodeshift": "^0.11.0"
     },
     "devDependencies": {
         "loader-utils": "^2.0.0",
