@@ -11,6 +11,7 @@
     -   The following functions are now available:
         -   `portal.open(portalID, tag, options?)`
         -   `portal.registerPrefix(prefix)`
+        -   `portal.buildBundle(tag)`
         -   See the documentation for usage information.
 -   Added the `player.download(data, filename, mimeType?)` function.
     -   Useful for downloading arbitrary data in any format you want.
