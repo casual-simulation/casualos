@@ -1353,6 +1353,26 @@ player.checkout({
 });
 ```
 
+### `player.download(data, filename, mimeType?)`
+
+Downloads the given data with the given filename and [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types).
+
+The **first parameter** is the data that should be downloaded. This
+can be a string, object, or binary data in the form of an [ArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)
+or [Blob](https://developer.mozilla.org/en-us/docs/Web/API/Blob).
+
+The **second parameter** is the name of the file that should be downloaded.
+
+The **third parameter** is optional and is the [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) that the downloaded file should have.
+If not provided, then it will be inferred from the provided filename.
+
+#### Examples:
+
+1. Download a text file named "test.txt" that contains "abc".
+```typescript
+player.download("abc", "test.txt");
+```
+
 ### `player.downloadBots(bots, filename)`
 
 
