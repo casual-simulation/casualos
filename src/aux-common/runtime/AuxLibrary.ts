@@ -58,8 +58,8 @@ import {
     webhook as calcWebhook,
     superShout as calcSuperShout,
     share as calcShare,
-    registerCustomPortal as calcRegisterCustomPortal,
-    addEntryPoint as calcAddEntryPoint,
+    openCustomPortal as calcOpenCustomPortal,
+    registerPrefix as calcRegisterPrefix,
     createCertificate as calcCreateCertificate,
     signTag as calcSignTag,
     revokeCertificate as calcRevokeCertificate,
@@ -167,7 +167,7 @@ import {
     EDIT_TAG_MASK_SYMBOL,
     AnimateTagOptions,
     EaseType,
-    RegisterCustomPortalOptions,
+    OpenCustomPortalOptions,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -586,8 +586,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             },
 
             portal: {
-                register: registerCustomPortal,
-                addEntryPoint,
+                open: openCustomPortal,
+                registerPrefix,
             },
 
             server: {
@@ -1786,30 +1786,37 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Registers a custom portal with the given source code.
      * @param portalId The ID of the portal.
+     * @param tag The tag that the portal should be created from.
      * @param options The options for the portal.
      */
-    function registerCustomPortal(
+    function openCustomPortal(
         portalId: string,
-        options: RegisterCustomPortalOptions = {}
+        tag: string,
+        options: OpenCustomPortalOptions = {}
     ): Promise<void> {
         const task = context.createTask();
-        const event = calcRegisterCustomPortal(portalId, options, task.taskId);
+        const event = calcOpenCustomPortal(
+            portalId,
+            tag,
+            {
+                style: options?.style || {},
+            },
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 
     /**
-     * Adds the given tag as an entry point for the portal.
-     * That is, scripts in the specified tag will be run automatically.
-     * @param portalId The ID of the portal.
-     * @param tag The tag that should be used as the entry point.
+     * Specifies that the given prefix should be interpreted as code.
+     * @param prefix The prefix that code tags should start with.
      */
-    function addEntryPoint(portalId: string, tag: string): Promise<void> {
-        if (typeof tag !== 'string') {
-            throw new Error('A tag name must be provided.');
+    function registerPrefix(prefix: string): Promise<void> {
+        if (typeof prefix !== 'string') {
+            throw new Error('A prefix must be provided.');
         }
 
         const task = context.createTask();
-        const event = calcAddEntryPoint(portalId, tag, task.taskId);
+        const event = calcRegisterPrefix(prefix, {}, task.taskId);
         return addAsyncAction(task, event);
     }
 

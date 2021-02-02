@@ -105,8 +105,8 @@ export type AsyncActions =
     | AsyncErrorAction
     | ShowInputAction
     | ShareAction
-    | RegisterCustomPortalAction
-    | AddEntryPointAction
+    | OpenCustomPortalAction
+    | RegisterPrefixAction
     | RunScriptAction
     | LoadBotsAction
     | ClearSpaceAction
@@ -2344,12 +2344,7 @@ export interface ShareAction extends AsyncAction, ShareOptions {
 /**
  * The possible options for a custom portal.
  */
-export interface RegisterCustomPortalOptions {
-    /**
-     * The script prefixes that should be used for the portal.
-     */
-    scriptPrefixes?: string[];
-
+export interface OpenCustomPortalOptions {
     /**
      * The CSS styles that should be used for the portal.
      */
@@ -2359,34 +2354,49 @@ export interface RegisterCustomPortalOptions {
 /**
  * Defines an event that creates a custom portal using the given source code.
  */
-export interface RegisterCustomPortalAction extends AsyncAction {
-    type: 'register_custom_portal';
+export interface OpenCustomPortalAction extends AsyncAction {
+    type: 'open_custom_portal';
     /**
      * The ID of the portal.
      */
     portalId: string;
 
     /**
+     * The tag that the portal should use.
+     */
+    tag: string;
+
+    /**
      * The options for the portal.
      */
-    options: RegisterCustomPortalOptions;
+    options: OpenCustomPortalOptions;
 }
 
 /**
  * Defines an event that adds an entry point to a custom portal.
  */
-export interface AddEntryPointAction extends AsyncAction {
-    type: 'add_entry_point';
+export interface RegisterPrefixAction extends AsyncAction {
+    type: 'register_prefix';
 
     /**
-     * The ID of the portal
+     * The prefix that should be registered.
      */
-    portalId: string;
+    prefix: string;
 
     /**
-     * The tag that should be used as the entry point.
+     * The options that should be used for the prefix.
      */
-    tag: string;
+    options: RegisterPrefixOptions;
+}
+
+/**
+ * Defines an interface that contains options for register prefix actions.
+ */
+export interface RegisterPrefixOptions {
+    /**
+     * The possible languages that prefixes can use.
+     */
+    language?: 'javascript' | 'typescript' | 'json';
 }
 
 /**z
@@ -4559,38 +4569,39 @@ export function share(
 /**
  * Creates an action that registers a custom portal.
  * @param portalId The ID of the portal,
+ * @param tag The tag that the portal should use.
  * @param options The options for the portal.
  * @param taskId The ID of the task.
  */
-export function registerCustomPortal(
+export function openCustomPortal(
     portalId: string,
-    options: RegisterCustomPortalOptions,
+    tag: string,
+    options: OpenCustomPortalOptions,
     taskId?: number | string
-): RegisterCustomPortalAction {
+): OpenCustomPortalAction {
     return {
-        type: 'register_custom_portal',
+        type: 'open_custom_portal',
         portalId,
+        tag,
         options,
         taskId,
     };
 }
 
 /**
- * Creates an action that adds an entry point to a custom portal.
- * @param portalId The ID of the portal.
- * @param botId The ID of the bot that the entry point is in. If null then all bots will be used.
- * @param tag The tag that should be used as the entry point.
+ * Creates an action that registers the given script prefix for custom portals.
+ * @param prefix The prefix that should be used.
  * @param taskId The ID of the task.
  */
-export function addEntryPoint(
-    portalId: string,
-    tag: string,
+export function registerPrefix(
+    prefix: string,
+    options: RegisterPrefixOptions,
     taskId?: number | string
-): AddEntryPointAction {
+): RegisterPrefixAction {
     return {
-        type: 'add_entry_point',
-        portalId,
-        tag,
+        type: 'register_prefix',
+        prefix,
+        options,
         taskId,
     };
 }

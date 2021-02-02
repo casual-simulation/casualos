@@ -512,7 +512,7 @@ export function loadModel(
 }
 
 function tagScriptLanguage(
-    simulation: Simulation,
+    simulation: BrowserSimulation,
     tag: string,
     script: any
 ): string {
@@ -532,7 +532,7 @@ function tagScriptLanguage(
     return 'plaintext';
 }
 
-function getScriptPrefix(simulation: Simulation, script: any) {
+function getScriptPrefix(simulation: BrowserSimulation, script: any) {
     return simulation.portals.scriptPrefixes.find(
         (p) => typeof script === 'string' && script.startsWith(p.prefix)
     );
@@ -870,7 +870,7 @@ function offsetSelections(
 }
 
 function updateLanguage(
-    simulation: Simulation,
+    simulation: BrowserSimulation,
     model: monaco.editor.ITextModel,
     tag: string,
     value: string
@@ -888,7 +888,7 @@ function updateLanguage(
 }
 
 function updateDecorators(
-    simulation: Simulation,
+    simulation: BrowserSimulation,
     model: monaco.editor.ITextModel,
     info: ModelInfo,
     value: string
@@ -1013,7 +1013,10 @@ export function getScript(bot: Bot, tag: string, space: string) {
     }
 }
 
-export function isCustomPortalScript(simulation: Simulation, value: unknown) {
+export function isCustomPortalScript(
+    simulation: BrowserSimulation,
+    value: unknown
+) {
     const prefixes = simulation.portals.scriptPrefixes.map((p) => p.prefix);
     return hasPortalScript(prefixes, value);
 }

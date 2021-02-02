@@ -47,7 +47,6 @@ import merge from 'lodash/merge';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subject, Subscription } from 'rxjs';
 import { cloneDeep } from 'lodash';
-import { TestAuxVM } from './test/TestAuxVM';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');

@@ -75,7 +75,7 @@ export class TestAuxVM implements AuxVM {
         this.versionUpdated = new Subject<RuntimeStateVersion>();
     }
 
-    registerCustomPortal(id: string): Promise<void> {
+    openCustomPortal(id: string): Promise<void> {
         throw new Error('Method not implemented.');
     }
 

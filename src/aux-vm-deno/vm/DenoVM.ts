@@ -261,7 +261,7 @@ export class DenoVM implements AuxVM {
         this._localEvents = null;
     }
 
-    registerCustomPortal(id: string): Promise<void> {
+    openCustomPortal(id: string): Promise<void> {
         throw new Error('Method not implemented.');
     }
 

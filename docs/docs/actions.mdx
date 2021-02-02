@@ -4811,7 +4811,7 @@ div.textContent = 'Hello, World!';
 Next, create an `onClick` tag and type this:
 ```
 @await portal.register('my-portal');
-await portal.addEntryPoint('my-portal', 'main');
+await portal.registerPrefix('my-portal', 'main');
 ```
 
 Finally, click the bot to start the portal. You should see a white frame appear over the top half of the screen and have the text "Hello, World!" in it.
@@ -4854,7 +4854,7 @@ await portal.register("my-portal", {
 });
 ```
 
-### `portal.addEntryPoint(portalId, tag)`
+### `portal.registerPrefix(portalId, tag)`
 
 Specifies that the given tag should be an entry point for the portal with the given ID. Returns a promise that resolves when the entry point has been registered.
 Portals support multiple entry points, although it should be noted that the order that each entry point runs in is not guaranteed.
@@ -4872,7 +4872,7 @@ Similarly to <ActionLink action='shout(name, arg?)'/>, this parameter can be pre
 
 1. Add the `main` tag as an entry point.
 ```typescript
-await portal.addEntryPoint("my-portal", "main");
+await portal.registerPrefix("my-portal", "main");
 ```
 
 2. Register a portal and add an entry point.
@@ -4881,7 +4881,7 @@ await portal.register("my-portal");
 
 // Inject scripts in "#main" tags that start with "📖"
 // into the portal.
-await portal.addEntryPoint("my-portal", "📖main");
+await portal.registerPrefix("my-portal", "📖main");
 ```
 
 ## Experimental Actions

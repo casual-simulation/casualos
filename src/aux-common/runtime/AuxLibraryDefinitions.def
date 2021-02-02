@@ -229,8 +229,8 @@ declare type AsyncActions =
     | BufferSoundAction
     | PlaySoundAction
     | CancelSoundAction
-    | RegisterCustomPortalAction
-    | AddEntryPointAction;
+    | OpenCustomPortalAction
+    | RegisterPrefixAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1707,12 +1707,7 @@ declare interface ShareAction extends AsyncAction, ShareOptions {
 /**
  * The possible options for a custom portal.
  */
-export interface RegisterCustomPortalOptions {
-    /**
-     * The script prefixes that should be used for the portal.
-     */
-    scriptPrefixes?: string[];
-
+export interface OpenCustomPortalOptions {
     /**
      * The CSS styles that should be used for the portal.
      */
@@ -1722,35 +1717,45 @@ export interface RegisterCustomPortalOptions {
 /**
  * Defines an event that creates a custom portal using the given source code.
  */
-export interface RegisterCustomPortalAction extends AsyncAction {
-    type: 'register_custom_portal';
+export interface OpenCustomPortalAction extends AsyncAction {
+    type: 'open_custom_portal';
     /**
      * The ID of the portal.
      */
     portalId: string;
 
     /**
+     * The tag that the portal should use.
+     */
+    tag: string;
+
+    /**
      * The options for the portal.
      */
-    options: RegisterCustomPortalOptions;
+    options: OpenCustomPortalOptions;
 }
 
 /**
  * Defines an event that adds an entry point to a custom portal.
  */
-export interface AddEntryPointAction extends AsyncAction {
-    type: 'add_entry_point';
+export interface RegisterPrefixAction extends AsyncAction {
+    type: 'register_prefix';
 
     /**
-     * The ID of the portal
+     * The prefix that should be registered.
      */
-    portalId: string;
-
+    prefix: string;
+    
     /**
-     * The tag that should be used as the entry point.
+     * The options that should be used for the prefix.
      */
-    tag: string;
+    options: RegisterPrefixOptions;
 }
+
+/**
+ * Defines an interface that contains options for register prefix actions.
+ */
+export interface RegisterPrefixOptions {}
 
 /**
  * Defines an interface for options that show a payment box.
@@ -3216,17 +3221,20 @@ declare global {
         /**
          * Registers a custom portal with the given source code.
          * @param portalId The ID of the portal.
+         * @param tag The tag that the portal should be created from.
          * @param options The options for the portal.
          */
-        register(portalId: string, options?: RegisterCustomPortalOptions): Promise<void>;
+        open(
+            portalId: string,
+            tag: string,
+            options?: OpenCustomPortalOptions
+        ): Promise<void>;
 
         /**
-         * Adds the given tag as an entry point for the portal.
-         * That is, scripts in the specified tag will be run automatically.
-         * @param portalId The ID of the portal.
-         * @param tag The tag that should be used as the entry point.
+         * Specifies that the given prefix should be interpreted as code.
+         * @param prefix The prefix that code tags should start with.
          */
-        addEntryPoint(portalId: string, tag: string): Promise<void>;
+        registerPrefix(prefix: string): Promise<void>;
     };
 
     /**

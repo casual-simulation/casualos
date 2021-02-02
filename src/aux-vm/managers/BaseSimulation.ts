@@ -35,7 +35,6 @@ export class BaseSimulation implements Simulation {
     protected _contexts: BotDimensionManager;
     protected _connection: ConnectionManager;
     protected _code: CodeLanguageManager;
-    protected _portals: PortalManager;
 
     protected _subscriptions: SubscriptionLike[];
     private _status: string;
@@ -109,10 +108,6 @@ export class BaseSimulation implements Simulation {
 
     get code() {
         return this._code;
-    }
-
-    get portals() {
-        return this._portals;
     }
 
     get localEvents() {

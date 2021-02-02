@@ -9,11 +9,12 @@ import {
     isPortalScript,
     PrecalculatedBot,
     PrecalculatedBotsState,
-    RegisterCustomPortalOptions,
+    OpenCustomPortalOptions,
     stateUpdatedEvent,
     StateUpdatedEvent,
     trimPortalScript,
     trimPrefixedScript,
+    Bot,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import values from 'lodash/values';
@@ -22,246 +23,127 @@ import axios from 'axios';
 import type ESBuild from 'esbuild';
 import * as esbuild from 'esbuild';
 
-export interface PortalEntrypoint {
-    botId?: string;
-    tag: string;
+export const DEFAULT_IMPORT_LANGUAGE = 'js';
+
+export const EXTERNAL_MODULE_SYMBOL = Symbol('external_module');
+
+/**
+ * Defines an interface that represents the list of bots and tags that are included in a bundle.
+ */
+export interface BundleModules {
+    [id: string]: Set<string>;
+
+    /**
+     * The set of external modules that were included in the bundle.
+     */
+    [EXTERNAL_MODULE_SYMBOL]?: Set<string>;
 }
 
-export interface Bundle {
-    portalId: string;
-    warnings: string[];
+export interface CodeBundle {
+    tag: string;
     source?: string;
     error?: string;
+    warnings: string[];
+    modules: BundleModules;
 }
 
-export interface Portal {
-    portalId: string;
-    entrypoints: PortalEntrypoint[];
-    scriptPrefixes: string[];
-    style: any;
+export interface ScriptPrefix {
+    prefix: string;
+    language: 'javascript' | 'typescript' | 'json';
+    isDefault?: boolean;
 }
 
 export const DEFAULT_BASE_MODULE_URL: string = 'https://cdn.skypack.dev';
 
 /**
+ * Defines an interface that can bundle AUX code from tags into a single script.
+ */
+export interface PortalBundler {
+    /**
+     * Creates a bundle from the given bots.
+     * @param state The bots state that the bundle should be created from.
+     * @param tag The tag that should be used as the entry point for the bundle.
+     * @param prefixes The prefixes that should be used to distinguish tag types.
+     */
+    bundleTag(
+        state: BotsState,
+        tag: string,
+        prefixes: ScriptPrefix[]
+    ): Promise<CodeBundle>;
+}
+
+/**
  * Defines a class that is used to bundle scripts for portals.
  * It listens for state updates and is able to asynchrounously emit bundles that should be injected into custom portals.
  */
-export class PortalBundler {
+export class ESBuildPortalBundler implements PortalBundler {
     private _esbuildService: ESBuild.Service;
-    private _portals: Map<string, Portal>;
-    private _state: PrecalculatedBotsState;
-    private _onBundleUpdated: Subject<Bundle>;
     private _baseModuleUrl: string = DEFAULT_BASE_MODULE_URL;
     private _httpCache: Map<string, Promise<string>>;
-    private _buildCache: Map<string, any>;
-    private _index: BotIndex;
     private _esbuildWasmUrl: string;
 
-    /**
-     * An observable that emits when a bundle is updated.
-     */
-    get onBundleUpdated(): Observable<Bundle> {
-        return this._onBundleUpdated;
-    }
-
     constructor(options: { esbuildWasmUrl?: string } = {}) {
-        this._portals = new Map();
         this._httpCache = new Map();
-        this._buildCache = new Map();
-        this._index = new BotIndex();
-        this._onBundleUpdated = new Subject();
         this._esbuildWasmUrl = options.esbuildWasmUrl || null;
     }
 
     /**
-     * Processes the given state update event.
+     * Creates a bundle from the given bots that starts with the given tag.
+     * @param state The bots state that the bundle should be created from.
+     * @param tag The tag that should be bundled.
+     * @param prefixes The list of script prefixes.
      */
-    stateUpdated(event: StateUpdatedEvent): Promise<void[]> {
-        this._state = applyUpdates(this._state, event);
-        const batch = this._index.batch(() => {
-            const added = event.addedBots.map((id) => this._state[id]);
-            const tagUpdates = event.updatedBots
-                .map((id) => {
-                    let u = event.state[id];
-                    let tags = u && u.tags ? Object.keys(u.tags) : [];
-                    let valueTags = u && u.values ? Object.keys(u.values) : [];
-                    let bot = this._state[id];
-                    return {
-                        bot,
-                        tags: new Set([...tags, ...valueTags]),
-                    };
-                })
-                .filter((u) => !!u.bot);
-            if (added.length > 0) {
-                this._index.addBots(added);
-            }
-            if (event.removedBots.length > 0) {
-                this._index.removeBots(event.removedBots);
-            }
-            if (tagUpdates.length > 0) {
-                this._index.updateBots(tagUpdates);
-            }
-        });
+    async bundleTag(
+        state: BotsState,
+        tag: string,
+        prefixes: ScriptPrefix[]
+    ): Promise<CodeBundle> {
+        let entryModules = new Set<string>();
+        let entryCode = '';
+        let scriptPrefixes = prefixes.map((p) => p.prefix);
+        let bots = sortBy(values(state), (b) => b.id);
+        const entryPrefix = getScriptPrefix(scriptPrefixes, tag);
+        const entryPrefixes =
+            entryPrefix !== null ? [entryPrefix] : scriptPrefixes;
+        tag = entryPrefix !== null ? trimPrefixedScript(entryPrefix, tag) : tag;
 
-        return this._updateBundles(event, batch);
-    }
+        let tagModules = bots
+            .map((b) => ({
+                prefix: getScriptPrefix(
+                    entryPrefixes,
+                    calculateBotValue(null, b, tag)
+                ),
+                tag: tag,
+                id: b.id,
+                code: calculateBotValue(null, b, tag),
+            }))
+            .filter((value) => value.prefix !== null)
+            .map((m) => ({
+                name: auxModuleId(m.prefix, m.id, m.tag),
+                code: trimPrefixedScript(m.prefix, m.code),
+            }));
 
-    getPortal(portalId: string) {
-        return this._portals.get(portalId);
-    }
-
-    /**
-     * Registers a custom portal with the given ID.
-     * @param portalId The ID of the portal.
-     * @param options The options for the portal.
-     */
-    registerCustomPortal(
-        portalId: string,
-        options: RegisterCustomPortalOptions
-    ): Promise<void> {
-        const currentPortal = this._portals.get(portalId);
-
-        if (currentPortal) {
-            const prefixesChanged = !isEqual(
-                currentPortal.scriptPrefixes,
-                options.scriptPrefixes
-            );
-            const newPortal: Portal = {
-                ...currentPortal,
-                scriptPrefixes: options.scriptPrefixes,
-                style: options.style,
-            };
-
-            this._portals.set(portalId, newPortal);
-
-            if (prefixesChanged && newPortal.entrypoints.length > 0) {
-                return this._updateBundle(
-                    stateUpdatedEvent(this._state),
-                    this._index.initialEvents(),
-                    newPortal
-                );
-            }
-        } else {
-            this._portals.set(portalId, {
-                portalId,
-                entrypoints: [],
-                scriptPrefixes: options.scriptPrefixes,
-                style: options.style,
-            });
+        if (tagModules.length <= 0) {
+            return null;
         }
 
-        return Promise.resolve();
-    }
-
-    /**
-     * Adds an entry point to the portal with the given ID.
-     * @param portalId The ID of the portal.
-     * @param entrypoint The entrypoint.
-     */
-    addEntryPoint(
-        portalId: string,
-        entrypoint: PortalEntrypoint
-    ): Promise<void> {
-        let portal = this._portals.get(portalId);
-        if (portal) {
-            portal.entrypoints.push({
-                tag: trimPortalScript(portal.scriptPrefixes, entrypoint.tag),
-                botId: entrypoint.botId,
-            });
-
-            return this._updateBundle(
-                stateUpdatedEvent(this._state),
-                this._index.initialEvents(),
-                portal
-            );
-        }
-    }
-
-    private _updateBundles(
-        event: StateUpdatedEvent,
-        indexEvents: BotIndexEvent[]
-    ) {
-        let promises = [] as Promise<void>[];
-        for (let portal of this._portals.values()) {
-            if (portal.entrypoints.length > 0) {
-                promises.push(this._updateBundle(event, indexEvents, portal));
-            }
-        }
-        return Promise.all(promises);
-    }
-
-    private _updateBundle(
-        event: StateUpdatedEvent,
-        indexEvents: BotIndexEvent[],
-        portal: Portal
-    ) {
-        let hasUpdate = indexEvents.some((event) => {
-            if (event.type === 'bot_tag_added') {
-                return hasPortalScript(
-                    portal.scriptPrefixes,
-                    calculateBotValue(null, event.bot, event.tag)
-                );
-            } else if (event.type === 'bot_tag_removed') {
-                return hasPortalScript(
-                    portal.scriptPrefixes,
-                    calculateBotValue(null, event.oldBot, event.tag)
-                );
-            } else if (event.type === 'bot_tag_updated') {
-                const wasEntrypointTag = hasPortalScript(
-                    portal.scriptPrefixes,
-                    calculateBotValue(null, event.oldBot, event.tag)
-                );
-                const isEntrypoint = hasPortalScript(
-                    portal.scriptPrefixes,
-                    calculateBotValue(null, event.bot, event.tag)
-                );
-                return isEntrypoint || wasEntrypointTag;
-            }
-        });
-
-        if (hasUpdate) {
-            let entryModules = new Set<string>();
-            let entryCode = '';
-            let bots = sortBy(values(this._state), (b) => b.id);
-
-            for (let entrypoint of portal.entrypoints) {
-                let tagModules = bots
-                    .map((b) => ({
-                        prefix: getScriptPrefix(
-                            portal.scriptPrefixes,
-                            b.values[entrypoint.tag]
-                        ),
-                        tag: entrypoint.tag,
-                        id: b.id,
-                        code: b.values[entrypoint.tag],
-                    }))
-                    .filter((value) => value.prefix !== null)
-                    .map((m) => ({
-                        name: auxModuleId(m.prefix, m.id, m.tag),
-                        code: trimPrefixedScript(m.prefix, m.code),
-                    }));
-
-                for (let m of tagModules) {
-                    entryModules.add(m.name);
-                }
-            }
-
-            for (let name of entryModules) {
-                entryCode += `import ${JSON.stringify(name)};\n`;
-            }
-
-            return this._esbuild(portal, entryCode, bots);
+        for (let m of tagModules) {
+            entryModules.add(m.name);
         }
 
-        return Promise.resolve();
+        for (let name of entryModules) {
+            entryCode += `import ${JSON.stringify(name)};\n`;
+        }
+        return await this._esbuild(tag, entryCode, prefixes, state, bots);
     }
 
     private async _esbuild(
-        portal: Portal,
+        tag: string,
         entryCode: string,
-        bots: PrecalculatedBot[]
-    ) {
+        prefixes: ScriptPrefix[],
+        state: BotsState,
+        bots: Bot[]
+    ): Promise<CodeBundle> {
         if (!this._esbuildService) {
             let options: ESBuild.ServiceOptions = {};
             if (this._esbuildWasmUrl) {
@@ -270,6 +152,7 @@ export class PortalBundler {
             this._esbuildService = await esbuild.startService(options);
         }
 
+        let modules: BundleModules = {};
         try {
             const result = await this._esbuildService.build({
                 entryPoints: ['__entry'],
@@ -278,7 +161,13 @@ export class PortalBundler {
                 write: false,
                 logLevel: 'silent',
                 plugins: [
-                    this._esbuildPlugin(portal.scriptPrefixes, entryCode, bots),
+                    this._esbuildPlugin(
+                        prefixes,
+                        entryCode,
+                        state,
+                        bots,
+                        modules
+                    ),
                 ],
             });
 
@@ -289,24 +178,28 @@ export class PortalBundler {
 
             const warnings = result.warnings.map((w) => w.text);
 
-            this._onBundleUpdated.next({
-                portalId: portal.portalId,
+            return {
+                tag,
                 source: final,
-                warnings: warnings,
-            });
+                warnings,
+                modules,
+            };
         } catch (err) {
-            this._onBundleUpdated.next({
-                portalId: portal.portalId,
-                warnings: [],
+            return {
+                tag,
                 error: err.toString(),
-            });
+                warnings: [],
+                modules,
+            };
         }
     }
 
     private _esbuildPlugin(
-        prefixes: string[],
+        prefixes: ScriptPrefix[],
         entryCode: string,
-        bots: PrecalculatedBot[]
+        state: BotsState,
+        bots: Bot[],
+        modules: BundleModules
     ): ESBuild.Plugin {
         return {
             name: 'casualos',
@@ -332,25 +225,31 @@ export class PortalBundler {
                 for (let p of prefixes) {
                     let prefix = p;
                     build.onResolve(
-                        { filter: new RegExp(`^${prefix}`) },
+                        { filter: new RegExp(`^${prefix.prefix}`) },
                         (args) => {
-                            const tag = trimPrefixedScript(prefix, args.path);
+                            const tag = trimPrefixedScript(
+                                prefix.prefix,
+                                args.path
+                            );
                             const bot = bots.find((b) =>
-                                isPortalScript(prefix, b.values[tag])
+                                isPortalScript(
+                                    prefix.prefix,
+                                    calculateBotValue(null, b, tag)
+                                )
                             );
 
                             if (!bot) {
                                 return {
                                     errors: [
                                         {
-                                            text: `Unable to resolve "${prefixes[0]}${tag}". No matching script could be found.`,
+                                            text: `Unable to resolve "${prefix.prefix}${tag}". No matching script could be found.`,
                                         },
                                     ],
                                 };
                             }
 
                             return {
-                                path: auxModuleId(prefix, bot.id, tag),
+                                path: auxModuleId(prefix.prefix, bot.id, tag),
                                 namespace: 'aux-ns',
                             };
                         }
@@ -365,20 +264,37 @@ export class PortalBundler {
                             args.path
                         );
                         if (prefix && botId && tag) {
-                            const bot = this._state[botId];
+                            const bot = state[botId];
                             if (!bot) {
                                 return {
                                     errors: [
                                         {
-                                            text: `Unable to import "${prefix}${tag}". No matching script could be found.`,
+                                            text: `Unable to import "${prefix.prefix}${tag}". No matching script could be found.`,
                                         },
                                     ],
                                 };
                             }
-                            const code = bot.values[tag];
+                            let moduleTags = modules[botId];
+                            if (!moduleTags) {
+                                moduleTags = new Set();
+                                modules[botId] = moduleTags;
+                            }
+                            moduleTags.add(tag);
+
+                            const code = calculateBotValue(null, bot, tag);
                             return {
-                                contents: trimPrefixedScript(prefix, code),
-                                loader: 'js',
+                                contents: trimPrefixedScript(
+                                    prefix.prefix,
+                                    code
+                                ),
+                                loader:
+                                    prefix.language === 'javascript'
+                                        ? 'js'
+                                        : prefix.language === 'typescript'
+                                        ? 'ts'
+                                        : prefix.language === 'json'
+                                        ? 'json'
+                                        : DEFAULT_IMPORT_LANGUAGE,
                             };
                         }
 
@@ -409,6 +325,12 @@ export class PortalBundler {
                         const url = new URL(importee, importer);
                         return { path: url.href, namespace: 'http-ns' };
                     } else {
+                        let moduleTags = modules[EXTERNAL_MODULE_SYMBOL];
+                        if (!moduleTags) {
+                            moduleTags = new Set();
+                            modules[EXTERNAL_MODULE_SYMBOL] = moduleTags;
+                        }
+                        moduleTags.add(importee);
                         return {
                             path: `${this._baseModuleUrl}/${importee}`,
                             namespace: 'http-ns',
@@ -469,13 +391,13 @@ function auxModuleId(prefix: string, botId: string, tag: string) {
 }
 
 function parseAuxModuleId(
-    prefixes: string[],
+    prefixes: ScriptPrefix[],
     id: string
-): { prefix: string; botId: string; tag: string } {
+): { prefix: ScriptPrefix; botId: string; tag: string } {
     if (isAuxModuleId(id)) {
         for (let prefix of prefixes) {
-            if (id.startsWith(prefix)) {
-                id = id.substring(prefix.length);
+            if (id.startsWith(prefix.prefix)) {
+                id = id.substring(prefix.prefix.length);
                 const dotIndex = id.indexOf('.');
                 const botId = id.slice(0, dotIndex);
                 const tag = id.slice(

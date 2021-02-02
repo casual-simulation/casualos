@@ -21,10 +21,10 @@ import {
     asyncResult,
     addDebugApi,
     RuntimeStateVersion,
-    RegisterCustomPortalAction,
+    OpenCustomPortalAction,
     asyncError,
-    AddEntryPointAction,
-    RegisterCustomPortalOptions,
+    RegisterPrefixAction,
+    OpenCustomPortalOptions,
     DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
@@ -591,45 +591,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this._registerStateSubscriptionsForPartition(partition);
         }
     }
-
-    // protected async _registerCustomPortal(
-    //     event: RegisterCustomPortalAction
-    // ): Promise<void> {
-    //     try {
-    //         let currentPortal = this._portalBundler.getPortal(event.portalId);
-    //         const options: RegisterCustomPortalOptions = {
-    //             scriptPrefixes:
-    //                 event.options.scriptPrefixes ||
-    //                 currentPortal?.scriptPrefixes ||
-    //                 DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
-    //             style: event.options.style || currentPortal?.style || {},
-    //         };
-
-    //         this._portalBundler.registerCustomPortal(event.portalId, options);
-    //         this._onPortalEvent.next([
-    //             {
-    //                 type: 'register_portal',
-    //                 portalId: event.portalId,
-    //                 options: options,
-    //             },
-    //         ]);
-    //         console.log(
-    //             `[BaseAuxChannel] Portal ${event.portalId} registered!`
-    //         );
-    //         await this._helper.transaction(asyncResult(event.taskId, null));
-    //     } catch (err) {
-    //         await this._helper.transaction(asyncError(event.taskId, err));
-    //     }
-    // }
-
-    // protected async _addEntryPoint(event: AddEntryPointAction) {
-    //     try {
-    //         this._portalBundler.addEntryPoint(event.portalId, event);
-    //         await this._helper.transaction(asyncResult(event.taskId, null));
-    //     } catch (err) {
-    //         await this._helper.transaction(asyncError(event.taskId, err));
-    //     }
-    // }
 
     private async _initUserBot() {
         if (!this.user) {

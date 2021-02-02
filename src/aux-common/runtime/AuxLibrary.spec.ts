@@ -134,10 +134,10 @@ import {
     RuntimeBot,
     SET_TAG_MASK_SYMBOL,
     CLEAR_CHANGES_SYMBOL,
-    registerCustomPortal,
+    openCustomPortal,
     animateTag,
     showUploadFiles,
-    addEntryPoint,
+    registerPrefix,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2467,12 +2467,15 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('portal.register()', () => {
-            it('should return a RegisterCustomPortal action', () => {
-                const promise: any = library.api.portal.register('test');
-                const expected = registerCustomPortal(
+        describe('portal.open()', () => {
+            it('should return a OpenCustomPortal action', () => {
+                const promise: any = library.api.portal.open('test', 'tag');
+                const expected = openCustomPortal(
                     'test',
-                    {},
+                    'tag',
+                    {
+                        style: {},
+                    },
                     context.tasks.size
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
@@ -2480,13 +2483,18 @@ describe('AuxLibrary', () => {
             });
 
             it('should include the specified options', () => {
-                const promise: any = library.api.portal.register('test', {
-                    scriptPrefixes: ['123', '🙂'],
+                const promise: any = library.api.portal.open('test', 'tag', {
+                    style: {
+                        abc: 'def',
+                    },
                 });
-                const expected = registerCustomPortal(
+                const expected = openCustomPortal(
                     'test',
+                    'tag',
                     {
-                        scriptPrefixes: ['123', '🙂'],
+                        style: {
+                            abc: 'def',
+                        },
                     },
                     context.tasks.size
                 );
@@ -2495,17 +2503,10 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('portal.addEntryPoint()', () => {
-            it('should return a AddEntryPoint action', () => {
-                const promise: any = library.api.portal.addEntryPoint(
-                    'test',
-                    'abc'
-                );
-                const expected = addEntryPoint(
-                    'test',
-                    'abc',
-                    context.tasks.size
-                );
+        describe('portal.registerPrefix()', () => {
+            it('should return a RegisterPrefix action', () => {
+                const promise: any = library.api.portal.registerPrefix('test');
+                const expected = registerPrefix('test', {}, context.tasks.size);
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
