@@ -3044,12 +3044,27 @@ declare global {
         run(script: string): Promise<any>;
 
         /**
+         * Downloads the given data.
+         * @param data The data to download. Objects will be formatted as JSON before downloading.
+         * @param filename The name of the file that the data should be downloaded as.
+         * @param mimeType The MIME type that should be used. If not specified then it will be inferred from the filename.
+         */
+        download(
+            data: string | object | ArrayBuffer | Blob,
+            filename: string,
+            mimeType?: string
+        ): DownloadAction;
+
+        /**
          * Downloads the given list of bots.
          * @param bots The bots that should be downloaded.
          * @param filename The name of the file that the bots should be downloaded as.
          */
         downloadBots(bots: Bot[], filename: string): DownloadAction;
 
+        /**
+         * Downloads all the shared bots in the server.
+         */
         downloadServer(): DownloadAction;
 
         /**

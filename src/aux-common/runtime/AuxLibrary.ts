@@ -1367,6 +1367,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         );
     }
 
+    /**
+     * Downloads all the shared bots in the server.
+     */
     function downloadServer() {
         return downloadBots(
             getBots(bySpace('shared')),
