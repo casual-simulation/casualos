@@ -4846,12 +4846,28 @@ Additionally, whenever one of those tags are changed the portal will be reloaded
 
 The **first parameter** is the ID that the portal should have. This is used to distinguish portals from each other.
 
-The **second parameter** is the tag that the portal should be loaded from. This value can be prefixed with a registered prefix to limit which tags can be used as entrypoints.
+The **second parameter** is the tag or source code that the portal should be loaded from.
+This value can be prefixed with a registered prefix to limit which tags can be used as entrypoints.
+The `mode` property of the options parameter determines whether this parameter should be a tag or some source code.
 
 The **third parameter** is optional and is the options that the portal should use. It is an object and should have the following structure:
 
 ```typescript
 let options: {
+
+    /**
+     * The mode that the portal should operate in.
+     * 
+     * "Tag" indicates that second parameter should be interpreted
+     * as a tag name and that the portal should be loaded from that tag.
+     * 
+     * "source" indicates that the second parameter should be interpreted
+     * as some source code and the portal loaded directly from the source.
+     * 
+     * Defaults to "tag".
+     */
+    mode?: "tag" | "source";
+
     /**
      * The CSS styles that should be used for the portal.
      */
@@ -4878,6 +4894,13 @@ await portal.open("my-portal", "test", {
     style: {
         height: '30%'
     }
+});
+```
+
+4. Open a custom portal with some source code.
+```typescript
+await portal.open("my-portal", `console.log("Hello, Portal!");`, {
+    mode: "source"
 });
 ```
 

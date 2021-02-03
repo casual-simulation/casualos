@@ -246,7 +246,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
-                    tag: '🔺script',
+                    tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
                         style: {
@@ -262,7 +262,6 @@ describe('PortalManager', () => {
                 {
                     id: 'test-portal',
                     source: 'abc',
-                    tag: 'script',
                     style: {
                         abc: 'def',
                     },
@@ -288,7 +287,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
-                    tag: '🔺script',
+                    tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
                         style: {
@@ -304,7 +303,6 @@ describe('PortalManager', () => {
                 {
                     id: 'test-portal',
                     source: null,
-                    tag: 'script',
                     style: {
                         abc: 'def',
                     },
@@ -326,7 +324,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
-                    tag: '🔺script',
+                    tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
                         style: {
@@ -342,7 +340,6 @@ describe('PortalManager', () => {
                 {
                     id: 'test-portal',
                     source: null,
-                    tag: 'script',
                     style: {
                         abc: 'def',
                     },
@@ -356,7 +353,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
-                    tag: 'script',
+                    tagOrSource: 'script',
                     taskId: 'task1',
                     options: {},
                 },
@@ -365,6 +362,104 @@ describe('PortalManager', () => {
             await waitAsync();
 
             expect(vm.events).toEqual([asyncResult('task1', undefined)]);
+        });
+
+        it('should resolve new portals loaded from source', async () => {
+            expect(portals).toEqual([]);
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺wrong',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    tagOrSource: 'console.log("test1");',
+                    taskId: 'task',
+                    options: {
+                        mode: 'source',
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(portals).toEqual([
+                {
+                    id: 'test-portal',
+                    source: 'console.log("test1");',
+                    style: {
+                        abc: 'def',
+                    },
+                    error: null,
+                },
+            ]);
+        });
+
+        it('should resolve new portals loaded from source that override building from a tag', async () => {
+            expect(portals).toEqual([]);
+
+            bundler.bundleTag.mockResolvedValueOnce({
+                tag: 'script',
+                source: 'wrong',
+                modules: {},
+                warnings: [],
+            });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺wrong',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    tagOrSource: '🔺script',
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    tagOrSource: 'console.log("test1");',
+                    taskId: 'task2',
+                    options: {
+                        mode: 'source',
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(portals).toEqual([
+                {
+                    id: 'test-portal',
+                    source: 'console.log("test1");',
+                    style: {
+                        abc: 'def',
+                    },
+                    error: null,
+                },
+            ]);
         });
     });
 
@@ -408,7 +503,7 @@ describe('PortalManager', () => {
                     {
                         type: 'open_custom_portal',
                         portalId: 'test-portal',
-                        tag: 'script',
+                        tagOrSource: 'script',
                         taskId: 'task1',
                         options: {},
                     },
@@ -449,13 +544,11 @@ describe('PortalManager', () => {
                     {
                         oldPortal: {
                             id: 'test-portal',
-                            tag: 'script',
                             source: 'abc',
                             error: null,
                         },
                         portal: {
                             id: 'test-portal',
-                            tag: 'script',
                             source: 'correct',
                             error: null,
                         },
@@ -490,13 +583,11 @@ describe('PortalManager', () => {
                     {
                         oldPortal: {
                             id: 'test-portal',
-                            tag: 'script',
                             source: 'abc',
                             error: null,
                         },
                         portal: {
                             id: 'test-portal',
-                            tag: 'script',
                             source: 'correct',
                             error: null,
                         },
@@ -528,13 +619,11 @@ describe('PortalManager', () => {
                     {
                         oldPortal: {
                             id: 'test-portal',
-                            tag: 'script',
                             source: 'abc',
                             error: null,
                         },
                         portal: {
                             id: 'test-portal',
-                            tag: 'script',
                             source: 'correct',
                             error: null,
                         },
@@ -638,7 +727,7 @@ describe('PortalManager', () => {
                     {
                         type: 'open_custom_portal',
                         portalId: 'test-portal',
-                        tag: '🔺script',
+                        tagOrSource: '🔺script',
                         taskId: 'task1',
                         options: {
                             style: {
@@ -654,13 +743,11 @@ describe('PortalManager', () => {
                     {
                         oldPortal: {
                             id: 'test-portal',
-                            tag: 'script',
                             source: 'abc',
                             error: null,
                         },
                         portal: {
                             id: 'test-portal',
-                            tag: 'script',
                             source: 'abc',
                             style: {
                                 anything: true,
@@ -699,7 +786,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
-                    tag: '🔺script',
+                    tagOrSource: '🔺script',
                     taskId: 'task1',
                     options: {},
                 },
@@ -738,13 +825,11 @@ describe('PortalManager', () => {
                 {
                     oldPortal: {
                         id: 'test-portal',
-                        tag: 'script',
                         source: 'abc',
                         error: null,
                     },
                     portal: {
                         id: 'test-portal',
-                        tag: 'script',
                         source: 'correct',
                         error: null,
                     },
@@ -779,7 +864,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
-                    tag: '🔺script',
+                    tagOrSource: '🔺script',
                     taskId: 'task1',
                     options: {},
                 },
@@ -813,14 +898,79 @@ describe('PortalManager', () => {
                 {
                     oldPortal: {
                         id: 'test-portal',
-                        tag: 'script',
                         source: 'abc',
                         error: null,
                     },
                     portal: {
                         id: 'test-portal',
-                        tag: 'script',
                         source: 'correct',
+                        error: null,
+                    },
+                },
+            ]);
+        });
+
+        it('should update the portal with the specified source', async () => {
+            bundler.bundleTag.mockResolvedValueOnce({
+                tag: 'script',
+                source: 'abc',
+                error: null,
+                modules: {},
+                warnings: [],
+            });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    bot1: createPrecalculatedBot('bot1', {
+                        script: '🔺abc',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    taskId: 'task1',
+                    options: {},
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    tagOrSource: '🔺script',
+                    taskId: 'task1',
+                    options: {},
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(updates).toEqual([]);
+
+            localEvents.next([
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    tagOrSource: 'my-source',
+                    taskId: 'task1',
+                    options: {
+                        mode: 'source',
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(updates).toEqual([
+                {
+                    oldPortal: {
+                        id: 'test-portal',
+                        source: 'abc',
+                        error: null,
+                    },
+                    portal: {
+                        id: 'test-portal',
+                        source: 'my-source',
                         error: null,
                     },
                 },

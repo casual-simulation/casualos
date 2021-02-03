@@ -1869,19 +1869,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Registers a custom portal with the given source code.
      * @param portalId The ID of the portal.
-     * @param tag The tag that the portal should be created from.
+     * @param tagOrSource The tag or source code that the portal should be created from.
      * @param options The options for the portal.
      */
     function openCustomPortal(
         portalId: string,
-        tag: string,
+        tagOrSource: string,
         options: OpenCustomPortalOptions = {}
     ): Promise<void> {
         const task = context.createTask();
         const event = calcOpenCustomPortal(
             portalId,
-            tag,
+            tagOrSource,
             {
+                mode: options?.mode || 'tag',
                 style: options?.style || {},
             },
             task.taskId

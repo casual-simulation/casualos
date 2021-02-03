@@ -175,6 +175,10 @@ export class PortalManager implements SubscriptionLike {
         portal: PortalRegistration,
         updatedTags: Set<string>
     ) {
+        if (portal.tag === null) {
+            return false;
+        }
+
         let hasUpdate = false;
         if (!portal.buildInProcess && portal.modules) {
             for (let tag of updatedTags) {
@@ -213,6 +217,9 @@ export class PortalManager implements SubscriptionLike {
         portal: PortalRegistration,
         updatedBots: Set<string>
     ) {
+        if (portal.tag === null) {
+            return false;
+        }
         let hasUpdate = false;
         if (!portal.buildInProcess && portal.modules) {
             for (let botId of updatedBots) {
@@ -254,18 +261,21 @@ export class PortalManager implements SubscriptionLike {
                         event.portalId
                     );
 
+                    const isSource = event.options.mode === 'source';
                     if (currentPortal) {
-                        currentPortal.entrypoint = event.tag;
-                        currentPortal.tag = this._getTrimmedPortalTag(
-                            event.tag
-                        );
+                        currentPortal.entrypoint = event.tagOrSource;
+                        currentPortal.tag = isSource
+                            ? null
+                            : this._getTrimmedPortalTag(event.tagOrSource);
                         currentPortal.style = event.options.style;
                         this._triggerUpdateForPortal(currentPortal);
                     } else {
                         const newPortal: PortalRegistration = {
                             id: event.portalId,
-                            entrypoint: event.tag,
-                            tag: this._getTrimmedPortalTag(event.tag),
+                            entrypoint: event.tagOrSource,
+                            tag: isSource
+                                ? null
+                                : this._getTrimmedPortalTag(event.tagOrSource),
                             style: event.options.style,
                             buildInProcess: false,
                             modules: null,
@@ -322,7 +332,20 @@ export class PortalManager implements SubscriptionLike {
     }
 
     private async _triggerUpdateForPortal(portal: PortalRegistration) {
-        if (!portal.buildInProcess) {
+        if (portal.tag === null) {
+            // portal has no tag to build - it can be loaded directly as source
+
+            portal.unprocessedBots.clear();
+            portal.unprocessedTags.clear();
+            portal.modules = null;
+
+            this._sendPortalData(portal, {
+                id: portal.id,
+                error: null,
+                source: portal.entrypoint,
+                style: portal.style,
+            });
+        } else if (!portal.buildInProcess) {
             try {
                 portal.buildInProcess = true;
                 portal.unprocessedTags.clear();
@@ -353,17 +376,23 @@ export class PortalManager implements SubscriptionLike {
             portal.entrypoint,
             this.scriptPrefixes
         );
+
+        if (portal.tag !== null) {
+            portal.modules = bundle?.modules || null;
+            this._sendPortalData(portal, {
+                id: portal.id,
+                style: portal.style,
+                error: bundle?.error || null,
+                source: bundle?.source || null,
+            });
+        }
+    }
+
+    private _sendPortalData(
+        portal: PortalRegistration,
+        portalData: PortalData
+    ) {
         const oldPortal = this._portals.get(portal.id);
-
-        portal.modules = bundle?.modules || null;
-
-        const portalData: PortalData = {
-            id: portal.id,
-            style: portal.style,
-            tag: bundle?.tag || oldPortal?.tag || portal.tag,
-            error: bundle?.error || null,
-            source: bundle?.source || null,
-        };
 
         if (!this._portals.has(portal.id)) {
             this._portals.set(portal.id, portalData);
@@ -424,11 +453,6 @@ export interface PortalData {
      * The ID of the portal.
      */
     id: string;
-
-    /**
-     * The tag that the portal is loaded from.
-     */
-    tag: string;
 
     /**
      * The source code that the portal should use.

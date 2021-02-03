@@ -2545,6 +2545,7 @@ describe('AuxLibrary', () => {
                     'tag',
                     {
                         style: {},
+                        mode: 'tag',
                     },
                     context.tasks.size
                 );
@@ -2557,6 +2558,7 @@ describe('AuxLibrary', () => {
                     style: {
                         abc: 'def',
                     },
+                    mode: 'source',
                 });
                 const expected = openCustomPortal(
                     'test',
@@ -2565,6 +2567,7 @@ describe('AuxLibrary', () => {
                         style: {
                             abc: 'def',
                         },
+                        mode: 'source',
                     },
                     context.tasks.size
                 );

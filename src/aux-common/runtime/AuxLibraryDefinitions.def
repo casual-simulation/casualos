@@ -1709,6 +1709,15 @@ declare interface ShareAction extends AsyncAction, ShareOptions {
  */
 export interface OpenCustomPortalOptions {
     /**
+     * The mode that the portal should be opened in.
+     * "Tag" indicates that the portal should watch the given tag and automatically produce bundles for the portal.
+     * "source" indicates that the portal should load the given source directly.
+     * 
+     * Defaults to "tag".
+     */
+    mode?: 'tag' | 'source';
+
+    /**
      * The CSS styles that should be used for the portal.
      */
     style?: any;
@@ -3280,12 +3289,12 @@ declare global {
         /**
          * Registers a custom portal with the given source code.
          * @param portalId The ID of the portal.
-         * @param tag The tag that the portal should be created from.
+         * @param tagOrSource The tag or source code that the portal should be created from.
          * @param options The options for the portal.
          */
         open(
             portalId: string,
-            tag: string,
+            tagOrSource: string,
             options?: OpenCustomPortalOptions
         ): Promise<void>;
 

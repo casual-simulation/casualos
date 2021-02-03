@@ -2350,6 +2350,13 @@ export interface OpenCustomPortalOptions {
      * The CSS styles that should be used for the portal.
      */
     style?: any;
+
+    /**
+     * The mode that the portal should be opened in.
+     * "Tag" indicates that the portal should watch the given tag and automatically produce bundles for the portal.
+     * "source" indicates that the portal should load the given source directly.
+     */
+    mode?: 'tag' | 'source';
 }
 
 /**
@@ -2363,9 +2370,9 @@ export interface OpenCustomPortalAction extends AsyncAction {
     portalId: string;
 
     /**
-     * The tag that the portal should use.
+     * The tag or bundle that the portal should use.
      */
-    tag: string;
+    tagOrSource: string;
 
     /**
      * The options for the portal.
@@ -4581,20 +4588,20 @@ export function share(
 /**
  * Creates an action that registers a custom portal.
  * @param portalId The ID of the portal,
- * @param tag The tag that the portal should use.
+ * @param tagOrSource The tag or bundle of source that the portal should use.
  * @param options The options for the portal.
  * @param taskId The ID of the task.
  */
 export function openCustomPortal(
     portalId: string,
-    tag: string,
+    tagOrSource: string,
     options: OpenCustomPortalOptions,
     taskId?: number | string
 ): OpenCustomPortalAction {
     return {
         type: 'open_custom_portal',
         portalId,
-        tag,
+        tagOrSource,
         options,
         taskId,
     };
