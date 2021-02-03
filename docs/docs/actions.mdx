@@ -1353,6 +1353,26 @@ player.checkout({
 });
 ```
 
+### `player.download(data, filename, mimeType?)`
+
+Downloads the given data with the given filename and [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types).
+
+The **first parameter** is the data that should be downloaded. This
+can be a string, object, or binary data in the form of an [ArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)
+or [Blob](https://developer.mozilla.org/en-us/docs/Web/API/Blob).
+
+The **second parameter** is the name of the file that should be downloaded.
+
+The **third parameter** is optional and is the [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) that the downloaded file should have.
+If not provided, then it will be inferred from the provided filename.
+
+#### Examples:
+
+1. Download a text file named "test.txt" that contains "abc".
+```typescript
+player.download("abc", "test.txt");
+```
+
 ### `player.downloadBots(bots, filename)`
 
 
@@ -4810,28 +4830,43 @@ div.textContent = 'Hello, World!';
 
 Next, create an `onClick` tag and type this:
 ```
-@await portal.register('my-portal');
-await portal.addEntryPoint('my-portal', 'main');
+@await portal.registerPrefix('📖');
+await portal.open('my-portal', '📖main');
 ```
 
 Finally, click the bot to start the portal. You should see a white frame appear over the top half of the screen and have the text "Hello, World!" in it.
 
-### `portal.register(portalId, options?)`
+### `portal.open(portalId, tag, options?)`
 
 Registers a custom portal with the given ID and options. Returns a promise that resolves when the portal has been registered.
 Can be called multiple times with new options to override previous options.
 
+After calling this function for a portal, CasualOS will look for tags that are referenced by the specified tag via import statements and produce a script bundle that is injected into the portal.
+Additionally, whenever one of those tags are changed the portal will be reloaded with the new bundle.
+
 The **first parameter** is the ID that the portal should have. This is used to distinguish portals from each other.
 
-The **second parameter** is optional and is the options that the portal should use. It is an object and should have the following structure:
+The **second parameter** is the tag or source code that the portal should be loaded from.
+This value can be prefixed with a registered prefix to limit which tags can be used as entrypoints.
+The `mode` property of the options parameter determines whether this parameter should be a tag or some source code.
+
+The **third parameter** is optional and is the options that the portal should use. It is an object and should have the following structure:
 
 ```typescript
 let options: {
+
     /**
-     * The script prefixes that should be used for the portal.
-     * Defaults to ["📖"] if not specified.
+     * The mode that the portal should operate in.
+     * 
+     * "Tag" indicates that second parameter should be interpreted
+     * as a tag name and that the portal should be loaded from that tag.
+     * 
+     * "source" indicates that the second parameter should be interpreted
+     * as some source code and the portal loaded directly from the source.
+     * 
+     * Defaults to "tag".
      */
-    scriptPrefixes?: string[];
+    mode?: "tag" | "source";
 
     /**
      * The CSS styles that should be used for the portal.
@@ -4842,46 +4877,98 @@ let options: {
 
 #### Examples:
 
-1. Register a custom portal.
+1. Open a custom portal for the `test` tag.
 ```typescript
-await portal.register("my-portal");
+await portal.open("my-portal", "test");
 ```
 
-2. Register a custom portal with custom script prefixes.
+2. Open a custom portal for `test` tags that are prefixed with `🔺`.
 ```typescript
-await portal.register("my-portal", {
-    scriptPrefixes: ["🐦"]
+await portal.registerPrefix('🔺');
+await portal.open("my-portal", "🔺test");
+```
+
+3. Open a custom portal with a custom CSS style.
+```typescript
+await portal.open("my-portal", "test", {
+    style: {
+        height: '30%'
+    }
 });
 ```
 
-### `portal.addEntryPoint(portalId, tag)`
+4. Open a custom portal with some source code.
+```typescript
+await portal.open("my-portal", `console.log("Hello, Portal!");`, {
+    mode: "source"
+});
+```
 
-Specifies that the given tag should be an entry point for the portal with the given ID. Returns a promise that resolves when the entry point has been registered.
-Portals support multiple entry points, although it should be noted that the order that each entry point runs in is not guaranteed.
+### `portal.registerPrefix(prefix)`
 
-After calling this function for a portal, CasualOS will look for tag values that start
-with one of the script prefixes that were specified in <ActionLink action='portal.register(portalId, options?)'/> and produce a script bundle that is injected into the portal.
-Additionally, whenever a tag with the specified script prefixes is changed the portal will be reloaded with the new bundle.
+Specifies that the given prefix should be used to indicate that the tag contains script content that can be used in a custom portal.
+Use this function to specify custom prefixes that function similarly to `@` or `🧬`.
 
-The **first parameter** is the ID of the portal.
-
-The **second parameter** is the tag that the portal should use as an entry point. That is, the piece of code that gets run first and references all the other code for the portal.
-Similarly to <ActionLink action='shout(name, arg?)'/>, this parameter can be prefixed with one of the script prefixes that the portal is registered with. 
+The **first parameter** is the prefix that should indicate that the rest of the tag value is a script.
 
 #### Examples:
 
-1. Add the `main` tag as an entry point.
+1. Add `📖` as an script prefix.
 ```typescript
-await portal.addEntryPoint("my-portal", "main");
+await portal.registerPrefix("📖");
 ```
 
-2. Register a portal and add an entry point.
+2. Register some arbitrary text as a prefix.
 ```typescript
-await portal.register("my-portal");
+await portal.registerPrefix("myPrefix");
+```
 
-// Inject scripts in "#main" tags that start with "📖"
-// into the portal.
-await portal.addEntryPoint("my-portal", "📖main");
+### `portal.buildBundle(tag)`
+
+Builds a script bundle for the given tag and returns a promise that resolves when the build is done.
+This function is useful for getting the code that portals would use.
+
+Resolves with an object that has the following structure:
+```typescript
+let result: {
+    /**
+     * The tag the bundle was built from.
+     */
+    tag: string;
+
+    /**
+     * The source code that the bundle contains.
+     * If an error occurred, then this will be null/undefined.
+     */
+    source?: string;
+
+    /**
+     * The error that occurred while building the bundle.
+     * Null/Undefined if an error did not happen.
+     */
+    error?: string;
+
+    /**
+     * The list of warnings that occurred while building the bundle.
+     */
+    warnings: string[];
+
+    /**
+     * The map of Bot IDs to tags that are contained in the bundle.
+     */
+    modules: {
+        [id: string]: Set<string>;
+    };
+};
+```
+
+The **first parameter** is the tag that the bundle should be built from. This value can be prefixed with a registered prefix to limit which tags can be used as entrypoints.
+
+#### Examples:
+
+1. Get a script bundle for the `test` tag.
+```typescript
+const bundle = await portal.buildBundle("test");
 ```
 
 ## Experimental Actions

@@ -8,6 +8,8 @@ export * from './ConnectionManager';
 export * from './LoginManager';
 export * from './ProgressManager';
 export * from './BotDimensionManager';
+export * from './PortalEvents';
+export * from './PortalBundler';
 export * from './PortalManager';
 
 export * from './BaseSimulation';

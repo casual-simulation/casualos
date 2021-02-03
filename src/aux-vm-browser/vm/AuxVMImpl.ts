@@ -28,7 +28,6 @@ import {
 } from '@casual-simulation/causal-trees';
 import Bowser from 'bowser';
 import axios from 'axios';
-import { PortalEvent } from '@casual-simulation/aux-vm/vm';
 
 export const DEFAULT_IFRAME_ALLOW_ATTRIBUTE =
     'accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking';
@@ -46,7 +45,6 @@ export class AuxVMImpl implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _versionUpdated: Subject<RuntimeStateVersion>;
     private _onError: Subject<AuxChannelErrorType>;
-    private _portalEvents: Subject<PortalEvent[]>;
     private _config: AuxConfig;
     private _iframe: HTMLIFrameElement;
     private _channel: MessageChannel;
@@ -72,11 +70,6 @@ export class AuxVMImpl implements AuxVM {
         this._versionUpdated = new Subject<RuntimeStateVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
-        this._portalEvents = new Subject();
-    }
-
-    get portalEvents(): Observable<PortalEvent[]> {
-        return this._portalEvents;
     }
 
     get connectionStateChanged(): Observable<StatusUpdate> {
@@ -155,7 +148,6 @@ export class AuxVMImpl implements AuxVM {
             proxy((state) =>
                 this._connectionStateChanged.next(statusMapper(state))
             ),
-            proxy((events) => this._portalEvents.next(events)),
             proxy((err) => this._onError.next(err))
         );
     }

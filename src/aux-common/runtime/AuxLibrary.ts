@@ -58,8 +58,8 @@ import {
     webhook as calcWebhook,
     superShout as calcSuperShout,
     share as calcShare,
-    registerCustomPortal as calcRegisterCustomPortal,
-    addEntryPoint as calcAddEntryPoint,
+    openCustomPortal as calcOpenCustomPortal,
+    registerPrefix as calcRegisterPrefix,
     createCertificate as calcCreateCertificate,
     signTag as calcSignTag,
     revokeCertificate as calcRevokeCertificate,
@@ -67,6 +67,7 @@ import {
     localRotationTween as calcLocalRotationTween,
     animateTag as calcAnimateTag,
     showUploadFiles as calcShowUploadFiles,
+    buildBundle as calcBuildBundle,
     clearSpace,
     loadBots,
     BotAction,
@@ -167,7 +168,8 @@ import {
     EDIT_TAG_MASK_SYMBOL,
     AnimateTagOptions,
     EaseType,
-    RegisterCustomPortalOptions,
+    OpenCustomPortalOptions,
+    RegisterPrefixOptions,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -192,8 +194,10 @@ import {
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, del, insert, preserve } from '../aux-format-2';
 import { Euler, Vector3, Plane, Ray } from 'three';
+import mime from 'mime';
 import TWEEN from '@tweenjs/tween.js';
 import './PerformanceNowPolyfill';
+import './BlobPolyfill';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -451,6 +455,45 @@ export interface TagSpecificApiOptions {
 }
 
 /**
+ * Defines an interface that represents the list of bots and tags that are included in a bundle.
+ */
+export interface BundleModules {
+    [id: string]: Set<string>;
+}
+
+/**
+ * Defines an interface that represents a bundle of code.
+ */
+export interface CodeBundle {
+    /**
+     * The tag the bundle was built from.
+     */
+    tag: string;
+
+    /**
+     * The source code that the bundle contains.
+     * If an error occurred, then this will be null/undefined.
+     */
+    source?: string;
+
+    /**
+     * The error that occurred while building the bundle.
+     * Null/Undefined if an error did not happen.
+     */
+    error?: string;
+
+    /**
+     * The list of warnings that occurred while building the bundle.
+     */
+    warnings: string[];
+
+    /**
+     * The list of modules that the bundle contains.
+     */
+    modules: BundleModules;
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
@@ -537,6 +580,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 disableAR,
                 enableVR,
                 disableVR,
+                download: downloadData,
                 downloadBots,
                 downloadServer,
                 showUploadAuxFile,
@@ -586,8 +630,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             },
 
             portal: {
-                register: registerCustomPortal,
-                addEntryPoint,
+                open: openCustomPortal,
+                buildBundle,
+                registerPrefix,
             },
 
             server: {
@@ -1310,6 +1355,41 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Downloads the given data.
+     * @param data The data to download. Objects will be formatted as JSON before downloading.
+     * @param filename The name of the file that the data should be downloaded as.
+     * @param mimeType The MIME type that should be used. If not specified then it will be inferred from the filename.
+     */
+    function downloadData(
+        data: string | object | ArrayBuffer | Blob,
+        filename: string,
+        mimeType: string = mime.getType(filename) || 'text/plain'
+    ) {
+        if (typeof filename !== 'string') {
+            throw new Error('The filename must be a string.');
+        }
+        if (typeof mimeType !== 'string') {
+            throw new Error('The mimeType must be a string.');
+        }
+
+        if (typeof data === 'string') {
+            return addAction(download(data, filename, mimeType));
+        } else if (data instanceof ArrayBuffer) {
+            return addAction(download(data, filename, mimeType));
+        } else if (data instanceof Blob) {
+            return addAction(download(data, filename, data.type));
+        } else if (typeof data === 'object') {
+            return addAction(
+                download(JSON.stringify(data), filename, mimeType)
+            );
+        }
+
+        throw new Error(
+            'The data must be either a string, object, or ArrayBuffer.'
+        );
+    }
+
+    /**
      * Downloads the given list of bots.
      * @param bots The bots that should be downloaded.
      * @param filename The name of the file that the bots should be downloaded as.
@@ -1328,6 +1408,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         );
     }
 
+    /**
+     * Downloads all the shared bots in the server.
+     */
     function downloadServer() {
         return downloadBots(
             getBots(bySpace('shared')),
@@ -1786,30 +1869,58 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Registers a custom portal with the given source code.
      * @param portalId The ID of the portal.
+     * @param tagOrSource The tag or source code that the portal should be created from.
      * @param options The options for the portal.
      */
-    function registerCustomPortal(
+    function openCustomPortal(
         portalId: string,
-        options: RegisterCustomPortalOptions = {}
+        tagOrSource: string,
+        options: OpenCustomPortalOptions = {}
     ): Promise<void> {
         const task = context.createTask();
-        const event = calcRegisterCustomPortal(portalId, options, task.taskId);
+        const event = calcOpenCustomPortal(
+            portalId,
+            tagOrSource,
+            {
+                mode: options?.mode || 'tag',
+                style: options?.style || {},
+            },
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 
     /**
-     * Adds the given tag as an entry point for the portal.
-     * That is, scripts in the specified tag will be run automatically.
-     * @param portalId The ID of the portal.
-     * @param tag The tag that should be used as the entry point.
+     * Builds a script bundle from the given tag.
+     * @param tag The tag that the bundle should be created from.
      */
-    function addEntryPoint(portalId: string, tag: string): Promise<void> {
-        if (typeof tag !== 'string') {
-            throw new Error('A tag name must be provided.');
+    function buildBundle(tag: string): Promise<CodeBundle> {
+        const task = context.createTask();
+        const event = calcBuildBundle(tag, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Specifies that the given prefix should be interpreted as code.
+     * @param prefix The prefix that code tags should start with.
+     * @param options The options for the prefix.
+     */
+    function registerPrefix(
+        prefix: string,
+        options: RegisterPrefixOptions = {}
+    ): Promise<void> {
+        if (typeof prefix !== 'string') {
+            throw new Error('A prefix must be provided.');
         }
 
         const task = context.createTask();
-        const event = calcAddEntryPoint(portalId, tag, task.taskId);
+        const event = calcRegisterPrefix(
+            prefix,
+            {
+                language: options?.language || 'javascript',
+            },
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

@@ -1,4 +1,4 @@
-import { RegisterCustomPortalOptions } from '@casual-simulation/aux-common';
+import { OpenCustomPortalOptions } from '@casual-simulation/aux-common';
 
 /**
  * Defines a list of portal events.
@@ -19,7 +19,7 @@ export interface RegisterPortalEvent {
     /**
      * The options for the portal.
      */
-    options: RegisterCustomPortalOptions;
+    options: OpenCustomPortalOptions;
 }
 
 /**

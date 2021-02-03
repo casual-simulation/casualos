@@ -168,7 +168,7 @@ export default class MonacoTagEditor extends Vue {
                         .pipe(flatMap((a) => a))
                         .subscribe((portal) => {
                             this.scriptPrefixes = sim.portals.scriptPrefixes.filter(
-                                (p) => !!p.portalId
+                                (p) => !p.isDefault
                             );
                         })
                 );
@@ -178,7 +178,7 @@ export default class MonacoTagEditor extends Vue {
                         .pipe(flatMap((a) => a))
                         .subscribe((portal) => {
                             this.scriptPrefixes = sim.portals.scriptPrefixes.filter(
-                                (p) => !!p.portalId
+                                (p) => !p.isDefault
                             );
                         })
                 );

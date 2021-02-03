@@ -9,9 +9,13 @@
 -   Added an initial implementation of custom portals.
     -   Custom portals are a way to write scripts that can interact directly with the web browser. This gives you the ability to do anything that is possible from inside a web browser.
     -   The following functions are now available:
-        -   `portal.register(portalID, options?)`
-        -   `portal.addEntryPoint(portalID, tag)`
+        -   `portal.open(portalID, tag, options?)`
+        -   `portal.registerPrefix(prefix)`
+        -   `portal.buildBundle(tag)`
         -   See the documentation for usage information.
+-   Added the `player.download(data, filename, mimeType?)` function.
+    -   Useful for downloading arbitrary data in any format you want.
+    -   See the documentation for more information.
 
 ### :bug: Bug Fixes
 

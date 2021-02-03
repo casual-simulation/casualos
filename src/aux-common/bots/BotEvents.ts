@@ -105,8 +105,9 @@ export type AsyncActions =
     | AsyncErrorAction
     | ShowInputAction
     | ShareAction
-    | RegisterCustomPortalAction
-    | AddEntryPointAction
+    | OpenCustomPortalAction
+    | BuildBundleAction
+    | RegisterPrefixAction
     | RunScriptAction
     | LoadBotsAction
     | ClearSpaceAction
@@ -2344,49 +2345,77 @@ export interface ShareAction extends AsyncAction, ShareOptions {
 /**
  * The possible options for a custom portal.
  */
-export interface RegisterCustomPortalOptions {
-    /**
-     * The script prefixes that should be used for the portal.
-     */
-    scriptPrefixes?: string[];
-
+export interface OpenCustomPortalOptions {
     /**
      * The CSS styles that should be used for the portal.
      */
     style?: any;
+
+    /**
+     * The mode that the portal should be opened in.
+     * "Tag" indicates that the portal should watch the given tag and automatically produce bundles for the portal.
+     * "source" indicates that the portal should load the given source directly.
+     */
+    mode?: 'tag' | 'source';
 }
 
 /**
  * Defines an event that creates a custom portal using the given source code.
  */
-export interface RegisterCustomPortalAction extends AsyncAction {
-    type: 'register_custom_portal';
+export interface OpenCustomPortalAction extends AsyncAction {
+    type: 'open_custom_portal';
     /**
      * The ID of the portal.
      */
     portalId: string;
 
     /**
+     * The tag or bundle that the portal should use.
+     */
+    tagOrSource: string;
+
+    /**
      * The options for the portal.
      */
-    options: RegisterCustomPortalOptions;
+    options: OpenCustomPortalOptions;
+}
+
+/**
+ * Defines an event that builds a bundle from a specified tag.
+ */
+export interface BuildBundleAction extends AsyncAction {
+    type: 'build_bundle';
+    /**
+     * The tag that the bundle should use.
+     */
+    tag: string;
 }
 
 /**
  * Defines an event that adds an entry point to a custom portal.
  */
-export interface AddEntryPointAction extends AsyncAction {
-    type: 'add_entry_point';
+export interface RegisterPrefixAction extends AsyncAction {
+    type: 'register_prefix';
 
     /**
-     * The ID of the portal
+     * The prefix that should be registered.
      */
-    portalId: string;
+    prefix: string;
 
     /**
-     * The tag that should be used as the entry point.
+     * The options that should be used for the prefix.
      */
-    tag: string;
+    options: RegisterPrefixOptions;
+}
+
+/**
+ * Defines an interface that contains options for register prefix actions.
+ */
+export interface RegisterPrefixOptions {
+    /**
+     * The possible languages that prefixes can use.
+     */
+    language?: 'javascript' | 'typescript' | 'json' | 'jsx' | 'tsx' | 'text';
 }
 
 /**z
@@ -4559,38 +4588,55 @@ export function share(
 /**
  * Creates an action that registers a custom portal.
  * @param portalId The ID of the portal,
+ * @param tagOrSource The tag or bundle of source that the portal should use.
  * @param options The options for the portal.
  * @param taskId The ID of the task.
  */
-export function registerCustomPortal(
+export function openCustomPortal(
     portalId: string,
-    options: RegisterCustomPortalOptions,
+    tagOrSource: string,
+    options: OpenCustomPortalOptions,
     taskId?: number | string
-): RegisterCustomPortalAction {
+): OpenCustomPortalAction {
     return {
-        type: 'register_custom_portal',
+        type: 'open_custom_portal',
         portalId,
+        tagOrSource,
         options,
         taskId,
     };
 }
 
 /**
- * Creates an action that adds an entry point to a custom portal.
- * @param portalId The ID of the portal.
- * @param botId The ID of the bot that the entry point is in. If null then all bots will be used.
- * @param tag The tag that should be used as the entry point.
+ * Creates an action that builds a bundle from the specified tag.
+ * @param tag The tag that the bundle should be built from.
  * @param taskId The ID of the task.
  */
-export function addEntryPoint(
-    portalId: string,
+export function buildBundle(
     tag: string,
     taskId?: number | string
-): AddEntryPointAction {
+): BuildBundleAction {
     return {
-        type: 'add_entry_point',
-        portalId,
+        type: 'build_bundle',
         tag,
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that registers the given script prefix for custom portals.
+ * @param prefix The prefix that should be used.
+ * @param taskId The ID of the task.
+ */
+export function registerPrefix(
+    prefix: string,
+    options: RegisterPrefixOptions,
+    taskId?: number | string
+): RegisterPrefixAction {
+    return {
+        type: 'register_prefix',
+        prefix,
+        options,
         taskId,
     };
 }

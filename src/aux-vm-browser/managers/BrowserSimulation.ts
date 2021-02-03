@@ -4,6 +4,7 @@ import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Bot } from '@casual-simulation/aux-common';
 import { Observable } from 'rxjs';
+import { PortalManager } from '@casual-simulation/aux-vm';
 
 /**
  * Defines an interface for objects that represent bot simulations.
@@ -23,6 +24,11 @@ export interface BrowserSimulation extends RemoteSimulation {
      * The observable list of console messages from the simulation.
      */
     consoleMessages: Observable<ConsoleMessages>;
+
+    /**
+     * Gets the portal manager.
+     */
+    portals: PortalManager;
 
     /**
      * Edits the given bot and tag as if the user edited it manually.
