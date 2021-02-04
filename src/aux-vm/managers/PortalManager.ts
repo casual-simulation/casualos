@@ -39,6 +39,12 @@ export const DEFAULT_SCRIPT_PREFIXES: ScriptPrefix[] = [
         language: 'json',
         isDefault: true,
     },
+    {
+        prefix: '#',
+        language: 'text',
+        isDefault: true,
+        isFallback: true,
+    },
 ];
 
 /**

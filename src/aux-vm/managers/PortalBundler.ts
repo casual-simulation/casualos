@@ -16,6 +16,7 @@ import {
     trimPrefixedScript,
     Bot,
     RegisterPrefixOptions,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import values from 'lodash/values';
@@ -72,10 +73,31 @@ export interface CodeBundle {
     modules: BundleModules;
 }
 
+/**
+ * Defines an interface that represents a script prefix.
+ * That is, a prefix that indicates the value should be treated as a particular language.
+ */
 export interface ScriptPrefix {
+    /**
+     * The prefix.
+     */
     prefix: string;
+
+    /**
+     * The language that values should be treated as.
+     */
     language: RegisterPrefixOptions['language'];
+
+    /**
+     * Whether the prefix is a builtin value.
+     */
     isDefault?: boolean;
+
+    /**
+     * Whether the prefix should be treated as a fallback.
+     * That is, values that are imported using it will be imported verbatim.
+     */
+    isFallback?: boolean;
 }
 
 export const DEFAULT_BASE_MODULE_URL: string = 'https://cdn.skypack.dev';
@@ -256,12 +278,16 @@ export class ESBuildPortalBundler implements PortalBundler {
                                 prefix.prefix,
                                 args.path
                             );
-                            const bot = bots.find((b) =>
-                                isPortalScript(
-                                    prefix.prefix,
-                                    calculateBotValue(null, b, tag)
-                                )
-                            );
+                            const bot = p.isFallback
+                                ? bots.find((b) =>
+                                      hasValue(calculateBotValue(null, b, tag))
+                                  )
+                                : bots.find((b) =>
+                                      isPortalScript(
+                                          prefix.prefix,
+                                          calculateBotValue(null, b, tag)
+                                      )
+                                  );
 
                             if (!bot) {
                                 return {
@@ -275,7 +301,9 @@ export class ESBuildPortalBundler implements PortalBundler {
 
                             return {
                                 path: auxModuleId(prefix.prefix, bot.id, tag),
-                                namespace: 'aux-ns',
+                                namespace: p.isFallback
+                                    ? 'aux-fallback-ns'
+                                    : 'aux-ns',
                             };
                         }
                     );
@@ -283,60 +311,12 @@ export class ESBuildPortalBundler implements PortalBundler {
 
                 build.onLoad(
                     { filter: /\\?auxmodule$/, namespace: 'aux-ns' },
-                    (args) => {
-                        const { prefix, botId, tag } = parseAuxModuleId(
-                            prefixes,
-                            args.path
-                        );
-                        if (prefix && botId && tag) {
-                            const bot = state[botId];
-                            if (!bot) {
-                                return {
-                                    errors: [
-                                        {
-                                            text: `Unable to import "${prefix.prefix}${tag}". No matching script could be found.`,
-                                        },
-                                    ],
-                                };
-                            }
-                            let moduleTags = modules[botId];
-                            if (!moduleTags) {
-                                moduleTags = new Set();
-                                modules[botId] = moduleTags;
-                            }
-                            moduleTags.add(tag);
+                    buildAuxLoader(false)
+                );
 
-                            const code = calculateBotValue(null, bot, tag);
-                            return {
-                                contents: trimPrefixedScript(
-                                    prefix.prefix,
-                                    code
-                                ),
-                                loader:
-                                    prefix.language === 'javascript'
-                                        ? 'js'
-                                        : prefix.language === 'typescript'
-                                        ? 'ts'
-                                        : prefix.language === 'json'
-                                        ? 'json'
-                                        : prefix.language === 'jsx'
-                                        ? 'jsx'
-                                        : prefix.language === 'tsx'
-                                        ? 'tsx'
-                                        : prefix.language === 'text'
-                                        ? 'text'
-                                        : DEFAULT_IMPORT_LANGUAGE,
-                            };
-                        }
-
-                        return {
-                            errors: [
-                                {
-                                    text: `Did you forget to use 📖 when importing?`,
-                                },
-                            ],
-                        };
-                    }
+                build.onLoad(
+                    { filter: /\\?auxmodule$/, namespace: 'aux-fallback-ns' },
+                    buildAuxLoader(true)
                 );
 
                 build.onResolve({ filter: /^https?/ }, (args) => ({
@@ -412,6 +392,64 @@ export class ESBuildPortalBundler implements PortalBundler {
                         }
                     }
                 );
+
+                function buildAuxLoader(
+                    isFallback: boolean
+                ): (args: ESBuild.OnLoadArgs) => ESBuild.OnLoadResult {
+                    return (args) => {
+                        const { prefix, botId, tag } = parseAuxModuleId(
+                            prefixes,
+                            args.path
+                        );
+                        if (prefix && botId && tag) {
+                            const bot = state[botId];
+                            if (!bot) {
+                                return {
+                                    errors: [
+                                        {
+                                            text: `Unable to import "${prefix.prefix}${tag}". No matching script could be found.`,
+                                        },
+                                    ],
+                                };
+                            }
+                            let moduleTags = modules[botId];
+                            if (!moduleTags) {
+                                moduleTags = new Set();
+                                modules[botId] = moduleTags;
+                            }
+                            moduleTags.add(tag);
+
+                            const code = calculateBotValue(null, bot, tag);
+                            return {
+                                contents: isFallback
+                                    ? code
+                                    : trimPrefixedScript(prefix.prefix, code),
+                                loader:
+                                    prefix.language === 'javascript'
+                                        ? 'js'
+                                        : prefix.language === 'typescript'
+                                        ? 'ts'
+                                        : prefix.language === 'json'
+                                        ? 'json'
+                                        : prefix.language === 'jsx'
+                                        ? 'jsx'
+                                        : prefix.language === 'tsx'
+                                        ? 'tsx'
+                                        : prefix.language === 'text'
+                                        ? 'text'
+                                        : DEFAULT_IMPORT_LANGUAGE,
+                            };
+                        }
+
+                        return {
+                            errors: [
+                                {
+                                    text: `Did you forget to use 📖 when importing?`,
+                                },
+                            ],
+                        };
+                    };
+                }
             },
         };
     }

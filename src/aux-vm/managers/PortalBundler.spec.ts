@@ -591,7 +591,7 @@ describe('ESBuildPortalBundler', () => {
             expect(func1).toBeCalledWith('first');
         });
 
-        it('should importing separate prefixes from special entry prefixes', async () => {
+        it('should support importing separate prefixes from special entry prefixes', async () => {
             const prefixes: ScriptPrefix[] = [
                 {
                     prefix: '🔺',
@@ -621,6 +621,38 @@ describe('ESBuildPortalBundler', () => {
             expect(func1).toBeCalledTimes(2);
             expect(func1).toHaveBeenNthCalledWith(1, 'second');
             expect(func1).toHaveBeenNthCalledWith(2, 'first');
+        });
+
+        it('should support importing arbitrary values using a fallback prefix', async () => {
+            const prefixes: ScriptPrefix[] = [
+                {
+                    prefix: '🔺',
+                    language: 'javascript',
+                },
+                {
+                    prefix: '#',
+                    language: 'text',
+                    isFallback: true,
+                },
+            ];
+            const state = {
+                bot1: createPrecalculatedBot('bot1', {
+                    main: `🔺import abc from "#other"; globalThis.func1(abc);`,
+                }),
+                bot2: createPrecalculatedBot('bot2', {
+                    other: `test`,
+                }),
+            };
+
+            const bundle = await bundler.bundleTag(state, `🔺main`, prefixes);
+
+            expect(bundle).not.toEqual(null);
+            expect(bundle.source).toBeTruthy();
+
+            eval(bundle.source);
+
+            expect(func1).toBeCalledTimes(1);
+            expect(func1).toBeCalledWith('test');
         });
     });
 });
