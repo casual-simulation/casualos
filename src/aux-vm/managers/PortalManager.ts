@@ -18,12 +18,13 @@ import {
 import {
     BundleModules,
     CodeBundle,
+    ExternalModule,
     PortalBundler,
     ScriptPrefix,
 } from './PortalBundler';
 import { BotHelper } from './BotHelper';
 import { BotWatcher, UpdatedBotInfo } from './BotWatcher';
-import { pick } from 'lodash';
+import { pick, values } from 'lodash';
 
 /**
  * The list of default script prefixes.
@@ -59,6 +60,8 @@ export class PortalManager implements SubscriptionLike {
     private _portalsUpdated: Subject<PortalUpdate[]>;
     private _prefixesDiscovered: Subject<ScriptPrefix[]>;
     private _prefixesRemoved: Subject<string[]>;
+    private _externalsDiscovered: Subject<ExternalModule[]>;
+    private _externalModules: CodeBundle['externals'];
     private _vm: AuxVM;
     private _helper: BotHelper;
     private _watcher: BotWatcher;
@@ -98,10 +101,26 @@ export class PortalManager implements SubscriptionLike {
     }
 
     /**
+     * Gets an observable that resolves when an external script has been discovered.
+     */
+    get externalsDiscovered(): Observable<ExternalModule[]> {
+        return this._externalsDiscovered.pipe(
+            startWith(values(this.externalModules))
+        );
+    }
+
+    /**
      * Gets the script prefixes that are currently in use.
      */
     get scriptPrefixes(): ScriptPrefix[] {
         return [...this._prefixes.values()];
+    }
+
+    /**
+     * Gets a map of external modules that have been loaded.
+     */
+    get externalModules() {
+        return this._externalModules;
     }
 
     constructor(
@@ -120,6 +139,8 @@ export class PortalManager implements SubscriptionLike {
         this._portalsUpdated = new Subject();
         this._prefixesDiscovered = new Subject();
         this._prefixesRemoved = new Subject();
+        this._externalsDiscovered = new Subject();
+        this._externalModules = {};
         this._bundler = bundler;
         this._sub = new Subscription();
 
@@ -391,6 +412,20 @@ export class PortalManager implements SubscriptionLike {
                 error: bundle?.error || null,
                 source: bundle?.source || null,
             });
+
+            if (bundle?.externals) {
+                let newModules: ExternalModule[] = [];
+                for (let mod of values(bundle.externals)) {
+                    if (!this._externalModules[mod.id]) {
+                        this._externalModules[mod.id] = mod;
+                        newModules.push(mod);
+                    }
+                }
+
+                if (newModules.length > 0) {
+                    this._externalsDiscovered.next(newModules);
+                }
+            }
         }
     }
 

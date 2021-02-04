@@ -12,7 +12,12 @@ import { Subject, Subscription } from 'rxjs';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { BotHelper } from './BotHelper';
 import { BotWatcher } from './BotWatcher';
-import { CodeBundle, PortalBundler, ScriptPrefix } from './PortalBundler';
+import {
+    CodeBundle,
+    ExternalModule,
+    PortalBundler,
+    ScriptPrefix,
+} from './PortalBundler';
 import {
     DEFAULT_SCRIPT_PREFIXES,
     PortalData,
@@ -170,6 +175,7 @@ describe('PortalManager', () => {
                 tag: 'script',
                 source: 'abc',
                 modules: {},
+                externals: {},
                 warnings: [],
             });
 
@@ -203,6 +209,7 @@ describe('PortalManager', () => {
                     source: 'abc',
                     warnings: [],
                     modules: {},
+                    externals: {},
                 }),
             ]);
         });
@@ -225,6 +232,7 @@ describe('PortalManager', () => {
                 tag: 'script',
                 source: 'abc',
                 modules: {},
+                externals: {},
                 warnings: [],
             });
 
@@ -274,6 +282,7 @@ describe('PortalManager', () => {
             bundler.bundleTag.mockResolvedValueOnce({
                 tag: 'script',
                 modules: {},
+                externals: {},
                 warnings: [],
             });
 
@@ -411,6 +420,7 @@ describe('PortalManager', () => {
                 tag: 'script',
                 source: 'wrong',
                 modules: {},
+                externals: {},
                 warnings: [],
             });
 
@@ -482,6 +492,7 @@ describe('PortalManager', () => {
                     modules: {
                         bot1: new Set(['script']),
                     },
+                    externals: {},
                     warnings: [],
                 });
 
@@ -522,6 +533,7 @@ describe('PortalManager', () => {
                     modules: {
                         bot1: new Set(['script']),
                     },
+                    externals: {},
                     warnings: [],
                 });
 
@@ -566,6 +578,7 @@ describe('PortalManager', () => {
                     modules: {
                         bot1: new Set(['script']),
                     },
+                    externals: {},
                     warnings: [],
                 });
 
@@ -603,6 +616,7 @@ describe('PortalManager', () => {
                     source: 'correct',
                     error: null,
                     modules: {},
+                    externals: {},
                     warnings: [],
                 });
 
@@ -639,6 +653,7 @@ describe('PortalManager', () => {
                     source: 'correct',
                     error: null,
                     modules: {},
+                    externals: {},
                     warnings: [],
                 });
 
@@ -662,6 +677,7 @@ describe('PortalManager', () => {
                     source: 'correct',
                     error: null,
                     modules: {},
+                    externals: {},
                     warnings: [],
                 });
 
@@ -688,6 +704,7 @@ describe('PortalManager', () => {
                     source: 'correct',
                     error: null,
                     modules: {},
+                    externals: {},
                     warnings: [],
                 });
 
@@ -720,6 +737,7 @@ describe('PortalManager', () => {
                     modules: {
                         bot1: new Set(['script']),
                     },
+                    externals: {},
                     warnings: [],
                 });
 
@@ -765,6 +783,7 @@ describe('PortalManager', () => {
                 source: 'abc',
                 error: null,
                 modules: {},
+                externals: {},
                 warnings: [],
             });
 
@@ -803,6 +822,7 @@ describe('PortalManager', () => {
                 modules: {
                     bot1: new Set(['script']),
                 },
+                externals: {},
                 warnings: [],
             });
 
@@ -843,6 +863,7 @@ describe('PortalManager', () => {
                 source: 'abc',
                 error: null,
                 modules: {},
+                externals: {},
                 warnings: [],
             });
 
@@ -881,6 +902,7 @@ describe('PortalManager', () => {
                 modules: {
                     bot1: new Set(['script']),
                 },
+                externals: {},
                 warnings: [],
             });
 
@@ -916,6 +938,7 @@ describe('PortalManager', () => {
                 source: 'abc',
                 error: null,
                 modules: {},
+                externals: {},
                 warnings: [],
             });
 
@@ -975,6 +998,298 @@ describe('PortalManager', () => {
                     },
                 },
             ]);
+        });
+    });
+
+    describe('externalsDiscovered', () => {
+        let externals = [] as ExternalModule[];
+
+        beforeEach(() => {
+            externals = [];
+            sub.add(
+                manager.externalsDiscovered.subscribe((p) =>
+                    externals.push(...p)
+                )
+            );
+        });
+
+        it('should resolve new external modules from builds', async () => {
+            expect(externals).toEqual([]);
+
+            bundler.bundleTag
+                .mockResolvedValueOnce({
+                    tag: 'script',
+                    source: 'abc',
+                    modules: {},
+                    externals: {
+                        lodash: {
+                            id: 'lodash',
+                            url: 'myLodashURL',
+                            typescriptDefinitionsURL: 'lodashDefs',
+                        },
+                        react: {
+                            id: 'react',
+                            url: 'myReactURL',
+                            typescriptDefinitionsURL: 'reactDefs',
+                        },
+                    },
+                    warnings: [],
+                })
+                .mockResolvedValueOnce({
+                    tag: 'script',
+                    source: 'def',
+                    modules: {},
+                    externals: {
+                        lodash: {
+                            id: 'lodash',
+                            url: 'myLodashURL',
+                            typescriptDefinitionsURL: 'lodashDefs',
+                        },
+                        react: {
+                            id: 'react',
+                            url: 'myReactURL',
+                            typescriptDefinitionsURL: 'reactDefs',
+                        },
+                        other: {
+                            id: 'other',
+                            url: 'myOtherURL',
+                            typescriptDefinitionsURL: 'otherDefs',
+                        },
+                    },
+                    warnings: [],
+                });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    tagOrSource: '🔺script',
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test2");',
+                    }),
+                })
+            );
+
+            await waitAsync();
+
+            expect(externals).toEqual([
+                {
+                    id: 'lodash',
+                    url: 'myLodashURL',
+                    typescriptDefinitionsURL: 'lodashDefs',
+                },
+                {
+                    id: 'react',
+                    url: 'myReactURL',
+                    typescriptDefinitionsURL: 'reactDefs',
+                },
+                {
+                    id: 'other',
+                    url: 'myOtherURL',
+                    typescriptDefinitionsURL: 'otherDefs',
+                },
+            ]);
+        });
+
+        it('should resolve with the externals that have already been discovered', async () => {
+            bundler.bundleTag.mockResolvedValueOnce({
+                tag: 'script',
+                source: 'abc',
+                modules: {},
+                externals: {
+                    lodash: {
+                        id: 'lodash',
+                        url: 'myLodashURL',
+                        typescriptDefinitionsURL: 'lodashDefs',
+                    },
+                    react: {
+                        id: 'react',
+                        url: 'myReactURL',
+                        typescriptDefinitionsURL: 'reactDefs',
+                    },
+                },
+                warnings: [],
+            });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    tagOrSource: '🔺script',
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            const existingExternals: ExternalModule[] = [];
+            manager.externalsDiscovered.subscribe((e) =>
+                existingExternals.push(...e)
+            );
+
+            expect(existingExternals).toEqual([
+                {
+                    id: 'lodash',
+                    url: 'myLodashURL',
+                    typescriptDefinitionsURL: 'lodashDefs',
+                },
+                {
+                    id: 'react',
+                    url: 'myReactURL',
+                    typescriptDefinitionsURL: 'reactDefs',
+                },
+            ]);
+        });
+
+        it('should record external modules from builds', async () => {
+            expect(externals).toEqual([]);
+
+            bundler.bundleTag
+                .mockResolvedValueOnce({
+                    tag: 'script',
+                    source: 'abc',
+                    modules: {},
+                    externals: {
+                        lodash: {
+                            id: 'lodash',
+                            url: 'myLodashURL',
+                            typescriptDefinitionsURL: 'lodashDefs',
+                        },
+                        react: {
+                            id: 'react',
+                            url: 'myReactURL',
+                            typescriptDefinitionsURL: 'reactDefs',
+                        },
+                    },
+                    warnings: [],
+                })
+                .mockResolvedValueOnce({
+                    tag: 'script',
+                    source: 'def',
+                    modules: {},
+                    externals: {
+                        lodash: {
+                            id: 'lodash',
+                            url: 'myLodashURL',
+                            typescriptDefinitionsURL: 'lodashDefs',
+                        },
+                        react: {
+                            id: 'react',
+                            url: 'myReactURL',
+                            typescriptDefinitionsURL: 'reactDefs',
+                        },
+                        other: {
+                            id: 'other',
+                            url: 'myOtherURL',
+                            typescriptDefinitionsURL: 'otherDefs',
+                        },
+                    },
+                    warnings: [],
+                });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    tagOrSource: '🔺script',
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test2");',
+                    }),
+                })
+            );
+
+            await waitAsync();
+
+            expect(manager.externalModules).toEqual({
+                lodash: {
+                    id: 'lodash',
+                    url: 'myLodashURL',
+                    typescriptDefinitionsURL: 'lodashDefs',
+                },
+                react: {
+                    id: 'react',
+                    url: 'myReactURL',
+                    typescriptDefinitionsURL: 'reactDefs',
+                },
+                other: {
+                    id: 'other',
+                    url: 'myOtherURL',
+                    typescriptDefinitionsURL: 'otherDefs',
+                },
+            });
         });
     });
 });

@@ -22,23 +22,37 @@ import { Observable, Subject } from 'rxjs';
 import values from 'lodash/values';
 import { isEqual, pick, sortBy } from 'lodash';
 import axios from 'axios';
+import type { AxiosResponse } from 'axios';
 import type ESBuild from 'esbuild';
 import * as esbuild from 'esbuild';
 
 export const DEFAULT_IMPORT_LANGUAGE = 'js';
-
-export const EXTERNAL_MODULE_SYMBOL = Symbol('external_module');
 
 /**
  * Defines an interface that represents the list of bots and tags that are included in a bundle.
  */
 export interface BundleModules {
     [id: string]: Set<string>;
+}
+
+/**
+ * Defines an interface that represents data about an external module.
+ */
+export interface ExternalModule {
+    /**
+     * The ID that was imported.
+     */
+    id: string;
 
     /**
-     * The set of external modules that were included in the bundle.
+     * The URL that was imported.
      */
-    [EXTERNAL_MODULE_SYMBOL]?: Set<string>;
+    url: string;
+
+    /**
+     * The URL to the typescript definitions
+     */
+    typescriptDefinitionsURL: string | null;
 }
 
 /**
@@ -71,6 +85,13 @@ export interface CodeBundle {
      * The list of modules that the bundle contains.
      */
     modules: BundleModules;
+
+    /**
+     * The list of modules that were imported from the web.
+     */
+    externals: {
+        [id: string]: ExternalModule;
+    };
 }
 
 /**
@@ -126,7 +147,7 @@ export interface PortalBundler {
 export class ESBuildPortalBundler implements PortalBundler {
     private _esbuildService: ESBuild.Service;
     private _baseModuleUrl: string = DEFAULT_BASE_MODULE_URL;
-    private _httpCache: Map<string, Promise<string>>;
+    private _httpCache: Map<string, Promise<AxiosResponse<string>>>;
     private _esbuildWasmUrl: string;
 
     constructor(options: { esbuildWasmUrl?: string } = {}) {
@@ -200,6 +221,7 @@ export class ESBuildPortalBundler implements PortalBundler {
         }
 
         let modules: BundleModules = {};
+        let externals: CodeBundle['externals'] = {};
         try {
             const result = await this._esbuildService.build({
                 entryPoints: ['__entry'],
@@ -213,7 +235,8 @@ export class ESBuildPortalBundler implements PortalBundler {
                         entryCode,
                         state,
                         bots,
-                        modules
+                        modules,
+                        externals
                     ),
                 ],
             });
@@ -230,6 +253,7 @@ export class ESBuildPortalBundler implements PortalBundler {
                 source: final,
                 warnings,
                 modules,
+                externals,
             };
         } catch (err) {
             return {
@@ -237,6 +261,7 @@ export class ESBuildPortalBundler implements PortalBundler {
                 error: err.toString(),
                 warnings: [],
                 modules,
+                externals,
             };
         }
     }
@@ -246,7 +271,8 @@ export class ESBuildPortalBundler implements PortalBundler {
         entryCode: string,
         state: BotsState,
         bots: Bot[],
-        modules: BundleModules
+        modules: BundleModules,
+        externals: CodeBundle['externals']
     ): ESBuild.Plugin {
         return {
             name: 'casualos',
@@ -345,19 +371,21 @@ export class ESBuildPortalBundler implements PortalBundler {
 
                         // use importer as base URL
                         if (!hasFileExtension && !importer.endsWith('/')) {
-                            importer = importer + '/';
+                            const importerUrl = new URL(importer);
+                            importer = `${importerUrl.origin}${importerUrl.pathname}/`;
                         }
+
                         const url = new URL(importee, importer);
                         return { path: url.href, namespace: 'http-ns' };
                     } else {
-                        let moduleTags = modules[EXTERNAL_MODULE_SYMBOL];
-                        if (!moduleTags) {
-                            moduleTags = new Set();
-                            modules[EXTERNAL_MODULE_SYMBOL] = moduleTags;
-                        }
-                        moduleTags.add(importee);
+                        const url = `${this._baseModuleUrl}/${importee}?dts`;
+                        externals[importee] = {
+                            id: importee,
+                            url,
+                            typescriptDefinitionsURL: null,
+                        };
                         return {
-                            path: `${this._baseModuleUrl}/${importee}`,
+                            path: url,
                             namespace: 'http-ns',
                         };
                     }
@@ -370,27 +398,24 @@ export class ESBuildPortalBundler implements PortalBundler {
                             const cached = this._httpCache.get(args.path);
                             if (typeof cached !== 'undefined') {
                                 return {
-                                    contents: await cached,
+                                    contents: handleHttpResponse(
+                                        args.path,
+                                        await cached,
+                                        externals
+                                    ),
                                     loader: 'js',
                                 };
                             }
 
-                            let promise = axios
-                                .get(args.path)
-                                .then((response) => {
-                                    if (typeof response.data === 'string') {
-                                        const script = response.data;
-                                        return script;
-                                    } else {
-                                        throw new Error(
-                                            `The module server did not return a string.`
-                                        );
-                                    }
-                                });
+                            let promise = axios.get(args.path);
 
                             this._httpCache.set(args.path, promise);
 
-                            const script = await promise;
+                            const script = handleHttpResponse(
+                                args.path,
+                                await promise,
+                                externals
+                            );
                             return {
                                 contents: script,
                                 loader: 'js',
@@ -466,6 +491,31 @@ export class ESBuildPortalBundler implements PortalBundler {
                 }
             },
         };
+    }
+}
+
+function handleHttpResponse(
+    path: string,
+    response: AxiosResponse<string>,
+    externals: CodeBundle['externals']
+) {
+    if (typeof response.data === 'string') {
+        const script = response.data;
+
+        const declarations = response?.headers?.['x-typescript-types'];
+        if (typeof declarations === 'string') {
+            const external = values(externals).find((e) => e.url === path);
+            if (external) {
+                external.typescriptDefinitionsURL = new URL(
+                    declarations,
+                    path
+                ).href;
+            }
+        }
+
+        return script;
+    } else {
+        throw new Error(`The module server did not return a string.`);
     }
 }
 

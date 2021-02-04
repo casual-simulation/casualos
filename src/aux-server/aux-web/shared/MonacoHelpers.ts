@@ -65,6 +65,7 @@ import { invertColor } from './scene/ColorUtils';
 import { getCursorColorClass, getCursorLabelClass } from './StyleHelpers';
 import jscodeshift from 'jscodeshift';
 import MonacoJSXHighlighter from './public/monaco-jsx-highlighter/index';
+import axios from 'axios';
 
 export function setup() {
     // Tell monaco how to create the web workers
@@ -267,6 +268,28 @@ export function watchSimulation(
     sub.add(() => {
         completionDisposable.dispose();
     });
+
+    sub.add(
+        simulation.portals.externalsDiscovered
+            .pipe(
+                flatMap((e) => e),
+                filter((e) => !!e.typescriptDefinitionsURL),
+                flatMap((e) => axios.get(e.typescriptDefinitionsURL)),
+                tap((request) => {
+                    if (typeof request.data === 'string') {
+                        monaco.languages.typescript.javascriptDefaults.addExtraLib(
+                            request.data,
+                            request.config.url
+                        );
+                        monaco.languages.typescript.typescriptDefaults.addExtraLib(
+                            request.data,
+                            request.config.url
+                        );
+                    }
+                })
+            )
+            .subscribe()
+    );
 
     return sub;
 }

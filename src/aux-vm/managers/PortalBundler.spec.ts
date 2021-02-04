@@ -9,7 +9,6 @@ import { Subscription } from 'rxjs';
 import {
     DEFAULT_BASE_MODULE_URL,
     ESBuildPortalBundler,
-    EXTERNAL_MODULE_SYMBOL,
     PortalBundler,
     ScriptPrefix,
 } from './PortalBundler';
@@ -249,7 +248,9 @@ describe('ESBuildPortalBundler', () => {
                         expect(bundle.source).toBeTruthy();
                         let [url] = require('axios').__getLastGet();
 
-                        expect(url).toBe(`${DEFAULT_BASE_MODULE_URL}/lodash`);
+                        expect(url).toBe(
+                            `${DEFAULT_BASE_MODULE_URL}/lodash?dts`
+                        );
 
                         eval(bundle.source);
 
@@ -302,7 +303,7 @@ describe('ESBuildPortalBundler', () => {
                         let requests = require('axios').__getRequests();
 
                         expect(requests).toEqual([
-                            ['get', `${DEFAULT_BASE_MODULE_URL}/lodash`],
+                            ['get', `${DEFAULT_BASE_MODULE_URL}/lodash?dts`],
                             ['get', `${DEFAULT_BASE_MODULE_URL}/lodash/fun`],
                         ]);
 
@@ -431,7 +432,7 @@ describe('ESBuildPortalBundler', () => {
                         let requests = require('axios').__getRequests();
 
                         expect(requests).toEqual([
-                            ['get', `${DEFAULT_BASE_MODULE_URL}/lodash`],
+                            ['get', `${DEFAULT_BASE_MODULE_URL}/lodash?dts`],
                             ['get', `${DEFAULT_BASE_MODULE_URL}/fun`],
                         ]);
 
@@ -473,7 +474,7 @@ describe('ESBuildPortalBundler', () => {
                         let requests = require('axios').__getRequests();
 
                         expect(requests).toEqual([
-                            ['get', `${DEFAULT_BASE_MODULE_URL}/lodash`],
+                            ['get', `${DEFAULT_BASE_MODULE_URL}/lodash?dts`],
                             ['get', `${DEFAULT_BASE_MODULE_URL}/lodash/fun`],
                             [
                                 'get',
@@ -516,7 +517,7 @@ describe('ESBuildPortalBundler', () => {
                         let requests = require('axios').__getRequests();
 
                         expect(requests).toEqual([
-                            ['get', `${DEFAULT_BASE_MODULE_URL}/lodash`],
+                            ['get', `${DEFAULT_BASE_MODULE_URL}/lodash?dts`],
                         ]);
                         expect(bundle1).toEqual(bundle2);
                     });
@@ -544,7 +545,7 @@ describe('ESBuildPortalBundler', () => {
                         let requests = require('axios').__getRequests();
 
                         expect(requests).toEqual([
-                            ['get', `${DEFAULT_BASE_MODULE_URL}/lodash`],
+                            ['get', `${DEFAULT_BASE_MODULE_URL}/lodash?dts`],
                         ]);
                         expect(bundle1).toEqual(bundle2);
                     });
@@ -569,9 +570,84 @@ describe('ESBuildPortalBundler', () => {
                         await waitAsync();
 
                         expect(bundle).not.toEqual(null);
-                        expect(bundle.modules[EXTERNAL_MODULE_SYMBOL]).toEqual(
-                            new Set(['lodash'])
+                        expect(bundle.externals).toEqual({
+                            lodash: {
+                                id: 'lodash',
+                                url: `${DEFAULT_BASE_MODULE_URL}/lodash?dts`,
+                                typescriptDefinitionsURL: null,
+                            },
+                        });
+                    });
+
+                    it('should report typescript definitions that were returned from the server', async () => {
+                        require('axios').__setResponse({
+                            data: `export const fun = globalThis.func1;`,
+                            headers: {
+                                'x-typescript-types': '/typescriptDefinitions',
+                            },
+                        });
+
+                        const state = {
+                            bot1: createPrecalculatedBot('bot1', {
+                                main: `${firstPrefix}import { fun } from "lodash"; fun();`,
+                            }),
+                        };
+
+                        const bundle = await bundler.bundleTag(
+                            state,
+                            'main',
+                            prefixes
                         );
+
+                        await waitAsync();
+
+                        expect(bundle).not.toEqual(null);
+                        expect(bundle.externals).toEqual({
+                            lodash: {
+                                id: 'lodash',
+                                url: `${DEFAULT_BASE_MODULE_URL}/lodash?dts`,
+                                typescriptDefinitionsURL: `${DEFAULT_BASE_MODULE_URL}/typescriptDefinitions`,
+                            },
+                        });
+                    });
+
+                    it('should report typescript definitions for cached modules', async () => {
+                        require('axios')
+                            .__setNextResponse({
+                                data: `export const fun = globalThis.func1;`,
+                                headers: {
+                                    'x-typescript-types':
+                                        '/typescriptDefinitions',
+                                },
+                            })
+                            .__setNextResponse({
+                                data: `export const fun = globalThis.func2;`,
+                            });
+
+                        const state = {
+                            bot1: createPrecalculatedBot('bot1', {
+                                main: `${firstPrefix}import { fun } from "lodash"; fun();`,
+                            }),
+                        };
+
+                        const [bundle1, bundle2] = await Promise.all([
+                            bundler.bundleTag(state, 'main', prefixes),
+                            bundler.bundleTag(state, 'main', prefixes),
+                        ]);
+
+                        let requests = require('axios').__getRequests();
+
+                        expect(requests).toEqual([
+                            ['get', `${DEFAULT_BASE_MODULE_URL}/lodash?dts`],
+                        ]);
+                        expect(bundle1.externals).toEqual({
+                            lodash: {
+                                id: 'lodash',
+                                url: `${DEFAULT_BASE_MODULE_URL}/lodash?dts`,
+                                typescriptDefinitionsURL: `${DEFAULT_BASE_MODULE_URL}/typescriptDefinitions`,
+                            },
+                        });
+                        expect(bundle1).toEqual(bundle2);
                     });
                 });
             }
