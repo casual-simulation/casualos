@@ -297,6 +297,17 @@ export interface LanguageServiceDefaults {
      * to the worker on start or restart.
      */
     getEagerModelSync(): boolean;
+
+    /**
+     * Sets whether CasualOS module resolution should be enabled.
+     * @param enabled Whether CasualOS module resolution should be enabled.
+     */
+    setCasualOSModuleResolution(enabled: boolean): void;
+
+    /**
+     * Gets whether CasualOS module resolution is enabled.
+     */
+    getCasualOSModuleResolution(): boolean;
 }
 
 export interface TypeScriptWorker {
@@ -487,6 +498,7 @@ export class LanguageServiceDefaultsImpl implements LanguageServiceDefaults {
     private _diagnosticsOptions!: DiagnosticsOptions;
     private _workerOptions!: WorkerOptions;
     private _onDidExtraLibsChangeTimeout: number;
+    private _casualOSModuleResolution: boolean;
 
     constructor(
         compilerOptions: CompilerOptions,
@@ -644,5 +656,13 @@ export class LanguageServiceDefaultsImpl implements LanguageServiceDefaults {
 
     getEagerModelSync() {
         return this._eagerModelSync;
+    }
+
+    setCasualOSModuleResolution(enabled: boolean): void {
+        this._casualOSModuleResolution = enabled;
+    }
+
+    getCasualOSModuleResolution() {
+        return this._casualOSModuleResolution;
     }
 }

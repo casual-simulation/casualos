@@ -75,6 +75,7 @@ export class WorkerManager {
                     extraLibs: this._defaults.getExtraLibs(),
                     customWorkerPath: this._defaults.workerOptions
                         .customWorkerPath,
+                    casualOSModuleResolution: this._defaults.getCasualOSModuleResolution(),
                 },
             });
 

@@ -8,7 +8,7 @@ import {
     ScriptTarget,
 } from './typescript/languageService';
 import { libFileMap } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
-import { setupLangaugeMode } from './typescript/tsMode';
+import { getWorker, setupLangaugeMode } from './typescript/tsMode';
 
 export const customPortalTypescriptDefaults: LanguageServiceDefaults = new LanguageServiceDefaultsImpl(
     { allowNonTsExtensions: true, target: ScriptTarget.Latest },
@@ -71,6 +71,9 @@ customPortalJavaScriptDefaults.addExtraLib(
     'defaultLib:lib.dom.d.ts'
 );
 
+customPortalJavaScriptDefaults.setCasualOSModuleResolution(true);
+customPortalTypescriptDefaults.setCasualOSModuleResolution(true);
+
 // --- Registration to monaco editor ---
 
 languages.onLanguage('custom-portal-typescript', () => {
@@ -85,3 +88,7 @@ languages.onLanguage(customPortalLanguageId, () => {
         customPortalJavaScriptDefaults
     );
 });
+
+export function getCustomPortalWorker() {
+    return getWorker(customPortalLanguageId);
+}

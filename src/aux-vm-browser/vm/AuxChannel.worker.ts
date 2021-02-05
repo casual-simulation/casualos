@@ -4,6 +4,10 @@ import { listenForChannel } from '../html/IFrameHelpers';
 import { BrowserAuxChannel } from './BrowserAuxChannel';
 import { NestedWorker } from './NestedWorker';
 
+// Note: This file needs to be valid JavaScript.
+// worker-loader for some reason does not run ts-loader during its child compilation.
+// (it has a .ts extension because .js files are gitignored and deleted when the clean task runs)
+
 // Use the nested worker polyfill if the worker interface is not specified.
 if (!globalThis.Worker) {
     const nativePostMessage = postMessage.bind(self);

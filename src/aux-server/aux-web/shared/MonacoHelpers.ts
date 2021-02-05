@@ -22,7 +22,7 @@ import {
     hasPortalScript,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
-import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
+// import TypescriptWorker from 'worker-loader!./monaco/typescript/ts.worker.js';
 import HtmlWorker from 'worker-loader!monaco-editor/esm/vs/language/html/html.worker';
 import CssWorker from 'worker-loader!monaco-editor/esm/vs/language/css/css.worker';
 import JsonWorker from 'worker-loader!monaco-editor/esm/vs/language/json/json.worker';
@@ -44,7 +44,7 @@ import {
     takeUntil,
     debounceTime,
 } from 'rxjs/operators';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { ScriptPrefix, Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import union from 'lodash/union';
 import sortBy from 'lodash/sortBy';
@@ -66,6 +66,12 @@ import { getCursorColorClass, getCursorLabelClass } from './StyleHelpers';
 import jscodeshift from 'jscodeshift';
 import MonacoJSXHighlighter from './public/monaco-jsx-highlighter/index';
 import { customPortalLanguageId } from './monaco/custom-portal-typescript/custom-portal-typescript.contribution';
+import { getCustomPortalWorker } from './monaco/languages.contribution';
+
+// load TypescriptWorker by require().
+// For some reason, loading relative imports with worker-loader fails when using the import syntax
+// but the require syntax works.
+const TypescriptWorker = require('./monaco/typescript/ts.worker').default;
 
 export function setup() {
     // Tell monaco how to create the web workers
@@ -271,6 +277,14 @@ export function watchSimulation(
 
     sub.add(() => {
         completionDisposable.dispose();
+    });
+
+    monaco.languages.onLanguage(customPortalLanguageId, () => {
+        sub.add(
+            simulation.portals.prefixesDiscovered
+                .pipe(flatMap((prefix) => addPrefixesToLanguageService(prefix)))
+                .subscribe()
+        );
     });
 
     return sub;
@@ -914,6 +928,12 @@ function watchModel(
     }
 
     subs.push(sub);
+}
+
+async function addPrefixesToLanguageService(prefixes: ScriptPrefix[]) {
+    const workerFactory = await getCustomPortalWorker();
+    const worker = await workerFactory();
+    (<any>worker).addScriptPrefixes(prefixes.map((p) => p.prefix));
 }
 
 function offsetSelections(
