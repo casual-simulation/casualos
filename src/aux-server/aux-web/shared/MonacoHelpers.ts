@@ -65,12 +65,17 @@ import { invertColor } from './scene/ColorUtils';
 import { getCursorColorClass, getCursorLabelClass } from './StyleHelpers';
 import jscodeshift from 'jscodeshift';
 import MonacoJSXHighlighter from './public/monaco-jsx-highlighter/index';
+import { customPortalLanguageId } from './monaco/custom-portal-typescript/custom-portal-typescript.contribution';
 
 export function setup() {
     // Tell monaco how to create the web workers
     (<any>self).MonacoEnvironment = {
         getWorker: function (moduleId: string, label: string) {
-            if (label === 'typescript' || label === 'javascript') {
+            if (
+                label === 'typescript' ||
+                label === 'javascript' ||
+                label === customPortalLanguageId
+            ) {
                 return new TypescriptWorker();
             } else if (label === 'html') {
                 return new HtmlWorker();
@@ -598,8 +603,11 @@ function tagScriptLanguage(
     if (prefix) {
         return prefix.language === 'text'
             ? 'plaintext'
-            : prefix.language === 'jsx'
-            ? 'javascript'
+            : prefix.language === 'jsx' ||
+              prefix.language === 'tsx' ||
+              prefix.language === 'typescript' ||
+              prefix.language === 'javascript'
+            ? customPortalLanguageId
             : prefix.language;
     }
 

@@ -5,9 +5,9 @@
 'use strict';
 
 import { WorkerManager } from './workerManager';
-import type { TypeScriptWorker } from './tsWorker';
+import type { TypeScriptWorker } from 'monaco-editor/esm/vs/language/typescript/monaco.contribution';
 import { LanguageServiceDefaults } from './languageService';
-import * as languageFeatures from './languageFeatures';
+import * as languageFeatures from 'monaco-editor/esm/vs/language/typescript/languageFeatures';
 import { languages, Uri } from './fillers/monaco-editor-core';
 
 let workers = new Map<string, (...uris: Uri[]) => Promise<TypeScriptWorker>>();

@@ -5,7 +5,7 @@
 'use strict';
 
 import { LanguageServiceDefaults } from './languageService';
-import type { TypeScriptWorker } from './tsWorker';
+import type { TypeScriptWorker } from 'monaco-editor/esm/vs/language/typescript/monaco.contribution';
 import { editor, Uri, IDisposable } from './fillers/monaco-editor-core';
 
 export class WorkerManager {
@@ -56,7 +56,7 @@ export class WorkerManager {
             // avoid multiple calls
             return;
         }
-        proxy.updateExtraLibs(this._defaults.getExtraLibs());
+        (<any>proxy).updateExtraLibs(this._defaults.getExtraLibs());
     }
 
     private _getClient(): Promise<TypeScriptWorker> {

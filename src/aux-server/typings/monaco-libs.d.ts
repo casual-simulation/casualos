@@ -17,3 +17,8 @@ declare module 'monaco-editor/esm/vs/language/typescript/lib/lib.js' {
 declare module 'monaco-editor/esm/vs/editor/edcore.main' {
     export * from 'monaco-editor';
 }
+
+declare module 'monaco-editor/esm/vs/basic-languages/_.contribution.js';
+declare module 'monaco-editor/esm/vs/basic-languages/typescript/typescript.js';
+declare module 'monaco-editor/esm/vs/language/typescript/lib/typescriptServices';
+declare module 'monaco-editor/esm/vs/language/typescript/languageFeatures';
