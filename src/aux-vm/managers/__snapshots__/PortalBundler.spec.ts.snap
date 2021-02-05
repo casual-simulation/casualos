@@ -1,5 +1,26 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ESBuildPortalBundler addLibrary() should use the given source when importing the specified library 1`] = `
+Object {
+  "externals": Object {},
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+  },
+  "source": "(() => {
+  // lib-ns:casualos
+  globalThis.func1(\\"casualos\\");
+
+  // aux-ns:📖bot1.main?auxmodule
+  globalThis.func1(\\"main\\");
+})();
+",
+  "tag": "main",
+  "warnings": Array [],
+}
+`;
+
 exports[`ESBuildPortalBundler bundleTag() library emoji imports should report errors that occur while fetching data 1`] = `
 "Error: Build failed with 1 error:
 aux-ns:📖bot1.main?auxmodule:1:20: error: [casualos] Error: Get failed."

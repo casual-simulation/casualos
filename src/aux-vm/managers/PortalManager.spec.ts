@@ -15,6 +15,7 @@ import { BotWatcher } from './BotWatcher';
 import {
     CodeBundle,
     ExternalModule,
+    LibraryModule,
     PortalBundler,
     ScriptPrefix,
 } from './PortalBundler';
@@ -37,6 +38,7 @@ describe('PortalManager', () => {
             Promise<CodeBundle>,
             [BotsState, string, ScriptPrefix[]]
         >;
+        addLibrary: jest.Mock<void, [LibraryModule]>;
     };
     let localEvents: Subject<LocalActions[]>;
 
@@ -56,6 +58,7 @@ describe('PortalManager', () => {
 
         bundler = {
             bundleTag: jest.fn(),
+            addLibrary: jest.fn(),
         };
         manager = new PortalManager(vm, helper, watcher, bundler);
     });

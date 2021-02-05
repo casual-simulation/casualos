@@ -824,4 +824,49 @@ describe('ESBuildPortalBundler', () => {
             expect(func1).toBeCalledWith('test');
         });
     });
+
+    describe('addLibrary()', () => {
+        let func1: jest.Mock<any>;
+        let func2: jest.Mock<any>;
+
+        beforeEach(() => {
+            bundler = new ESBuildPortalBundler();
+            (<any>globalThis).func1 = func1 = jest.fn();
+            (<any>globalThis).func2 = func2 = jest.fn();
+        });
+
+        afterEach(() => {
+            delete (<any>globalThis).func2;
+            delete (<any>globalThis).func1;
+        });
+
+        it('should use the given source when importing the specified library', async () => {
+            bundler.addLibrary({
+                id: 'casualos',
+                source: 'globalThis.func1("casualos");',
+                language: 'javascript',
+            });
+
+            const state = {
+                bot1: createPrecalculatedBot('bot1', {
+                    main: `📖import "casualos"; globalThis.func1("main");`,
+                }),
+            };
+            const bundle = await bundler.bundleTag(state, 'main', [
+                {
+                    prefix: '📖',
+                    language: 'typescript',
+                },
+            ]);
+
+            expect(bundle).toMatchSnapshot();
+            expect(bundle.source).toBeTruthy();
+
+            eval(bundle.source);
+
+            expect(func1).toHaveBeenCalledTimes(2);
+            expect(func1).toHaveBeenNthCalledWith(1, 'casualos');
+            expect(func1).toHaveBeenNthCalledWith(2, 'main');
+        });
+    });
 });
