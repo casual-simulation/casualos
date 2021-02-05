@@ -6,17 +6,13 @@ import {
     AuxPartition,
 } from '@casual-simulation/aux-common';
 import { SERVER_ROLE, DeviceAction } from '@casual-simulation/causal-trees';
-import { AuxConfig, AuxUser, PortalBundler } from '@casual-simulation/aux-vm';
+import { AuxConfig, AuxUser } from '@casual-simulation/aux-vm';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
 import { createProxyClientPartition } from '../partitions/ProxyClientPartition';
-import ESBuildWasmURL from 'esbuild-wasm/esbuild.wasm';
 
 export class BrowserAuxChannel extends RemoteAuxChannel {
-    private _defaultHost: string;
-
     constructor(defaultHost: string, user: AuxUser, config: AuxConfig) {
         super(user, config, {});
-        this._defaultHost = defaultHost;
     }
 
     // TODO: Move this logic to an AuxModule
@@ -45,14 +41,5 @@ export class BrowserAuxChannel extends RemoteAuxChannel {
         }
 
         return partition;
-    }
-
-    protected _createPortalBundler() {
-        return new PortalBundler({
-            esbuildWasmUrl: new URL(
-                ESBuildWasmURL,
-                this._config.config.vmOrigin || this._defaultHost
-            ).href,
-        });
     }
 }

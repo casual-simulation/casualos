@@ -26,7 +26,6 @@ import {
 } from '@casual-simulation/causal-trees';
 import { DenoWorker, polyfillMessageChannel } from 'deno-vm';
 import { URL } from 'url';
-import { PortalEntrypoint, PortalEvent } from '@casual-simulation/aux-vm/vm';
 
 polyfillMessageChannel();
 
@@ -43,7 +42,6 @@ export class DenoVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _versionUpdated: Subject<RuntimeStateVersion>;
     private _onError: Subject<AuxChannelErrorType>;
-    private _portalEvents: Subject<PortalEvent[]>;
     private _config: AuxConfig;
     private _worker: DenoWorker;
     private _proxy: Remote<AuxChannel>;
@@ -67,11 +65,6 @@ export class DenoVM implements AuxVM {
         this._versionUpdated = new Subject<RuntimeStateVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
-        this._portalEvents = new Subject();
-    }
-
-    get portalEvents(): Observable<PortalEvent[]> {
-        return this._portalEvents;
     }
 
     get connectionStateChanged(): Observable<StatusUpdate> {
@@ -161,7 +154,6 @@ export class DenoVM implements AuxVM {
             proxy((state) =>
                 this._connectionStateChanged.next(statusMapper(state))
             ),
-            proxy((events) => this._portalEvents.next(events)),
             proxy((err) => this._onError.next(err))
         );
     }
@@ -269,7 +261,7 @@ export class DenoVM implements AuxVM {
         this._localEvents = null;
     }
 
-    registerCustomPortal(id: string): Promise<void> {
+    openCustomPortal(id: string): Promise<void> {
         throw new Error('Method not implemented.');
     }
 

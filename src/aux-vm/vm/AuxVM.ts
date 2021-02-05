@@ -11,7 +11,6 @@ import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
 import { StoredAux } from '../StoredAux';
 import { ChannelActionResult } from './AuxChannel';
-import { PortalEvent } from './PortalEvents';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -31,11 +30,6 @@ export interface AuxVM extends Initable {
      * Gets the observable list of device events from the simulation.
      */
     deviceEvents: Observable<DeviceAction[]>;
-
-    /**
-     * Gets the observable list of portal events from the simulation.
-     */
-    portalEvents: Observable<PortalEvent[]>;
 
     /**
      * Gets the observable list of state updates from the simulation.

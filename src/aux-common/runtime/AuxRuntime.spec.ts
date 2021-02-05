@@ -70,6 +70,7 @@ import {
     DEFAULT_TAG_MASK_SPACE,
     DNA_TAG_PREFIX,
     tagsOnBot,
+    TEMPORARY_BOT_PARTITION_ID,
 } from '../bots';
 import uuid from 'uuid/v4';
 import { waitAsync } from '../test/TestHelpers';
@@ -3824,6 +3825,39 @@ describe('AuxRuntime', () => {
             await waitAsync();
 
             expect(events).toEqual([[botRemoved('test1')]]);
+        });
+
+        it('should handle setting a tag mask on a new bot', async () => {
+            uuidMock.mockReturnValueOnce('uuid');
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        create:
+                            '@let newBot = create({ test: true }); newBot.tags.abc = 456; setTagMask(newBot, "myTag", 123);',
+                    }),
+                })
+            );
+            runtime.shout('create');
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                [
+                    botAdded({
+                        id: 'uuid',
+                        tags: {
+                            creator: 'test1',
+                            test: true,
+                            abc: 456,
+                        },
+                        masks: {
+                            [TEMPORARY_BOT_PARTITION_ID]: {
+                                myTag: 123,
+                            },
+                        },
+                    }),
+                ],
+            ]);
         });
 
         describe('bot_added', () => {

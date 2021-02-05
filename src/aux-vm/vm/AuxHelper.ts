@@ -32,6 +32,7 @@ import {
     asyncError,
     botRemoved,
     BotTagMasks,
+    isBot,
 } from '@casual-simulation/aux-common';
 import {
     RemoteAction,
@@ -154,10 +155,14 @@ export class AuxHelper extends BaseHelper<Bot> {
             this._partitionStates.set(key, bots);
 
             const finalBots = transform<Bot, Bot>(bots, (result, value, id) => {
-                result[id] = {
-                    ...value,
-                    space: <any>key,
-                };
+                // ignore partial bots
+                // (like bots that live in another partition but have a tag mask set in this partition)
+                if (isBot(value)) {
+                    result[id] = {
+                        ...value,
+                        space: <any>key,
+                    };
+                }
             });
             if (!state) {
                 state = { ...finalBots };

@@ -13,6 +13,7 @@ const config: ClientConfig = {
                 .CAUSAL_REPO_CONNECTION_PROTOCOL as RemoteCausalRepoProtocol) ||
             'socket.io',
         causalRepoConnectionUrl: process.env.CAUSAL_REPO_CONNECTION_URL,
+        vmOrigin: process.env.VM_ORIGIN || null,
     },
 };
 

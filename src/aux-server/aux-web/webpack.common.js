@@ -91,14 +91,35 @@ function playerConfig() {
                 clientsClaim: true,
                 skipWaiting: true,
                 exclude: [/webxr-profiles/, /\.map$/, /fonts\/NotoSansKR/],
-                chunks: [
-                    'player',
-                    'vendors',
-                    'vm',
-                    'monaco',
-                    'monaco-tag-editor',
+                include: [
+                    /\.html$/,
+                    /\.css$/,
+                    /\.json$/,
+                    /\.js$/,
+                    /\.png$/,
+                    /\.glb$/,
+                    /\.ico$/,
+                    /\.ttf$/,
+                    /roboto-v18-latin-regular\.woff2$/,
                 ],
-                maximumFileSizeToCacheInBytes: 5242880, // 5MiB
+                runtimeCaching: [
+                    {
+                        handler: 'CacheFirst',
+                        urlPattern: /\.wasm$/,
+                        method: 'GET',
+                    },
+                    {
+                        handler: 'NetworkFirst',
+                        urlPattern: /assets-manifest\.json$/,
+                        method: 'GET',
+                    },
+                    {
+                        handler: 'NetworkFirst',
+                        urlPattern: /\/api\/config$/,
+                        method: 'GET',
+                    },
+                ],
+                maximumFileSizeToCacheInBytes: 15728640, // 5MiB
                 importScriptsViaChunks: ['service-worker'],
                 swDest: 'sw.js',
                 inlineWorkboxRuntime: true,
@@ -353,6 +374,10 @@ function baseConfig() {
                     __dirname,
                     'shared/public/clipboard-polyfill/clipboard-polyfill.js'
                 ),
+
+                os: false,
+                constants: false,
+                fs: false,
             },
         },
     };
