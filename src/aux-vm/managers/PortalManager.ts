@@ -19,6 +19,7 @@ import {
     BundleModules,
     CodeBundle,
     ExternalModule,
+    LibraryModule,
     PortalBundler,
     ScriptPrefix,
 } from './PortalBundler';
@@ -166,6 +167,10 @@ export class PortalManager implements SubscriptionLike {
                 .pipe(tap((b) => this._onBotsUpdated(b)))
                 .subscribe()
         );
+    }
+
+    addLibrary(module: LibraryModule) {
+        return this._bundler.addLibrary(module);
     }
 
     private _onBotsUpdated(updates: UpdatedBotInfo[]): void {

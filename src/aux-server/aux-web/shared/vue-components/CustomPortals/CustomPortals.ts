@@ -11,6 +11,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import CustomPortal from '../CustomPortal/CustomPortal';
+import AuxLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/core.js';
 
 @Component({
     components: {
@@ -53,6 +54,12 @@ export default class CustomPortals extends Vue {
     private _onSimulationAdded(sim: BrowserSimulation) {
         let sub = new Subscription();
         this._simulations.set(sim, sub);
+
+        sim.portals.addLibrary({
+            id: 'casualos',
+            language: 'javascript',
+            source: AuxLibraryCode,
+        });
 
         sub.add(
             sim.portals.portalsDiscovered

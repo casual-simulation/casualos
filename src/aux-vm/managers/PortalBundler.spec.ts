@@ -830,6 +830,7 @@ describe('ESBuildPortalBundler', () => {
         let func2: jest.Mock<any>;
 
         beforeEach(() => {
+            require('axios').__reset();
             bundler = new ESBuildPortalBundler();
             (<any>globalThis).func1 = func1 = jest.fn();
             (<any>globalThis).func2 = func2 = jest.fn();
@@ -867,6 +868,38 @@ describe('ESBuildPortalBundler', () => {
             expect(func1).toHaveBeenCalledTimes(2);
             expect(func1).toHaveBeenNthCalledWith(1, 'casualos');
             expect(func1).toHaveBeenNthCalledWith(2, 'main');
+        });
+
+        it('should be able to process imports from libraries', async () => {
+            require('axios').__setResponse({
+                data: `export const fun = globalThis.func1;`,
+            });
+
+            bundler.addLibrary({
+                id: 'casualos',
+                source: 'export * from "lodash";',
+                language: 'javascript',
+            });
+
+            const state = {
+                bot1: createPrecalculatedBot('bot1', {
+                    main: `📖import { fun } from "casualos"; fun("main");`,
+                }),
+            };
+            const bundle = await bundler.bundleTag(state, 'main', [
+                {
+                    prefix: '📖',
+                    language: 'typescript',
+                },
+            ]);
+
+            expect(bundle).toMatchSnapshot();
+            expect(bundle.source).toBeTruthy();
+
+            eval(bundle.source);
+
+            expect(func1).toHaveBeenCalledTimes(1);
+            expect(func1).toHaveBeenNthCalledWith(1, 'main');
         });
     });
 });

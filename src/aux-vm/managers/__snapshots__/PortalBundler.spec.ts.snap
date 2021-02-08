@@ -1,5 +1,32 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ESBuildPortalBundler addLibrary() should be able to process imports from libraries 1`] = `
+Object {
+  "externals": Object {
+    "lodash": Object {
+      "id": "lodash",
+      "typescriptDefinitionsURL": null,
+      "url": "https://cdn.skypack.dev/lodash?dts",
+    },
+  },
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+  },
+  "source": "(() => {
+  // http-ns:https://cdn.skypack.dev/lodash?dts
+  var fun = globalThis.func1;
+
+  // aux-ns:📖bot1.main?auxmodule
+  fun(\\"main\\");
+})();
+",
+  "tag": "main",
+  "warnings": Array [],
+}
+`;
+
 exports[`ESBuildPortalBundler addLibrary() should use the given source when importing the specified library 1`] = `
 Object {
   "externals": Object {},
