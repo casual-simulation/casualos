@@ -311,6 +311,99 @@ describe('ESBuildPortalBundler', () => {
                         expect(func1).toBeCalledTimes(1);
                     });
 
+                    it('should support HTTPS modules that have parent references', async () => {
+                        require('axios')
+                            .__setNextResponse({
+                                data: `export * from './first.js';`,
+                            })
+                            .__setNextResponse({
+                                data: `export * from '../nested/fun.js';`,
+                            })
+                            .__setNextResponse({
+                                data: `export const fun = globalThis.func1;`,
+                            });
+
+                        const state = {
+                            bot1: createPrecalculatedBot('bot1', {
+                                main: `${firstPrefix}import { fun } from "lodash/test/haha.js"; fun();`,
+                            }),
+                        };
+
+                        const bundle = await bundler.bundleTag(
+                            state,
+                            'main',
+                            prefixes
+                        );
+
+                        expect(bundle).not.toEqual(null);
+                        expect(bundle.source).toBeTruthy();
+                        let requests = require('axios').__getRequests();
+
+                        expect(requests).toEqual([
+                            [
+                                'get',
+                                `${DEFAULT_BASE_MODULE_URL}/lodash/test/haha.js`,
+                            ],
+                            [
+                                'get',
+                                `${DEFAULT_BASE_MODULE_URL}/lodash/test/first.js`,
+                            ],
+                            [
+                                'get',
+                                `${DEFAULT_BASE_MODULE_URL}/lodash/nested/fun.js`,
+                            ],
+                        ]);
+
+                        eval(bundle.source);
+
+                        expect(func1).toBeCalledTimes(1);
+                    });
+
+                    it('should support HTTPS modules that have deep parent references', async () => {
+                        require('axios')
+                            .__setNextResponse({
+                                data: `export * from './first.js';`,
+                            })
+                            .__setNextResponse({
+                                data: `export * from '../../nested/fun.js';`,
+                            })
+                            .__setNextResponse({
+                                data: `export const fun = globalThis.func1;`,
+                            });
+
+                        const state = {
+                            bot1: createPrecalculatedBot('bot1', {
+                                main: `${firstPrefix}import { fun } from "lodash/test/haha.js"; fun();`,
+                            }),
+                        };
+
+                        const bundle = await bundler.bundleTag(
+                            state,
+                            'main',
+                            prefixes
+                        );
+
+                        expect(bundle).not.toEqual(null);
+                        expect(bundle.source).toBeTruthy();
+                        let requests = require('axios').__getRequests();
+
+                        expect(requests).toEqual([
+                            [
+                                'get',
+                                `${DEFAULT_BASE_MODULE_URL}/lodash/test/haha.js`,
+                            ],
+                            [
+                                'get',
+                                `${DEFAULT_BASE_MODULE_URL}/lodash/test/first.js`,
+                            ],
+                            ['get', `${DEFAULT_BASE_MODULE_URL}/nested/fun.js`],
+                        ]);
+
+                        eval(bundle.source);
+
+                        expect(func1).toBeCalledTimes(1);
+                    });
+
                     it('should support HTTPS modules that have absolute references', async () => {
                         require('axios')
                             .__setNextResponse({

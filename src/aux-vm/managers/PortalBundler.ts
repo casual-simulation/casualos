@@ -328,9 +328,23 @@ export class ESBuildPortalBundler implements PortalBundler {
                     const importee = args.path;
                     let importer = args.importer;
                     // convert to HTTP(S) import.
-                    if (importee.startsWith('/') || importee.startsWith('./')) {
+                    if (
+                        importee.startsWith('/') ||
+                        importee.startsWith('./') ||
+                        importee.startsWith('../')
+                    ) {
+                        const lastForwardSlash = importer.lastIndexOf('/');
+                        const lastDot = importer.lastIndexOf('.');
+
+                        // We can determine that the importer was a file with an extension
+                        // by looking at whether the index of the last period is after the
+                        // index of the last forward slash. If it is, then we know the file has
+                        // a valid extension. If it is not, then it should be treated as a directory name.
+                        const hasFileExtension =
+                            lastDot >= 0 && lastForwardSlash < lastDot;
+
                         // use importer as base URL
-                        if (!importer.endsWith('/')) {
+                        if (!hasFileExtension && !importer.endsWith('/')) {
                             importer = importer + '/';
                         }
                         const url = new URL(importee, importer);
