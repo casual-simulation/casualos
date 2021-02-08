@@ -21,6 +21,11 @@ import {
     asyncResult,
     addDebugApi,
     RuntimeStateVersion,
+    OpenCustomPortalAction,
+    asyncError,
+    RegisterPrefixAction,
+    OpenCustomPortalOptions,
+    DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
@@ -39,8 +44,6 @@ import { StatusHelper } from './StatusHelper';
 import { StoredAux } from '../StoredAux';
 import pick from 'lodash/pick';
 import flatMap from 'lodash/flatMap';
-import { RealtimeEditMode } from '@casual-simulation/aux-common/runtime/RuntimeBot';
-import { mergeVersions } from '@casual-simulation/aux-common/aux-format-2';
 
 export interface AuxChannelOptions {}
 

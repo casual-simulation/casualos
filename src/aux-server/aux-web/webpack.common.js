@@ -9,6 +9,7 @@ const WorkboxPlugin = require('workbox-webpack-plugin');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 const webpack = require('webpack');
 const { merge } = require('webpack-merge');
+const WebpackAssetsManifest = require('webpack-assets-manifest');
 
 const commitHash = childProcess
     .execSync('git rev-parse HEAD')
@@ -34,11 +35,19 @@ function playerConfig() {
                 '..',
                 'aux-vm-browser',
                 'html',
-                'IframeEntry.ts'
+                'IframeEntry.js'
             ),
             'service-worker': path.resolve(
                 __dirname,
                 './shared/service-worker.ts'
+            ),
+            worker: path.resolve(
+                __dirname,
+                '..',
+                '..',
+                'aux-vm-browser',
+                'vm',
+                'WorkerEntry.ts'
             ),
         },
         plugins: [
@@ -82,14 +91,35 @@ function playerConfig() {
                 clientsClaim: true,
                 skipWaiting: true,
                 exclude: [/webxr-profiles/, /\.map$/, /fonts\/NotoSansKR/],
-                chunks: [
-                    'player',
-                    'vendors',
-                    'vm',
-                    'monaco',
-                    'monaco-tag-editor',
+                include: [
+                    /\.html$/,
+                    /\.css$/,
+                    /\.json$/,
+                    /\.js$/,
+                    /\.png$/,
+                    /\.glb$/,
+                    /\.ico$/,
+                    /\.ttf$/,
+                    /roboto-v18-latin-regular\.woff2$/,
                 ],
-                maximumFileSizeToCacheInBytes: 5242880, // 5MiB
+                runtimeCaching: [
+                    {
+                        handler: 'CacheFirst',
+                        urlPattern: /\.wasm$/,
+                        method: 'GET',
+                    },
+                    {
+                        handler: 'NetworkFirst',
+                        urlPattern: /assets-manifest\.json$/,
+                        method: 'GET',
+                    },
+                    {
+                        handler: 'NetworkFirst',
+                        urlPattern: /\/api\/config$/,
+                        method: 'GET',
+                    },
+                ],
+                maximumFileSizeToCacheInBytes: 15728640, // 5MiB
                 importScriptsViaChunks: ['service-worker'],
                 swDest: 'sw.js',
                 inlineWorkboxRuntime: true,
@@ -137,6 +167,7 @@ function playerConfig() {
                     },
                 ],
             }),
+            new WebpackAssetsManifest(),
         ],
     });
 }
@@ -164,6 +195,7 @@ function commonPlugins() {
             GIT_TAG: JSON.stringify(latestTag),
             PROXY_CORS_REQUESTS: process.env.PROXY_CORS_REQUESTS !== 'false',
         }),
+        new webpack.NormalModuleReplacementPlugin(/^esbuild$/, 'esbuild-wasm'),
     ];
 }
 
@@ -236,7 +268,7 @@ function baseConfig() {
                     use: 'exports-loader?vg=vg',
                 },
                 {
-                    test: /\.(gltf|glb)$/,
+                    test: /\.(gltf|glb|wasm)$/,
                     use: [
                         {
                             loader: 'file-loader',
@@ -342,6 +374,10 @@ function baseConfig() {
                     __dirname,
                     'shared/public/clipboard-polyfill/clipboard-polyfill.js'
                 ),
+
+                os: false,
+                constants: false,
+                fs: false,
             },
         },
     };

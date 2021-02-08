@@ -1,0 +1,189 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ESBuildPortalBundler bundleTag() library emoji imports should report errors that occur while fetching data 1`] = `
+"Error: Build failed with 1 error:
+aux-ns:📖bot1.main?auxmodule:1:20: error: [casualos] Error: Get failed."
+`;
+
+exports[`ESBuildPortalBundler bundleTag() library emoji should resolve with a bundle that contains the specified tags 1`] = `
+Object {
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+    "bot2": Set {
+      "main",
+    },
+  },
+  "source": "(() => {
+  // aux-ns:📖bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:📖bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+  "tag": "main",
+  "warnings": Array [],
+}
+`;
+
+exports[`ESBuildPortalBundler bundleTag() library emoji should resolve with build errors 1`] = `
+Object {
+  "error": "Error: Build failed with 1 error:
+aux-ns:📖bot1.main?auxmodule:1:15: error: Unterminated string literal",
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+  },
+  "tag": "main",
+  "warnings": Array [],
+}
+`;
+
+exports[`ESBuildPortalBundler bundleTag() multiple emoji imports should report errors that occur while fetching data 1`] = `
+"Error: Build failed with 1 error:
+aux-ns:🙂bot1.main?auxmodule:1:20: error: [casualos] Error: Get failed."
+`;
+
+exports[`ESBuildPortalBundler bundleTag() multiple emoji should resolve with a bundle that contains the specified tags 1`] = `
+Object {
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+    "bot2": Set {
+      "main",
+    },
+  },
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:📖bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+  "tag": "main",
+  "warnings": Array [],
+}
+`;
+
+exports[`ESBuildPortalBundler bundleTag() multiple emoji should resolve with build errors 1`] = `
+Object {
+  "error": "Error: Build failed with 1 error:
+aux-ns:🙂bot1.main?auxmodule:1:15: error: Unterminated string literal",
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+  },
+  "tag": "main",
+  "warnings": Array [],
+}
+`;
+
+exports[`ESBuildPortalBundler bundleTag() should support JSON 1`] = `
+Object {
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+  },
+  "source": "(() => {
+})();
+",
+  "tag": "main",
+  "warnings": Array [
+    "Ignoring this import because \\"aux-ns:📖bot1.main?auxmodule\\" was marked as having no side effects",
+  ],
+}
+`;
+
+exports[`ESBuildPortalBundler bundleTag() should support JSX 1`] = `
+Object {
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+  },
+  "source": "(() => {
+})();
+",
+  "tag": "main",
+  "warnings": Array [],
+}
+`;
+
+exports[`ESBuildPortalBundler bundleTag() should support TSX 1`] = `
+Object {
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+  },
+  "source": "(() => {
+})();
+",
+  "tag": "main",
+  "warnings": Array [],
+}
+`;
+
+exports[`ESBuildPortalBundler bundleTag() should support typescript 1`] = `
+Object {
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+  },
+  "source": "(() => {
+})();
+",
+  "tag": "main",
+  "warnings": Array [],
+}
+`;
+
+exports[`ESBuildPortalBundler bundleTag() smile emoji imports should report errors that occur while fetching data 1`] = `
+"Error: Build failed with 1 error:
+aux-ns:🙂bot1.main?auxmodule:1:20: error: [casualos] Error: Get failed."
+`;
+
+exports[`ESBuildPortalBundler bundleTag() smile emoji should resolve with a bundle that contains the specified tags 1`] = `
+Object {
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+    "bot2": Set {
+      "main",
+    },
+  },
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:🙂bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+  "tag": "main",
+  "warnings": Array [],
+}
+`;
+
+exports[`ESBuildPortalBundler bundleTag() smile emoji should resolve with build errors 1`] = `
+Object {
+  "error": "Error: Build failed with 1 error:
+aux-ns:🙂bot1.main?auxmodule:1:15: error: Unterminated string literal",
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+  },
+  "tag": "main",
+  "warnings": Array [],
+}
+`;

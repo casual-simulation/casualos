@@ -1,5 +1,5 @@
 declare module '*.vue' {
-    import Vue from 'vue';
-    const component: Vue;
+    import { VueClass } from 'vue-class-component/lib/declarations';
+    const component: VueClass<any>;
     export default component;
 }

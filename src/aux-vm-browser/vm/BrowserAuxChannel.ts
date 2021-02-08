@@ -20,9 +20,10 @@ export class BrowserAuxChannel extends RemoteAuxChannel {
     protected async _handlePartitionEvents(events: BotAction[]) {
         await super._handlePartitionEvents(events);
         let filtered = events.filter(
-            e => e.type === 'device' && e.device.roles.indexOf(SERVER_ROLE) >= 0
+            (e) =>
+                e.type === 'device' && e.device.roles.indexOf(SERVER_ROLE) >= 0
         ) as DeviceAction[];
-        let mapped = <BotAction[]>filtered.map(e => e.event);
+        let mapped = <BotAction[]>filtered.map((e) => e.event);
         if (filtered.length > 0) {
             await this.sendEvents(mapped);
         }

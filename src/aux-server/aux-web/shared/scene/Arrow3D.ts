@@ -1,7 +1,6 @@
 import { Object3D, Color, Vector3, ArrowHelper, Sphere } from 'three';
 
 import {
-    Object,
     isMinimized,
     BotCalculationContext,
 } from '@casual-simulation/aux-common';

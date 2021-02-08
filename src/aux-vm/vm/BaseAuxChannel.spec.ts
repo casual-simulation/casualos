@@ -36,13 +36,16 @@ import {
     MemoryPartitionImpl,
     MemoryPartitionStateConfig,
     RuntimeStateVersion,
+    LocalActions,
+    asyncResult,
+    DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
 import uuid from 'uuid/v4';
 import merge from 'lodash/merge';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { cloneDeep } from 'lodash';
 
 const uuidMock: jest.Mock = <any>uuid;

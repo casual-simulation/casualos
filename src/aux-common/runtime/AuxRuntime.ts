@@ -42,6 +42,7 @@ import {
     CLEAR_CHANGES_SYMBOL,
     CompiledBotListener,
     DNA_TAG_PREFIX,
+    UpdateBotAction,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -103,7 +104,7 @@ export class AuxRuntime
     };
 
     private _updatedBots = new Map<string, RuntimeBot>();
-    private _newBots = new Map<string, RuntimeBot>();
+    private _newBots = new Map<string, Bot>();
 
     // TODO: Update version number
     // TODO: Update device
@@ -787,7 +788,7 @@ export class AuxRuntime
         const mode = this._editModeProvider.getEditMode(space);
         if (mode === RealtimeEditMode.Immediate) {
             const compiled = this._createCompiledBot(bot, true);
-            this._newBots.set(bot.id, compiled.script);
+            this._newBots.set(bot.id, bot);
             return compiled.script;
         }
         return null;
@@ -879,30 +880,46 @@ export class AuxRuntime
     private _processUnbatchedActions() {
         const actions = this._globalContext.dequeueActions();
         const updatedBots = [...this._updatedBots.values()];
-        const updates = updatedBots
-            .filter((bot) => {
-                return (
-                    (Object.keys(bot.changes).length > 0 ||
-                        Object.keys(bot.maskChanges).length > 0) &&
-                    !this._newBots.has(bot.id) &&
-                    isInContext(this._globalContext, bot)
-                );
-            })
-            .map((bot) => {
-                let update = {} as PartialBot;
-                if (Object.keys(bot.changes).length > 0) {
-                    update.tags = { ...bot.changes };
-                }
-                if (Object.keys(bot.maskChanges).length > 0) {
-                    update.masks = {};
-                    for (let space in bot.maskChanges) {
-                        update.masks[space] = {
-                            ...bot.maskChanges[space],
-                        };
+
+        let updates = [] as UpdateBotAction[];
+        for (let bot of updatedBots) {
+            const hasTagChange = Object.keys(bot.changes).length > 0;
+            const hasMaskChange = Object.keys(bot.maskChanges).length > 0;
+            const hasChange = hasTagChange || hasMaskChange;
+            if (hasChange) {
+                const isNewBot = this._newBots.has(bot.id);
+                if (isNewBot) {
+                    // tag mask changes need to be handled here
+                    // because new bots don't share the same reference to the
+                    // bot in the add bot event (unlike normal bots)
+                    if (hasMaskChange) {
+                        const newBot = this._newBots.get(bot.id);
+                        newBot.masks = {};
+                        for (let space in bot.maskChanges) {
+                            newBot.masks[space] = {
+                                ...bot.maskChanges[space],
+                            };
+                        }
+                    }
+                } else {
+                    if (isInContext(this._globalContext, bot)) {
+                        let update = {} as PartialBot;
+                        if (hasTagChange) {
+                            update.tags = { ...bot.changes };
+                        }
+                        if (hasMaskChange) {
+                            update.masks = {};
+                            for (let space in bot.maskChanges) {
+                                update.masks[space] = {
+                                    ...bot.maskChanges[space],
+                                };
+                            }
+                        }
+                        updates.push(botUpdated(bot.id, update));
                     }
                 }
-                return botUpdated(bot.id, update);
-            });
+            }
+        }
         for (let bot of updatedBots) {
             bot[CLEAR_CHANGES_SYMBOL]();
         }

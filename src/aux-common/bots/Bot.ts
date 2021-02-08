@@ -4,7 +4,6 @@ export type PartialBot = Partial<Bot>;
 
 export type AuxDomain = 'builder' | 'player';
 
-export type Object = Bot;
 export type Workspace = Bot;
 
 /**
@@ -746,6 +745,11 @@ export const DEFAULT_TAG_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint =
     'fullscreen';
 
 /**
+ * The default anchor point for custom portals.
+ */
+export const DEFAULT_CUSTOM_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint = 'top';
+
+/**
  * The default bot LOD.
  */
 export const DEFAULT_BOT_LOD: BotLOD = 'normal';
@@ -1231,6 +1235,11 @@ export const SHEET_PORTAL: string = 'sheetPortal';
  * The prefix for DNA Tags.
  */
 export const DNA_TAG_PREFIX: string = '🧬';
+
+/**
+ * The default script prefixes for custom portals.
+ */
+export const DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES: string[] = ['📖'];
 
 /**
  * The list of all portal tags.

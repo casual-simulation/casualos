@@ -105,6 +105,9 @@ export type AsyncActions =
     | AsyncErrorAction
     | ShowInputAction
     | ShareAction
+    | OpenCustomPortalAction
+    | BuildBundleAction
+    | RegisterPrefixAction
     | RunScriptAction
     | LoadBotsAction
     | ClearSpaceAction
@@ -2339,6 +2342,82 @@ export interface ShareAction extends AsyncAction, ShareOptions {
     type: 'share';
 }
 
+/**
+ * The possible options for a custom portal.
+ */
+export interface OpenCustomPortalOptions {
+    /**
+     * The CSS styles that should be used for the portal.
+     */
+    style?: any;
+
+    /**
+     * The mode that the portal should be opened in.
+     * "Tag" indicates that the portal should watch the given tag and automatically produce bundles for the portal.
+     * "source" indicates that the portal should load the given source directly.
+     */
+    mode?: 'tag' | 'source';
+}
+
+/**
+ * Defines an event that creates a custom portal using the given source code.
+ */
+export interface OpenCustomPortalAction extends AsyncAction {
+    type: 'open_custom_portal';
+    /**
+     * The ID of the portal.
+     */
+    portalId: string;
+
+    /**
+     * The tag or bundle that the portal should use.
+     */
+    tagOrSource: string;
+
+    /**
+     * The options for the portal.
+     */
+    options: OpenCustomPortalOptions;
+}
+
+/**
+ * Defines an event that builds a bundle from a specified tag.
+ */
+export interface BuildBundleAction extends AsyncAction {
+    type: 'build_bundle';
+    /**
+     * The tag that the bundle should use.
+     */
+    tag: string;
+}
+
+/**
+ * Defines an event that adds an entry point to a custom portal.
+ */
+export interface RegisterPrefixAction extends AsyncAction {
+    type: 'register_prefix';
+
+    /**
+     * The prefix that should be registered.
+     */
+    prefix: string;
+
+    /**
+     * The options that should be used for the prefix.
+     */
+    options: RegisterPrefixOptions;
+}
+
+/**
+ * Defines an interface that contains options for register prefix actions.
+ */
+export interface RegisterPrefixOptions {
+    /**
+     * The possible languages that prefixes can use.
+     */
+    language?: 'javascript' | 'typescript' | 'json' | 'jsx' | 'tsx' | 'text';
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -4503,6 +4582,62 @@ export function share(
         type: 'share',
         taskId,
         ...options,
+    };
+}
+
+/**
+ * Creates an action that registers a custom portal.
+ * @param portalId The ID of the portal,
+ * @param tagOrSource The tag or bundle of source that the portal should use.
+ * @param options The options for the portal.
+ * @param taskId The ID of the task.
+ */
+export function openCustomPortal(
+    portalId: string,
+    tagOrSource: string,
+    options: OpenCustomPortalOptions,
+    taskId?: number | string
+): OpenCustomPortalAction {
+    return {
+        type: 'open_custom_portal',
+        portalId,
+        tagOrSource,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that builds a bundle from the specified tag.
+ * @param tag The tag that the bundle should be built from.
+ * @param taskId The ID of the task.
+ */
+export function buildBundle(
+    tag: string,
+    taskId?: number | string
+): BuildBundleAction {
+    return {
+        type: 'build_bundle',
+        tag,
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that registers the given script prefix for custom portals.
+ * @param prefix The prefix that should be used.
+ * @param taskId The ID of the task.
+ */
+export function registerPrefix(
+    prefix: string,
+    options: RegisterPrefixOptions,
+    taskId?: number | string
+): RegisterPrefixAction {
+    return {
+        type: 'register_prefix',
+        prefix,
+        options,
+        taskId,
     };
 }
 

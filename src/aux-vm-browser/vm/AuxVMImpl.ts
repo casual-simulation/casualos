@@ -19,7 +19,7 @@ import {
     AuxChannelErrorType,
     StoredAux,
 } from '@casual-simulation/aux-vm';
-import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
+import { loadScript, setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import {
     StatusUpdate,
     remapProgressPercent,
@@ -27,6 +27,12 @@ import {
     CurrentVersion,
 } from '@casual-simulation/causal-trees';
 import Bowser from 'bowser';
+import axios from 'axios';
+
+export const DEFAULT_IFRAME_ALLOW_ATTRIBUTE =
+    'accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking';
+export const DEFAULT_IFRAME_SANDBOX_ATTRIBUTE =
+    'allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts allow-downloads';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -44,6 +50,7 @@ export class AuxVMImpl implements AuxVM {
     private _channel: MessageChannel;
     private _proxy: Remote<AuxChannel>;
     private _initialUser: AuxUser;
+    private _manifest: { [key: string]: string };
     closed: boolean;
 
     /**
@@ -81,36 +88,42 @@ export class AuxVMImpl implements AuxVM {
     }
 
     private async _init(): Promise<void> {
+        const origin = this._config.config.vmOrigin || location.origin;
+        const iframeUrl = new URL('/aux-vm-iframe.html', origin).href;
+
+        this._connectionStateChanged.next({
+            type: 'progress',
+            message: 'Getting web manifest...',
+            progress: 0.05,
+        });
+
+        await this._initManifest();
+
+        // TODO: Decide which origin to use
+        const workerUrl = new URL(this._manifest['worker.js'], location.origin)
+            .href;
+
         this._connectionStateChanged.next({
             type: 'progress',
             message: 'Initializing web worker...',
             progress: 0.1,
         });
         this._iframe = document.createElement('iframe');
-        this._iframe.src = '/aux-vm-iframe.html';
+        this._iframe.src = iframeUrl;
         this._iframe.style.display = 'none';
-
-        // Allow the iframe to run scripts, but do nothing else.
-        // Because we're not allowing the same origin, this prevents the VM from talking to
-        // storage like IndexedDB and therefore prevents different VMs from affecting each other.
-        this._iframe.sandbox.add('allow-scripts');
-
-        const bowserResult = Bowser.parse(navigator.userAgent);
-
-        // Safari requires the allow-same-origin option in order to load
-        // web workers using a blob.
-        if (
-            bowserResult.browser.name === 'Safari' ||
-            bowserResult.os.name === 'iOS'
-        ) {
-            console.warn('[AuxVMImpl] Adding allow-same-origin for Safari');
-            this._iframe.sandbox.add('allow-same-origin');
-        }
+        this._iframe.setAttribute('allow', DEFAULT_IFRAME_ALLOW_ATTRIBUTE);
+        this._iframe.setAttribute('sandbox', DEFAULT_IFRAME_SANDBOX_ATTRIBUTE);
 
         let promise = waitForLoad(this._iframe);
-        document.body.appendChild(this._iframe);
+        document.body.insertBefore(this._iframe, document.body.firstChild);
 
         await promise;
+
+        await loadScriptFromUrl(
+            this._iframe.contentWindow,
+            'default',
+            workerUrl
+        );
 
         this._channel = setupChannel(this._iframe.contentWindow);
 
@@ -239,6 +252,81 @@ export class AuxVMImpl implements AuxVM {
         this._localEvents.unsubscribe();
         this._localEvents = null;
     }
+
+    private async _initManifest() {
+        console.log('[AuxVMImpl] Fetching manifest...');
+        this._manifest = await this._getManifest();
+        await this._saveConfig();
+        if (!this._config) {
+            console.warn(
+                '[AuxVMImpl] Manifest not able to be fetched from the server or local storage.'
+            );
+        }
+    }
+
+    private async _getManifest(): Promise<any> {
+        const serverConfig = await this._fetchManifestFromServer();
+        if (serverConfig) {
+            return serverConfig;
+        } else {
+            return await this._fetchConfigFromLocalStorage();
+        }
+    }
+
+    private async _fetchManifestFromServer(): Promise<any> {
+        try {
+            const result = await axios.get<any>(`/assets-manifest.json`);
+            if (result.status === 200) {
+                return result.data;
+            } else {
+                console.error(
+                    '[AuxVMImpl] Unable to fetch manifest from server.'
+                );
+                return null;
+            }
+        } catch (err) {
+            console.error(
+                '[AuxVMImpl] Unable to fetch manifest from server: ',
+                err
+            );
+            return null;
+        }
+    }
+
+    private async _saveConfig() {
+        try {
+            if (this._manifest) {
+                globalThis.localStorage.setItem(
+                    'manifest',
+                    JSON.stringify(this._manifest)
+                );
+            } else {
+                globalThis.localStorage.removeItem('manifest');
+            }
+        } catch (err) {
+            console.error('Unable to save manifest: ', err);
+        }
+    }
+
+    private async _fetchConfigFromLocalStorage(): Promise<any> {
+        try {
+            const val = globalThis.localStorage.getItem('manifest');
+            if (val) {
+                return JSON.parse(val);
+            } else {
+                console.error(
+                    '[AuxVMImpl] Unable to fetch manifest from storage.'
+                );
+                return null;
+            }
+        } catch (err) {
+            console.error(
+                '[AuxVMImpl] Unable to fetch manifest from storage',
+                err
+            );
+            return null;
+        }
+    }
 }
 
 function processPartitions(config: AuxConfig): AuxConfig {
@@ -259,4 +347,23 @@ function processPartitions(config: AuxConfig): AuxConfig {
         }
     }
     return transfer(config, transferrables);
+}
+
+/**
+ * Loads the script at the given URL into the given iframe window.
+ * @param iframeWindow The iframe.
+ * @param id The ID of the script.
+ * @param url The URL to load.
+ */
+async function loadScriptFromUrl(
+    iframeWindow: Window,
+    id: string,
+    url: string
+) {
+    const source = await axios.get(url);
+    if (source.status === 200 && typeof source.data === 'string') {
+        return await loadScript(iframeWindow, id, source.data);
+    } else {
+        throw new Error('Unable to load script: ' + url);
+    }
 }

@@ -34,14 +34,19 @@ import {
 import { BotPanelManager } from './BotPanelManager';
 import { BrowserSimulation } from './BrowserSimulation';
 import { AuxVMImpl } from '../vm/AuxVMImpl';
-import { ProgressManager } from '@casual-simulation/aux-vm/managers';
+import {
+    PortalBundler,
+    PortalManager,
+    ProgressManager,
+} from '@casual-simulation/aux-vm';
 import { filter, flatMap, tap, map } from 'rxjs/operators';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
-import pickBy from 'lodash/pickBy';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';
 import { LocalStoragePartitionImpl } from '../partitions/LocalStoragePartition';
 import { getBotsStateFromStoredAux } from '@casual-simulation/aux-vm/StoredAux';
+import ESBuildWasmURL from 'esbuild-wasm/esbuild.wasm';
+import { ESBuildPortalBundler } from '@casual-simulation/aux-vm/managers';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -51,6 +56,8 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     private _botPanel: BotPanelManager;
     private _login: LoginManager;
     private _progress: ProgressManager;
+    private _bundler: PortalBundler;
+    private _portals: PortalManager;
 
     /**
      * Gets the bots panel manager.
@@ -78,6 +85,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 )
             )
         );
+    }
+
+    get portals() {
+        return this._portals;
     }
 
     constructor(
@@ -193,5 +204,16 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     protected _initManagers() {
         super._initManagers();
         this._botPanel = new BotPanelManager(this._watcher, this._helper);
+        this._bundler = new ESBuildPortalBundler({
+            esbuildWasmUrl: ESBuildWasmURL,
+        });
+        this._portals = new PortalManager(
+            this._vm,
+            this.helper,
+            this.watcher,
+            this._bundler
+        );
+
+        this._subscriptions.push(this._portals);
     }
 }

@@ -19,6 +19,7 @@ import {
     calculateStringTagValue,
     calculateFormattedBotValue,
     DNA_TAG_PREFIX,
+    hasPortalScript,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
 import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
@@ -62,6 +63,8 @@ import { CurrentVersion } from '@casual-simulation/causal-trees';
 import { Color } from 'three';
 import { invertColor } from './scene/ColorUtils';
 import { getCursorColorClass, getCursorLabelClass } from './StyleHelpers';
+import jscodeshift from 'jscodeshift';
+import MonacoJSXHighlighter from './public/monaco-jsx-highlighter/index';
 
 export function setup() {
     // Tell monaco how to create the web workers
@@ -98,6 +101,20 @@ export function setup() {
         checkJs: true,
         newLine: monaco.languages.typescript.NewLineKind.LineFeed,
         noEmit: true,
+        jsx: monaco.languages.typescript.JsxEmit.Preserve,
+    });
+    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+        target: monaco.languages.typescript.ScriptTarget.ES2015,
+
+        // Auto-import the given libraries
+        lib: ['defaultLib:lib.es2015.d.ts', 'file:///AuxDefinitions.d.ts'],
+
+        allowJs: true,
+        alwaysStrict: true,
+        checkJs: true,
+        newLine: monaco.languages.typescript.NewLineKind.LineFeed,
+        noEmit: true,
+        jsx: monaco.languages.typescript.JsxEmit.Preserve,
     });
 
     // Eagerly sync models to get intellisense for all models
@@ -135,7 +152,10 @@ interface ModelInfo {
     decorators: string[];
     isFormula: boolean;
     isScript: boolean;
+    isCustomPortalScript: boolean;
+    editOffset: number;
     model: monaco.editor.ITextModel;
+    language: string;
     sub: Subscription;
 }
 
@@ -165,7 +185,11 @@ export function watchSimulation(
             for (let tag of tagsOnBot(f)) {
                 if (
                     shouldKeepModelWithTagLoaded(tag) ||
-                    isFormula(f.tags[tag])
+                    isFormula(f.tags[tag]) ||
+                    isCustomPortalScript(
+                        simulation,
+                        calculateBotValue(null, f, tag)
+                    )
                 ) {
                     loadModel(simulation, f, tag, null, getEditor);
                 }
@@ -251,10 +275,24 @@ export function watchEditor(
     simulation: Simulation,
     editor: monaco.editor.ICodeEditor
 ): Subscription {
+    const monacoJsxHighlighter = new MonacoJSXHighlighter(
+        monaco,
+        jscodeshift,
+        editor
+    );
+
     const modelChangeObservable = new Observable<
         monaco.editor.IModelChangedEvent
     >((sub) => {
         return toSubscription(editor.onDidChangeModel((e) => sub.next(e)));
+    });
+
+    const modelChangeLanguageObservable = new Observable<
+        monaco.editor.IModelLanguageChangedEvent
+    >((sub) => {
+        return toSubscription(
+            editor.onDidChangeModelLanguage((e) => sub.next(e))
+        );
     });
 
     const decorators = modelChangeObservable.pipe(
@@ -306,10 +344,7 @@ export function watchEditor(
             const botDecorators = debouncedStates.pipe(
                 map((state) => {
                     let decorators = [] as monaco.editor.IModelDeltaDecoration[];
-                    let offset =
-                        info?.isScript || info?.isFormula
-                            ? DNA_TAG_PREFIX.length
-                            : 0;
+                    let offset = info.editOffset;
                     for (let bot of getActiveObjects(state)) {
                         const cursorStart = calculateNumericalTagValue(
                             null,
@@ -421,9 +456,51 @@ export function watchEditor(
         }, [] as string[])
     );
 
+    const modelInfos = merge(
+        modelChangeObservable.pipe(
+            filter((e) => !!e.newModelUrl),
+            map((e) => models.get(e.newModelUrl.toString())),
+            filter((info) => !!info),
+            filter((info) => !info.model.isDisposed())
+        ),
+        modelChangeLanguageObservable.pipe(
+            map((e) => editor.getModel()),
+            filter((model) => !!model),
+            map((model) => models.get(model.uri.toString())),
+            filter((info) => !!info),
+            filter((info) => !info.model.isDisposed())
+        )
+    );
+
+    const enableJsxHighlightingOnCorrectModels = modelInfos.pipe(
+        map(
+            (info) =>
+                info.language === 'javascript' || info.language === 'typescript'
+        ),
+        scan(
+            (acc, needsJsxHighlighting) => {
+                if (acc) {
+                    acc();
+                }
+                if (needsJsxHighlighting) {
+                    return monacoJsxHighlighter.highLightOnDidChangeModelContent(
+                        undefined,
+                        () => {},
+                        undefined,
+                        () => {}
+                    );
+                } else {
+                    return () => {};
+                }
+            },
+            () => {}
+        )
+    );
+
     const sub = new Subscription();
 
     sub.add(decorators.subscribe());
+    sub.add(enableJsxHighlightingOnCorrectModels.subscribe());
 
     sub.add(
         toSubscription(
@@ -438,10 +515,7 @@ export function watchEditor(
                     e.selection.getEndPosition()
                 );
 
-                const offset =
-                    info?.isScript || info?.isFormula
-                        ? DNA_TAG_PREFIX.length
-                        : 0;
+                const offset = info.editOffset;
                 let finalStartIndex = offset + startIndex;
                 let finalEndIndex = offset + endIndex;
 
@@ -494,26 +568,48 @@ export function loadModel(
     let model = monaco.editor.getModel(uri);
     if (!model) {
         let script = getScript(bot, tag, space);
-        model = monaco.editor.createModel(
-            script,
-            tagScriptLanguage(tag, getTagValueForSpace(bot, tag, space)),
-            uri
+        let language = tagScriptLanguage(
+            simulation,
+            tag,
+            getTagValueForSpace(bot, tag, space)
         );
+        model = monaco.editor.createModel(script, language, uri);
 
-        watchModel(simulation, model, bot, tag, space, getEditor);
+        watchModel(simulation, model, bot, tag, space, language, getEditor);
     }
 
     return model;
 }
 
-function tagScriptLanguage(tag: string, script: any): string {
-    return isScript(script)
-        ? 'javascript'
-        : isFormula(script)
-        ? 'json'
-        : tag.indexOf('.') >= 0
-        ? undefined
-        : 'plaintext';
+function tagScriptLanguage(
+    simulation: BrowserSimulation,
+    tag: string,
+    script: any
+): string {
+    if (isScript(script)) {
+        return 'javascript';
+    } else if (isFormula(script)) {
+        return 'json';
+    } else if (tag.indexOf('.') >= 0) {
+        return undefined;
+    }
+
+    const prefix = getScriptPrefix(simulation, script);
+    if (prefix) {
+        return prefix.language === 'text'
+            ? 'plaintext'
+            : prefix.language === 'jsx'
+            ? 'javascript'
+            : prefix.language;
+    }
+
+    return 'plaintext';
+}
+
+function getScriptPrefix(simulation: BrowserSimulation, script: any) {
+    return simulation.portals.scriptPrefixes.find(
+        (p) => typeof script === 'string' && script.startsWith(p.prefix)
+    );
 }
 
 /**
@@ -543,7 +639,11 @@ export function shouldKeepModelLoaded(
 ): boolean {
     let info = models.get(model.uri.toString());
     if (info) {
-        return shouldKeepModelWithTagLoaded(info.tag) || info.isFormula;
+        return (
+            shouldKeepModelWithTagLoaded(info.tag) ||
+            info.isFormula ||
+            info.isCustomPortalScript
+        );
     } else {
         return true;
     }
@@ -559,6 +659,7 @@ function watchModel(
     bot: Bot,
     tag: string,
     space: string,
+    language: string,
     getEditor: () => monaco.editor.ICodeEditor
 ) {
     let sub = new Subscription();
@@ -568,7 +669,10 @@ function watchModel(
         decorators: [],
         isFormula: false,
         isScript: false,
+        isCustomPortalScript: false,
+        editOffset: 0,
         model: model,
+        language: language,
         sub: sub,
     };
 
@@ -621,11 +725,7 @@ function watchModel(
                     );
 
                     for (let ops of update.operations) {
-                        let index = info.isFormula
-                            ? -DNA_TAG_PREFIX.length
-                            : info.isScript
-                            ? -1
-                            : 0;
+                        let index = -info.editOffset;
                         for (let op of ops) {
                             if (op.type === 'preserve') {
                                 index += op.count;
@@ -713,6 +813,7 @@ function watchModel(
                             model.setValue(script);
                         }
                         updateLanguage(
+                            simulation,
                             model,
                             tag,
                             getTagValueForSpace(bot, tag, space)
@@ -733,11 +834,7 @@ function watchModel(
                 }
                 let operations = [] as TagEditOp[][];
                 let index = 0;
-                let offset = info.isFormula
-                    ? DNA_TAG_PREFIX.length
-                    : info.isScript
-                    ? 1
-                    : 0;
+                let offset = info.editOffset;
                 const changes = sortBy(e.changes, (c) => c.rangeOffset);
                 for (let change of changes) {
                     operations.push([
@@ -769,13 +866,41 @@ function watchModel(
             })
     );
 
+    sub.add(
+        merge(
+            simulation.portals.prefixesDiscovered.pipe(map((p) => {})),
+            simulation.portals.prefixesRemoved.pipe(map((p) => {}))
+        )
+            .pipe(
+                tap((p) => {
+                    try {
+                        applyingEdits = true;
+                        updateLanguage(
+                            simulation,
+                            model,
+                            tag,
+                            getTagValueForSpace(bot, tag, space)
+                        );
+                    } finally {
+                        applyingEdits = false;
+                    }
+                })
+            )
+            .subscribe()
+    );
+
     models.set(model.uri.toString(), info);
 
     // We need to wrap updateDecorators() because it might try to apply
     // an edit to the model.
     try {
         applyingEdits = true;
-        updateDecorators(model, info, getTagValueForSpace(bot, tag, space));
+        updateDecorators(
+            simulation,
+            model,
+            info,
+            getTagValueForSpace(bot, tag, space)
+        );
     } finally {
         applyingEdits = false;
     }
@@ -821,6 +946,7 @@ function offsetSelections(
 }
 
 function updateLanguage(
+    simulation: BrowserSimulation,
     model: monaco.editor.ITextModel,
     tag: string,
     value: string
@@ -830,14 +956,16 @@ function updateLanguage(
         return;
     }
     const currentLanguage = model.getModeId();
-    const nextLanguage = tagScriptLanguage(tag, value);
+    const nextLanguage = tagScriptLanguage(simulation, tag, value);
+    info.language = nextLanguage;
     if (typeof nextLanguage === 'string' && nextLanguage !== currentLanguage) {
         monaco.editor.setModelLanguage(model, nextLanguage);
     }
-    updateDecorators(model, info, value);
+    updateDecorators(simulation, model, info, value);
 }
 
 function updateDecorators(
+    simulation: BrowserSimulation,
     model: monaco.editor.ITextModel,
     info: ModelInfo,
     value: string
@@ -846,6 +974,8 @@ function updateDecorators(
         const wasFormula = info.isFormula;
         info.isFormula = true;
         info.isScript = false;
+        info.isCustomPortalScript = false;
+        info.editOffset = DNA_TAG_PREFIX.length;
         if (!wasFormula) {
             const text = model.getValue();
             if (isFormula(text)) {
@@ -853,12 +983,7 @@ function updateDecorators(
                 // it is a formula marker
                 model.applyEdits([
                     {
-                        range: new monaco.Range(
-                            1,
-                            1,
-                            1,
-                            1 + DNA_TAG_PREFIX.length
-                        ),
+                        range: new monaco.Range(1, 1, 1, 1 + info.editOffset),
                         text: '',
                     },
                 ]);
@@ -878,6 +1003,8 @@ function updateDecorators(
         const wasScript = info.isScript;
         info.isScript = true;
         info.isFormula = false;
+        info.isCustomPortalScript = false;
+        info.editOffset = 1;
 
         if (!wasScript) {
             const text = model.getValue();
@@ -886,7 +1013,7 @@ function updateDecorators(
                 // it is a script marker
                 model.applyEdits([
                     {
-                        range: new monaco.Range(1, 1, 1, 2),
+                        range: new monaco.Range(1, 1, 1, 1 + info.editOffset),
                         text: '',
                     },
                 ]);
@@ -902,10 +1029,32 @@ function updateDecorators(
                 },
             },
         ]);
+    } else if (isCustomPortalScript(simulation, value)) {
+        const prefix = getScriptPrefix(simulation, value);
+
+        const wasPortalScript = info.isCustomPortalScript;
+        info.isFormula = false;
+        info.isScript = false;
+        info.isCustomPortalScript = true;
+        info.editOffset = prefix.prefix.length;
+
+        if (!wasPortalScript) {
+            const text = model.getValue();
+            if (getScriptPrefix(simulation, text) === prefix) {
+                model.applyEdits([
+                    {
+                        range: new monaco.Range(1, 1, 1, 1 + info.editOffset),
+                        text: '',
+                    },
+                ]);
+            }
+        }
     } else {
         info.decorators = model.deltaDecorations(info.decorators, []);
         info.isFormula = false;
         info.isScript = false;
+        info.isCustomPortalScript = false;
+        info.editOffset = 0;
     }
 }
 
@@ -939,6 +1088,14 @@ export function getScript(bot: Bot, tag: string, space: string) {
     } else {
         return val || '';
     }
+}
+
+export function isCustomPortalScript(
+    simulation: BrowserSimulation,
+    value: unknown
+) {
+    const prefixes = simulation.portals.scriptPrefixes.map((p) => p.prefix);
+    return hasPortalScript(prefixes, value);
 }
 
 export function toSubscription(disposable: monaco.IDisposable) {

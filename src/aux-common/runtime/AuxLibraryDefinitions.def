@@ -1,5 +1,3 @@
-import { ShowUploadFileAction } from '../bots';
-
 /**
  * Contains information about the version of AUX that is running.
  */
@@ -230,7 +228,9 @@ declare type AsyncActions =
     | SetSpacePasswordAction
     | BufferSoundAction
     | PlaySoundAction
-    | CancelSoundAction;
+    | CancelSoundAction
+    | OpenCustomPortalAction
+    | RegisterPrefixAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1703,6 +1703,74 @@ declare interface ShareAction extends AsyncAction, ShareOptions {
     type: 'share';
 }
 
+
+/**
+ * The possible options for a custom portal.
+ */
+export interface OpenCustomPortalOptions {
+    /**
+     * The mode that the portal should be opened in.
+     * "Tag" indicates that the portal should watch the given tag and automatically produce bundles for the portal.
+     * "source" indicates that the portal should load the given source directly.
+     * 
+     * Defaults to "tag".
+     */
+    mode?: 'tag' | 'source';
+
+    /**
+     * The CSS styles that should be used for the portal.
+     */
+    style?: any;
+}
+
+/**
+ * Defines an event that creates a custom portal using the given source code.
+ */
+export interface OpenCustomPortalAction extends AsyncAction {
+    type: 'open_custom_portal';
+    /**
+     * The ID of the portal.
+     */
+    portalId: string;
+
+    /**
+     * The tag that the portal should use.
+     */
+    tag: string;
+
+    /**
+     * The options for the portal.
+     */
+    options: OpenCustomPortalOptions;
+}
+
+/**
+ * Defines an event that adds an entry point to a custom portal.
+ */
+export interface RegisterPrefixAction extends AsyncAction {
+    type: 'register_prefix';
+
+    /**
+     * The prefix that should be registered.
+     */
+    prefix: string;
+    
+    /**
+     * The options that should be used for the prefix.
+     */
+    options: RegisterPrefixOptions;
+}
+
+/**
+ * Defines an interface that contains options for register prefix actions.
+ */
+export interface RegisterPrefixOptions {
+    /**
+     * The possible languages that prefixes can use.
+     */
+    language?: 'javascript' | 'typescript' | 'json' | 'jsx' | 'tsx' | 'text';
+}
+
 /**
  * Defines an interface for options that show a payment box.
  */
@@ -2017,6 +2085,45 @@ declare interface PerformanceStats {
      * The total number of active setTimeout() and setInterval() timers that are active.
      */
     numberOfActiveTimers: number;
+}
+
+/**
+ * Defines an interface that represents the list of bots and tags that are included in a bundle.
+ */
+export interface BundleModules {
+    [id: string]: Set<string>;
+}
+
+/**
+ * Defines an interface that represents a bundle of code.
+ */
+export interface CodeBundle {
+    /**
+     * The tag the bundle was built from.
+     */
+    tag: string;
+
+    /**
+     * The source code that the bundle contains.
+     * If an error occurred, then this will be null/undefined.
+     */
+    source?: string;
+
+    /**
+     * The error that occurred while building the bundle.
+     * Null/Undefined if an error did not happen.
+     */
+    error?: string;
+
+    /**
+     * The list of warnings that occurred while building the bundle.
+     */
+    warnings: string[];
+
+    /**
+     * The list of modules that the bundle contains.
+     */
+    modules: BundleModules;
 }
 
 declare global {
@@ -2985,12 +3092,27 @@ declare global {
         run(script: string): Promise<any>;
 
         /**
+         * Downloads the given data.
+         * @param data The data to download. Objects will be formatted as JSON before downloading.
+         * @param filename The name of the file that the data should be downloaded as.
+         * @param mimeType The MIME type that should be used. If not specified then it will be inferred from the filename.
+         */
+        download(
+            data: string | object | ArrayBuffer | Blob,
+            filename: string,
+            mimeType?: string
+        ): DownloadAction;
+
+        /**
          * Downloads the given list of bots.
          * @param bots The bots that should be downloaded.
          * @param filename The name of the file that the bots should be downloaded as.
          */
         downloadBots(bots: Bot[], filename: string): DownloadAction;
 
+        /**
+         * Downloads all the shared bots in the server.
+         */
         downloadServer(): DownloadAction;
 
         /**
@@ -3158,6 +3280,36 @@ declare global {
          * Gets the name of the dimension that is used for the current user's inventory.
          */
         getInventoryDimension(): string;
+    };
+
+    /**
+     * Defines a set of functions that relate to custom portal operations.
+     */
+    const portal: {
+        /**
+         * Registers a custom portal with the given source code.
+         * @param portalId The ID of the portal.
+         * @param tagOrSource The tag or source code that the portal should be created from.
+         * @param options The options for the portal.
+         */
+        open(
+            portalId: string,
+            tagOrSource: string,
+            options?: OpenCustomPortalOptions
+        ): Promise<void>;
+
+        /**
+         * Builds a script bundle from the given tag.
+         * @param tag The tag that the bundle should be created from.
+         */
+        buildBundle(tag: string): Promise<CodeBundle>;
+
+        /**
+         * Specifies that the given prefix should be interpreted as code.
+         * @param prefix The prefix that code tags should start with.
+         * @param options The options that should be used for the prefix.
+         */
+        registerPrefix(prefix: string, options?: RegisterPrefixOptions): Promise<void>;
     };
 
     /**

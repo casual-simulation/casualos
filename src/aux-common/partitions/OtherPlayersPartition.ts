@@ -23,7 +23,6 @@ import {
     OtherPlayersPartition,
     AuxPartitionRealtimeStrategy,
     RemoteCausalRepoPartition,
-    getPartitionState,
 } from './AuxPartition';
 import {
     BotsState,

@@ -14,6 +14,10 @@ import {
     DNA_TAG_PREFIX,
     parseScriptSafe,
     parseFormulaSafe,
+    isPortalScript,
+    hasPortalScript,
+    getScriptPrefix,
+    trimPortalScript,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike, Subscription } from 'rxjs';
@@ -31,10 +35,11 @@ import {
     watchEditor,
 } from '../../MonacoHelpers';
 import * as monaco from '../../MonacoLibs';
-import { filter, tap } from 'rxjs/operators';
+import { filter, flatMap, tap } from 'rxjs/operators';
 import groupBy from 'lodash/groupBy';
 import sumBy from 'lodash/sumBy';
 import { tagValueHash } from '@casual-simulation/aux-common/aux-format-2';
+import { ScriptPrefix } from '@casual-simulation/aux-vm';
 
 setup();
 
@@ -55,6 +60,7 @@ export default class MonacoTagEditor extends Vue {
     private _model: monaco.editor.ITextModel;
 
     signed: boolean;
+    scriptPrefixes: ScriptPrefix[];
 
     @Watch('tag')
     tagChanged() {
@@ -110,6 +116,36 @@ export default class MonacoTagEditor extends Vue {
         return false;
     }
 
+    get isAnyPrefix() {
+        if (this.bot && this.tag) {
+            const currentValue = getTagValueForSpace(
+                this.bot,
+                this.tag,
+                this.space
+            );
+            return hasPortalScript(
+                this.scriptPrefixes.map((p) => p.prefix),
+                currentValue
+            );
+        }
+        return false;
+    }
+
+    get currentPrefix() {
+        if (this.bot && this.tag) {
+            const currentValue = getTagValueForSpace(
+                this.bot,
+                this.tag,
+                this.space
+            );
+            return getScriptPrefix(
+                this.scriptPrefixes.map((p) => p.prefix),
+                currentValue
+            );
+        }
+        return null;
+    }
+
     get editor() {
         return (<MonacoEditor>this.$refs?.editor).editor;
     }
@@ -126,6 +162,26 @@ export default class MonacoTagEditor extends Vue {
             appManager.whileLoggedIn((user, sim) => {
                 this._simulation = sim;
                 const sub = watchSimulation(sim, () => this.editor);
+
+                sub.add(
+                    sim.portals.prefixesDiscovered
+                        .pipe(flatMap((a) => a))
+                        .subscribe((portal) => {
+                            this.scriptPrefixes = sim.portals.scriptPrefixes.filter(
+                                (p) => !p.isDefault
+                            );
+                        })
+                );
+
+                sub.add(
+                    sim.portals.prefixesRemoved
+                        .pipe(flatMap((a) => a))
+                        .subscribe((portal) => {
+                            this.scriptPrefixes = sim.portals.scriptPrefixes.filter(
+                                (p) => !p.isDefault
+                            );
+                        })
+                );
 
                 this._sub.add(sub);
                 return [sub];
@@ -157,50 +213,22 @@ export default class MonacoTagEditor extends Vue {
     }
 
     makeNormalTag() {
-        let currentValue = getTagValueForSpace(this.bot, this.tag, this.space);
-        if (typeof currentValue === 'object') {
-            return;
-        }
-        if (!hasValue(currentValue)) {
-            currentValue = '';
-        }
-        let final = null as string;
-        if (this.isFormula) {
-            final = parseFormulaSafe(currentValue);
-        } else if (this.isScript) {
-            final = parseScriptSafe(currentValue);
-        }
-        if (final !== null) {
-            this._simulation.helper.updateBot(
-                this.bot,
-                getUpdateForTagAndSpace(this.tag, final, this.space)
-            );
-        }
+        this._replacePrefix('');
     }
 
     makeDnaTag() {
-        let currentValue = getTagValueForSpace(this.bot, this.tag, this.space);
-        if (typeof currentValue === 'object') {
-            return;
-        }
-        if (!hasValue(currentValue)) {
-            currentValue = '';
-        }
-        let final = null as string;
-        if (this.isScript) {
-            final = '🧬' + parseScriptSafe(currentValue);
-        } else if (!this.isFormula) {
-            final = '🧬' + currentValue;
-        }
-        if (final !== null) {
-            this._simulation.helper.updateBot(
-                this.bot,
-                getUpdateForTagAndSpace(this.tag, final, this.space)
-            );
-        }
+        this._replacePrefix(DNA_TAG_PREFIX);
     }
 
     makeScriptTag() {
+        this._replacePrefix('@');
+    }
+
+    makePrefixTag(prefix: ScriptPrefix) {
+        this._replacePrefix(prefix.prefix);
+    }
+
+    private _replacePrefix(prefix: string) {
         let currentValue = getTagValueForSpace(this.bot, this.tag, this.space);
         if (typeof currentValue === 'object') {
             return;
@@ -210,9 +238,15 @@ export default class MonacoTagEditor extends Vue {
         }
         let final = null as string;
         if (this.isFormula) {
-            final = '@' + parseFormulaSafe(currentValue);
-        } else if (!this.isScript) {
-            final = '@' + currentValue;
+            final = prefix + parseFormulaSafe(currentValue);
+        } else if (this.isScript) {
+            final = prefix + parseScriptSafe(currentValue);
+        } else {
+            const script = trimPortalScript(
+                this.scriptPrefixes.map((p) => p.prefix),
+                currentValue
+            );
+            final = prefix + script;
         }
         if (final !== null) {
             this._simulation.helper.updateBot(
@@ -220,6 +254,18 @@ export default class MonacoTagEditor extends Vue {
                 getUpdateForTagAndSpace(this.tag, final, this.space)
             );
         }
+    }
+
+    isPrefix(prefix: ScriptPrefix): boolean {
+        if (this.bot && this.tag) {
+            const currentValue = getTagValueForSpace(
+                this.bot,
+                this.tag,
+                this.space
+            );
+            return isPortalScript(prefix.prefix, currentValue);
+        }
+        return false;
     }
 
     private _updateModel() {

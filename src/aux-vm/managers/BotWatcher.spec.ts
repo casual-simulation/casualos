@@ -201,6 +201,7 @@ describe('BotWatcher', () => {
                 {
                     type: 'bot_tag_removed',
                     bot: test2,
+                    oldBot: test2,
                     tag: 'hello',
                 },
                 {

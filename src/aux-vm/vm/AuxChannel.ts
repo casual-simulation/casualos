@@ -3,6 +3,7 @@ import {
     BotAction,
     StateUpdatedEvent,
     RuntimeStateVersion,
+    OpenCustomPortalAction,
 } from '@casual-simulation/aux-common';
 import {
     StatusUpdate,

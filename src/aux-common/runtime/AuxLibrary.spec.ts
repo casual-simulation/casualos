@@ -134,8 +134,11 @@ import {
     RuntimeBot,
     SET_TAG_MASK_SYMBOL,
     CLEAR_CHANGES_SYMBOL,
+    openCustomPortal,
     animateTag,
     showUploadFiles,
+    registerPrefix,
+    buildBundle,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1643,6 +1646,75 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('player.download()', () => {
+            it('should emit a DownloadAction with the string data', () => {
+                const action = library.api.player.download(
+                    'abcdef',
+                    'test.txt'
+                );
+                const expected = download('abcdef', 'test.txt', 'text/plain');
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should download objects as JSON', () => {
+                const action = library.api.player.download(
+                    { abc: 'def' },
+                    'test.json'
+                );
+                const expected = download(
+                    JSON.stringify({ abc: 'def' }),
+                    'test.json',
+                    'application/json'
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should download array buffers as binary', () => {
+                const action = library.api.player.download(
+                    new ArrayBuffer(20),
+                    'test.zip'
+                );
+                const expected = download(
+                    new ArrayBuffer(20),
+                    'test.zip',
+                    'application/zip'
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should download blobs as whatever they are', () => {
+                const action = library.api.player.download(
+                    new Blob([], { type: 'my-type' }),
+                    'test.zip'
+                );
+                const expected = download(
+                    new Blob([], { type: 'my-type' }),
+                    'test.zip',
+                    'my-type'
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should allow specifying a custom content type', () => {
+                const action = library.api.player.download(
+                    'my XML',
+                    'test.xml',
+                    'application/xml'
+                );
+                const expected = download(
+                    'my XML',
+                    'test.xml',
+                    'application/xml'
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('player.downloadBots()', () => {
             it('should emit a DownloadAction with the given bots formatted as JSON', () => {
                 const action = library.api.player.downloadBots(
@@ -2457,6 +2529,84 @@ describe('AuxLibrary', () => {
                     {
                         url: 'http://example.com',
                         title: 'Example',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('portal.open()', () => {
+            it('should return a OpenCustomPortal action', () => {
+                const promise: any = library.api.portal.open('test', 'tag');
+                const expected = openCustomPortal(
+                    'test',
+                    'tag',
+                    {
+                        style: {},
+                        mode: 'tag',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should include the specified options', () => {
+                const promise: any = library.api.portal.open('test', 'tag', {
+                    style: {
+                        abc: 'def',
+                    },
+                    mode: 'source',
+                });
+                const expected = openCustomPortal(
+                    'test',
+                    'tag',
+                    {
+                        style: {
+                            abc: 'def',
+                        },
+                        mode: 'source',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('portal.buildBundle()', () => {
+            it('should return a BuildBundleAction', () => {
+                const promise: any = library.api.portal.buildBundle('tag');
+                const expected = buildBundle('tag', context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('portal.registerPrefix()', () => {
+            it('should return a RegisterPrefix action', () => {
+                const promise: any = library.api.portal.registerPrefix('test');
+                const expected = registerPrefix(
+                    'test',
+                    {
+                        language: 'javascript',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', () => {
+                const promise: any = library.api.portal.registerPrefix('test', {
+                    language: 'jsx',
+                });
+                const expected = registerPrefix(
+                    'test',
+                    {
+                        language: 'jsx',
                     },
                     context.tasks.size
                 );

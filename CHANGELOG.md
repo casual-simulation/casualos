@@ -1,5 +1,27 @@
 # CasualOS Changelog
 
+## V1.4.0
+
+#### Date: 2/8/2021
+
+### :rocket: Improvements
+
+-   Added an initial implementation of custom portals.
+    -   Custom portals are a way to write scripts that can interact directly with the web browser. This gives you the ability to do anything that is possible from inside a web browser.
+    -   The following functions are now available:
+        -   `portal.open(portalID, tag, options?)`
+        -   `portal.registerPrefix(prefix)`
+        -   `portal.buildBundle(tag)`
+        -   See the documentation for usage information.
+-   Added the `player.download(data, filename, mimeType?)` function.
+    -   Useful for downloading arbitrary data in any format you want.
+    -   See the documentation for more information.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue that broke bots in the `player` space when a `tempLocal` tag mask was put on them.
+-   Fixed an issue that prevented tag masks from being placed on new bots.
+
 ## V1.3.14
 
 #### Date: 1/25/2021

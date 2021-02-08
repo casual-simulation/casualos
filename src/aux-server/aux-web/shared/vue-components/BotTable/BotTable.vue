@@ -68,6 +68,7 @@
                             :tag="tag"
                             :isScript="isTagOnlyScripts(tag, space)"
                             :isFormula="isTagOnlyFormulas(tag, space)"
+                            :prefix="getTagPrefix(tag, space)"
                             :allowCloning="true"
                         ></bot-tag>
 
