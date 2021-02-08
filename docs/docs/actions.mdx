@@ -4904,12 +4904,34 @@ await portal.open("my-portal", `console.log("Hello, Portal!");`, {
 });
 ```
 
-### `portal.registerPrefix(prefix)`
+### `portal.registerPrefix(prefix, options?)`
 
 Specifies that the given prefix should be used to indicate that the tag contains script content that can be used in a custom portal.
 Use this function to specify custom prefixes that function similarly to `@` or `🧬`.
 
 The **first parameter** is the prefix that should indicate that the rest of the tag value is a script.
+
+The **second parameter** is optional and is the options that should be used for the prefix. It is an object and should have the following structure:
+```typescript
+let options: {
+
+    /**
+     * The language that scripts with the prefix should be interpreted as.
+     * 
+     * "javascript" and "typescript" can be used for general purpose programming.
+     * 
+     * "jsx" and "tsx" are extensions to JavaScript and TypeScript which includes the ability
+     * to write HTML-like code that gets converted to JavaScript/TypeScript code.
+     * 
+     * "json" can be used to interpret the data as JSON (like 🧬).
+     * 
+     * "text" can be used to interpret the data as plain text.
+     * 
+     * Defaults to "javascript".
+     */
+    language?: "javascript" | "typescript" | "json" | "jsx" | "tsx" | "text";
+};
+```
 
 #### Examples:
 
@@ -4921,6 +4943,13 @@ await portal.registerPrefix("📖");
 2. Register some arbitrary text as a prefix.
 ```typescript
 await portal.registerPrefix("myPrefix");
+```
+
+3. Register a prefix as [JSX code](https://reactjs.org/docs/introducing-jsx.html).
+```typescript
+await portal.registerPrefix("🔺", {
+    language: "jsx"
+});
 ```
 
 ### `portal.buildBundle(tag)`
