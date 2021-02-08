@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-server",
-    "version": "1.3.14",
+    "version": "1.4.0",
     "description": "The repository for the AUX server project.",
     "main": "server/dist/main.js",
     "private": true,
@@ -43,11 +43,11 @@
         "/LICENSE.txt"
     ],
     "dependencies": {
-        "@casual-simulation/aux-common": "^1.3.14",
-        "@casual-simulation/aux-vm": "^1.3.14",
-        "@casual-simulation/aux-vm-browser": "^1.3.14",
-        "@casual-simulation/aux-vm-deno": "^1.3.14",
-        "@casual-simulation/aux-vm-node": "^1.3.14",
+        "@casual-simulation/aux-common": "^1.4.0",
+        "@casual-simulation/aux-vm": "^1.4.0",
+        "@casual-simulation/aux-vm-browser": "^1.4.0",
+        "@casual-simulation/aux-vm-deno": "^1.4.0",
+        "@casual-simulation/aux-vm-node": "^1.4.0",
         "@casual-simulation/causal-tree-client-socketio": "^1.3.12",
         "@casual-simulation/causal-tree-server": "^1.3.12",
         "@casual-simulation/causal-tree-server-socketio": "^1.3.12",
@@ -89,6 +89,7 @@
         "http-proxy": "1.18.1",
         "inherits": "2.0.4",
         "jsbarcode": "3.11.0",
+        "jscodeshift": "^0.11.0",
         "jsonwebtoken": "8.5.1",
         "jsqr": "1.2.0",
         "jszip": "3.2.2",
@@ -121,8 +122,7 @@
         "vue-property-decorator": "^7.2.0",
         "vue-router": "^3.0.1",
         "vue-shortkey": "^3.1.6",
-        "workbox-webpack-plugin": "6.0.2",
-        "jscodeshift": "^0.11.0"
+        "workbox-webpack-plugin": "6.0.2"
     },
     "devDependencies": {
         "loader-utils": "^2.0.0",
