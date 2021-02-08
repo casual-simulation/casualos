@@ -17,7 +17,7 @@
                                 class="md-icon-button create-bot"
                                 @click="createBot()"
                             >
-                                <cube-icon></cube-icon>
+                                <new-bot-icon></new-bot-icon>
                                 <md-tooltip>Create Empty Bot</md-tooltip>
                             </md-button>
                             <md-button

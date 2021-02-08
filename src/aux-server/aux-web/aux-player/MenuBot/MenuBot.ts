@@ -31,9 +31,11 @@ import { first } from '@casual-simulation/causal-trees';
 import { safeParseURL } from '../PlayerUtils';
 import PieProgress from '../../shared/vue-components/PieProgress/PieProgress';
 import { Input } from '../../shared/scene/Input';
+import CubeIcon from '../../shared/public/icons/MenuCube.svg';
 
 @Component({
     components: {
+        'cube-icon': CubeIcon,
         'pie-progress': PieProgress,
     },
 })

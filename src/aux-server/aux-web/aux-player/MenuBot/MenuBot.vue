@@ -11,10 +11,11 @@
         <div
             class="menu-bot-text"
             v-show="label"
-            :style="{ 'text-align': labelAlign, color: labelColor }"
+            :style="{ 'text-align': labelAlign, color: labelColor, fill: labelColor }"
         >
             <span class="menu-bot-icon" v-if="hasIcon">
                 <img v-if="iconIsURL" :src="icon" />
+                <cube-icon v-else-if="icon === 'cube'"></cube-icon>
                 <md-icon v-else>{{ icon }}</md-icon>
             </span>
             <span>
