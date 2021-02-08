@@ -1,7 +1,7 @@
-const esbuild = require('esbuild');
 const path = require('path');
+const esbuild = require('esbuild');
+const { options } = require('./common');
 
 esbuild.buildSync({
-    entryPoints: [path.resolve(__dirname, '../lib/test.ts')],
-    outfile: path.resolve(__dirname, '../temp/out.js'),
+    ...options,
 });

@@ -29,9 +29,9 @@
         "url": "git+https://github.com/casual-simulation/casualos.git"
     },
     "scripts": {
-        "watch": "tsc --watch",
+        "watch": "node ./bin/watch",
         "watch:player": "npm run watch",
-        "build": "npx build",
+        "build": "node ./bin/build",
         "test": "jest",
         "test:watch": "jest --watchAll"
     },
