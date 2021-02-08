@@ -4,7 +4,6 @@ export type PartialBot = Partial<Bot>;
 
 export type AuxDomain = 'builder' | 'player';
 
-export type Object = Bot;
 export type Workspace = Bot;
 
 /**

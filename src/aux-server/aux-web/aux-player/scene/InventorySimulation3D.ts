@@ -1,5 +1,4 @@
 import {
-    Object,
     BotCalculationContext,
     PrecalculatedBot,
     calculateGridScale,

@@ -16,7 +16,6 @@ import {
 } from 'three';
 
 import {
-    Object,
     isMinimized,
     BotCalculationContext,
     calculateNumericalTagValue,

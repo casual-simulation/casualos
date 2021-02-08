@@ -1,5 +1,4 @@
 import {
-    Object,
     Bot,
     Workspace,
     DEFAULT_WORKSPACE_SCALE,
@@ -308,10 +307,7 @@ export function getAllBotTags(bots: Bot[], includeHidden: boolean) {
  * @param shortIds The short ids to search for.
  * @returns bot array or null if no matches found.
  */
-export function botsFromShortIds(
-    bots: Bot[] | Object[],
-    shortIds: string[]
-): Bot[] {
+export function botsFromShortIds(bots: Bot[], shortIds: string[]): Bot[] {
     var matches: Bot[] = [];
     shortIds.forEach((shortId) => {
         var bot = this.botFromShortId(bots, shortId);
@@ -328,8 +324,8 @@ export function botsFromShortIds(
  * @param shortId The short id to search for.
  * @returns bot or undefined if no match found.
  */
-export function botFromShortId(bots: Bot[] | Object[], shortId: string): Bot {
-    return find(bots, (f: Bot | Object) => {
+export function botFromShortId(bots: Bot[], shortId: string): Bot {
+    return find(bots, (f: Bot) => {
         return getShortId(f) === shortId;
     });
 }
@@ -338,7 +334,7 @@ export function botFromShortId(bots: Bot[] | Object[], shortId: string): Bot {
  * Return the short id for the bot.
  * @param bot The bot to get short id for.
  */
-export function getShortId(bot: Bot | Object | string): string {
+export function getShortId(bot: Bot | string): string {
     let id = typeof bot === 'string' ? bot : bot.id;
 
     if (typeof id !== 'string') {
@@ -391,12 +387,12 @@ export function isRuntimeBot(bot: any): bot is RuntimeBot {
 }
 
 export function isPrecalculated(
-    bot: Object | PrecalculatedBot
+    bot: Bot | PrecalculatedBot
 ): bot is PrecalculatedBot {
     return bot && (<PrecalculatedBot>bot).precalculated === true;
 }
 
-export function isExistingBot(bot: Object | PrecalculatedBot): bot is Bot {
+export function isExistingBot(bot: Bot | PrecalculatedBot): bot is Bot {
     return bot && (<Bot>bot).id != undefined;
 }
 
@@ -414,7 +410,7 @@ export function getBotSpace(bot: Bot): BotSpace {
 
 export function calculateBotValue(
     context: BotObjectsContext,
-    object: Object | PrecalculatedBot,
+    object: Bot | PrecalculatedBot,
     tag: keyof BotTags
 ) {
     const value = calculateBotTagValue(object, tag);
@@ -433,7 +429,7 @@ export function calculateBotValue(
 }
 
 function calculateBotTagValue(
-    object: Object | PrecalculatedBot,
+    object: Bot | PrecalculatedBot,
     tag: keyof BotTags
 ) {
     if (tag === 'id') {
@@ -451,7 +447,7 @@ function calculateBotTagValue(
 
 export function calculateFormattedBotValue(
     context: BotCalculationContext,
-    bot: Object,
+    bot: Bot,
     tag: string
 ): string {
     const value = calculateBotValue(context, bot, tag);
@@ -588,7 +584,7 @@ export function isBot(object: any): object is Bot {
  * @param state The state to get the active objects of.
  */
 export function getActiveObjects(state: BotsState) {
-    return <Object[]>values(state);
+    return <Bot[]>values(state);
 }
 
 /**
@@ -610,8 +606,8 @@ export function isTagWellKnown(tag: string): boolean {
  * @param second The second bot.
  */
 export function doBotsAppearEqual(
-    first: Object,
-    second: Object,
+    first: Bot,
+    second: Bot,
     options: BotAppearanceEqualityOptions = {}
 ): boolean {
     if (first === second) {
@@ -693,7 +689,7 @@ export function validateTag(tag: string) {
  * @param userId The User that is adding the bot to the selection.
  */
 export function toggleBotSelection(
-    bot: Object,
+    bot: Bot,
     selectionId: string,
     userId: string
 ) {
@@ -937,7 +933,7 @@ export function createDimensionId() {
  */
 export function createBot(
     id = uuid(),
-    tags: Object['tags'] = {},
+    tags: Bot['tags'] = {},
     space?: BotSpace
 ): Bot {
     if (hasValue(space)) {
@@ -953,7 +949,7 @@ export function createBot(
 export function createPrecalculatedBot(
     id = uuid(),
     values: PrecalculatedTags = {},
-    tags?: Object['tags'],
+    tags?: Bot['tags'],
     space?: BotSpace
 ): PrecalculatedBot {
     if (hasValue(space)) {
@@ -2260,7 +2256,7 @@ export function nextAvailableObjectIndex(
  * @param objects The objects to filter.
  * @param workspaceId The ID of the workspace that the objects need to be on,
  */
-export function objectsAtWorkspace(objects: Object[], workspaceId: string) {
+export function objectsAtWorkspace(objects: Bot[], workspaceId: string) {
     return objects.filter((o) => {
         return o.tags._workspace === workspaceId;
     });
@@ -2278,9 +2274,9 @@ export function objectsAtWorkspace(objects: Object[], workspaceId: string) {
  */
 export function duplicateBot(
     calc: BotCalculationContext,
-    bot: Object,
+    bot: Bot,
     data?: PartialBot
-): Object {
+): Bot {
     let copy = cloneDeep(bot);
     const tags = tagsOnBot(copy);
     const tagsToRemove = filterWellKnownAndDimensionTags(calc, tags);
@@ -2291,7 +2287,7 @@ export function duplicateBot(
     let newBot = merge(copy, data || {});
     newBot.id = uuid();
 
-    return <Object>cleanBot(newBot);
+    return <Bot>cleanBot(newBot);
 }
 
 /**
@@ -2475,7 +2471,7 @@ export function calculateStringListTagValue(
  */
 export function calculateNumericalTagValue(
     context: BotCalculationContext,
-    bot: Object,
+    bot: Bot,
     tag: string,
     defaultValue: number
 ): number {
@@ -2495,7 +2491,7 @@ export function calculateNumericalTagValue(
  */
 export function calculateBooleanTagValue(
     context: BotCalculationContext,
-    bot: Object,
+    bot: Bot,
     tag: string,
     defaultValue: boolean
 ): boolean {
@@ -2517,7 +2513,7 @@ export function calculateBooleanTagValue(
  */
 export function calculateStringTagValue(
     context: BotCalculationContext,
-    bot: Object,
+    bot: Bot,
     tag: string,
     defaultValue: string
 ): string {
@@ -2537,7 +2533,7 @@ export function calculateStringTagValue(
  */
 export function calculateBotIdTagValue(
     context: BotCalculationContext,
-    bot: Object,
+    bot: Bot,
     tag: string,
     defaultValue: string
 ): string {
@@ -2556,7 +2552,7 @@ export function calculateBotIdTagValue(
  * @param calc The bot calculation context.
  * @param bot The bot to check.
  */
-export function isDestroyable(calc: BotCalculationContext, bot: Object) {
+export function isDestroyable(calc: BotCalculationContext, bot: Bot) {
     return calculateBooleanTagValue(calc, bot, 'auxDestroyable', true);
 }
 
@@ -2566,7 +2562,7 @@ export function isDestroyable(calc: BotCalculationContext, bot: Object) {
  * @param calc The bot calculation context.
  * @param bot The bot to check.
  */
-export function isEditable(calc: BotCalculationContext, bot: Object) {
+export function isEditable(calc: BotCalculationContext, bot: Bot) {
     return calculateBooleanTagValue(calc, bot, 'auxEditable', true);
 }
 
@@ -2575,10 +2571,7 @@ export function isEditable(calc: BotCalculationContext, bot: Object) {
  * @param calc The calculation context.
  * @param bot The bot to check.
  */
-export function isSimulation(
-    calc: BotCalculationContext,
-    bot: Object
-): boolean {
+export function isSimulation(calc: BotCalculationContext, bot: Bot): boolean {
     return !!getBotChannel(calc, bot);
 }
 
@@ -2587,10 +2580,7 @@ export function isSimulation(
  * @param calc The bot calculation context to use.
  * @param bot The bot.
  */
-export function getBotChannel(
-    calc: BotCalculationContext,
-    bot: Object
-): string {
+export function getBotChannel(calc: BotCalculationContext, bot: Bot): string {
     return calculateBotValue(calc, bot, 'server');
 }
 
@@ -2622,7 +2612,7 @@ export function getChannelBotById(calc: BotCalculationContext, id: string) {
  */
 export function isBotInDimension(
     context: BotCalculationContext,
-    bot: Object,
+    bot: Bot,
     dimensionId: string
 ): boolean {
     if (!dimensionId) return false;
