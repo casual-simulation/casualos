@@ -118,6 +118,10 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         return this.pageConfig.backgroundColor || super.backgroundColor;
     }
 
+    get backgroundAddress() {
+        return this.pageConfig.backgroundAddress || super.backgroundAddress;
+    }
+
     /**
      * Gets the pannability of the inventory camera that the simulation defines.
      */
@@ -270,14 +274,14 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         const input = this.game.getInput();
 
         const controllerAdded = input.controllerAdded.pipe(
-            filter(c => c.inputSource.handedness === hand)
+            filter((c) => c.inputSource.handedness === hand)
         );
         const controllerRemoved = input.controllerRemoved;
 
         const sub = bindToController(
             controllerAdded,
             controllerRemoved,
-            controller => {
+            (controller) => {
                 controller.mesh.mesh.add(config.grid3D);
                 applyWristControllerOffset(hand, config.grid3D);
 
@@ -309,14 +313,14 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         const config = this.getPortalConfig(portal);
 
         const controllerAdded = input.controllerAdded.pipe(
-            filter(c => c.inputSource.handedness === hand)
+            filter((c) => c.inputSource.handedness === hand)
         );
         const controllerRemoved = input.controllerRemoved;
 
         const sub = bindToController(
             controllerAdded,
             controllerRemoved,
-            controller => {
+            (controller) => {
                 console.log(
                     '[PlayerPageSimulation3D] Bind to controller',
                     controller
@@ -394,7 +398,7 @@ const offsets = {
 if (typeof window !== 'undefined') {
     merge(window, {
         aux: {
-            setWristControllerPosition: function(
+            setWristControllerPosition: function (
                 hand: keyof typeof offsets,
                 x: number,
                 y: number,
@@ -402,7 +406,7 @@ if (typeof window !== 'undefined') {
             ) {
                 offsets[hand].positionOffset.set(x, y, z);
             },
-            setWristControllerRotation: function(
+            setWristControllerRotation: function (
                 hand: keyof typeof offsets,
                 x: number,
                 y: number,
@@ -430,12 +434,12 @@ function bindToController(
 ): Subscription {
     const sub = controllerAdded
         .pipe(
-            map(controller => ({ sub: action(controller), controller })),
-            switchMap(data => {
+            map((controller) => ({ sub: action(controller), controller })),
+            switchMap((data) => {
                 return controllerRemoved.pipe(
-                    filter(c => c === data.controller),
+                    filter((c) => c === data.controller),
                     take(1),
-                    tap(c => data.sub.unsubscribe())
+                    tap((c) => data.sub.unsubscribe())
                 );
             })
         )

@@ -13,8 +13,9 @@ import {
     PortalPointerDragMode,
     DEFAULT_PORTAL_POINTER_DRAG_MODE,
     calculatePortalPointerDragMode,
+    calculateStringTagValue,
 } from '@casual-simulation/aux-common';
-import { Color } from 'three';
+import { Color, Texture } from 'three';
 import {
     BrowserSimulation,
     watchPortalConfigBot,
@@ -22,6 +23,7 @@ import {
 import { tap } from 'rxjs/operators';
 import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
 import { BoundedGrid3D } from '../BoundedGrid3D';
+import { AuxTextureLoader } from '../../shared/scene/AuxTextureLoader';
 
 /**
  * Defines a class that is able to watch dimension confic bots and update values.
@@ -30,6 +32,7 @@ export class PortalConfig implements SubscriptionLike {
     private _sub: Subscription;
     private _portalTag: string;
     private _dimensionBackground: Color = null;
+    private _backgroundAddress: string = null;
     private _pannable: boolean = null;
     private _panMinX: number = null;
     private _panMaxX: number = null;
@@ -56,6 +59,14 @@ export class PortalConfig implements SubscriptionLike {
     get backgroundColor() {
         if (this._dimensionBackground) {
             return this._dimensionBackground;
+        } else {
+            return null;
+        }
+    }
+
+    get backgroundAddress() {
+        if (this._backgroundAddress) {
+            return this._backgroundAddress;
         } else {
             return null;
         }
@@ -257,7 +268,7 @@ export class PortalConfig implements SubscriptionLike {
         this._grid3D.useAuxCoordinates = true;
         this._sub = watchPortalConfigBot(simulation, portalTag)
             .pipe(
-                tap(update => {
+                tap((update) => {
                     const bot = update;
 
                     if (bot) {
@@ -304,16 +315,22 @@ export class PortalConfig implements SubscriptionLike {
         portalTag: string
     ) {
         // Update the dimension background color.
-        //let dimensionBackgroundColor =
-        //bot.tags['auxPortalColor'];
         let dimensionBackgroundColor = calculateBotValue(
             calc,
             bot,
             `auxPortalColor`
         );
+
         this._dimensionBackground = hasValue(dimensionBackgroundColor)
             ? new Color(dimensionBackgroundColor)
             : undefined;
+
+        this._backgroundAddress = calculateStringTagValue(
+            calc,
+            bot,
+            'auxPortalBackgroundAddress',
+            null
+        );
         this._pannable = calculateBooleanTagValue(
             calc,
             bot,

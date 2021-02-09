@@ -992,6 +992,23 @@ The color of the background of the portal.
   <AnyColorValues/>
 </PossibleValuesTable>
 
+### `portalBackgroundAddress`
+
+The URL of the image that should be displayed as the background of the portal.
+
+When specified, this tag overrides <TagLink tag='#portalColor'/>.
+Additionally, this tag does nothing when in VR. 
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any URL'>
+    Specifies that the portal background should use the given image.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `portalLocked`
 
 Determines if the portal can be loaded.

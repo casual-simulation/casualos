@@ -137,6 +137,13 @@ export class PlayerGame extends Game {
         );
     }
 
+    getBackgroundAddress() {
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'backgroundAddress'
+        );
+    }
+
     getPannable(): boolean {
         return this._getSimulationValue(this.playerSimulations, 'pannable');
     }
