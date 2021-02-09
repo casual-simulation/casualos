@@ -139,6 +139,7 @@ import {
     showUploadFiles,
     registerPrefix,
     buildBundle,
+    circleWipe,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2529,6 +2530,66 @@ describe('AuxLibrary', () => {
                     {
                         url: 'http://example.com',
                         title: 'Example',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('player.closeCircleWipe()', () => {
+            it('should return a OpenCircleWipeAction', () => {
+                const promise: any = library.api.player.closeCircleWipe({
+                    color: 'green',
+                });
+                const expected = circleWipe(
+                    false,
+                    {
+                        color: 'green',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should default color to black', () => {
+                const promise: any = library.api.player.closeCircleWipe();
+                const expected = circleWipe(
+                    false,
+                    {
+                        color: 'black',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('player.openCircleWipe()', () => {
+            it('should return a OpenCircleWipeAction', () => {
+                const promise: any = library.api.player.openCircleWipe({
+                    color: 'green',
+                });
+                const expected = circleWipe(
+                    true,
+                    {
+                        color: 'green',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should default color to black', () => {
+                const promise: any = library.api.player.openCircleWipe();
+                const expected = circleWipe(
+                    true,
+                    {
+                        color: 'black',
                     },
                     context.tasks.size
                 );

@@ -180,7 +180,8 @@ export type AsyncActions =
     | CancelSoundAction
     | LocalPositionTweenAction
     | LocalRotationTweenAction
-    | ShowUploadFilesAction;
+    | ShowUploadFilesAction
+    | OpenCircleWipeAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2418,6 +2419,33 @@ export interface RegisterPrefixOptions {
     language?: 'javascript' | 'typescript' | 'json' | 'jsx' | 'tsx' | 'text';
 }
 
+/**
+ * An event that is used to show or hide the circle wipe.
+ */
+export interface OpenCircleWipeAction extends AsyncAction {
+    type: 'show_circle_wipe';
+
+    /**
+     * Whether the circle wipe should be visible.
+     */
+    open: boolean;
+
+    /**
+     * The options for the circle wipe.
+     */
+    options: OpenCircleWipeOptions;
+}
+
+/**
+ * The options for the circle wipe.
+ */
+export interface OpenCircleWipeOptions {
+    /**
+     * The color that the circle wipe should be.
+     */
+    color: string;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -4582,6 +4610,25 @@ export function share(
         type: 'share',
         taskId,
         ...options,
+    };
+}
+
+/**
+ * Creates an action that opens/closes the circle wipe display element.
+ * @param open Whether the circle wipe should transition to open or closed.
+ * @param options The options that the circle wipe should use.
+ * @param taskId The ID of the task.
+ */
+export function circleWipe(
+    open: boolean,
+    options: OpenCircleWipeOptions,
+    taskId?: number | string
+): OpenCircleWipeAction {
+    return {
+        type: 'show_circle_wipe',
+        open,
+        options,
+        taskId,
     };
 }
 
