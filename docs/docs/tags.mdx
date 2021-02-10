@@ -1506,6 +1506,32 @@ The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the
   </PossibleValue>
 </PossibleValuesTable>
 
+### `menuPortalStyle`
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the menu portal container.
+This is useful for positioning the menu portal in ways that are not possible normally.
+
+When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the menu portal container.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples
+
+1. Make the menu portal `80%` of the screen width.
+```
+🧬{
+    "width": "80%",
+}
+```
+
 ### `sheetPortalShowButton`
 
 Whether the sheet portal should show a button that allows a custom action.
