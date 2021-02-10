@@ -438,6 +438,11 @@ export type BotShape =
     | 'nothing';
 
 /**
+ * Defines the possible forms that a menu bot can appear as.
+ */
+export type MenuBotForm = 'button' | 'input';
+
+/**
  * Defines the possible subtypes for shapes that a bot can appear as.
  */
 export type BotSubShape = 'gltf' | 'src' | 'html' | null;
@@ -564,6 +569,11 @@ export type BotLOD = 'normal' | 'min' | 'max';
  * The default bot shape.
  */
 export const DEFAULT_BOT_SHAPE: BotShape = 'cube';
+
+/**
+ * The default menu bot form.
+ */
+export const DEFAULT_MENU_BOT_FORM: MenuBotForm = 'button';
 
 /**
  * The default bot label anchor.
@@ -1062,6 +1072,16 @@ export const ON_CHAT_TYPING_ACTION_NAME: string = 'onChatTyping';
 export const ON_CHAT_ACTION_NAME: string = 'onChat';
 
 /**
+ * The name of the event that is triggered when the text in a menu bot input is submitted.
+ */
+export const ON_SUBMIT_ACTION_NAME: string = 'onSubmit';
+
+/**
+ * The name of the event that is triggered when the text in a menu bot input is updated.
+ */
+export const ON_INPUT_TYPING_ACTION_NAME: string = 'onInputTyping';
+
+/**
  * The name of the event that is triggered when text is pasted into aux.
  */
 export const ON_PASTE_ACTION_NAME: string = 'onPaste';
@@ -1443,6 +1463,7 @@ export const KNOWN_TAGS: string[] = [
     'focusable',
     'transformer',
     'menuItemStyle',
+    'menuItemText',
 
     'taskOutput',
     'taskError',
@@ -1527,6 +1548,8 @@ export const KNOWN_TAGS: string[] = [
     ON_RUN_ACTION_NAME,
     ON_CHAT_TYPING_ACTION_NAME,
     ON_CHAT_ACTION_NAME,
+    ON_SUBMIT_ACTION_NAME,
+    ON_INPUT_TYPING_ACTION_NAME,
     ON_PASTE_ACTION_NAME,
     ON_MAX_LOD_ENTER_ACTION_NAME,
     ON_MIN_LOD_ENTER_ACTION_NAME,
@@ -1659,6 +1682,12 @@ export function onPointerUpDownArg(bot: Bot, dimension: string) {
     return {
         bot,
         dimension,
+    };
+}
+
+export function onSubmitArg(text: string) {
+    return {
+        text,
     };
 }
 

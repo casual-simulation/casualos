@@ -1,3 +1,7 @@
+.menu-bot-content {
+    width: 100%;
+}
+
 .menu-bot-text {
     overflow-wrap: break-word;
     white-space: normal;
@@ -34,4 +38,20 @@
 
 .menu-bot-progress {
     float: right;
+}
+
+.menu-bot-input {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: flex-end;
+}
+
+.md-field .md-input.text-input {
+    color: var(--menu-placeholder-color);
+    -webkit-text-fill-color: var(--menu-placeholder-color);
+}
+
+.input-form .md-list-item-container {
+    height: 100%;
 }
