@@ -1,5 +1,16 @@
 # CasualOS Changelog
 
+## V1.4.1
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `player.openCircleWipe()` and `player.closeCircleWipe()` functions.
+    -   These are useful for hiding the page portal while transitioning between scenes.
+    -   See the documentation for usage information.
+-   Added the ability to use `"cube"` as the `#formAddress` tag on menu bots to show a cube icon.
+
 ## V1.4.0
 
 #### Date: 2/8/2021
