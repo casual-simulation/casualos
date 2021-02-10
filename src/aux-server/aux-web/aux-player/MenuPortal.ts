@@ -12,15 +12,19 @@ import {
     Bot,
     BotCalculationContext,
 } from '@casual-simulation/aux-common';
+import { MenuPortalConfig } from './MenuPortalConfig';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 /**
  * Defines a dimension that watches a set of simulations for changes to items in a dimension.
  */
-export class ItemDimension implements SubscriptionLike {
+export class MenuPortal implements SubscriptionLike {
     items: DimensionItem[] = [];
+    extraStyle: Object = {};
 
     private _dimensionTags: string[] = [];
     private _itemsUpdated = new Subject<DimensionItem[]>();
+    private _configUpdated = new Subject<void>();
 
     private _sub: Subscription;
     private _simulations: Map<Simulation, Subscription> = new Map();
@@ -38,6 +42,7 @@ export class ItemDimension implements SubscriptionLike {
      * A map of bot IDs to menu item.
      */
     private _botItemMap: Map<string, DimensionItem> = new Map();
+    private _config: MenuPortalConfig;
 
     constructor(
         simulationManager: SimulationManager<Simulation>,
@@ -62,6 +67,10 @@ export class ItemDimension implements SubscriptionLike {
         return this._itemsUpdated.pipe(startWith(this.items));
     }
 
+    get configUpdated() {
+        return this._configUpdated.pipe(startWith([undefined]));
+    }
+
     unsubscribe(): void {
         this._sub.unsubscribe();
     }
@@ -74,6 +83,19 @@ export class ItemDimension implements SubscriptionLike {
         let sub = new Subscription();
         this._simulations.set(sim, sub);
 
+        if (!this._config) {
+            this._config = new MenuPortalConfig(
+                this._dimensionTags[0],
+                sim as BrowserSimulation
+            );
+            sub.add(this._config);
+            sub.add(
+                this._config.onUpdated.subscribe(() => {
+                    this._updateConfig();
+                })
+            );
+        }
+
         sub.add(
             sim.dimensions
                 .watchDimensions(
@@ -83,6 +105,15 @@ export class ItemDimension implements SubscriptionLike {
                 .pipe(tap((update) => this._updateMenuDimensions(sim, update)))
                 .subscribe()
         );
+    }
+
+    private _updateConfig() {
+        if (this._config) {
+            this.extraStyle = this._config.style;
+        } else {
+            this.extraStyle = {};
+        }
+        this._configUpdated.next();
     }
 
     private _onSimulationRemoved(sim: Simulation): void {
