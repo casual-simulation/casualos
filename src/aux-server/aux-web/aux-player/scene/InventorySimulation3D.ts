@@ -51,6 +51,12 @@ export class InventorySimulation3D extends PlayerSimulation3D {
         return this.inventoryConfig.backgroundColor || super.backgroundColor;
     }
 
+    get backgroundAddress() {
+        return (
+            this.inventoryConfig.backgroundAddress || super.backgroundAddress
+        );
+    }
+
     /**
      * Gets the pannability of the inventory camera that the simulation defines.
      */

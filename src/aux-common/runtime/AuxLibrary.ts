@@ -170,6 +170,8 @@ import {
     EaseType,
     OpenCustomPortalOptions,
     RegisterPrefixOptions,
+    OpenCircleWipeOptions,
+    circleWipe,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -618,6 +620,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 cancelSound,
                 hasBotInInventory,
                 share,
+                closeCircleWipe,
+                openCircleWipe,
                 inSheet,
 
                 getCameraPosition,
@@ -1863,6 +1867,44 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function share(options: ShareOptions): Promise<void> {
         const task = context.createTask();
         const event = calcShare(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Closes the circle wipe transition effect.
+     * @param options The options that should be used for the effect.
+     */
+    function closeCircleWipe(
+        options?: Partial<OpenCircleWipeOptions>
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = circleWipe(
+            false,
+            {
+                color: options?.color || 'black',
+                duration: options?.duration || 1,
+            },
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Opens the circle wipe transition effect.
+     * @param options The options that should be used for the effect.
+     */
+    function openCircleWipe(
+        options?: Partial<OpenCircleWipeOptions>
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = circleWipe(
+            true,
+            {
+                color: options?.color || 'black',
+                duration: options?.duration || 1,
+            },
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

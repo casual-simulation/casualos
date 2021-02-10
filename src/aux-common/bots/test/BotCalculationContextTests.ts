@@ -64,6 +64,7 @@ import {
     createPrecalculatedBot,
     calculateLabelFontSize,
     calculateLabelWordWrapMode,
+    getMenuBotForm,
 } from '../BotCalculations';
 import {
     Bot,
@@ -975,6 +976,42 @@ export function botCalculationContextTests(
             const shape = getBotShape(calc, bot);
 
             expect(shape).toBe('cube');
+        });
+    });
+
+    describe('getMenuBotForm()', () => {
+        const cases = [['button'], ['input']];
+        const tagCases = ['auxForm', 'form'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (shape: string) => {
+                const bot = createBot('test', {
+                    [tag]: <any>shape,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getMenuBotForm(calc, bot)).toBe(shape);
+            });
+
+            it('should return the shape from the tag', () => {
+                let bot = createBot();
+                bot.tags[tag] = 'input';
+
+                const calc = createPrecalculatedContext([bot]);
+                const shape = getMenuBotForm(calc, bot);
+
+                expect(shape).toBe('input');
+            });
+        });
+
+        it('should default to button', () => {
+            const bot = createBot();
+
+            const calc = createPrecalculatedContext([bot]);
+            const shape = getMenuBotForm(calc, bot);
+
+            expect(shape).toBe('button');
         });
     });
 

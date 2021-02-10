@@ -24,6 +24,12 @@ import {
     ON_POINTER_EXIT,
     ON_ANY_POINTER_EXIT,
     ON_ANY_POINTER_ENTER,
+    MenuBotForm,
+    getMenuBotForm,
+    ON_SUBMIT_ACTION_NAME,
+    onSubmitArg,
+    ON_INPUT_TYPING_ACTION_NAME,
+    TEMPORARY_BOT_PARTITION_ID,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
@@ -31,9 +37,15 @@ import { first } from '@casual-simulation/causal-trees';
 import { safeParseURL } from '../PlayerUtils';
 import PieProgress from '../../shared/vue-components/PieProgress/PieProgress';
 import { Input } from '../../shared/scene/Input';
+import CubeIcon from '../../shared/public/icons/MenuCube.svg';
+import EggIcon from '../../shared/public/icons/MenuEgg.svg';
+import HelixIcon from '../../shared/public/icons/MenuHelix.svg';
 
 @Component({
     components: {
+        'cube-icon': CubeIcon,
+        'egg-icon': EggIcon,
+        'helix-icon': HelixIcon,
         'pie-progress': PieProgress,
     },
 })
@@ -54,9 +66,12 @@ export default class MenuBot extends Vue {
     progress: number = null;
     progressBarForeground: string = null;
     progressBarBackground: string = null;
+    text: string = null;
+    form: MenuBotForm = 'button';
 
     private _down: boolean = false;
     private _hover: boolean = false;
+    private _updatingText: boolean = false;
 
     get hasProgress() {
         return hasValue(this.progress);
@@ -74,6 +89,12 @@ export default class MenuBot extends Vue {
         };
     }
 
+    get inputStyleVariables() {
+        return {
+            '--menu-label-color': this.labelColor || 'rgba(0,0,0,0.54)',
+        };
+    }
+
     @Watch('item')
     private async _botChanged(item: DimensionItem) {
         if (item) {
@@ -86,6 +107,8 @@ export default class MenuBot extends Vue {
             this._updateStyle(calc, item.bot);
             this._updateIcon(calc, item.bot);
             this._updateProgress(calc, item.bot);
+            this._updateForm(calc, item.bot);
+            this._updateText(calc, item.bot);
         } else {
             this.label = '';
             this.labelColor = '#000';
@@ -95,6 +118,8 @@ export default class MenuBot extends Vue {
             this.icon = null;
             this.iconIsURL = false;
             this.progress = null;
+            this.form = 'button';
+            this.text = '';
         }
     }
 
@@ -223,6 +248,38 @@ export default class MenuBot extends Vue {
         this.mouseUp();
     }
 
+    async onTextUpdated() {
+        if (!this._updatingText) {
+            const simulation = _simulation(this.item);
+            await simulation.editBot(
+                this.item.bot,
+                'menuItemText',
+                this.text,
+                TEMPORARY_BOT_PARTITION_ID
+            );
+            await simulation.helper.action(
+                ON_INPUT_TYPING_ACTION_NAME,
+                null,
+                onSubmitArg(this.text)
+            );
+        }
+    }
+
+    async submitInput(dropFocus: boolean) {
+        if (dropFocus) {
+            const input = <Vue>this.$refs.textInput;
+            if (input) {
+                input.$el.blur();
+            }
+        }
+        const simulation = _simulation(this.item);
+        await simulation.helper.action(
+            ON_SUBMIT_ACTION_NAME,
+            null,
+            onSubmitArg(this.text)
+        );
+    }
+
     private _updateColor(calc: BotCalculationContext, bot: Bot) {
         this.backgroundColor = calculateBotValue(calc, bot, 'auxColor');
         if (!hasValue(this.backgroundColor)) {
@@ -296,6 +353,30 @@ export default class MenuBot extends Vue {
         this.progressBarBackground = hasValue(bgColorTagValue)
             ? bgColorTagValue
             : '#000';
+    }
+
+    private _updateForm(calc: BotCalculationContext, bot: Bot) {
+        const form = getMenuBotForm(calc, bot);
+        this.form = form;
+    }
+
+    private _updateText(calc: BotCalculationContext, bot: Bot) {
+        const text = calculateStringTagValue(calc, bot, 'menuItemText', '');
+
+        if (text !== this.text) {
+            this._ignoreTextUpdates(async () => {
+                this.text = text;
+            });
+        }
+    }
+
+    private async _ignoreTextUpdates(action: (text: string) => Promise<void>) {
+        try {
+            this._updatingText = true;
+            await action(this.text);
+        } finally {
+            this._updatingText = false;
+        }
     }
 }
 

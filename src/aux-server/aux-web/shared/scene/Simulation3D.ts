@@ -133,6 +133,13 @@ export abstract class Simulation3D
         return this._sceneBackground;
     }
 
+    /**
+     * Gets the address that should be used as the background.
+     */
+    get backgroundAddress(): string {
+        return null;
+    }
+
     get decoratorFactory() {
         return this._decoratorFactory;
     }

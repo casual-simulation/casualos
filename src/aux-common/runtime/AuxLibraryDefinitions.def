@@ -1703,6 +1703,37 @@ declare interface ShareAction extends AsyncAction, ShareOptions {
     type: 'share';
 }
 
+/**
+ * An event that is used to show or hide the circle wipe.
+ */
+export interface OpenCircleWipeAction extends AsyncAction {
+    type: 'show_circle_wipe';
+
+    /**
+     * Whether the circle wipe should be visible.
+     */
+    open: boolean;
+
+    /**
+     * The options for the circle wipe.
+     */
+    options: OpenCircleWipeOptions;
+}
+
+/**
+ * The options for the circle wipe.
+ */
+export interface OpenCircleWipeOptions {
+    /**
+     * The duration of this half of the circle wipe animation in seconds.
+     */
+    duration: number;
+
+    /**
+     * The color that the circle wipe should be.
+     */
+    color: string;
+}
 
 /**
  * The possible options for a custom portal.
@@ -2971,6 +3002,18 @@ declare global {
          * @param options The options.
          */
         share(options: ShareOptions): ShareAction;
+
+        /**
+         * Closes the circle wipe transition effect.
+         * @param options The options that should be used for the effect.
+         */
+        closeCircleWipe(options?: Partial<OpenCircleWipeOptions>): Promise<void>;
+
+        /**
+         * Opens the circle wipe transition effect.
+         * @param options The options that should be used for the effect.
+         */
+        openCircleWipe(options?: Partial<OpenCircleWipeOptions>): Promise<void>;
 
         /**
          * Shows some HTML to the user.

@@ -47,6 +47,8 @@ import {
     DEFAULT_LABEL_FONT_SIZE,
     BotLabelWordWrap,
     DEFAULT_LABEL_WORD_WRAP_MODE,
+    MenuBotForm,
+    DEFAULT_MENU_BOT_FORM,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -1231,6 +1233,22 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         return shape;
     }
     return DEFAULT_BOT_SHAPE;
+}
+
+/**
+ * Gets the form of a menu bot.
+ * @param calc The calculation context to use.
+ * @param bot The bot.
+ */
+export function getMenuBotForm(
+    calc: BotCalculationContext,
+    bot: Bot
+): MenuBotForm {
+    const shape: MenuBotForm = calculateBotValue(calc, bot, 'auxForm');
+    if (shape === 'button' || shape === 'input') {
+        return shape;
+    }
+    return DEFAULT_MENU_BOT_FORM;
 }
 
 /**

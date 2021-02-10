@@ -1,0 +1,32 @@
+svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+}
+
+svg.open {
+    pointer-events: none;
+}
+
+svg.closed {
+    pointer-events: all;
+}
+
+svg > circle {
+    stroke-width: 0;
+    transition-property: stroke-width, stroke;
+    transition-duration: 1s, 0.25s;
+    transition-timing-function: linear;
+}
+
+svg.open > circle {
+    stroke-width: 0;
+}
+
+svg.closed > circle {
+    stroke-width: 150;
+}

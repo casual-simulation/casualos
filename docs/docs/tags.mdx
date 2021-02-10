@@ -578,6 +578,10 @@ The shape that the bot should be displayed as.
     You also need to place the bot in the same dimension that the tag portal uses
     for the cursor to appear.
   </PossibleValueCode>
+  <PossibleValueCode value='input'>
+    The bot will appear as an input box in the menu portal.
+    You also need to place the bot in the dimension that the menu portal is showing for the input to appear.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `formSubtype`
@@ -614,7 +618,8 @@ When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> i
 When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
 
 When the bot is in the menu portal, this is the URL of the image that should be shown on the menu item.
-If the given value is not a URL, then the specified [Material Icon](https://material.io/resources/icons/?style=baseline) will be shown.
+It can also be `cube` to show an icon of a cube, `egg` to show an egg icon, and `helix` to show an icon of a DNA helix.
+If the given value is not a URL or one of the predefined icons, then the specified [Material Icon](https://material.io/resources/icons/?style=baseline) will be shown.
 
 ### `formAnimation`
 
@@ -840,11 +845,27 @@ When setting this tag via the sheet, it is useful to utilize DNA tags to ensure 
 
 1. Round the top corners of the menu bot.
 ```typescript
-=({
-    'border-radius': '8px 8px 0 0',
-    'margin-top': '8px'
-})
+🧬{
+    "border-radius": "8px 8px 0 0",
+    "margin-top": "8px"
+}
 ```
+
+### `menuItemText`
+
+The text that has been entered in the menu item's input box. Only has an effect on menu items that have <TagLink tag='form'/> set to `input`.
+
+This tag will also be updated in the `tempLocal` space when the user types in the input box.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No text in the input box. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The text will appear in the input box.
+  </PossibleValue>
+</PossibleValuesTable>
 
 ## Dimension Tags
 
@@ -989,6 +1010,23 @@ The color of the background of the portal.
     (default)
   </PossibleValueCode>
   <AnyColorValues/>
+</PossibleValuesTable>
+
+### `portalBackgroundAddress`
+
+The URL of the image that should be displayed as the background of the portal.
+
+When specified, this tag overrides <TagLink tag='#portalColor'/>.
+Additionally, this tag does nothing when in VR. 
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any URL'>
+    Specifies that the portal background should use the given image.
+  </PossibleValue>
 </PossibleValuesTable>
 
 ### `portalLocked`
@@ -1341,14 +1379,13 @@ When setting this tag via the sheet, it is useful to utilize DNA tags to ensure 
 #### Examples
 
 1. Put the meet portal in the center of the screen.
-Note that we wrap the curly braces in parenthesis to tell JavaScript that we want the curly braces to be intepreted as an [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer) instead of as a [block](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/block).
 ```
-=({
-    top: "10%",
-    bottom: "10%",
-    left: "10%",
-    right: "10%",
-})
+🧬{
+    "top": "10%",
+    "bottom": "10%",
+    "left": "10%",
+    "right": "10%",
+}
 ```
 
 ### `tagPortalAnchorPoint`
@@ -1413,14 +1450,13 @@ When setting this tag via the sheet, it is useful to utilize DNA tags to ensure 
 #### Examples
 
 1. Put the tag portal in the center of the screen.
-Note that we wrap the curly braces in parenthesis to tell JavaScript that we want the curly braces to be intepreted as an [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer) instead of as a [block](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/block).
 ```
-=({
-    top: "10%",
-    bottom: "10%",
-    left: "10%",
-    right: "10%",
-})
+🧬{
+    "top": "10%",
+    "bottom": "10%",
+    "left": "10%",
+    "right": "10%",
+}
 ```
 
 ### `tagPortalShowButton`
@@ -1467,6 +1503,32 @@ The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the
     The text that should be displayed as a hint when the user hovers their mouse over the button.
   </PossibleValue>
 </PossibleValuesTable>
+
+### `menuPortalStyle`
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the menu portal container.
+This is useful for positioning the menu portal in ways that are not possible normally.
+
+When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the menu portal container.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples
+
+1. Make the menu portal `80%` of the screen width.
+```
+🧬{
+    "width": "80%",
+}
+```
 
 ### `sheetPortalShowButton`
 

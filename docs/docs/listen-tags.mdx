@@ -334,6 +334,32 @@ let that: {
 };
 ```
 
+### `@onInputTyping`
+
+A whisper that is sent whenever the player is typing in the menu bot's input box.
+Only sent for bots that are in a menu and have <TagLink tag='form'/> set to `input`.
+
+#### Arguments:
+```typescript
+let that: {
+  text: string
+};
+```
+
+### `@onSubmit`
+
+A whisper that is sent whenever the player submits the text in the menu bot's input box.
+This can happen by pressing enter while there is text in the box or by clicking the send button on the right side of the box.
+
+Only sent for bots that are in a menu and have <TagLink tag='form'/> set to `input`.
+
+#### Arguments:
+```typescript
+let that: {
+  text: string
+};
+```
+
 ### `@onBotAdded`
 
 A whisper that is sent when the bot is added to the local server.

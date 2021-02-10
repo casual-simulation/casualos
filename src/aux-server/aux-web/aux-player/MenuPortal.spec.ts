@@ -3,11 +3,11 @@ import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { waitForSync } from '@casual-simulation/aux-vm';
 import { Simulation, SimulationManager } from '@casual-simulation/aux-vm';
 import { nodeSimulationWithConfig } from '@casual-simulation/aux-vm-node';
-import { ItemDimension } from './ItemDimension';
+import { MenuPortal } from './MenuPortal';
 
 console.log = jest.fn();
 
-describe('ItemDimension', () => {
+describe('MenuPortal', () => {
     let simulationManager: SimulationManager<Simulation>;
 
     beforeEach(() => {
@@ -49,7 +49,7 @@ describe('ItemDimension', () => {
     });
 
     it('should keep bots that are in both dimensions', async () => {
-        const dim = new ItemDimension(simulationManager, ['menuPortal']);
+        const dim = new MenuPortal(simulationManager, ['menuPortal']);
 
         const sim = await simulationManager.addSimulation('test');
         sim.helper.userId = 'user';

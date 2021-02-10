@@ -78,7 +78,6 @@ export class PlayerGame extends Game {
 
     private _sliderLeft: Element;
     private _sliderRight: Element;
-    private _menuElement: Element;
 
     private get sliderLeft() {
         if (!this._sliderLeft) {
@@ -92,13 +91,6 @@ export class PlayerGame extends Game {
             this._sliderRight = document.querySelector('.slider-hiddenRight');
         }
         return this._sliderRight;
-    }
-
-    private get menuElement() {
-        if (!this._menuElement) {
-            this._menuElement = document.querySelector('.toolbar.menu');
-        }
-        return this._menuElement;
     }
 
     private sliderPressed: boolean = false;
@@ -134,6 +126,13 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(
             this.playerSimulations,
             'backgroundColor'
+        );
+    }
+
+    getBackgroundAddress() {
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'backgroundAddress'
         );
     }
 
@@ -772,11 +771,6 @@ export class PlayerGame extends Game {
             (<HTMLElement>this.sliderLeft).style.top =
                 sliderTop.toString() + 'px';
 
-            //waaa
-            (<HTMLElement>this.menuElement).style.bottom =
-                (window.innerHeight - sliderTop + this.menuOffset).toString() +
-                'px';
-
             (<HTMLElement>this.sliderRight).style.top =
                 sliderTop.toString() + 'px';
 
@@ -793,11 +787,16 @@ export class PlayerGame extends Game {
                     15
                 ).toString() + 'px';
 
-            (<HTMLElement>this.menuElement).style.left =
-                this.inventoryViewport.x.toString() + 'px';
-
-            (<HTMLElement>this.menuElement).style.width =
-                this.inventoryViewport.width.toString() + 'px';
+            this.gameView.setMenuStyle({
+                bottom:
+                    (
+                        window.innerHeight -
+                        sliderTop +
+                        this.menuOffset
+                    ).toString() + 'px',
+                left: this.inventoryViewport.x.toString() + 'px',
+                width: this.inventoryViewport.width.toString() + 'px',
+            });
         } else {
             let invOffsetHeight = 40;
 
@@ -836,15 +835,16 @@ export class PlayerGame extends Game {
                     12
                 ).toString() + 'px';
 
-            (<HTMLElement>this.menuElement).style.bottom =
-                (window.innerHeight - sliderTop + this.menuOffset).toString() +
-                'px';
-
-            (<HTMLElement>this.menuElement).style.left =
-                this.inventoryViewport.x.toString() + 'px';
-
-            (<HTMLElement>this.menuElement).style.width =
-                this.inventoryViewport.width.toString() + 'px';
+            this.gameView.setMenuStyle({
+                bottom:
+                    (
+                        window.innerHeight -
+                        sliderTop +
+                        this.menuOffset
+                    ).toString() + 'px',
+                left: this.inventoryViewport.x.toString() + 'px',
+                width: this.inventoryViewport.width.toString() + 'px',
+            });
         }
 
         if (this.inventoryCameraRig) {
@@ -857,10 +857,9 @@ export class PlayerGame extends Game {
         this.inventoryViewport.setScale(null, 0);
         (<HTMLElement>this.sliderLeft).style.display = 'none';
         (<HTMLElement>this.sliderRight).style.display = 'none';
-        (<HTMLElement>this.menuElement).style.bottom =
-            this.menuOffset.toString() + 'px';
-        (<HTMLElement>this.menuElement).style.left = null;
-        (<HTMLElement>this.menuElement).style.width = null;
+        this.gameView.setMenuStyle({
+            bottom: this.menuOffset.toString() + 'px',
+        });
     }
 
     private _showInventory() {
@@ -898,9 +897,16 @@ export class PlayerGame extends Game {
 
         (<HTMLElement>this.sliderRight).style.top = sliderTop.toString() + 'px';
 
-        (<HTMLElement>this.menuElement).style.bottom =
-            (window.innerHeight - sliderTop + this.menuOffset - 8).toString() +
-            'px';
+        this.gameView.setMenuStyle({
+            ...this.gameView.menuStyle,
+            bottom:
+                (
+                    window.innerHeight -
+                    sliderTop +
+                    this.menuOffset -
+                    8
+                ).toString() + 'px',
+        });
     }
 
     protected frameUpdate(xrFrame?: any) {
@@ -1142,8 +1148,10 @@ export class PlayerGame extends Game {
             this.inventoryViewport.height -
             invOffsetHeight;
 
-        (<HTMLElement>this.menuElement).style.bottom =
-            window.innerHeight - sliderTop + this.menuOffset - 8 + 'px';
+        this.gameView.setMenuStyle({
+            ...this.gameView.menuStyle,
+            bottom: window.innerHeight - sliderTop + this.menuOffset - 8 + 'px',
+        });
 
         this.inventoryHeightOverride = window.innerHeight - sliderPos;
 
