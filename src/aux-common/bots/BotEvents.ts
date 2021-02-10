@@ -2441,6 +2441,11 @@ export interface OpenCircleWipeAction extends AsyncAction {
  */
 export interface OpenCircleWipeOptions {
     /**
+     * The duration of this half of the circle wipe animation in seconds.
+     */
+    duration: number;
+
+    /**
      * The color that the circle wipe should be.
      */
     color: string;

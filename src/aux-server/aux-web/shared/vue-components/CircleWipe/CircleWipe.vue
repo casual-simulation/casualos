@@ -6,7 +6,13 @@
         preserveAspectRatio="xMidYMid slice"
         version="1.1"
     >
-        <circle cx="50" cy="50" r="75" fill="transparent" />
+        <circle
+            :style="{ 'transition-duration': transitionDuration }"
+            cx="50"
+            cy="50"
+            r="75"
+            fill="transparent"
+        />
     </svg>
 </template>
 <script src="./CircleWipe.ts"></script>

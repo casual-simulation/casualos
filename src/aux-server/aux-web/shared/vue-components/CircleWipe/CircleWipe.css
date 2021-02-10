@@ -16,7 +16,9 @@ svg.closed {
 
 svg > circle {
     stroke-width: 0;
-    transition: stroke-width 2s linear, stroke 0.25s linear;
+    transition-property: stroke-width, stroke;
+    transition-duration: 1s, 0.25s;
+    transition-timing-function: linear;
 }
 
 svg.open > circle {

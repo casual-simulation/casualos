@@ -1874,12 +1874,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Closes the circle wipe transition effect.
      * @param options The options that should be used for the effect.
      */
-    function closeCircleWipe(options?: OpenCircleWipeOptions): Promise<void> {
+    function closeCircleWipe(
+        options?: Partial<OpenCircleWipeOptions>
+    ): Promise<void> {
         const task = context.createTask();
         const event = circleWipe(
             false,
             {
                 color: options?.color || 'black',
+                duration: options?.duration || 1,
             },
             task.taskId
         );
@@ -1890,12 +1893,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Opens the circle wipe transition effect.
      * @param options The options that should be used for the effect.
      */
-    function openCircleWipe(options?: OpenCircleWipeOptions): Promise<void> {
+    function openCircleWipe(
+        options?: Partial<OpenCircleWipeOptions>
+    ): Promise<void> {
         const task = context.createTask();
         const event = circleWipe(
             true,
             {
                 color: options?.color || 'black',
+                duration: options?.duration || 1,
             },
             task.taskId
         );

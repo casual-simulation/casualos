@@ -14,14 +14,13 @@ import {
     hasValue,
 } from '@casual-simulation/aux-common';
 
-const CIRCLE_WIPE_ANIMATION_TIME_MS: number = 2000;
-
 @Component({
     components: {},
 })
 export default class CircleWipe extends Vue {
     open: boolean = true;
     color: string = 'black';
+    duration: number = 1;
 
     private _pendingTasks: [Simulation, AsyncAction][] = [];
     private _complete: boolean;
@@ -29,9 +28,14 @@ export default class CircleWipe extends Vue {
     private _sub: Subscription;
     private _simulationSubs: Map<Simulation, Subscription>;
 
+    get transitionDuration() {
+        return `${this.duration}s, 0.25s`;
+    }
+
     created() {
         this.open = true;
         this.color = 'black';
+        this.duration = 1;
         this._sub = new Subscription();
         this._simulationSubs = new Map();
         this._complete = true;
@@ -65,8 +69,9 @@ export default class CircleWipe extends Vue {
                         this._complete = false;
                         this._timeout = setTimeout(() => {
                             this._completePendingTasks();
-                        }, CIRCLE_WIPE_ANIMATION_TIME_MS);
+                        }, e.options.duration * 1000);
                         this.color = e.options.color;
+                        this.duration = e.options.duration;
                         this.open = e.open;
                     }
                     this._addTask([sim, e]);
