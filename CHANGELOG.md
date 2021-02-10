@@ -14,6 +14,7 @@
     -   Setting `#form` to "input" on a bot that is in the menu portal will give it an input box that can be typed in.
     -   Typing in the box will send `@onInputTyping` whispers to the bot. And submitting the data by hitting enter or the send button will send a `@onSubmit` whisper to the bot.
     -   Additionally, the text in the input will be stored in the `tempLocal` `#menuItemText` tag.
+-   Adjusted the chat bar to be inset in the page portal to give it the feel of being part of the page portal.
 
 ## V1.4.0
 
