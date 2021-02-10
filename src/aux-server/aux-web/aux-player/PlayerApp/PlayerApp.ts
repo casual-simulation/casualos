@@ -62,7 +62,6 @@ import ShowInputModal from '../../shared/vue-components/ShowInputModal/ShowInput
 import MeetPortal from '../../shared/vue-components/MeetPortal/MeetPortal';
 import TagPortal from '../../shared/vue-components/TagPortal/TagPortal';
 import CustomPortals from '../../shared/vue-components/CustomPortals/CustomPortals';
-import CircleWipe from '../../shared/vue-components/CircleWipe/CircleWipe';
 
 import merge from 'lodash/merge';
 
@@ -83,7 +82,6 @@ import merge from 'lodash/merge';
         'meet-portal': MeetPortal,
         'tag-portal': TagPortal,
         'custom-portals': CustomPortals,
-        'circle-wipe': CircleWipe,
         console: Console,
         tagline: Tagline,
         checkout: Checkout,

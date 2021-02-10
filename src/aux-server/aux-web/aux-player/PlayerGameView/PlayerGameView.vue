@@ -47,6 +47,8 @@
 
             <!-- Main viewport -->
             <div v-if="hasMainViewport" class="viewport" :style="mainViewportStyle"></div>
+
+            <circle-wipe></circle-wipe>
         </div>
     </div>
 </template>

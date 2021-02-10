@@ -11,10 +11,12 @@ import { map, tap, combineLatest } from 'rxjs/operators';
 import { DimensionItem } from '../DimensionItem';
 import { ItemDimension } from '../ItemDimension';
 import { appManager } from '../../shared/AppManager';
+import CircleWipe from '../../shared/vue-components/CircleWipe/CircleWipe';
 
 @Component({
     components: {
         'menu-bot': MenuBot,
+        'circle-wipe': CircleWipe,
     },
 })
 export default class PlayerGameView extends BaseGameView implements IGameView {

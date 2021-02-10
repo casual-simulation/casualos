@@ -133,8 +133,6 @@
             <html-modal></html-modal>
             <clipboard-modal></clipboard-modal>
             <upload-server-modal></upload-server-modal>
-
-            <circle-wipe></circle-wipe>
         </load-app>
     </div>
 </template>
