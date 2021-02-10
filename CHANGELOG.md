@@ -9,7 +9,7 @@
 -   Added the `player.openCircleWipe()` and `player.closeCircleWipe()` functions.
     -   These are useful for hiding the page portal while transitioning between scenes.
     -   See the documentation for usage information.
--   Added the ability to use "cube" as the `#formAddress` tag on menu bots to show a cube icon.
+-   Added "cube", "helix", and "egg" as additional options for the `#formAddress` tag on menu bots.
 -   Added the `input` form for menu bots.
     -   Setting `#form` to "input" on a bot that is in the menu portal will give it an input box that can be typed in.
     -   Typing in the box will send `@onInputTyping` whispers to the bot. And submitting the data by hitting enter or the send button will send a `@onSubmit` whisper to the bot.
