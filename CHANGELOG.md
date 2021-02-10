@@ -15,6 +15,9 @@
     -   Typing in the box will send `@onInputTyping` whispers to the bot. And submitting the data by hitting enter or the send button will send a `@onSubmit` whisper to the bot.
     -   Additionally, the text in the input will be stored in the `tempLocal` `#menuItemText` tag.
 -   Adjusted the chat bar to be inset in the page portal to give it the feel of being part of the page portal.
+-   Added the `#menuPortalStyle` tag to allow customizing the menu portal with CSS.
+    -   This works similarly to `#menuItemStyle` except that it applies to the entire menu portal instead of just one item.
+    -   Set it on the `#menuPortalConfigBot`.
 
 ## V1.4.0
 
