@@ -47,9 +47,16 @@
     justify-content: flex-end;
 }
 
-.md-field .md-input.text-input {
-    color: var(--menu-placeholder-color);
-    -webkit-text-fill-color: var(--menu-placeholder-color);
+.md-field.menu-input::before {
+    background-color: var(--menu-label-color);
+}
+
+.md-field.menu-input.md-focused label {
+    color: var(--menu-label-color);
+}
+
+.md-field.menu-input.md-focused .md-field {
+    color: var(--menu-label-color);
 }
 
 .input-form .md-list-item-container {
