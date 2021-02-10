@@ -38,10 +38,14 @@ import { safeParseURL } from '../PlayerUtils';
 import PieProgress from '../../shared/vue-components/PieProgress/PieProgress';
 import { Input } from '../../shared/scene/Input';
 import CubeIcon from '../../shared/public/icons/MenuCube.svg';
+import EggIcon from '../../shared/public/icons/MenuEgg.svg';
+import HelixIcon from '../../shared/public/icons/MenuHelix.svg';
 
 @Component({
     components: {
         'cube-icon': CubeIcon,
+        'egg-icon': EggIcon,
+        'helix-icon': HelixIcon,
         'pie-progress': PieProgress,
     },
 })
@@ -87,7 +91,7 @@ export default class MenuBot extends Vue {
 
     get inputStyleVariables() {
         return {
-            '--menu-text-color': this.labelColor || 'rgba(0,0,0,0.54)',
+            '--menu-label-color': this.labelColor || 'rgba(0,0,0,0.54)',
         };
     }
 

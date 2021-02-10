@@ -8,6 +8,8 @@
                 <span class="menu-bot-icon" v-if="hasIcon">
                     <img v-if="iconIsURL" :src="icon" />
                     <cube-icon v-else-if="icon === 'cube'"></cube-icon>
+                    <egg-icon v-else-if="icon === 'egg'"></egg-icon>
+                    <helix-icon v-else-if="icon === 'helix'"></helix-icon>
                     <md-icon v-else>{{ icon }}</md-icon>
                 </span>
                 <md-field class="menu-input" md-inline>
@@ -45,6 +47,8 @@
                 <span class="menu-bot-icon" v-if="hasIcon">
                     <img v-if="iconIsURL" :src="icon" />
                     <cube-icon v-else-if="icon === 'cube'"></cube-icon>
+                    <egg-icon v-else-if="icon === 'egg'"></egg-icon>
+                    <helix-icon v-else-if="icon === 'helix'"></helix-icon>
                     <md-icon v-else>{{ icon }}</md-icon>
                 </span>
                 <span>
