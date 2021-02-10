@@ -1596,6 +1596,110 @@ player.share({
 });
 ```
 
+### `player.openCircleWipe(options?)`
+
+Causes the circular wipe animation to open around the screen. This can be used to reveal the page portal after transitioning between screens.
+Returns a promise that resolves when the animation has finished running.
+The promise will throw an exception if <ActionLink action='player.closeCircleWipe(options?)'/> is called while the animation is running.
+
+The **first parameter** is optional and is an object that contains options for the animation:
+```typescript
+let options: {
+    /**
+     * The duration of this half of the circle wipe animation in seconds.
+     * Defaults to 1.
+     */
+    duration?: number;
+
+    /**
+     * The color that the circle wipe should be.
+     * Defaults to "black".
+     */
+    color?: string;
+}
+```
+
+#### Examples:
+
+1. Reveal the page portal with a circular wipe animation.
+```typescript
+await player.openCircleWipe();
+player.toast("Revealed!");
+```
+
+2. Hide the page portal and show it after an additional second.
+```typescript
+await player.closeCircleWipe();
+await sleep(1000);
+await player.openCircleWipe();
+```
+
+3. Use a custom color for the circle wipe.
+```typescript
+await player.openCircleWipe({
+    color: '#63f1aa'
+});
+```
+
+4. Make the circle wipe take 5 seconds to complete.
+```typescript
+await player.openCircleWipe({
+    duration: 5
+});
+```
+
+### `player.closeCircleWipe(options?)`
+
+Causes a circular wipe animation to close around the screen. This can be used to cover the page portal while transitioning between scenes.
+Returns a promise that resolves when the animation has finished running.
+The promise will throw an exception if <ActionLink action='player.openCircleWipe(options?)'/> is called while the animation is running.
+
+The **first parameter** is optional and is an object that contains options for the animation:
+```typescript
+let options: {
+    /**
+     * The duration of this half of the circle wipe animation in seconds.
+     * Defaults to 1.
+     */
+    duration?: number;
+
+    /**
+     * The color that the circle wipe should be.
+     * Defaults to "black".
+     */
+    color?: string;
+}
+```
+
+#### Examples:
+
+1. Hide the page portal with a circular wipe animation.
+```typescript
+await player.closeCircleWipe();
+player.toast("Hidden!");
+```
+
+2. Hide the page portal and show it after an additional second.
+```typescript
+await player.closeCircleWipe();
+await sleep(1000);
+await player.openCircleWipe();
+```
+
+3. Use a custom color for the circle wipe.
+```typescript
+await player.closeCircleWipe({
+    color: '#63f1aa'
+});
+```
+
+4. Make the circle wipe take 5 seconds to complete.
+```typescript
+await player.closeCircleWipe({
+    duration: 5
+});
+```
+
 ### `player.toast(message, duration?)`
 
 
