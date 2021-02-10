@@ -578,6 +578,10 @@ The shape that the bot should be displayed as.
     You also need to place the bot in the same dimension that the tag portal uses
     for the cursor to appear.
   </PossibleValueCode>
+  <PossibleValueCode value='input'>
+    The bot will appear as an input box in the menu portal.
+    You also need to place the bot in the dimension that the menu portal is showing for the input to appear.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `formSubtype`
@@ -846,6 +850,22 @@ When setting this tag via the sheet, it is useful to utilize DNA tags to ensure 
     'margin-top': '8px'
 })
 ```
+
+### `menuItemText`
+
+The text that has been entered in the menu item's input box. Only has an effect on menu items that have <TagLink tag='form'/> set to `input`.
+
+This tag will also be updated in the `tempLocal` space when the user types in the input box.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No text in the input box. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The text will appear in the input box.
+  </PossibleValue>
+</PossibleValuesTable>
 
 ## Dimension Tags
 
