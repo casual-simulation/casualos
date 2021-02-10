@@ -18,6 +18,8 @@
 -   Added the `#menuPortalStyle` tag to allow customizing the menu portal with CSS.
     -   This works similarly to `#menuItemStyle` except that it applies to the entire menu portal instead of just one item.
     -   Set it on the `#menuPortalConfigBot`.
+-   Added the `#portalBackgroundAddress` tag to allow specifying a custom image for the page portal background.
+    -   Does not work in VR.
 
 ## V1.4.0
 
