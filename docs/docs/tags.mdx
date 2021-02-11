@@ -1220,6 +1220,21 @@ The mode that specifies how the mouse pointer/controller drags bots in the porta
   </PossibleValue>
 </PossibleValuesTable>
 
+### `portalCameraControls`
+
+The mode that specifies how the camera controls work in the portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='"player"'>
+    Specifies that the player should be able to control the camera.
+    Individual options like <TagLink tag='portalZoomable'/> override this option.
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Specifies that the player should not be able to control the camera in the portal.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
 ### `portalShowFocusPoint`
 
 Whether the focus point of the portal camera should be shown as a small sphere.
