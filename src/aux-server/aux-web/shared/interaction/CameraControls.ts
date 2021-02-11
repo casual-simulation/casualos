@@ -707,7 +707,6 @@ export class CameraControls {
             this.dollyStart.copy(this.dollyEnd);
         } else if (
             input.getWheelMoved() &&
-            input.getWheelData().ctrl &&
             this.enableZoom &&
             this.state === STATE.PINCH_DOLLY
         ) {
@@ -715,6 +714,16 @@ export class CameraControls {
             let wheelData = input.getWheelData();
             let zoomScale =
                 Math.pow(0.98, Math.abs(wheelData.delta.y)) * this.zoomSpeed;
+
+            // Clamp all zooms to at most halve (zoom * 0.55) the current zoom value
+            zoomScale = Math.min(1, Math.max(0.55, zoomScale));
+
+            if (!wheelData.ctrl) {
+                // If CTRL is not held for the event,
+                // then we know that this is not a pinch-to-zoom situation
+                // and the values should be clamped to ones that will have a less darastic change.
+                zoomScale = Math.max(0.9, zoomScale);
+            }
             this.dollyStart.copy(input.getMouseClientPos());
             this.dollyBegin.copy(this.dollyStart);
             this.dollyBegin = Input.offsetPosition(
@@ -770,11 +779,7 @@ export class CameraControls {
                 this._game.gameView.gameView
             );
             this.state = STATE.DOLLY;
-        } else if (
-            input.getWheelMoved() &&
-            input.getWheelData().ctrl &&
-            this.enableZoom
-        ) {
+        } else if (input.getWheelMoved() && this.enableZoom) {
             this.zooming = false;
             this.setRot = false;
             // Pinch dolly start.
