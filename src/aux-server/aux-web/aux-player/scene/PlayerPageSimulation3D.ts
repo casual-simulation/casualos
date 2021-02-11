@@ -111,6 +111,10 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         return this.getPortalConfig('rightWristPortal');
     }
 
+    get cameraControlsMode() {
+        return this.pageConfig.cameraControlsMode ?? super.cameraControlsMode;
+    }
+
     /**
      * Gets the background color that the simulation defines.
      */

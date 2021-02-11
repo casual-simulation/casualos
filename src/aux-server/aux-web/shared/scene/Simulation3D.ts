@@ -7,6 +7,8 @@ import {
     PrecalculatedBot,
     BotIndexEvent,
     LocalActions,
+    PortalCameraControlsMode,
+    DEFAULT_PORTAL_CAMERA_CONTROLS_MODE,
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike, Subject, Observable, Subscription } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
@@ -124,6 +126,13 @@ export abstract class Simulation3D
      */
     get game() {
         return this._game;
+    }
+
+    /**
+     * Gets the camera controls mode for the simulation.
+     */
+    get cameraControlsMode(): PortalCameraControlsMode {
+        return DEFAULT_PORTAL_CAMERA_CONTROLS_MODE;
     }
 
     /**

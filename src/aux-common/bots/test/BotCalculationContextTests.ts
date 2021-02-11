@@ -65,6 +65,7 @@ import {
     calculateLabelFontSize,
     calculateLabelWordWrapMode,
     getMenuBotForm,
+    calculatePortalCameraControlsMode,
 } from '../BotCalculations';
 import {
     Bot,
@@ -1449,6 +1450,32 @@ export function botCalculationContextTests(
             const shape = calculatePortalPointerDragMode(calc, bot);
 
             expect(shape).toBe('world');
+        });
+    });
+
+    describe('calculatePortalCameraControlsMode()', () => {
+        const cases = [['player'], [false]];
+        const tagCases = ['auxPortalCameraControls', 'portalCameraControls'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (mode: string) => {
+                const bot = createBot('test', {
+                    [tag]: <any>mode,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(calculatePortalCameraControlsMode(calc, bot)).toBe(mode);
+            });
+        });
+
+        it('should default to player', () => {
+            const bot = createBot();
+
+            const calc = createPrecalculatedContext([bot]);
+            const shape = calculatePortalCameraControlsMode(calc, bot);
+
+            expect(shape).toBe('player');
         });
     });
 

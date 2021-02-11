@@ -166,7 +166,7 @@ export abstract class BaseInteractionManager {
     update(): void {
         // const calc = appManager.simulationManager.primary.helper.createContext();
         // Update active operations and dispose of any that are finished.
-        this._operations = this._operations.filter(o => {
+        this._operations = this._operations.filter((o) => {
             const calc = o.simulation
                 ? o.simulation.helper.createContext()
                 : null;
@@ -213,7 +213,6 @@ export abstract class BaseInteractionManager {
         }
 
         if (this._operations.length === 0) {
-            // Enable camera controls when there are no more operations.
             this.setCameraControlsEnabled(this._cameraControlsEnabled);
         }
 
@@ -252,7 +251,7 @@ export abstract class BaseInteractionManager {
             const ray = cameraForwardRay(controller.rig.mainCamera);
             const { hit, gameObject } = this.findHoveredGameObjectFromRay(
                 ray,
-                obj => obj.focusable,
+                (obj) => obj.focusable,
                 controller.rig.viewport
             );
 
@@ -274,7 +273,7 @@ export abstract class BaseInteractionManager {
         if (this._tapCodeManager.code.length >= this._maxTapCodeLength) {
             const code = this._tapCodeManager.code;
             console.log('[BaseInteractionManager] tap code: ', code);
-            appManager.simulationManager.simulations.forEach(sim => {
+            appManager.simulationManager.simulations.forEach((sim) => {
                 sim.helper.action('onTapCode', null, code);
             });
             this._tapCodeManager.trim(this._maxTapCodeLength - 1);
@@ -295,7 +294,7 @@ export abstract class BaseInteractionManager {
             ) {
                 const { gameObject, hit } = this.findHoveredGameObject(
                     inputMethod,
-                    obj => obj.pointable
+                    (obj) => obj.pointable
                 );
                 if (gameObject) {
                     // Start game object click operation.
@@ -339,7 +338,7 @@ export abstract class BaseInteractionManager {
         if (input.currentInputType === InputType.Mouse) {
             const { gameObject } = this.findHoveredGameObject(
                 inputMethod,
-                obj => obj.pointable
+                (obj) => obj.pointable
             );
             if (gameObject) {
                 // Set bot as being hovered on.
@@ -358,7 +357,7 @@ export abstract class BaseInteractionManager {
             if (input.getControllerPrimaryButtonDown(controller)) {
                 const { gameObject, hit } = this.findHoveredGameObject(
                     inputMethod,
-                    obj => obj.pointable
+                    (obj) => obj.pointable
                 );
                 if (gameObject) {
                     this._startClickingGameObject(gameObject, hit, inputMethod);
@@ -375,7 +374,7 @@ export abstract class BaseInteractionManager {
             ) {
                 const { gameObject, hit } = this.findHoveredGameObject(
                     inputMethod,
-                    obj => obj.pointable
+                    (obj) => obj.pointable
                 );
                 if (gameObject) {
                     // Set bot as being hovered on.
@@ -406,7 +405,7 @@ export abstract class BaseInteractionManager {
         if (pressedBot) {
             const { gameObject, hit } = this.findHoveredGameObject(
                 method,
-                obj => obj.pointable
+                (obj) => obj.pointable
             );
             if (gameObject instanceof AuxBot3D && gameObject == pressedBot) {
                 this.handlePointerUp(
@@ -433,7 +432,7 @@ export abstract class BaseInteractionManager {
 
     dragBot(simulation: Simulation, bot: Bot | BotTags, dimension: string) {
         if (
-            this._operations.some(op => {
+            this._operations.some((op) => {
                 const isDrag =
                     op instanceof BaseBotDragOperation ||
                     op instanceof BaseModDragOperation;
@@ -524,12 +523,14 @@ export abstract class BaseInteractionManager {
             const simulation: Simulation =
                 gameObject.dimensionGroup.simulation3D.simulation;
 
-            let hoveredBot: HoveredBot = this._hoveredBots.find(hoveredBot => {
-                return (
-                    hoveredBot.bot.id === bot.id &&
-                    hoveredBot.simulation.id === simulation.id
-                );
-            });
+            let hoveredBot: HoveredBot = this._hoveredBots.find(
+                (hoveredBot) => {
+                    return (
+                        hoveredBot.bot.id === bot.id &&
+                        hoveredBot.simulation.id === simulation.id
+                    );
+                }
+            );
 
             if (hoveredBot) {
                 // Update the frame of the hovered bot to the current frame.
@@ -559,12 +560,14 @@ export abstract class BaseInteractionManager {
             const simulation: Simulation =
                 gameObject.dimensionGroup.simulation3D.simulation;
 
-            let focusedBot: HoveredBot = this._focusedBots.find(focusedBot => {
-                return (
-                    focusedBot.bot.id === bot.id &&
-                    focusedBot.simulation.id === simulation.id
-                );
-            });
+            let focusedBot: HoveredBot = this._focusedBots.find(
+                (focusedBot) => {
+                    return (
+                        focusedBot.bot.id === bot.id &&
+                        focusedBot.simulation.id === simulation.id
+                    );
+                }
+            );
 
             if (focusedBot) {
                 // Update the frame of the hovered bot to the current frame.
@@ -590,7 +593,7 @@ export abstract class BaseInteractionManager {
     protected _updateHoveredBots(): void {
         const curFrame = this._game.getTime().frameCount;
 
-        this._hoveredBots = this._hoveredBots.filter(focusedBot => {
+        this._hoveredBots = this._hoveredBots.filter((focusedBot) => {
             if (focusedBot.frame < curFrame) {
                 // No longer hovering on this bot.
                 this.handlePointerExit(
@@ -612,7 +615,7 @@ export abstract class BaseInteractionManager {
     protected _updateFocusedBots(): void {
         const curFrame = this._game.getTime().frameCount;
 
-        this._focusedBots = this._focusedBots.filter(hoveredBot => {
+        this._focusedBots = this._focusedBots.filter((hoveredBot) => {
             if (hoveredBot.frame < curFrame) {
                 // No longer hovering on this bot.
                 this.handleFocusExit(
@@ -647,12 +650,13 @@ export abstract class BaseInteractionManager {
         if (this._draggableGroupsDirty || !this._draggableGroups) {
             const dimensions = flatMap(
                 this._game.getSimulations(),
-                s => s.dimensions
+                (s) => s.dimensions
             );
             if (dimensions && dimensions.length > 0) {
-                let colliders = flatMap(dimensions.filter(c => !!c), f =>
-                    f instanceof DimensionGroup3D ? f.colliders : []
-                ).filter(c => !!c);
+                let colliders = flatMap(
+                    dimensions.filter((c) => !!c),
+                    (f) => (f instanceof DimensionGroup3D ? f.colliders : [])
+                ).filter((c) => !!c);
 
                 this._draggableGroups = [
                     {
@@ -874,7 +878,7 @@ export abstract class BaseInteractionManager {
                 type: 'mouse_or_touch',
                 identifier: MOUSE_INPUT_METHOD_IDENTIFIER,
             },
-            obj => obj.pointable
+            (obj) => obj.pointable
         );
         const actions = this._contextMenuActions(calc, gameObject, hit.point);
 
@@ -914,7 +918,7 @@ export abstract class BaseInteractionManager {
 
     protected _handleCameraRigTypeChanged(newCameraRig: CameraRig): void {
         const cameraRigControls = this._cameraRigControllers.find(
-            c => c.rig.name === newCameraRig.name
+            (c) => c.rig.name === newCameraRig.name
         );
 
         if (cameraRigControls) {
@@ -943,9 +947,11 @@ export abstract class BaseInteractionManager {
      * @param enabled
      */
     protected setCameraControlsEnabled(enabled: boolean): void {
-        this._cameraRigControllers.forEach(
-            rigControls => (rigControls.controls.enabled = enabled)
-        );
+        for (let rigControls of this._cameraRigControllers) {
+            const sim = this._game.findSimulationForCameraRig(rigControls.rig);
+            rigControls.controls.enabled =
+                enabled && (!!sim ? sim.cameraControlsMode === 'player' : true);
+        }
     }
 
     protected _markDirty() {

@@ -409,6 +409,16 @@ export abstract class Game implements AuxBotVisualizerFinder {
         );
     }
 
+    /**
+     * Finds the first simulation that is using the given camera rig as its primary rig.
+     * @param rig The camera rig.
+     */
+    findSimulationForCameraRig(rig: CameraRig) {
+        return this.getSimulations().find(
+            (sim) => sim.getMainCameraRig() === rig
+        );
+    }
+
     protected mainSceneBackgroundUpdate() {
         const address = this.getBackgroundAddress();
         if (address && !this.xrSession) {
