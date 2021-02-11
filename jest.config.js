@@ -10,5 +10,6 @@ module.exports = {
         '^three/examples/js/renderers/CSS3DRenderer$':
             '<rootDir>/__mocks__/CSS3DRendererMock.js',
         '^three\\-examples$': '<rootDir>/node_modules/three/examples/js',
+        '^esbuild-wasm/esbuild.wasm$': '<rootDir>/__mocks__/esbuild.wasm.js',
     },
 };
