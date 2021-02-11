@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.4.2
+
+#### Date: TBD
+
+### :rocket: Bug Fixes
+
+-   Fixed an issue where the inventory portal color could not be set when the page portal is using an image for the background.
+
 ## V1.4.1
 
 #### Date: 2/10/2021
