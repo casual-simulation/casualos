@@ -4,7 +4,12 @@
 
 #### Date: TBD
 
-### :rocket: Bug Fixes
+### :rocket: Improvements
+
+-   Added the ability to zoom by scrolling.
+    -   Previously this was possible by holding the Ctrl button down.
+
+### :bug: Bug Fixes
 
 -   Fixed an issue where the inventory portal color could not be set when the page portal is using an image for the background.
 
