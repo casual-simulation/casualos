@@ -49,6 +49,8 @@ import {
     DEFAULT_LABEL_WORD_WRAP_MODE,
     MenuBotForm,
     DEFAULT_MENU_BOT_FORM,
+    PortalCameraControlsMode,
+    DEFAULT_PORTAL_CAMERA_CONTROLS_MODE,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -1742,6 +1744,24 @@ export function calculatePortalPointerDragMode(
         return mode;
     }
     return DEFAULT_PORTAL_POINTER_DRAG_MODE;
+}
+
+/**
+ * Calculates the portal camera controls mode that the given bot has set.
+ * @param calc The calculation context.
+ * @param bot The portal config bot.
+ */
+export function calculatePortalCameraControlsMode(
+    calc: BotCalculationContext,
+    bot: Bot
+): PortalCameraControlsMode {
+    const mode = <PortalCameraControlsMode>(
+        calculateBotValue(calc, bot, 'auxPortalCameraControls')
+    );
+    if (mode === 'player' || mode === false) {
+        return mode;
+    }
+    return DEFAULT_PORTAL_CAMERA_CONTROLS_MODE;
 }
 
 /**

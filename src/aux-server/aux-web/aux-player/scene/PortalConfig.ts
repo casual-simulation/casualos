@@ -14,6 +14,8 @@ import {
     DEFAULT_PORTAL_POINTER_DRAG_MODE,
     calculatePortalPointerDragMode,
     calculateStringTagValue,
+    PortalCameraControlsMode,
+    calculatePortalCameraControlsMode,
 } from '@casual-simulation/aux-common';
 import { Color, Texture } from 'three';
 import {
@@ -46,6 +48,7 @@ export class PortalConfig implements SubscriptionLike {
     private _playerRotationX: number = null;
     private _playerRotationY: number = null;
     private _showFocusPoint: boolean = null;
+    private _cameraControlsMode: PortalCameraControlsMode = null;
     private _gridScale: number;
     private _raycastMode: PortalPointerDragMode = null;
     private _disableCanvasTransparency: boolean = null;
@@ -212,6 +215,17 @@ export class PortalConfig implements SubscriptionLike {
         }
     }
 
+    /**
+     * Gets the camera controls mode that the portal is using.
+     */
+    get cameraControlsMode() {
+        if (this._cameraControlsMode !== null) {
+            return this._cameraControlsMode;
+        } else {
+            return null;
+        }
+    }
+
     get gridScale() {
         return this._gridScale;
     }
@@ -305,6 +319,7 @@ export class PortalConfig implements SubscriptionLike {
         this._playerRotationY = null;
         this._raycastMode = null;
         this._showFocusPoint = null;
+        this._cameraControlsMode = null;
         this._disableCanvasTransparency = null;
         this.gridScale = this._getDefaultGridScale();
     }
@@ -410,6 +425,7 @@ export class PortalConfig implements SubscriptionLike {
             `auxPortalShowFocusPoint`,
             null
         );
+        this._cameraControlsMode = calculatePortalCameraControlsMode(calc, bot);
         this._disableCanvasTransparency = calculateBooleanTagValue(
             calc,
             bot,

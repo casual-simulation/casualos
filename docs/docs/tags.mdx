@@ -1212,12 +1212,27 @@ The mode that specifies how the mouse pointer/controller drags bots in the porta
 
 #### Possible values are:
 <PossibleValuesTable>
-  <PossibleValue value='world'>
+  <PossibleValueCode value='world'>
     Specifies that the pointer should use the other bots in the portal for positioning the dragged bot(s). (Default)
-  </PossibleValue>
-  <PossibleValue value='grid'>
+  </PossibleValueCode>
+  <PossibleValueCode value='grid'>
     Specifies that the pointer should ignore other bots in the portal for positioning the dragged bot(s).
-  </PossibleValue>
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `portalCameraControls`
+
+The mode that specifies how the camera controls work in the portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='"player"'>
+    Specifies that the player should be able to control the camera.
+    Individual options like <TagLink tag='portalZoomable'/> override this option.
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Specifies that the player should not be able to control the camera in the portal.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `portalShowFocusPoint`
@@ -1230,12 +1245,12 @@ When a bot is between the focus point and the camera, then focus events will tri
 
 #### Possible values are:
 <PossibleValuesTable>
-  <PossibleValue value='false'>
+  <PossibleValueCode value='false'>
     Don't show an indicator for the focus point. (Default)
-  </PossibleValue>
-  <PossibleValue value='true'>
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
     Show an indicator for the focus point.
-  </PossibleValue>
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `portalDisableCanvasTransparency`

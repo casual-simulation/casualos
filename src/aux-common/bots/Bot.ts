@@ -566,6 +566,11 @@ export type DimensionVisualizeMode = true | false | 'surface';
 export type BotLOD = 'normal' | 'min' | 'max';
 
 /**
+ * The possible camera control modes.
+ */
+export type PortalCameraControlsMode = 'player' | false;
+
+/**
  * The default bot shape.
  */
 export const DEFAULT_BOT_SHAPE: BotShape = 'cube';
@@ -604,6 +609,12 @@ export const DEFAULT_ANCHOR_POINT: BotAnchorPoint = 'bottom';
  * The default portal raycast mode.
  */
 export const DEFAULT_PORTAL_POINTER_DRAG_MODE: PortalPointerDragMode = 'world';
+
+/**
+ * The default portal camera controls mode.
+ */
+export const DEFAULT_PORTAL_CAMERA_CONTROLS_MODE: PortalCameraControlsMode =
+    'player';
 
 /**
  * The default bot label font address.
@@ -1397,6 +1408,7 @@ export const KNOWN_TAGS: string[] = [
     `portalPlayerRotationX`,
     `portalPlayerRotationY`,
     'portalPointerDragMode',
+    'portalCameraControls',
     'portalShowFocusPoint',
     'portalDisableCanvasTransparency',
     'inventoryPortalHeight',

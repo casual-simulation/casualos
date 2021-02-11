@@ -44,6 +44,12 @@ export class InventorySimulation3D extends PlayerSimulation3D {
         return <InventoryPortalConfig>this.getPortalConfig('inventoryPortal');
     }
 
+    get cameraControlsMode() {
+        return (
+            this.inventoryConfig.cameraControlsMode ?? super.cameraControlsMode
+        );
+    }
+
     /**
      * Gets the background color that the simulation defines.
      */

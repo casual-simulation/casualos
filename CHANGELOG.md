@@ -1,5 +1,23 @@
 # CasualOS Changelog
 
+## V1.4.2
+
+#### Date: 2/11/2021
+
+### :rocket: Improvements
+
+-   Added the ability to zoom by scrolling.
+    -   Previously this was possible by holding the Ctrl button down.
+-   Added the `#portalCameraControls` tag to allow disabling moving the camera.
+    -   Can be set on the portal config bot for the page and inventory portals.
+    -   Supported values are:
+        -   `player` - Allows the player to move the camera around like normal. (Default)
+        -   `false` - Disables camera movement in the portal.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the inventory portal color could not be set when the page portal is using an image for the background.
+
 ## V1.4.1
 
 #### Date: 2/10/2021
