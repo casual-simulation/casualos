@@ -40,6 +40,7 @@ import {
     Bot,
     BotTags,
     isBot,
+    DEFAULT_SCENE_BACKGROUND_COLOR,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -591,9 +592,7 @@ export class PlayerGame extends Game {
 
         this.renderer.clearDepth(); // Clear depth buffer so that inventory scene always appears above the main scene.
 
-        if (this.mainScene.background instanceof Color) {
-            this.inventorySceneBackgroundUpdate(this.mainScene.background);
-        }
+        this.inventorySceneBackgroundUpdate();
 
         this.renderer.setViewport(
             this.inventoryViewport.x,
@@ -633,19 +632,26 @@ export class PlayerGame extends Game {
         this.renderer.setScissorTest(false);
     }
 
-    private inventorySceneBackgroundUpdate(colorToOffset: Color) {
-        if (!colorToOffset) return;
-
-        let invColor: Color | Texture = colorToOffset.clone();
+    private inventorySceneBackgroundUpdate() {
         let tagColor = this.getInventoryColor();
 
-        if (tagColor != undefined) {
-            invColor = tagColor;
+        if (tagColor) {
+            this.inventoryScene.background = tagColor;
         } else {
+            let sceneColor =
+                this.mainScene.background instanceof Color
+                    ? this.mainScene.background
+                    : null;
+            let backgroundColor = this.getBackground();
+            let currentColor =
+                sceneColor ??
+                (backgroundColor instanceof Color
+                    ? backgroundColor
+                    : new Color(DEFAULT_SCENE_BACKGROUND_COLOR));
+            let invColor: Color | Texture = currentColor.clone();
             invColor.offsetHSL(0, -0.02, -0.04);
+            this.inventoryScene.background = invColor;
         }
-
-        this.inventoryScene.background = invColor;
     }
 
     protected setupRendering() {
