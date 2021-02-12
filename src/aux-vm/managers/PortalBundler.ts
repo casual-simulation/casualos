@@ -484,7 +484,7 @@ export class ESBuildPortalBundler implements PortalBundler {
                             if (module) {
                                 return {
                                     contents: module.source,
-                                    loader: this._loaderForLanguage(
+                                    loader: loaderForLanguage(
                                         module.language,
                                         DEFAULT_IMPORT_LANGUAGE
                                     ),
@@ -541,7 +541,7 @@ export class ESBuildPortalBundler implements PortalBundler {
                                 contents: isFallback
                                     ? code
                                     : trimPrefixedScript(prefix.prefix, code),
-                                loader: this._loaderForLanguage(
+                                loader: loaderForLanguage(
                                     prefix.language,
                                     DEFAULT_IMPORT_LANGUAGE
                                 ),
@@ -560,25 +560,25 @@ export class ESBuildPortalBundler implements PortalBundler {
             },
         };
     }
+}
 
-    private _loaderForLanguage(
-        language: RegisterPrefixOptions['language'],
-        defaultLoader: ESBuild.Loader
-    ): ESBuild.Loader {
-        return language === 'javascript'
-            ? 'js'
-            : language === 'typescript'
-            ? 'ts'
-            : language === 'json'
-            ? 'json'
-            : language === 'jsx'
-            ? 'jsx'
-            : language === 'tsx'
-            ? 'tsx'
-            : language === 'text'
-            ? 'text'
-            : defaultLoader;
-    }
+function loaderForLanguage(
+    language: RegisterPrefixOptions['language'],
+    defaultLoader: ESBuild.Loader
+): ESBuild.Loader {
+    return language === 'javascript'
+        ? 'js'
+        : language === 'typescript'
+        ? 'ts'
+        : language === 'json'
+        ? 'json'
+        : language === 'jsx'
+        ? 'jsx'
+        : language === 'tsx'
+        ? 'tsx'
+        : language === 'text'
+        ? 'text'
+        : defaultLoader;
 }
 
 function handleHttpResponse(

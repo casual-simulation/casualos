@@ -343,7 +343,7 @@ describe('ESBuildPortalBundler', () => {
                         expect(requests).toEqual([
                             [
                                 'get',
-                                `${DEFAULT_BASE_MODULE_URL}/lodash/test/haha.js`,
+                                `${DEFAULT_BASE_MODULE_URL}/lodash/test/haha.js?dts`,
                             ],
                             [
                                 'get',
@@ -391,7 +391,7 @@ describe('ESBuildPortalBundler', () => {
                         expect(requests).toEqual([
                             [
                                 'get',
-                                `${DEFAULT_BASE_MODULE_URL}/lodash/test/haha.js`,
+                                `${DEFAULT_BASE_MODULE_URL}/lodash/test/haha.js?dts`,
                             ],
                             [
                                 'get',
