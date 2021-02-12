@@ -110,3 +110,5 @@ export const Alert = ({type, children}) => (
         {children}
     </div>
 );
+
+export const Example = ({code}) => (<Badge type='info'><a target='_blank' href={`https://casualos.com?auxCode=${code}`}>Example</a></Badge>);
