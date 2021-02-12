@@ -26,9 +26,8 @@ import {
     userBotTagsChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { UpdatedBotInfo } from '@casual-simulation/aux-vm';
-import intersection from 'lodash/intersection';
+import { intersection, isEqual } from 'lodash';
 import { Subscription } from 'rxjs';
-import isEqual from 'lodash/isEqual';
 import { uniqueNamesGenerator, Config } from 'unique-names-generator';
 import adjectives from '../../shared/dictionaries/adjectives';
 import colors from '../../shared/dictionaries/colors';

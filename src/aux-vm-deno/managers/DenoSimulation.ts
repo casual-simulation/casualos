@@ -33,7 +33,7 @@ import { ProgressManager } from '@casual-simulation/aux-vm/managers';
 import { filter, flatMap, tap, map } from 'rxjs/operators';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
-import pickBy from 'lodash/pickBy';
+import { pickBy } from 'lodash';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';
 import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 

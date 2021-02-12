@@ -41,7 +41,7 @@ import {
     BRANCHES,
     BranchesEvent,
 } from '@casual-simulation/causal-trees';
-import flatMap from 'lodash/flatMap';
+import { flatMap } from 'lodash';
 import { waitAsync } from '../test/TestHelpers';
 import {
     botAdded,

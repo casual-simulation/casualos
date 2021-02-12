@@ -42,8 +42,7 @@ import {
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
 import { StoredAux } from '../StoredAux';
-import pick from 'lodash/pick';
-import flatMap from 'lodash/flatMap';
+import { flatMap, pick } from 'lodash';
 
 export interface AuxChannelOptions {}
 

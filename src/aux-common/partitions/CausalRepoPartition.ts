@@ -29,7 +29,7 @@ import {
     PartitionConfig,
     CausalRepoPartitionConfig,
 } from './AuxPartitionConfig';
-import flatMap from 'lodash/flatMap';
+import { flatMap } from 'lodash';
 
 /**
  * Attempts to create a CausalTree2Partition from the given config.

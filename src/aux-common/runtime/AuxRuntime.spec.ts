@@ -82,7 +82,6 @@ import {
     deviceError,
 } from '@casual-simulation/causal-trees';
 import { possibleTagValueCases } from '../bots/test/BotTestHelpers';
-import values from 'lodash/values';
 import { RealtimeEditMode } from './RuntimeBot';
 import { skip } from 'rxjs/operators';
 import { createDefaultLibrary } from './AuxLibrary';

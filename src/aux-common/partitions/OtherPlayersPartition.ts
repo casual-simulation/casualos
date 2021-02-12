@@ -49,7 +49,7 @@ import {
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { skip, startWith } from 'rxjs/operators';
 import { createCausalRepoClientPartition } from './RemoteCausalRepoPartition';
-import sortBy from 'lodash/sortBy';
+import { sortBy } from 'lodash';
 
 export async function createOtherPlayersClientPartition(
     config: PartitionConfig,

@@ -16,10 +16,7 @@ import {
 import { getOptionalValue } from '../shared/SharedUtils';
 import { DebugObjectManager } from '../shared/scene/debugobjectmanager/DebugObjectManager';
 import { Physics } from '../shared/scene/Physics';
-import { Dictionary } from 'lodash';
-import groupBy from 'lodash/groupBy';
-import flatMap from 'lodash/flatMap';
-import sortBy from 'lodash/sortBy';
+import { Dictionary, groupBy, flatMap, sortBy } from 'lodash';
 import { GridTile, Grid3D } from './Grid3D';
 import { disposeObject3D } from '../shared/scene/SceneUtils';
 import { hasValue } from '@casual-simulation/aux-common';
@@ -149,7 +146,7 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
 
         let tile: GridTile = {
             center: this.localToWorld(tilePoints.center),
-            corners: tilePoints.corners.map(p => this.localToWorld(p)),
+            corners: tilePoints.corners.map((p) => this.localToWorld(p)),
             tileCoordinate: new Vector2(tileX, tileY),
             grid: this,
         };
@@ -173,7 +170,7 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
             ? this.localToWorld(tilePoints.center)
             : tilePoints.center;
         const corners = worldSpace
-            ? tilePoints.corners.map(p => this.localToWorld(p))
+            ? tilePoints.corners.map((p) => this.localToWorld(p))
             : tilePoints.corners;
         return {
             center: center,
@@ -342,7 +339,7 @@ export function calculateGridTilePoints(x: number, y: number, scale: number) {
 
     return {
         center: localCenter,
-        corners: corners.map(p => {
+        corners: corners.map((p) => {
             return new Vector3().copy(p).add(localCenter);
         }),
     };
@@ -366,9 +363,9 @@ export function calculateGridTileLocalCenter(
 }
 
 function constructGridLines(tiles: GridTile[]): LineSegments {
-    const allPoints: Vector3[] = flatMap(tiles, t => t.corners);
-    const verticalPoints = groupBy(allPoints, p => p.x);
-    const horizontalPoints = groupBy(allPoints, p => p.z);
+    const allPoints: Vector3[] = flatMap(tiles, (t) => t.corners);
+    const verticalPoints = groupBy(allPoints, (p) => p.x);
+    const horizontalPoints = groupBy(allPoints, (p) => p.z);
 
     let vertices: number[] = [];
 

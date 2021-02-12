@@ -12,7 +12,6 @@ import {
     Mesh,
     Vector3,
 } from 'three';
-import flatMap from 'lodash/flatMap';
 
 describe('SceneUtils', () => {
     describe('calculateScale()', () => {

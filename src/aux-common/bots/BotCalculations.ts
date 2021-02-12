@@ -56,27 +56,30 @@ import {
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
 
 import uuid from 'uuid/v4';
-import flatMap from 'lodash/flatMap';
-import union from 'lodash/union';
-import keys from 'lodash/keys';
-import intersection from 'lodash/intersection';
-import some from 'lodash/some';
-import assign from 'lodash/assign';
-import find from 'lodash/find';
-import values from 'lodash/values';
-import isEqual from 'lodash/isEqual';
-import sortBy from 'lodash/sortBy';
-import cloneDeep from 'lodash/cloneDeep';
-import difference from 'lodash/difference';
-import mapValues from 'lodash/mapValues';
+import {
+    flatMap,
+    union,
+    keys,
+    intersection,
+    some,
+    assign,
+    find,
+    values,
+    isEqual,
+    sortBy,
+    cloneDeep,
+    difference,
+    mapValues,
+    differenceBy,
+    maxBy,
+    intersectionBy,
+    unionBy,
+} from 'lodash';
 
 /// <reference path="../typings/global.d.ts" />
 import { PartialBot } from '../bots';
 import { merge, shortUuid } from '../utils';
-import differenceBy from 'lodash/differenceBy';
-import maxBy from 'lodash/maxBy';
 import { BotObjectsContext } from './BotObjectsContext';
-import { intersectionBy, unionBy } from 'lodash';
 
 export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
 

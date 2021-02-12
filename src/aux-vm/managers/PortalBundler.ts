@@ -19,8 +19,7 @@ import {
     hasValue,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
-import values from 'lodash/values';
-import { isEqual, pick, sortBy } from 'lodash';
+import { values, isEqual, pick, sortBy } from 'lodash';
 import axios from 'axios';
 import type { AxiosResponse } from 'axios';
 import type ESBuild from 'esbuild';
@@ -542,7 +541,10 @@ export class ESBuildPortalBundler implements PortalBundler {
                                 contents: isFallback
                                     ? code
                                     : trimPrefixedScript(prefix.prefix, code),
-                                loader: this._loaderForLanguage(prefix.language, DEFAULT_IMPORT_LANGUAGE),
+                                loader: this._loaderForLanguage(
+                                    prefix.language,
+                                    DEFAULT_IMPORT_LANGUAGE
+                                ),
                             };
                         }
 

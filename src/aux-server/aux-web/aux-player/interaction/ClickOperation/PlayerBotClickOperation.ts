@@ -19,7 +19,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import { PlayerBotDragOperation } from '../DragOperation/PlayerBotDragOperation';
-import dropWhile from 'lodash/dropWhile';
+import { dropWhile } from 'lodash';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { PlayerNewBotDragOperation } from '../DragOperation/PlayerNewBotDragOperation';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
@@ -81,7 +81,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
                 console.log(dimension);
             }
             const bot = this._bot;
-            const draggedObjects = dropWhile(objects, o => o.id !== bot.id);
+            const draggedObjects = dropWhile(objects, (o) => o.id !== bot.id);
             const {
                 playerSimulation3D,
                 inventorySimulation3D,

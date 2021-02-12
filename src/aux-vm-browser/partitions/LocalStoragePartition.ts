@@ -29,7 +29,7 @@ import {
     Action,
     CurrentVersion,
 } from '@casual-simulation/causal-trees';
-import flatMap from 'lodash/flatMap';
+import { flatMap, union } from 'lodash';
 import {
     Subject,
     Subscription,
@@ -38,8 +38,6 @@ import {
     BehaviorSubject,
 } from 'rxjs';
 import { startWith, filter, map } from 'rxjs/operators';
-import pickBy from 'lodash/pickBy';
-import union from 'lodash/union';
 import {
     applyEdit,
     isTagEdit,

@@ -59,7 +59,7 @@ import {
     StateUpdatedEvent,
     stateUpdatedEvent,
 } from '../bots';
-import flatMap from 'lodash/flatMap';
+import { flatMap } from 'lodash';
 import {
     PartitionConfig,
     RemoteCausalRepoPartitionConfig,

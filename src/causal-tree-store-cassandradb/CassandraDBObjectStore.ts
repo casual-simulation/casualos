@@ -5,8 +5,7 @@ import {
     CausalRepoIndex,
 } from '@casual-simulation/causal-trees';
 import { Client, concurrent } from 'cassandra-driver';
-import sortBy from 'lodash/sortBy';
-import flatMap from 'lodash/flatMap';
+import { sortBy, flatMap } from 'lodash';
 import { CassandraDBCausalReposConfig } from './CassandraDBCausalReposConfig';
 
 /**
@@ -56,13 +55,10 @@ export class CassandraDBObjectStore implements CausalObjectStore {
         if (this._config.replication) {
             if (this._config.replication.class === 'SimpleStrategy') {
                 console.log('[CassandraDBObjectStore] Using Simple Strategy');
-                await this._client.execute(`CREATE KEYSPACE IF NOT EXISTS ${
-                    this._config.keyspace
-                } WITH replication = {
+                await this._client
+                    .execute(`CREATE KEYSPACE IF NOT EXISTS ${this._config.keyspace} WITH replication = {
                         'class': 'SimpleStrategy',
-                        'replication_factor': ${
-                            this._config.replication.replicationFactor
-                        }
+                        'replication_factor': ${this._config.replication.replicationFactor}
                     };`);
             } else {
                 console.log(
@@ -71,7 +67,7 @@ export class CassandraDBObjectStore implements CausalObjectStore {
                 const replication = this._config.replication;
                 const dataCenters = Object.keys(replication.dataCenters);
                 const dataCenterReplications = dataCenters
-                    .map(key => `'${key}': '${replication.dataCenters[key]}'`)
+                    .map((key) => `'${key}': '${replication.dataCenters[key]}'`)
                     .join(',\n');
                 await this._client.execute(`CREATE KEYSPACE IF NOT EXISTS ${
                     this._config.keyspace
@@ -153,11 +149,9 @@ export class CassandraDBObjectStore implements CausalObjectStore {
             );
 
             console.log(
-                `[CassandraDBObjectStore] Query returned ${
-                    objects.length
-                } objects out of ${totalObjects} objects.`
+                `[CassandraDBObjectStore] Query returned ${objects.length} objects out of ${totalObjects} objects.`
             );
-            return sortBy(objects, o =>
+            return sortBy(objects, (o) =>
                 o.type === 'atom' ? o.data.id.timestamp : -1
             );
         } finally {
@@ -194,9 +188,9 @@ export class CassandraDBObjectStore implements CausalObjectStore {
                 objects.push(JSON.parse(row.data));
             }
         } else {
-            objects = result.rows.map(row => JSON.parse(row.data));
+            objects = result.rows.map((row) => JSON.parse(row.data));
         }
-        return sortBy(objects, o =>
+        return sortBy(objects, (o) =>
             o.type === 'atom' ? o.data.id.timestamp : -1
         );
     }
@@ -223,7 +217,7 @@ export class CassandraDBObjectStore implements CausalObjectStore {
         head: string,
         objects: CausalRepoObject[]
     ): Promise<void> {
-        const queries = flatMap(objects, o => {
+        const queries = flatMap(objects, (o) => {
             const hash = getObjectHash(o);
             const data = JSON.stringify(o);
             const message = o.type === 'commit' ? o.message : null;

@@ -12,8 +12,7 @@ import {
     Object3D,
     Box3Helper,
 } from 'three';
-import groupBy from 'lodash/groupBy';
-import keys from 'lodash/keys';
+import { groupBy, keys } from 'lodash';
 import { HexGridMesh, HexMesh } from '../hex';
 import { GridLevel } from './GridLevel';
 import { GridTile } from './GridTile';
@@ -86,11 +85,11 @@ export class GridChecker {
         this._updateRenderer();
         this._updateHexes();
 
-        const groups = groupBy(this._grid.hexes, h =>
+        const groups = groupBy(this._grid.hexes, (h) =>
             Math.floor(h.height * this._heightSpacing)
         );
         const heights = keys(groups);
-        const results = heights.map(h =>
+        const results = heights.map((h) =>
             this.checkLevel(groups[h], groups[h][0].height)
         );
 
@@ -170,8 +169,8 @@ export class GridChecker {
                     bottomLeftPixel,
                     bottomRightPixel,
                 ];
-                const alphas = pixels.map(p => data[p + 3]);
-                const matching = alphas.filter(a => a);
+                const alphas = pixels.map((p) => data[p + 3]);
+                const matching = alphas.filter((a) => a);
                 const valid = alphas.length - matching.length <= 1; // valid if at least 4 of the 5 hit
 
                 // const r = data[pixel];
@@ -245,7 +244,7 @@ export class GridChecker {
         const mat = new MeshBasicMaterial({
             color: 0x000000,
         });
-        this._grid.hexes.forEach(h => {
+        this._grid.hexes.forEach((h) => {
             let a: any = h;
             a.__savedMat = h.material;
             h.material = mat;
@@ -257,7 +256,7 @@ export class GridChecker {
         this._grid.add(...this._grid.hexes);
 
         // reset the meshes materials.
-        this._grid.hexes.forEach(h => {
+        this._grid.hexes.forEach((h) => {
             let a: any = h;
             const mat = h.material;
             h.material = a.__savedMat;
@@ -329,8 +328,8 @@ export class GridChecker {
         const tileColor = options.tileCenterColor || 0x0000ff;
         const tilePointColor = options.tilePointColor || 0x00ff00;
         const invalidColor = options.invalidTileColor || 0xff0000;
-        results.levels.forEach(level => {
-            level.tiles.forEach(tile => {
+        results.levels.forEach((level) => {
+            level.tiles.forEach((tile) => {
                 if (tile.valid || options.showInvalidPoints) {
                     const tileWorldPosition = new Vector3().copy(
                         tile.localPosition
@@ -345,7 +344,7 @@ export class GridChecker {
                             size
                         )
                     );
-                    tile.localPoints.forEach(p => {
+                    tile.localPoints.forEach((p) => {
                         const pointWorldPosition = new Vector3().copy(p);
                         if (options.workspace) {
                             pointWorldPosition.add(options.workspace.position);

@@ -14,8 +14,7 @@ import {
     BotTags,
 } from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
-import flatMap from 'lodash/flatMap';
-import remove from 'lodash/remove';
+import { flatMap } from 'lodash';
 import { CameraControls } from './CameraControls';
 import {
     MouseButtonId,

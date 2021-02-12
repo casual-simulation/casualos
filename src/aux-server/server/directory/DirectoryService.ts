@@ -1,6 +1,6 @@
 import { DirectoryEntry } from './DirectoryEntry';
 import { DirectoryStore } from './DirectoryStore';
-import sortBy from 'lodash/sortBy';
+import { sortBy } from 'lodash';
 import { DirectoryUpdate, DirectoryUpdateSchema } from './DirectoryUpdate';
 import { DirectoryResult } from './DirectoryResult';
 import { compareSync, hashSync, genSaltSync } from 'bcryptjs';
@@ -34,7 +34,7 @@ export class DirectoryService {
         if (validation.error) {
             return {
                 type: 'bad_request',
-                errors: validation.error.details.map(d => ({
+                errors: validation.error.details.map((d) => ({
                     path: d.path,
                     message: d.message,
                 })),
@@ -77,11 +77,11 @@ export class DirectoryService {
 
     async findEntries(ip: string): Promise<DirectoryResult> {
         const stored = await this._store.findByPublicIpAddress(ip);
-        const entries = sortBy(stored, e => e.publicName);
+        const entries = sortBy(stored, (e) => e.publicName);
 
         return {
             type: 'query_results',
-            entries: entries.map(e => ({
+            entries: entries.map((e) => ({
                 publicName: e.publicName,
                 subhost: getSubHost(e, ip),
             })),

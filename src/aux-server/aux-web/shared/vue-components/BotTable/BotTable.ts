@@ -1,8 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
-import some from 'lodash/some';
-import union from 'lodash/union';
+import { some, union, sortBy } from 'lodash';
 import {
     botTags,
     isHiddenTag,
@@ -51,9 +50,8 @@ import Bowser from 'bowser';
 import BotTagMini from '../BotTagMini/BotTagMini';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import { first } from 'rxjs/operators';
-import sumBy from 'lodash/sumBy';
+import { sumBy } from 'lodash';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
-import { groupBy, sortBy } from 'lodash';
 
 @Component({
     components: {

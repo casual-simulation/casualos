@@ -20,7 +20,7 @@ import {
     objectWorldDirectionRay,
     objectWorldForwardRay,
 } from '../SceneUtils';
-import values from 'lodash/values';
+import { values } from 'lodash';
 import { XRFrame, XRPose, XRSpace, XRInputSource } from './WebXRTypes';
 import { copyPose } from './WebXRHelpers';
 import { PointerRay3D } from './PointerRay3D';
@@ -245,9 +245,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
                 );
                 if (!touchPointRoot) {
                     console.log(
-                        `Could not find touch dot, ${
-                            component.touchPointNodeName
-                        }, in touchpad component ${componentId}`
+                        `Could not find touch dot, ${component.touchPointNodeName}, in touchpad component ${componentId}`
                     );
                 } else {
                     const sphereGeometry = new SphereGeometry(0.001);

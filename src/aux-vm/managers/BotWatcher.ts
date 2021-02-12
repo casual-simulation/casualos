@@ -25,8 +25,7 @@ import {
     merge as rxMerge,
     map,
 } from 'rxjs/operators';
-import values from 'lodash/values';
-import omitBy from 'lodash/omitBy';
+import { values } from 'lodash';
 import { BotHelper } from './BotHelper';
 import {
     isTagEdit,

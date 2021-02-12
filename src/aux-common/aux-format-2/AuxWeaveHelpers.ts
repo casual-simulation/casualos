@@ -22,7 +22,7 @@ import {
     atom,
     VersionVector,
 } from '@casual-simulation/causal-trees/core2';
-import isEqual from 'lodash/isEqual';
+import { isEqual } from 'lodash';
 import { splice } from '../utils';
 import { hasValue } from '../bots/BotCalculations';
 

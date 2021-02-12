@@ -173,8 +173,7 @@ import {
     OpenCircleWipeOptions,
     circleWipe,
 } from '../bots';
-import sortBy from 'lodash/sortBy';
-import every from 'lodash/every';
+import { sortBy, every } from 'lodash';
 import {
     remote as calcRemote,
     DeviceSelector,

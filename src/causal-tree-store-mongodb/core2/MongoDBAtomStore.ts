@@ -5,7 +5,7 @@ import {
     AtomId,
     atomIdToString,
 } from '@casual-simulation/causal-trees/core2';
-import sortBy from 'lodash/sortBy';
+import { sortBy } from 'lodash';
 
 /**
  * Defines a class that implements an AtomStore for MongoDB.
@@ -22,7 +22,7 @@ export class MongoDBAtomStore implements AtomStore {
     }
 
     async add<T>(atoms: Atom<T>[]): Promise<void> {
-        let mongoAtoms: MongoDBAtom[] = atoms.map(a => ({
+        let mongoAtoms: MongoDBAtom[] = atoms.map((a) => ({
             _id: a.hash,
             cause: a.cause ? atomIdToString(a.cause) : '',
             atom: a,
@@ -40,7 +40,7 @@ export class MongoDBAtomStore implements AtomStore {
                 cause: causeId,
             })
             .sort({ 'atom.id.timestamp': 1 })
-            .map(a => a.atom)
+            .map((a) => a.atom)
             .toArray();
         return atoms;
     }
@@ -51,7 +51,7 @@ export class MongoDBAtomStore implements AtomStore {
                 _id: { $in: hashes },
             })
             .sort({ 'atom.id.timestamp': 1 })
-            .map(a => a.atom)
+            .map((a) => a.atom)
             .toArray();
         return atoms;
     }

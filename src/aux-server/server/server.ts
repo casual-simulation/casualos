@@ -82,7 +82,7 @@ import {
 } from '@casual-simulation/causal-trees/core2';
 import { SetupChannelModule2 } from './modules/SetupChannelModule2';
 import { map, first } from 'rxjs/operators';
-import pickBy from 'lodash/pickBy';
+import { pickBy, sortBy } from 'lodash';
 import { BotHttpServer } from './servers/BotHttpServer';
 import { MongoDBBotStore } from './mongodb/MongoDBBotStore';
 import {
@@ -93,7 +93,6 @@ import { EventEmitter } from 'events';
 import { readFileSync } from 'fs';
 import AmazonRootCA1 from '@casual-simulation/causal-tree-store-cassandradb/certificates/AmazonRootCA1.pem';
 import mime from 'mime';
-import sortBy from 'lodash/sortBy';
 import { GpioModule } from './modules/GpioModule';
 import { GpioModule2 } from './modules/GpioModule2';
 import { SerialModule } from './modules/SerialModule';

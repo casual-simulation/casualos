@@ -20,8 +20,7 @@ import {
     DeviceAction,
     CurrentVersion,
 } from '@casual-simulation/causal-trees';
-import values from 'lodash/values';
-import union from 'lodash/union';
+import { union } from 'lodash';
 import { AuxUser } from '../../AuxUser';
 import { StoredAux } from '../../StoredAux';
 import { ChannelActionResult } from '../../vm';

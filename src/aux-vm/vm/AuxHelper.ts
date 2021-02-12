@@ -41,13 +41,10 @@ import {
     RemoteActions,
 } from '@casual-simulation/causal-trees';
 import { Subject } from 'rxjs';
-import union from 'lodash/union';
-import sortBy from 'lodash/sortBy';
-import pick from 'lodash/pick';
+import { union, sortBy, pick, transform } from 'lodash';
 import { BaseHelper } from '../managers/BaseHelper';
 import { AuxUser } from '../AuxUser';
 import { StoredAux, getBotsStateFromStoredAux } from '../StoredAux';
-import transform from 'lodash/transform';
 import { CompiledBot } from '@casual-simulation/aux-common/runtime/CompiledBot';
 import { tap } from 'rxjs/operators';
 

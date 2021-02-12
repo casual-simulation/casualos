@@ -46,8 +46,7 @@ import {
 } from 'rxjs/operators';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import union from 'lodash/union';
-import sortBy from 'lodash/sortBy';
+import { union, sortBy } from 'lodash';
 import { propertyInsertText } from './CompletionHelpers';
 import {
     bot,

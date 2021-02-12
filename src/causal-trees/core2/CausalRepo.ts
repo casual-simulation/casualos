@@ -28,7 +28,7 @@ import {
 } from './CausalRepoStore';
 import { Weave } from './Weave2';
 import { Observable } from 'rxjs';
-import merge from 'lodash/merge';
+import { merge } from 'lodash';
 
 /**
  * Defines the set of types that can be stored in a repo.
@@ -219,7 +219,7 @@ async function loadAtomsForHeadOrIndex(
         ? await store.loadIndex(head, index)
         : await store.getObjects(head, getAtomHashes(index.data.atoms));
 
-    const atoms = repoAtoms.map(a => {
+    const atoms = repoAtoms.map((a) => {
         if (a.type !== 'atom') {
             throw new Error(
                 'Found bad data. An index references an object other than an atom.'
@@ -243,9 +243,9 @@ async function loadAtomsWithoutHead(
     hashList: AtomHashList
 ): Promise<Map<string, Atom<any>>> {
     const hashes = getAtomHashes(hashList);
-    const repoAtoms = await Promise.all(hashes.map(h => store.getObject(h)));
+    const repoAtoms = await Promise.all(hashes.map((h) => store.getObject(h)));
 
-    const atoms = repoAtoms.map(a => {
+    const atoms = repoAtoms.map((a) => {
         if (a.type !== 'atom') {
             throw new Error(
                 'Found bad data. An index references an object other than an atom.'
@@ -262,7 +262,7 @@ async function loadAtomsWithoutHead(
  * @param atoms The atoms.
  */
 export function atomMap(atoms: Atom<any>[]): Map<string, Atom<any>> {
-    return new Map(atoms.map(a => [a.hash, a] as const));
+    return new Map(atoms.map((a) => [a.hash, a] as const));
 }
 
 /**
@@ -278,9 +278,7 @@ export async function updateBranch(
     const data = await store.getObject(branch.hash);
     if (!data) {
         throw new Error(
-            `The branch (${branch.name}) references a hash (${
-                branch.hash
-            }) that does not exist in the store.`
+            `The branch (${branch.name}) references a hash (${branch.hash}) that does not exist in the store.`
         );
     }
     return await store.saveBranch(branch);
@@ -347,8 +345,8 @@ export function calculateCommitDiff(
         const deleted = Object.keys(diff.deletions);
 
         return {
-            additions: atomMap(added.map(hash => second.atoms.get(hash))),
-            deletions: atomMap(deleted.map(hash => first.atoms.get(hash))),
+            additions: atomMap(added.map((hash) => second.atoms.get(hash))),
+            deletions: atomMap(deleted.map((hash) => first.atoms.get(hash))),
         };
     }
 }
@@ -544,9 +542,7 @@ export class CausalRepo {
         if (branches.length === 0) {
             if (options.createIfDoesntExist) {
                 console.log(
-                    `[CausalRepo] Creating branch (${branch}) at ${
-                        options.createIfDoesntExist.hash
-                    }`
+                    `[CausalRepo] Creating branch (${branch}) at ${options.createIfDoesntExist.hash}`
                 );
                 await this.createBranch(
                     branch,

@@ -27,8 +27,7 @@ import {
     CurrentVersion,
 } from '@casual-simulation/causal-trees';
 import { startWith } from 'rxjs/operators';
-import flatMap from 'lodash/flatMap';
-import union from 'lodash/union';
+import { flatMap, union } from 'lodash';
 import { merge } from '../utils';
 import { applyEdit, isTagEdit } from '../aux-format-2';
 import uuid from 'uuid/v4';
