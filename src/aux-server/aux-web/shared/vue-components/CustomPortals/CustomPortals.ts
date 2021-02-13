@@ -98,6 +98,7 @@ export default class CustomPortals extends Vue {
             portalId: portal.id,
             source: portal.source,
             error: portal.error,
+            ports: portal.ports,
             style: {},
         });
     }
@@ -112,6 +113,7 @@ export default class CustomPortals extends Vue {
         portal.source = update.portal.source;
         portal.style = update.portal.style;
         portal.error = update.portal.error;
+        portal.ports = update.portal.ports;
     }
 }
 
@@ -120,5 +122,8 @@ interface CustomPortalData {
     portalId: string;
     source: string;
     error: string;
+    ports: {
+        [id: string]: MessagePort;
+    };
     style: any;
 }

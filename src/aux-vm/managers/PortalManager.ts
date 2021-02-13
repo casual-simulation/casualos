@@ -411,12 +411,23 @@ export class PortalManager implements SubscriptionLike {
 
         if (portal.tag !== null) {
             portal.modules = bundle?.modules || null;
-            this._sendPortalData(portal, {
+
+            let data: PortalData = {
                 id: portal.id,
                 style: portal.style,
                 error: bundle?.error || null,
                 source: bundle?.source || null,
-            });
+            };
+
+            if (this._vm.createEndpoint && bundle?.libraries?.casualos) {
+                const port = await this._vm.createEndpoint();
+                data.ports = {
+                    ...(data.ports || {}),
+                    casualos: port,
+                };
+            }
+
+            this._sendPortalData(portal, data);
 
             if (bundle?.externals) {
                 let newModules: ExternalModule[] = [];
@@ -516,6 +527,13 @@ export interface PortalData {
      * The CSS styles that the portal iframe should have.
      */
     style: any;
+
+    /**
+     * The ports that should be set for the portal.
+     */
+    ports?: {
+        [id: string]: MessagePort;
+    };
 }
 
 /**

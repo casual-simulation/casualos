@@ -111,6 +111,13 @@ export interface CodeBundle {
     externals: {
         [id: string]: ExternalModule;
     };
+
+    /**
+     * The list of libraries that were imported.
+     */
+    libraries: {
+        [id: string]: LibraryModule;
+    };
 }
 
 /**
@@ -258,6 +265,7 @@ export class ESBuildPortalBundler implements PortalBundler {
 
         let modules: BundleModules = {};
         let externals: CodeBundle['externals'] = {};
+        let libraries: CodeBundle['libraries'] = {};
         try {
             const result = await this._esbuildService.build({
                 entryPoints: ['__entry'],
@@ -272,7 +280,8 @@ export class ESBuildPortalBundler implements PortalBundler {
                         state,
                         bots,
                         modules,
-                        externals
+                        externals,
+                        libraries
                     ),
                 ],
             });
@@ -290,6 +299,7 @@ export class ESBuildPortalBundler implements PortalBundler {
                 warnings,
                 modules,
                 externals,
+                libraries,
             };
         } catch (err) {
             return {
@@ -298,6 +308,7 @@ export class ESBuildPortalBundler implements PortalBundler {
                 warnings: [],
                 modules,
                 externals,
+                libraries,
             };
         }
     }
@@ -308,7 +319,8 @@ export class ESBuildPortalBundler implements PortalBundler {
         state: BotsState,
         bots: Bot[],
         modules: BundleModules,
-        externals: CodeBundle['externals']
+        externals: CodeBundle['externals'],
+        libraries: CodeBundle['libraries']
     ): ESBuild.Plugin {
         return {
             name: 'casualos',
@@ -482,6 +494,7 @@ export class ESBuildPortalBundler implements PortalBundler {
                         try {
                             const module = this._libraries.get(args.path);
                             if (module) {
+                                libraries[args.path] = module;
                                 return {
                                     contents: module.source,
                                     loader: loaderForLanguage(

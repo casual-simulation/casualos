@@ -179,6 +179,7 @@ describe('PortalManager', () => {
                 source: 'abc',
                 modules: {},
                 externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -213,6 +214,7 @@ describe('PortalManager', () => {
                     warnings: [],
                     modules: {},
                     externals: {},
+                    libraries: {},
                 }),
             ]);
         });
@@ -236,6 +238,7 @@ describe('PortalManager', () => {
                 source: 'abc',
                 modules: {},
                 externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -286,6 +289,7 @@ describe('PortalManager', () => {
                 tag: 'script',
                 modules: {},
                 externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -424,6 +428,7 @@ describe('PortalManager', () => {
                 source: 'wrong',
                 modules: {},
                 externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -474,6 +479,69 @@ describe('PortalManager', () => {
                 },
             ]);
         });
+
+        it('should include a message port for bundles that reference casualos', async () => {
+            expect(portals).toEqual([]);
+
+            bundler.bundleTag.mockResolvedValueOnce({
+                tag: 'script',
+                source: 'abc',
+                modules: {},
+                externals: {},
+                libraries: {
+                    casualos: {
+                        id: 'casualos',
+                        source: '',
+                        language: 'javascript',
+                    },
+                },
+                warnings: [],
+            });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    tagOrSource: '🔺script',
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(portals).toEqual([
+                {
+                    id: 'test-portal',
+                    source: 'abc',
+                    style: {
+                        abc: 'def',
+                    },
+                    error: null,
+                    ports: {
+                        casualos: expect.any(MessagePort),
+                    },
+                },
+            ]);
+        });
     });
 
     describe('portalsUpdated', () => {
@@ -496,6 +564,7 @@ describe('PortalManager', () => {
                         bot1: new Set(['script']),
                     },
                     externals: {},
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -537,6 +606,7 @@ describe('PortalManager', () => {
                         bot1: new Set(['script']),
                     },
                     externals: {},
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -582,6 +652,7 @@ describe('PortalManager', () => {
                         bot1: new Set(['script']),
                     },
                     externals: {},
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -620,6 +691,7 @@ describe('PortalManager', () => {
                     error: null,
                     modules: {},
                     externals: {},
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -657,6 +729,7 @@ describe('PortalManager', () => {
                     error: null,
                     modules: {},
                     externals: {},
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -681,6 +754,7 @@ describe('PortalManager', () => {
                     error: null,
                     modules: {},
                     externals: {},
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -708,6 +782,7 @@ describe('PortalManager', () => {
                     error: null,
                     modules: {},
                     externals: {},
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -741,6 +816,7 @@ describe('PortalManager', () => {
                         bot1: new Set(['script']),
                     },
                     externals: {},
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -787,6 +863,7 @@ describe('PortalManager', () => {
                 error: null,
                 modules: {},
                 externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -826,6 +903,7 @@ describe('PortalManager', () => {
                     bot1: new Set(['script']),
                 },
                 externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -867,6 +945,7 @@ describe('PortalManager', () => {
                 error: null,
                 modules: {},
                 externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -906,6 +985,7 @@ describe('PortalManager', () => {
                     bot1: new Set(['script']),
                 },
                 externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -942,6 +1022,7 @@ describe('PortalManager', () => {
                 error: null,
                 modules: {},
                 externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -1036,6 +1117,7 @@ describe('PortalManager', () => {
                             typescriptDefinitionsURL: 'reactDefs',
                         },
                     },
+                    libraries: {},
                     warnings: [],
                 })
                 .mockResolvedValueOnce({
@@ -1059,6 +1141,7 @@ describe('PortalManager', () => {
                             typescriptDefinitionsURL: 'otherDefs',
                         },
                     },
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -1138,6 +1221,7 @@ describe('PortalManager', () => {
                         typescriptDefinitionsURL: 'reactDefs',
                     },
                 },
+                libraries: {},
                 warnings: [],
             });
 
@@ -1210,6 +1294,7 @@ describe('PortalManager', () => {
                             typescriptDefinitionsURL: 'reactDefs',
                         },
                     },
+                    libraries: {},
                     warnings: [],
                 })
                 .mockResolvedValueOnce({
@@ -1233,6 +1318,7 @@ describe('PortalManager', () => {
                             typescriptDefinitionsURL: 'otherDefs',
                         },
                     },
+                    libraries: {},
                     warnings: [],
                 });
 
