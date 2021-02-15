@@ -66,7 +66,11 @@ import jscodeshift from 'jscodeshift';
 import MonacoJSXHighlighter from './public/monaco-jsx-highlighter/index';
 import axios from 'axios';
 import { customPortalLanguageId } from './monaco/custom-portal-typescript/custom-portal-typescript.contribution';
-import { getCustomPortalWorker } from './monaco/languages.contribution';
+import {
+    customPortalJavaScriptDefaults,
+    customPortalTypescriptDefaults,
+    getCustomPortalWorker,
+} from './monaco/languages.contribution';
 
 // load TypescriptWorker by require().
 // For some reason, loading relative imports with worker-loader fails when using the import syntax
@@ -287,15 +291,34 @@ export function watchSimulation(
                 flatMap((e) => axios.get(e.typescriptDefinitionsURL)),
                 tap((request) => {
                     if (typeof request.data === 'string') {
-                        monaco.languages.typescript.javascriptDefaults.addExtraLib(
+                        customPortalJavaScriptDefaults.addExtraLib(
                             request.data,
                             request.config.url
                         );
-                        monaco.languages.typescript.typescriptDefaults.addExtraLib(
+                        customPortalTypescriptDefaults.addExtraLib(
                             request.data,
                             request.config.url
                         );
                     }
+                })
+            )
+            .subscribe()
+    );
+
+    sub.add(
+        simulation.portals.librariesDiscovered
+            .pipe(
+                flatMap((e) => e),
+                filter((lib) => !!lib.typescriptDefinitions),
+                tap((lib) => {
+                    customPortalJavaScriptDefaults.addExtraLib(
+                        lib.typescriptDefinitions,
+                        lib.id
+                    );
+                    customPortalTypescriptDefaults.addExtraLib(
+                        lib.typescriptDefinitions,
+                        lib.id
+                    );
                 })
             )
             .subscribe()

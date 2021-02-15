@@ -69,6 +69,11 @@ export interface LibraryModule {
     source: string;
 
     /**
+     * The typescript definitions that should be used for the module.
+     */
+    typescriptDefinitions?: string;
+
+    /**
      * The language that this module is in.
      */
     language: RegisterPrefixOptions['language'];
