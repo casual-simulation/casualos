@@ -1,11 +1,15 @@
 const esbuild = require('esbuild');
-const { options } = require('./common');
+const builds = require('./common');
 
-start();
+for (let b of builds) {
+    start(b);
+}
 
-async function start() {
-    await esbuild.build({
-        ...options,
-        watch: true,
-    });
+async function start(build) {
+    if (build.type === 'esbuild') {
+        await esbuild.build({
+            ...build.options,
+            watch: true,
+        });
+    }
 }

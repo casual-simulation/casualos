@@ -8,8 +8,8 @@
         "composite": true,
         "incremental": true
     },
-    "include": ["**/*.ts"],
-    "exclude": ["node_modules", "lib", "**/*.spec.ts"],
+    "include": ["./**/*.ts"],
+    "exclude": ["node_modules", "**/*.spec.ts"],
     "references": [
         { "path": "../aux-common" },
         { "path": "../aux-vm" },

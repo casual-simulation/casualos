@@ -1,4 +1,8 @@
-import { ProxyBridgePartition, AuxPartitionBase } from './AuxPartition';
+import {
+    ProxyBridgePartition,
+    AuxPartitionBase,
+    AuxPartitionRealtimeStrategy,
+} from './AuxPartition';
 import {
     User,
     DeviceAction,
@@ -16,7 +20,7 @@ export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
         return this._partition.private;
     }
 
-    get realtimeStrategy() {
+    get realtimeStrategy(): AuxPartitionRealtimeStrategy {
         return this._partition.realtimeStrategy;
     }
 

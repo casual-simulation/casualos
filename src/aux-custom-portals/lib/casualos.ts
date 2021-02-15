@@ -31,7 +31,7 @@ class CustomPortalSimulation extends BaseSimulation implements Simulation {
 
 export { createBot };
 
-const port: MessagePort = globalThis.__injectedPorts?.casualos;
+const port: MessagePort = (globalThis as any).__injectedPorts?.casualos;
 
 const simulation = port
     ? new CustomPortalSimulation('custom-portal', port)
