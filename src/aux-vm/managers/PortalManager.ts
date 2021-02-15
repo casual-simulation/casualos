@@ -62,7 +62,9 @@ export class PortalManager implements SubscriptionLike {
     private _prefixesDiscovered: Subject<ScriptPrefix[]>;
     private _prefixesRemoved: Subject<string[]>;
     private _externalsDiscovered: Subject<ExternalModule[]>;
+    private _librariesDiscovered: Subject<LibraryModule[]>;
     private _externalModules: CodeBundle['externals'];
+    private _libraryModules: CodeBundle['libraries'];
     private _vm: AuxVM;
     private _helper: BotHelper;
     private _watcher: BotWatcher;
@@ -111,6 +113,15 @@ export class PortalManager implements SubscriptionLike {
     }
 
     /**
+     * Gets an observable that resolves when an external script has been discovered.
+     */
+    get librariesDiscovered(): Observable<LibraryModule[]> {
+        return this._librariesDiscovered.pipe(
+            startWith(values(this._libraryModules))
+        );
+    }
+
+    /**
      * Gets the script prefixes that are currently in use.
      */
     get scriptPrefixes(): ScriptPrefix[] {
@@ -122,6 +133,13 @@ export class PortalManager implements SubscriptionLike {
      */
     get externalModules() {
         return this._externalModules;
+    }
+
+    /**
+     * Gets a map of library modules that have been loaded.
+     */
+    get libraryModules() {
+        return this._libraryModules;
     }
 
     constructor(
@@ -141,7 +159,9 @@ export class PortalManager implements SubscriptionLike {
         this._prefixesDiscovered = new Subject();
         this._prefixesRemoved = new Subject();
         this._externalsDiscovered = new Subject();
+        this._librariesDiscovered = new Subject();
         this._externalModules = {};
+        this._libraryModules = {};
         this._bundler = bundler;
         this._sub = new Subscription();
 
@@ -440,6 +460,20 @@ export class PortalManager implements SubscriptionLike {
 
                 if (newModules.length > 0) {
                     this._externalsDiscovered.next(newModules);
+                }
+            }
+
+            if (bundle?.libraries) {
+                let newModules: LibraryModule[] = [];
+                for (let mod of values(bundle.libraries)) {
+                    if (!this._libraryModules[mod.id]) {
+                        this._libraryModules[mod.id] = mod;
+                        newModules.push(mod);
+                    }
+                }
+
+                if (newModules.length > 0) {
+                    this._librariesDiscovered.next(newModules);
                 }
             }
         }

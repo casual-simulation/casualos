@@ -1381,4 +1381,301 @@ describe('PortalManager', () => {
             });
         });
     });
+
+    describe('librariesDiscovered', () => {
+        let externals = [] as LibraryModule[];
+
+        beforeEach(() => {
+            externals = [];
+            sub.add(
+                manager.librariesDiscovered.subscribe((p) =>
+                    externals.push(...p)
+                )
+            );
+        });
+
+        it('should resolve new library modules from builds', async () => {
+            expect(externals).toEqual([]);
+
+            bundler.bundleTag
+                .mockResolvedValueOnce({
+                    tag: 'script',
+                    source: 'abc',
+                    modules: {},
+                    externals: {},
+                    libraries: {
+                        lodash: {
+                            id: 'lodash',
+                            source: 'lodashSource',
+                            language: 'javascript',
+                        },
+                        react: {
+                            id: 'react',
+                            source: 'reactSource',
+                            language: 'javascript',
+                        },
+                    },
+                    warnings: [],
+                })
+                .mockResolvedValueOnce({
+                    tag: 'script',
+                    source: 'def',
+                    modules: {},
+                    externals: {},
+                    libraries: {
+                        lodash: {
+                            id: 'lodash',
+                            source: 'lodashSource',
+                            language: 'javascript',
+                        },
+                        react: {
+                            id: 'react',
+                            source: 'reactSource',
+                            language: 'javascript',
+                        },
+                        other: {
+                            id: 'other',
+                            source: 'otherSource',
+                            language: 'javascript',
+                        },
+                    },
+                    warnings: [],
+                });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    tagOrSource: '🔺script',
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test2");',
+                    }),
+                })
+            );
+
+            await waitAsync();
+
+            expect(externals).toEqual([
+                {
+                    id: 'lodash',
+                    source: 'lodashSource',
+                    language: 'javascript',
+                },
+                {
+                    id: 'react',
+                    source: 'reactSource',
+                    language: 'javascript',
+                },
+                {
+                    id: 'other',
+                    source: 'otherSource',
+                    language: 'javascript',
+                },
+            ]);
+        });
+
+        it('should resolve with the libraries that have already been discovered', async () => {
+            bundler.bundleTag.mockResolvedValueOnce({
+                tag: 'script',
+                source: 'abc',
+                modules: {},
+                externals: {},
+                libraries: {
+                    lodash: {
+                        id: 'lodash',
+                        source: 'lodashSource',
+                        language: 'javascript',
+                    },
+                    react: {
+                        id: 'react',
+                        source: 'reactSource',
+                        language: 'javascript',
+                    },
+                },
+                warnings: [],
+            });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    tagOrSource: '🔺script',
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            const existingExternals: LibraryModule[] = [];
+            manager.librariesDiscovered.subscribe((e) =>
+                existingExternals.push(...e)
+            );
+
+            expect(existingExternals).toEqual([
+                {
+                    id: 'lodash',
+                    source: 'lodashSource',
+                    language: 'javascript',
+                },
+                {
+                    id: 'react',
+                    source: 'reactSource',
+                    language: 'javascript',
+                },
+            ]);
+        });
+
+        it('should record library modules from builds', async () => {
+            expect(externals).toEqual([]);
+
+            bundler.bundleTag
+                .mockResolvedValueOnce({
+                    tag: 'script',
+                    source: 'abc',
+                    modules: {},
+                    externals: {},
+                    libraries: {
+                        lodash: {
+                            id: 'lodash',
+                            source: 'lodashSource',
+                            language: 'javascript',
+                        },
+                        react: {
+                            id: 'react',
+                            source: 'reactSource',
+                            language: 'javascript',
+                        },
+                    },
+                    warnings: [],
+                })
+                .mockResolvedValueOnce({
+                    tag: 'script',
+                    source: 'def',
+                    modules: {},
+                    externals: {},
+                    libraries: {
+                        lodash: {
+                            id: 'lodash',
+                            source: 'lodashSource',
+                            language: 'javascript',
+                        },
+                        react: {
+                            id: 'react',
+                            source: 'reactSource',
+                            language: 'javascript',
+                        },
+                        other: {
+                            id: 'other',
+                            source: 'otherSource',
+                            language: 'javascript',
+                        },
+                    },
+                    warnings: [],
+                });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    tagOrSource: '🔺script',
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test2");',
+                    }),
+                })
+            );
+
+            await waitAsync();
+
+            expect(manager.libraryModules).toEqual({
+                lodash: {
+                    id: 'lodash',
+                    source: 'lodashSource',
+                    language: 'javascript',
+                },
+                react: {
+                    id: 'react',
+                    source: 'reactSource',
+                    language: 'javascript',
+                },
+                other: {
+                    id: 'other',
+                    source: 'otherSource',
+                    language: 'javascript',
+                },
+            });
+        });
+    });
 });
