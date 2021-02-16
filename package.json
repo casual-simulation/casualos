@@ -5,7 +5,7 @@
     "scripts": {
         "start": "node ./src/aux-server/server/dist/main.js",
         "bootstrap": "lerna bootstrap --hoist",
-        "watch": "npm run clean && npm run prebuild:portals && npm run build:libs && concurrently --names \"Libs,CustomPortals,Server\" \"npm run watch:libs\" \"npm run watch:portals\" \"npm run watch:server\"",
+        "watch": "npm run clean && npm run fastbuild:portals && npm run build:libs && concurrently --names \"Libs,CustomPortals,Server\" \"npm run watch:libs\" \"npm run watch:portals\" \"npm run watch:server\"",
         "watch:docs": "cd docs && npm start",
         "watch:player": "npm run build:libs && concurrently \"npm run watch:libs\" \"npm run watch:server:player\"",
         "watch:server": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run watch",
@@ -19,7 +19,7 @@
         "build:docker:arm32": "npm run build:tar:docker && npm run package:docker:arm32",
         "build:libs": "tsc --build",
         "build:portals": "lerna exec --scope @casual-simulation/aux-custom-portals -- npm run build",
-        "prebuild:portals": "lerna exec --scope @casual-simulation/aux-custom-portals -- npm run prebuild",
+        "fastbuild:portals": "lerna exec --scope @casual-simulation/aux-custom-portals -- npm run fastbuild",
         "build:server": "lerna exec --scope @casual-simulation/aux-server -- npm run build",
         "build:web": "lerna exec --scope @casual-simulation/aux-server -- npm run build:web",
         "build:proxy": "lerna exec --scope @casual-simulation/aux-proxy -- npm run build",

@@ -32,7 +32,7 @@
         "watch": "node ./bin/watch",
         "watch:player": "npm run watch",
         "build": "node ./bin/build",
-        "prebuild": "node ./bin/prebuild",
+        "fastbuild": "node ./bin/prebuild",
         "test": "jest",
         "test:watch": "jest --watchAll"
     },
@@ -61,6 +61,7 @@
         "esbuild": "^0.8.43",
         "rollup": "^2.39.0",
         "@wessberg/rollup-plugin-ts": "^1.3.7",
-        "@rollup/plugin-node-resolve": "^11.2.0"
+        "@rollup/plugin-node-resolve": "^11.2.0",
+        "rollup-plugin-dts": "^2.0.1"
     }
 }

@@ -1,5 +1,6 @@
 const path = require('path');
 const ts = require('@wessberg/rollup-plugin-ts');
+const dts = require('rollup-plugin-dts').default;
 const { nodeResolve } = require('@rollup/plugin-node-resolve');
 const { emptyModulePlugin, injectModulePlugin } = require('./helpers');
 
@@ -71,7 +72,10 @@ module.exports = [
                 nodeResolve(),
                 ts({
                     cwd: path.resolve(__dirname, '..'),
-                    tsconfig: path.resolve(__dirname, '../tsconfig.d.json'),
+                    tsconfig: path.resolve(
+                        __dirname,
+                        '../tsconfig.casualos.json'
+                    ),
                     exclude: [],
                 }),
             ],
@@ -111,6 +115,25 @@ module.exports = [
                 '../dist/esbuild/rxjs/rxjs.meta.json'
             ),
             logLevel: 'error',
+        },
+    },
+
+    // rollup is for typescript declarations
+    {
+        id: 'rxjs',
+        type: 'rollup',
+        filename: 'rxjs.d.ts',
+        options: {
+            input: path.resolve(
+                __dirname,
+                '../../../node_modules/rxjs/index.d.ts'
+            ),
+            external: [],
+            plugins: [
+                dts({
+                    respectExternal: true,
+                }),
+            ],
         },
     },
 

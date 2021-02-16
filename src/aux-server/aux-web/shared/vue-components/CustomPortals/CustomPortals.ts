@@ -18,6 +18,7 @@ import CustomPortal from '../CustomPortal/CustomPortal';
 import CasualOSLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/esbuild/casualos.js';
 import CasualOSDeclarations from '!raw-loader!@casual-simulation/aux-custom-portals/dist/rollup/casualos/casualos.d.ts';
 import RxjsLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/esbuild/rxjs/rxjs.js';
+import RxjsDeclarations from '!raw-loader!@casual-simulation/aux-custom-portals/dist/rollup/rxjs/rxjs.d.ts';
 import RxjsOperatorsLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/esbuild/rxjs/rxjs-operators.js';
 import LodashLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/esbuild/lodash.js';
 import UuidLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/esbuild/uuid.js';
@@ -81,6 +82,7 @@ export default class CustomPortals extends Vue {
                 id: 'rxjs',
                 language: 'javascript',
                 source: RxjsLibraryCode,
+                typescriptDefinitions: RxjsDeclarations,
             },
             {
                 id: 'rxjs/operators',

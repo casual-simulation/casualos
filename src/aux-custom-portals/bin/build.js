@@ -14,13 +14,20 @@ async function build(build) {
                 ...build.options,
             });
         } else {
+            const dir = path.resolve(__dirname, `../dist/rollup/${build.id}`);
             const bundle = await rollup.rollup({
                 ...build.options,
             });
 
-            await bundle.write({
-                dir: path.resolve(__dirname, `../dist/rollup/${build.id}`),
-            });
+            await bundle.write(
+                build.filename
+                    ? {
+                          file: path.resolve(`${dir}/`, build.filename),
+                      }
+                    : {
+                          dir,
+                      }
+            );
             await bundle.close();
         }
     } catch (err) {

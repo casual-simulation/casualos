@@ -22,9 +22,15 @@ async function start(build) {
                     ...build.options,
                 });
 
-                await bundle.write({
-                    dir,
-                });
+                await bundle.write(
+                    build.filename
+                        ? {
+                              file: path.resolve(`${dir}/`, build.filename),
+                          }
+                        : {
+                              dir,
+                          }
+                );
                 await bundle.close();
             }
         }
