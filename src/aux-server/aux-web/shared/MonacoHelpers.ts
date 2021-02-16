@@ -22,7 +22,6 @@ import {
     hasPortalScript,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
-// import TypescriptWorker from 'worker-loader!./monaco/typescript/ts.worker.js';
 import HtmlWorker from 'worker-loader!monaco-editor/esm/vs/language/html/html.worker';
 import CssWorker from 'worker-loader!monaco-editor/esm/vs/language/css/css.worker';
 import JsonWorker from 'worker-loader!monaco-editor/esm/vs/language/json/json.worker';
@@ -69,17 +68,18 @@ import { getCursorColorClass, getCursorLabelClass } from './StyleHelpers';
 // import jscodeshift from 'jscodeshift';
 // import MonacoJSXHighlighter from './public/monaco-jsx-highlighter/index';
 import axios from 'axios';
-import { customPortalLanguageId } from './monaco/custom-portal-typescript/custom-portal-typescript.contribution';
+import { customPortalLanguageId } from './public/monaco-editor/custom-portal-typescript/custom-portal-typescript.contribution';
 import {
     customPortalJavaScriptDefaults,
     customPortalTypescriptDefaults,
     getCustomPortalWorker,
-} from './monaco/languages.contribution';
+} from './public/monaco-editor/languages.contribution';
 
 // load TypescriptWorker by require().
 // For some reason, loading relative imports with worker-loader fails when using the import syntax
 // but the require syntax works.
-const TypescriptWorker = require('./monaco/typescript/ts.worker').default;
+const TypescriptWorker = require('./public/monaco-editor/typescript/ts.worker')
+    .default;
 
 export function setup() {
     // Tell monaco how to create the web workers

@@ -1,5 +1,5 @@
-import './monaco/typescript/index';
-import './monaco/languages.contribution';
+import './public/monaco-editor/typescript/index';
+import './public/monaco-editor/languages.contribution';
 import 'monaco-editor/esm/vs/language/html/monaco.contribution';
 import 'monaco-editor/esm/vs/language/css/monaco.contribution';
 import 'monaco-editor/esm/vs/language/json/monaco.contribution';
