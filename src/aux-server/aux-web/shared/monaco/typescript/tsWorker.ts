@@ -52,41 +52,41 @@ export class TypeScriptWorker
         this._compilerOptions = createData.compilerOptions;
         this._extraLibs = createData.extraLibs;
 
-        if (createData.casualOSModuleResolution) {
-            console.log('[tsWorker] Using CasualOS module resolution.');
-            this.resolveModuleNames = (
-                moduleNames,
-                containingFile,
-                reusedNames,
-                redirectedReferece,
-                options
-            ) => {
-                const filenames = this.getScriptFileNames();
+        // if (createData.casualOSModuleResolution) {
+        //     console.log('[tsWorker] Using CasualOS module resolution.');
+        //     this.resolveModuleNames = (
+        //         moduleNames,
+        //         containingFile,
+        //         reusedNames,
+        //         redirectedReferece,
+        //         options
+        //     ) => {
+        //         const filenames = this.getScriptFileNames();
 
-                const modules: ts.ResolvedModule[] = moduleNames.map((m) => {
-                    if (hasPortalScript(this._scriptPrefixes, m)) {
-                        console.log(`[tsWorker] Resolving ${m}`);
-                        const tag = trimPortalScript(this._scriptPrefixes, m);
-                        const tagWithExtension =
-                            tag.indexOf('.') >= 0 ? tag : `${tag}.js`;
-                        const resolved = filenames.find((file) =>
-                            file.endsWith(tagWithExtension)
-                        );
-                        if (resolved) {
-                            console.log(`[tsWorker] Resolved to ${resolved}`);
-                            return {
-                                resolvedFileName: resolved,
-                                isExternalLibraryImport: false,
-                            };
-                        } else {
-                            return undefined;
-                        }
-                    }
-                });
+        //         const modules: ts.ResolvedModule[] = moduleNames.map((m) => {
+        //             if (hasPortalScript(this._scriptPrefixes, m)) {
+        //                 console.log(`[tsWorker] Resolving ${m}`);
+        //                 const tag = trimPortalScript(this._scriptPrefixes, m);
+        //                 const tagWithExtension =
+        //                     tag.indexOf('.') >= 0 ? tag : `${tag}.js`;
+        //                 const resolved = filenames.find((file) =>
+        //                     file.endsWith(tagWithExtension)
+        //                 );
+        //                 if (resolved) {
+        //                     console.log(`[tsWorker] Resolved to ${resolved}`);
+        //                     return {
+        //                         resolvedFileName: resolved,
+        //                         isExternalLibraryImport: false,
+        //                     };
+        //                 } else {
+        //                     return undefined;
+        //                 }
+        //             }
+        //         });
 
-                return modules;
-            };
-        }
+        //         return modules;
+        //     };
+        // }
     }
 
     addScriptPrefixes(prefixes: string[]) {

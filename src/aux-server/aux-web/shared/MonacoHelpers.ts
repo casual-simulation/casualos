@@ -313,11 +313,11 @@ export function watchSimulation(
                 tap((lib) => {
                     customPortalJavaScriptDefaults.addExtraLib(
                         lib.typescriptDefinitions,
-                        lib.id
+                        `file:///${lib.id}.d.ts`
                     );
                     customPortalTypescriptDefaults.addExtraLib(
                         lib.typescriptDefinitions,
-                        lib.id
+                        `file:///${lib.id}.d.ts`
                     );
                 })
             )

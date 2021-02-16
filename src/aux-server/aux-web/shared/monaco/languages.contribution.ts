@@ -4,6 +4,7 @@ import {
     JsxEmit,
     LanguageServiceDefaults,
     LanguageServiceDefaultsImpl,
+    ModuleResolutionKind,
     NewLineKind,
     ScriptTarget,
 } from './typescript/languageService';
@@ -11,13 +12,22 @@ import { libFileMap } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js'
 import { getWorker, setupLangaugeMode } from './typescript/tsMode';
 
 export const customPortalTypescriptDefaults: LanguageServiceDefaults = new LanguageServiceDefaultsImpl(
-    { allowNonTsExtensions: true, target: ScriptTarget.Latest },
+    {
+        allowNonTsExtensions: true,
+        target: ScriptTarget.Latest,
+        moduleResolution: ModuleResolutionKind.Classic,
+    },
     { noSemanticValidation: false, noSyntaxValidation: false },
     {}
 );
 
 export const customPortalJavaScriptDefaults: LanguageServiceDefaults = new LanguageServiceDefaultsImpl(
-    { allowNonTsExtensions: true, allowJs: true, target: ScriptTarget.Latest },
+    {
+        allowNonTsExtensions: true,
+        allowJs: true,
+        target: ScriptTarget.Latest,
+        moduleResolution: ModuleResolutionKind.Classic,
+    },
     { noSemanticValidation: true, noSyntaxValidation: false },
     {}
 );
