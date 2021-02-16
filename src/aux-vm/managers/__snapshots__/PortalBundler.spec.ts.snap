@@ -34,6 +34,34 @@ Object {
 }
 `;
 
+exports[`ESBuildPortalBundler addLibrary() should only override imports that exactly match the library name 1`] = `
+Object {
+  "externals": Object {},
+  "libraries": Object {
+    "rxjs/operators": Object {
+      "id": "rxjs/operators",
+      "language": "javascript",
+      "source": "globalThis.func1(\\"rxjs/operators\\");",
+    },
+  },
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+  },
+  "source": "(() => {
+  // lib-ns:rxjs/operators
+  globalThis.func1(\\"rxjs/operators\\");
+
+  // aux-ns:📖bot1.main?auxmodule
+  globalThis.func1(\\"main\\");
+})();
+",
+  "tag": "main",
+  "warnings": Array [],
+}
+`;
+
 exports[`ESBuildPortalBundler addLibrary() should use the given source when importing the specified library 1`] = `
 Object {
   "externals": Object {},

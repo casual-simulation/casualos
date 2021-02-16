@@ -1,5 +1,6 @@
 const path = require('path');
 const ts = require('rollup-plugin-ts');
+const { emptyModulePlugin, injectModulePlugin } = require('./helpers');
 
 module.exports = [
     // esbuild is for fast builds
@@ -15,25 +16,30 @@ module.exports = [
                 __dirname,
                 '../dist/esbuild/casualos.meta.json'
             ),
-            minifySyntax: true,
-            external: [
-                'lodash',
-                'rxjs',
-                'three',
-                'scrypt-js',
-                'base64-js',
-                'uuid/v4',
-                'uuid/v5',
-                'hash.js',
-                'tweetnacl',
-                'acorn',
-                'lru-cache',
-                'estraverse',
-                'mime',
-                'fast-json-stable-stringify',
-                'astring',
-                '@tweenjs/tween.js',
+            plugins: [
+                emptyModulePlugin('three'),
+                emptyModulePlugin('scrypt-js'),
+                emptyModulePlugin('base64-js'),
+                emptyModulePlugin('hash.js', /^hash\.js$/),
+                injectModulePlugin('tweetnacl', {
+                    randomBytes: null,
+                    secretbox: { keyLength: 0 },
+                    sign: null,
+                }),
+                emptyModulePlugin('acorn'),
+                emptyModulePlugin('lru-cache'),
+                emptyModulePlugin('estraverse'),
+                emptyModulePlugin('mime'),
+                emptyModulePlugin('fast-json-stable-stringify'),
+                emptyModulePlugin('astring'),
+                emptyModulePlugin(
+                    '@tweenjs/tween.js',
+                    /^\@tweenjs\/tween\.js$/
+                ),
             ],
+            minifySyntax: true,
+            external: ['lodash', 'rxjs', 'uuid'],
+            logLevel: 'error',
         },
     },
 
@@ -65,6 +71,7 @@ module.exports = [
                 '../dist/esbuild/lodash.meta.json'
             ),
             external: [],
+            logLevel: 'error',
         },
     },
 
@@ -79,7 +86,24 @@ module.exports = [
             outdir: path.resolve(__dirname, '../dist/esbuild/rxjs'),
             bundle: true,
             format: 'esm',
-            metafile: path.resolve(__dirname, '../dist/esbuild/rxjs.meta.json'),
+            metafile: path.resolve(
+                __dirname,
+                '../dist/esbuild/rxjs/rxjs.meta.json'
+            ),
+            logLevel: 'error',
+        },
+    },
+
+    {
+        id: 'uuid',
+        type: 'esbuild',
+        options: {
+            entryPoints: [path.resolve(__dirname, '../lib/uuid.ts')],
+            outfile: path.resolve(__dirname, '../dist/esbuild/uuid.js'),
+            bundle: true,
+            format: 'esm',
+            metafile: path.resolve(__dirname, '../dist/esbuild/uuid.meta.json'),
+            logLevel: 'error',
         },
     },
 ];

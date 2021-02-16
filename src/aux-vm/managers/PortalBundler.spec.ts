@@ -901,5 +901,40 @@ describe('ESBuildPortalBundler', () => {
             expect(func1).toHaveBeenCalledTimes(1);
             expect(func1).toHaveBeenNthCalledWith(1, 'main');
         });
+
+        it('should only override imports that exactly match the library name', async () => {
+            bundler.addLibrary({
+                id: 'rxjs',
+                source: 'globalThis.func1("rxjs");',
+                language: 'javascript',
+            });
+
+            bundler.addLibrary({
+                id: 'rxjs/operators',
+                source: 'globalThis.func1("rxjs/operators");',
+                language: 'javascript',
+            });
+
+            const state = {
+                bot1: createPrecalculatedBot('bot1', {
+                    main: `📖import "rxjs/operators"; globalThis.func1("main");`,
+                }),
+            };
+            const bundle = await bundler.bundleTag(state, 'main', [
+                {
+                    prefix: '📖',
+                    language: 'typescript',
+                },
+            ]);
+
+            expect(bundle).toMatchSnapshot();
+            expect(bundle.source).toBeTruthy();
+
+            eval(bundle.source);
+
+            expect(func1).toHaveBeenCalledTimes(2);
+            expect(func1).toHaveBeenNthCalledWith(1, 'rxjs/operators');
+            expect(func1).toHaveBeenNthCalledWith(2, 'main');
+        });
     });
 });

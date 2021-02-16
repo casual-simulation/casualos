@@ -10,7 +10,7 @@ for (let b of builds) {
 async function build(build) {
     try {
         if (build.type === 'esbuild') {
-            esbuild.buildSync({
+            await esbuild.build({
                 ...build.options,
             });
         } else {

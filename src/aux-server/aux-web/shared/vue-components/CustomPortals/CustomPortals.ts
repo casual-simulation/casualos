@@ -11,7 +11,11 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import CustomPortal from '../CustomPortal/CustomPortal';
-import AuxLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/core.js';
+import CasualOSLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/esbuild/casualos.js';
+import RxjsLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/esbuild/rxjs/rxjs.js';
+import RxjsOperatorsLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/esbuild/rxjs/rxjs-operators.js';
+import LodashLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/esbuild/lodash.js';
+import UuidLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/esbuild/uuid.js';
 
 @Component({
     components: {
@@ -58,7 +62,31 @@ export default class CustomPortals extends Vue {
         sim.portals.addLibrary({
             id: 'casualos',
             language: 'javascript',
-            source: AuxLibraryCode,
+            source: CasualOSLibraryCode,
+        });
+
+        sim.portals.addLibrary({
+            id: 'lodash',
+            language: 'javascript',
+            source: LodashLibraryCode,
+        });
+
+        sim.portals.addLibrary({
+            id: 'rxjs',
+            language: 'javascript',
+            source: RxjsLibraryCode,
+        });
+
+        sim.portals.addLibrary({
+            id: 'rxjs/operators',
+            language: 'javascript',
+            source: RxjsOperatorsLibraryCode,
+        });
+
+        sim.portals.addLibrary({
+            id: 'uuid',
+            language: 'javascript',
+            source: UuidLibraryCode,
         });
 
         sub.add(
