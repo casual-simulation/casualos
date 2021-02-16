@@ -44,7 +44,11 @@ import {
     takeUntil,
     debounceTime,
 } from 'rxjs/operators';
-import { ScriptPrefix, Simulation } from '@casual-simulation/aux-vm';
+import {
+    LibraryModule,
+    ScriptPrefix,
+    Simulation,
+} from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { union, sortBy } from 'lodash';
 import { propertyInsertText } from './CompletionHelpers';
@@ -305,25 +309,6 @@ export function watchSimulation(
             .subscribe()
     );
 
-    sub.add(
-        simulation.portals.librariesDiscovered
-            .pipe(
-                flatMap((e) => e),
-                filter((lib) => !!lib.typescriptDefinitions),
-                tap((lib) => {
-                    customPortalJavaScriptDefaults.addExtraLib(
-                        lib.typescriptDefinitions,
-                        `file:///${lib.id}.d.ts`
-                    );
-                    customPortalTypescriptDefaults.addExtraLib(
-                        lib.typescriptDefinitions,
-                        `file:///${lib.id}.d.ts`
-                    );
-                })
-            )
-            .subscribe()
-    );
-
     monaco.languages.onLanguage(customPortalLanguageId, () => {
         sub.add(
             simulation.portals.prefixesDiscovered
@@ -333,6 +318,19 @@ export function watchSimulation(
     });
 
     return sub;
+}
+
+export function addDefinitionsForLibrary(lib: LibraryModule) {
+    if (lib.typescriptDefinitions) {
+        customPortalJavaScriptDefaults.addExtraLib(
+            lib.typescriptDefinitions,
+            `file:///${lib.id}.d.ts`
+        );
+        customPortalTypescriptDefaults.addExtraLib(
+            lib.typescriptDefinitions,
+            `file:///${lib.id}.d.ts`
+        );
+    }
 }
 
 export function watchEditor(

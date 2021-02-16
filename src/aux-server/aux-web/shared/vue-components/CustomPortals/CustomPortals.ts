@@ -1,4 +1,8 @@
-import { PortalData, PortalUpdate } from '@casual-simulation/aux-vm';
+import {
+    LibraryModule,
+    PortalData,
+    PortalUpdate,
+} from '@casual-simulation/aux-vm';
 import {
     BrowserSimulation,
     loadScript,
@@ -17,6 +21,7 @@ import RxjsLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/d
 import RxjsOperatorsLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/esbuild/rxjs/rxjs-operators.js';
 import LodashLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/esbuild/lodash.js';
 import UuidLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/esbuild/uuid.js';
+import { addDefinitionsForLibrary } from '../../MonacoHelpers';
 
 @Component({
     components: {
@@ -60,36 +65,39 @@ export default class CustomPortals extends Vue {
         let sub = new Subscription();
         this._simulations.set(sim, sub);
 
-        sim.portals.addLibrary({
-            id: 'casualos',
-            language: 'javascript',
-            source: CasualOSLibraryCode,
-            typescriptDefinitions: CasualOSDeclarations,
-        });
+        let libraries = [
+            {
+                id: 'casualos',
+                language: 'javascript',
+                source: CasualOSLibraryCode,
+                typescriptDefinitions: CasualOSDeclarations,
+            },
+            {
+                id: 'lodash',
+                language: 'javascript',
+                source: LodashLibraryCode,
+            },
+            {
+                id: 'rxjs',
+                language: 'javascript',
+                source: RxjsLibraryCode,
+            },
+            {
+                id: 'rxjs/operators',
+                language: 'javascript',
+                source: RxjsOperatorsLibraryCode,
+            },
+            {
+                id: 'uuid',
+                language: 'javascript',
+                source: UuidLibraryCode,
+            },
+        ] as LibraryModule[];
 
-        sim.portals.addLibrary({
-            id: 'lodash',
-            language: 'javascript',
-            source: LodashLibraryCode,
-        });
-
-        sim.portals.addLibrary({
-            id: 'rxjs',
-            language: 'javascript',
-            source: RxjsLibraryCode,
-        });
-
-        sim.portals.addLibrary({
-            id: 'rxjs/operators',
-            language: 'javascript',
-            source: RxjsOperatorsLibraryCode,
-        });
-
-        sim.portals.addLibrary({
-            id: 'uuid',
-            language: 'javascript',
-            source: UuidLibraryCode,
-        });
+        for (let lib of libraries) {
+            sim.portals.addLibrary(lib);
+            addDefinitionsForLibrary(lib);
+        }
 
         sub.add(
             sim.portals.portalsDiscovered
