@@ -28,7 +28,7 @@ import {
     calculateBotValue,
     isFormula,
 } from '@casual-simulation/aux-common';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import axios from 'axios';
 import { RedisClient, createClient as createRedisClient } from 'redis';
 import util from 'util';

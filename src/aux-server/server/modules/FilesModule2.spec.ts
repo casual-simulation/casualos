@@ -15,7 +15,7 @@ import {
 import fs from 'fs';
 import { FilesModule2 } from './FilesModule2';
 import mockFs from 'mock-fs';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import {
     Action,
     remoteResult,
@@ -27,7 +27,7 @@ console.log = jest.fn();
 console.error = jest.fn();
 
 const uuidMock: jest.Mock = <any>uuid;
-jest.mock('uuid/v4');
+jest.mock('uuid');
 
 describe('FilesModule2', () => {
     let simulation: Simulation;
@@ -248,7 +248,7 @@ describe('FilesModule2', () => {
             it('should send an async result when done if the event has a task id and player id', async () => {
                 let remoteEvents = [] as Action[];
 
-                memory.sendRemoteEvents = async events => {
+                memory.sendRemoteEvents = async (events) => {
                     remoteEvents.push(...events);
                 };
 
@@ -282,7 +282,7 @@ describe('FilesModule2', () => {
             it('should send an async error when done if the event has a task id and player id', async () => {
                 let remoteEvents = [] as Action[];
 
-                memory.sendRemoteEvents = async events => {
+                memory.sendRemoteEvents = async (events) => {
                     remoteEvents.push(...events);
                 };
 
@@ -396,7 +396,7 @@ describe('FilesModule2', () => {
             it('should send an async result with the file', async () => {
                 let remoteEvents = [] as Action[];
 
-                memory.sendRemoteEvents = async events => {
+                memory.sendRemoteEvents = async (events) => {
                     remoteEvents.push(...events);
                 };
 
@@ -429,7 +429,7 @@ describe('FilesModule2', () => {
             it('should send an async error if the file doesnt exist', async () => {
                 let remoteEvents = [] as Action[];
 
-                memory.sendRemoteEvents = async events => {
+                memory.sendRemoteEvents = async (events) => {
                     remoteEvents.push(...events);
                 };
 

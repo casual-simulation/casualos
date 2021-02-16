@@ -55,7 +55,7 @@ import {
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
 
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import {
     flatMap,
     union,

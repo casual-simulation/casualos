@@ -42,7 +42,7 @@ import {
     applyEdit,
     isTagEdit,
 } from '@casual-simulation/aux-common/aux-format-2';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 
 export class LocalStoragePartitionImpl implements LocalStoragePartition {
     protected _onBotsAdded = new Subject<Bot[]>();

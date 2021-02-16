@@ -1,5 +1,5 @@
 import { union, keys, every, some, isObject, mapValues } from 'lodash';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Merges the two objects and returns a new object that contains the combination of the two.

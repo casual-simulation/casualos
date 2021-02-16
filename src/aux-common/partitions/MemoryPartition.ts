@@ -30,7 +30,7 @@ import { startWith } from 'rxjs/operators';
 import { flatMap, union } from 'lodash';
 import { merge } from '../utils';
 import { applyEdit, isTagEdit } from '../aux-format-2';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Attempts to create a MemoryPartition from the given config.

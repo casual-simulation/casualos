@@ -54,7 +54,7 @@
         "lodash": "4.17.19",
         "rxjs": "^6.5.2",
         "socket.io-client": "2.1.1",
-        "uuid": "^3.3.2"
+        "uuid": "^8.3.2"
     },
     "devDependencies": {
         "esbuild": "^0.8.43",

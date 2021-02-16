@@ -1,6 +1,6 @@
 import { WeaveResult, Weave, addedAtom } from './Weave2';
 import { Atom, atom, atomId, AtomCardinality } from './Atom2';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Describes information about the current status of a site.

@@ -81,7 +81,7 @@
         "@types/stripe": "6.32.1",
         "@types/stripe-v3": "^3.1.7",
         "@types/useragent": "^2.1.1",
-        "@types/uuid": "^3.3.2",
+        "@types/uuid": "^8.3.0",
         "@types/vue-color": "^2.4.1",
         "@types/ws": "6.0.3",
         "@types/cors": "2.8.6",

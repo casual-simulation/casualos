@@ -211,7 +211,7 @@ import {
     DeviceSelector,
     RemoteAction,
 } from '@casual-simulation/causal-trees';
-import uuidv4 from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';

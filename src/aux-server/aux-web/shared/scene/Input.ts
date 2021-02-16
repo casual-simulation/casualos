@@ -4,7 +4,7 @@ import { find, some } from 'lodash';
 import { Viewport } from './Viewport';
 import { Game } from './Game';
 import { Subscription, Observable, Subject } from 'rxjs';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import {
     XRInputSource,
     XRFrame,

@@ -30,7 +30,7 @@ import {
     TagMaskOp,
     InsertOp,
 } from './AuxOpTypes';
-import uuidv5 from 'uuid/v5';
+import { v5 as uuidv5 } from 'uuid';
 import { Bot, PartialBotsState, BotSpace } from '../bots/Bot';
 import { merge } from '../utils';
 import { hasValue, createBot } from '../bots/BotCalculations';

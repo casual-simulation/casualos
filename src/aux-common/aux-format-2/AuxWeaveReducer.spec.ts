@@ -28,7 +28,7 @@ import reduce, { CERT_ID_NAMESPACE, CERTIFIED_SPACE } from './AuxWeaveReducer';
 import { BotsState, PartialBotsState } from '../bots/Bot';
 import { apply, del, edit, edits, insert, preserve } from './AuxStateHelpers';
 import { isBot } from '../bots';
-import uuidv5 from 'uuid/v5';
+import { v5 as uuidv5 } from 'uuid';
 import { merge } from 'lodash';
 import { getHash } from '@casual-simulation/crypto';
 import reducer from './AuxWeaveReducer';

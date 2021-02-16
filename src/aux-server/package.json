@@ -111,7 +111,7 @@
         "troika-three-text": "0.36.1",
         "unique-names-generator": "4.2.0",
         "useragent": "^2.3.0",
-        "uuid": "^3.3.2",
+        "uuid": "^8.3.2",
         "vhost": "^3.0.2",
         "vm2": "3.8.2",
         "vue": "^2.5.17",

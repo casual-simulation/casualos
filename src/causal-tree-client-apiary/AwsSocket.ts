@@ -11,7 +11,7 @@ import {
     AwsUploadRequest,
     AwsUploadResponse,
 } from './AwsMessages';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import { concatMap, filter, map } from 'rxjs/operators';
 import axios from 'axios';
 

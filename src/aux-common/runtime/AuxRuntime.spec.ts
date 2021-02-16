@@ -72,7 +72,7 @@ import {
     tagsOnBot,
     TEMPORARY_BOT_PARTITION_ID,
 } from '../bots';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
 import { types } from 'util';
 import {
@@ -94,7 +94,7 @@ import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { merge } from '../utils';
 
 const uuidMock: jest.Mock = <any>uuid;
-jest.mock('uuid/v4');
+jest.mock('uuid');
 
 console.warn = jest.fn();
 

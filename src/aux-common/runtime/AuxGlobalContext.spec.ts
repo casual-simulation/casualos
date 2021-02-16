@@ -12,10 +12,10 @@ import { createBot, botAdded, botRemoved } from '../bots';
 import { RealtimeEditMode, RuntimeBatcher } from './RuntimeBot';
 import { waitAsync } from '../test/TestHelpers';
 import { RanOutOfEnergyError } from './AuxResults';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 
 const uuidMock: jest.Mock = <any>uuid;
-jest.mock('uuid/v4');
+jest.mock('uuid');
 
 describe('AuxGlobalContext', () => {
     let context: AuxGlobalContext;

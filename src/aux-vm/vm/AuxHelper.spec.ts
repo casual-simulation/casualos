@@ -50,7 +50,7 @@ import {
     AUTHENTICATE_BRANCH_WRITES,
     SET_BRANCH_PASSWORD,
 } from '@casual-simulation/causal-trees';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import {
     waitAsync,
     wait,
@@ -62,7 +62,7 @@ import { TestScriptBotFactory } from '@casual-simulation/aux-common/runtime/test
 import { keypair } from '../../aux-common/node_modules/@casual-simulation/crypto';
 
 const uuidMock: jest.Mock = <any>uuid;
-jest.mock('uuid/v4');
+jest.mock('uuid');
 
 console.log = jest.fn();
 console.warn = jest.fn();

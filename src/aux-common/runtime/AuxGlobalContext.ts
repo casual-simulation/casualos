@@ -18,7 +18,7 @@ import {
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { ScriptError, RanOutOfEnergyError } from './AuxResults';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import { sortBy, sortedIndex, sortedIndexOf, sortedIndexBy } from 'lodash';
 import './PerformanceNowPolyfill';
 import { Observable, Subscription, SubscriptionLike } from 'rxjs';
