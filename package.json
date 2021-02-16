@@ -13,7 +13,7 @@
         "watch:libs": "tsc --build --watch",
         "watch:portals": "lerna exec --scope @casual-simulation/aux-custom-portals -- npm run watch",
         "rebuild": "npm run clean && npm run build",
-        "build": "npm run clean && npm run build:libs && npm run build:server && npm run build:proxy && npm run build:redirector && npm run build:cli",
+        "build": "npm run clean && npm run build:libs && npm run build:portals && npm run build:server && npm run build:proxy && npm run build:redirector && npm run build:cli",
         "build:tar:docker": "npm run build && npm run tar:docket",
         "build:docker": "npm run build && npm run package:docker",
         "build:docker:arm32": "npm run build:tar:docker && npm run package:docker:arm32",
