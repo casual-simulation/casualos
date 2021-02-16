@@ -1,18 +1,18 @@
+const path = require('path');
 const esbuild = require('esbuild');
+const rollup = require('rollup');
 const builds = require('./common');
 const fs = require('fs');
-const path = require('path');
 
 for (let b of builds) {
-    start(b);
+    build(b);
 }
 
-async function start(build) {
+async function build(build) {
     try {
         if (build.type === 'esbuild') {
             await esbuild.build({
                 ...build.options,
-                watch: true,
             });
         } else {
             const dir = path.resolve(__dirname, `../dist/rollup/${build.id}`);

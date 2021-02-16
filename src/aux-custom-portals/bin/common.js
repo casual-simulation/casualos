@@ -1,5 +1,6 @@
 const path = require('path');
-const ts = require('rollup-plugin-ts');
+const ts = require('@wessberg/rollup-plugin-ts');
+const { nodeResolve } = require('@rollup/plugin-node-resolve');
 const { emptyModulePlugin, injectModulePlugin } = require('./helpers');
 
 module.exports = [
@@ -49,10 +50,29 @@ module.exports = [
         type: 'rollup',
         options: {
             input: path.resolve(__dirname, '../lib/casualos.ts'),
+            external: [
+                'lodash',
+                'rxjs',
+                'rxjs/operators',
+                'base64-js',
+                'hash.js',
+                'three',
+                'scrypt-js',
+                'tweetnacl',
+                'astring',
+                'fast-json-stable-stringify',
+                'lru-cache',
+                'acorn',
+                'mime',
+                '@tweenjs/tween.js',
+                'estraverse',
+            ],
             plugins: [
+                nodeResolve(),
                 ts({
-                    // cwd: path.resolve(__dirname, '..'),
+                    cwd: path.resolve(__dirname, '..'),
                     tsconfig: path.resolve(__dirname, '../tsconfig.d.json'),
+                    exclude: [],
                 }),
             ],
         },
