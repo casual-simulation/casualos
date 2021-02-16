@@ -66,8 +66,8 @@ import { CurrentVersion } from '@casual-simulation/causal-trees';
 import { Color } from 'three';
 import { invertColor } from './scene/ColorUtils';
 import { getCursorColorClass, getCursorLabelClass } from './StyleHelpers';
-import jscodeshift from 'jscodeshift';
-import MonacoJSXHighlighter from './public/monaco-jsx-highlighter/index';
+// import jscodeshift from 'jscodeshift';
+// import MonacoJSXHighlighter from './public/monaco-jsx-highlighter/index';
 import axios from 'axios';
 import { customPortalLanguageId } from './monaco/custom-portal-typescript/custom-portal-typescript.contribution';
 import {
@@ -337,11 +337,11 @@ export function watchEditor(
     simulation: Simulation,
     editor: monaco.editor.ICodeEditor
 ): Subscription {
-    const monacoJsxHighlighter = new MonacoJSXHighlighter(
-        monaco,
-        jscodeshift,
-        editor
-    );
+    // const monacoJsxHighlighter = new MonacoJSXHighlighter(
+    //     monaco,
+    //     jscodeshift,
+    //     editor
+    // );
 
     const modelChangeObservable = new Observable<
         monaco.editor.IModelChangedEvent
@@ -534,35 +534,35 @@ export function watchEditor(
         )
     );
 
-    const enableJsxHighlightingOnCorrectModels = modelInfos.pipe(
-        map(
-            (info) =>
-                info.language === 'javascript' || info.language === 'typescript'
-        ),
-        scan(
-            (acc, needsJsxHighlighting) => {
-                if (acc) {
-                    acc();
-                }
-                if (needsJsxHighlighting) {
-                    return monacoJsxHighlighter.highLightOnDidChangeModelContent(
-                        undefined,
-                        () => {},
-                        undefined,
-                        () => {}
-                    );
-                } else {
-                    return () => {};
-                }
-            },
-            () => {}
-        )
-    );
+    // const enableJsxHighlightingOnCorrectModels = modelInfos.pipe(
+    //     map(
+    //         (info) =>
+    //             info.language === 'javascript' || info.language === 'typescript'
+    //     ),
+    //     scan(
+    //         (acc, needsJsxHighlighting) => {
+    //             if (acc) {
+    //                 acc();
+    //             }
+    //             if (needsJsxHighlighting) {
+    //                 return monacoJsxHighlighter.highLightOnDidChangeModelContent(
+    //                     undefined,
+    //                     () => {},
+    //                     undefined,
+    //                     () => {}
+    //                 );
+    //             } else {
+    //                 return () => {};
+    //             }
+    //         },
+    //         () => {}
+    //     )
+    // );
 
     const sub = new Subscription();
 
     sub.add(decorators.subscribe());
-    sub.add(enableJsxHighlightingOnCorrectModels.subscribe());
+    // sub.add(enableJsxHighlightingOnCorrectModels.subscribe());
 
     sub.add(
         toSubscription(
