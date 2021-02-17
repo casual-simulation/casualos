@@ -3,6 +3,7 @@ import {
     DEFAULT_CUSTOM_PORTAL_ANCHOR_POINT,
 } from '@casual-simulation/aux-common';
 import {
+    injectPort,
     loadScript,
     loadText,
     reload,
@@ -29,6 +30,11 @@ export default class CustomPortal extends Vue {
 
     @Prop({ default: {} })
     extraStyle: any;
+
+    @Prop({})
+    ports: {
+        [id: string]: MessagePort;
+    };
 
     defaultStyle: any;
 
@@ -73,6 +79,14 @@ export default class CustomPortal extends Vue {
     }
 
     private async _injectScript() {
+        if (this.ports) {
+            for (let key in this.ports) {
+                let port = this.ports[key];
+                if (port) {
+                    await injectPort(this._iframe.contentWindow, key, port);
+                }
+            }
+        }
         await loadScript(this._iframe.contentWindow, 'main', this.source);
     }
 

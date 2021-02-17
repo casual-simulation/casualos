@@ -30,7 +30,7 @@ import { ArrowHelperPool } from '../objectpools/ArrowHelperPool';
 import { drawExamples } from './DebugExamples';
 import { PlaneHelperPool } from '../objectpools/PlaneHelerPool';
 import { CubeHelperPool } from '../objectpools/CubeHelperPool';
-import merge from 'lodash/merge';
+import { merge } from 'lodash';
 import { Subscription } from 'rxjs';
 
 const BOX3HELPER_POOL_ID = 'box3helper_pool';

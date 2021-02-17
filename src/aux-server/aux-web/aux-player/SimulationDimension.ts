@@ -11,8 +11,8 @@ import {
     isSimulation,
     getBotChannel,
 } from '@casual-simulation/aux-common';
-import remove from 'lodash/remove';
-import sortBy from 'lodash/sortBy';
+import { remove } from 'lodash';
+import { sortBy } from 'lodash';
 import { PlayerPageSimulation3D } from './scene/PlayerPageSimulation3D';
 import { Subject, Observable } from 'rxjs';
 
@@ -77,7 +77,7 @@ export class SimulationDimension {
      * @param calc The calculation context that should be used.
      */
     botAdded(bot: Bot, calc: BotCalculationContext) {
-        const isInDimension = !!this.bots.find(f => f.id == bot.id);
+        const isInDimension = !!this.bots.find((f) => f.id == bot.id);
         const shouldBeInDimension =
             isBotInDimension(calc, bot, this.dimension) &&
             isSimulation(calc, bot);
@@ -94,7 +94,7 @@ export class SimulationDimension {
      * @param calc The calculation context that should be used.
      */
     botUpdated(bot: Bot, updates: Set<string>, calc: BotCalculationContext) {
-        const isInDimension = !!this.bots.find(f => f.id == bot.id);
+        const isInDimension = !!this.bots.find((f) => f.id == bot.id);
         const shouldBeInDimension =
             isBotInDimension(calc, bot, this.dimension) &&
             isSimulation(calc, bot);
@@ -134,7 +134,7 @@ export class SimulationDimension {
     }
 
     private _removeBot(id: string) {
-        remove(this.bots, f => f.id === id);
+        remove(this.bots, (f) => f.id === id);
         this._itemsDirty = true;
     }
 
@@ -143,7 +143,7 @@ export class SimulationDimension {
         updates: Set<string>,
         calc: BotCalculationContext
     ) {
-        let botIndex = this.bots.findIndex(f => f.id == bot.id);
+        let botIndex = this.bots.findIndex((f) => f.id == bot.id);
         if (botIndex >= 0) {
             this.bots[botIndex] = bot;
             this._itemsDirty = true;
@@ -151,9 +151,9 @@ export class SimulationDimension {
     }
 
     private _resortItems(calc: BotCalculationContext): void {
-        this.items = sortBy(this.bots, f =>
+        this.items = sortBy(this.bots, (f) =>
             botDimensionSortOrder(calc, f, this.dimension)
-        ).map(f => {
+        ).map((f) => {
             return {
                 bot: f,
                 simulation: this.simulation,

@@ -1,6 +1,6 @@
 import { Subscription, Subject, SubscriptionLike } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
-import sortBy from 'lodash/sortBy';
+import { sortBy } from 'lodash';
 import { DimensionItem } from './DimensionItem';
 import {
     Simulation,

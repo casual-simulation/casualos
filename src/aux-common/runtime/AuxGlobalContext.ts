@@ -9,7 +9,6 @@ import {
     DEFAULT_ENERGY,
     RuntimeBot,
 } from '../bots';
-import sortedIndexBy from 'lodash/sortedIndexBy';
 import {
     RuntimeBotFactory,
     RuntimeBotsState,
@@ -19,8 +18,8 @@ import {
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { ScriptError, RanOutOfEnergyError } from './AuxResults';
-import uuid from 'uuid/v4';
-import { sortBy, sortedIndex, sortedIndexOf } from 'lodash';
+import { v4 as uuid } from 'uuid';
+import { sortBy, sortedIndex, sortedIndexOf, sortedIndexBy } from 'lodash';
 import './PerformanceNowPolyfill';
 import { Observable, Subscription, SubscriptionLike } from 'rxjs';
 import { tap } from 'rxjs/operators';

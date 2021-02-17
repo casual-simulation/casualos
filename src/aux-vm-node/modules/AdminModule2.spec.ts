@@ -18,7 +18,7 @@ import {
     wait,
     waitAsync,
 } from '@casual-simulation/aux-common/test/TestHelpers';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import { nodeSimulationForLocalRepo } from '../managers/NodeSimulationFactories';
 
 console.error = jest.fn();
@@ -27,7 +27,7 @@ let logMock = (console.log = jest.fn());
 jest.mock('child_process');
 
 const uuidMock: jest.Mock = <any>uuid;
-jest.mock('uuid/v4');
+jest.mock('uuid');
 
 describe('AdminModule2', () => {
     let simulation: Simulation;

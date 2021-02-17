@@ -36,8 +36,6 @@ import {
 } from '../../MonacoHelpers';
 import * as monaco from '../../MonacoLibs';
 import { filter, flatMap, tap } from 'rxjs/operators';
-import groupBy from 'lodash/groupBy';
-import sumBy from 'lodash/sumBy';
 import { tagValueHash } from '@casual-simulation/aux-common/aux-format-2';
 import { ScriptPrefix } from '@casual-simulation/aux-vm';
 

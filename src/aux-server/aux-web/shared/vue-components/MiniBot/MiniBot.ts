@@ -6,7 +6,7 @@ import { BotRenderer } from '../../scene/BotRenderer';
 import { appManager } from '../../AppManager';
 import TagColor from '../TagColor/TagColor';
 import { EventBus } from '../../EventBus';
-import debounce from 'lodash/debounce';
+import { debounce } from 'lodash';
 
 @Component({
     components: {

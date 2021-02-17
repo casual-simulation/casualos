@@ -4,6 +4,7 @@ import {
     SimulationIdParseSuccess,
     BotIndex,
     AuxPartitionConfig,
+    LocalActions,
 } from '@casual-simulation/aux-common';
 import { Observable, SubscriptionLike } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
@@ -16,7 +17,11 @@ import { AuxConfig } from '../vm/AuxConfig';
 import { ConnectionManager } from './ConnectionManager';
 import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
-import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
+import {
+    DeviceAction,
+    DevicesEvent,
+    LoadingProgressCallback,
+} from '@casual-simulation/causal-trees';
 import { ProgressStatus, DeviceInfo } from '@casual-simulation/causal-trees';
 import { Simulation } from './Simulation';
 import { CodeLanguageManager } from './CodeLanguageManager';
@@ -110,7 +115,7 @@ export class BaseSimulation implements Simulation {
         return this._code;
     }
 
-    get localEvents() {
+    get localEvents(): Observable<LocalActions> {
         return this._vm.localEvents.pipe(flatMap((e) => e));
     }
 
@@ -118,7 +123,7 @@ export class BaseSimulation implements Simulation {
         return this._vm.onError;
     }
 
-    get deviceEvents() {
+    get deviceEvents(): Observable<DeviceAction> {
         return this._vm.deviceEvents.pipe(flatMap((e) => e));
     }
 

@@ -1,5 +1,5 @@
 import { Vector2 } from 'three';
-import range from 'lodash/range';
+import { range } from 'lodash';
 
 // (kal)
 // Lots taken from https://www.redblobgames.com/grids/hexagons/
@@ -29,7 +29,7 @@ export function hexCorner(
  */
 export function hex(size: number): Vector2[] {
     const idx = range(0, 6);
-    return idx.map(i => hexCorner(i, undefined, size));
+    return idx.map((i) => hexCorner(i, undefined, size));
 }
 
 /**

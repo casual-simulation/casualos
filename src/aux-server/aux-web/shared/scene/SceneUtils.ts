@@ -36,7 +36,7 @@ import {
     LineSegments,
     LineBasicMaterial,
 } from 'three';
-import flatMap from 'lodash/flatMap';
+import { flatMap } from 'lodash';
 import {
     BotCalculationContext,
     Bot,

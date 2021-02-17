@@ -12,7 +12,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike, Subject, Observable, Subscription } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
-import flatMap from 'lodash/flatMap';
+import { flatMap } from 'lodash';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { CameraRig } from './CameraRigFactory';
 import { Game } from './Game';

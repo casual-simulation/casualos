@@ -15,8 +15,7 @@ import { UpdatedBotInfo } from './BotWatcher';
 import { Observable, Subject } from 'rxjs';
 import { map, filter } from 'rxjs/operators';
 import { BotHelper } from './BotHelper';
-import difference from 'lodash/difference';
-import union from 'lodash/union';
+import { difference, union } from 'lodash';
 
 /**
  * Defines a class that makes it easy to watch for updates to bots in dimensions.

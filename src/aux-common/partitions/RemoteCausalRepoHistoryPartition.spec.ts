@@ -32,7 +32,7 @@ import {
     StateUpdatedEvent,
 } from '../bots';
 import { CausalRepoHistoryClientPartitionConfig } from './AuxPartitionConfig';
-import uuid from 'uuid/v5';
+import { v5 as uuid } from 'uuid';
 import { skip } from 'rxjs/operators';
 
 console.log = jest.fn();

@@ -58,8 +58,9 @@ import {
     SetSpacePasswordAction,
     StateUpdatedEvent,
     stateUpdatedEvent,
+    BotsState,
 } from '../bots';
-import flatMap from 'lodash/flatMap';
+import { flatMap } from 'lodash';
 import {
     PartitionConfig,
     RemoteCausalRepoPartitionConfig,
@@ -171,7 +172,7 @@ export class RemoteCausalRepoPartitionImpl
         return this._sub.closed;
     }
 
-    get state() {
+    get state(): BotsState {
         return this._tree.state;
     }
 

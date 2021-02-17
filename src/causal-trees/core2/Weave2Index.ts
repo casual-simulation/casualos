@@ -6,7 +6,7 @@ import {
 } from './Weave2';
 import { AtomIndexFullDiff, AtomHashList } from './AtomIndex';
 import { Atom, atomIdToString } from './Atom2';
-import uniqBy from 'lodash/uniqBy';
+import { uniqBy } from 'lodash';
 
 /**
  * Calculates the index diff from the given weave results.
@@ -30,14 +30,14 @@ export function batchDiff(results: WeaveResult[]): AtomIndexFullDiff {
     }
 
     return {
-        additions: uniqBy(added, a => a.hash),
+        additions: uniqBy(added, (a) => a.hash),
         deletions: deleted,
     };
 
     function removeRef(ref: WeaveNode<any>) {
         for (let removed of iterateFrom(ref)) {
             const hash = removed.atom.hash;
-            const idx = added.findIndex(a => a.hash === hash);
+            const idx = added.findIndex((a) => a.hash === hash);
             if (idx >= 0) {
                 added.splice(idx, 1);
             } else {

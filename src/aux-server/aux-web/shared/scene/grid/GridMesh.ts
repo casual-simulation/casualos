@@ -10,11 +10,7 @@ import {
     LineSegments,
 } from 'three';
 import { GridLevel } from './GridLevel';
-import flatMap from 'lodash/flatMap';
-import groupBy from 'lodash/groupBy';
-import minBy from 'lodash/minBy';
-import sortBy from 'lodash/sortBy';
-import { Dictionary } from 'lodash';
+import { Dictionary, flatMap, groupBy, minBy, sortBy } from 'lodash';
 import { disposeMesh } from '../SceneUtils';
 
 export const Y_OFFSET = 0.01;
@@ -31,8 +27,8 @@ export class GridMesh extends Object3D {
     constructor(level: GridLevel) {
         super();
         this.tiles = level.tiles
-            .filter(t => t.valid)
-            .map(t => ({
+            .filter((t) => t.valid)
+            .map((t) => ({
                 localPosition: t.localPosition,
                 gridPosition: t.gridPosition,
             }));
@@ -48,16 +44,16 @@ export class GridMesh extends Object3D {
         this.worldToLocal(p);
 
         const validTiles = this.tiles;
-        const mapped = validTiles.map(t => ({
+        const mapped = validTiles.map((t) => ({
             tile: t,
             distance: p.distanceTo(t.localPosition),
         }));
-        const closestTile = minBy(mapped, t => t.distance);
+        const closestTile = minBy(mapped, (t) => t.distance);
         return closestTile;
     }
 
     dispose() {
-        this.children.forEach(c => {
+        this.children.forEach((c) => {
             if (c instanceof Line) {
                 disposeMesh(c);
             }
@@ -66,12 +62,12 @@ export class GridMesh extends Object3D {
 }
 
 export function constructGridLines(level: GridLevel): Line {
-    const validTiles = level.tiles.filter(t => t.valid);
+    const validTiles = level.tiles.filter((t) => t.valid);
 
-    const allPoints = flatMap(validTiles, t => t.localPoints);
+    const allPoints = flatMap(validTiles, (t) => t.localPoints);
 
-    const verticalPoints = groupBy(allPoints, p => p.x);
-    const horizontalPoints = groupBy(allPoints, p => p.z);
+    const verticalPoints = groupBy(allPoints, (p) => p.x);
+    const horizontalPoints = groupBy(allPoints, (p) => p.z);
 
     let verticies: number[] = [];
     let horizontalKeys = Object.keys(horizontalPoints);

@@ -1,6 +1,6 @@
 import { AtomStore } from './AtomStore';
 import { Atom, AtomId, atomIdToString } from './Atom2';
-import sortBy from 'lodash/sortBy';
+import { sortBy } from 'lodash';
 
 /**
  * Defines a class that implements an in-memory implementation of an AtomStore.
@@ -40,7 +40,7 @@ export class MemoryAtomStore implements AtomStore {
     async findByCause(cause: AtomId): Promise<Atom<any>[]> {
         const atoms =
             this._causeIndex.get(cause ? atomIdToString(cause) : '') || [];
-        return sortBy(atoms, a => a.id.timestamp);
+        return sortBy(atoms, (a) => a.id.timestamp);
     }
 
     async findByHashes(hashes: string[]): Promise<Atom<any>[]> {

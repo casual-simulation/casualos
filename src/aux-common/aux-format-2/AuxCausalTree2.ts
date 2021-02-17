@@ -70,7 +70,7 @@ import {
     calculateFinalEditValue,
 } from './AuxWeaveHelpers';
 import { Action } from '@casual-simulation/causal-trees';
-import lodashMerge from 'lodash/merge';
+import { merge as lodashMerge } from 'lodash';
 
 /**
  * Defines an interface that represents the state of a causal tree that contains AUX state.

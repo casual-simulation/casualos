@@ -6,7 +6,7 @@ import {
     RuntimeStateVersion,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
-import { wrap, proxy, Remote, expose, transfer } from 'comlink';
+import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
 import {
     AuxConfig,
     AuxVM,
@@ -236,6 +236,14 @@ export class AuxVMImpl implements AuxVM {
     async getTags(): Promise<string[]> {
         if (!this._proxy) return null;
         return await this._proxy.getTags();
+    }
+
+    /**
+     * Gets a new endpoint for the aux channel.
+     * Can then be used with a ConnectableAuxVM.
+     */
+    createEndpoint(): Promise<MessagePort> {
+        return this._proxy[createEndpoint]();
     }
 
     unsubscribe(): void {

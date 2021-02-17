@@ -12,7 +12,7 @@ import {
     CausalRepoSitelogConnectionReason,
     CausalRepoBranchSettings,
 } from './CausalRepoObject';
-import sortBy from 'lodash/sortBy';
+import { sortBy } from 'lodash';
 import { getAtomHashes } from './AtomIndex';
 
 export class MemoryCausalRepoStore implements CausalRepoStore {
@@ -132,11 +132,11 @@ export class MemoryCausalRepoStore implements CausalRepoStore {
             }
         }
 
-        return sortBy(branches, b => b.name);
+        return sortBy(branches, (b) => b.name);
     }
 
     async saveBranch(head: CausalRepoBranch): Promise<void> {
-        const index = this._branches.findIndex(b => b.name === head.name);
+        const index = this._branches.findIndex((b) => b.name === head.name);
         if (index >= 0) {
             this._branches[index] = head;
         } else {
@@ -152,7 +152,7 @@ export class MemoryCausalRepoStore implements CausalRepoStore {
     }
 
     async deleteBranch(head: CausalRepoBranch): Promise<void> {
-        const index = this._branches.findIndex(b => b.name === head.name);
+        const index = this._branches.findIndex((b) => b.name === head.name);
         if (index >= 0) {
             this._branches.splice(index, 1);
         }

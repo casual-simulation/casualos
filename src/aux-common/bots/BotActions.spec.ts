@@ -5,13 +5,13 @@ import {
     botRemoved,
     botUpdated,
 } from './BotEvents';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import { BotsState } from './Bot';
 import { createBot } from './BotCalculations';
 import { breakIntoIndividualEvents } from './BotActions';
 
 const uuidMock: jest.Mock = <any>uuid;
-jest.mock('uuid/v4');
+jest.mock('uuid');
 
 console.error = jest.fn();
 

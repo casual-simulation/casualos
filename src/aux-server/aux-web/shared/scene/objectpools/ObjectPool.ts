@@ -1,6 +1,6 @@
 import { getOptionalValue } from '../../SharedUtils';
-import uuid from 'uuid/v4';
-import remove from 'lodash/remove';
+import { v4 as uuid } from 'uuid';
+import { remove } from 'lodash';
 
 /**
  * This is a generic object pool class that can be extended from to implement a pool for
@@ -66,7 +66,7 @@ export abstract class ObjectPool<T> {
 
         if (this._pool.length > 0) {
             obj = this._pool[0];
-            remove(this._pool, o => o === obj);
+            remove(this._pool, (o) => o === obj);
         } else {
             if (this.poolEmptyWarn) {
                 console.warn(

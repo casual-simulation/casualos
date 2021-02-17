@@ -23,10 +23,8 @@ import {
     CurrentVersion,
 } from '@casual-simulation/causal-trees';
 import { startWith } from 'rxjs/operators';
-import flatMap from 'lodash/flatMap';
-import union from 'lodash/union';
+import { flatMap, union, sortBy, values } from 'lodash';
 import { BotClient } from './BotClient';
-import sortBy from 'lodash/sortBy';
 import {
     breakIntoIndividualEvents,
     UpdatedBot,
@@ -44,7 +42,6 @@ import {
     StateUpdatedEvent,
     stateUpdatedEvent,
 } from '../bots';
-import values from 'lodash/values';
 
 /**
  * Attempts to create a BotPartition from the given config.

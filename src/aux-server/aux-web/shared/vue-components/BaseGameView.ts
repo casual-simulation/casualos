@@ -7,7 +7,7 @@ import CameraHome from '../../shared/vue-components/CameraHome/CameraHome';
 import { Game } from '../scene/Game';
 import { SubscriptionLike } from 'rxjs';
 import { EventBus } from '../EventBus';
-import debounce from 'lodash/debounce';
+import { debounce } from 'lodash';
 
 export interface SidebarItem {
     id: string;

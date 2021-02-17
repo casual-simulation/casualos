@@ -110,4 +110,9 @@ export interface AuxVM extends Initable {
      * Gets the list of tags that are currently in use.
      */
     getTags(): Promise<string[]>;
+
+    /**
+     * Creates a new MessagePort that can be used to connect to the internal aux channel.
+     */
+    createEndpoint?(): Promise<MessagePort>;
 }

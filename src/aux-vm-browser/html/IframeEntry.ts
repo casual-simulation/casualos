@@ -47,5 +47,21 @@ globalThis.addEventListener('message', (message) => {
         );
     } else if (message.data.type === 'reload') {
         location.reload();
+    } else if (message.data.type === 'inject_port') {
+        const id = message.data.id;
+        const port = message.data.port;
+        const global = globalThis as any;
+        if (!global.__injectedPorts) {
+            global.__injectedPorts = {};
+        }
+
+        global.__injectedPorts[id] = port;
+        (<any>message.source).postMessage(
+            {
+                type: 'port_injected',
+                id,
+            },
+            message.origin
+        );
     }
 });

@@ -32,13 +32,11 @@ import {
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import differenceBy from 'lodash/differenceBy';
-import maxBy from 'lodash/maxBy';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { Subscription } from 'rxjs';
 import { ControllerData, InputMethod } from '../../../shared/scene/Input';
 import { posesEqual } from '../ClickOperation/ClickOperationUtils';
-import merge from 'lodash/merge';
+import { merge } from 'lodash';
 
 /**
  * Shared class for both BotDragOperation and NewBotDragOperation.
@@ -129,7 +127,7 @@ export abstract class BaseBotDragOperation implements IOperation {
 
         if (!skipOnDragEvents) {
             const sub = this._simulation3D.simulation.localEvents.subscribe(
-                action => {
+                (action) => {
                     if (action.type === 'replace_drag_bot') {
                         if (sub) {
                             sub.unsubscribe();

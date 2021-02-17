@@ -1,4 +1,4 @@
-import merge from 'lodash/merge';
+import { merge } from 'lodash';
 
 /**
  * Adds the given function with the given name to the global aux namespace.
