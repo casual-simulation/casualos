@@ -1,11 +1,10 @@
 import Vue from 'vue';
 import { Vector2, Vector3, Ray, Group, Object3D } from 'three';
-import find from 'lodash/find';
-import some from 'lodash/some';
+import { find, some } from 'lodash';
 import { Viewport } from './Viewport';
 import { Game } from './Game';
 import { Subscription, Observable, Subject } from 'rxjs';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import {
     XRInputSource,
     XRFrame,

@@ -147,7 +147,7 @@ import {
     possibleTagValueCases,
 } from '../bots/test/BotTestHelpers';
 import { remote } from '@casual-simulation/causal-trees';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import {
     TestScriptBotFactory,
     createDummyRuntimeBot,
@@ -165,7 +165,7 @@ import { Subscription, SubscriptionLike } from 'rxjs';
 import { waitAsync } from '../test/TestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
-jest.mock('uuid/v4');
+jest.mock('uuid');
 
 describe('AuxLibrary', () => {
     let library: ReturnType<typeof createDefaultLibrary>;

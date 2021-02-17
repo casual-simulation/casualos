@@ -24,12 +24,13 @@ import {
     RevokeCertificateAction,
     StateUpdatedEvent,
     stateUpdatedEvent,
+    BotsState,
 } from '../bots';
 import {
     PartitionConfig,
     CausalRepoPartitionConfig,
 } from './AuxPartitionConfig';
-import flatMap from 'lodash/flatMap';
+import { flatMap } from 'lodash';
 
 /**
  * Attempts to create a CausalTree2Partition from the given config.
@@ -107,7 +108,7 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
         return this._sub.closed;
     }
 
-    get state() {
+    get state(): BotsState {
         return this._tree.state;
     }
 

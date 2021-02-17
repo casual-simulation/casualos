@@ -10,7 +10,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import { normalizeAUXBotURL } from '@casual-simulation/aux-common';
 import Dexie from 'dexie';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import { WebConfig } from '../../shared/WebConfig';
 import {
     SimulationManager,

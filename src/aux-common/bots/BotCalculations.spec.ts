@@ -35,7 +35,7 @@ import {
     hasMaskForTag,
 } from './BotCalculations';
 import { Bot, BotsState, DNA_TAG_PREFIX } from './Bot';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import { botCalculationContextTests } from './test/BotCalculationContextTests';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
 import { BotCalculationContext } from './BotCalculationContext';
@@ -43,7 +43,7 @@ import { createPrecalculatedContext } from './BotCalculationContextFactory';
 import { getShortId } from '.';
 
 const uuidMock: jest.Mock = <any>uuid;
-jest.mock('uuid/v4');
+jest.mock('uuid');
 
 const dateNowMock = (Date.now = jest.fn());
 

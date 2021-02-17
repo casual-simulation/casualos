@@ -1,0 +1,12 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "outDir": ".",
+        "declaration": true,
+        "emitDeclarationOnly": true,
+        "moduleResolution": "Node"
+    },
+    "include": ["./lib/casualos.ts"],
+    "exclude": ["node_modules", "**/*.spec.ts"]
+}

@@ -46,15 +46,13 @@ import { map } from 'rxjs/operators';
 import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
 import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
-import find from 'lodash/find';
-import flatMap from 'lodash/flatMap';
+import { flatMap, merge } from 'lodash';
 import { EventBus } from '../EventBus';
 import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import Bowser from 'bowser';
 import { AuxBot3D } from './AuxBot3D';
 import { supportsXR } from '../SharedUtils';
-import merge from 'lodash/merge';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 

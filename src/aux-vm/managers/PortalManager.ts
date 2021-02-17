@@ -18,12 +18,14 @@ import {
 import {
     BundleModules,
     CodeBundle,
+    ExternalModule,
+    LibraryModule,
     PortalBundler,
     ScriptPrefix,
 } from './PortalBundler';
 import { BotHelper } from './BotHelper';
 import { BotWatcher, UpdatedBotInfo } from './BotWatcher';
-import { pick } from 'lodash';
+import { pick, values } from 'lodash';
 
 /**
  * The list of default script prefixes.
@@ -59,6 +61,10 @@ export class PortalManager implements SubscriptionLike {
     private _portalsUpdated: Subject<PortalUpdate[]>;
     private _prefixesDiscovered: Subject<ScriptPrefix[]>;
     private _prefixesRemoved: Subject<string[]>;
+    private _externalsDiscovered: Subject<ExternalModule[]>;
+    private _librariesDiscovered: Subject<LibraryModule[]>;
+    private _externalModules: CodeBundle['externals'];
+    private _libraryModules: CodeBundle['libraries'];
     private _vm: AuxVM;
     private _helper: BotHelper;
     private _watcher: BotWatcher;
@@ -98,10 +104,42 @@ export class PortalManager implements SubscriptionLike {
     }
 
     /**
+     * Gets an observable that resolves when an external script has been discovered.
+     */
+    get externalsDiscovered(): Observable<ExternalModule[]> {
+        return this._externalsDiscovered.pipe(
+            startWith(values(this.externalModules))
+        );
+    }
+
+    /**
+     * Gets an observable that resolves when an external script has been discovered.
+     */
+    get librariesDiscovered(): Observable<LibraryModule[]> {
+        return this._librariesDiscovered.pipe(
+            startWith(values(this._libraryModules))
+        );
+    }
+
+    /**
      * Gets the script prefixes that are currently in use.
      */
     get scriptPrefixes(): ScriptPrefix[] {
         return [...this._prefixes.values()];
+    }
+
+    /**
+     * Gets a map of external modules that have been loaded.
+     */
+    get externalModules() {
+        return this._externalModules;
+    }
+
+    /**
+     * Gets a map of library modules that have been loaded.
+     */
+    get libraryModules() {
+        return this._libraryModules;
     }
 
     constructor(
@@ -120,6 +158,10 @@ export class PortalManager implements SubscriptionLike {
         this._portalsUpdated = new Subject();
         this._prefixesDiscovered = new Subject();
         this._prefixesRemoved = new Subject();
+        this._externalsDiscovered = new Subject();
+        this._librariesDiscovered = new Subject();
+        this._externalModules = {};
+        this._libraryModules = {};
         this._bundler = bundler;
         this._sub = new Subscription();
 
@@ -145,6 +187,10 @@ export class PortalManager implements SubscriptionLike {
                 .pipe(tap((b) => this._onBotsUpdated(b)))
                 .subscribe()
         );
+    }
+
+    addLibrary(module: LibraryModule) {
+        return this._bundler.addLibrary(module);
     }
 
     private _onBotsUpdated(updates: UpdatedBotInfo[]): void {
@@ -385,12 +431,51 @@ export class PortalManager implements SubscriptionLike {
 
         if (portal.tag !== null) {
             portal.modules = bundle?.modules || null;
-            this._sendPortalData(portal, {
+
+            let data: PortalData = {
                 id: portal.id,
                 style: portal.style,
                 error: bundle?.error || null,
                 source: bundle?.source || null,
-            });
+            };
+
+            if (this._vm.createEndpoint && bundle?.libraries?.casualos) {
+                const port = await this._vm.createEndpoint();
+                data.ports = {
+                    ...(data.ports || {}),
+                    casualos: port,
+                };
+            }
+
+            this._sendPortalData(portal, data);
+
+            if (bundle?.externals) {
+                let newModules: ExternalModule[] = [];
+                for (let mod of values(bundle.externals)) {
+                    if (!this._externalModules[mod.id]) {
+                        this._externalModules[mod.id] = mod;
+                        newModules.push(mod);
+                    }
+                }
+
+                if (newModules.length > 0) {
+                    this._externalsDiscovered.next(newModules);
+                }
+            }
+
+            if (bundle?.libraries) {
+                let newModules: LibraryModule[] = [];
+                for (let mod of values(bundle.libraries)) {
+                    if (!this._libraryModules[mod.id]) {
+                        this._libraryModules[mod.id] = mod;
+                        newModules.push(mod);
+                    }
+                }
+
+                if (newModules.length > 0) {
+                    this._librariesDiscovered.next(newModules);
+                }
+            }
         }
     }
 
@@ -476,6 +561,13 @@ export interface PortalData {
      * The CSS styles that the portal iframe should have.
      */
     style: any;
+
+    /**
+     * The ports that should be set for the portal.
+     */
+    ports?: {
+        [id: string]: MessagePort;
+    };
 }
 
 /**

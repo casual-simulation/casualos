@@ -1,5 +1,20 @@
 # CasualOS Changelog
 
+## V1.4.3
+
+#### Date: 2/17/2021
+
+### :rocket: Improvements
+
+-   Added the ability to interface with CasualOS from inside a custom portal.
+    -   CasualOS-related functionality is available by importing functions and objects from the `casualos` module.
+    -   Among the available functionality is `onBotsDiscovered`, `onBotsRemoved`, `onBotsUpdated`, `createBot()`, `destroyBot()`, and `updateBot()`.
+    -   Additionally autocomplete is available for the available features.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where webhook errors could not be caught on Safari based browsers.
+
 ## V1.4.2
 
 #### Date: 2/11/2021

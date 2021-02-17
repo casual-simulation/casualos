@@ -13,7 +13,7 @@ import {
     ConnectTunnelRequest,
 } from '../ServerTunnelRequest';
 import { wrap } from './WebSocket';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import {
     requestUrl,
     connect,
@@ -161,7 +161,7 @@ export class WebSocketServer implements TunnelServer {
         ) as ConnectableObservable<WebSocket>;
 
         const observable = upgrade.pipe(
-            tap(ws => {
+            tap((ws) => {
                 const wsStream = wrap(ws);
                 connection.pipe(wsStream).pipe(connection);
                 connection.resume();
@@ -174,7 +174,7 @@ export class WebSocketServer implements TunnelServer {
             completeWith(upgrade)
         );
 
-        observable.subscribe(null, err => {
+        observable.subscribe(null, (err) => {
             console.error('Connection error:', err);
         });
 
@@ -203,7 +203,7 @@ export class WebSocketServer implements TunnelServer {
         ) as ConnectableObservable<WebSocket>;
 
         const observable = upgrade.pipe(
-            flatMap(ws => {
+            flatMap((ws) => {
                 const server = createServer();
 
                 server.on('listening', () => {
@@ -212,15 +212,13 @@ export class WebSocketServer implements TunnelServer {
                         request.localPort = address.port;
                     }
                     console.log(
-                        `[WSS] Starting TCP server started on ${
-                            request.localPort
-                        }`
+                        `[WSS] Starting TCP server started on ${request.localPort}`
                     );
                     this._tunnelAccepted.next(request);
                 });
 
                 return listen(server, request.localPort).pipe(
-                    tap(connection => {
+                    tap((connection) => {
                         const id = uuid();
                         connection.pause();
                         this._map.set(id, connection);
@@ -234,7 +232,7 @@ export class WebSocketServer implements TunnelServer {
             completeWith(upgrade)
         );
 
-        observable.subscribe(null, err => {
+        observable.subscribe(null, (err) => {
             console.error('Server error:', err);
         });
 
@@ -248,9 +246,7 @@ export class WebSocketServer implements TunnelServer {
         head: Buffer
     ) {
         console.log(
-            `[WSS] Connecting to remote host at ${request.forwardHost}:${
-                request.forwardPort
-            }...`
+            `[WSS] Connecting to remote host at ${request.forwardHost}:${request.forwardPort}...`
         );
 
         const connection = connect({
@@ -259,9 +255,9 @@ export class WebSocketServer implements TunnelServer {
         }).pipe(publish()) as ConnectableObservable<Socket>;
 
         const observable = connection.pipe(
-            tap(_ => console.log('[WSS] Connected!')),
+            tap((_) => console.log('[WSS] Connected!')),
             flatMap(
-                connection => handleUpgrade(this._server, req, socket, head),
+                (connection) => handleUpgrade(this._server, req, socket, head),
                 (connection, ws) => ({ connection, ws })
             ),
             tap(({ connection, ws }) => {
@@ -277,7 +273,7 @@ export class WebSocketServer implements TunnelServer {
             completeWith(connection)
         );
 
-        observable.subscribe(null, err => {
+        observable.subscribe(null, (err) => {
             console.error('Connection error:', err);
         });
 

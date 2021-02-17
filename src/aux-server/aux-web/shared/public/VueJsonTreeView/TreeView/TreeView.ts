@@ -24,13 +24,7 @@
  * @license MIT
  */
 
-import map from 'lodash/map';
-import last from 'lodash/last';
-import drop from 'lodash/drop';
-import dropRight from 'lodash/dropRight';
-import cloneDeep from 'lodash/cloneDeep';
-import extend from 'lodash/extend';
-import isPlainObject from 'lodash/isPlainObject';
+import { map, last, drop, dropRight, cloneDeep, extend, isPlainObject }  from 'lodash';
 import TreeViewItem from '../TreeViewItem/TreeViewItem';
 
 export default {

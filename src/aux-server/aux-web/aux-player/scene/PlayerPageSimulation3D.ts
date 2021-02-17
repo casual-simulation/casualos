@@ -56,7 +56,7 @@ import { WristPortalConfig } from './WristPortalConfig';
 import { XRHandedness } from 'aux-web/shared/scene/xr/WebXRTypes';
 import { ControllerData, Input } from 'aux-web/shared/scene/Input';
 import { PortalConfig } from './PortalConfig';
-import merge from 'lodash/merge';
+import { merge } from 'lodash';
 import {
     objectForwardRay,
     objectDirectionRay,

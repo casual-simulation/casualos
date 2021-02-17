@@ -1,7 +1,7 @@
 import { Vector2 } from 'three';
 import { Axial } from './Axial';
 import { hexWidth } from './Hex';
-import values from 'lodash/values';
+import { values } from 'lodash';
 
 /**
  * Calcualates the real position of this grid position.
@@ -128,7 +128,7 @@ export class HexGrid<T> {
      * Gets the items contained in this grid.
      */
     get items(): T[] {
-        return values(this._data).map(d => d.val);
+        return values(this._data).map((d) => d.val);
     }
 
     /**
@@ -173,7 +173,7 @@ export class HexGrid<T> {
      */
     positions(): Axial[] {
         const vals = values(this._data);
-        return vals.map(v => v.pos);
+        return vals.map((v) => v.pos);
     }
 
     /**

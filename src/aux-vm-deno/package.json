@@ -51,7 +51,7 @@
         "deno-vm": "^0.8.0",
         "lodash": "4.17.19",
         "rxjs": "^6.5.2",
-        "uuid": "^3.3.2"
+        "uuid": "^8.3.2"
     },
     "devDependencies": {
         "worker-loader": "^3.0.6"

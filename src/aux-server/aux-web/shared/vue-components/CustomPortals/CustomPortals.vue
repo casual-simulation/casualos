@@ -8,6 +8,7 @@
             :source="portal.source"
             :error="portal.error"
             :extraStyle="portal.style"
+            :ports="portal.ports"
         >
         </custom-portal>
         <div ref="otherContainer" class="other-container">

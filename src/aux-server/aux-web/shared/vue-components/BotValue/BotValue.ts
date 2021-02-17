@@ -10,7 +10,6 @@ import {
     getTagValueForSpace,
     getSpaceForTag,
 } from '@casual-simulation/aux-common';
-import assign from 'lodash/assign';
 import { appManager } from '../../AppManager';
 import { EventBus } from '../../EventBus';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';

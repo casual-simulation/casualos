@@ -25,8 +25,7 @@ import {
     merge as rxMerge,
     map,
 } from 'rxjs/operators';
-import values from 'lodash/values';
-import omitBy from 'lodash/omitBy';
+import { values } from 'lodash';
 import { BotHelper } from './BotHelper';
 import {
     isTagEdit,
@@ -73,9 +72,12 @@ export class BotWatcher implements SubscriptionLike {
      * That is, it was created or added by another user.
      */
     get botsDiscovered(): Observable<PrecalculatedBot[]> {
-        return this._botsDiscoveredObservable.pipe(
-            startWith(values(this._helper.botsState))
-        );
+        const bots = values(this._helper.botsState);
+        if (bots.length > 0) {
+            return this._botsDiscoveredObservable.pipe(startWith(bots));
+        } else {
+            return this._botsDiscoveredObservable;
+        }
     }
 
     /**
@@ -162,10 +164,20 @@ export class BotWatcher implements SubscriptionLike {
                             })
                             .filter((u) => !!u.bot);
 
-                        this._botsDiscoveredObservable.next(added);
-                        this._botsRemovedObservable.next(update.removedBots);
-                        this._botsUpdatedObservable.next(updated);
-                        this._botTagsUpdatedObservable.next(tagUpdates);
+                        if (added.length > 0) {
+                            this._botsDiscoveredObservable.next(added);
+                        }
+                        if (update.removedBots.length > 0) {
+                            this._botsRemovedObservable.next(
+                                update.removedBots
+                            );
+                        }
+                        if (updated.length > 0) {
+                            this._botsUpdatedObservable.next(updated);
+                        }
+                        if (tagUpdates.length > 0) {
+                            this._botTagsUpdatedObservable.next(tagUpdates);
+                        }
 
                         let ids = [...update.addedBots, ...update.updatedBots];
                         for (let id of ids) {

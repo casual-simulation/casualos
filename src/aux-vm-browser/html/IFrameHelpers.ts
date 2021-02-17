@@ -77,6 +77,43 @@ export function loadScript(iframeWindow: Window, id: string, source: string) {
 }
 
 /**
+ * Injects the given message port with the given ID into the iframe.
+ * @param iframeWindow The iframe that the message port should be injected into.
+ * @param id The ID of the message port.
+ * @param port The port to inject.
+ */
+export function injectPort(
+    iframeWindow: Window,
+    id: string,
+    port: MessagePort
+) {
+    return new Promise<void>((resolve, reject) => {
+        const listener = (message: MessageEvent) => {
+            if (message.source !== iframeWindow) {
+                return;
+            }
+            if (
+                message.data.type === 'port_injected' &&
+                message.data.id === id
+            ) {
+                globalThis.removeEventListener('message', listener);
+                resolve();
+            }
+        };
+        globalThis.addEventListener('message', listener);
+        iframeWindow.postMessage(
+            {
+                type: 'inject_port',
+                id,
+                port,
+            },
+            '*',
+            [port]
+        );
+    });
+}
+
+/**
  * Loads the script at the given URL into the given iframe window.
  * @param iframeWindow The iframe.
  * @param id The ID of the script.

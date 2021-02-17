@@ -2,11 +2,11 @@ import * as os from 'os';
 import * as process from 'process';
 import { Handler } from 'express';
 import { AxiosError } from 'axios';
-import flatMap from 'lodash/flatMap';
+import { flatMap } from 'lodash';
 
 export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
     return (req, res, next) => {
-        Promise.resolve(fn(req, res, next)).catch(er => {
+        Promise.resolve(fn(req, res, next)).catch((er) => {
             const err: AxiosError = er;
             if (err.response && err.response.data) {
                 console.error(
@@ -27,10 +27,10 @@ export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
  */
 export function getLocalIpAddresses() {
     const ifaces = os.networkInterfaces();
-    return flatMap(Object.keys(ifaces), ifname => {
+    return flatMap(Object.keys(ifaces), (ifname) => {
         return ifaces[ifname]
-            .filter(iface => !iface.internal)
-            .map(iface => iface.address);
+            .filter((iface) => !iface.internal)
+            .map((iface) => iface.address);
     });
 }
 

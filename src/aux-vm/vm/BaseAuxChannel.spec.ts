@@ -42,14 +42,13 @@ import {
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
-import uuid from 'uuid/v4';
-import merge from 'lodash/merge';
+import { v4 as uuid } from 'uuid';
+import { merge, cloneDeep } from 'lodash';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subject, Subscription } from 'rxjs';
-import { cloneDeep } from 'lodash';
 
 const uuidMock: jest.Mock = <any>uuid;
-jest.mock('uuid/v4');
+jest.mock('uuid');
 
 console.log = jest.fn();
 console.warn = jest.fn();

@@ -1,7 +1,7 @@
 import { RealtimeEditMode } from './RuntimeBot';
 import { isBot, isRuntimeBot } from '../bots/BotCalculations';
 import { AuxPartitionRealtimeStrategy } from '../partitions/AuxPartition';
-import forOwn from 'lodash/forOwn';
+import { forOwn } from 'lodash';
 import { Easing, EaseMode } from '../bots';
 import TWEEN, { Easing as TweenEasing } from '@tweenjs/tween.js';
 

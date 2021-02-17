@@ -1,5 +1,5 @@
 import { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
-import flatMap from 'lodash/flatMap';
+import { flatMap } from 'lodash';
 import { AuxBotVisualizer } from './AuxBotVisualizer';
 
 /**
@@ -75,7 +75,7 @@ export class DimensionGroupHelper<T extends AuxBotVisualizer> {
      * Gets the bots that are contained by this builder dimension.
      */
     getBots() {
-        return flatMap([...this.bots.values()].map(b => [...b.values()]));
+        return flatMap([...this.bots.values()].map((b) => [...b.values()]));
     }
 
     /**

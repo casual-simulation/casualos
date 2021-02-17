@@ -1,6 +1,6 @@
 import { appManager } from './AppManager';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 
 export async function loginToSim(sim: BrowserSimulation, username: string) {
     const user = await appManager.getUser(username);

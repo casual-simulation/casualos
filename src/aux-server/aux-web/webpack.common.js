@@ -104,16 +104,57 @@ function playerConfig() {
                 ],
                 runtimeCaching: [
                     {
+                        // The esbuild WASM file has a hash in the filename
+                        // so we can cache it. Also there should only ever be one of them so
+                        // we can discard old ones.
+                        handler: 'CacheFirst',
+                        urlPattern: /esbuild\.wasm$/,
+                        method: 'GET',
+                        options: {
+                            cacheName: 'esbuild',
+                            expiration: {
+                                maxEntries: 1,
+                            },
+                        },
+                    },
+                    {
+                        // draco_decoder does not have a hash in its filename
+                        // so we will use the cached version while fetching the new version.
+                        // Also there should only ever be one so we can discard old ones.
+                        handler: 'StaleWhileRevalidate',
+                        urlPattern: /draco_decoder\.wasm$/,
+                        method: 'GET',
+                        options: {
+                            cacheName: 'draco_decoder',
+                            expiration: {
+                                maxEntries: 1,
+                            },
+                        },
+                    },
+                    {
+                        // Other WASM files should have a hash in the filename
+                        // so we can cache them and use an expiration date.
                         handler: 'CacheFirst',
                         urlPattern: /\.wasm$/,
                         method: 'GET',
+                        options: {
+                            cacheName: 'wasm',
+                            expiration: {
+                                maxAgeSeconds: 604800, // 7 days in seconds
+                            },
+                        },
                     },
                     {
+                        // The assets-manifest.json file is used to determine which script to
+                        // fetch for the VM. We will make a request every time we need it but can fallback
+                        // to the cached version if needed.
                         handler: 'NetworkFirst',
                         urlPattern: /assets-manifest\.json$/,
                         method: 'GET',
                     },
                     {
+                        // The /api/config request is used to determine some extra configuration for the app.
+                        // We will make a request each time we need it but can fallback to the cached version if needed.
                         handler: 'NetworkFirst',
                         urlPattern: /\/api\/config$/,
                         method: 'GET',
@@ -268,11 +309,26 @@ function baseConfig() {
                     use: 'exports-loader?vg=vg',
                 },
                 {
-                    test: /\.(gltf|glb|wasm)$/,
+                    test: /\.(gltf|glb)$/,
                     use: [
                         {
                             loader: 'file-loader',
-                            options: {},
+                            options: {
+                                name: '[contenthash].[name].[ext]',
+                                outputPath: 'gltf',
+                            },
+                        },
+                    ],
+                },
+                {
+                    test: /\.(wasm)$/,
+                    use: [
+                        {
+                            loader: 'file-loader',
+                            options: {
+                                name: '[contenthash].[name].[ext]',
+                                outputPath: 'wasm',
+                            },
                         },
                     ],
                 },
@@ -284,6 +340,7 @@ function baseConfig() {
                             options: {
                                 // Required for images loaded via Vue code
                                 esModule: false,
+                                outputPath: 'images',
                             },
                         },
                     ],

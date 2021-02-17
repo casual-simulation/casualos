@@ -39,7 +39,9 @@ export async function sendWebhook(
         }
         await simulation.helper.transaction(...actions);
     } catch (err) {
-        let actions: BotAction[] = [asyncError(event.taskId, err)];
+        let actions: BotAction[] = [
+            asyncError(event.taskId, convertErrorToCopiableValue(err)),
+        ];
         if (responseShout) {
             actions.push(
                 ...simulation.helper.actions([
@@ -58,5 +60,29 @@ export async function sendWebhook(
             console.error(err);
         }
         await simulation.helper.transaction(...actions);
+    }
+}
+
+function convertErrorToCopiableValue(err: unknown) {
+    if (err instanceof Error) {
+        let obj: any = {
+            message: err.message,
+            name: err.name,
+            stack: err.stack,
+        };
+
+        if ((<any>err).response) {
+            let response = (<any>err).response;
+            obj.response = {
+                data: response.data,
+                headers: response.headers,
+                status: response.status,
+                statusText: response.statusText,
+            };
+        }
+
+        return obj;
+    } else {
+        return err;
     }
 }

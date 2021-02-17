@@ -31,8 +31,7 @@ import {
     getDimensionVisualizeMode,
     Bot,
 } from '@casual-simulation/aux-common';
-import minBy from 'lodash/minBy';
-import isEqual from 'lodash/isEqual';
+import { minBy, isEqual } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
 import { GameObject } from './GameObject';
 import { AuxBot3D } from './AuxBot3D';
@@ -87,7 +86,7 @@ export class WorkspaceMesh extends GameObject {
      * Sets the visibility of the grids on this workspace.
      */
     set gridsVisible(visible: boolean) {
-        this.squareGrids.forEach(grid => {
+        this.squareGrids.forEach((grid) => {
             grid.visible = visible;
         });
     }
@@ -146,9 +145,9 @@ export class WorkspaceMesh extends GameObject {
      */
     closestTileToPoint(point: Vector3) {
         const tiles = this.squareGrids
-            .map(g => g.closestTileToPoint(point))
-            .filter(t => !!t);
-        const closest = minBy(tiles, t => t.distance);
+            .map((g) => g.closestTileToPoint(point))
+            .filter((t) => !!t);
+        const closest = minBy(tiles, (t) => t.distance);
         return closest;
     }
 
@@ -208,7 +207,7 @@ export class WorkspaceMesh extends GameObject {
             ? buildSRGBColor(colorValue)
             : buildSRGBColor(DEFAULT_WORKSPACE_COLOR);
         const hexes = this.hexGrid.hexes;
-        hexes.forEach(h => {
+        hexes.forEach((h) => {
             h.color = color;
         });
         this.miniHex.color = color;
@@ -253,7 +252,7 @@ export class WorkspaceMesh extends GameObject {
             scale || DEFAULT_WORKSPACE_SCALE
         );
 
-        bots.forEach(bot => {
+        bots.forEach((bot) => {
             let localPosition = calculateGridTileLocalCenter(
                 calculateBotValue(calc, bot.bot, bot.dimension + 'X'),
                 calculateBotValue(calc, bot.bot, bot.dimension + 'Y'),
@@ -304,7 +303,7 @@ export class WorkspaceMesh extends GameObject {
         calc: BotCalculationContext
     ) {
         if (this.squareGrids && this.squareGrids.length > 0) {
-            this.squareGrids.forEach(g => g.dispose());
+            this.squareGrids.forEach((g) => g.dispose());
             this.container.remove(...this.squareGrids);
         }
 
@@ -312,8 +311,8 @@ export class WorkspaceMesh extends GameObject {
         checker.tileRatio = gridScale || DEFAULT_WORKSPACE_GRID_SCALE;
         const results = await checker.check(this.hexGrid);
         const levels = results.levels;
-        this.squareGrids = levels.map(l => new GridMesh(l));
-        this.squareGrids.forEach(grid => (grid.visible = false));
+        this.squareGrids = levels.map((l) => new GridMesh(l));
+        this.squareGrids.forEach((grid) => (grid.visible = false));
         if (this.squareGrids && this.squareGrids.length > 0) {
             this.container.add(...this.squareGrids);
         }

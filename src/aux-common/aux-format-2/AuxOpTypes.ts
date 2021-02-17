@@ -1,4 +1,4 @@
-import assign from 'lodash/assign';
+import { assign } from 'lodash';
 import { AtomId, Atom, atom } from '@casual-simulation/causal-trees';
 import { sign, verify, keypair, getHash } from '@casual-simulation/crypto';
 import stringify from 'fast-json-stable-stringify';

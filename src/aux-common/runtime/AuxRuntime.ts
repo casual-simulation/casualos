@@ -61,8 +61,6 @@ import {
     RealtimeEditMode,
 } from './RuntimeBot';
 import { CompiledBot, CompiledBotsState } from './CompiledBot';
-import sortBy from 'lodash/sortBy';
-import transform from 'lodash/transform';
 import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
@@ -72,7 +70,7 @@ import {
     SpaceRealtimeEditModeMap,
     DefaultRealtimeEditModeProvider,
 } from './AuxRealtimeEditModeProvider';
-import { forOwn, merge } from 'lodash';
+import { sortBy, forOwn, merge } from 'lodash';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { applyEdit, isTagEdit, mergeVersions } from '../aux-format-2';
 import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';

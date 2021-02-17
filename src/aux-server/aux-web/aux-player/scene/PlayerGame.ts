@@ -21,8 +21,7 @@ import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { appManager } from '../../shared/AppManager';
 import { tap, mergeMap, first } from 'rxjs/operators';
-import flatMap from 'lodash/flatMap';
-import uniq from 'lodash/uniq';
+import { flatMap, uniq } from 'lodash';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
