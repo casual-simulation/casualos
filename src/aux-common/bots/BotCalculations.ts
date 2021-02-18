@@ -1233,7 +1233,8 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         shape === 'egg' ||
         shape === 'hex' ||
         shape === 'cursor' ||
-        shape === 'portal'
+        shape === 'portal' ||
+        shape === 'dimension'
     ) {
         return shape;
     }

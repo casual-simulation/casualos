@@ -435,6 +435,7 @@ export type BotShape =
     | 'hex'
     | 'cursor'
     | 'portal'
+    | 'dimension'
     | 'nothing';
 
 /**
