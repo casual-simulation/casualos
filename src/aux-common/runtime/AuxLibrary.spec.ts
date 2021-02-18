@@ -4363,6 +4363,42 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('sendRemoteData()', () => {
+            it('should send a remote action with a shout', () => {
+                const actions = library.api.sendRemoteData(
+                    'playerId',
+                    'eventName'
+                );
+
+                const expected = remote(
+                    action('eventName', null, null, undefined),
+                    {
+                        sessionId: 'playerId',
+                    }
+                );
+                expect(actions).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support multiple player IDs', () => {
+                const actions = library.api.sendRemoteData(
+                    ['playerId1', 'playerId2'],
+                    'eventName'
+                );
+
+                const expected = [
+                    remote(action('eventName', null, null, undefined), {
+                        sessionId: 'playerId1',
+                    }),
+                    remote(action('eventName', null, null, undefined), {
+                        sessionId: 'playerId2',
+                    }),
+                ];
+                expect(actions).toEqual(expected);
+                expect(context.actions).toEqual(expected);
+            });
+        });
+
         describe('remoteWhisper()', () => {
             it('should send a remote action with a shout', () => {
                 const actions = library.api.remoteWhisper(

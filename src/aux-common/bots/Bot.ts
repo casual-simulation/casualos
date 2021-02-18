@@ -1041,6 +1041,11 @@ export const ON_ACTION_ACTION_NAME: string = 'onServerAction';
 export const ON_REMOTE_WHISPER_ACTION_NAME: string = 'onRemoteWhisper';
 
 /**
+ * The name of the event that is triggered when a remote whisper is executed.
+ */
+export const ON_REMOTE_DATA_ACTION_NAME: string = 'onRemoteData';
+
+/**
  * The name of the event that is triggered when a channel becomes synced.
  */
 export const ON_SERVER_STREAMING_ACTION_NAME: string = 'onServerStreaming';

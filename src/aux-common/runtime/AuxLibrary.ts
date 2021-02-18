@@ -590,6 +590,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             not,
 
             remote,
+            sendRemoteData: remoteWhisper,
             remoteWhisper,
             remoteShout,
             webhook,

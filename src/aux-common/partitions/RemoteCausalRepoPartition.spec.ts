@@ -64,6 +64,7 @@ import {
     signTag,
     revokeCertificate,
     setSpacePassword,
+    ON_REMOTE_DATA_ACTION_NAME,
 } from '../bots';
 import {
     AuxOpType,
@@ -931,6 +932,11 @@ describe('RemoteCausalRepoPartition', () => {
                     await waitAsync();
 
                     expect(events).toEqual([
+                        action(ON_REMOTE_DATA_ACTION_NAME, null, null, {
+                            name: 'eventName',
+                            that: { abc: 'def' },
+                            playerId: 'info1SessionId',
+                        }),
                         action(ON_REMOTE_WHISPER_ACTION_NAME, null, null, {
                             name: 'eventName',
                             that: { abc: 'def' },
@@ -964,6 +970,11 @@ describe('RemoteCausalRepoPartition', () => {
                     await waitAsync();
 
                     expect(events).toEqual([
+                        action(ON_REMOTE_DATA_ACTION_NAME, null, null, {
+                            name: 'eventName',
+                            that: { abc: 'def' },
+                            playerId: 'info1SessionId',
+                        }),
                         action(ON_REMOTE_WHISPER_ACTION_NAME, null, null, {
                             name: 'eventName',
                             that: { abc: 'def' },
