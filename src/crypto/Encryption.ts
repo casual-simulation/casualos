@@ -154,7 +154,7 @@ export function decryptV1(password: string, cyphertext: string): Uint8Array {
  *
  * The returned keypair contains a version number at the beginning which determines the format of the following data.
  *
- * vEK1 keypairs use ed25519 with XSalsa20 and Poly1305.
+ * vEK1 keypairs use x25519 with XSalsa20 and Poly1305.
  * The output string is formatting as following with periods between the components:
  * 1. The version number (vEK1) - the EK is for "encryption keypair".
  * 2. The base64 of the public key.
@@ -171,7 +171,7 @@ export function asymmetricKeypair(password: string): string {
  *
  * The returned keypair contains a version number at the beginning which determines the format of the following data.
  *
- * vEK1 keypairs use ed25519 with XSalsa20 and Poly1305.
+ * vEK1 keypairs use x25519 with XSalsa20 and Poly1305.
  * The output string is formatting as following with periods between the components:
  * 1. The version number (vEK1) - the EK is for "encryption keypair".
  * 2. The base64 of the public key.
@@ -211,7 +211,7 @@ function decodeAsymmetricKeypairV1(keypair: string): [Uint8Array, string] {
  *
  * The returned cyphertext contains a version number at the beginning which determines the format of the following data.
  *
- * vA1 encryptions use ed25519 for key exchange, XSalsa20 as the cipher and Poly1305 for authentication.
+ * vA1 encryptions use x25519 for key exchange, XSalsa20 as the cipher and Poly1305 for authentication.
  *
  * vA1 encryptions technically use two keypairs for encryption/decryption. One for the local party and one for the remote party.
  * These two parties are used to calculate a shared key that is then used to encrypt and authenticate the data.
@@ -236,7 +236,7 @@ export function asymmetricEncrypt(keypair: string, data: Uint8Array): string {
  *
  * The returned cyphertext contains a version number at the beginning which determines the format of the following data.
  *
- * vA1 encryptions use ed25519 for key exchange, XSalsa20 as the cipher and Poly1305 for authentication.
+ * vA1 encryptions use x25519 for key exchange, XSalsa20 as the cipher and Poly1305 for authentication.
  *
  * vA1 encryptions technically use two keypairs for encryption/decryption. One for the local party and one for the remote party.
  * These two parties are used to calculate a shared key that is then used to encrypt and authenticate the data.
@@ -286,7 +286,7 @@ export function asymmetricEncryptV1(keypair: string, data: Uint8Array): string {
  * Decrypts the given data with the given keypair and returns the resulting plaintext.
  * Returns null if the data was unable to be decrypted.
  *
- * vA1 encryptions use ed25519 for key exchange, XSalsa20 as the cipher and Poly1305 for authentication.
+ * vA1 encryptions use x25519 for key exchange, XSalsa20 as the cipher and Poly1305 for authentication.
  *
  * @param keypair The keypair to use to decrypt the data.
  * @param password The password that should be used to decrypt the keypair's private key.
@@ -313,7 +313,7 @@ export function asymmetricDecrypt(
  * Decrypts the given data with the given keypair using version 1 of the asymmetric encryption mechanisms in this file and returns the resulting
  * plaintext. Returns null if the data was unable to be decrypted.
  *
- * vA1 encryptions use ed25519 for key exchange, XSalsa20 as the cipher and Poly1305 for authentication.
+ * vA1 encryptions use x25519 for key exchange, XSalsa20 as the cipher and Poly1305 for authentication.
  *
  * @param keypair The keypair to use to decrypt the data.
  * @param password The password that should be used to decrypt the keypair's private key.
