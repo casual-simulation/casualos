@@ -3828,7 +3828,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Decrypts the given data with the given keypair and secret and returns the result.
      * If the data was unable to be decrypted, null will be returned.
      *
-     * @param keypair The keypair to use to secure the data.
+     * @param keypair The keypair to use to decrypt the data.
      * @param secret The secret to use to decrypt the keypair's private key.
      * @param data The data to decrypt.
      */

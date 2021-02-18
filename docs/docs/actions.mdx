@@ -4658,7 +4658,7 @@ Use <ActionLink action='crypto.verify(keypair, signature, data)'/> to validate s
 
 Digital signatures are used to verifying the authenticity and integrity of data.
 
-This works by leveraging asymetric encryption but in reverse.
+This works by leveraging asymmetric encryption but in reverse.
 
 If we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that
 the data was encrypted (i.e. signed) by the corresponding private key.
@@ -4712,6 +4712,92 @@ const signature = "vS1.uF93ErJBhdI/vqRF2XD2zgRAO96vKc9mx8crn6Kasijmx92px36B/alLG
 
 const valid = crypto.verify(keypair, signature, "hello");
 player.toast(valid);
+```
+
+### `crypto.asymmetric.keypair(secret)`
+
+Creates a keypair that can be used to [encrypt and decrypt](https://en.wikipedia.org/wiki/Encryption) data.
+
+Use <ActionLink action='crypto.asymmetric.encrypt(keypair, data)'/> and <ActionLink action='crypto.asymmetric.decrypt(keypair, signature, data)'/> to encrypt and decrypt the data.
+
+_Always use a strong and unique secret key._ Use a password manager such as LastPass or 1Password to help you create and keep track of them.
+
+Keypairs are made up of a private key and a public key
+The public key is a special value that can be used to encrypt data and
+the private key is a related value that can be used to decrypt data that was encrypted by the private key.
+
+The private key is called "private" because it is encrypted using the given secret
+while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
+
+Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
+they have access to it.
+
+The **first parameter** is the secret that should be used to encrypt the private key of the keypair.
+
+#### Examples:
+
+1. Create a keypair and toast it.
+```typescript
+const keypair = crypto.asymmetric.keypair("my secret");
+player.toast(keypair);
+```
+
+### `crypto.asymmetric.encrypt(keypair, data)`
+
+[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given keypair's public key and returns the result.
+
+Use the <ActionLink action='crypto.asymmetric.decrypt(keypair, secret, data)'/> function to decrypt the data.
+
+This method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it),
+reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).
+
+As a consequence, encrypting the same data with the same keypair will produce different results.
+This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
+
+Encrypts the given data using an asymmetric authenticated encryption mechanism
+based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
+
+You may notice that this function does not need a secret to decrypt the keypair.
+This is because the public key of the keypair is used to encrypt the data.
+Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.
+
+Encrypts the given data using an authenticated encryption mechanism 
+based on [x25519](https://en.wikipedia.org/wiki/Curve25519), [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).
+
+The **first parameter** is the keypair that should be used to encrypt the data.
+
+The **second parameter** is the string data that should be encrypted.
+
+#### Examples
+
+1. Encrypt the given data and toast it.
+```typescript
+const keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';
+const encrypted = crypto.asymmetric.encrypt(keypair, "hello, world");
+player.toast(encrypted);
+```
+
+### `crypto.asymmetric.decrypt(keypair, secret, data)`
+
+[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data with the given keypair and secret and returns the result.
+If the data was unable to be decrypted, null will be returned.
+
+Use the <ActionLink action='crypto.asymmetric.encrypt(keypair, data)'/> function to encrypt the data.
+
+The **first parameter** is the keypair that should be used to decrypt the data.
+
+The **second parameter** is the secret that should be used to decrypt the keypair's private key.
+
+The **third parameter** is the data that should be decrypted.
+
+#### Examples:
+
+1. Decrypt the given data and toast it.
+```typescript
+const keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';
+const encrypted = 'vA1.3CC1r0fJP2tPS09C8YrTDQCJmgFczxprNEcMOzY4JD4=.3oiC7nG6N4jblFhBd4usrdid/w4Phwg/.X/9mbZYOGBjRX7YAO4D2zYJvZ3c=';
+const decrypted = crypto.asymmetric.decrypt(keypair, 'password', encrypted);
+player.toast(decrypted);
 ```
 
 ### `crypto.createCertificate(certificate, secret, keypair)`
