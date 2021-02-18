@@ -1,4 +1,12 @@
-import { encryptV1, decryptV1, encrypt, decrypt } from './Encryption';
+import {
+    encryptV1,
+    decryptV1,
+    encrypt,
+    decrypt,
+    asymmetricKeypair,
+    asymmetricEncrypt,
+    asymmetricDecrypt,
+} from './Encryption';
 
 describe('Encryption', () => {
     const passwordCases = [[null], [undefined], ['']];
@@ -100,7 +108,7 @@ describe('Encryption', () => {
             expect(data1).not.toEqual(data2);
         });
 
-        it.each(passwordCases)('should reject %s passwords', password => {
+        it.each(passwordCases)('should reject %s passwords', (password) => {
             const data = 'test';
             const encoder = new TextEncoder();
             const dataBytes = encoder.encode(data);
@@ -148,6 +156,113 @@ describe('Encryption', () => {
         });
         it('should return null if given cyphertext without data', () => {
             const decrypted = decryptV1('testPassword', 'v1.salt.nonce.');
+            expect(decrypted).toBe(null);
+        });
+    });
+
+    describe('asymmetricKeypair()', () => {
+        it('should return a v1 keypair encrypted with the given password', () => {
+            const key = asymmetricKeypair('password');
+            const sections = key.split('.');
+            const version = sections[0];
+
+            expect(typeof key).toBe('string');
+            expect(sections.length).toBe(3);
+            expect(version).toBe('vEK1');
+        });
+
+        it.each(passwordCases)('should reject %s passwords', (password) => {
+            expect(() => {
+                asymmetricKeypair(password);
+            }).toThrow(expect.any(Error));
+        });
+    });
+
+    describe('asymmetricEncrypt()', () => {
+        it('should encrypt the data with the given keypair', () => {
+            const key = asymmetricKeypair('password');
+            const data = 'hello, world!';
+            const encoder = new TextEncoder();
+            const dataBytes = encoder.encode(data);
+            const cyphertext = asymmetricEncrypt(key, dataBytes);
+            expect(cyphertext).not.toContain(data);
+        });
+
+        it('should encrypt the same data with the same key differently', () => {
+            const key = asymmetricKeypair('password');
+            const data = 'hello, world!';
+            const encoder = new TextEncoder();
+            const dataBytes = encoder.encode(data);
+            const cyphertext1 = asymmetricEncrypt(key, dataBytes);
+            const cyphertext2 = asymmetricEncrypt(key, dataBytes);
+
+            const [version1, publicKey1, nonce1, data1] = cyphertext1.split(
+                '.'
+            );
+            const [version2, publicKey2, nonce2, data2] = cyphertext2.split(
+                '.'
+            );
+
+            expect(version1).toEqual(version2);
+            expect(publicKey1).not.toEqual(publicKey2);
+            expect(nonce1).not.toEqual(nonce2);
+            expect(data1).not.toEqual(data2);
+        });
+    });
+
+    describe('asymmetricDecrypt()', () => {
+        it('should be able to decrypt the data with the given keypair', () => {
+            const key = asymmetricKeypair('password');
+            const data = 'hello, world!';
+            const encoder = new TextEncoder();
+            const dataBytes = encoder.encode(data);
+            const cyphertext = asymmetricEncrypt(key, dataBytes);
+
+            const decrypted = asymmetricDecrypt(key, 'password', cyphertext);
+            const decoder = new TextDecoder();
+            const final = decoder.decode(decrypted);
+
+            expect(final).toEqual(data);
+        });
+
+        it('should return null when trying to decrypt data that was corrupted', () => {
+            const key = asymmetricKeypair('password');
+            const data = 'hello, world!';
+            const encoder = new TextEncoder();
+            const dataBytes = encoder.encode(data);
+            const cyphertext = asymmetricEncrypt(key, dataBytes);
+
+            // Replace the last character of the data with a 0 (or a 1 if it was already a 0)
+            let corrupted = cyphertext.slice(0, cyphertext.length - 1);
+            corrupted += cyphertext[cyphertext.length - 1] === '0' ? '1' : '0';
+
+            const decrypted = asymmetricDecrypt(key, 'password', corrupted);
+            expect(decrypted).toBe(null);
+        });
+
+        const invalidCases = [
+            [
+                'should return null if given cyphertext without a public key',
+                asymmetricKeypair('password'),
+                'password',
+                'vA1.',
+            ],
+            [
+                'should return null if given cyphertext without a nonce',
+                asymmetricKeypair('password'),
+                'password',
+                'vA1.abc.',
+            ],
+            [
+                'should return null if given cyphertext without data',
+                asymmetricKeypair('password'),
+                'password',
+                'vA1.abc.nonce.',
+            ],
+        ];
+
+        it.each(invalidCases)('%s', (key, password, cyphertext) => {
+            const decrypted = asymmetricDecrypt(key, password, cyphertext);
             expect(decrypted).toBe(null);
         });
     });
