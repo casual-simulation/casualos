@@ -12,6 +12,7 @@
     -   `crypto.asymmetric.decrypt(keypair, secret, data)` - Decrypts some data using the given keypair and secret.
     -   Check the documentation for more info.
 -   Added a better error message when trying to save a bot to a tag value.
+-   Added the `dimension` bot form as a preferred alias to `portal`.
 
 ## V1.4.3
 
