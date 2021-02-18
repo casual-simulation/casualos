@@ -1242,7 +1242,42 @@ const toastAction = player.toast('My message!');
 remote(toastAction, otherPlayerBotId);
 ```
 
+### `sendRemoteData(playerId, name, arg?)`
+
+Sends a <TagLink tag='@onRemoteData'/> shout to the player with the given ID or players if given a list of IDs.
+This is useful for sending arbitrary messages to specific players.
+
+The **first parameter** is the player ID or list of player IDs that the shout should be sent to.
+
+The **second parameter** is the name of the event that is being sent. This is useful for telling the difference between different messages.
+
+The **third parameter** is optional and is the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
+
+#### Examples:
+
+1. Send a "custom" message to another player.
+```typescript
+const otherPlayerBotId = "otherPlayerBotId";
+
+// The other player will receive a @onRemoteData with 
+// that.name === "custom" and that.that === "Hello"
+sendRemoteData(otherPlayerBotId, "custom", "Hello");
+```
+
+2. Send a message to all other players.
+```typescript
+const players = await server.players();
+const playerId = getID(player.getBot());
+const otherPlayers = players.filter(id => id !== playerId);
+
+// All other players will receive a @onRemoteData with
+// that.name === "custom" and that.that === "Hello"
+sendRemoteData(otherPlayers, "custom", "Hello");
+```
+
 ### `remoteWhisper(playerId, name, arg?)`
+
+NOTICE: This method is deprecated in favor of <ActionLink action='sendRemoteData(playerId, name, arg?)'/>.
 
 Sends a <TagLink tag='@onRemoteWhisper'/> shout to the player with the given ID or players if given a list of IDs.
 This is useful for sending arbitrary messages to specific players.
@@ -1276,6 +1311,8 @@ remoteWhisper(otherPlayers, "custom", "Hello");
 ```
 
 ### `remoteShout(name, arg?)`
+
+NOTICE: This method is deprecated in favor of <ActionLink action='sendRemoteData(playerId, name, arg?)'/>.
 
 Sends a <TagLink tag='@onRemoteWhisper'/> shout to all the players in the current server.
 The listener will be triggered on all players connected to the server, including the local player.
