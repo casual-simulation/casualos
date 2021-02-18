@@ -26,6 +26,7 @@ module.exports = [
                 injectModulePlugin('tweetnacl', {
                     randomBytes: null,
                     secretbox: { keyLength: 0 },
+                    box: {},
                     sign: null,
                 }),
                 emptyModulePlugin('acorn'),
