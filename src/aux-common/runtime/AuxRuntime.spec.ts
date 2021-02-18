@@ -5468,6 +5468,65 @@ describe('AuxRuntime', () => {
             const listener = runtime.getListener(bot, 'abc');
             expect(listener).toEqual(null);
         });
+
+        it('should throw an error when setting the tag value to a bot', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                    test2: createBot('test2', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            const bot2 = runtime.context.state['test2'];
+
+            expect(() => {
+                runtime.updateTag(bot, 'abc', bot2);
+            }).toThrow();
+        });
+    });
+
+    describe('updateTagMask()', () => {
+        it('should set the tag value on the bot', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            runtime.updateTagMask(bot, 'abc', ['tempLocal'], 99);
+
+            expect(bot.masks.tempLocal.abc).toEqual(99);
+            expect(bot.values.abc).toEqual(99);
+            expect(runtime.getValue(bot, 'abc')).toEqual(99);
+        });
+
+        it('should throw an error when setting the tag value to a bot', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                    test2: createBot('test2', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            const bot2 = runtime.context.state['test2'];
+
+            expect(() => {
+                runtime.updateTagMask(bot, 'abc', ['tempLocal'], bot2);
+            }).toThrow();
+        });
     });
 
     describe('getListener()', () => {

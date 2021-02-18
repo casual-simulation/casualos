@@ -157,7 +157,12 @@ import { RuntimeBatcher } from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
-import { decryptV1, keypair } from '@casual-simulation/crypto';
+import {
+    asymmetricDecryptV1,
+    asymmetricKeypairV1,
+    decryptV1,
+    keypair,
+} from '@casual-simulation/crypto';
 import { CERTIFIED_SPACE } from '../aux-format-2/AuxWeaveReducer';
 import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { RanOutOfEnergyError } from './AuxResults';
@@ -4354,6 +4359,42 @@ describe('AuxLibrary', () => {
                     }),
                 ];
                 expect(action).toEqual(expected);
+                expect(context.actions).toEqual(expected);
+            });
+        });
+
+        describe('sendRemoteData()', () => {
+            it('should send a remote action with a shout', () => {
+                const actions = library.api.sendRemoteData(
+                    'playerId',
+                    'eventName'
+                );
+
+                const expected = remote(
+                    action('eventName', null, null, undefined),
+                    {
+                        sessionId: 'playerId',
+                    }
+                );
+                expect(actions).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support multiple player IDs', () => {
+                const actions = library.api.sendRemoteData(
+                    ['playerId1', 'playerId2'],
+                    'eventName'
+                );
+
+                const expected = [
+                    remote(action('eventName', null, null, undefined), {
+                        sessionId: 'playerId1',
+                    }),
+                    remote(action('eventName', null, null, undefined), {
+                        sessionId: 'playerId2',
+                    }),
+                ];
+                expect(actions).toEqual(expected);
                 expect(context.actions).toEqual(expected);
             });
         });
@@ -9488,6 +9529,54 @@ describe('AuxLibrary', () => {
 
         it('should return null if the data was not able to be decrypted', () => {
             const result = library.api.crypto.decrypt('password', 'wrong');
+            expect(result).toBe(null);
+        });
+    });
+
+    describe('crypto.asymmetric.keypair()', () => {
+        it('should create and return a keypair', () => {
+            const result = library.api.crypto.asymmetric.keypair('password');
+            expect(typeof result).toEqual('string');
+        });
+    });
+
+    describe('crypto.asymmetric.encrypt()', () => {
+        it('should encrypt the given string with the given password', () => {
+            const keypair = asymmetricKeypairV1('password');
+            const result = library.api.crypto.asymmetric.encrypt(
+                keypair,
+                'data'
+            );
+            const decrypted = asymmetricDecryptV1(keypair, 'password', result);
+
+            const decoder = new TextDecoder();
+            const final = decoder.decode(decrypted);
+            expect(final).toEqual('data');
+        });
+    });
+
+    describe('crypto.asymmetric.decrypt()', () => {
+        it('should be able to decrypt the given encrypted data', () => {
+            const keypair = asymmetricKeypairV1('password');
+            const encrypted = library.api.crypto.asymmetric.encrypt(
+                keypair,
+                'data'
+            );
+            const result = library.api.crypto.asymmetric.decrypt(
+                keypair,
+                'password',
+                encrypted
+            );
+            expect(result).toEqual('data');
+        });
+
+        it('should return null if the data was not able to be decrypted', () => {
+            const keypair = asymmetricKeypairV1('password');
+            const result = library.api.crypto.asymmetric.decrypt(
+                keypair,
+                'password',
+                'wrong'
+            );
             expect(result).toBe(null);
         });
     });

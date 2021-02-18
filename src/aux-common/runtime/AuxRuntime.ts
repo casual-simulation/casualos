@@ -43,6 +43,7 @@ import {
     CompiledBotListener,
     DNA_TAG_PREFIX,
     UpdateBotAction,
+    isRuntimeBot,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -1003,6 +1004,12 @@ export class AuxRuntime
     }
 
     updateTag(bot: CompiledBot, tag: string, newValue: any): RealtimeEditMode {
+        if (isRuntimeBot(newValue)) {
+            throw new Error(
+                `It is not possible to save bots as tag values. (Setting '${tag}' on ${bot.id})`
+            );
+        }
+
         const space = getBotSpace(bot);
         const mode = this._editModeProvider.getEditMode(space);
         if (mode === RealtimeEditMode.Immediate) {
@@ -1027,6 +1034,12 @@ export class AuxRuntime
         spaces: string[],
         value: any
     ): RealtimeEditMode {
+        if (isRuntimeBot(value)) {
+            throw new Error(
+                `It is not possible to save bots as tag values. (Setting '${tag}' on ${bot.id})`
+            );
+        }
+
         let updated = false;
         for (let space of spaces) {
             const mode = this._editModeProvider.getEditMode(space);

@@ -8,12 +8,6 @@
     "author": "Casual Simulation, Inc.",
     "homepage": "https://casualsimulation.com/",
     "license": "MIT",
-    "main": "index.js",
-    "types": "index.d.ts",
-    "module": "index.js",
-    "directories": {
-        "lib": "."
-    },
     "files": [
         "/README.md",
         "/LICENSE.txt",

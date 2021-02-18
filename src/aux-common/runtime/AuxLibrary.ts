@@ -224,6 +224,9 @@ import {
     keypair as realKeypair,
     sign as realSign,
     verify as realVerify,
+    asymmetricKeypair as realAsymmetricKeypair,
+    asymmetricEncrypt as realAsymmetricEncrypt,
+    asymmetricDecrypt as realAsymmetricDecrypt,
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, del, insert, preserve } from '../aux-format-2';
@@ -587,6 +590,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             not,
 
             remote,
+            sendRemoteData: remoteWhisper,
             remoteWhisper,
             remoteShout,
             webhook,
@@ -777,6 +781,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 hmacSha512,
                 encrypt,
                 decrypt,
+                asymmetric: {
+                    keypair: asymmetricKeypair,
+                    encrypt: asymmetricEncrypt,
+                    decrypt: asymmetricDecrypt,
+                },
                 keypair,
                 sign,
                 verify,
@@ -3766,6 +3775,82 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Creates a new keypair that can be used for encrypting and decrypting data.
+     *
+     * @description Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to
+     * help you create and keep track of them.
+     *
+     * Keypairs are made up of a private key and a public key.
+     * The public key is a special value that can be used to encrypt data and
+     * the private key is a related value that can be used to decrypt data that was encrypted by the public key.
+     *
+     * The private key is called "private" because it is encrypted using the given secret
+     * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
+     *
+     * Note that both the private and public keys are randomly generated, so while the public key is unencrypted, it won't be able to be used by someone else unless
+     * they have access to it.
+     *
+     * @param secret The secret that should be used to encrypt the private key.
+     */
+    function asymmetricKeypair(secret: string): string {
+        return realAsymmetricKeypair(secret);
+    }
+
+    /**
+     * Encrypts the given data with the given keypair and returns the result.
+     *
+     * @description This method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it),
+     * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).
+     *
+     * As a consequence, encrypting the same data with the same keypair will produce different results.
+     * This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
+     *
+     * Encrypts the given data using an asymmetric authenticated encryption mechanism
+     * based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
+     *
+     * You may notice that this function does not need a secret to decrypt the keypair.
+     * This is because the public key of the keypair is used to encrypt the data.
+     * Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.
+     *
+     * @param keypair The keypair to use to secure the data.
+     * @param data The data to encrypt.
+     */
+    function asymmetricEncrypt(keypair: string, data: string): string {
+        if (typeof data === 'string') {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(data);
+            return realAsymmetricEncrypt(keypair, bytes);
+        } else {
+            throw new Error('The data to encrypt must be a string.');
+        }
+    }
+
+    /**
+     * Decrypts the given data with the given keypair and secret and returns the result.
+     * If the data was unable to be decrypted, null will be returned.
+     *
+     * @param keypair The keypair to use to decrypt the data.
+     * @param secret The secret to use to decrypt the keypair's private key.
+     * @param data The data to decrypt.
+     */
+    function asymmetricDecrypt(
+        keypair: string,
+        secret: string,
+        data: string
+    ): string {
+        if (typeof data === 'string') {
+            const bytes = realAsymmetricDecrypt(keypair, secret, data);
+            if (!bytes) {
+                return null;
+            }
+            const decoder = new TextDecoder();
+            return decoder.decode(bytes);
+        } else {
+            throw new Error('The data to encrypt must be a string.');
+        }
+    }
+
+    /**
      * Creates a new keypair that can be used for signing and verifying data.
      *
      * @description
@@ -3776,7 +3861,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * The private key is called "private" because it is encrypted using the given secret
      * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
      *
-     * Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
+     * Note that both the private and public keys are randomly generated, so while the public key is unencrypted, it won't be able to be used by someone else unless
      * they have access to it.
      *
      * @param secret The secret that should be used to encrypt the private key.

@@ -493,7 +493,7 @@ export class BotShapeDecorator
             this._createEgg();
         } else if (this._shape === 'hex') {
             this._createHex();
-        } else if (this._shape === 'portal') {
+        } else if (this._shape === 'portal' || this._shape === 'dimension') {
             this._createPortal();
         }
 

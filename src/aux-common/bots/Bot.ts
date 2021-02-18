@@ -435,6 +435,7 @@ export type BotShape =
     | 'hex'
     | 'cursor'
     | 'portal'
+    | 'dimension'
     | 'nothing';
 
 /**
@@ -1039,6 +1040,11 @@ export const ON_ACTION_ACTION_NAME: string = 'onServerAction';
  * The name of the event that is triggered when a remote whisper is executed.
  */
 export const ON_REMOTE_WHISPER_ACTION_NAME: string = 'onRemoteWhisper';
+
+/**
+ * The name of the event that is triggered when a remote whisper is executed.
+ */
+export const ON_REMOTE_DATA_ACTION_NAME: string = 'onRemoteData';
 
 /**
  * The name of the event that is triggered when a channel becomes synced.

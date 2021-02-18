@@ -1,5 +1,19 @@
 # CasualOS Changelog
 
+## V1.4.4
+
+#### Date: 2/18/2021
+
+### :rocket: Improvements
+
+-   Added additional crypto functions to support asymmetric encryption and decryption.
+    -   `crypto.asymmetric.keypair(secret)` - Creates a keypair that can be used for asymmetric encryption and decryption.
+    -   `crypto.asymmetric.encrypt(keypair, data)` - Encrypts some data using the given keypair.
+    -   `crypto.asymmetric.decrypt(keypair, secret, data)` - Decrypts some data using the given keypair and secret.
+    -   Check the documentation for more info.
+-   Added a better error message when trying to save a bot to a tag value.
+-   Added the `dimension` bot form as a preferred alias to `portal`.
+
 ## V1.4.3
 
 #### Date: 2/17/2021

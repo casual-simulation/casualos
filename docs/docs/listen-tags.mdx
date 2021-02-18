@@ -1023,6 +1023,30 @@ let that: {
 };
 ```
 
+### `@onRemoteData`
+
+A shout that is sent whenever a message is received from another player.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the message.
+     */
+    name: string,
+
+    /**
+     * The argument that was included in the message.
+     */
+    that: any,
+
+    /**
+     * The ID of the player that sent the message.
+     */
+    playerId: string
+};
+```
+
 ### `@onRemoteWhisper`
 
 A shout that is sent whenever a message is received from another player.
