@@ -43,6 +43,11 @@ export interface IdeTagNode {
     name: string;
 }
 
+export interface IdePortalUpdate {
+    hasPortal: boolean;
+    items: IdeNode[];
+}
+
 /**
  * Defines a class that manages the bot panel.
  */
@@ -51,7 +56,7 @@ export class IdePortalManager implements SubscriptionLike {
     private _watcher: BotWatcher;
     private _buffer: boolean;
 
-    private _itemsUpdated: BehaviorSubject<IdeNode[]>;
+    private _itemsUpdated: BehaviorSubject<IdePortalUpdate>;
 
     private _subs: SubscriptionLike[] = [];
     closed: boolean = false;
@@ -59,7 +64,7 @@ export class IdePortalManager implements SubscriptionLike {
     /**
      * Gets an observable that resolves whenever the list of selected bots is updated.
      */
-    get itemsUpdated(): Observable<IdeNode[]> {
+    get itemsUpdated(): Observable<IdePortalUpdate> {
         return this._itemsUpdated;
     }
 
@@ -77,7 +82,10 @@ export class IdePortalManager implements SubscriptionLike {
         this._watcher = watcher;
         this._helper = helper;
         this._buffer = bufferEvents;
-        this._itemsUpdated = new BehaviorSubject<IdeNode[]>([]);
+        this._itemsUpdated = new BehaviorSubject<IdePortalUpdate>({
+            hasPortal: false,
+            items: [],
+        });
 
         this._subs.push(
             this._calculateItemsUpdated().subscribe(this._itemsUpdated)
@@ -92,9 +100,12 @@ export class IdePortalManager implements SubscriptionLike {
         }
     }
 
-    private _findMatchingItems(): IdeNode[] {
+    private _findMatchingItems(): IdePortalUpdate {
         if (!this._helper.userBot) {
-            return [];
+            return {
+                hasPortal: false,
+                items: [],
+            };
         }
         const prefix = this._helper.userBot.values[IDE_PORTAL];
         if (prefix) {
@@ -115,13 +126,19 @@ export class IdePortalManager implements SubscriptionLike {
                     }
                 }
             }
-            return sortBy(items, (item) => item.key);
+            return {
+                hasPortal: true,
+                items: sortBy(items, (item) => item.key),
+            };
         }
 
-        return [];
+        return {
+            hasPortal: false,
+            items: [],
+        };
     }
 
-    private _calculateItemsUpdated(): Observable<IdeNode[]> {
+    private _calculateItemsUpdated(): Observable<IdePortalUpdate> {
         const allBotsSelectedUpdatedAddedAndRemoved = merge(
             this._watcher.botsDiscovered,
             this._watcher.botsUpdated,

@@ -1269,6 +1269,11 @@ export const DATA_PORTAL: string = 'dataPortal';
 export const SHEET_PORTAL: string = 'sheetPortal';
 
 /**
+ * The name of the IDE portal.
+ */
+export const IDE_PORTAL: string = 'idePortal';
+
+/**
  * The prefix for DNA Tags.
  */
 export const DNA_TAG_PREFIX: string = '🧬';
@@ -1284,6 +1289,7 @@ export const DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES: string[] = ['📖'];
 export const KNOWN_PORTALS: string[] = [
     'pagePortal',
     SHEET_PORTAL,
+    IDE_PORTAL,
     'inventoryPortal',
     'menuPortal',
     'leftWristPortal',
@@ -1297,7 +1303,8 @@ export const KNOWN_PORTALS: string[] = [
  */
 export const QUERY_PORTALS: string[] = [
     'pagePortal',
-    'sheetPortal',
+    SHEET_PORTAL,
+    IDE_PORTAL,
     MEET_PORTAL,
     TAG_PORTAL,
     TAG_PORTAL_SPACE,
@@ -1309,14 +1316,16 @@ export const QUERY_PORTALS: string[] = [
 export const KNOWN_TAGS: string[] = [
     'playerActive',
     'pagePortal',
-    'sheetPortal',
+    SHEET_PORTAL,
+    IDE_PORTAL,
     'server',
     'inventoryPortal',
     'menuPortal',
     'leftWristPortal',
     'rightWristPortal',
     'pagePortalConfigBot',
-    'sheetPortalConfigBot',
+    `${SHEET_PORTAL}ConfigBot`,
+    `${IDE_PORTAL}ConfigBot`,
     'inventoryPortalConfigBot',
     'menuPortalConfigBot',
     'leftWristPortalConfigBot',

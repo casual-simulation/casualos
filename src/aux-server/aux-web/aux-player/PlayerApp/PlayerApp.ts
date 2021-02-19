@@ -62,6 +62,7 @@ import ShowInputModal from '../../shared/vue-components/ShowInputModal/ShowInput
 import MeetPortal from '../../shared/vue-components/MeetPortal/MeetPortal';
 import TagPortal from '../../shared/vue-components/TagPortal/TagPortal';
 import CustomPortals from '../../shared/vue-components/CustomPortals/CustomPortals';
+import IdePortal from '../../shared/vue-components/IdePortal/IdePortal';
 
 @Component({
     components: {
@@ -80,6 +81,7 @@ import CustomPortals from '../../shared/vue-components/CustomPortals/CustomPorta
         'meet-portal': MeetPortal,
         'tag-portal': TagPortal,
         'custom-portals': CustomPortals,
+        'ide-portal': IdePortal,
         console: Console,
         tagline: Tagline,
         checkout: Checkout,

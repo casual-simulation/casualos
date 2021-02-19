@@ -70,8 +70,10 @@ describe('IdePortalManager', () => {
     describe('botsUpdated', () => {
         it('should resolve whenever a bot with the correct prefix is added', async () => {
             let items: IdeNode[];
+            let hasPortal: boolean;
             manager.itemsUpdated.subscribe((e) => {
-                items = e;
+                items = e.items;
+                hasPortal = e.hasPortal;
             });
 
             await vm.sendEvents([
@@ -118,12 +120,13 @@ describe('IdePortalManager', () => {
                     tag: 'other',
                 },
             ]);
+            expect(hasPortal).toBe(true);
         });
 
         it('should resolve whenever a bot with the correct prefix is updated', async () => {
             let items: IdeNode[];
             manager.itemsUpdated.subscribe((e) => {
-                items = e;
+                items = e.items;
             });
 
             await vm.sendEvents([
@@ -175,7 +178,7 @@ describe('IdePortalManager', () => {
         it('should sort items by key', async () => {
             let items: IdeNode[];
             manager.itemsUpdated.subscribe((e) => {
-                items = e;
+                items = e.items;
             });
 
             await vm.sendEvents([
@@ -203,6 +206,26 @@ describe('IdePortalManager', () => {
                     name: '🔺zzz',
                 },
             ]);
+        });
+
+        it('should not have a portal if there is no idePortal tag on the user bot', async () => {
+            let items: IdeNode[];
+            let hasPortal: boolean;
+            manager.itemsUpdated.subscribe((e) => {
+                items = e.items;
+                hasPortal = e.hasPortal;
+            });
+
+            await vm.sendEvents([
+                botUpdated(userId, {
+                    tags: {
+                        idePortal: null,
+                    },
+                }),
+            ]);
+
+            expect(hasPortal).toBe(false);
+            expect(items).toEqual([]);
         });
     });
 });
