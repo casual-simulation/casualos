@@ -19,6 +19,7 @@ import {
     SHEET_PORTAL,
     IDE_PORTAL,
     isPortalScript,
+    DNA_TAG_PREFIX,
 } from '@casual-simulation/aux-common';
 import {
     PortalManager,
@@ -41,6 +42,10 @@ export interface IdeTagNode {
     tag: string;
     key: string;
     name: string;
+
+    prefix?: string;
+    isScript?: boolean;
+    isFormula?: boolean;
 }
 
 export interface IdePortalUpdate {
@@ -107,7 +112,7 @@ export class IdePortalManager implements SubscriptionLike {
                 items: [],
             };
         }
-        const prefix = this._helper.userBot.values[IDE_PORTAL];
+        const prefix = this._helper.userBot.tags[IDE_PORTAL];
         if (prefix) {
             let items = [] as IdeNode[];
             for (let bot of this._helper.objects) {
@@ -115,14 +120,24 @@ export class IdePortalManager implements SubscriptionLike {
                     continue;
                 }
                 for (let tag in bot.values) {
-                    if (isPortalScript(prefix, bot.values[tag])) {
-                        items.push({
+                    if (isPortalScript(prefix, bot.tags[tag])) {
+                        let item: IdeTagNode = {
                             type: 'tag',
                             botId: bot.id,
                             tag: tag,
-                            name: `${prefix}${tag}`,
+                            name: tag,
                             key: `${bot.id}.${tag}`,
-                        });
+                        };
+
+                        if (prefix === '@') {
+                            item.isScript = true;
+                        } else if (prefix === DNA_TAG_PREFIX) {
+                            item.isFormula = true;
+                        } else {
+                            item.prefix = prefix;
+                        }
+
+                        items.push(item);
                     }
                 }
             }

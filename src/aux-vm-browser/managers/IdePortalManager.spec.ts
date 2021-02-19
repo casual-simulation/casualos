@@ -90,7 +90,8 @@ describe('IdePortalManager', () => {
                     key: 'test.hello',
                     botId: 'test',
                     tag: 'hello',
-                    name: '🔺hello',
+                    name: 'hello',
+                    prefix: '🔺',
                 },
             ]);
 
@@ -108,16 +109,18 @@ describe('IdePortalManager', () => {
                 {
                     type: 'tag',
                     key: 'test.hello',
-                    name: '🔺hello',
+                    name: 'hello',
                     botId: 'test',
                     tag: 'hello',
+                    prefix: '🔺',
                 },
                 {
                     type: 'tag',
                     key: 'test2.other',
-                    name: '🔺other',
+                    name: 'other',
                     botId: 'test2',
                     tag: 'other',
+                    prefix: '🔺',
                 },
             ]);
             expect(hasPortal).toBe(true);
@@ -143,7 +146,8 @@ describe('IdePortalManager', () => {
                     key: 'test.hello',
                     botId: 'test',
                     tag: 'hello',
-                    name: '🔺hello',
+                    name: 'hello',
+                    prefix: '🔺',
                 },
             ]);
 
@@ -161,16 +165,18 @@ describe('IdePortalManager', () => {
                 {
                     type: 'tag',
                     key: 'test.hello',
-                    name: '🔺hello',
+                    name: 'hello',
                     botId: 'test',
                     tag: 'hello',
+                    prefix: '🔺',
                 },
                 {
                     type: 'tag',
                     key: 'test.other',
-                    name: '🔺other',
+                    name: 'other',
                     botId: 'test',
                     tag: 'other',
+                    prefix: '🔺',
                 },
             ]);
         });
@@ -196,14 +202,80 @@ describe('IdePortalManager', () => {
                     key: 'test.hello',
                     botId: 'test',
                     tag: 'hello',
-                    name: '🔺hello',
+                    name: 'hello',
+                    prefix: '🔺',
                 },
                 {
                     type: 'tag',
                     key: 'test.zzz',
                     botId: 'test',
                     tag: 'zzz',
-                    name: '🔺zzz',
+                    name: 'zzz',
+                    prefix: '🔺',
+                },
+            ]);
+        });
+
+        it('should indicate listen tags are such', async () => {
+            let items: IdeNode[];
+            manager.itemsUpdated.subscribe((e) => {
+                items = e.items;
+            });
+
+            await vm.sendEvents([
+                botUpdated(userId, {
+                    tags: {
+                        idePortal: '@',
+                    },
+                }),
+                botAdded(
+                    createBot('test', {
+                        zzz: '@bcd',
+                        hello: '🔺script',
+                    })
+                ),
+            ]);
+
+            expect(items).toEqual([
+                {
+                    type: 'tag',
+                    key: 'test.zzz',
+                    botId: 'test',
+                    tag: 'zzz',
+                    name: 'zzz',
+                    isScript: true,
+                },
+            ]);
+        });
+
+        it('should indicate DNA tags are such', async () => {
+            let items: IdeNode[];
+            manager.itemsUpdated.subscribe((e) => {
+                items = e.items;
+            });
+
+            await vm.sendEvents([
+                botUpdated(userId, {
+                    tags: {
+                        idePortal: '🧬',
+                    },
+                }),
+                botAdded(
+                    createBot('test', {
+                        zzz: '🧬bcd',
+                        hello: '🔺script',
+                    })
+                ),
+            ]);
+
+            expect(items).toEqual([
+                {
+                    type: 'tag',
+                    key: 'test.zzz',
+                    botId: 'test',
+                    tag: 'zzz',
+                    name: 'zzz',
+                    isFormula: true,
                 },
             ]);
         });

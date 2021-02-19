@@ -26,10 +26,12 @@ import { tap } from 'rxjs/operators';
 import { IdePortalConfig } from './IdePortalConfig';
 import { IdeNode } from '@casual-simulation/aux-vm-browser';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
+import BotTag from '../BotTag/BotTag';
 
 @Component({
     components: {
         'tag-value-editor': TagValueEditor,
+        'bot-tag': BotTag,
     },
 })
 export default class IdePortal extends Vue {
@@ -100,6 +102,7 @@ export default class IdePortal extends Vue {
 
     selectItem(item: IdeNode) {
         if (item.type === 'tag') {
+            this.selectedItem = item;
             this.currentBot = this._simulation.helper.botsState[item.botId];
             this.currentTag = item.tag;
             this.currentSpace = null;

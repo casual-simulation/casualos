@@ -9,9 +9,16 @@
                         :key="item.key"
                         @click="selectItem(item)"
                         class="item"
-                        :class="{ selected: item === selectedItem }"
+                        :class="{ selected: selectedItem && item.key === selectedItem.key }"
                     >
-                        {{ item.name }}
+                        <bot-tag
+                            :tag="item.name"
+                            :isScript="item.isScript"
+                            :isFormula="item.isFormula"
+                            :prefix="item.prefix"
+                            :light="true"
+                        >
+                        </bot-tag>
                     </div>
                 </div>
                 <div class="portal-content" v-if="currentBot && currentTag">

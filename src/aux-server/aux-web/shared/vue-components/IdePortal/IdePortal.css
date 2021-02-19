@@ -77,6 +77,8 @@
 .items-list {
     flex: 0 0 200px;
     border-right: 1px solid var(--bot-cell-border-color);
+    height: 100%;
+    overflow: auto;
 }
 
 .items-list-header {
