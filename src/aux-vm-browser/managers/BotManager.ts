@@ -51,6 +51,7 @@ import { ESBuildPortalBundler } from '@casual-simulation/aux-vm/managers';
 // during Jest tests but not during builds.
 // @ts-ignore TS2307
 import ESBuildWasmURL from 'esbuild-wasm/esbuild.wasm';
+import { IdePortalManager } from './IdePortalManager';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -62,12 +63,17 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     private _progress: ProgressManager;
     private _bundler: PortalBundler;
     private _portals: PortalManager;
+    private _idePortal: IdePortalManager;
 
     /**
      * Gets the bots panel manager.
      */
     get botPanel() {
         return this._botPanel;
+    }
+
+    get idePortal() {
+        return this._idePortal;
     }
 
     get login() {
@@ -217,6 +223,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             this.watcher,
             this._bundler
         );
+        this._idePortal = new IdePortalManager(this._watcher, this.helper);
 
         this._subscriptions.push(this._portals);
     }

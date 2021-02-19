@@ -1,0 +1,140 @@
+import {
+    Subject,
+    Observable,
+    BehaviorSubject,
+    merge,
+    from,
+    SubscriptionLike,
+} from 'rxjs';
+import { flatMap, tap, withLatestFrom, bufferTime } from 'rxjs/operators';
+import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
+import {
+    isBot,
+    PrecalculatedBot,
+    isPrecalculated,
+    isExistingBot,
+    createPrecalculatedBot,
+    filterBotsBySelection,
+    botsInDimension,
+    SHEET_PORTAL,
+    IDE_PORTAL,
+    isPortalScript,
+} from '@casual-simulation/aux-common';
+import {
+    PortalManager,
+    UpdatedBotInfo,
+} from '@casual-simulation/aux-vm/managers';
+import { sortBy } from 'lodash';
+
+export type IdeNode = IdeFolderNode | IdeTagNode;
+
+export interface IdeFolderNode {
+    type: 'folder';
+    name: string;
+    key: string;
+    children: IdeNode[];
+}
+
+export interface IdeTagNode {
+    type: 'tag';
+    botId: string;
+    tag: string;
+    key: string;
+    name: string;
+}
+
+/**
+ * Defines a class that manages the bot panel.
+ */
+export class IdePortalManager implements SubscriptionLike {
+    private _helper: BotHelper;
+    private _watcher: BotWatcher;
+    private _buffer: boolean;
+
+    private _itemsUpdated: BehaviorSubject<IdeNode[]>;
+
+    private _subs: SubscriptionLike[] = [];
+    closed: boolean = false;
+
+    /**
+     * Gets an observable that resolves whenever the list of selected bots is updated.
+     */
+    get itemsUpdated(): Observable<IdeNode[]> {
+        return this._itemsUpdated;
+    }
+
+    /**
+     * Creates a new bot panel manager.
+     * @param watcher The bot watcher to use.
+     * @param helper The bot helper to use.
+     * @param bufferEvents Whether to buffer the update events.
+     */
+    constructor(
+        watcher: BotWatcher,
+        helper: BotHelper,
+        bufferEvents: boolean = true
+    ) {
+        this._watcher = watcher;
+        this._helper = helper;
+        this._buffer = bufferEvents;
+        this._itemsUpdated = new BehaviorSubject<IdeNode[]>([]);
+
+        this._subs.push(
+            this._calculateItemsUpdated().subscribe(this._itemsUpdated)
+        );
+    }
+
+    unsubscribe(): void {
+        if (!this.closed) {
+            this.closed = true;
+            this._subs.forEach((s) => s.unsubscribe());
+            this._subs = null;
+        }
+    }
+
+    private _findMatchingItems(): IdeNode[] {
+        if (!this._helper.userBot) {
+            return [];
+        }
+        const prefix = this._helper.userBot.values[IDE_PORTAL];
+        if (prefix) {
+            let items = [] as IdeNode[];
+            for (let bot of this._helper.objects) {
+                if (bot.id === this._helper.userId) {
+                    continue;
+                }
+                for (let tag in bot.values) {
+                    if (isPortalScript(prefix, bot.values[tag])) {
+                        items.push({
+                            type: 'tag',
+                            botId: bot.id,
+                            tag: tag,
+                            name: `${prefix}${tag}`,
+                            key: `${bot.id}.${tag}`,
+                        });
+                    }
+                }
+            }
+            return sortBy(items, (item) => item.key);
+        }
+
+        return [];
+    }
+
+    private _calculateItemsUpdated(): Observable<IdeNode[]> {
+        const allBotsSelectedUpdatedAddedAndRemoved = merge(
+            this._watcher.botsDiscovered,
+            this._watcher.botsUpdated,
+            this._watcher.botsRemoved
+        );
+        const bufferedEvents: Observable<any> = this._buffer
+            ? allBotsSelectedUpdatedAddedAndRemoved.pipe(bufferTime(10))
+            : allBotsSelectedUpdatedAddedAndRemoved;
+        return bufferedEvents.pipe(
+            flatMap(async () => {
+                const items = this._findMatchingItems();
+                return items;
+            })
+        );
+    }
+}
