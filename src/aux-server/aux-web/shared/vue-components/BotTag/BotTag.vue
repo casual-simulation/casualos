@@ -1,5 +1,5 @@
 <template>
-    <span class="tag bot-tag" :class="{ clonable: allowCloning }">
+    <span class="tag bot-tag" :class="{ clonable: allowCloning, light: light }">
         <span v-if="isFormula">
             <span class="dna-symbol">🧬</span><span class="tag-name">{{ tag }}</span>
         </span>

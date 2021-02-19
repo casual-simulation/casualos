@@ -15,6 +15,10 @@
     color: #7b64ff;
 }
 
+.bot-tag.light .tag-name {
+    font-weight: 400;
+}
+
 .tag-name {
     font-weight: 700;
 }

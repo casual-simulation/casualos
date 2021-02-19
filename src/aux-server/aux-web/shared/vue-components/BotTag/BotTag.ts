@@ -22,6 +22,12 @@ export default class BotTag extends Vue {
     @Prop({ default: true })
     allowCloning: boolean;
 
+    /**
+     * Whether the tag name should be rendered with a light font weight.
+     */
+    @Prop({ default: false })
+    light: boolean;
+
     get isCombine() {
         return false;
     }
