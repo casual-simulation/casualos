@@ -87,7 +87,7 @@ describe('IdePortalManager', () => {
             expect(items).toEqual([
                 {
                     type: 'tag',
-                    key: 'test.hello',
+                    key: 'hello.test',
                     botId: 'test',
                     tag: 'hello',
                     name: 'hello',
@@ -108,7 +108,7 @@ describe('IdePortalManager', () => {
             expect(items).toEqual([
                 {
                     type: 'tag',
-                    key: 'test.hello',
+                    key: 'hello.test',
                     name: 'hello',
                     botId: 'test',
                     tag: 'hello',
@@ -116,7 +116,7 @@ describe('IdePortalManager', () => {
                 },
                 {
                     type: 'tag',
-                    key: 'test2.other',
+                    key: 'other.test2',
                     name: 'other',
                     botId: 'test2',
                     tag: 'other',
@@ -143,7 +143,7 @@ describe('IdePortalManager', () => {
             expect(items).toEqual([
                 {
                     type: 'tag',
-                    key: 'test.hello',
+                    key: 'hello.test',
                     botId: 'test',
                     tag: 'hello',
                     name: 'hello',
@@ -164,7 +164,7 @@ describe('IdePortalManager', () => {
             expect(items).toEqual([
                 {
                     type: 'tag',
-                    key: 'test.hello',
+                    key: 'hello.test',
                     name: 'hello',
                     botId: 'test',
                     tag: 'hello',
@@ -172,7 +172,7 @@ describe('IdePortalManager', () => {
                 },
                 {
                     type: 'tag',
-                    key: 'test.other',
+                    key: 'other.test',
                     name: 'other',
                     botId: 'test',
                     tag: 'other',
@@ -181,7 +181,7 @@ describe('IdePortalManager', () => {
             ]);
         });
 
-        it('should sort items by key', async () => {
+        it('should sort items by tag and then bot ID', async () => {
             let items: IdeNode[];
             manager.itemsUpdated.subscribe((e) => {
                 items = e.items;
@@ -191,7 +191,13 @@ describe('IdePortalManager', () => {
                 botAdded(
                     createBot('test', {
                         zzz: '🔺bcd',
-                        hello: '🔺script',
+                        aaa: '🔺script',
+                    })
+                ),
+                botAdded(
+                    createBot('abc', {
+                        zzz: '🔺bcd',
+                        bbb: '🔺script',
                     })
                 ),
             ]);
@@ -199,15 +205,31 @@ describe('IdePortalManager', () => {
             expect(items).toEqual([
                 {
                     type: 'tag',
-                    key: 'test.hello',
+                    key: 'aaa.test',
                     botId: 'test',
-                    tag: 'hello',
-                    name: 'hello',
+                    tag: 'aaa',
+                    name: 'aaa',
                     prefix: '🔺',
                 },
                 {
                     type: 'tag',
-                    key: 'test.zzz',
+                    key: 'bbb.abc',
+                    botId: 'abc',
+                    tag: 'bbb',
+                    name: 'bbb',
+                    prefix: '🔺',
+                },
+                {
+                    type: 'tag',
+                    key: 'zzz.abc',
+                    botId: 'abc',
+                    tag: 'zzz',
+                    name: 'zzz',
+                    prefix: '🔺',
+                },
+                {
+                    type: 'tag',
+                    key: 'zzz.test',
                     botId: 'test',
                     tag: 'zzz',
                     name: 'zzz',
@@ -239,7 +261,7 @@ describe('IdePortalManager', () => {
             expect(items).toEqual([
                 {
                     type: 'tag',
-                    key: 'test.zzz',
+                    key: 'zzz.test',
                     botId: 'test',
                     tag: 'zzz',
                     name: 'zzz',
@@ -271,7 +293,7 @@ describe('IdePortalManager', () => {
             expect(items).toEqual([
                 {
                     type: 'tag',
-                    key: 'test.zzz',
+                    key: 'zzz.test',
                     botId: 'test',
                     tag: 'zzz',
                     name: 'zzz',

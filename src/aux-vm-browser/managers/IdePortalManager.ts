@@ -126,7 +126,7 @@ export class IdePortalManager implements SubscriptionLike {
                             botId: bot.id,
                             tag: tag,
                             name: tag,
-                            key: `${bot.id}.${tag}`,
+                            key: `${tag}.${bot.id}`,
                         };
 
                         if (prefix === '@') {
