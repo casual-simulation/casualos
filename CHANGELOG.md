@@ -1,5 +1,17 @@
 # CasualOS Changelog
 
+## V1.4.5
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Changed the ab-1 bootstrap URL to `https://bootstrap.casualos.com/ab1.aux`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was not possible to enter numbers in menu bot input boxes.
+
 ## V1.4.4
 
 #### Date: 2/18/2021
@@ -13,10 +25,6 @@
     -   Check the documentation for more info.
 -   Added a better error message when trying to save a bot to a tag value.
 -   Added the `dimension` bot form as a preferred alias to `portal`.
-
-### :bug: Bug Fixes
-
--   Fixed an issue where it was not possible to enter numbers in menu bot input boxes.
 
 ## V1.4.3
 
