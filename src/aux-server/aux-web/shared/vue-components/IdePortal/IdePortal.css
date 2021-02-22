@@ -78,7 +78,9 @@
     flex: 0 0 200px;
     border-right: 1px solid var(--bot-cell-border-color);
     height: 100%;
-    overflow: auto;
+
+    display: flex;
+    flex-direction: column;
 }
 
 .items-list-header {
@@ -88,6 +90,17 @@
 
     padding: 0 0 0 8px;
     font-weight: 600;
+    line-height: 22px;
+    flex: 0 0 auto;
+}
+
+.items-list-items {
+    overflow: auto;
+
+    /* override for browsers that support "overlay" */
+    overflow: overlay;
+
+    flex: 1 1 auto;
 }
 
 .items-list .item {
@@ -101,4 +114,30 @@
 
 .items-list .item.selected {
     background-color: #ddd;
+}
+
+.items-list-items:hover {
+    --scrollbar-thumb-background: rgba(0, 0, 0, 0.2);
+}
+
+.items-list-items::-webkit-scrollbar {
+    background: transparent;
+    width: 12px;
+    height: 12px;
+}
+
+.items-list-items::-webkit-scrollbar * {
+    background-color: transparent;
+}
+
+.items-list-items::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.items-list-items::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb-background);
+}
+
+.items-list-items::-webkit-scrollbar-thumb:hover {
+    background-color: #bbb;
 }
