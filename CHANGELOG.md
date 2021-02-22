@@ -14,6 +14,10 @@
 -   Added a better error message when trying to save a bot to a tag value.
 -   Added the `dimension` bot form as a preferred alias to `portal`.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was not possible to enter numbers in menu bot input boxes.
+
 ## V1.4.3
 
 #### Date: 2/17/2021
