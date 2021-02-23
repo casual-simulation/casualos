@@ -552,11 +552,11 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onBotAdded: `@player.toast("Added 1!")`,
+                                onBotAdded: `@os.toast("Added 1!")`,
                             }),
                             test2: createBot('test2', {
                                 abc: 'ghi',
-                                onBotAdded: `@player.toast("Added 2!")`,
+                                onBotAdded: `@os.toast("Added 2!")`,
                             }),
                             test3: createBot('test3', {
                                 abc: '999',
@@ -576,11 +576,11 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onBotAdded: `@player.toast(getBots('abc', 'ghi').length + 10)`,
+                                onBotAdded: `@os.toast(getBots('abc', 'ghi').length + 10)`,
                             }),
                             test2: createBot('test2', {
                                 abc: 'ghi',
-                                onBotAdded: `@player.toast(getBots('abc', 'def').length + 20)`,
+                                onBotAdded: `@os.toast(getBots('abc', 'def').length + 20)`,
                             }),
                         })
                     );
@@ -595,7 +595,7 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onBotAdded: `@player.toast(that)`,
+                                onBotAdded: `@os.toast(that)`,
                             }),
                         })
                     );
@@ -612,7 +612,7 @@ describe('AuxRuntime', () => {
                             test1: createBot('test1', {
                                 abc: 'def',
                                 create: `@create({
-                                onBotAdded: '@player.toast("hit")'
+                                onBotAdded: '@os.toast("hit")'
                             })`,
                             }),
                         })
@@ -627,7 +627,7 @@ describe('AuxRuntime', () => {
                             botAdded(
                                 createBot('uuid1', {
                                     creator: 'test1',
-                                    onBotAdded: '@player.toast("hit")',
+                                    onBotAdded: '@os.toast("hit")',
                                 })
                             ),
                         ],
@@ -640,11 +640,11 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onBotAdded: `@player.toast("Added 1!")`,
+                                onBotAdded: `@os.toast("Added 1!")`,
                             }),
                             test2: createBot('test2', {
                                 abc: 'ghi',
-                                onBotAdded: `@player.toast("Added 2!")`,
+                                onBotAdded: `@os.toast("Added 2!")`,
                             }),
                             test3: createBot('test3', {
                                 abc: '999',
@@ -663,11 +663,11 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onBotAdded: `@player.toast("Added 1!")`,
+                                onBotAdded: `@os.toast("Added 1!")`,
                             }),
                             test2: createBot('test2', {
                                 abc: 'ghi',
-                                onBotAdded: `@player.toast("Added 2!")`,
+                                onBotAdded: `@os.toast("Added 2!")`,
                             }),
                             test3: createBot('test3', {
                                 abc: '999',
@@ -687,7 +687,7 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onAnyBotsAdded: `@player.toast(that.bots.length)`,
+                                onAnyBotsAdded: `@os.toast(that.bots.length)`,
                             }),
                             test2: createBot('test2', {
                                 abc: 'ghi',
@@ -708,7 +708,7 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onAnyBotsAdded: `@player.toast(that.bots.length)`,
+                                onAnyBotsAdded: `@os.toast(that.bots.length)`,
                             }),
                         })
                     );
@@ -779,11 +779,11 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onAnyBotsAdded: `@player.toast("Added 1!")`,
+                                onAnyBotsAdded: `@os.toast("Added 1!")`,
                             }),
                             test2: createBot('test2', {
                                 abc: 'ghi',
-                                onAnyBotsAdded: `@player.toast("Added 2!")`,
+                                onAnyBotsAdded: `@os.toast("Added 2!")`,
                             }),
                             test3: createBot('test3', {
                                 abc: '999',
@@ -802,11 +802,11 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onAnyBotsAdded: `@player.toast("Added 1!")`,
+                                onAnyBotsAdded: `@os.toast("Added 1!")`,
                             }),
                             test2: createBot('test2', {
                                 abc: 'ghi',
-                                onAnyBotsAdded: `@player.toast("Added 2!")`,
+                                onAnyBotsAdded: `@os.toast("Added 2!")`,
                             }),
                             test3: createBot('test3', {
                                 abc: '999',
@@ -963,8 +963,7 @@ describe('AuxRuntime', () => {
                     const update1 = runtime.stateUpdated(
                         stateUpdatedEvent({
                             test: createBot('test', {
-                                abc:
-                                    '@setInterval(() => player.toast("hi"), 100);',
+                                abc: '@setInterval(() => os.toast("hi"), 100);',
                             }),
                         })
                     );
@@ -1069,7 +1068,7 @@ describe('AuxRuntime', () => {
                             }),
                             test3: createBot('test3', {
                                 abc: '999',
-                                onAnyBotsRemoved: `@player.toast(that.botIDs)`,
+                                onAnyBotsRemoved: `@os.toast(that.botIDs)`,
                             }),
                         })
                     );
@@ -1094,11 +1093,11 @@ describe('AuxRuntime', () => {
                             }),
                             test2: createBot('test2', {
                                 abc: 'ghi',
-                                onAnyBotsRemoved: `@player.toast(getBots('abc').length)`,
+                                onAnyBotsRemoved: `@os.toast(getBots('abc').length)`,
                             }),
                             test3: createBot('test3', {
                                 abc: '999',
-                                onAnyBotsRemoved: `@player.toast(getBots('abc').length + 10)`,
+                                onAnyBotsRemoved: `@os.toast(getBots('abc').length + 10)`,
                             }),
                         })
                     );
@@ -1122,7 +1121,7 @@ describe('AuxRuntime', () => {
                             test1: createBot('test1', {
                                 abc: 'def',
                                 destroy: `@destroy(this)`,
-                                onBotDestroyed: `@player.toast("Hit")`,
+                                onBotDestroyed: `@os.toast("Hit")`,
                             }),
                         })
                     );
@@ -1145,7 +1144,7 @@ describe('AuxRuntime', () => {
                             }),
                             test3: createBot('test3', {
                                 abc: '999',
-                                onAnyBotsRemoved: `@player.toast(that.botIDs)`,
+                                onAnyBotsRemoved: `@os.toast(that.botIDs)`,
                             }),
                         })
                     );
@@ -1174,7 +1173,7 @@ describe('AuxRuntime', () => {
                             }),
                             test3: createBot('test3', {
                                 abc: '999',
-                                onAnyBotsRemoved: `@player.toast(that.botIDs)`,
+                                onAnyBotsRemoved: `@os.toast(that.botIDs)`,
                             }),
                         })
                     );
@@ -1579,11 +1578,11 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onBotChanged: `@player.toast("Changed 1!")`,
+                                onBotChanged: `@os.toast("Changed 1!")`,
                             }),
                             test2: createBot('test2', {
                                 abc: 'ghi',
-                                onBotChanged: `@player.toast("Changed 2!")`,
+                                onBotChanged: `@os.toast("Changed 2!")`,
                             }),
                             test3: createBot('test3', {
                                 abc: '999',
@@ -1618,7 +1617,7 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onBotChanged: `@player.toast(getBots('zzz').length)`,
+                                onBotChanged: `@os.toast(getBots('zzz').length)`,
                             }),
                         })
                     );
@@ -1643,7 +1642,7 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onBotChanged: `@player.toast(that)`,
+                                onBotChanged: `@os.toast(that)`,
                             }),
                         })
                     );
@@ -1675,11 +1674,11 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onBotChanged: `@player.toast("Changed 1!")`,
+                                onBotChanged: `@os.toast("Changed 1!")`,
                             }),
                             test2: createBot('test2', {
                                 abc: 'ghi',
-                                onBotChanged: `@player.toast("Changed 2!")`,
+                                onBotChanged: `@os.toast("Changed 2!")`,
                             }),
                             test3: createBot('test3', {
                                 abc: '999',
@@ -1715,11 +1714,11 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onBotChanged: `@player.toast("Changed 1!")`,
+                                onBotChanged: `@os.toast("Changed 1!")`,
                             }),
                             test2: createBot('test2', {
                                 abc: 'ghi',
-                                onBotChanged: `@player.toast("Changed 2!")`,
+                                onBotChanged: `@os.toast("Changed 2!")`,
                             }),
                             test3: createBot('test3', {
                                 abc: '999',
@@ -1757,7 +1756,7 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onAnyBotsChanged: `@player.toast(that)`,
+                                onAnyBotsChanged: `@os.toast(that)`,
                             }),
                             test2: createBot('test2', {
                                 abc: 'ghi',
@@ -1850,11 +1849,11 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onAnyBotsChanged: `@player.toast("Changed 1!")`,
+                                onAnyBotsChanged: `@os.toast("Changed 1!")`,
                             }),
                             test2: createBot('test2', {
                                 abc: 'ghi',
-                                onAnyBotsChanged: `@player.toast("Changed 2!")`,
+                                onAnyBotsChanged: `@os.toast("Changed 2!")`,
                             }),
                             test3: createBot('test3', {
                                 abc: '999',
@@ -1890,11 +1889,11 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 abc: 'def',
-                                onAnyBotsChanged: `@player.toast("Changed 1!")`,
+                                onAnyBotsChanged: `@os.toast("Changed 1!")`,
                             }),
                             test2: createBot('test2', {
                                 abc: 'ghi',
-                                onAnyBotsChanged: `@player.toast("Changed 2!")`,
+                                onAnyBotsChanged: `@os.toast("Changed 2!")`,
                             }),
                             test3: createBot('test3', {
                                 abc: '999',
@@ -2929,10 +2928,10 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        hello: '@player.toast("hi1")',
+                        hello: '@os.toast("hi1")',
                     }),
                     test2: createBot('test2', {
-                        hello: '@player.toast("hi2")',
+                        hello: '@os.toast("hi2")',
                     }),
                     test3: createBot('test3', {}),
                 })
@@ -2948,10 +2947,10 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        hello: '@player.toast("hi1")',
+                        hello: '@os.toast("hi1")',
                     }),
                     test2: createBot('test2', {
-                        hello: '@player.toast("hi2")',
+                        hello: '@os.toast("hi2")',
                     }),
                     test3: createBot('test3', {}),
                 })
@@ -2968,7 +2967,7 @@ describe('AuxRuntime', () => {
         it('should flatten run script events into the given batch', async () => {
             runtime.process([
                 toast('hi0'),
-                runScript('player.toast("hi1")'),
+                runScript('os.toast("hi1")'),
                 toast('hi2'),
             ]);
 
@@ -2983,13 +2982,13 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        onServerAction: '@player.toast(that.action.message)',
+                        onServerAction: '@os.toast(that.action.message)',
                     }),
                 })
             );
             runtime.process([
                 toast('hi0'),
-                runScript('player.toast("hi1")'),
+                runScript('os.toast("hi1")'),
                 toast('hi2'),
             ]);
 
@@ -3018,7 +3017,7 @@ describe('AuxRuntime', () => {
             );
             runtime.process([
                 toast('hi0'),
-                runScript('player.toast("hi1")'),
+                runScript('os.toast("hi1")'),
                 toast('hi2'),
             ]);
 
@@ -3032,7 +3031,7 @@ describe('AuxRuntime', () => {
                 stateUpdatedEvent({
                     test1: createBot('test1', {
                         onServerAction: '@tags.count += 1',
-                        wow: '@player.toast("hi")',
+                        wow: '@os.toast("hi")',
                         count: 0,
                     }),
                 })
@@ -3040,7 +3039,7 @@ describe('AuxRuntime', () => {
             runtime.process([
                 toast('hi0'),
                 action('wow'),
-                runScript('player.toast("hi1")'),
+                runScript('os.toast("hi1")'),
                 toast('hi2'),
             ]);
 
@@ -3096,7 +3095,7 @@ describe('AuxRuntime', () => {
                 stateUpdatedEvent({
                     test1: createBot('test1', {
                         onServerAction: `@if(that.action.type === "action") action.reject(that.action);`,
-                        test: '@player.toast("hi")',
+                        test: '@os.toast("hi")',
                     }),
                 })
             );
@@ -3115,7 +3114,7 @@ describe('AuxRuntime', () => {
                     }),
                 })
             );
-            runtime.process([runScript('player.toast("hi")')]);
+            runtime.process([runScript('os.toast("hi")')]);
 
             await waitAsync();
 
@@ -3175,7 +3174,7 @@ describe('AuxRuntime', () => {
                     }),
                 })
             );
-            runtime.process([device(<any>{}, runScript('player.toast("hi")'))]);
+            runtime.process([device(<any>{}, runScript('os.toast("hi")'))]);
 
             await waitAsync();
 
@@ -3184,16 +3183,14 @@ describe('AuxRuntime', () => {
                     // onServerAction is executed before
                     // the device action is executed
                     toast('hi'),
-                    device(<any>{}, runScript('player.toast("hi")')),
+                    device(<any>{}, runScript('os.toast("hi")')),
                 ],
             ]);
         });
 
         it('should support resolving async actions', async () => {
             runtime.process([
-                runScript(
-                    'player.showInput().then(result => player.toast(result))'
-                ),
+                runScript('os.showInput().then(result => os.toast(result))'),
             ]);
 
             await waitAsync();
@@ -3222,7 +3219,7 @@ describe('AuxRuntime', () => {
 
             runtime.process([
                 runScript(
-                    'player.showInput().then(result => player.toast(result.tags.abc))'
+                    'os.showInput().then(result => os.toast(result.tags.abc))'
                 ),
             ]);
 
@@ -3252,9 +3249,7 @@ describe('AuxRuntime', () => {
 
         it('should support rejecting async actions', async () => {
             runtime.process([
-                runScript(
-                    'player.showInput().catch(result => player.toast(result))'
-                ),
+                runScript('os.showInput().catch(result => os.toast(result))'),
             ]);
 
             await waitAsync();
@@ -3276,7 +3271,7 @@ describe('AuxRuntime', () => {
             uuidMock.mockReturnValueOnce('task1');
             runtime.process([
                 runScript(
-                    'server.serverPlayerCount("test").then(result => player.toast(result))'
+                    'server.serverPlayerCount("test").then(result => os.toast(result))'
                 ),
             ]);
 
@@ -3297,7 +3292,7 @@ describe('AuxRuntime', () => {
             uuidMock.mockReturnValueOnce('task1');
             runtime.process([
                 runScript(
-                    'server.serverPlayerCount("test").catch(err => player.toast(err))'
+                    'server.serverPlayerCount("test").catch(err => os.toast(err))'
                 ),
             ]);
 
@@ -3317,8 +3312,8 @@ describe('AuxRuntime', () => {
         it('should support using await for async actions', async () => {
             runtime.process([
                 runScript(
-                    `const result = await player.showInput();
-                     player.toast(result);`
+                    `const result = await os.showInput();
+                     os.toast(result);`
                 ),
             ]);
 
@@ -3338,7 +3333,7 @@ describe('AuxRuntime', () => {
         });
 
         it('should not crash if given a run_script that doesnt compile', async () => {
-            runtime.process([runScript('player.toast('), toast('abc')]);
+            runtime.process([runScript('os.toast('), toast('abc')]);
 
             await waitAsync();
 
@@ -3347,7 +3342,7 @@ describe('AuxRuntime', () => {
 
         it('should resolve run_script tasks', async () => {
             const result = runtime.execute(
-                'return await player.run("return 123");'
+                'return await os.run("return 123");'
             );
 
             runtime.process(result.actions);
@@ -3357,7 +3352,7 @@ describe('AuxRuntime', () => {
 
         it('should unwrap async run_script tasks', async () => {
             const result = runtime.execute(
-                'return await player.run("return Promise.resolve(123);");'
+                'return await os.run("return Promise.resolve(123);");'
             );
 
             runtime.process(result.actions);
@@ -3368,7 +3363,7 @@ describe('AuxRuntime', () => {
 
     describe('execute()', () => {
         it('should compile and run the given script', async () => {
-            runtime.execute('player.toast("hello")');
+            runtime.execute('os.toast("hello")');
 
             await waitAsync();
 
@@ -3376,7 +3371,7 @@ describe('AuxRuntime', () => {
         });
 
         it('should emit an error if the script has a syntax error', async () => {
-            runtime.execute('player.toast(');
+            runtime.execute('os.toast(');
 
             await waitAsync();
 
@@ -3384,7 +3379,7 @@ describe('AuxRuntime', () => {
                 [
                     {
                         error: expect.any(SyntaxError),
-                        script: 'player.toast(',
+                        script: 'os.toast(',
                         bot: null,
                         tag: null,
                     },
@@ -3393,7 +3388,7 @@ describe('AuxRuntime', () => {
         });
 
         it('should return the compiler error if the script was unable to be compiled', async () => {
-            const result = runtime.execute('player.toast(');
+            const result = runtime.execute('os.toast(');
 
             await waitAsync();
 
@@ -3403,7 +3398,7 @@ describe('AuxRuntime', () => {
                 errors: [
                     {
                         error: expect.any(SyntaxError),
-                        script: 'player.toast(',
+                        script: 'os.toast(',
                         bot: null,
                         tag: null,
                     },
@@ -3417,10 +3412,10 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        hello: '@player.toast("hi1")',
+                        hello: '@os.toast("hi1")',
                     }),
                     test2: createBot('test2', {
-                        hello: '@player.toast("hi2")',
+                        hello: '@os.toast("hi2")',
                     }),
                     test3: createBot('test3', {}),
                 })
@@ -3436,10 +3431,10 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        hello: '@player.toast("hi1")',
+                        hello: '@os.toast("hi1")',
                     }),
                     test2: createBot('test2', {
-                        hello: '@player.toast("hi2")',
+                        hello: '@os.toast("hi2")',
                     }),
                     test3: createBot('test3', {}),
                 })
@@ -3455,7 +3450,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        hello: '@player.toast(that.toJSON())',
+                        hello: '@os.toast(that.toJSON())',
                     }),
                     test2: createBot('test2', {
                         abc: 'def',
@@ -3498,7 +3493,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        hello: '@player.toast(that)',
+                        hello: '@os.toast(that)',
                     }),
                 })
             );
@@ -3524,7 +3519,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        hello: '@player.toast(that)',
+                        hello: '@os.toast(that)',
                     }),
                 })
             );
@@ -3548,7 +3543,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        hello: '@player.toast(that)',
+                        hello: '@os.toast(that)',
                     }),
                 })
             );
@@ -3572,7 +3567,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        hello: '@player.toast(that)',
+                        hello: '@os.toast(that)',
                     }),
                 })
             );
@@ -3596,7 +3591,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        hello: '@player.toast(that)',
+                        hello: '@os.toast(that)',
                     }),
                 })
             );
@@ -3620,7 +3615,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        hello: '@player.toast(that)',
+                        hello: '@os.toast(that)',
                     }),
                 })
             );
@@ -3653,8 +3648,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            hello:
-                                '@setInterval(() => player.toast("abc"), 100)',
+                            hello: '@setInterval(() => os.toast("abc"), 100)',
                         }),
                     })
                 );
@@ -3673,8 +3667,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            hello:
-                                '@setTimeout(() => player.toast("abc"), 100)',
+                            hello: '@setTimeout(() => os.toast("abc"), 100)',
                         }),
                     })
                 );
@@ -3719,7 +3712,7 @@ describe('AuxRuntime', () => {
                 stateUpdatedEvent({
                     test1: createBot('test1', {
                         hello:
-                            '@Promise.resolve(0).then(() => player.toast("abc")).then(() => player.toast("abc2"))',
+                            '@Promise.resolve(0).then(() => os.toast("abc")).then(() => os.toast("abc2"))',
                     }),
                 })
             );
@@ -3735,7 +3728,7 @@ describe('AuxRuntime', () => {
                 stateUpdatedEvent({
                     test1: createBot('test1', {
                         hello: `@await Promise.resolve(0);
-                        player.toast("abc");`,
+                        os.toast("abc");`,
                     }),
                 })
             );
@@ -3751,7 +3744,7 @@ describe('AuxRuntime', () => {
                 stateUpdatedEvent({
                     test1: createBot('test1', {
                         hello: `@await Promise.resolve(0);
-                        player.toast("abc");
+                        os.toast("abc");
 
                         // Never gets resolved but that is fine because we
                         // want to ensure that the toast happens
@@ -3890,7 +3883,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            create: `@create({ "shout": "@player.toast('abc')" })`,
+                            create: `@create({ "shout": "@os.toast('abc')" })`,
                         }),
                     })
                 );
@@ -3904,7 +3897,7 @@ describe('AuxRuntime', () => {
                         botAdded(
                             createBot('uuid', {
                                 creator: 'test1',
-                                shout: "@player.toast('abc')",
+                                shout: "@os.toast('abc')",
                             })
                         ),
                         toast('abc'),
@@ -3917,7 +3910,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            create: `@create({ abc: "def", "shout": "@player.toast('abc')" })`,
+                            create: `@create({ abc: "def", "shout": "@os.toast('abc')" })`,
                         }),
                     })
                 );
@@ -3937,7 +3930,7 @@ describe('AuxRuntime', () => {
                         state: {
                             uuid: createPrecalculatedBot('uuid', {
                                 creator: 'test1',
-                                shout: "@player.toast('abc')",
+                                shout: "@os.toast('abc')",
                                 abc: 'def',
                             }),
                         },
@@ -4045,7 +4038,7 @@ describe('AuxRuntime', () => {
                     stateUpdatedEvent({
                         test1: createBot('test1', {
                             create:
-                                '@create({ abc: "@player.toast(`Hi`);" }); shout("abc");',
+                                '@create({ abc: "@os.toast(`Hi`);" }); shout("abc");',
                         }),
                     })
                 );
@@ -4058,7 +4051,7 @@ describe('AuxRuntime', () => {
                         botAdded(
                             createBot('uuid', {
                                 creator: 'test1',
-                                abc: '@player.toast(`Hi`);',
+                                abc: '@os.toast(`Hi`);',
                             })
                         ),
                         toast('Hi'),
@@ -4072,7 +4065,7 @@ describe('AuxRuntime', () => {
                     stateUpdatedEvent({
                         test1: createBot('test1', {
                             create:
-                                '@let created = create({ abc: "@player.toast(`Hi`);" }); whisper(created, "abc");',
+                                '@let created = create({ abc: "@os.toast(`Hi`);" }); whisper(created, "abc");',
                         }),
                     })
                 );
@@ -4085,7 +4078,7 @@ describe('AuxRuntime', () => {
                         botAdded(
                             createBot('uuid', {
                                 creator: 'test1',
-                                abc: '@player.toast(`Hi`);',
+                                abc: '@os.toast(`Hi`);',
                             })
                         ),
                         toast('Hi'),
@@ -4128,7 +4121,7 @@ describe('AuxRuntime', () => {
                     stateUpdatedEvent({
                         test1: createBot('test1', {
                             create:
-                                '@await testPromise; let created = create({ abc: "@player.toast(`Hi`);" }); whisper(created, "abc");',
+                                '@await testPromise; let created = create({ abc: "@os.toast(`Hi`);" }); whisper(created, "abc");',
                         }),
                     })
                 );
@@ -4147,7 +4140,7 @@ describe('AuxRuntime', () => {
                         botAdded(
                             createBot('uuid', {
                                 creator: 'test1',
-                                abc: '@player.toast(`Hi`);',
+                                abc: '@os.toast(`Hi`);',
                             })
                         ),
                         toast('Hi'),
@@ -4293,7 +4286,7 @@ describe('AuxRuntime', () => {
                     stateUpdatedEvent({
                         test1: createBot('test1', {
                             delete: '@destroy(this)',
-                            hello: '@player.toast("hi")',
+                            hello: '@os.toast("hi")',
                         }),
                     })
                 );
@@ -5106,7 +5099,7 @@ describe('AuxRuntime', () => {
                             tags.value = 123;
                             // value is not updated to 123 because
                             // the update is delayed
-                            player.toast(tags.value);
+                            os.toast(tags.value);
                         `,
                             },
                             <any>'delayed'
@@ -5635,18 +5628,18 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        script: '@player.toast("abc")',
+                        script: '@os.toast("abc")',
                     }),
                     test2: {
                         id: 'test2',
                         tags: {
-                            script: '@player.toast("def")',
+                            script: '@os.toast("def")',
                         },
                         signatures: {
                             [tagValueHash(
                                 'test2',
                                 'script',
-                                '@player.toast("def")'
+                                '@os.toast("def")'
                             )]: 'script',
                         },
                     },
@@ -5661,12 +5654,12 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        script: '@player.toast("abc")',
+                        script: '@os.toast("abc")',
                     }),
                 })
             );
 
-            const hash = tagValueHash('test', 'script', '@player.toast("abc")');
+            const hash = tagValueHash('test', 'script', '@os.toast("abc")');
 
             runtime.stateUpdated(
                 stateUpdatedEvent({
@@ -5688,20 +5681,20 @@ describe('AuxRuntime', () => {
                     test: {
                         id: 'test',
                         tags: {
-                            script: '@player.toast("def")',
+                            script: '@os.toast("def")',
                         },
                         signatures: {
                             [tagValueHash(
                                 'test',
                                 'script',
-                                '@player.toast("def")'
+                                '@os.toast("def")'
                             )]: 'script',
                         },
                     },
                 })
             );
 
-            const hash = tagValueHash('test', 'script', '@player.toast("def")');
+            const hash = tagValueHash('test', 'script', '@os.toast("def")');
 
             runtime.stateUpdated(
                 stateUpdatedEvent({
@@ -5723,7 +5716,7 @@ describe('AuxRuntime', () => {
                     test: createBot(
                         'test',
                         {
-                            script: '@player.toast("abc")',
+                            script: '@os.toast("abc")',
                         },
                         'tempLocal'
                     ),
@@ -5740,7 +5733,7 @@ describe('AuxRuntime', () => {
                     test: createBot(
                         'test',
                         {
-                            script: '@player.toast("abc")',
+                            script: '@os.toast("abc")',
                         },
                         'local'
                     ),
@@ -6189,7 +6182,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: `@player.toast("abc")\nthrow new Error("abc")`,
+                        test: `@os.toast("abc")\nthrow new Error("abc")`,
                     },
                 },
             };
@@ -6369,6 +6362,36 @@ describe('original action tests', () => {
                 botUpdated('thisBot', {
                     tags: {
                         hasCreator: false,
+                    },
+                }),
+            ]);
+        });
+    });
+
+    describe('configBot', () => {
+        it('should get the current users bot', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        test: '@setTag(configBot, "#name", "Test")',
+                    },
+                },
+                userBot: {
+                    id: 'userBot',
+                    tags: {},
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot', 'userBot'], 'userBot');
+            const result = calculateActionResults(state, botAction);
+
+            expect(result.actions).toEqual([
+                botUpdated('userBot', {
+                    tags: {
+                        name: 'Test',
                     },
                 }),
             ]);
@@ -6648,7 +6671,7 @@ describe('original action tests', () => {
                 id: 'thisBot',
                 tags: {
                     abcdef: '@shout("sayHello")',
-                    sayHello: '@setTag(this, "#userId", player.getBot().id)',
+                    sayHello: '@setTag(this, "#userId", configBot.id)',
                 },
             },
         };
@@ -6705,7 +6728,7 @@ describe('original action tests', () => {
             bBot: {
                 id: 'bBot',
                 tags: {
-                    test: `@player.toast("hello")`,
+                    test: `@os.toast("hello")`,
                 },
             },
         };
@@ -6732,7 +6755,7 @@ describe('original action tests', () => {
             bBot: {
                 id: 'bBot',
                 tags: {
-                    test: `@player.toast("hello")`,
+                    test: `@os.toast("hello")`,
                 },
             },
         };
@@ -6755,7 +6778,7 @@ describe('original action tests', () => {
             thisBot: {
                 id: 'thisBot',
                 tags: {
-                    test: '@player.toast("test"); // this is a test',
+                    test: '@os.toast("test"); // this is a test',
                 },
             },
         };
@@ -6779,8 +6802,7 @@ describe('original action tests', () => {
             thisBot: {
                 id: 'thisBot',
                 tags: {
-                    test:
-                        '@player.toast("test"); // comment 1\n// this is a test',
+                    test: '@os.toast("test"); // comment 1\n// this is a test',
                 },
             },
         };
@@ -6967,7 +6989,7 @@ describe('original action tests', () => {
                 bot1: {
                     id: 'bot1',
                     tags: {
-                        onAnyListen: `@player.toast('Hi!');`,
+                        onAnyListen: `@os.toast('Hi!');`,
                     },
                 },
                 bot2: {
@@ -7512,7 +7534,7 @@ describe('original action tests', () => {
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        abcdef: `@action.perform(player.toast('abc'))`,
+                        abcdef: `@action.perform(os.toast('abc'))`,
                     },
                 },
             };
@@ -7533,7 +7555,7 @@ describe('original action tests', () => {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
                         abcdef: `@
-                            const toast = player.toast('abc');
+                            const toast = os.toast('abc');
                             action.reject(toast);
                             action.perform(toast);
                         `,
@@ -8515,8 +8537,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         abc: true,
-                        test:
-                            '@destroy(this); player.toast(getBot("abc", true));',
+                        test: '@destroy(this); os.toast(getBot("abc", true));',
                     },
                 },
             };
@@ -8719,14 +8740,14 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.getDimensionalDepth()', () => {
+    describe('os.getDimensionalDepth()', () => {
         it('should return 0 when the bot is in the given dimension', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@setTag(this, "depth", player.getDimensionalDepth("dimension"))',
+                            '@setTag(this, "depth", os.getDimensionalDepth("dimension"))',
                     },
                 },
                 userBot: {
@@ -8761,7 +8782,7 @@ describe('original action tests', () => {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "depth", player.getDimensionalDepth("dimension"))',
+                                '@setTag(this, "depth", os.getDimensionalDepth("dimension"))',
                         },
                     },
                     userBot: {
@@ -8797,7 +8818,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@setTag(this, "depth", player.getDimensionalDepth("dimension"))',
+                            '@setTag(this, "depth", os.getDimensionalDepth("dimension"))',
                     },
                 },
                 userBot: {
@@ -8821,44 +8842,16 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.getBot()', () => {
-        it('should get the current users bot', () => {
-            const state: BotsState = {
-                thisBot: {
-                    id: 'thisBot',
-                    tags: {
-                        test: '@setTag(player.getBot(), "#name", "Test")',
-                    },
-                },
-                userBot: {
-                    id: 'userBot',
-                    tags: {},
-                },
-            };
+    describe('player.getBot()', () => {});
 
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const botAction = action('test', ['thisBot', 'userBot'], 'userBot');
-            const result = calculateActionResults(state, botAction);
-
-            expect(result.actions).toEqual([
-                botUpdated('userBot', {
-                    tags: {
-                        name: 'Test',
-                    },
-                }),
-            ]);
-        });
-    });
-
-    describe('player.replaceDragBot()', () => {
+    describe('os.replaceDragBot()', () => {
         it('should send a replace_drag_bot event', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
                         abc: true,
-                        test: '@player.replaceDragBot(this)',
+                        test: '@os.replaceDragBot(this)',
                     },
                 },
             };
@@ -8876,7 +8869,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         abc: true,
-                        test: '@player.replaceDragBot(this)',
+                        test: '@os.replaceDragBot(this)',
                     },
                 },
             };
@@ -9137,7 +9130,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@setTag(this, "#dimension", player.getMenuDimension())',
+                            '@setTag(this, "#dimension", os.getMenuDimension())',
                     },
                 },
                 userBot: {
@@ -9163,13 +9156,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.toast()', () => {
+    describe('os.toast()', () => {
         it('should emit a ShowToastAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.toast("hello, world!")',
+                        test: '@os.toast("hello, world!")',
                     },
                 },
             };
@@ -9183,13 +9176,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.showJoinCode()', () => {
+    describe('os.showJoinCode()', () => {
         it('should emit a ShowJoinCodeEvent', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.showJoinCode()',
+                        test: '@os.showJoinCode()',
                     },
                 },
             };
@@ -9207,7 +9200,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.showJoinCode("server", "dimension")',
+                        test: '@os.showJoinCode("server", "dimension")',
                     },
                 },
             };
@@ -9223,13 +9216,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.requestFullscreenMode()', () => {
+    describe('os.requestFullscreenMode()', () => {
         it('should issue a request_fullscreen action', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.requestFullscreenMode()',
+                        test: '@os.requestFullscreenMode()',
                     },
                 },
             };
@@ -9243,13 +9236,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.exitFullscreenMode()', () => {
+    describe('os.exitFullscreenMode()', () => {
         it('should issue a request_fullscreen action', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.exitFullscreenMode()',
+                        test: '@os.exitFullscreenMode()',
                     },
                 },
             };
@@ -9263,13 +9256,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.showHtml()', () => {
+    describe('os.showHtml()', () => {
         it('should issue a show_html action', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.showHtml("hello, world!")',
+                        test: '@os.showHtml("hello, world!")',
                     },
                 },
             };
@@ -9283,13 +9276,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.hideHtml()', () => {
+    describe('os.hideHtml()', () => {
         it('should issue a hide_html action', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.hideHtml()',
+                        test: '@os.hideHtml()',
                     },
                 },
             };
@@ -9303,13 +9296,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.setClipboard()', () => {
+    describe('os.setClipboard()', () => {
         it('should emit a SetClipboardEvent', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.setClipboard("test")',
+                        test: '@os.setClipboard("test")',
                     },
                 },
             };
@@ -9323,13 +9316,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.tweenTo()', () => {
+    describe('os.tweenTo()', () => {
         it('should emit a TweenToAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.tweenTo("test")',
+                        test: '@os.tweenTo("test")',
                     },
                 },
             };
@@ -9347,7 +9340,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.tweenTo(this)',
+                        test: '@os.tweenTo(this)',
                     },
                 },
             };
@@ -9366,7 +9359,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@player.tweenTo("test", undefined, undefined, undefined, 10)',
+                            '@os.tweenTo("test", undefined, undefined, undefined, 10)',
                     },
                 },
             };
@@ -9382,13 +9375,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.moveTo()', () => {
+    describe('os.moveTo()', () => {
         it('should emit a TweenToAction with the duration set to 0', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.moveTo("test")',
+                        test: '@os.moveTo("test")',
                     },
                 },
             };
@@ -9410,13 +9403,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.showChat()', () => {
+    describe('os.showChat()', () => {
         it('should emit a ShowChatBarAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.showChat()',
+                        test: '@os.showChat()',
                     },
                 },
             };
@@ -9434,7 +9427,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.showChat("test")',
+                        test: '@os.showChat("test")',
                     },
                 },
             };
@@ -9456,7 +9449,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: `@player.showChat({
+                        test: `@os.showChat({
                             placeholder: "abc",
                             prefill: "def"
                         })`,
@@ -9478,13 +9471,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.hideChat()', () => {
+    describe('os.hideChat()', () => {
         it('should emit a ShowChatBarAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.hideChat()',
+                        test: '@os.hideChat()',
                     },
                 },
             };
@@ -9498,13 +9491,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.run()', () => {
+    describe('os.run()', () => {
         it('should emit a RunScriptAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.run("abc")',
+                        test: '@os.run("abc")',
                     },
                 },
             };
@@ -9518,13 +9511,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.version()', () => {
+    describe('os.version()', () => {
         it('should return an object with version information', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@tags.version = player.version()',
+                        test: '@tags.version = os.version()',
                     },
                 },
             };
@@ -9556,13 +9549,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.device()', () => {
+    describe('os.device()', () => {
         it('should return an object with device information', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@tags.device = player.device()',
+                        test: '@tags.device = os.device()',
                     },
                 },
             };
@@ -9592,7 +9585,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@tags.device = player.device()',
+                        test: '@tags.device = os.device()',
                     },
                 },
             };
@@ -9615,13 +9608,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.enableAR()', () => {
+    describe('os.enableAR()', () => {
         it('should issue an EnableARAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.enableAR()',
+                        test: '@os.enableAR()',
                     },
                 },
             };
@@ -9635,13 +9628,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.disableAR()', () => {
+    describe('os.disableAR()', () => {
         it('should issue an EnableVRAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.disableAR()',
+                        test: '@os.disableAR()',
                     },
                 },
             };
@@ -9655,13 +9648,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.enableVR()', () => {
+    describe('os.enableVR()', () => {
         it('should issue an EnableVRAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.enableVR()',
+                        test: '@os.enableVR()',
                     },
                 },
             };
@@ -9675,13 +9668,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.disableVR()', () => {
+    describe('os.disableVR()', () => {
         it('should issue an EnableVRAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.disableVR()',
+                        test: '@os.disableVR()',
                     },
                 },
             };
@@ -9695,14 +9688,14 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.downloadBots()', () => {
+    describe('os.downloadBots()', () => {
         it('should emit a DownloadAction with the given bots formatted as JSON', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@player.downloadBots(getBots(inDimension("abc")), "test")',
+                            '@os.downloadBots(getBots(inDimension("abc")), "test")',
                     },
                 },
                 funBot: {
@@ -9747,7 +9740,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@player.downloadBots(getBots(inDimension("abc")), "test.aux")',
+                            '@os.downloadBots(getBots(inDimension("abc")), "test.aux")',
                     },
                 },
                 funBot: {
@@ -9787,13 +9780,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.showUploadAuxFile()', () => {
+    describe('os.showUploadAuxFile()', () => {
         it('should emit a showUploadAuxFileAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.showUploadAuxFile()',
+                        test: '@os.showUploadAuxFile()',
                     },
                 },
             };
@@ -9807,13 +9800,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.downloadServer()', () => {
+    describe('os.downloadServer()', () => {
         it('should emit a DownloadAction with the current state and server name', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.downloadServer()',
+                        test: '@os.downloadServer()',
                     },
                 },
                 userBot: {
@@ -9846,7 +9839,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.downloadServer()',
+                        test: '@os.downloadServer()',
                     },
                 },
                 thatBot: {
@@ -9906,7 +9899,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.openQRCodeScanner()',
+                        test: '@os.openQRCodeScanner()',
                     },
                 },
             };
@@ -9924,7 +9917,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.openQRCodeScanner("front")',
+                        test: '@os.openQRCodeScanner("front")',
                     },
                 },
             };
@@ -9944,7 +9937,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.closeQRCodeScanner()',
+                        test: '@os.closeQRCodeScanner()',
                     },
                 },
             };
@@ -9964,7 +9957,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.showQRCode("hello")',
+                        test: '@os.showQRCode("hello")',
                     },
                 },
             };
@@ -9984,7 +9977,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.hideQRCode()',
+                        test: '@os.hideQRCode()',
                     },
                 },
             };
@@ -10004,7 +9997,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.openBarcodeScanner()',
+                        test: '@os.openBarcodeScanner()',
                     },
                 },
             };
@@ -10022,7 +10015,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.openBarcodeScanner("front")',
+                        test: '@os.openBarcodeScanner("front")',
                     },
                 },
             };
@@ -10042,7 +10035,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.closeBarcodeScanner()',
+                        test: '@os.closeBarcodeScanner()',
                     },
                 },
             };
@@ -10062,7 +10055,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.showBarcode("hello")',
+                        test: '@os.showBarcode("hello")',
                     },
                 },
             };
@@ -10080,7 +10073,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.showBarcode("hello", "format")',
+                        test: '@os.showBarcode("hello", "format")',
                     },
                 },
             };
@@ -10102,7 +10095,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.hideBarcode()',
+                        test: '@os.hideBarcode()',
                     },
                 },
             };
@@ -10122,7 +10115,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.loadServer("abc")',
+                        test: '@os.loadServer("abc")',
                     },
                 },
             };
@@ -10142,7 +10135,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.unloadServer("abc")',
+                        test: '@os.unloadServer("abc")',
                     },
                 },
             };
@@ -10162,7 +10155,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.importAUX("abc")',
+                        test: '@os.importAUX("abc")',
                     },
                 },
             };
@@ -10192,7 +10185,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: `@player.importAUX('${json}')`,
+                        test: `@os.importAUX('${json}')`,
                     },
                 },
             };
@@ -10206,14 +10199,14 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.isInDimension()', () => {
+    describe('os.isInDimension()', () => {
         it('should return true when pagePortal equals the given value', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@setTag(this, "#inDimension", player.isInDimension("dimension"))',
+                            '@setTag(this, "#inDimension", os.isInDimension("dimension"))',
                     },
                 },
                 userBot: {
@@ -10244,7 +10237,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@setTag(this, "#inDimension", player.isInDimension("abc"))',
+                            '@setTag(this, "#inDimension", os.isInDimension("abc"))',
                     },
                 },
                 userBot: {
@@ -10275,7 +10268,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@setTag(this, "#inDimension", player.isInDimension("abc"))',
+                            '@setTag(this, "#inDimension", os.isInDimension("abc"))',
                     },
                 },
                 userBot: {
@@ -10299,14 +10292,14 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.getCurrentDimension()', () => {
+    describe('os.getCurrentDimension()', () => {
         it('should return pagePortal', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@setTag(this, "#dimension", player.getCurrentDimension())',
+                            '@setTag(this, "#dimension", os.getCurrentDimension())',
                     },
                 },
                 userBot: {
@@ -10337,7 +10330,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@setTag(this, "#dimension", player.getCurrentDimension())',
+                            '@setTag(this, "#dimension", os.getCurrentDimension())',
                     },
                 },
                 userBot: {
@@ -10361,14 +10354,14 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.getCurrentServer()', () => {
+    describe('os.getCurrentServer()', () => {
         it('should return server', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@setTag(this, "#dimension", player.getCurrentServer())',
+                            '@setTag(this, "#dimension", os.getCurrentServer())',
                     },
                 },
                 userBot: {
@@ -10399,7 +10392,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@setTag(this, "#dimension", player.getCurrentServer())',
+                            '@setTag(this, "#dimension", os.getCurrentServer())',
                     },
                 },
                 userBot: {
@@ -10433,7 +10426,7 @@ describe('original action tests', () => {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#dimension", player.getCurrentServer())',
+                                '@setTag(this, "#dimension", os.getCurrentServer())',
                         },
                     },
                     userBot: {
@@ -10460,7 +10453,7 @@ describe('original action tests', () => {
         );
     });
 
-    describe('player.getPortalDimension()', () => {
+    describe('os.getPortalDimension()', () => {
         const cases = [
             ['page', 'pageDimension'],
             ['pagePortal', 'pageDimension'],
@@ -10481,7 +10474,7 @@ describe('original action tests', () => {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: `@setTag(this, "#fun", player.getPortalDimension("${portal}"))`,
+                            test: `@setTag(this, "#fun", os.getPortalDimension("${portal}"))`,
                         },
                     },
                     userBot: {
@@ -10513,13 +10506,13 @@ describe('original action tests', () => {
         );
     });
 
-    describe('player.showInputForTag()', () => {
+    describe('os.showInputForTag()', () => {
         it('should emit a ShowInputForTagAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.showInputForTag(this, "abc")',
+                        test: '@os.showInputForTag(this, "abc")',
                     },
                 },
             };
@@ -10537,7 +10530,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.showInputForTag("test", "abc")',
+                        test: '@os.showInputForTag("test", "abc")',
                     },
                 },
             };
@@ -10556,7 +10549,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@player.showInputForTag("test", "##abc"); player.showInputForTag("test", "#abc")',
+                            '@os.showInputForTag("test", "##abc"); os.showInputForTag("test", "#abc")',
                     },
                 },
             };
@@ -10578,7 +10571,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@player.showInputForTag("test", "abc", { backgroundColor: "red", foregroundColor: "green" })',
+                            '@os.showInputForTag("test", "abc", { backgroundColor: "red", foregroundColor: "green" })',
                     },
                 },
             };
@@ -10603,7 +10596,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.goToDimension("abc")',
+                        test: '@os.goToDimension("abc")',
                     },
                 },
             };
@@ -10621,7 +10614,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.goToDimension("sim", "abc")',
+                        test: '@os.goToDimension("sim", "abc")',
                     },
                 },
             };
@@ -10635,13 +10628,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.goToURL()', () => {
+    describe('os.goToURL()', () => {
         it('should issue a GoToURL event', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.goToURL("abc")',
+                        test: '@os.goToURL("abc")',
                     },
                 },
             };
@@ -10655,13 +10648,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.openURL()', () => {
+    describe('os.openURL()', () => {
         it('should issue a OpenURL event', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.openURL("abc")',
+                        test: '@os.openURL("abc")',
                     },
                 },
             };
@@ -10675,13 +10668,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.openDevConsole()', () => {
+    describe('os.openDevConsole()', () => {
         it('should issue a OpenConsole event', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.openDevConsole()',
+                        test: '@os.openDevConsole()',
                     },
                 },
             };
@@ -11149,13 +11142,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.checkout()', () => {
+    describe('os.checkout()', () => {
         it('should emit a start checkout event', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: `@player.checkout({
+                        test: `@os.checkout({
                             publishableKey: 'key',
                             productId: 'ID1',
                             title: 'Product 1',
@@ -11355,41 +11348,35 @@ describe('original action tests', () => {
 
     describe('remote()', () => {
         const cases = [
-            ['player.toast("My Message!")', toast('My Message!')] as const,
+            ['os.toast("My Message!")', toast('My Message!')] as const,
             [
-                'player.goToDimension("dimension")',
+                'os.goToDimension("dimension")',
                 goToDimension('dimension'),
             ] as const,
-            ['player.openURL("url")', openURL('url')] as const,
-            ['player.goToURL("url")', goToURL('url')] as const,
-            ['player.tweenTo("id")', tweenTo('id')] as const,
-            ['player.openURL("url")', openURL('url')] as const,
-            ['player.openQRCodeScanner()', openQRCodeScanner(true)] as const,
-            ['player.closeQRCodeScanner()', openQRCodeScanner(false)] as const,
-            ['player.openBarcodeScanner()', openBarcodeScanner(true)] as const,
+            ['os.openURL("url")', openURL('url')] as const,
+            ['os.goToURL("url")', goToURL('url')] as const,
+            ['os.tweenTo("id")', tweenTo('id')] as const,
+            ['os.openURL("url")', openURL('url')] as const,
+            ['os.openQRCodeScanner()', openQRCodeScanner(true)] as const,
+            ['os.closeQRCodeScanner()', openQRCodeScanner(false)] as const,
+            ['os.openBarcodeScanner()', openBarcodeScanner(true)] as const,
+            ['os.closeBarcodeScanner()', openBarcodeScanner(false)] as const,
+            ['os.showBarcode("code")', showBarcode(true, 'code')] as const,
+            ['os.hideBarcode()', showBarcode(false)] as const,
+            ['os.loadServer("channel")', loadSimulation('channel')] as const,
             [
-                'player.closeBarcodeScanner()',
-                openBarcodeScanner(false),
-            ] as const,
-            ['player.showBarcode("code")', showBarcode(true, 'code')] as const,
-            ['player.hideBarcode()', showBarcode(false)] as const,
-            [
-                'player.loadServer("channel")',
-                loadSimulation('channel'),
-            ] as const,
-            [
-                'player.unloadServer("channel")',
+                'os.unloadServer("channel")',
                 unloadSimulation('channel'),
             ] as const,
-            ['player.importAUX("aux")', importAUX('aux')] as const,
-            ['player.showQRCode("code")', showQRCode(true, 'code')] as const,
-            ['player.hideQRCode()', showQRCode(false)] as const,
+            ['os.importAUX("aux")', importAUX('aux')] as const,
+            ['os.showQRCode("code")', showQRCode(true, 'code')] as const,
+            ['os.hideQRCode()', showQRCode(false)] as const,
             [
-                'player.showInputForTag(this, "abc")',
+                'os.showInputForTag(this, "abc")',
                 showInputForTag('thisBot', 'abc'),
             ] as const,
             [
-                `player.checkout({
+                `os.checkout({
                 publishableKey: 'my_key',
                 productId: 'ID1',
                 title: 'Product 1',
@@ -11404,7 +11391,7 @@ describe('original action tests', () => {
                     processingServer: 'channel2',
                 }),
             ] as const,
-            ['player.openDevConsole()', openConsole()] as const,
+            ['os.openDevConsole()', openConsole()] as const,
         ];
 
         it.each(cases)('should wrap %s in a remote event', (script, event) => {
@@ -11430,7 +11417,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: `@remote(player.toast("Hi!"), {
+                        test: `@remote(os.toast("Hi!"), {
                             session: 's',
                             username: 'u',
                             device: 'd'

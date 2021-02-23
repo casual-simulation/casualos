@@ -583,7 +583,7 @@ describe('BaseAuxChannel', () => {
             await memory.applyEvents([
                 botAdded(
                     createBot('test1', {
-                        test: '@player.toast("abc");',
+                        test: '@os.toast("abc");',
                     })
                 ),
             ]);
@@ -599,7 +599,7 @@ describe('BaseAuxChannel', () => {
             subject.next(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        test: '@player.toast("abc");',
+                        test: '@os.toast("abc");',
                     }),
                 })
             );
@@ -640,7 +640,7 @@ describe('BaseAuxChannel', () => {
             await memory.applyEvents([
                 botAdded(
                     createBot('test1', {
-                        test: '@player.toast("abc");',
+                        test: '@os.toast("abc");',
                     })
                 ),
             ]);
@@ -655,7 +655,7 @@ describe('BaseAuxChannel', () => {
             subject.next(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        test: '@player.toast("abc");',
+                        test: '@os.toast("abc");',
                     }),
                 })
             );
@@ -774,7 +774,7 @@ describe('BaseAuxChannel', () => {
                     {
                         type: 'run_script',
                         script:
-                            'create({ value: "fun" }); let bot = create({ space: "random", value: 123 }); player.toast(bot)',
+                            'create({ value: "fun" }); let bot = create({ space: "random", value: 123 }); os.toast(bot)',
                         taskId: null,
                     },
                 ]);
@@ -876,7 +876,7 @@ describe('BaseAuxChannel', () => {
                 ),
                 botAdded(
                     createBot('test2', {
-                        getValue: `@player.toast("abc");`,
+                        getValue: `@os.toast("abc");`,
                     })
                 ),
             ]);
@@ -900,7 +900,7 @@ describe('BaseAuxChannel', () => {
                 ),
                 botAdded(
                     createBot('test2', {
-                        getValue: `@player.toast("abc");`,
+                        getValue: `@os.toast("abc");`,
                     })
                 ),
                 botAdded(
@@ -931,7 +931,7 @@ describe('BaseAuxChannel', () => {
         it('should send remote events', async () => {
             await channel.initAndWait();
 
-            await channel.formulaBatch(['remote(player.toast("abc"))']);
+            await channel.formulaBatch(['remote(os.toast("abc"))']);
 
             expect(channel.remoteEvents).toEqual([remote(toast('abc'))]);
         });

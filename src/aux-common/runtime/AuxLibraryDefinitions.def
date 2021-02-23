@@ -2801,9 +2801,9 @@ declare global {
     function subtractMods(bot: any, ...diffs: Mod[]): void;
 
     /**
-     * Defines a set of functions that relate to common player operations.
+     * Defines a set of functions that relate to common OS operations.
      */
-    const player: {
+    const os: {
 
         /**
          * Derermines whether the player is in the given dimension.

@@ -1285,6 +1285,7 @@ export class AuxRuntime
                 raw: (ctx) => (ctx.bot ? ctx.bot.script.raw : null),
                 masks: (ctx) => (ctx.bot ? ctx.bot.script.masks : null),
                 creator: (ctx) => ctx.creator,
+                configBot: () => this.context.playerBot,
             },
             arguments: [['that', 'data']],
         });

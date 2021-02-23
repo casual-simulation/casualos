@@ -601,7 +601,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             __energyCheck,
 
-            player: {
+            os: {
                 toast,
                 showJoinCode,
                 requestFullscreenMode,
@@ -637,8 +637,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 unloadServer,
                 importAUX,
                 replaceDragBot,
-
-                getBot: getPlayerBot,
                 isInDimension,
                 getCurrentDimension,
                 getCurrentServer,
@@ -1602,13 +1600,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function replaceDragBot(bot: Mod): ReplaceDragBotAction {
         const event = calcReplaceDragBot(context.unwrapBot(bot));
         return addAction(event);
-    }
-
-    /**
-     * Get's the current player's bot.
-     */
-    function getPlayerBot(): RuntimeBot {
-        return context.playerBot;
     }
 
     /**
