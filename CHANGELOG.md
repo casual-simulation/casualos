@@ -7,6 +7,8 @@
 ### :rocket: Improvements
 
 -   Changed the ab-1 bootstrap URL to `https://bootstrap.casualos.com/ab1.aux`.
+-   Updated to three.js r125.
+    -   This fixes WebXR for Chrome 88 and later.
 
 ### :bug: Bug Fixes
 
