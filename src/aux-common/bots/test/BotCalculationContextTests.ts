@@ -66,6 +66,7 @@ import {
     calculateLabelWordWrapMode,
     getMenuBotForm,
     calculatePortalCameraControlsMode,
+    getMenuBotHoverStyle,
 } from '../BotCalculations';
 import {
     Bot,
@@ -1014,6 +1015,53 @@ export function botCalculationContextTests(
             const shape = getMenuBotForm(calc, bot);
 
             expect(shape).toBe('button');
+        });
+    });
+
+    describe('getMenuBotHoverStyle()', () => {
+        const cases = [['hover'], ['none']];
+        const tagCases = ['auxMenuItemHoverMode', 'menuItemHoverMode'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (shape: string) => {
+                const bot = createBot('test', {
+                    [tag]: <any>shape,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getMenuBotHoverStyle(calc, bot)).toBe(shape);
+            });
+
+            it('should return the shape from the tag', () => {
+                let bot = createBot();
+                bot.tags[tag] = 'hover';
+
+                const calc = createPrecalculatedContext([bot]);
+                const shape = getMenuBotHoverStyle(calc, bot);
+
+                expect(shape).toBe('hover');
+            });
+        });
+
+        it('should default to hover if the bot has an onClick', () => {
+            const bot = createBot('test', {
+                onClick: 'abc',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            const shape = getMenuBotHoverStyle(calc, bot);
+
+            expect(shape).toBe('hover');
+        });
+
+        it('should default to none if the bot does not have an onClick', () => {
+            const bot = createBot('test', {});
+
+            const calc = createPrecalculatedContext([bot]);
+            const shape = getMenuBotHoverStyle(calc, bot);
+
+            expect(shape).toBe('none');
         });
     });
 

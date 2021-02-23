@@ -444,6 +444,17 @@ export type BotShape =
 export type MenuBotForm = 'button' | 'input';
 
 /**
+ * Defines the possible hover styles that can be used for a menu bot.
+ * Currently only applies to button menu bots.
+ */
+export type MenuBotHoverStyle = 'auto' | 'hover' | 'none';
+
+/**
+ * Defines the possible hover styles that have been resolved from a bot.
+ */
+export type MenuBotResolvedHoverStyle = 'hover' | 'none';
+
+/**
  * Defines the possible subtypes for shapes that a bot can appear as.
  */
 export type BotSubShape = 'gltf' | 'src' | 'html' | null;
@@ -580,6 +591,11 @@ export const DEFAULT_BOT_SHAPE: BotShape = 'cube';
  * The default menu bot form.
  */
 export const DEFAULT_MENU_BOT_FORM: MenuBotForm = 'button';
+
+/**
+ * The default menu bot hover style.
+ */
+export const DEFAULT_MENU_BOT_HOVER_STYLE: MenuBotHoverStyle = 'auto';
 
 /**
  * The default bot label anchor.
@@ -1491,6 +1507,7 @@ export const KNOWN_TAGS: string[] = [
     'focusable',
     'transformer',
     'menuItemStyle',
+    'menuItemHoverMode',
     'menuItemText',
 
     'taskOutput',

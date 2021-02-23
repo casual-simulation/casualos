@@ -32,8 +32,9 @@
     <md-list-item
         v-else
         class="menu-bot"
-        :class="{ active: selected }"
+        :class="{ active: selected, 'no-hover': hoverStyle === 'none' }"
         :style="style"
+        :md-ripple="hoverStyle !== 'none'"
         @click="click()"
         @mousedown="mouseDown()"
         @mouseenter="mouseEnter()"

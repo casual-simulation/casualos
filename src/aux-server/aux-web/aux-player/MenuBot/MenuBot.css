@@ -62,3 +62,19 @@
 .input-form .md-list-item-container {
     height: 100%;
 }
+
+.md-list.md-theme-default
+    .menu-bot.md-list-item.no-hover
+    .md-list-item-container:not(.md-list-item-default):not(.md-list-item-expand):not([disabled]):hover {
+    color: var(
+        --md-theme-default-text-primary-on-background,
+        rgba(0, 0, 0, 0.87)
+    );
+    background-color: transparent;
+}
+
+.menu-bot.md-list-item.no-hover
+    .md-list-item-button.md-list-item-container
+    > .md-list-item-content {
+    cursor: auto;
+}
