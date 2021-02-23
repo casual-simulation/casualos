@@ -7,7 +7,6 @@ import {
     Color,
     LineBasicMaterial,
     LineSegments,
-    NoColors,
     Camera,
     WebGLRenderer,
     ArrowHelper,

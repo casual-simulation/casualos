@@ -248,7 +248,8 @@ let LegacyGLTFLoaderExport = ( function () {
 						// transform joints to local space,
 						// then transform using joint's inverse
 						m4v[ mi ]
-							.getInverse( boundUniform.sourceNode.matrixWorld )
+							.copy( boundUniform.sourceNode.matrixWorld )
+							.invert()
 							.multiply( boundUniform.targetNode.skeleton.bones[ mi ].matrixWorld )
 							.multiply( boundUniform.targetNode.skeleton.boneInverses[ mi ] )
 							.multiply( boundUniform.targetNode.bindMatrix );
