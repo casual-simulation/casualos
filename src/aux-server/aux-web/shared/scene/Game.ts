@@ -4,18 +4,6 @@ import {
     Color,
     Texture,
     Vector3,
-    Matrix4,
-    Quaternion,
-    MathUtils as ThreeMath,
-    PerspectiveCamera,
-    ArrayCamera,
-    AxesHelper,
-    LineBasicMaterial,
-    NoColors,
-    Box3Helper,
-    BoxHelper,
-    Box3,
-    Object3D,
     Vector2,
     sRGBEncoding,
 } from 'three';
@@ -31,7 +19,6 @@ import {
     CameraType,
     resizeCameraRig,
     createCameraRig,
-    resetCameraRigToDefaultPosition,
 } from './CameraRigFactory';
 import { Time } from './Time';
 import { Input, InputType, ControllerData } from './Input';
@@ -50,9 +37,7 @@ import { flatMap, merge } from 'lodash';
 import { EventBus } from '../EventBus';
 import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
-import Bowser from 'bowser';
 import { AuxBot3D } from './AuxBot3D';
-import { supportsXR } from '../SharedUtils';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 

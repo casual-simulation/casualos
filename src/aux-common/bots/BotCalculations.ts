@@ -51,6 +51,9 @@ import {
     DEFAULT_MENU_BOT_FORM,
     PortalCameraControlsMode,
     DEFAULT_PORTAL_CAMERA_CONTROLS_MODE,
+    MenuBotHoverStyle,
+    MenuBotResolvedHoverStyle,
+    DEFAULT_MENU_BOT_HOVER_STYLE,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -1255,6 +1258,28 @@ export function getMenuBotForm(
         return shape;
     }
     return DEFAULT_MENU_BOT_FORM;
+}
+
+/**
+ * Gets the form of a menu bot.
+ * @param calc The calculation context to use.
+ * @param bot The bot.
+ */
+export function getMenuBotHoverStyle(
+    calc: BotCalculationContext,
+    bot: Bot
+): MenuBotResolvedHoverStyle {
+    let shape: MenuBotHoverStyle = calculateBotValue(
+        calc,
+        bot,
+        'auxMenuItemHoverMode'
+    );
+    if (shape === 'hover' || shape === 'none') {
+        return shape;
+    } else {
+        const onClick = calculateBotValue(calc, bot, 'onClick');
+        return hasValue(onClick) ? 'hover' : 'none';
+    }
 }
 
 /**

@@ -3,10 +3,8 @@ import {
     BufferGeometry,
     LineBasicMaterial,
     Color,
-    VertexColors,
     BufferAttribute,
     Vector3,
-    Usage,
     DynamicDrawUsage,
     StaticDrawUsage,
 } from 'three';

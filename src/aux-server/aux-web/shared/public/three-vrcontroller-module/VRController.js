@@ -1315,7 +1315,7 @@ OrientationArmModel.prototype.update = function(){
 	var extensionRatio = this.clamp_((controllerXDeg - 11) / (50 - 11), 0, 1);
 
 	// Controller orientation in camera space.
-	var controllerCameraQ = this.rootQ.clone().inverse();
+	var controllerCameraQ = this.rootQ.clone().invert();
 	controllerCameraQ.multiply(this.controllerQ);
 
 	// Calculate elbow position.
@@ -1338,7 +1338,7 @@ OrientationArmModel.prototype.update = function(){
 		(elbowRatio + wristRatio * extensionRatio * OrientationArmModel.EXTENSION_RATIO_WEIGHT);
 
 	var wristQ = new Quaternion().slerp(controllerCameraQ, lerpValue);
-	var invWristQ = wristQ.inverse();
+	var invWristQ = wristQ.invert();
 	var elbowQ = controllerCameraQ.clone().multiply(invWristQ);
 
 	// Calculate our final controller position based on all our joint rotations

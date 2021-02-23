@@ -13,10 +13,8 @@ import {
     BufferGeometry,
     BufferAttribute,
     Material,
-    Geometry,
     ConeGeometry,
     DoubleSide,
-    MeshToonMaterial,
     AmbientLight,
     DirectionalLight,
     MathUtils as ThreeMath,
@@ -36,6 +34,7 @@ import {
     LineSegments,
     LineBasicMaterial,
 } from 'three';
+import { MeshToonMaterial } from '../public/MeshToonMaterial';
 import { flatMap } from 'lodash';
 import {
     BotCalculationContext,
@@ -237,7 +236,7 @@ export function setParent(object3d: Object3D, parent: Object3D, scene: Scene) {
 
     // Attach
     if (parent) {
-        object3d.applyMatrix4(new Matrix4().getInverse(parent.matrixWorld));
+        object3d.applyMatrix4(new Matrix4().copy(parent.matrixWorld).invert());
         scene.remove(object3d);
         parent.add(object3d);
     }
@@ -389,7 +388,7 @@ export function disposeMaterial(material: Material | Material[]) {
  */
 export function disposeMesh(
     mesh: {
-        geometry: Geometry | BufferGeometry;
+        geometry: BufferGeometry;
         material: Material | Material[];
     },
     disposeGeometry: boolean = true,
@@ -685,7 +684,7 @@ export function percentOfScreen(
     boundingSphere: Sphere
 ): number {
     const sphere = boundingSphere.clone();
-    camera.matrixWorldInverse.getInverse(camera.matrixWorld);
+    camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
 
     sphere.applyMatrix4(camera.matrixWorldInverse);
 

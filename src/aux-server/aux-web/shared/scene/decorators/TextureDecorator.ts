@@ -1,11 +1,11 @@
 import {
     MeshBasicMaterial,
     Texture,
-    MeshToonMaterial,
     MeshStandardMaterial,
     SpriteMaterial,
     sRGBEncoding,
 } from 'three';
+import { MeshToonMaterial } from '../../public/MeshToonMaterial';
 import {
     BotCalculationContext,
     calculateBotValue,

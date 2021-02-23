@@ -1,5 +1,28 @@
 # CasualOS Changelog
 
+## V1.4.5
+
+#### Date: 2/23/2021
+
+### :rocket: Improvements
+
+-   Changed the ab-1 bootstrap URL to `https://bootstrap.casualos.com/ab1.aux`.
+-   Updated to three.js r125.
+    -   This fixes WebXR for Chrome 88 and later.
+-   Added the ability to disable hover states on menu item buttons using the `menuItemHoverMode` tag. It has three possible options:
+    -   `auto` - The bot will appear hoverable based on if it has a `@onClick` tag. (Default)
+    -   `hover` - The bot will appear hoverable.
+    -   `none` - The bot will not appear hoverable.
+    -   None of these options affect the existing functionality of any listen tags on menu bots.
+-   Added an initial version of the `idePortal` (IDE portal).
+    -   The IDE portal makes it easier to jump between tags to edit them in the multiline tag editor.
+    -   Setting the `idePortal` tag to a prefix (like 📖) will load every tag that starts with the prefix into the IDE portal and let you jump between them as if they are files in a text editor.
+    -   Currently it is pretty limited, but can be very useful for custom portals.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was not possible to enter numbers in menu bot input boxes.
+
 ## V1.4.4
 
 #### Date: 2/18/2021

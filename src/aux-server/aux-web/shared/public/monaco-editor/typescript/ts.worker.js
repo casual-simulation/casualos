@@ -13,7 +13,6 @@ import { TypeScriptWorker, ICreateData } from './tsWorker';
 self.onmessage = () => {
     // ignore the first message
     edworker.initialize((ctx, createData) => {
-        console.log(ctx, createData);
         return new TypeScriptWorker(ctx, createData);
     });
 };

@@ -857,6 +857,27 @@ When setting this tag via the sheet, it is useful to utilize DNA tags to ensure 
 }
 ```
 
+### `menuItemHoverMode`
+
+The mode that menu items should use when the cursor hovers over the bot when it is in the menu portal.
+Currently only affects menu bots that are buttons (input bots are not hoverable).
+
+Note that this only determines how the menu item looks when the mouse pointer hovers over the item.
+It does not affect the <TagLink tag='@onClick'/>, <TagLink tag='@onPointerEnter'/>, <TagLink tag='@onPointerExit'/>, etc. listeners.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='auto'>
+    The bot will appear hoverable if it has a <TagLink tag='@onClick'/> tag. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='hover'>
+    The bot will appear hoverable.
+  </PossibleValueCode>
+  <PossibleValueCode value='none'>
+    The bot will not appear hoverable.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
 ### `menuItemText`
 
 The text that has been entered in the menu item's input box. Only has an effect on menu items that have <TagLink tag='form'/> set to `input`.
@@ -1710,6 +1731,15 @@ Only available on the player bot.
 </Badges>
 
 The dimension that is loaded into the "sheet" portal in CasualOS.
+Only available on the player bot.
+
+### `idePortal`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The prefix that indicates which tags should be loaded into the "IDE" portal in CasualOS.
 Only available on the player bot.
 
 ### `inventoryPortal`

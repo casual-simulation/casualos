@@ -18,10 +18,10 @@ import {
     Color,
     Group,
     Vector3,
-    MeshToonMaterial,
     Euler,
     MathUtils as ThreeMath,
 } from 'three';
+import { MeshToonMaterial } from '../../public/MeshToonMaterial';
 import {
     isTransparent,
     disposeMesh,
@@ -32,7 +32,8 @@ import {
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 
-export class ProgressBarDecorator extends AuxBot3DDecoratorBase
+export class ProgressBarDecorator
+    extends AuxBot3DDecoratorBase
     implements IMeshDecorator {
     container: Group;
     mesh: Mesh;

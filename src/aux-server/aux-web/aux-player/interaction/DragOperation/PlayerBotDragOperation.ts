@@ -405,9 +405,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 if (parent instanceof AuxBot3D) {
                     hasTransformer = true;
                     const matrixWorldInverse = new Matrix4();
-                    matrixWorldInverse.getInverse(
-                        parent.transformContainer.matrixWorld
-                    );
+                    matrixWorldInverse
+                        .copy(parent.transformContainer.matrixWorld)
+                        .invert();
 
                     targetMatrix.premultiply(matrixWorldInverse);
                 }

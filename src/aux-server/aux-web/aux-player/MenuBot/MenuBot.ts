@@ -30,6 +30,10 @@ import {
     onSubmitArg,
     ON_INPUT_TYPING_ACTION_NAME,
     TEMPORARY_BOT_PARTITION_ID,
+    getSpaceForTag,
+    getTagValueForSpace,
+    MenuBotResolvedHoverStyle,
+    getMenuBotHoverStyle,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
@@ -68,6 +72,7 @@ export default class MenuBot extends Vue {
     progressBarBackground: string = null;
     text: string = null;
     form: MenuBotForm = 'button';
+    hoverStyle: MenuBotResolvedHoverStyle = 'hover';
 
     private _down: boolean = false;
     private _hover: boolean = false;
@@ -318,6 +323,7 @@ export default class MenuBot extends Vue {
             style = null;
         }
         this.extraStyle = style || {};
+        this.hoverStyle = getMenuBotHoverStyle(calc, bot);
     }
 
     private _updateIcon(calc: BotCalculationContext, bot: Bot) {
@@ -361,7 +367,8 @@ export default class MenuBot extends Vue {
     }
 
     private _updateText(calc: BotCalculationContext, bot: Bot) {
-        const text = calculateStringTagValue(calc, bot, 'menuItemText', '');
+        const space = getSpaceForTag(bot, 'menuItemText');
+        const text = getTagValueForSpace(bot, 'menuItemText', space);
 
         if (text !== this.text) {
             this._ignoreTextUpdates(async () => {

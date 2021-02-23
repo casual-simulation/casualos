@@ -1,10 +1,5 @@
-import {
-    Group,
-    Mesh,
-    MathUtils as ThreeMath,
-    MeshToonMaterial,
-    Color,
-} from 'three';
+import { Group, Mesh, MathUtils as ThreeMath } from 'three';
+import { MeshToonMaterial } from '../../public/MeshToonMaterial';
 import {
     BotCalculationContext,
     isUserActive,
@@ -19,7 +14,8 @@ import { ArgEvent } from '@casual-simulation/aux-common/Events';
 /**
  * Defines a class that represents a mesh for an "user" bot.
  */
-export class UserMeshDecorator extends AuxBot3DDecoratorBase
+export class UserMeshDecorator
+    extends AuxBot3DDecoratorBase
     implements IMeshDecorator {
     /**
      * The mesh that acts as the visual representation of the user.

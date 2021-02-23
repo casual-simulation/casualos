@@ -444,6 +444,17 @@ export type BotShape =
 export type MenuBotForm = 'button' | 'input';
 
 /**
+ * Defines the possible hover styles that can be used for a menu bot.
+ * Currently only applies to button menu bots.
+ */
+export type MenuBotHoverStyle = 'auto' | 'hover' | 'none';
+
+/**
+ * Defines the possible hover styles that have been resolved from a bot.
+ */
+export type MenuBotResolvedHoverStyle = 'hover' | 'none';
+
+/**
  * Defines the possible subtypes for shapes that a bot can appear as.
  */
 export type BotSubShape = 'gltf' | 'src' | 'html' | null;
@@ -580,6 +591,11 @@ export const DEFAULT_BOT_SHAPE: BotShape = 'cube';
  * The default menu bot form.
  */
 export const DEFAULT_MENU_BOT_FORM: MenuBotForm = 'button';
+
+/**
+ * The default menu bot hover style.
+ */
+export const DEFAULT_MENU_BOT_HOVER_STYLE: MenuBotHoverStyle = 'auto';
 
 /**
  * The default bot label anchor.
@@ -1269,6 +1285,11 @@ export const DATA_PORTAL: string = 'dataPortal';
 export const SHEET_PORTAL: string = 'sheetPortal';
 
 /**
+ * The name of the IDE portal.
+ */
+export const IDE_PORTAL: string = 'idePortal';
+
+/**
  * The prefix for DNA Tags.
  */
 export const DNA_TAG_PREFIX: string = '🧬';
@@ -1284,6 +1305,7 @@ export const DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES: string[] = ['📖'];
 export const KNOWN_PORTALS: string[] = [
     'pagePortal',
     SHEET_PORTAL,
+    IDE_PORTAL,
     'inventoryPortal',
     'menuPortal',
     'leftWristPortal',
@@ -1297,7 +1319,8 @@ export const KNOWN_PORTALS: string[] = [
  */
 export const QUERY_PORTALS: string[] = [
     'pagePortal',
-    'sheetPortal',
+    SHEET_PORTAL,
+    IDE_PORTAL,
     MEET_PORTAL,
     TAG_PORTAL,
     TAG_PORTAL_SPACE,
@@ -1309,14 +1332,16 @@ export const QUERY_PORTALS: string[] = [
 export const KNOWN_TAGS: string[] = [
     'playerActive',
     'pagePortal',
-    'sheetPortal',
+    SHEET_PORTAL,
+    IDE_PORTAL,
     'server',
     'inventoryPortal',
     'menuPortal',
     'leftWristPortal',
     'rightWristPortal',
     'pagePortalConfigBot',
-    'sheetPortalConfigBot',
+    `${SHEET_PORTAL}ConfigBot`,
+    `${IDE_PORTAL}ConfigBot`,
     'inventoryPortalConfigBot',
     'menuPortalConfigBot',
     'leftWristPortalConfigBot',
@@ -1482,6 +1507,7 @@ export const KNOWN_TAGS: string[] = [
     'focusable',
     'transformer',
     'menuItemStyle',
+    'menuItemHoverMode',
     'menuItemText',
 
     'taskOutput',
