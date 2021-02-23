@@ -260,6 +260,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
@@ -303,6 +304,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
@@ -340,6 +342,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
@@ -369,6 +372,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: 'script',
                     taskId: 'task1',
                     options: {},
@@ -395,6 +399,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: 'console.log("test1");',
                     taskId: 'task',
                     options: {
@@ -444,6 +449,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
@@ -455,6 +461,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: 'console.log("test1");',
                     taskId: 'task2',
                     options: {
@@ -516,6 +523,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
@@ -586,6 +594,7 @@ describe('PortalManager', () => {
                     {
                         type: 'open_custom_portal',
                         portalId: 'test-portal',
+                        botId: null,
                         tagOrSource: 'script',
                         taskId: 'task1',
                         options: {},
@@ -824,6 +833,7 @@ describe('PortalManager', () => {
                     {
                         type: 'open_custom_portal',
                         portalId: 'test-portal',
+                        botId: null,
                         tagOrSource: '🔺script',
                         taskId: 'task1',
                         options: {
@@ -885,6 +895,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task1',
                     options: {},
@@ -967,6 +978,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task1',
                     options: {},
@@ -1044,6 +1056,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task1',
                     options: {},
@@ -1058,6 +1071,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: 'my-source',
                     taskId: 'task1',
                     options: {
@@ -1163,6 +1177,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
@@ -1243,6 +1258,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
@@ -1340,6 +1356,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
@@ -1460,6 +1477,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
@@ -1540,6 +1558,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
@@ -1637,6 +1656,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {

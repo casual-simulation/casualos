@@ -2565,9 +2565,14 @@ describe('AuxLibrary', () => {
 
         describe('portal.open()', () => {
             it('should return a OpenCustomPortal action', () => {
-                const promise: any = library.api.portal.open('test', 'tag');
+                const promise: any = library.api.portal.open(
+                    'test',
+                    bot1,
+                    'tag'
+                );
                 const expected = openCustomPortal(
                     'test',
+                    bot1.id,
                     'tag',
                     {
                         style: {},
@@ -2580,14 +2585,20 @@ describe('AuxLibrary', () => {
             });
 
             it('should include the specified options', () => {
-                const promise: any = library.api.portal.open('test', 'tag', {
-                    style: {
-                        abc: 'def',
-                    },
-                    mode: 'source',
-                });
+                const promise: any = library.api.portal.open(
+                    'test',
+                    bot1,
+                    'tag',
+                    {
+                        style: {
+                            abc: 'def',
+                        },
+                        mode: 'source',
+                    }
+                );
                 const expected = openCustomPortal(
                     'test',
+                    bot1.id,
                     'tag',
                     {
                         style: {

@@ -96,7 +96,7 @@ export class AuxRuntime
     private _errorBatch: ScriptError[] = [];
 
     private _userId: string;
-    private _sub: SubscriptionLike;
+    private _sub: Subscription;
     private _currentVersion: RuntimeStateVersion = {
         localSites: {},
         vector: {},
@@ -114,6 +114,7 @@ export class AuxRuntime
     private _forceSignedScripts: boolean;
     private _exemptSpaces: BotSpace[];
     private _batchPending: boolean = false;
+    private _portalBots: Map<string, string> = new Map();
 
     get forceSignedScripts() {
         return this._forceSignedScripts;
@@ -269,6 +270,36 @@ export class AuxRuntime
             this._globalContext.resolveTask(action.taskId, action.result, true);
         } else if (action.type === 'device_error') {
             this._globalContext.rejectTask(action.taskId, action.error, true);
+        } else if (action.type === 'open_custom_portal') {
+            this._portalBots.set(action.portalId, action.botId);
+            let anyGlobal: any = globalThis;
+            const botId = action.botId;
+            const portalId = action.portalId;
+            const variableName = `${action.portalId}Bot`;
+            if (hasValue(botId)) {
+                Object.defineProperty(anyGlobal, variableName, {
+                    get: () => this.context.state[botId],
+                    enumerable: false,
+                    configurable: true,
+                });
+            } else {
+                delete anyGlobal[variableName];
+            }
+
+            this._sub.add(() => {
+                if (this._portalBots.has(portalId)) {
+                    const descriptor = Object.getOwnPropertyDescriptor(
+                        anyGlobal,
+                        variableName
+                    );
+                    if (descriptor) {
+                        delete anyGlobal[variableName];
+                        this._portalBots.delete(portalId);
+                    }
+                }
+            });
+
+            this._actionBatch.push(action);
         } else {
             this._actionBatch.push(action);
         }

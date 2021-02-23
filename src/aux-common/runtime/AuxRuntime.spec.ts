@@ -71,6 +71,7 @@ import {
     DNA_TAG_PREFIX,
     tagsOnBot,
     TEMPORARY_BOT_PARTITION_ID,
+    openCustomPortal,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -3358,6 +3359,112 @@ describe('AuxRuntime', () => {
             runtime.process(result.actions);
 
             expect(await result.result).toBe(123);
+        });
+
+        describe('open_custom_portal', () => {
+            it('should add a global variable for the bot included in a open portal action', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                runtime.process([
+                    openCustomPortal('page', 'test1', 'myTag', {}),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+            });
+
+            it('should override previous variables', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'other',
+                        }),
+                    })
+                );
+                runtime.process([
+                    openCustomPortal('page', 'test1', 'myTag', {}),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+
+                runtime.process([
+                    openCustomPortal('page', 'test2', 'myTag', {}),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test2']
+                );
+            });
+
+            it('should remove the variable if given no bot to use for configuration', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                runtime.process([
+                    openCustomPortal('page', 'test1', 'myTag', {}),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+
+                runtime.process([openCustomPortal('page', null, 'myTag', {})]);
+
+                expect((<any>globalThis).pageBot).toBeUndefined();
+            });
+
+            it('should remove the global variables that were created by the runtime', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                runtime.process([
+                    openCustomPortal('page', 'test1', 'myTag', {}),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+
+                runtime.unsubscribe();
+
+                expect(
+                    Object.getOwnPropertyDescriptor(globalThis, 'pageBot')
+                ).toBeUndefined();
+            });
+
+            it('should emit open portal actions', async () => {
+                let actions = [] as BotAction[];
+                runtime.onActions.subscribe((a) => actions.push(...a));
+
+                runtime.process([
+                    openCustomPortal('page', 'test1', 'myTag', {}),
+                ]);
+
+                await waitAsync();
+
+                expect(actions).toEqual([
+                    openCustomPortal('page', 'test1', 'myTag', {}),
+                ]);
+            });
         });
     });
 
@@ -6814,8 +6921,6 @@ describe('original action tests', () => {
 
         expect(events.actions).toEqual([toast('test')]);
     });
-
-    // describe('')
 
     describe('onAnyListen()', () => {
         it('should send a onAnyListen() for actions', () => {

@@ -2371,6 +2371,11 @@ export interface OpenCustomPortalAction extends AsyncAction {
     portalId: string;
 
     /**
+     * The ID of the bot that should be used to configure this portal.
+     */
+    botId: string;
+
+    /**
      * The tag or bundle that the portal should use.
      */
     tagOrSource: string;
@@ -4640,12 +4645,14 @@ export function circleWipe(
 /**
  * Creates an action that registers a custom portal.
  * @param portalId The ID of the portal,
+ * @param botId The ID of the bot that should be used to configure the portal.
  * @param tagOrSource The tag or bundle of source that the portal should use.
  * @param options The options for the portal.
  * @param taskId The ID of the task.
  */
 export function openCustomPortal(
     portalId: string,
+    botId: string,
     tagOrSource: string,
     options: OpenCustomPortalOptions,
     taskId?: number | string
@@ -4653,6 +4660,7 @@ export function openCustomPortal(
     return {
         type: 'open_custom_portal',
         portalId,
+        botId,
         tagOrSource,
         options,
         taskId,
