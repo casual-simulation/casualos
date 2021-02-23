@@ -9,6 +9,11 @@
 -   Changed the ab-1 bootstrap URL to `https://bootstrap.casualos.com/ab1.aux`.
 -   Updated to three.js r125.
     -   This fixes WebXR for Chrome 88 and later.
+-   Added the ability to disable hover states on menu item buttons using the `menuItemHoverMode` tag. It has three possible options:
+    -   `auto` - The bot will appear hoverable based on if it has a `@onClick` tag. (Default)
+    -   `hover` - The bot will appear hoverable.
+    -   `none` - The bot will not appear hoverable.
+    -   None of these options affect the existing functionality of any listen tags on menu bots.
 
 ### :bug: Bug Fixes
 
