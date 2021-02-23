@@ -1226,14 +1226,10 @@ export class AuxRuntime
                 bot,
                 tag,
                 creator: null as RuntimeBot,
-                config: null as RuntimeBot,
             },
             before: (ctx) => {
                 ctx.creator = ctx.bot
                     ? this._getRuntimeBot(ctx.bot.script.tags.creator)
-                    : null;
-                ctx.config = ctx.bot
-                    ? this._getRuntimeBot(ctx.bot.script.tags.configBot)
                     : null;
             },
             onError: (err, ctx, meta) => {
@@ -1289,9 +1285,6 @@ export class AuxRuntime
                 raw: (ctx) => (ctx.bot ? ctx.bot.script.raw : null),
                 masks: (ctx) => (ctx.bot ? ctx.bot.script.masks : null),
                 creator: (ctx) => ctx.creator,
-                config: (ctx) => ctx.config,
-                configTag: (ctx) =>
-                    ctx.config ? ctx.config.tags[ctx.tag] : null,
             },
             arguments: [['that', 'data']],
         });
