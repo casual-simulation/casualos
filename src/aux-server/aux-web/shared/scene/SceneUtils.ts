@@ -16,7 +16,6 @@ import {
     Geometry,
     ConeGeometry,
     DoubleSide,
-    MeshToonMaterial,
     AmbientLight,
     DirectionalLight,
     MathUtils as ThreeMath,
@@ -36,6 +35,7 @@ import {
     LineSegments,
     LineBasicMaterial,
 } from 'three';
+import { MeshToonMaterial } from '../public/MeshToonMaterial';
 import { flatMap } from 'lodash';
 import {
     BotCalculationContext,

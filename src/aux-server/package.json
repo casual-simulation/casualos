@@ -107,7 +107,7 @@
         "socket.io": "2.1.1",
         "socket.io-client": "2.1.1",
         "stripe": "7.9.0",
-        "three": "0.117.1",
+        "three": "0.118.3",
         "troika-three-text": "0.36.1",
         "unique-names-generator": "4.2.0",
         "useragent": "^2.3.0",
