@@ -296,3 +296,11 @@ th:last-child {
 .md-checkbox {
     display: flex;
 }
+
+.md-dialog.new-tag-dialog {
+    z-index: 14;
+}
+
+.md-dialog.new-tag-dialog ~ .md-overlay {
+    z-index: 13;
+}

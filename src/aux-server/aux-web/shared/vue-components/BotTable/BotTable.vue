@@ -189,7 +189,7 @@
             <md-button class="md-primary" @click="undoDelete()">Undo</md-button>
         </md-snackbar>
 
-        <md-dialog :md-active.sync="isMakingNewTag">
+        <md-dialog :md-active.sync="isMakingNewTag" class="new-tag-dialog">
             <md-dialog-title>Add New Tag</md-dialog-title>
             <md-dialog-content>
                 <form class="bot-table-form" @submit.prevent="addTag()">
