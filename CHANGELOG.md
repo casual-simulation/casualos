@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.4.6
+
+#### Date: 2/23/2021
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the circle wipe element would not cover modals like `player.showHtml()` or `player.showInput()`.
+-   Fixed an issue where calling `player.showInput()` in sequence would show the first input but not the second input.
+
 ## V1.4.5
 
 #### Date: 2/23/2021
