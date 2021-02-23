@@ -44,6 +44,9 @@ import {
     DNA_TAG_PREFIX,
     UpdateBotAction,
     isRuntimeBot,
+    OpenCustomPortalAction,
+    createBot,
+    openCustomPortal,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -271,38 +274,49 @@ export class AuxRuntime
         } else if (action.type === 'device_error') {
             this._globalContext.rejectTask(action.taskId, action.error, true);
         } else if (action.type === 'open_custom_portal') {
-            this._portalBots.set(action.portalId, action.botId);
-            let anyGlobal: any = globalThis;
-            const botId = action.botId;
-            const portalId = action.portalId;
-            const variableName = `${action.portalId}Bot`;
-            if (hasValue(botId)) {
-                Object.defineProperty(anyGlobal, variableName, {
-                    get: () => this.context.state[botId],
-                    enumerable: false,
-                    configurable: true,
-                });
-            } else {
-                delete anyGlobal[variableName];
-            }
-
-            this._sub.add(() => {
-                if (this._portalBots.has(portalId)) {
-                    const descriptor = Object.getOwnPropertyDescriptor(
-                        anyGlobal,
-                        variableName
-                    );
-                    if (descriptor) {
-                        delete anyGlobal[variableName];
-                        this._portalBots.delete(portalId);
-                    }
-                }
-            });
-
+            this._registerPortalBot(action.portalId, action.botId);
             this._actionBatch.push(action);
+        } else if (action.type === 'register_builtin_portal') {
+            if (!this._portalBots.has(action.portalId)) {
+                const newBot = this.context.createBot(
+                    createBot(undefined, undefined, 'tempLocal')
+                );
+                this._registerPortalBot(action.portalId, newBot.id);
+                this._actionBatch.push(
+                    openCustomPortal(action.portalId, newBot.id, null, {})
+                );
+            }
         } else {
             this._actionBatch.push(action);
         }
+    }
+
+    private _registerPortalBot(portalId: string, botId: string) {
+        this._portalBots.set(portalId, botId);
+        let anyGlobal: any = globalThis;
+        const variableName = `${portalId}Bot`;
+        if (hasValue(botId)) {
+            Object.defineProperty(anyGlobal, variableName, {
+                get: () => this.context.state[botId],
+                enumerable: false,
+                configurable: true,
+            });
+        } else {
+            delete anyGlobal[variableName];
+        }
+
+        this._sub.add(() => {
+            if (this._portalBots.get(portalId) === botId) {
+                const descriptor = Object.getOwnPropertyDescriptor(
+                    anyGlobal,
+                    variableName
+                );
+                if (descriptor) {
+                    delete anyGlobal[variableName];
+                    this._portalBots.delete(portalId);
+                }
+            }
+        });
     }
 
     private _rejectAction(

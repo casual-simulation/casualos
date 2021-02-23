@@ -72,6 +72,7 @@ import {
     tagsOnBot,
     TEMPORARY_BOT_PARTITION_ID,
     openCustomPortal,
+    registerBuiltinPortal,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -3359,6 +3360,71 @@ describe('AuxRuntime', () => {
             runtime.process(result.actions);
 
             expect(await result.result).toBe(123);
+        });
+
+        describe('register_builtin_portal', () => {
+            it('should add a global variable with a new tempLocal bot for the bot included in the action', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                runtime.process([registerBuiltinPortal('page')]);
+
+                await waitAsync();
+
+                expect(allEvents).toEqual([
+                    openCustomPortal('page', 'uuid', null, {}),
+                    botAdded(createBot('uuid', {}, 'tempLocal')),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['uuid']
+                );
+            });
+
+            it('should not override previous variables', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'other',
+                        }),
+                    })
+                );
+                runtime.process([
+                    openCustomPortal('page', 'test1', 'myTag', {}),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+
+                runtime.process([registerBuiltinPortal('page')]);
+
+                await waitAsync();
+
+                expect(allEvents).toEqual([
+                    openCustomPortal('page', 'test1', 'myTag', {}),
+                ]);
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+            });
+
+            it('should remove the global variables that were created by the runtime', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+
+                runtime.process([registerBuiltinPortal('page')]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['uuid']
+                );
+
+                runtime.unsubscribe();
+
+                expect(
+                    Object.getOwnPropertyDescriptor(globalThis, 'pageBot')
+                ).toBeUndefined();
+            });
         });
 
         describe('open_custom_portal', () => {
