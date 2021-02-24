@@ -2,6 +2,7 @@ import { createBot } from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { waitForSync } from '@casual-simulation/aux-vm';
 import { Simulation, SimulationManager } from '@casual-simulation/aux-vm';
+import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 import { nodeSimulationWithConfig } from '@casual-simulation/aux-vm-node';
 import { MenuPortal } from './MenuPortal';
 
@@ -11,7 +12,7 @@ describe('MenuPortal', () => {
     let simulationManager: SimulationManager<Simulation>;
 
     beforeEach(() => {
-        simulationManager = new SimulationManager<Simulation>((id) =>
+        simulationManager = new SimulationManager<RemoteSimulation>((id) =>
             nodeSimulationWithConfig(
                 {
                     id: 'user',

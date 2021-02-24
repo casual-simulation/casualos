@@ -2182,17 +2182,12 @@ declare global {
     /**
      * The config Bot for this Bot.
      */
-    const config: Bot;
+    const configBot: Bot;
 
     /**
      * The name of the tag that this script is running in.
      */
     const tagName: string;
-
-    /**
-     * The value of the same tag in the config Bot.
-     */
-    const configTag: any;
 
     /**
      * Creates a new bot and returns it.

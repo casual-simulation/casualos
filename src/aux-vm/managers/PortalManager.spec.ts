@@ -21,6 +21,7 @@ import {
 } from './PortalBundler';
 import {
     DEFAULT_SCRIPT_PREFIXES,
+    PortalBotData,
     PortalData,
     PortalManager,
     PortalUpdate,
@@ -281,6 +282,7 @@ describe('PortalManager', () => {
                         abc: 'def',
                     },
                     error: null,
+                    botId: null,
                 },
             ]);
         });
@@ -325,6 +327,7 @@ describe('PortalManager', () => {
                         abc: 'def',
                     },
                     error: null,
+                    botId: null,
                 },
             ]);
         });
@@ -363,6 +366,7 @@ describe('PortalManager', () => {
                         abc: 'def',
                     },
                     error: null,
+                    botId: null,
                 },
             ]);
         });
@@ -421,6 +425,7 @@ describe('PortalManager', () => {
                         abc: 'def',
                     },
                     error: null,
+                    botId: null,
                 },
             ]);
         });
@@ -483,6 +488,7 @@ describe('PortalManager', () => {
                         abc: 'def',
                     },
                     error: null,
+                    botId: null,
                 },
             ]);
         });
@@ -543,10 +549,68 @@ describe('PortalManager', () => {
                     style: {
                         abc: 'def',
                     },
+                    botId: null,
                     error: null,
                     ports: {
                         casualos: expect.any(MessagePort),
                     },
+                },
+            ]);
+        });
+
+        it('should emit null source when portals have a null tag', async () => {
+            expect(portals).toEqual([]);
+
+            bundler.bundleTag.mockResolvedValueOnce({
+                tag: 'script',
+                source: 'abc',
+                modules: {},
+                externals: {},
+                libraries: {},
+                warnings: [],
+            });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    botId: null,
+                    tagOrSource: null,
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(bundler.bundleTag).not.toBeCalled();
+            expect(portals).toEqual([
+                {
+                    id: 'test-portal',
+                    botId: null,
+                    source: null,
+                    style: {
+                        abc: 'def',
+                    },
+                    error: null,
                 },
             ]);
         });
@@ -640,11 +704,13 @@ describe('PortalManager', () => {
                             id: 'test-portal',
                             source: 'abc',
                             error: null,
+                            botId: null,
                         },
                         portal: {
                             id: 'test-portal',
                             source: 'correct',
                             error: null,
+                            botId: null,
                         },
                     },
                 ]);
@@ -681,11 +747,13 @@ describe('PortalManager', () => {
                             id: 'test-portal',
                             source: 'abc',
                             error: null,
+                            botId: null,
                         },
                         portal: {
                             id: 'test-portal',
                             source: 'correct',
                             error: null,
+                            botId: null,
                         },
                     },
                 ]);
@@ -719,11 +787,13 @@ describe('PortalManager', () => {
                             id: 'test-portal',
                             source: 'abc',
                             error: null,
+                            botId: null,
                         },
                         portal: {
                             id: 'test-portal',
                             source: 'correct',
                             error: null,
+                            botId: null,
                         },
                     },
                 ]);
@@ -852,6 +922,7 @@ describe('PortalManager', () => {
                             id: 'test-portal',
                             source: 'abc',
                             error: null,
+                            botId: null,
                         },
                         portal: {
                             id: 'test-portal',
@@ -860,6 +931,7 @@ describe('PortalManager', () => {
                                 anything: true,
                             },
                             error: null,
+                            botId: null,
                         },
                     },
                 ]);
@@ -939,11 +1011,13 @@ describe('PortalManager', () => {
                         id: 'test-portal',
                         source: 'abc',
                         error: null,
+                        botId: null,
                     },
                     portal: {
                         id: 'test-portal',
                         source: 'correct',
                         error: null,
+                        botId: null,
                     },
                 },
             ]);
@@ -1017,11 +1091,13 @@ describe('PortalManager', () => {
                         id: 'test-portal',
                         source: 'abc',
                         error: null,
+                        botId: null,
                     },
                     portal: {
                         id: 'test-portal',
                         source: 'correct',
                         error: null,
+                        botId: null,
                     },
                 },
             ]);
@@ -1088,11 +1164,13 @@ describe('PortalManager', () => {
                         id: 'test-portal',
                         source: 'abc',
                         error: null,
+                        botId: null,
                     },
                     portal: {
                         id: 'test-portal',
                         source: 'my-source',
                         error: null,
+                        botId: null,
                     },
                 },
             ]);
@@ -1696,6 +1774,135 @@ describe('PortalManager', () => {
                     language: 'javascript',
                 },
             });
+        });
+    });
+
+    describe('portalBotIdUpdated', () => {
+        let portals = [] as PortalBotData[];
+
+        beforeEach(() => {
+            portals = [];
+            sub.add(
+                manager.portalBotIdUpdated.subscribe((p) => portals.push(...p))
+            );
+        });
+
+        it('should resolve with new portal bot IDs', async () => {
+            expect(portals).toEqual([]);
+
+            bundler.bundleTag.mockResolvedValueOnce({
+                tag: 'script',
+                source: 'abc',
+                modules: {},
+                externals: {},
+                libraries: {},
+                warnings: [],
+            });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    botId: 'test',
+                    tagOrSource: null,
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(portals).toEqual([
+                {
+                    portalId: 'test-portal',
+                    botId: 'test',
+                },
+            ]);
+        });
+
+        it('should resolve with updated portal bot IDs', async () => {
+            expect(portals).toEqual([]);
+
+            bundler.bundleTag.mockResolvedValueOnce({
+                tag: 'script',
+                source: 'abc',
+                modules: {},
+                externals: {},
+                libraries: {},
+                warnings: [],
+            });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    botId: 'test',
+                    tagOrSource: null,
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    botId: 'different',
+                    tagOrSource: null,
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(portals).toEqual([
+                {
+                    portalId: 'test-portal',
+                    botId: 'test',
+                },
+                {
+                    portalId: 'test-portal',
+                    botId: 'different',
+                },
+            ]);
         });
     });
 });
