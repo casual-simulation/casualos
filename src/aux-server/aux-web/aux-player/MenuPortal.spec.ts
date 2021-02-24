@@ -9,7 +9,7 @@ import { MenuPortal } from './MenuPortal';
 console.log = jest.fn();
 
 describe('MenuPortal', () => {
-    let simulationManager: SimulationManager<Simulation>;
+    let simulationManager: SimulationManager<RemoteSimulation>;
 
     beforeEach(() => {
         simulationManager = new SimulationManager<RemoteSimulation>((id) =>
