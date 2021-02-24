@@ -3346,7 +3346,7 @@ declare global {
         open(
             portalId: string,
             bot: Bot | string,
-            tagOrSource: string,
+            tagOrSource?: string,
             options?: OpenCustomPortalOptions
         ): Promise<void>;
 

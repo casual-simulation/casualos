@@ -1960,7 +1960,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function openCustomPortal(
         portalId: string,
         bot: Bot | string,
-        tagOrSource: string,
+        tagOrSource: string = null,
         options: OpenCustomPortalOptions = {}
     ): Promise<void> {
         const task = context.createTask();
