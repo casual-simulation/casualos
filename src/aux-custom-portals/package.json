@@ -28,7 +28,8 @@
         "build": "node ./bin/build",
         "fastbuild": "node ./bin/prebuild",
         "test": "jest",
-        "test:watch": "jest --watchAll"
+        "test:watch": "jest --watchAll",
+        "import-typescript": "node ./scripts/importTypescript.js"
     },
     "publishConfig": {
         "access": "public"

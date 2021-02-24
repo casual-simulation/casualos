@@ -15,7 +15,7 @@ import {
     LanguageServiceDefaults,
     LanguageServiceDefaultsImpl,
 } from './languageService';
-import { typescriptVersion as tsversion } from './lib/typescriptServicesMetadata'; // do not import the whole typescriptServices here
+import { typescriptVersion as tsversion } from '@casual-simulation/aux-custom-portals/monaco/typescript/lib//typescriptServicesMetadata'; // do not import the whole typescriptServices here
 
 export const typescriptVersion: string = tsversion;
 
