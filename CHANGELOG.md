@@ -19,6 +19,8 @@
     -   After callilng this, the given bot will be available globally at `{name}Bot`.
     -   For example `portal.open("myPortal", bot, "main")` will make `bot` available as `myPortalBot`.
 -   Removed `player.getBot()` and replaced it with `configBot`.
+-   Renamed the `creator` variable to `creatorBot`.
+-   Added the `thisBot` variable as a preferred alternative to `this` and `bot`.
 
 ### :bug: Bug Fixes
 
