@@ -1425,7 +1425,7 @@ export function calculateAnchorPoint(value: BotAnchorPoint) {
         if (value.length >= 3 && value.every((v) => typeof v === 'number')) {
             return value;
         }
-    } else if (possibleAnchorPoints.has(value)) {
+    } else if (possibleAnchorPoints.has(value as any)) {
         return value;
     }
     return DEFAULT_ANCHOR_POINT;

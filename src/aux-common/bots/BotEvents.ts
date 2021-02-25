@@ -105,6 +105,7 @@ export type AsyncActions =
     | AsyncErrorAction
     | ShowInputAction
     | ShareAction
+    | RegisterBuiltinPortalAction
     | OpenCustomPortalAction
     | BuildBundleAction
     | RegisterPrefixAction
@@ -2361,6 +2362,18 @@ export interface OpenCustomPortalOptions {
 }
 
 /**
+ * Defines an event that ensures a portal bot has been created for a portal.
+ */
+export interface RegisterBuiltinPortalAction {
+    type: 'register_builtin_portal';
+
+    /**
+     * The ID of the portal.
+     */
+    portalId: string;
+}
+
+/**
  * Defines an event that creates a custom portal using the given source code.
  */
 export interface OpenCustomPortalAction extends AsyncAction {
@@ -2371,9 +2384,14 @@ export interface OpenCustomPortalAction extends AsyncAction {
     portalId: string;
 
     /**
+     * The ID of the bot that should be used to configure this portal.
+     */
+    botId: string;
+
+    /**
      * The tag or bundle that the portal should use.
      */
-    tagOrSource: string;
+    tagOrSource: string | null;
 
     /**
      * The options for the portal.
@@ -4638,21 +4656,38 @@ export function circleWipe(
 }
 
 /**
+ * Creates an action that registers a portal that is builtin.
+ * This instructs the runtime to create a portal bot if one has not already been created.
+ * @param portalId The ID of the portal.
+ */
+export function registerBuiltinPortal(
+    portalId: string
+): RegisterBuiltinPortalAction {
+    return {
+        type: 'register_builtin_portal',
+        portalId,
+    };
+}
+
+/**
  * Creates an action that registers a custom portal.
  * @param portalId The ID of the portal,
+ * @param botId The ID of the bot that should be used to configure the portal.
  * @param tagOrSource The tag or bundle of source that the portal should use.
  * @param options The options for the portal.
  * @param taskId The ID of the task.
  */
 export function openCustomPortal(
     portalId: string,
-    tagOrSource: string,
+    botId: string,
+    tagOrSource: string | null,
     options: OpenCustomPortalOptions,
     taskId?: number | string
 ): OpenCustomPortalAction {
     return {
         type: 'open_custom_portal',
         portalId,
+        botId,
         tagOrSource,
         options,
         taskId,

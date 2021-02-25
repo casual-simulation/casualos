@@ -1,5 +1,11 @@
-import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
-import { startWith, tap } from 'rxjs/operators';
+import {
+    merge,
+    Observable,
+    Subject,
+    Subscription,
+    SubscriptionLike,
+} from 'rxjs';
+import { startWith, tap, map } from 'rxjs/operators';
 import { AuxVM } from '../vm/AuxVM';
 import {
     BotAction,
@@ -119,6 +125,36 @@ export class PortalManager implements SubscriptionLike {
         return this._librariesDiscovered.pipe(
             startWith(values(this._libraryModules))
         );
+    }
+
+    /**
+     * Gets an observable that resolves when a portal's bot ID has been updated.
+     */
+    get portalBotIdUpdated(): Observable<PortalBotData[]> {
+        const updatedBotIds = this.portalsUpdated.pipe(
+            map((portals) =>
+                portals.map(
+                    (p) =>
+                        ({
+                            portalId: p.portal.id,
+                            botId: p.portal.botId,
+                        } as PortalBotData)
+                )
+            )
+        );
+        const newBotIds = this.portalsDiscovered.pipe(
+            map((portals) =>
+                portals.map(
+                    (p) =>
+                        ({
+                            portalId: p.id,
+                            botId: p.botId,
+                        } as PortalBotData)
+                )
+            )
+        );
+
+        return merge(newBotIds, updatedBotIds);
     }
 
     /**
@@ -316,6 +352,7 @@ export class PortalManager implements SubscriptionLike {
                     const isSource = event.options.mode === 'source';
                     if (currentPortal) {
                         currentPortal.entrypoint = event.tagOrSource;
+                        currentPortal.botId = event.botId;
                         currentPortal.tag = isSource
                             ? null
                             : this._getTrimmedPortalTag(event.tagOrSource);
@@ -325,6 +362,7 @@ export class PortalManager implements SubscriptionLike {
                         const newPortal: PortalRegistration = {
                             id: event.portalId,
                             entrypoint: event.tagOrSource,
+                            botId: event.botId,
                             tag: isSource
                                 ? null
                                 : this._getTrimmedPortalTag(event.tagOrSource),
@@ -393,6 +431,7 @@ export class PortalManager implements SubscriptionLike {
 
             this._sendPortalData(portal, {
                 id: portal.id,
+                botId: portal.botId,
                 error: null,
                 source: portal.entrypoint,
                 style: portal.style,
@@ -434,6 +473,7 @@ export class PortalManager implements SubscriptionLike {
 
             let data: PortalData = {
                 id: portal.id,
+                botId: portal.botId,
                 style: portal.style,
                 error: bundle?.error || null,
                 source: bundle?.source || null,
@@ -546,6 +586,11 @@ export interface PortalData {
     id: string;
 
     /**
+     * The ID of the portal bot.
+     */
+    botId: string;
+
+    /**
      * The source code that the portal should use.
      * Null if the portal currently has no source.
      */
@@ -588,6 +633,11 @@ export interface PortalRegistration {
      * The tag that the portal is loaded from.
      */
     tag: string;
+
+    /**
+     * The ID of the portal bot.
+     */
+    botId: string;
 
     /**
      * The CSS styles that the portal iframe should have.
@@ -633,4 +683,12 @@ export interface PortalUpdate {
      * The old portal.
      */
     oldPortal: PortalData;
+}
+
+/**
+ * Contains information about
+ */
+export interface PortalBotData {
+    portalId: string;
+    botId: string;
 }

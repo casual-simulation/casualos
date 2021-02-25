@@ -298,7 +298,6 @@ export interface BotTags {
     ['orientationMode']?: string;
     ['anchorPoint']?: string;
     ['creator']?: string;
-    ['configBot']?: string;
     ['progressBar']?: unknown;
     ['progressBarColor']?: unknown;
     ['progressBarBackgroundColor']?: unknown;
@@ -315,12 +314,6 @@ export interface BotTags {
     ['menuPortal']?: string;
     ['leftWristPortal']?: string;
     ['rightWristPortal']?: string;
-    ['pagePortalConfigBot']?: string;
-    ['sheetPortalConfigBot']?: string;
-    ['inventoryPortalConfigBot']?: string;
-    ['menuPortalConfigBot']?: string;
-    ['leftWristPortalConfigBot']?: string;
-    ['rightWristPortalConfigBot']?: string;
     ['editingBot']?: string;
     cursorStartIndex?: number;
     cursorEndIndex?: number;
@@ -1339,20 +1332,11 @@ export const KNOWN_TAGS: string[] = [
     'menuPortal',
     'leftWristPortal',
     'rightWristPortal',
-    'pagePortalConfigBot',
-    `${SHEET_PORTAL}ConfigBot`,
-    `${IDE_PORTAL}ConfigBot`,
-    'inventoryPortalConfigBot',
-    'menuPortalConfigBot',
-    'leftWristPortalConfigBot',
-    'rightWristPortalConfigBot',
 
     MEET_PORTAL,
-    `${MEET_PORTAL}ConfigBot`,
     DATA_PORTAL,
     TAG_PORTAL,
     TAG_PORTAL_SPACE,
-    `${TAG_PORTAL}ConfigBot`,
 
     'pageCameraPositionX',
     'pageCameraPositionY',
@@ -1463,7 +1447,6 @@ export const KNOWN_TAGS: string[] = [
 
     'color',
     'creator',
-    'configBot',
     'draggable',
     'draggableMode',
     'positioningMode',

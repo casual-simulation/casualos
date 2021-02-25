@@ -18,7 +18,7 @@ import {
   Alert,
   TagLink,
   NormalCode,
-  UserBotBadge,
+  ConfigBotBadge,
   ActionLink,
 } from './components.mdx';
 
@@ -1185,7 +1185,7 @@ let that: {
 A shout that is sent when a list of bots is removed from the current server.
 
 Unlike <TagLink tag='@onDestroy'/>, this listen tag is triggered whenever the bots have been removed from the current player's server, even if the bots were not destroyed.
-An example of this happening is when another player disconnects. Even though their player bots were not destroyed, they still need to be removed from the server.
+An example of this happening is when another player disconnects. Even though their config bots were not destroyed, they still need to be removed from the server.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script deletes multiple bots, `@onAnyBotsRemoved` will only be triggered once.
 

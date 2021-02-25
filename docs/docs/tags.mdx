@@ -19,9 +19,8 @@ import {
   ActionLink,
   TagLink,
   NormalCode,
-  UserBotBadge,
-  HistoryBotBadge,
   ConfigBotBadge,
+  HistoryBotBadge,
   Example,
 } from './components.mdx';
 
@@ -244,11 +243,6 @@ Determines whether this bot responds to whispers or shouts. If this tag is set t
     The bot will not respond to whispers or shouts.
   </PossibleValueCode>
 </PossibleValuesTable>
-
-### `configBot`
-
-The ID of the bot that "configures" this bot.
-When set, the `config` variable will be available in scripts as a shortcut to the specified bot.
 
 ## Visualization Tags
 
@@ -816,7 +810,7 @@ When the minimum LOD is exited the <TagLink tag='@onMinLODExit'/> listener is tr
 The ID of the bot that should transform this bot in the page and inventory portals.
 When the transformer bot and this bot are in the same dimension, this bot will inherit the position and rotation of the transformer bot.
 
-When set on the player bot, this will transform the portal camera by the specified bot.
+When set on the config bot, this will transform the portal camera by the specified bot.
 
 <PossibleValuesTable>
   <PossibleValueCode value='null'>
@@ -1701,16 +1695,16 @@ The bot that the error occurred in.
 
 The tag that the error occurred in.
 
-## Player Bot Tags
+## Config bot Tags
 
-All tags on the player bot will be synced with the URL query parameters.
-This means that setting the `#abc` tag on the player bot to `hello` will update the URL to include `abc=hello`.
+All tags on the config bot will be synced with the URL query parameters.
+This means that setting the `#abc` tag on the config bot to `hello` will update the URL to include `abc=hello`.
 It also means that putting `inventoryPortal=myDimension` into the query string will set the <TagLink tag='inventoryPortal'/> tag to `myDimension`.
 
 ### `server`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The server that is loaded into CasualOS.
@@ -1718,70 +1712,70 @@ The server that is loaded into CasualOS.
 ### `pagePortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded into the "page" portal in CasualOS.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `sheetPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded into the "sheet" portal in CasualOS.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `idePortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The prefix that indicates which tags should be loaded into the "IDE" portal in CasualOS.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `inventoryPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded into the "inventory" portal in CasualOS.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `menuPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded into the "menu" portal in CasualOS.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `leftWristPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded onto the left controller near the wrist when in VR.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `rightWristPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded onto the right controller near the wrist when in VR.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `meetPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The [Jitsi Meet](https://meet.jit.si/) room code of the meeting that should be joined.
@@ -1789,12 +1783,12 @@ This will join the current tab to the meeting and provide audiovisual communicat
 
 This is similar to a Skype or Zoom call except that all data is encrypted and is deleted once you are done with it. Check out the Jitsi Meet privacy policy [here](https://jitsi.org/meet-jit-si-privacy/).
 
-Only available on the player bot.
+Only available on the config bot.
 
 ### `tagPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The Bot ID and tag that should be edited in the tag portal.
@@ -1802,36 +1796,34 @@ This will show just the code editor without the rest of the sheet and makes it p
 
 When you are setting the tag portal, you should format it so the bot ID and tag name are separated by a single period (.).
 
-Only available on the player bot.
+Only available on the config bot.
 
 #### Examples:
 
-1. Open the tag portal for the `abc` tag on the player bot.
+1. Open the tag portal for the `abc` tag on the config bot.
 ```typescript
-const playerBot = player.getBot();
 const tag = "abc";
-playerBot.tags.tagPortal = getID(playerBot) + "." + tag;
+playerBot.tags.tagPortal = getID(configBot) + "." + tag;
 ```
 
 ### `tagPortalSpace`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The space of the tag mask that should be edited in the tag portal.
 If not set, then the tag on the bot will be edited.
 If set, then the tag mask in the given space will be edited.
 
-Only available on the player bot.
+Only available on the config bot.
 
 #### Examples:
 
-1. Open the tag portal for the `abc` tag mask in the `tempLocal` space on the player bot.
+1. Open the tag portal for the `abc` tag mask in the `tempLocal` space on the config bot.
 ```typescript
-const playerBot = player.getBot();
 const tag = "abc";
-playerBot.tags.tagPortal = getID(playerBot) + "." + tag;
+playerBot.tags.tagPortal = getID(configBot) + "." + tag;
 playerBot.tags.tagPortalSpace = "tempLocal";
 ```
 
@@ -1870,7 +1862,7 @@ https://auxplayer.com?server=my-server&dataPortal=test.html
 ### `pagePortalConfigBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that should be used to configure the <TagLink tag='pagePortal'>page portal</TagLink>.
@@ -1894,22 +1886,22 @@ Supports the following tags:
 - <TagLink tag='portalShowFocusPoint'/>
 - <TagLink tag='portalDisableCanvasTransparency'/>
 
-Only available on the player bot.
+Only available on the config bot.
 
 ### `sheetPortalConfigBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that should be used to configure the <TagLink tag='sheetPortal'>sheet portal</TagLink>.
 
-Currently not used. Only available on the player bot.
+Currently not used. Only available on the config bot.
 
 ### `inventoryPortalConfigBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that should be used to configure the <TagLink tag='inventoryPortal'>inventory portal</TagLink>.
@@ -1933,22 +1925,22 @@ Supports the following tags:
 - <TagLink tag='inventoryPortalHeight'/>
 - <TagLink tag='inventoryPortalResizable'/>
 
-Only available on the player bot.
+Only available on the config bot.
 
 ### `menuPortalConfigBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that should be used to configure the <TagLink tag='menuPortal'>menu portal</TagLink>.
 
-Currently not used. Only available on the player bot.
+Currently not used. Only available on the config bot.
 
 ### `leftWristPortalConfigBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that should be used to configure the <TagLink tag='leftWristPortal'>left wrist portal</TagLink>.
@@ -1960,12 +1952,12 @@ Supports the following tags:
 - <TagLink tag='wristPortalHeight'/>
 - <TagLink tag='wristPortalWidth'/>
 
-Only available on the player bot.
+Only available on the config bot.
 
 ### `rightWristPortalConfigBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that should be used to configure the <TagLink tag='rightWristPortal'>right wrist portal</TagLink>.
@@ -1977,12 +1969,12 @@ Supports the following tags:
 - <TagLink tag='wristPortalHeight'/>
 - <TagLink tag='wristPortalWidth'/>
 
-Only available on the player bot.
+Only available on the config bot.
 
 ### `meetPortalConfigBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that should be used to configure the <TagLink tag='meetPortal'>meet portal</TagLink>.
@@ -1993,7 +1985,7 @@ Supports the following tags:
 - <TagLink tag='meetPortalAnchorPoint'/>
 - <TagLink tag='meetPortalStyle'/>
 
-Only available on the player bot.
+Only available on the config bot.
 
 ### `pagePixelWidth`
 
@@ -2428,25 +2420,25 @@ The title that should be displayed on the web browser tab.
 ### `editingBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that the user is currently editing.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `editingTag`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The tag that the user is currently editing.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `cursorStartIndex`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The selection start index of the player's cursor in the current <TagLink tag='editingTag'/>.
@@ -2455,12 +2447,12 @@ Note that when <TagLink tag='cursorStartIndex'/> is larger than <TagLink tag='cu
 that the player has selected text from the right to the left.
 This is important because text will always be inserted at <TagLink tag='cursorEndIndex'/>.
 
-Only available on the player bot.
+Only available on the config bot.
 
 ### `cursorEndIndex`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The selection end index of the player's cursor in the current <TagLink tag='editingTag'/>.
@@ -2469,7 +2461,7 @@ Note that when <TagLink tag='cursorEndIndex'/> is smaller than <TagLink tag='cur
 that the player has selected text from the right to the left.
 This is important because text will always be inserted at <TagLink tag='cursorEndIndex'/>.
 
-Only available on the player bot.
+Only available on the config bot.
 
 ## Hidden Tags
 

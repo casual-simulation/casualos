@@ -47,6 +47,7 @@
         "@casual-simulation/aux-custom-portals": "^1.4.5",
         "@casual-simulation/aux-vm": "^1.4.5",
         "@casual-simulation/aux-vm-browser": "^1.4.5",
+        "@casual-simulation/aux-vm-client": "^1.4.5",
         "@casual-simulation/aux-vm-deno": "^1.4.5",
         "@casual-simulation/aux-vm-node": "^1.4.5",
         "@casual-simulation/causal-tree-client-socketio": "^1.4.4",

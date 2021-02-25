@@ -601,7 +601,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             __energyCheck,
 
-            player: {
+            os: {
                 toast,
                 showJoinCode,
                 requestFullscreenMode,
@@ -637,8 +637,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 unloadServer,
                 importAUX,
                 replaceDragBot,
-
-                getBot: getPlayerBot,
                 isInDimension,
                 getCurrentDimension,
                 getCurrentServer,
@@ -1605,13 +1603,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Get's the current player's bot.
-     */
-    function getPlayerBot(): RuntimeBot {
-        return context.playerBot;
-    }
-
-    /**
      * Derermines whether the player is in the given dimension.
      * @param dimension The dimension.
      */
@@ -1962,17 +1953,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Registers a custom portal with the given source code.
      * @param portalId The ID of the portal.
+     * @param bot The bot that should be used to configure the portal.
      * @param tagOrSource The tag or source code that the portal should be created from.
      * @param options The options for the portal.
      */
     function openCustomPortal(
         portalId: string,
-        tagOrSource: string,
+        bot: Bot | string,
+        tagOrSource: string = null,
         options: OpenCustomPortalOptions = {}
     ): Promise<void> {
         const task = context.createTask();
         const event = calcOpenCustomPortal(
             portalId,
+            getID(bot),
             tagOrSource,
             {
                 mode: options?.mode || 'tag',

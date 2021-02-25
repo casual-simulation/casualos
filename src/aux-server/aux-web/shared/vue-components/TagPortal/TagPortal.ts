@@ -13,6 +13,7 @@ import {
     DEFAULT_TAG_PORTAL_ANCHOR_POINT,
     trimTag,
     TAG_PORTAL_SPACE,
+    registerBuiltinPortal,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike, Subscription, Observable } from 'rxjs';
@@ -208,6 +209,8 @@ export default class TagPortal extends Vue {
                 .pipe(tap((user) => this._onUserBotUpdated(sim, user)))
                 .subscribe()
         );
+
+        sim.helper.transaction(registerBuiltinPortal(TAG_PORTAL));
     }
 
     private _onSimulationRemoved(sim: BrowserSimulation) {
