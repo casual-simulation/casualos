@@ -21,6 +21,9 @@
 -   Removed `player.getBot()` and replaced it with `configBot`.
 -   Renamed the `creator` variable to `creatorBot`.
 -   Added the `thisBot` variable as a preferred alternative to `this` and `bot`.
+-   Moved the page and inventory camera tags to their portal config bots from the player bot.
+    -   e.g. `pageCameraPositionX` used to be on the player bot (now the config bot) but is now on the page portal bot.
+-   Changed the behavior of the `transformer` tag to use the page and inventory portal bots instead of the config bot (previously the player bot).
 
 ### :bug: Bug Fixes
 
