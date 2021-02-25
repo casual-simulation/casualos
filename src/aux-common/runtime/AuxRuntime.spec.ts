@@ -6443,7 +6443,7 @@ describe('original action tests', () => {
         });
     });
 
-    describe('creator', () => {
+    describe('creatorBot', () => {
         it('should pass in a creator variable which equals getBot("id", tags.creator)', () => {
             const state: BotsState = {
                 thisBot: {
@@ -6452,7 +6452,7 @@ describe('original action tests', () => {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
                         creator: 'thatBot',
-                        test: '@setTag(this, "creatorId", creator.id)',
+                        test: '@setTag(this, "creatorId", creatorBot.id)',
                     },
                 },
                 thatBot: {
@@ -6484,7 +6484,8 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@setTag(this, "hasCreator", creator !== null)',
+                        test:
+                            '@setTag(this, "hasCreator", creatorBot !== null)',
                     },
                 },
                 thatBot: {
@@ -6515,7 +6516,8 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         creator: 'none',
-                        test: '@setTag(this, "hasCreator", creator !== null)',
+                        test:
+                            '@setTag(this, "hasCreator", creatorBot !== null)',
                     },
                 },
                 thatBot: {

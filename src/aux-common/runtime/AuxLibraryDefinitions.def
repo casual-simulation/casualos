@@ -2182,7 +2182,7 @@ declare global {
     /**
      * The Bot that created this Bot.
      */
-    const creator: Bot;
+    const creatorBot: Bot;
 
     /**
      * The config Bot for this Bot.
