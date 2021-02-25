@@ -8208,27 +8208,41 @@ describe('AuxLibrary', () => {
     });
 
     describe('os.getCameraPosition()', () => {
-        let player: RuntimeBot;
+        let pagePortal: RuntimeBot;
+        let inventoryPortal: RuntimeBot;
 
         beforeEach(() => {
-            player = createDummyRuntimeBot(
-                'player',
+            pagePortal = createDummyRuntimeBot(
+                'pagePortal',
                 {
-                    pageCameraPositionX: 1,
-                    pageCameraPositionY: 2,
-                    pageCameraPositionZ: 3,
-                    inventoryCameraPositionX: 4,
-                    inventoryCameraPositionY: 5,
-                    inventoryCameraPositionZ: 6,
+                    cameraPositionX: 1,
+                    cameraPositionY: 2,
+                    cameraPositionZ: 3,
                 },
                 'tempLocal'
             );
-            addToContext(context, player);
-            context.playerBot = player;
+            inventoryPortal = createDummyRuntimeBot(
+                'inventoryPortal',
+                {
+                    cameraPositionX: 4,
+                    cameraPositionY: 5,
+                    cameraPositionZ: 6,
+                },
+                'tempLocal'
+            );
+            addToContext(context, pagePortal, inventoryPortal);
+
+            (<any>globalThis).pagePortalBot = pagePortal;
+            (<any>globalThis).inventoryPortalBot = inventoryPortal;
         });
 
-        it('should return NaN for x, y, and z if the player bot is null', () => {
-            context.playerBot = null;
+        afterEach(() => {
+            delete (<any>globalThis).pagePortalBot;
+            delete (<any>globalThis).inventoryPortalBot;
+        });
+
+        it('should return NaN for x, y, and z if the page portal bot is null', () => {
+            (<any>globalThis).pagePortalBot = null;
             const result = library.api.os.getCameraPosition();
 
             expect(result).toEqual({
@@ -8238,7 +8252,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should return the x, y, and z of the player camera for the page portal', () => {
+        it('should return the x, y, and z of the camera for the page portal', () => {
             const result = library.api.os.getCameraPosition();
 
             expect(result).toEqual({
@@ -8270,27 +8284,41 @@ describe('AuxLibrary', () => {
     });
 
     describe('os.getCameraRotation()', () => {
-        let player: RuntimeBot;
+        let pagePortal: RuntimeBot;
+        let inventoryPortal: RuntimeBot;
 
         beforeEach(() => {
-            player = createDummyRuntimeBot(
-                'player',
+            pagePortal = createDummyRuntimeBot(
+                'pagePortal',
                 {
-                    pageCameraRotationX: 1,
-                    pageCameraRotationY: 2,
-                    pageCameraRotationZ: 3,
-                    inventoryCameraRotationX: 4,
-                    inventoryCameraRotationY: 5,
-                    inventoryCameraRotationZ: 6,
+                    cameraRotationX: 1,
+                    cameraRotationY: 2,
+                    cameraRotationZ: 3,
                 },
                 'tempLocal'
             );
-            addToContext(context, player);
-            context.playerBot = player;
+            inventoryPortal = createDummyRuntimeBot(
+                'inventoryPortal',
+                {
+                    cameraRotationX: 4,
+                    cameraRotationY: 5,
+                    cameraRotationZ: 6,
+                },
+                'tempLocal'
+            );
+            addToContext(context, pagePortal, inventoryPortal);
+
+            (<any>globalThis).pagePortalBot = pagePortal;
+            (<any>globalThis).inventoryPortalBot = inventoryPortal;
         });
 
-        it('should return NaN for x, y, and z if the player bot is null', () => {
-            context.playerBot = null;
+        afterEach(() => {
+            delete (<any>globalThis).pagePortalBot;
+            delete (<any>globalThis).inventoryPortalBot;
+        });
+
+        it('should return NaN for x, y, and z if the page portal bot is null', () => {
+            delete (<any>globalThis).pagePortalBot;
             const result = library.api.os.getCameraRotation();
 
             expect(result).toEqual({

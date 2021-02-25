@@ -69,6 +69,24 @@ export function getUserBotAsync(
 }
 
 /**
+ * Gets the config bot for the given portal.
+ * @param simulation The simulation.
+ * @param portal The portal.
+ */
+export function getPortalConfigBot(
+    simulation: RemoteSimulation,
+    portal: PortalType
+): PrecalculatedBot {
+    const data = simulation.portals.portals.get(portal);
+
+    if (data && data.botId) {
+        return simulation.helper.botsState[data.botId] ?? null;
+    }
+
+    return null;
+}
+
+/**
  * Watches the config bot for the given portal for changes.
  * @param simulation The simulation.
  * @param portal The portal.

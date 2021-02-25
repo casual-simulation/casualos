@@ -1325,11 +1325,12 @@ export class AuxRuntime
             variables: {
                 ...this._library.tagSpecificApi,
                 this: (ctx) => (ctx.bot ? ctx.bot.script : null),
+                thisBot: (ctx) => (ctx.bot ? ctx.bot.script : null),
                 bot: (ctx) => (ctx.bot ? ctx.bot.script : null),
                 tags: (ctx) => (ctx.bot ? ctx.bot.script.tags : null),
                 raw: (ctx) => (ctx.bot ? ctx.bot.script.raw : null),
                 masks: (ctx) => (ctx.bot ? ctx.bot.script.masks : null),
-                creator: (ctx) => ctx.creator,
+                creatorBot: (ctx) => ctx.creator,
                 configBot: () => this.context.playerBot,
             },
             arguments: [['that', 'data']],
