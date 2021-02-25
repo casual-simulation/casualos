@@ -24,6 +24,9 @@
 -   Moved the page and inventory camera tags to their portal config bots from the player bot.
     -   e.g. `pageCameraPositionX` used to be on the player bot (now the config bot) but is now on the page portal bot.
 -   Changed the behavior of the `transformer` tag to use the page and inventory portal bots instead of the config bot (previously the player bot).
+-   Renamed the `pageCameraPosition{X,Y,Z}` and `inventoryCameraPosition{X,Y,Z}` tags to `cameraPosition{X,Y,Z}`.
+-   Renamed the `pageCameraRotation{X,Y,Z}` and `inventoryCameraRotation{X,Y,Z}` tags to `cameraRotation{X,Y,Z}`.
+-   Renamed the `pagePixelHeight` and `pagePixelWidth` tags to `pixelHeight` and `pixelWidth`.
 
 ### :bug: Bug Fixes
 
