@@ -4671,8 +4671,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getCameraPosition(
         portal: 'page' | 'inventory' = 'page'
     ): { x: number; y: number; z: number } {
-        const user = context.playerBot;
-        if (!user) {
+        const bot = (<any>globalThis)[`${portal}PortalBot`];
+        if (!bot) {
             return {
                 x: NaN,
                 y: NaN,
@@ -4681,9 +4681,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return {
-            x: user.tags[`${portal}CameraPositionX`],
-            y: user.tags[`${portal}CameraPositionY`],
-            z: user.tags[`${portal}CameraPositionZ`],
+            x: bot.tags[`${portal}CameraPositionX`],
+            y: bot.tags[`${portal}CameraPositionY`],
+            z: bot.tags[`${portal}CameraPositionZ`],
         };
     }
 
@@ -4694,8 +4694,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getCameraRotation(
         portal: 'page' | 'inventory' = 'page'
     ): { x: number; y: number; z: number } {
-        const user = context.playerBot;
-        if (!user) {
+        const bot = (<any>globalThis)[`${portal}PortalBot`];
+        if (!bot) {
             return {
                 x: NaN,
                 y: NaN,
@@ -4704,9 +4704,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return {
-            x: user.tags[`${portal}CameraRotationX`],
-            y: user.tags[`${portal}CameraRotationY`],
-            z: user.tags[`${portal}CameraRotationZ`],
+            x: bot.tags[`${portal}CameraRotationX`],
+            y: bot.tags[`${portal}CameraRotationY`],
+            z: bot.tags[`${portal}CameraRotationZ`],
         };
     }
 

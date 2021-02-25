@@ -23,7 +23,10 @@ import { appManager } from '../../shared/AppManager';
 import { tap, mergeMap, first } from 'rxjs/operators';
 import { flatMap, uniq } from 'lodash';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import {
+    BrowserSimulation,
+    getPortalConfigBot,
+} from '@casual-simulation/aux-vm-browser';
 import {
     clamp,
     DEFAULT_INVENTORY_VISIBLE,
@@ -40,6 +43,7 @@ import {
     BotTags,
     isBot,
     DEFAULT_SCENE_BACKGROUND_COLOR,
+    getPortalConfigBotID,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -1110,13 +1114,13 @@ export class PlayerGame extends Game {
         this.renderer.getSize(renderingSize);
 
         for (let [id, sim] of appManager.simulationManager.simulations) {
-            const player = sim.helper.userBot;
+            const portalConfig = getPortalConfigBot(sim, 'pagePortal');
             if (
-                player &&
-                (player.tags['pagePixelWidth'] !== renderingSize.x ||
-                    player.tags['pagePixelHeight'] !== renderingSize.y)
+                portalConfig &&
+                (portalConfig.tags['pagePixelWidth'] !== renderingSize.x ||
+                    portalConfig.tags['pagePixelHeight'] !== renderingSize.y)
             ) {
-                sim.helper.updateBot(player, {
+                sim.helper.updateBot(portalConfig, {
                     tags: {
                         pagePixelWidth: renderingSize.x,
                         pagePixelHeight: renderingSize.y,

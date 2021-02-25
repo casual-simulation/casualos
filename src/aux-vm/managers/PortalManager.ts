@@ -178,6 +178,13 @@ export class PortalManager implements SubscriptionLike {
         return this._libraryModules;
     }
 
+    /**
+     * Gets the map of portals that have been opened.
+     */
+    get portals() {
+        return this._portals;
+    }
+
     constructor(
         vm: AuxVM,
         helper: BotHelper,
