@@ -21,6 +21,15 @@ import {
   NormalCode,
   ConfigBotBadge,
   HistoryBotBadge,
+  AutomaticBadge,
+  PagePortalBadge,
+  InventoryPortalBadge,
+  MenuPortalBadge,
+  MeetPortalBadge,
+  LeftWristPortalBadge,
+  RightWristPortalBadge,
+  SheetPortalBadge,
+  TagPortalBadge,
   Example,
 } from './components.mdx';
 
@@ -1013,16 +1022,20 @@ The selection end index for cursor bots that are in the multi-line editor (tag p
   </PossibleValue>
 </PossibleValuesTable>
 
-## Portal Config Tags
+## Portal Bot Tags
 
 These tags are used to configure portals.
 They can be set on the corresponding portal bot.
 
+Some of them are automatically set by the corresponding portal but most of them (like the `cameraPositionOffset` tags) can be changed manually.
+
 ### `portalColor`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The color of the background of the portal.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1033,13 +1046,15 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalBackgroundAddress`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The URL of the image that should be displayed as the background of the portal.
 
 When specified, this tag overrides <TagLink tag='#portalColor'/>.
 Additionally, this tag does nothing when in VR. 
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1052,10 +1067,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalLocked`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 Determines if the portal can be loaded.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1068,10 +1085,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalPannable`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 Whether the player will be able to pan the camera inside the portal.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1084,10 +1103,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalPannableMinX`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The minimum X value that the camera can pan to in the portal.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1097,10 +1118,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalPannableMaxX`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The maximum X value that the camera can pan to in the portal.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1110,10 +1133,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalPannableMinY`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The minimum Y value that the camera can pan to in the portal.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1123,10 +1148,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalPannableMaxY`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The maximum Y value that the camera can pan to in the portal.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1136,10 +1163,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalRotatable`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 Whether the player will be able to rotate the camera inside the inventory in this portal.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1152,10 +1181,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalPlayerRotationX`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The X rotation that the camera starts at in the portal.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1165,10 +1196,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalPlayerRotationY`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The Y rotation that the camera starts at in the portal.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1178,10 +1211,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalZoomable`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 Whether the player will be able to zoom the camera inside the portal.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1194,10 +1229,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalZoomableMin`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The minimum value that the camera can zoom to in the portal.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1207,10 +1244,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalZoomableMax`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The maximum value that the camera can zoom to in the portal.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1220,10 +1259,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalPlayerZoom`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The zoom value that the camera starts at in the portal.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1233,10 +1274,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalGridScale`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The size of bots in the portal.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1246,10 +1289,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalSurfaceScale`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The scale of surfaces.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1259,10 +1304,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalPointerDragMode`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The mode that specifies how the mouse pointer/controller drags bots in the portal.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1275,10 +1322,12 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalCameraControls`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The mode that specifies how the camera controls work in the portal.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1292,14 +1341,16 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalShowFocusPoint`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 Whether the focus point of the portal camera should be shown as a small sphere.
 
 The focus point is the position that the camera orbits (rotates) around and is always facing.
 
 When a bot is between the focus point and the camera, then focus events will trigger.
-
-Available on `pagePortalBot` and `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1312,13 +1363,14 @@ Available on `pagePortalBot` and `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `portalDisableCanvasTransparency`
+<Badges>
+    <PagePortalBadge/>
+</Badges>
 
 Whether to disable transparency on the [canvas element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/canvas) that the 3D content is displayed on.
 
 Set this tag to `true` on the page portal to fix rendering issues with 3D models that use alpha cutoff.
 Note that when this value is `true`, [iframe forms](#iframe-form) will cease to function properly.
-
-Available on `pagePortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1331,10 +1383,11 @@ Available on `pagePortalBot`.
 </PossibleValuesTable>
 
 ### `inventoryPortalHeight`
+<Badges>
+    <InventoryPortalBadge/>
+</Badges>
 
 Sets the initial height of the inventory viewport for the portal.
-
-Available on `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1344,10 +1397,11 @@ Available on `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `inventoryPortalResizable`
+<Badges>
+    <InventoryPortalBadge/>
+</Badges>
 
 Whether the player will be able to resize the viewport for the inventory portal.
-
-Available on `inventoryPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1360,10 +1414,12 @@ Available on `inventoryPortalBot`.
 </PossibleValuesTable>
 
 ### `wristPortalHeight`
+<Badges>
+    <LeftWristPortalBadge/>
+    <RightWristPortalBadge/>
+</Badges>
 
 The number of grid spaces that the wrist portal should have in the Y direction.
-
-Available on `leftWristPortalBot` and `rightWristPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1373,10 +1429,12 @@ Available on `leftWristPortalBot` and `rightWristPortalBot`.
 </PossibleValuesTable>
 
 ### `wristPortalWidth`
+<Badges>
+    <LeftWristPortalBadge/>
+    <RightWristPortalBadge/>
+</Badges>
 
 The number of grid spaces that the wrist portal should have in the X direction.
-
-Available on `leftWristPortalBot` and `rightWristPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1386,11 +1444,12 @@ Available on `leftWristPortalBot` and `rightWristPortalBot`.
 </PossibleValuesTable>
 
 ### `meetPortalVisible`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
 
 Whether the meet portal should be visible.
 This is useful for hiding the meet portal while still in a meeting.
-
-Available on `meetPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1403,11 +1462,12 @@ Available on `meetPortalBot`.
 </PossibleValuesTable>
 
 ### `meetPortalAnchorPoint`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
 
 The position on the screen that the meet portal should be anchored to.
 Overrides any conflicting properties set by <TagLink tag='meetPortalStyle'/>.
-
-Available on `meetPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1446,14 +1506,15 @@ Available on `meetPortalBot`.
 </PossibleValuesTable>
 
 ### `meetPortalStyle`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
 
 The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the meet portal container.
 This is useful for positioning the meet portal in ways that are not possible using <TagLink tag='meetPortalAnchorPoint'/>.
 Overridden by conflicting properties set by <TagLink tag='meetPortalAnchorPoint'/>.
 
 When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
-
-Available on `meetPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1478,11 +1539,12 @@ Available on `meetPortalBot`.
 ```
 
 ### `tagPortalAnchorPoint`
+<Badges>
+    <TagPortalBadge/>
+</Badges>
 
 The position on the screen that the tag portal should be anchored to.
 Overrides any conflicting properties set by <TagLink tag='tagPortalStyle'/>.
-
-Available on `tagPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1521,14 +1583,15 @@ Available on `tagPortalBot`.
 </PossibleValuesTable>
 
 ### `tagPortalStyle`
+<Badges>
+    <TagPortalBadge/>
+</Badges>
 
 The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the tag portal container.
 This is useful for positioning the tag portal in ways that are not possible using <TagLink tag='tagPortalAnchorPoint'/>.
 Overridden by conflicting properties set by <TagLink tag='tagPortalAnchorPoint'/>.
 
 When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
-
-Available on `tagPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1553,13 +1616,15 @@ Available on `tagPortalBot`.
 ```
 
 ### `tagPortalShowButton`
+<Badges>
+    <TagPortalBadge/>
+</Badges>
 
 Whether the tag portal should show a button that allows a custom action.
 When set to true, the button will be displayed in the lower right hand corner of the tag portal.
 
 Clicking the button will trigger a <TagLink tag='@onClick'/> on the tag portal config bot.
 
-Available on `tagPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1572,10 +1637,11 @@ Available on `tagPortalBot`.
 </PossibleValuesTable>
 
 ### `tagPortalButtonIcon`
+<Badges>
+    <TagPortalBadge/>
+</Badges>
 
 The [Material Icon](https://material.io/resources/icons/?style=baseline) that should be shown on the tag portal button.
-
-Available on `tagPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1588,10 +1654,11 @@ Available on `tagPortalBot`.
 </PossibleValuesTable>
 
 ### `tagPortalButtonHint`
+<Badges>
+    <TagPortalBadge/>
+</Badges>
 
 The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the tag portal button.
-
-Available on `tagPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1607,14 +1674,13 @@ Available on `tagPortalBot`.
 
 <Badges>
     <Example code='menuPortalStyle'/>
+    <MenuPortalBadge/>
 </Badges>
 
 The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the menu portal container.
 This is useful for positioning the menu portal in ways that are not possible normally.
 
 When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
-
-Available on `menuPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1636,14 +1702,15 @@ Available on `menuPortalBot`.
 ```
 
 ### `sheetPortalShowButton`
+<Badges>
+    <SheetPortalBadge/>
+</Badges>
 
 Whether the sheet portal should show a button that allows a custom action.
 When set to true, the button will be displayed in the lower right hand corner of the sheet portal.
 
 Clicking the button will trigger a <TagLink tag='@onClick'/> on the sheet portal config bot.
 If there is no `@onClick`, then the sheet portal will be closed.
-
-Available on `sheetPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1656,10 +1723,11 @@ Available on `sheetPortalBot`.
 </PossibleValuesTable>
 
 ### `sheetPortalButtonIcon`
+<Badges>
+    <SheetPortalBadge/>
+</Badges>
 
 The [Material Icon](https://material.io/resources/icons/?style=baseline) that should be shown on the sheet portal button.
-
-Available on `sheetPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1672,10 +1740,12 @@ Available on `sheetPortalBot`.
 </PossibleValuesTable>
 
 ### `sheetPortalButtonHint`
+<Badges>
+    <SheetPortalBadge/>
+</Badges>
 
 The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the sheet portal button.
 
-Available on `sheetPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1688,10 +1758,11 @@ Available on `sheetPortalBot`.
 </PossibleValuesTable>
 
 ### `sheetPortalAllowedTags`
+<Badges>
+    <SheetPortalBadge/>
+</Badges>
 
 The list of tags that should be allowed in the sheet portal.
-
-Available on `sheetPortalBot`.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1702,6 +1773,163 @@ Available on `sheetPortalBot`.
     Only the specified tags can be shown in the sheet portal.
   </PossibleValue>
 </PossibleValuesTable>
+
+### `pixelWidth`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+</Badges>
+
+The width of the page portal in pixels. Because the inventory portal is contained by the page portal, this value also applies to the inventory portal.
+
+Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
+Additionally, a device with a larger width than height does not necessarily mean that it is in landscape mode.
+
+### `pixelHeight`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+</Badges>
+
+The height of the page portal in pixels. Because the inventory portal is contained by the page portal, this value also applies to the inventory portal.
+
+Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
+Additionally, a device with a larger height than width does not necessarily mean that it is in portrait mode.
+
+### `cameraPositionX`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The X position of the player's camera in the page portal.
+
+### `cameraPositionY`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The Y position of the player's camera in the page portal.
+
+### `cameraPositionZ`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The Z position of the player's camera in the page portal.
+
+### `cameraPositionOffsetX`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The offset that should be applied to the X position of the player's camera in the page portal.
+
+Useful for moving the player around in VR.
+
+### `cameraPositionOffsetY`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The offset that should be applied to the Y position of the player's camera in the page portal.
+
+Useful for moving the player around in VR.
+
+### `cameraPositionOffsetZ`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The offset that should be applied to the Z position of the player's camera in the page portal.
+
+Useful for moving the player around in VR.
+
+### `cameraRotationX`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The X rotation of the player's camera in the page portal.
+
+Units are in radians.
+
+### `cameraRotationY`
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The Y rotation of the player's camera in the page portal.
+
+Units are in radians.
+
+### `cameraRotationZ`
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The Z rotation of the player's camera in the page portal.
+
+Units are in radians.
+
+### `cameraRotationOffsetX`
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The offset that should be applied to the X rotation of the player's camera in the page portal.
+
+Units are in radians.
+
+### `cameraRotationOffsetY`
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The offset that should be applied to the Y rotation of the player's camera in the page portal.
+
+Units are in radians.
+
+### `cameraRotationOffsetZ`
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The offset that should be applied to the Z rotation of the player's camera in the page portal.
+
+Units are in radians.
 
 ## History Tags
 
@@ -2273,150 +2501,6 @@ that the player has selected text from the right to the left.
 This is important because text will always be inserted at <TagLink tag='cursorEndIndex'/>.
 
 Only available on the config bot.
-
-## Page Portal Bot Tags
-
-These are tags that are on the page portal bot.
-Most of them are automatically set by the page portal but some of them (like the `pageCameraPositionOffset` tags) can be changed manually.
-
-### `pagePixelWidth`
-
-The width of the page portal in pixels. Because the inventory portal is contained by the page portal, this value also applies to the inventory portal.
-
-Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
-Additionally, a device with a larger width than height does not necessarily mean that it is in landscape mode.
-
-### `pagePixelHeight`
-
-The height of the page portal in pixels. Because the inventory portal is contained by the page portal, this value also applies to the inventory portal.
-
-Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
-Additionally, a device with a larger height than width does not necessarily mean that it is in portrait mode.
-
-### `pageCameraPositionX`
-
-The X position of the player's camera in the page portal.
-
-### `pageCameraPositionY`
-
-The Y position of the player's camera in the page portal.
-
-### `pageCameraPositionZ`
-
-The Z position of the player's camera in the page portal.
-
-### `pageCameraPositionOffsetX`
-
-The offset that should be applied to the X position of the player's camera in the page portal.
-
-Useful for moving the player around in VR.
-
-### `pageCameraPositionOffsetY`
-
-The offset that should be applied to the Y position of the player's camera in the page portal.
-
-Useful for moving the player around in VR.
-
-### `pageCameraPositionOffsetZ`
-
-The offset that should be applied to the Z position of the player's camera in the page portal.
-
-Useful for moving the player around in VR.
-
-### `pageCameraRotationX`
-
-The X rotation of the player's camera in the page portal.
-
-Units are in radians.
-
-### `pageCameraRotationY`
-
-The Y rotation of the player's camera in the page portal.
-
-Units are in radians.
-
-### `pageCameraRotationZ`
-
-The Z rotation of the player's camera in the page portal.
-
-Units are in radians.
-
-### `pageCameraRotationOffsetX`
-
-The offset that should be applied to the X rotation of the player's camera in the page portal.
-
-Units are in radians.
-
-### `pageCameraRotationOffsetY`
-
-The offset that should be applied to the Y rotation of the player's camera in the page portal.
-
-Units are in radians.
-
-### `pageCameraRotationOffsetZ`
-
-The offset that should be applied to the Z rotation of the player's camera in the page portal.
-
-Units are in radians.
-
-## Inventory Portal Bot Tags
-
-These are tags that are on the page portal bot.
-Most of them are automatically set by the page portal but some of them (like the `inventoryCameraPositionOffset` tags) can be changed manually.
-
-### `inventoryCameraPositionX`
-
-The X position of the player's camera in the inventory portal.
-
-### `inventoryCameraPositionY`
-
-The Y position of the player's camera in the inventory portal.
-
-### `inventoryCameraPositionZ`
-
-The Z position of the player's camera in the inventory portal.
-
-### `inventoryCameraPositionOffsetX`
-
-The offset that should be applied to the X position of the player's camera in the inventory portal.
-
-### `inventoryCameraPositionOffsetY`
-
-The offset that should be applied to the Y position of the player's camera in the inventory portal.
-
-### `inventoryCameraPositionOffsetZ`
-
-The offset that should be applied to the Z position of the player's camera in the inventory portal.
-
-### `inventoryCameraRotationX`
-
-The X rotation of the player's camera in the inventory portal.
-
-### `inventoryCameraRotationY`
-
-The Y rotation of the player's camera in the inventory portal.
-
-### `inventoryCameraRotationZ`
-
-The Z rotation of the player's camera in the inventory portal.
-
-### `inventoryCameraRotationOffsetX`
-
-The offset that should be applied to the X rotation of the player's camera in the inventory portal.
-
-Units are in radians.
-
-### `inventoryCameraRotationOffsetY`
-
-The offset that should be applied to the Y rotation of the player's camera in the inventory portal.
-
-Units are in radians.
-
-### `inventoryCameraRotationOffsetZ`
-
-The offset that should be applied to the Z rotation of the player's camera in the inventory portal.
-
-Units are in radians.
 
 ## Hidden Tags
 
