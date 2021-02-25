@@ -327,11 +327,6 @@ export function watchSimulation(
                         data.botId,
                         monaco.languages.typescript.javascriptDefaults
                     );
-                    addDefinitionsForPortalBot(
-                        data.portalId,
-                        data.botId,
-                        customPortalJavaScriptDefaults
-                    );
                 })
             )
             .subscribe()
