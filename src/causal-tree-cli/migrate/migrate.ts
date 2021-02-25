@@ -12,7 +12,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import Progress from 'cli-progress';
 
-import sortBy from 'lodash/sortBy';
+import { sortBy } from 'lodash';
 import { prompt } from 'inquirer';
 import { mongoConnectionInfo } from './mongodb';
 import { cassandraAndMongoDBConnectionInfo } from './cassandradb';
@@ -45,14 +45,14 @@ async function migrate(
 ) {
     if (isRepoStore(source)) {
         const allBranches = await source.getBranches(null);
-        const validBranches = allBranches.filter(b => !!b && !!b.hash);
-        const sortedBranches = sortBy(validBranches, b => b.name);
+        const validBranches = allBranches.filter((b) => !!b && !!b.hash);
+        const sortedBranches = sortBy(validBranches, (b) => b.name);
 
         const branchesAnswer = await prompt({
             type: 'checkbox',
             name: 'branches',
             message: 'Select the branches to migrate',
-            choices: sortedBranches.map(b => ({
+            choices: sortedBranches.map((b) => ({
                 name: `${b.name} (${b.hash.substring(0, 6)})`,
                 checked: true,
                 value: b,
@@ -88,9 +88,7 @@ async function migrate(
             } else {
                 succeeded += 1;
                 console.log(
-                    `✔ ${branch.name}: ${
-                        result.numberOfObjectsMigrated
-                    } objects migrated`
+                    `✔ ${branch.name}: ${result.numberOfObjectsMigrated} objects migrated`
                 );
             }
         }

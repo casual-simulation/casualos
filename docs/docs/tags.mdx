@@ -19,9 +19,9 @@ import {
   ActionLink,
   TagLink,
   NormalCode,
-  UserBotBadge,
-  HistoryBotBadge,
   ConfigBotBadge,
+  HistoryBotBadge,
+  Example,
 } from './components.mdx';
 
 AUX has many tags.
@@ -43,6 +43,7 @@ Every bot has an automatically generated unique ID that cannot be changed.
 
 <Badges>
   <ReadOnlyBadge/>
+  <Example code='space'/>
 </Badges>
 
 The space the bot lives in.
@@ -242,11 +243,6 @@ Determines whether this bot responds to whispers or shouts. If this tag is set t
     The bot will not respond to whispers or shouts.
   </PossibleValueCode>
 </PossibleValuesTable>
-
-### `configBot`
-
-The ID of the bot that "configures" this bot.
-When set, the `config` variable will be available in scripts as a shortcut to the specified bot.
 
 ## Visualization Tags
 
@@ -570,13 +566,21 @@ The shape that the bot should be displayed as.
   <PossibleValueCode id="iframe-form" value='iframe'>
     A webpage loaded into a 3D iframe. See <TagLink tag="formSubtype"/> for additional options.
   </PossibleValueCode>
+  <PossibleValueCode value='dimension'>
+    The bot will display the dimension specified by <TagLink tag='formAddress'/>.
+  </PossibleValueCode>
   <PossibleValueCode value='portal'>
     The bot will display the dimension specified by <TagLink tag='formAddress'/>.
+    This is an alias for "dimension".
   </PossibleValueCode>
   <PossibleValueCode value='cursor'>
     The bot will appear as a cursor in the multi-line editor.
     You also need to place the bot in the same dimension that the tag portal uses
     for the cursor to appear.
+  </PossibleValueCode>
+  <PossibleValueCode value='input'>
+    The bot will appear as an input box in the menu portal.
+    You also need to place the bot in the dimension that the menu portal is showing for the input to appear.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -614,7 +618,8 @@ When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> i
 When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
 
 When the bot is in the menu portal, this is the URL of the image that should be shown on the menu item.
-If the given value is not a URL, then the specified [Material Icon](https://material.io/resources/icons/?style=baseline) will be shown.
+It can also be `cube` to show an icon of a cube, `egg` to show an egg icon, and `helix` to show an icon of a DNA helix.
+If the given value is not a URL or one of the predefined icons, then the specified [Material Icon](https://material.io/resources/icons/?style=baseline) will be shown.
 
 ### `formAnimation`
 
@@ -805,7 +810,7 @@ When the minimum LOD is exited the <TagLink tag='@onMinLODExit'/> listener is tr
 The ID of the bot that should transform this bot in the page and inventory portals.
 When the transformer bot and this bot are in the same dimension, this bot will inherit the position and rotation of the transformer bot.
 
-When set on the player bot, this will transform the portal camera by the specified bot.
+When set on the config bot, this will transform the portal camera by the specified bot.
 
 <PossibleValuesTable>
   <PossibleValueCode value='null'>
@@ -840,11 +845,48 @@ When setting this tag via the sheet, it is useful to utilize DNA tags to ensure 
 
 1. Round the top corners of the menu bot.
 ```typescript
-=({
-    'border-radius': '8px 8px 0 0',
-    'margin-top': '8px'
-})
+🧬{
+    "border-radius": "8px 8px 0 0",
+    "margin-top": "8px"
+}
 ```
+
+### `menuItemHoverMode`
+
+The mode that menu items should use when the cursor hovers over the bot when it is in the menu portal.
+Currently only affects menu bots that are buttons (input bots are not hoverable).
+
+Note that this only determines how the menu item looks when the mouse pointer hovers over the item.
+It does not affect the <TagLink tag='@onClick'/>, <TagLink tag='@onPointerEnter'/>, <TagLink tag='@onPointerExit'/>, etc. listeners.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='auto'>
+    The bot will appear hoverable if it has a <TagLink tag='@onClick'/> tag. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='hover'>
+    The bot will appear hoverable.
+  </PossibleValueCode>
+  <PossibleValueCode value='none'>
+    The bot will not appear hoverable.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `menuItemText`
+
+The text that has been entered in the menu item's input box. Only has an effect on menu items that have <TagLink tag='form'/> set to `input`.
+
+This tag will also be updated in the `tempLocal` space when the user types in the input box.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No text in the input box. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The text will appear in the input box.
+  </PossibleValue>
+</PossibleValuesTable>
 
 ## Dimension Tags
 
@@ -989,6 +1031,23 @@ The color of the background of the portal.
     (default)
   </PossibleValueCode>
   <AnyColorValues/>
+</PossibleValuesTable>
+
+### `portalBackgroundAddress`
+
+The URL of the image that should be displayed as the background of the portal.
+
+When specified, this tag overrides <TagLink tag='#portalColor'/>.
+Additionally, this tag does nothing when in VR. 
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any URL'>
+    Specifies that the portal background should use the given image.
+  </PossibleValue>
 </PossibleValuesTable>
 
 ### `portalLocked`
@@ -1174,12 +1233,27 @@ The mode that specifies how the mouse pointer/controller drags bots in the porta
 
 #### Possible values are:
 <PossibleValuesTable>
-  <PossibleValue value='world'>
+  <PossibleValueCode value='world'>
     Specifies that the pointer should use the other bots in the portal for positioning the dragged bot(s). (Default)
-  </PossibleValue>
-  <PossibleValue value='grid'>
+  </PossibleValueCode>
+  <PossibleValueCode value='grid'>
     Specifies that the pointer should ignore other bots in the portal for positioning the dragged bot(s).
-  </PossibleValue>
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `portalCameraControls`
+
+The mode that specifies how the camera controls work in the portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='"player"'>
+    Specifies that the player should be able to control the camera.
+    Individual options like <TagLink tag='portalZoomable'/> override this option.
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Specifies that the player should not be able to control the camera in the portal.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `portalShowFocusPoint`
@@ -1192,12 +1266,12 @@ When a bot is between the focus point and the camera, then focus events will tri
 
 #### Possible values are:
 <PossibleValuesTable>
-  <PossibleValue value='false'>
+  <PossibleValueCode value='false'>
     Don't show an indicator for the focus point. (Default)
-  </PossibleValue>
-  <PossibleValue value='true'>
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
     Show an indicator for the focus point.
-  </PossibleValue>
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `portalDisableCanvasTransparency`
@@ -1341,14 +1415,13 @@ When setting this tag via the sheet, it is useful to utilize DNA tags to ensure 
 #### Examples
 
 1. Put the meet portal in the center of the screen.
-Note that we wrap the curly braces in parenthesis to tell JavaScript that we want the curly braces to be intepreted as an [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer) instead of as a [block](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/block).
 ```
-=({
-    top: "10%",
-    bottom: "10%",
-    left: "10%",
-    right: "10%",
-})
+🧬{
+    "top": "10%",
+    "bottom": "10%",
+    "left": "10%",
+    "right": "10%",
+}
 ```
 
 ### `tagPortalAnchorPoint`
@@ -1413,14 +1486,13 @@ When setting this tag via the sheet, it is useful to utilize DNA tags to ensure 
 #### Examples
 
 1. Put the tag portal in the center of the screen.
-Note that we wrap the curly braces in parenthesis to tell JavaScript that we want the curly braces to be intepreted as an [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer) instead of as a [block](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/block).
 ```
-=({
-    top: "10%",
-    bottom: "10%",
-    left: "10%",
-    right: "10%",
-})
+🧬{
+    "top": "10%",
+    "bottom": "10%",
+    "left": "10%",
+    "right": "10%",
+}
 ```
 
 ### `tagPortalShowButton`
@@ -1467,6 +1539,36 @@ The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the
     The text that should be displayed as a hint when the user hovers their mouse over the button.
   </PossibleValue>
 </PossibleValuesTable>
+
+### `menuPortalStyle`
+
+<Badges>
+    <Example code='menuPortalStyle'/>
+</Badges>
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the menu portal container.
+This is useful for positioning the menu portal in ways that are not possible normally.
+
+When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the menu portal container.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples
+
+1. Make the menu portal `80%` of the screen width.
+```
+🧬{
+    "width": "80%",
+}
+```
 
 ### `sheetPortalShowButton`
 
@@ -1593,16 +1695,16 @@ The bot that the error occurred in.
 
 The tag that the error occurred in.
 
-## Player Bot Tags
+## Config bot Tags
 
-All tags on the player bot will be synced with the URL query parameters.
-This means that setting the `#abc` tag on the player bot to `hello` will update the URL to include `abc=hello`.
+All tags on the config bot will be synced with the URL query parameters.
+This means that setting the `#abc` tag on the config bot to `hello` will update the URL to include `abc=hello`.
 It also means that putting `inventoryPortal=myDimension` into the query string will set the <TagLink tag='inventoryPortal'/> tag to `myDimension`.
 
 ### `server`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The server that is loaded into CasualOS.
@@ -1610,61 +1712,70 @@ The server that is loaded into CasualOS.
 ### `pagePortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded into the "page" portal in CasualOS.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `sheetPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded into the "sheet" portal in CasualOS.
-Only available on the player bot.
+Only available on the config bot.
+
+### `idePortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The prefix that indicates which tags should be loaded into the "IDE" portal in CasualOS.
+Only available on the config bot.
 
 ### `inventoryPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded into the "inventory" portal in CasualOS.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `menuPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded into the "menu" portal in CasualOS.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `leftWristPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded onto the left controller near the wrist when in VR.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `rightWristPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded onto the right controller near the wrist when in VR.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `meetPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The [Jitsi Meet](https://meet.jit.si/) room code of the meeting that should be joined.
@@ -1672,12 +1783,12 @@ This will join the current tab to the meeting and provide audiovisual communicat
 
 This is similar to a Skype or Zoom call except that all data is encrypted and is deleted once you are done with it. Check out the Jitsi Meet privacy policy [here](https://jitsi.org/meet-jit-si-privacy/).
 
-Only available on the player bot.
+Only available on the config bot.
 
 ### `tagPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The Bot ID and tag that should be edited in the tag portal.
@@ -1685,36 +1796,34 @@ This will show just the code editor without the rest of the sheet and makes it p
 
 When you are setting the tag portal, you should format it so the bot ID and tag name are separated by a single period (.).
 
-Only available on the player bot.
+Only available on the config bot.
 
 #### Examples:
 
-1. Open the tag portal for the `abc` tag on the player bot.
+1. Open the tag portal for the `abc` tag on the config bot.
 ```typescript
-const playerBot = player.getBot();
 const tag = "abc";
-playerBot.tags.tagPortal = getID(playerBot) + "." + tag;
+playerBot.tags.tagPortal = getID(configBot) + "." + tag;
 ```
 
 ### `tagPortalSpace`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The space of the tag mask that should be edited in the tag portal.
 If not set, then the tag on the bot will be edited.
 If set, then the tag mask in the given space will be edited.
 
-Only available on the player bot.
+Only available on the config bot.
 
 #### Examples:
 
-1. Open the tag portal for the `abc` tag mask in the `tempLocal` space on the player bot.
+1. Open the tag portal for the `abc` tag mask in the `tempLocal` space on the config bot.
 ```typescript
-const playerBot = player.getBot();
 const tag = "abc";
-playerBot.tags.tagPortal = getID(playerBot) + "." + tag;
+playerBot.tags.tagPortal = getID(configBot) + "." + tag;
 playerBot.tags.tagPortalSpace = "tempLocal";
 ```
 
@@ -1753,7 +1862,7 @@ https://auxplayer.com?server=my-server&dataPortal=test.html
 ### `pagePortalConfigBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that should be used to configure the <TagLink tag='pagePortal'>page portal</TagLink>.
@@ -1777,22 +1886,22 @@ Supports the following tags:
 - <TagLink tag='portalShowFocusPoint'/>
 - <TagLink tag='portalDisableCanvasTransparency'/>
 
-Only available on the player bot.
+Only available on the config bot.
 
 ### `sheetPortalConfigBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that should be used to configure the <TagLink tag='sheetPortal'>sheet portal</TagLink>.
 
-Currently not used. Only available on the player bot.
+Currently not used. Only available on the config bot.
 
 ### `inventoryPortalConfigBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that should be used to configure the <TagLink tag='inventoryPortal'>inventory portal</TagLink>.
@@ -1816,22 +1925,22 @@ Supports the following tags:
 - <TagLink tag='inventoryPortalHeight'/>
 - <TagLink tag='inventoryPortalResizable'/>
 
-Only available on the player bot.
+Only available on the config bot.
 
 ### `menuPortalConfigBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that should be used to configure the <TagLink tag='menuPortal'>menu portal</TagLink>.
 
-Currently not used. Only available on the player bot.
+Currently not used. Only available on the config bot.
 
 ### `leftWristPortalConfigBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that should be used to configure the <TagLink tag='leftWristPortal'>left wrist portal</TagLink>.
@@ -1843,12 +1952,12 @@ Supports the following tags:
 - <TagLink tag='wristPortalHeight'/>
 - <TagLink tag='wristPortalWidth'/>
 
-Only available on the player bot.
+Only available on the config bot.
 
 ### `rightWristPortalConfigBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that should be used to configure the <TagLink tag='rightWristPortal'>right wrist portal</TagLink>.
@@ -1860,12 +1969,12 @@ Supports the following tags:
 - <TagLink tag='wristPortalHeight'/>
 - <TagLink tag='wristPortalWidth'/>
 
-Only available on the player bot.
+Only available on the config bot.
 
 ### `meetPortalConfigBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that should be used to configure the <TagLink tag='meetPortal'>meet portal</TagLink>.
@@ -1876,7 +1985,7 @@ Supports the following tags:
 - <TagLink tag='meetPortalAnchorPoint'/>
 - <TagLink tag='meetPortalStyle'/>
 
-Only available on the player bot.
+Only available on the config bot.
 
 ### `pagePixelWidth`
 
@@ -2311,25 +2420,25 @@ The title that should be displayed on the web browser tab.
 ### `editingBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that the user is currently editing.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `editingTag`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The tag that the user is currently editing.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `cursorStartIndex`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The selection start index of the player's cursor in the current <TagLink tag='editingTag'/>.
@@ -2338,12 +2447,12 @@ Note that when <TagLink tag='cursorStartIndex'/> is larger than <TagLink tag='cu
 that the player has selected text from the right to the left.
 This is important because text will always be inserted at <TagLink tag='cursorEndIndex'/>.
 
-Only available on the player bot.
+Only available on the config bot.
 
 ### `cursorEndIndex`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The selection end index of the player's cursor in the current <TagLink tag='editingTag'/>.
@@ -2352,7 +2461,7 @@ Note that when <TagLink tag='cursorEndIndex'/> is smaller than <TagLink tag='cur
 that the player has selected text from the right to the left.
 This is important because text will always be inserted at <TagLink tag='cursorEndIndex'/>.
 
-Only available on the player bot.
+Only available on the config bot.
 
 ## Hidden Tags
 

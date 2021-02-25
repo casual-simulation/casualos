@@ -1,7 +1,6 @@
 import * as monaco from 'monaco-editor/esm/vs/editor/edcore.main';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import debounce from 'lodash/debounce';
 import { ResizeObserverEntry } from '@juggle/resize-observer/lib/ResizeObserverEntry';
 
 @Component({})

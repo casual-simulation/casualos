@@ -43,6 +43,10 @@ import {
     CompiledBotListener,
     DNA_TAG_PREFIX,
     UpdateBotAction,
+    isRuntimeBot,
+    OpenCustomPortalAction,
+    createBot,
+    openCustomPortal,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -61,8 +65,6 @@ import {
     RealtimeEditMode,
 } from './RuntimeBot';
 import { CompiledBot, CompiledBotsState } from './CompiledBot';
-import sortBy from 'lodash/sortBy';
-import transform from 'lodash/transform';
 import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
@@ -72,7 +74,7 @@ import {
     SpaceRealtimeEditModeMap,
     DefaultRealtimeEditModeProvider,
 } from './AuxRealtimeEditModeProvider';
-import { forOwn, merge } from 'lodash';
+import { sortBy, forOwn, merge } from 'lodash';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { applyEdit, isTagEdit, mergeVersions } from '../aux-format-2';
 import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
@@ -97,7 +99,7 @@ export class AuxRuntime
     private _errorBatch: ScriptError[] = [];
 
     private _userId: string;
-    private _sub: SubscriptionLike;
+    private _sub: Subscription;
     private _currentVersion: RuntimeStateVersion = {
         localSites: {},
         vector: {},
@@ -115,6 +117,7 @@ export class AuxRuntime
     private _forceSignedScripts: boolean;
     private _exemptSpaces: BotSpace[];
     private _batchPending: boolean = false;
+    private _portalBots: Map<string, string> = new Map();
 
     get forceSignedScripts() {
         return this._forceSignedScripts;
@@ -270,9 +273,50 @@ export class AuxRuntime
             this._globalContext.resolveTask(action.taskId, action.result, true);
         } else if (action.type === 'device_error') {
             this._globalContext.rejectTask(action.taskId, action.error, true);
+        } else if (action.type === 'open_custom_portal') {
+            this._registerPortalBot(action.portalId, action.botId);
+            this._actionBatch.push(action);
+        } else if (action.type === 'register_builtin_portal') {
+            if (!this._portalBots.has(action.portalId)) {
+                const newBot = this.context.createBot(
+                    createBot(undefined, undefined, 'tempLocal')
+                );
+                this._registerPortalBot(action.portalId, newBot.id);
+                this._actionBatch.push(
+                    openCustomPortal(action.portalId, newBot.id, null, {})
+                );
+            }
         } else {
             this._actionBatch.push(action);
         }
+    }
+
+    private _registerPortalBot(portalId: string, botId: string) {
+        this._portalBots.set(portalId, botId);
+        let anyGlobal: any = globalThis;
+        const variableName = `${portalId}Bot`;
+        if (hasValue(botId)) {
+            Object.defineProperty(anyGlobal, variableName, {
+                get: () => this.context.state[botId],
+                enumerable: false,
+                configurable: true,
+            });
+        } else {
+            delete anyGlobal[variableName];
+        }
+
+        this._sub.add(() => {
+            if (this._portalBots.get(portalId) === botId) {
+                const descriptor = Object.getOwnPropertyDescriptor(
+                    anyGlobal,
+                    variableName
+                );
+                if (descriptor) {
+                    delete anyGlobal[variableName];
+                    this._portalBots.delete(portalId);
+                }
+            }
+        });
     }
 
     private _rejectAction(
@@ -1005,6 +1049,12 @@ export class AuxRuntime
     }
 
     updateTag(bot: CompiledBot, tag: string, newValue: any): RealtimeEditMode {
+        if (isRuntimeBot(newValue)) {
+            throw new Error(
+                `It is not possible to save bots as tag values. (Setting '${tag}' on ${bot.id})`
+            );
+        }
+
         const space = getBotSpace(bot);
         const mode = this._editModeProvider.getEditMode(space);
         if (mode === RealtimeEditMode.Immediate) {
@@ -1029,6 +1079,12 @@ export class AuxRuntime
         spaces: string[],
         value: any
     ): RealtimeEditMode {
+        if (isRuntimeBot(value)) {
+            throw new Error(
+                `It is not possible to save bots as tag values. (Setting '${tag}' on ${bot.id})`
+            );
+        }
+
         let updated = false;
         for (let space of spaces) {
             const mode = this._editModeProvider.getEditMode(space);
@@ -1215,14 +1271,10 @@ export class AuxRuntime
                 bot,
                 tag,
                 creator: null as RuntimeBot,
-                config: null as RuntimeBot,
             },
             before: (ctx) => {
                 ctx.creator = ctx.bot
                     ? this._getRuntimeBot(ctx.bot.script.tags.creator)
-                    : null;
-                ctx.config = ctx.bot
-                    ? this._getRuntimeBot(ctx.bot.script.tags.configBot)
                     : null;
             },
             onError: (err, ctx, meta) => {
@@ -1278,9 +1330,7 @@ export class AuxRuntime
                 raw: (ctx) => (ctx.bot ? ctx.bot.script.raw : null),
                 masks: (ctx) => (ctx.bot ? ctx.bot.script.masks : null),
                 creator: (ctx) => ctx.creator,
-                config: (ctx) => ctx.config,
-                configTag: (ctx) =>
-                    ctx.config ? ctx.config.tags[ctx.tag] : null,
+                configBot: () => this.context.playerBot,
             },
             arguments: [['that', 'data']],
         });

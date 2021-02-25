@@ -1,4 +1,4 @@
-import concat from 'lodash/concat';
+import { concat } from 'lodash';
 import TreeViewItemValue from '../TreeViewItemValue/TreeViewItemValue';
 
 export default {

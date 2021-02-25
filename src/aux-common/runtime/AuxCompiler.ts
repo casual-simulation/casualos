@@ -1,6 +1,6 @@
 import { Transpiler } from './Transpiler';
 import { isFormula, isScript, parseScript, hasValue } from '../bots';
-import flatMap from 'lodash/flatMap';
+import { flatMap } from 'lodash';
 
 /**
  * A symbol that identifies a function as having been compiled using the AuxCompiler.

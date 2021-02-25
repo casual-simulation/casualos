@@ -15,6 +15,7 @@
                         </div>
                     </md-toolbar>
                     <bot-sheet></bot-sheet>
+                    <ide-portal></ide-portal>
                     <md-content id="app-game-container">
                         <router-view></router-view>
                     </md-content>

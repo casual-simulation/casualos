@@ -170,14 +170,48 @@ import {
     EaseType,
     OpenCustomPortalOptions,
     RegisterPrefixOptions,
+    OpenCircleWipeOptions,
+    circleWipe,
+    SuperShoutAction,
+    ShowToastAction,
+    ShowJoinCodeAction,
+    RequestFullscreenAction,
+    ExitFullscreenAction,
+    ShowHtmlAction,
+    HideHtmlAction,
+    SetClipboardAction,
+    TweenToAction,
+    ShowChatBarAction,
+    EnableARAction,
+    EnableVRAction,
+    DownloadAction,
+    ShowUploadAuxFileAction,
+    OpenQRCodeScannerAction,
+    ShowQRCodeAction,
+    OpenBarcodeScannerAction,
+    ShowBarcodeAction,
+    LoadServerAction,
+    UnloadServerAction,
+    ImportAUXAction,
+    ReplaceDragBotAction,
+    ShowInputForTagAction,
+    GoToDimensionAction,
+    GoToURLAction,
+    OpenURLAction,
+    OpenConsoleAction,
+    StartCheckoutAction,
+    FinishCheckoutAction,
+    ShowUploadFilesAction,
+    ApplyStateAction,
+    RejectAction,
 } from '../bots';
-import sortBy from 'lodash/sortBy';
-import every from 'lodash/every';
+import { sortBy, every } from 'lodash';
 import {
     remote as calcRemote,
     DeviceSelector,
+    RemoteAction,
 } from '@casual-simulation/causal-trees';
-import uuidv4 from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
@@ -190,6 +224,9 @@ import {
     keypair as realKeypair,
     sign as realSign,
     verify as realVerify,
+    asymmetricKeypair as realAsymmetricKeypair,
+    asymmetricEncrypt as realAsymmetricEncrypt,
+    asymmetricDecrypt as realAsymmetricDecrypt,
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, del, insert, preserve } from '../aux-format-2';
@@ -198,6 +235,8 @@ import mime from 'mime';
 import TWEEN from '@tweenjs/tween.js';
 import './PerformanceNowPolyfill';
 import './BlobPolyfill';
+import { AuxDevice } from './AuxDevice';
+import { AuxVersion } from './AuxVersion';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -551,6 +590,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             not,
 
             remote,
+            sendRemoteData: remoteWhisper,
             remoteWhisper,
             remoteShout,
             webhook,
@@ -561,7 +601,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             __energyCheck,
 
-            player: {
+            os: {
                 toast,
                 showJoinCode,
                 requestFullscreenMode,
@@ -597,8 +637,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 unloadServer,
                 importAUX,
                 replaceDragBot,
-
-                getBot: getPlayerBot,
                 isInDimension,
                 getCurrentDimension,
                 getCurrentServer,
@@ -618,6 +656,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 cancelSound,
                 hasBotInInventory,
                 share,
+                closeCircleWipe,
+                openCircleWipe,
                 inSheet,
 
                 getCameraPosition,
@@ -739,6 +779,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 hmacSha512,
                 encrypt,
                 decrypt,
+                asymmetric: {
+                    keypair: asymmetricKeypair,
+                    encrypt: asymmetricEncrypt,
+                    decrypt: asymmetricDecrypt,
+                },
                 keypair,
                 sign,
                 verify,
@@ -1189,7 +1234,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function toast(
         message: string | number | boolean | object | Array<any> | null,
         duration: number = 2
-    ) {
+    ): ShowToastAction {
         return addAction(
             toastMessage(convertToCopiableValue(message), duration)
         );
@@ -1200,7 +1245,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param server The server that should be joined. Defaults to the current server.
      * @param dimension The dimension that should be joined. Defaults to the current dimension.
      */
-    function showJoinCode(server?: string, dimension?: string) {
+    function showJoinCode(
+        server?: string,
+        dimension?: string
+    ): ShowJoinCodeAction {
         return addAction(calcShowJoinCode(server, dimension));
     }
 
@@ -1208,14 +1256,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Requests that AUX enters fullscreen mode.
      * Depending on the web browser, this may ask the player for permission.
      */
-    function requestFullscreenMode() {
+    function requestFullscreenMode(): RequestFullscreenAction {
         return addAction(requestFullscreen());
     }
 
     /**
      * Exits fullscreen mode.
      */
-    function exitFullscreenMode() {
+    function exitFullscreenMode(): ExitFullscreenAction {
         return addAction(exitFullscreen());
     }
 
@@ -1223,14 +1271,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Shows some HTML to the user.
      * @param html The HTML to show.
      */
-    function showHtml(html: string) {
+    function showHtml(html: string): ShowHtmlAction {
         return addAction(htmlMessage(html));
     }
 
     /**
      * Hides the HTML from the user.
      */
-    function hideHtml() {
+    function hideHtml(): HideHtmlAction {
         return addAction(hideHtmlMessage());
     }
 
@@ -1238,7 +1286,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Sets the text stored in the player's clipboard.
      * @param text The text to set to the clipboard.
      */
-    function setClipboard(text: string) {
+    function setClipboard(text: string): SetClipboardAction {
         return addAction(calcSetClipboard(text));
     }
 
@@ -1253,7 +1301,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         rotX?: number,
         rotY?: number,
         duration?: number
-    ) {
+    ): TweenToAction {
         return addAction(
             calcTweenTo(getID(bot), zoomValue, rotX, rotY, duration)
         );
@@ -1271,7 +1319,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         zoomValue?: number,
         rotX?: number,
         rotY?: number
-    ) {
+    ): TweenToAction {
         return tweenTo(bot, zoomValue, rotX, rotY, 0);
     }
 
@@ -1279,7 +1327,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Shows the chat bar.
      * @param placeholderOrOptions The placeholder text or options. (optional)
      */
-    function showChat(placeholderOrOptions?: string | ShowChatOptions) {
+    function showChat(
+        placeholderOrOptions?: string | ShowChatOptions
+    ): ShowChatBarAction {
         const action =
             typeof placeholderOrOptions === 'string'
                 ? calcShowChat({
@@ -1292,7 +1342,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Hides the run bar.
      */
-    function hideChat() {
+    function hideChat(): ShowChatBarAction {
         return addAction(calcHideChat());
     }
 
@@ -1309,14 +1359,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Gets information about the version of AUX that is running.
      */
-    function version() {
+    function version(): AuxVersion {
         return context.version;
     }
 
     /**
      * Gets information about the device that the player is using.
      */
-    function device() {
+    function device(): AuxDevice {
         if (context.device) {
             return context.device;
         }
@@ -1329,28 +1379,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Enables Augmented Reality features.
      */
-    function enableAR() {
+    function enableAR(): EnableARAction {
         return addAction(calcEnableAR());
     }
 
     /**
      * Disables Augmented Reality features.
      */
-    function disableAR() {
+    function disableAR(): EnableARAction {
         return addAction(calcDisableAR());
     }
 
     /**
      * Enables Virtual Reality features.
      */
-    function enableVR() {
+    function enableVR(): EnableVRAction {
         return addAction(calcEnableVR());
     }
 
     /**
      * Disables Virtual Reality features.
      */
-    function disableVR() {
+    function disableVR(): EnableVRAction {
         return addAction(calcDisableVR());
     }
 
@@ -1364,7 +1414,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         data: string | object | ArrayBuffer | Blob,
         filename: string,
         mimeType: string = mime.getType(filename) || 'text/plain'
-    ) {
+    ): DownloadAction {
         if (typeof filename !== 'string') {
             throw new Error('The filename must be a string.');
         }
@@ -1394,7 +1444,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bots The bots that should be downloaded.
      * @param filename The name of the file that the bots should be downloaded as.
      */
-    function downloadBots(bots: Bot[], filename: string) {
+    function downloadBots(bots: Bot[], filename: string): DownloadAction {
         let state: BotsState = {};
         for (let bot of bots) {
             state[bot.id] = bot;
@@ -1411,7 +1461,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Downloads all the shared bots in the server.
      */
-    function downloadServer() {
+    function downloadServer(): DownloadAction {
         return downloadBots(
             getBots(bySpace('shared')),
             `${getCurrentServer()}.aux`
@@ -1421,7 +1471,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Shows the "Upload AUX File" dialog.
      */
-    function showUploadAuxFile() {
+    function showUploadAuxFile(): ShowUploadAuxFileAction {
         return addAction(calcShowUploadAuxFile());
     }
 
@@ -1438,7 +1488,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Opens the QR Code Scanner.
      * @param camera The camera that should be used.
      */
-    function openQRCodeScanner(camera?: CameraType) {
+    function openQRCodeScanner(camera?: CameraType): OpenQRCodeScannerAction {
         const event = calcOpenQRCodeScanner(true, camera);
         return addAction(event);
     }
@@ -1446,7 +1496,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Closes the QR Code Scanner.
      */
-    function closeQRCodeScanner() {
+    function closeQRCodeScanner(): OpenQRCodeScannerAction {
         const event = calcOpenQRCodeScanner(false);
         return addAction(event);
     }
@@ -1455,7 +1505,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Shows the given QR Code.
      * @param code The code to show.
      */
-    function showQRCode(code: string) {
+    function showQRCode(code: string): ShowQRCodeAction {
         const event = calcShowQRCode(true, code);
         return addAction(event);
     }
@@ -1463,7 +1513,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Hides the QR Code.
      */
-    function hideQRCode() {
+    function hideQRCode(): ShowQRCodeAction {
         const event = calcShowQRCode(false);
         return addAction(event);
     }
@@ -1472,7 +1522,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Opens the barcode scanner.
      * @param camera The camera that should be used.
      */
-    function openBarcodeScanner(camera?: CameraType) {
+    function openBarcodeScanner(camera?: CameraType): OpenBarcodeScannerAction {
         const event = calcOpenBarcodeScanner(true, camera);
         return addAction(event);
     }
@@ -1480,7 +1530,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Closes the barcode scanner.
      */
-    function closeBarcodeScanner() {
+    function closeBarcodeScanner(): OpenBarcodeScannerAction {
         const event = calcOpenBarcodeScanner(false);
         return addAction(event);
     }
@@ -1490,7 +1540,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param code The code that should be shown.
      * @param format The format that the barcode should be shown in.
      */
-    function showBarcode(code: string, format?: BarcodeFormat) {
+    function showBarcode(
+        code: string,
+        format?: BarcodeFormat
+    ): ShowBarcodeAction {
         const event = calcShowBarcode(true, code, format);
         return addAction(event);
     }
@@ -1498,7 +1551,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Hides the barcode.
      */
-    function hideBarcode() {
+    function hideBarcode(): ShowBarcodeAction {
         const event = calcShowBarcode(false);
         return addAction(event);
     }
@@ -1507,7 +1560,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Loads the server with the given ID.
      * @param id The ID of the server to load.
      */
-    function loadServer(id: string) {
+    function loadServer(id: string): LoadServerAction {
         const event = loadSimulation(id);
         return addAction(event);
     }
@@ -1516,7 +1569,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Unloads the server with the given ID.
      * @param id The ID of the server to unload.
      */
-    function unloadServer(id: string) {
+    function unloadServer(id: string): UnloadServerAction {
         const event = unloadSimulation(id);
         return addAction(event);
     }
@@ -1527,7 +1580,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *                  If given JSON, then it will be imported as if it was a .aux file.
      *                  If given a URL, then it will be downloaded and then imported.
      */
-    function importAUX(urlOrJSON: string) {
+    function importAUX(urlOrJSON: string): ImportAUXAction | ApplyStateAction {
         try {
             const data = JSON.parse(urlOrJSON);
             const state = getUploadState(data);
@@ -1544,23 +1597,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Only works from inside a onDrag() or onAnyBotDrag() listen tag.
      * @param bot The bot or mod that should be dragged instead of the original.
      */
-    function replaceDragBot(bot: Mod) {
+    function replaceDragBot(bot: Mod): ReplaceDragBotAction {
         const event = calcReplaceDragBot(context.unwrapBot(bot));
         return addAction(event);
-    }
-
-    /**
-     * Get's the current player's bot.
-     */
-    function getPlayerBot() {
-        return context.playerBot;
     }
 
     /**
      * Derermines whether the player is in the given dimension.
      * @param dimension The dimension.
      */
-    function isInDimension(dimension: string) {
+    function isInDimension(dimension: string): boolean {
         return (
             getCurrentDimension() === dimension &&
             getCurrentDimension() != undefined
@@ -1634,7 +1680,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * If no dimension is loaded, then null is returned.
      * @param portal The portal type.
      */
-    function getPortalDimension(portal: PortalType) {
+    function getPortalDimension(portal: PortalType): string {
         const user = context.playerBot;
         if (!user) {
             return null;
@@ -1696,7 +1742,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         bot: Bot | string,
         tag: string,
         options?: Partial<ShowInputOptions>
-    ) {
+    ): ShowInputForTagAction {
         const id = typeof bot === 'string' ? bot : bot.id;
         const event = calcShowInputForTag(id, trimTag(tag), options);
         return addAction(event);
@@ -1732,7 +1778,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * // Send the player to the "welcome" dimension.
      * player.goToDimension("welcome");
      */
-    function goToDimension(dimension: string) {
+    function goToDimension(dimension: string): GoToDimensionAction {
         const event = calcGoToDimension(dimension);
         return addAction(event);
     }
@@ -1745,7 +1791,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * // Send the player to wikipedia.
      * player.goToURL("https://wikipedia.org");
      */
-    function goToURL(url: string) {
+    function goToURL(url: string): GoToURLAction {
         const event = calcGoToURL(url);
         return addAction(event);
     }
@@ -1758,7 +1804,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * // Open wikipedia in a new tab.
      * player.openURL("https://wikipedia.org");
      */
-    function openURL(url: string) {
+    function openURL(url: string): OpenURLAction {
         const event = calcOpenURL(url);
         return addAction(event);
     }
@@ -1767,7 +1813,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Instructs auxPlayer to open the built-in developer console.
      * The dev console provides easy access to error messages and debug logs for formulas and actions.
      */
-    function openDevConsole() {
+    function openDevConsole(): OpenConsoleAction {
         const event = openConsole();
         return addAction(event);
     }
@@ -1787,7 +1833,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * });
      *
      */
-    function checkout(options: StartCheckoutOptions) {
+    function checkout(options: StartCheckoutOptions): StartCheckoutAction {
         const event = calcCheckout(options);
         return addAction(event);
     }
@@ -1867,19 +1913,60 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Closes the circle wipe transition effect.
+     * @param options The options that should be used for the effect.
+     */
+    function closeCircleWipe(
+        options?: Partial<OpenCircleWipeOptions>
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = circleWipe(
+            false,
+            {
+                color: options?.color || 'black',
+                duration: options?.duration || 1,
+            },
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Opens the circle wipe transition effect.
+     * @param options The options that should be used for the effect.
+     */
+    function openCircleWipe(
+        options?: Partial<OpenCircleWipeOptions>
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = circleWipe(
+            true,
+            {
+                color: options?.color || 'black',
+                duration: options?.duration || 1,
+            },
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Registers a custom portal with the given source code.
      * @param portalId The ID of the portal.
+     * @param bot The bot that should be used to configure the portal.
      * @param tagOrSource The tag or source code that the portal should be created from.
      * @param options The options for the portal.
      */
     function openCustomPortal(
         portalId: string,
-        tagOrSource: string,
+        bot: Bot | string,
+        tagOrSource: string = null,
         options: OpenCustomPortalOptions = {}
     ): Promise<void> {
         const task = context.createTask();
         const event = calcOpenCustomPortal(
             portalId,
+            getID(bot),
             tagOrSource,
             {
                 mode: options?.mode || 'tag',
@@ -2763,7 +2850,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Executes the given shell script on the server.
      * @param script The shell script  that should be executed.
      */
-    function shell(script: string) {
+    function shell(script: string): RemoteAction | RemoteAction[] {
         return remote(calcShell(script));
     }
 
@@ -2771,14 +2858,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Backs up all the AUX stories to a Github Gist.
      * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
      */
-    function backupToGithub(auth: string) {
+    function backupToGithub(auth: string): RemoteAction | RemoteAction[] {
         return remote(calcBackupToGithub(auth));
     }
 
     /**
      * Backs up all the AUX stories to a zip bot.
      */
-    function backupAsDownload(target: SessionSelector) {
+    function backupAsDownload(
+        target: SessionSelector
+    ): RemoteAction | RemoteAction[] {
         return remote(calcBackupAsDownload(convertSessionSelector(target)));
     }
 
@@ -2799,7 +2888,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *   description: 'Description for purchase'
      * });
      */
-    function finishCheckout(options: FinishCheckoutOptions) {
+    function finishCheckout(
+        options: FinishCheckoutOptions
+    ): FinishCheckoutAction {
         const event = calcFinishCheckout(
             options.secretKey,
             options.token,
@@ -2821,7 +2912,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *   message: "Save recent changes"
      * });
      */
-    function markHistory(options: MarkHistoryOptions) {
+    function markHistory(options: MarkHistoryOptions): Promise<void> {
         const task = context.createTask(true, true);
         const event = calcRemote(
             calcMarkHistory(options),
@@ -2835,7 +2926,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Loads the "history" space into the server.
      */
-    function browseHistory() {
+    function browseHistory(): Promise<void> {
         const task = context.createTask(true, true);
         const event = calcRemote(
             calcBrowseHistory(),
@@ -2850,7 +2941,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Restores the current state to the given mark.
      * @param mark The bot or bot ID that represents the mark that should be restored.
      */
-    function restoreHistoryMark(mark: Bot | string) {
+    function restoreHistoryMark(mark: Bot | string): Promise<void> {
         const id = getID(mark);
         const task = context.createTask(true, true);
         const event = calcRemote(
@@ -2867,7 +2958,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param mark The bot or bot ID that represents the mark that should be restored.
      * @param server The server that the mark should be restored to.
      */
-    function restoreHistoryMarkToServer(mark: Bot | string, server: string) {
+    function restoreHistoryMarkToServer(
+        mark: Bot | string,
+        server: string
+    ): Promise<void> {
         const id = getID(mark);
         const task = context.createTask(true, true);
         const event = calcRemote(
@@ -2884,7 +2978,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param path The path of the file.
      * @param options The options.
      */
-    function loadFile(path: string, options?: LoadFileOptions) {
+    function loadFile(path: string, options?: LoadFileOptions): Promise<any> {
         const task = context.createTask(true, true);
         const event = calcRemote(
             calcLoadFile({
@@ -2904,7 +2998,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param data The data to save.
      * @param options The options to use.
      */
-    function saveFile(path: string, data: string, options?: SaveFileOptions) {
+    function saveFile(
+        path: string,
+        data: string,
+        options?: SaveFileOptions
+    ): Promise<any> {
         const task = context.createTask(true, true);
         const event = calcRemote(
             calcSaveFile({
@@ -3017,7 +3115,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         event: BotAction,
         selector?: SessionSelector | string | (SessionSelector | string)[],
         allowBatching?: boolean
-    ) {
+    ): RemoteAction | RemoteAction[] {
         if (!event) {
             return;
         }
@@ -3053,7 +3151,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         playerId: string | string[],
         name: string,
         arg?: any
-    ) {
+    ): RemoteAction | RemoteAction[] {
         return remote(action(name, null, null, arg), playerId);
     }
 
@@ -3066,13 +3164,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param name The name of the event.
      * @param arg The optional argument to include in the whisper.
      */
-    function remoteShout(name: string, arg?: any) {
+    function remoteShout(
+        name: string,
+        arg?: any
+    ): RemoteAction | RemoteAction[] {
         return remote(action(name, null, null, arg), {
             broadcast: true,
         });
     }
 
-    function webhook(options: WebhookOptions) {
+    function webhook(options: WebhookOptions): Promise<any> {
         const task = context.createTask();
         const event = calcWebhook(<any>options, task.taskId);
         return addAsyncAction(task, event);
@@ -3081,7 +3182,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Creates a Universally Unique IDentifier (UUID).
      */
-    function uuid() {
+    function uuid(): string {
         return uuidv4();
     }
 
@@ -3089,8 +3190,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Sleeps for time in ms.
      * @param time The Time to sleep in ms. 1 second is 1000 ms.
      */
-    function sleep(time: number) {
-        let sleepy = new Promise((resolve) => setTimeout(resolve, time));
+    function sleep(time: number): Promise<void> {
+        let sleepy = new Promise<void>((resolve) => setTimeout(resolve, time));
         return sleepy;
     }
 
@@ -3264,7 +3365,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Performs the given action.
      * @param action The action to perform.
      */
-    function perform(action: any) {
+    function perform(action: any): any {
         return addAction(action);
     }
 
@@ -3272,7 +3373,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Rejects the given action.
      * @param action The action to reject.
      */
-    function reject(action: any) {
+    function reject(action: any): RejectAction {
         const original = getOriginalObject(action);
         const event = Array.isArray(original)
             ? calcReject(...original)
@@ -3285,7 +3386,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Returns a promise that resolves when the space is unlocked.
      * @param password The password to use to unlock admin space.
      */
-    function unlockAdminSpace(password: string) {
+    function unlockAdminSpace(password: string): Promise<void> {
         const task = context.createTask();
         const event = unlockSpace('admin', password, task.taskId);
         return addAsyncAction(task, event);
@@ -3296,7 +3397,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param oldPassword The old password for the admin space.
      * @param newPassword The new password that should be used.
      */
-    function setAdminSpacePassword(oldPassword: string, newPassword: string) {
+    function setAdminSpacePassword(
+        oldPassword: string,
+        newPassword: string
+    ): Promise<void> {
         const task = context.createTask();
         const event = setSpacePassword(
             'admin',
@@ -3380,7 +3484,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         bot: Bot,
         dimension: string,
         anchorPoint: BotAnchorPoint
-    ) {
+    ): { x: number; y: number; z: number } {
         const offset = getAnchorPointOffset(anchorPoint);
         const scale = getBotScale(null, bot, 1);
         const position = getBotPosition(null, bot, dimension);
@@ -3423,7 +3527,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *             If it is a list, then the result will be sum(list)/list.length.
      *             If it is not a list, then the result will be the value converted to a number.
      */
-    function avg(list: any) {
+    function avg(list: any): number {
         if (!Array.isArray(list)) {
             return parseFloat(list);
         }
@@ -3437,7 +3541,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Calculates the square root of the given number.
      * @param value The number.
      */
-    function sqrt(value: any) {
+    function sqrt(value: any): number {
         return Math.sqrt(parseFloat(value));
     }
 
@@ -3445,7 +3549,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Calculates the absolute value of a number.
      * @param number The number to get the absolute value of.
      */
-    function abs(number: any) {
+    function abs(number: any): number {
         return Math.abs(parseFloat(number));
     }
 
@@ -3454,7 +3558,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @param list The value that the standard deviation should be calculated for.
      */
-    function stdDev(list: any) {
+    function stdDev(list: any): number {
         if (!Array.isArray(list)) {
             list = [parseFloat(list)];
         }
@@ -3552,7 +3656,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the position offset for the given bot anchor point.
      * @param anchorPoint The anchor point to get the offset for.
      */
-    function getAnchorPointOffset(anchorPoint: BotAnchorPoint) {
+    function getAnchorPointOffset(
+        anchorPoint: BotAnchorPoint
+    ): { x: number; y: number; z: number } {
         const value = calculateAnchorPoint(anchorPoint);
         const offset = calculateAnchorPointOffset(value);
         return {
@@ -3663,6 +3769,82 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Creates a new keypair that can be used for encrypting and decrypting data.
+     *
+     * @description Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to
+     * help you create and keep track of them.
+     *
+     * Keypairs are made up of a private key and a public key.
+     * The public key is a special value that can be used to encrypt data and
+     * the private key is a related value that can be used to decrypt data that was encrypted by the public key.
+     *
+     * The private key is called "private" because it is encrypted using the given secret
+     * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
+     *
+     * Note that both the private and public keys are randomly generated, so while the public key is unencrypted, it won't be able to be used by someone else unless
+     * they have access to it.
+     *
+     * @param secret The secret that should be used to encrypt the private key.
+     */
+    function asymmetricKeypair(secret: string): string {
+        return realAsymmetricKeypair(secret);
+    }
+
+    /**
+     * Encrypts the given data with the given keypair and returns the result.
+     *
+     * @description This method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it),
+     * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).
+     *
+     * As a consequence, encrypting the same data with the same keypair will produce different results.
+     * This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
+     *
+     * Encrypts the given data using an asymmetric authenticated encryption mechanism
+     * based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
+     *
+     * You may notice that this function does not need a secret to decrypt the keypair.
+     * This is because the public key of the keypair is used to encrypt the data.
+     * Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.
+     *
+     * @param keypair The keypair to use to secure the data.
+     * @param data The data to encrypt.
+     */
+    function asymmetricEncrypt(keypair: string, data: string): string {
+        if (typeof data === 'string') {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(data);
+            return realAsymmetricEncrypt(keypair, bytes);
+        } else {
+            throw new Error('The data to encrypt must be a string.');
+        }
+    }
+
+    /**
+     * Decrypts the given data with the given keypair and secret and returns the result.
+     * If the data was unable to be decrypted, null will be returned.
+     *
+     * @param keypair The keypair to use to decrypt the data.
+     * @param secret The secret to use to decrypt the keypair's private key.
+     * @param data The data to decrypt.
+     */
+    function asymmetricDecrypt(
+        keypair: string,
+        secret: string,
+        data: string
+    ): string {
+        if (typeof data === 'string') {
+            const bytes = realAsymmetricDecrypt(keypair, secret, data);
+            if (!bytes) {
+                return null;
+            }
+            const decoder = new TextDecoder();
+            return decoder.decode(bytes);
+        } else {
+            throw new Error('The data to encrypt must be a string.');
+        }
+    }
+
+    /**
      * Creates a new keypair that can be used for signing and verifying data.
      *
      * @description
@@ -3673,7 +3855,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * The private key is called "private" because it is encrypted using the given secret
      * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
      *
-     * Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
+     * Note that both the private and public keys are randomly generated, so while the public key is unencrypted, it won't be able to be used by someone else unless
      * they have access to it.
      *
      * @param secret The secret that should be used to encrypt the private key.
@@ -4064,7 +4246,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * removeTags(this, /^hello$/gi);
      *
      */
-    function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
+    function removeTags(bot: Bot | Bot[], tagSection: string | RegExp): void {
         if (typeof bot === 'object' && Array.isArray(bot)) {
             let botList: any[] = bot;
 
@@ -4105,7 +4287,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param originalTag The original tag to rename.
      * @param newTag The new tag name.
      */
-    function renameTag(bot: Bot | Bot[], originalTag: string, newTag: string) {
+    function renameTag(
+        bot: Bot | Bot[],
+        originalTag: string,
+        newTag: string
+    ): void {
         if (Array.isArray(bot)) {
             for (let b of bot) {
                 renameTag(b, originalTag, newTag);
@@ -4124,7 +4310,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The bot.
      * @param diffs The mods to apply.
      */
-    function applyMod(bot: any, ...diffs: Mod[]) {
+    function applyMod(bot: any, ...diffs: Mod[]): void {
         let appliedDiffs: BotTags[] = [];
         for (let diff of diffs) {
             if (!diff) {
@@ -4150,7 +4336,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The bot.
      * @param diff The diff to apply.
      */
-    function subtractMods(bot: any, ...diffs: Mod[]) {
+    function subtractMods(bot: any, ...diffs: Mod[]): void {
         let subtractedDiffs: BotTags[] = [];
         for (let diff of diffs) {
             if (!diff) {
@@ -4204,7 +4390,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Creates a new bot that contains the given tags.
      * @param mods The mods that specify what tags to set on the bot.
      */
-    function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
+    function createFromMods(
+        idFactory: () => string,
+        ...mods: (Mod | Mod[])[]
+    ): RuntimeBot | RuntimeBot[] {
         let variants: Mod[][] = new Array<Mod[]>(1);
         variants[0] = [];
 
@@ -4304,7 +4493,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function destroy(
         bot: RuntimeBot | string | Bot | (RuntimeBot | string | Bot)[]
-    ) {
+    ): void {
         if (typeof bot === 'object' && Array.isArray(bot)) {
             bot.forEach((f) => destroyBot(f));
         } else {
@@ -4316,7 +4505,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Removes the given bot or bot ID from the simulation.
      * @param bot The bot or bot ID to remove from the simulation.
      */
-    function destroyBot(bot: RuntimeBot | string | Bot) {
+    function destroyBot(bot: RuntimeBot | string | Bot): void {
         let realBot: RuntimeBot;
         let id: string;
         if (!hasValue(bot)) {
@@ -4362,7 +4551,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         destroyChildren(id);
     }
 
-    function destroyChildren(id: string) {
+    function destroyChildren(id: string): void {
         const children = getBots('creator', id);
         for (let child of children) {
             destroyBot(child);
@@ -4379,7 +4568,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         bot: Bot,
         stateName: string,
         groupName: string = 'state'
-    ) {
+    ): void {
         const previousState = getTag(bot, groupName);
         if (previousState === stateName) {
             return;
@@ -4401,7 +4590,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param eventName The name of the event to shout.
      * @param arg The argument to shout. This gets passed as the `that` variable to the other scripts.
      */
-    function superShout(eventName: string, arg?: any) {
+    function superShout(eventName: string, arg?: any): SuperShoutAction {
         const event = calcSuperShout(trimEvent(eventName), arg);
         return addAction(event);
     }
@@ -4626,7 +4815,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         bots: (Bot | string)[],
         arg?: any,
         sendListenEvents: boolean = true
-    ) {
+    ): any[] {
         const startTime = globalThis.performance.now();
         let tag = trimEvent(name);
 
@@ -4723,7 +4912,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return promise;
     }
 
-    function getDownloadState(state: BotsState) {
+    function getDownloadState(
+        state: BotsState
+    ): { version: number; state: BotsState } {
         return {
             version: 1,
             state,

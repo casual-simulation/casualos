@@ -8,7 +8,7 @@ import {
     CompiledBotListeners,
     RuntimeBot,
 } from '../bots';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 
 // Types of bots
 // 1. Raw bot - original data

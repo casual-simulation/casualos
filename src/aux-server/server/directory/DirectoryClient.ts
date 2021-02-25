@@ -8,7 +8,7 @@ import { randomBytes } from 'crypto';
 import { hostname, networkInterfaces } from 'os';
 import { sha256 } from 'hash.js';
 import axios from 'axios';
-import sortBy from 'lodash/sortBy';
+import { sortBy } from 'lodash';
 import {
     SubscriptionLike,
     timer,

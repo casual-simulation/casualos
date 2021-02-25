@@ -1,6 +1,6 @@
 import { BotClient } from './BotClient';
 import { Bot, BotsState, TagFilter } from '../bots';
-import values from 'lodash/values';
+import { values } from 'lodash';
 
 export class MemoryBotClient implements BotClient {
     stories: {

@@ -24,7 +24,6 @@ import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { Input, InputMethod } from '../../../shared/scene/Input';
-import differenceBy from 'lodash/differenceBy';
 import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
 import { GridTile } from '../../Grid3D';
@@ -102,7 +101,7 @@ export class PlayerModDragOperation extends BaseModDragOperation {
                 hit,
             } = this._interaction.findHoveredGameObjectFromRay(
                 inputRay,
-                obj => obj.pointable,
+                (obj) => obj.pointable,
                 viewport
             );
             if (gameObject instanceof AuxBot3D) {

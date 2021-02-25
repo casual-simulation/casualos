@@ -50,7 +50,7 @@ import {
     AUTHENTICATE_BRANCH_WRITES,
     SET_BRANCH_PASSWORD,
 } from '@casual-simulation/causal-trees';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import {
     waitAsync,
     wait,
@@ -62,7 +62,7 @@ import { TestScriptBotFactory } from '@casual-simulation/aux-common/runtime/test
 import { keypair } from '../../aux-common/node_modules/@casual-simulation/crypto';
 
 const uuidMock: jest.Mock = <any>uuid;
-jest.mock('uuid/v4');
+jest.mock('uuid');
 
 console.log = jest.fn();
 console.warn = jest.fn();
@@ -922,41 +922,6 @@ describe('AuxHelper', () => {
         });
     });
 
-    describe('createContext()', () => {
-        // describe('player.inSheet()', () => {
-        //     it('should return true when in builder', async () => {
-        //         helper = createHelper(
-        //             {
-        //                 shared: memory,
-        //             },
-        //             runtime
-        //         );
-        //         helper.userId = userId;
-        //         const context = helper.createContext();
-        //         expect(context.sandbox.library.player.inSheet()).toBe(true);
-        //     });
-        //     it('should return false when not in builder', async () => {
-        //         helper = createHelper(
-        //             {
-        //                 shared: memory,
-        //             },
-        //             runtime
-        //         );
-        //         helper.userId = userId;
-        //         const context = helper.createContext();
-        //         expect(context.sandbox.library.player.inSheet()).toBe(false);
-        //     });
-        //     it('should default to not in aux builder or player', async () => {
-        //         helper = createHelper({
-        //             shared: memory,
-        //         });
-        //         helper.userId = userId;
-        //         const context = helper.createContext();
-        //         expect(context.sandbox.library.player.inSheet()).toBe(false);
-        //     });
-        // });
-    });
-
     describe('transaction()', () => {
         it('should emit local events that are sent via transaction()', async () => {
             let events: LocalActions[] = [];
@@ -997,7 +962,7 @@ describe('AuxHelper', () => {
             expect(helper.botsState['test'].tags.script).toBeUndefined();
         });
 
-        it('should support player.inSheet() in actions', async () => {
+        it('should support os.inSheet() in actions', async () => {
             helper = createHelper({
                 shared: memory,
             });
@@ -1010,7 +975,7 @@ describe('AuxHelper', () => {
             });
 
             await helper.createBot('test', {
-                action: '@setTag(this, "#value", player.inSheet())',
+                action: '@setTag(this, "#value", os.inSheet())',
             });
 
             await helper.transaction(action('action', ['test'], 'user'));
@@ -1032,7 +997,7 @@ describe('AuxHelper', () => {
             );
 
             await helper.createBot('test', {
-                action: '@player.toast("test")',
+                action: '@os.toast("test")',
             });
 
             await helper.transaction(action('action', ['test'], 'user'));
@@ -1729,7 +1694,7 @@ describe('AuxHelper', () => {
     });
 
     describe('formulaBatch()', () => {
-        it('should support player.inSheet()', async () => {
+        it('should support os.inSheet()', async () => {
             helper = createHelper({
                 shared: memory,
             });
@@ -1742,11 +1707,11 @@ describe('AuxHelper', () => {
             });
 
             await helper.createBot('test', {
-                'action()': 'setTag(this, "#value", player.inSheet())',
+                'action()': 'setTag(this, "#value", os.inSheet())',
             });
 
             await helper.formulaBatch([
-                'setTag(getBot("id", "test"), "value", player.inSheet())',
+                'setTag(getBot("id", "test"), "value", os.inSheet())',
             ]);
 
             await waitAsync();

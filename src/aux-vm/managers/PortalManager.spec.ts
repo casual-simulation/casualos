@@ -12,9 +12,16 @@ import { Subject, Subscription } from 'rxjs';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { BotHelper } from './BotHelper';
 import { BotWatcher } from './BotWatcher';
-import { CodeBundle, PortalBundler, ScriptPrefix } from './PortalBundler';
+import {
+    CodeBundle,
+    ExternalModule,
+    LibraryModule,
+    PortalBundler,
+    ScriptPrefix,
+} from './PortalBundler';
 import {
     DEFAULT_SCRIPT_PREFIXES,
+    PortalBotData,
     PortalData,
     PortalManager,
     PortalUpdate,
@@ -32,6 +39,7 @@ describe('PortalManager', () => {
             Promise<CodeBundle>,
             [BotsState, string, ScriptPrefix[]]
         >;
+        addLibrary: jest.Mock<void, [LibraryModule]>;
     };
     let localEvents: Subject<LocalActions[]>;
 
@@ -51,6 +59,7 @@ describe('PortalManager', () => {
 
         bundler = {
             bundleTag: jest.fn(),
+            addLibrary: jest.fn(),
         };
         manager = new PortalManager(vm, helper, watcher, bundler);
     });
@@ -170,6 +179,8 @@ describe('PortalManager', () => {
                 tag: 'script',
                 source: 'abc',
                 modules: {},
+                externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -203,6 +214,8 @@ describe('PortalManager', () => {
                     source: 'abc',
                     warnings: [],
                     modules: {},
+                    externals: {},
+                    libraries: {},
                 }),
             ]);
         });
@@ -225,6 +238,8 @@ describe('PortalManager', () => {
                 tag: 'script',
                 source: 'abc',
                 modules: {},
+                externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -246,6 +261,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
@@ -266,6 +282,7 @@ describe('PortalManager', () => {
                         abc: 'def',
                     },
                     error: null,
+                    botId: null,
                 },
             ]);
         });
@@ -274,6 +291,8 @@ describe('PortalManager', () => {
             bundler.bundleTag.mockResolvedValueOnce({
                 tag: 'script',
                 modules: {},
+                externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -287,6 +306,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
@@ -307,6 +327,7 @@ describe('PortalManager', () => {
                         abc: 'def',
                     },
                     error: null,
+                    botId: null,
                 },
             ]);
         });
@@ -324,6 +345,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
@@ -344,6 +366,7 @@ describe('PortalManager', () => {
                         abc: 'def',
                     },
                     error: null,
+                    botId: null,
                 },
             ]);
         });
@@ -353,6 +376,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: 'script',
                     taskId: 'task1',
                     options: {},
@@ -379,6 +403,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: 'console.log("test1");',
                     taskId: 'task',
                     options: {
@@ -400,6 +425,7 @@ describe('PortalManager', () => {
                         abc: 'def',
                     },
                     error: null,
+                    botId: null,
                 },
             ]);
         });
@@ -411,6 +437,8 @@ describe('PortalManager', () => {
                 tag: 'script',
                 source: 'wrong',
                 modules: {},
+                externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -426,6 +454,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task',
                     options: {
@@ -437,6 +466,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: 'console.log("test1");',
                     taskId: 'task2',
                     options: {
@@ -454,6 +484,129 @@ describe('PortalManager', () => {
                 {
                     id: 'test-portal',
                     source: 'console.log("test1");',
+                    style: {
+                        abc: 'def',
+                    },
+                    error: null,
+                    botId: null,
+                },
+            ]);
+        });
+
+        it('should include a message port for bundles that reference casualos', async () => {
+            expect(portals).toEqual([]);
+
+            bundler.bundleTag.mockResolvedValueOnce({
+                tag: 'script',
+                source: 'abc',
+                modules: {},
+                externals: {},
+                libraries: {
+                    casualos: {
+                        id: 'casualos',
+                        source: '',
+                        language: 'javascript',
+                    },
+                },
+                warnings: [],
+            });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    botId: null,
+                    tagOrSource: '🔺script',
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(portals).toEqual([
+                {
+                    id: 'test-portal',
+                    source: 'abc',
+                    style: {
+                        abc: 'def',
+                    },
+                    botId: null,
+                    error: null,
+                    ports: {
+                        casualos: expect.any(MessagePort),
+                    },
+                },
+            ]);
+        });
+
+        it('should emit null source when portals have a null tag', async () => {
+            expect(portals).toEqual([]);
+
+            bundler.bundleTag.mockResolvedValueOnce({
+                tag: 'script',
+                source: 'abc',
+                modules: {},
+                externals: {},
+                libraries: {},
+                warnings: [],
+            });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    botId: null,
+                    tagOrSource: null,
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(bundler.bundleTag).not.toBeCalled();
+            expect(portals).toEqual([
+                {
+                    id: 'test-portal',
+                    botId: null,
+                    source: null,
                     style: {
                         abc: 'def',
                     },
@@ -482,6 +635,8 @@ describe('PortalManager', () => {
                     modules: {
                         bot1: new Set(['script']),
                     },
+                    externals: {},
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -503,6 +658,7 @@ describe('PortalManager', () => {
                     {
                         type: 'open_custom_portal',
                         portalId: 'test-portal',
+                        botId: null,
                         tagOrSource: 'script',
                         taskId: 'task1',
                         options: {},
@@ -522,6 +678,8 @@ describe('PortalManager', () => {
                     modules: {
                         bot1: new Set(['script']),
                     },
+                    externals: {},
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -546,11 +704,13 @@ describe('PortalManager', () => {
                             id: 'test-portal',
                             source: 'abc',
                             error: null,
+                            botId: null,
                         },
                         portal: {
                             id: 'test-portal',
                             source: 'correct',
                             error: null,
+                            botId: null,
                         },
                     },
                 ]);
@@ -566,6 +726,8 @@ describe('PortalManager', () => {
                     modules: {
                         bot1: new Set(['script']),
                     },
+                    externals: {},
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -585,11 +747,13 @@ describe('PortalManager', () => {
                             id: 'test-portal',
                             source: 'abc',
                             error: null,
+                            botId: null,
                         },
                         portal: {
                             id: 'test-portal',
                             source: 'correct',
                             error: null,
+                            botId: null,
                         },
                     },
                 ]);
@@ -603,6 +767,8 @@ describe('PortalManager', () => {
                     source: 'correct',
                     error: null,
                     modules: {},
+                    externals: {},
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -621,11 +787,13 @@ describe('PortalManager', () => {
                             id: 'test-portal',
                             source: 'abc',
                             error: null,
+                            botId: null,
                         },
                         portal: {
                             id: 'test-portal',
                             source: 'correct',
                             error: null,
+                            botId: null,
                         },
                     },
                 ]);
@@ -639,6 +807,8 @@ describe('PortalManager', () => {
                     source: 'correct',
                     error: null,
                     modules: {},
+                    externals: {},
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -662,6 +832,8 @@ describe('PortalManager', () => {
                     source: 'correct',
                     error: null,
                     modules: {},
+                    externals: {},
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -688,6 +860,8 @@ describe('PortalManager', () => {
                     source: 'correct',
                     error: null,
                     modules: {},
+                    externals: {},
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -720,6 +894,8 @@ describe('PortalManager', () => {
                     modules: {
                         bot1: new Set(['script']),
                     },
+                    externals: {},
+                    libraries: {},
                     warnings: [],
                 });
 
@@ -727,6 +903,7 @@ describe('PortalManager', () => {
                     {
                         type: 'open_custom_portal',
                         portalId: 'test-portal',
+                        botId: null,
                         tagOrSource: '🔺script',
                         taskId: 'task1',
                         options: {
@@ -745,6 +922,7 @@ describe('PortalManager', () => {
                             id: 'test-portal',
                             source: 'abc',
                             error: null,
+                            botId: null,
                         },
                         portal: {
                             id: 'test-portal',
@@ -753,6 +931,7 @@ describe('PortalManager', () => {
                                 anything: true,
                             },
                             error: null,
+                            botId: null,
                         },
                     },
                 ]);
@@ -765,6 +944,8 @@ describe('PortalManager', () => {
                 source: 'abc',
                 error: null,
                 modules: {},
+                externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -786,6 +967,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task1',
                     options: {},
@@ -803,6 +985,8 @@ describe('PortalManager', () => {
                 modules: {
                     bot1: new Set(['script']),
                 },
+                externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -827,11 +1011,13 @@ describe('PortalManager', () => {
                         id: 'test-portal',
                         source: 'abc',
                         error: null,
+                        botId: null,
                     },
                     portal: {
                         id: 'test-portal',
                         source: 'correct',
                         error: null,
+                        botId: null,
                     },
                 },
             ]);
@@ -843,6 +1029,8 @@ describe('PortalManager', () => {
                 source: 'abc',
                 error: null,
                 modules: {},
+                externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -864,6 +1052,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task1',
                     options: {},
@@ -881,6 +1070,8 @@ describe('PortalManager', () => {
                 modules: {
                     bot1: new Set(['script']),
                 },
+                externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -900,11 +1091,13 @@ describe('PortalManager', () => {
                         id: 'test-portal',
                         source: 'abc',
                         error: null,
+                        botId: null,
                     },
                     portal: {
                         id: 'test-portal',
                         source: 'correct',
                         error: null,
+                        botId: null,
                     },
                 },
             ]);
@@ -916,6 +1109,8 @@ describe('PortalManager', () => {
                 source: 'abc',
                 error: null,
                 modules: {},
+                externals: {},
+                libraries: {},
                 warnings: [],
             });
 
@@ -937,6 +1132,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: '🔺script',
                     taskId: 'task1',
                     options: {},
@@ -951,6 +1147,7 @@ describe('PortalManager', () => {
                 {
                     type: 'open_custom_portal',
                     portalId: 'test-portal',
+                    botId: null,
                     tagOrSource: 'my-source',
                     taskId: 'task1',
                     options: {
@@ -967,12 +1164,743 @@ describe('PortalManager', () => {
                         id: 'test-portal',
                         source: 'abc',
                         error: null,
+                        botId: null,
                     },
                     portal: {
                         id: 'test-portal',
                         source: 'my-source',
                         error: null,
+                        botId: null,
                     },
+                },
+            ]);
+        });
+    });
+
+    describe('externalsDiscovered', () => {
+        let externals = [] as ExternalModule[];
+
+        beforeEach(() => {
+            externals = [];
+            sub.add(
+                manager.externalsDiscovered.subscribe((p) =>
+                    externals.push(...p)
+                )
+            );
+        });
+
+        it('should resolve new external modules from builds', async () => {
+            expect(externals).toEqual([]);
+
+            bundler.bundleTag
+                .mockResolvedValueOnce({
+                    tag: 'script',
+                    source: 'abc',
+                    modules: {},
+                    externals: {
+                        lodash: {
+                            id: 'lodash',
+                            url: 'myLodashURL',
+                            typescriptDefinitionsURL: 'lodashDefs',
+                        },
+                        react: {
+                            id: 'react',
+                            url: 'myReactURL',
+                            typescriptDefinitionsURL: 'reactDefs',
+                        },
+                    },
+                    libraries: {},
+                    warnings: [],
+                })
+                .mockResolvedValueOnce({
+                    tag: 'script',
+                    source: 'def',
+                    modules: {},
+                    externals: {
+                        lodash: {
+                            id: 'lodash',
+                            url: 'myLodashURL',
+                            typescriptDefinitionsURL: 'lodashDefs',
+                        },
+                        react: {
+                            id: 'react',
+                            url: 'myReactURL',
+                            typescriptDefinitionsURL: 'reactDefs',
+                        },
+                        other: {
+                            id: 'other',
+                            url: 'myOtherURL',
+                            typescriptDefinitionsURL: 'otherDefs',
+                        },
+                    },
+                    libraries: {},
+                    warnings: [],
+                });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    botId: null,
+                    tagOrSource: '🔺script',
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test2");',
+                    }),
+                })
+            );
+
+            await waitAsync();
+
+            expect(externals).toEqual([
+                {
+                    id: 'lodash',
+                    url: 'myLodashURL',
+                    typescriptDefinitionsURL: 'lodashDefs',
+                },
+                {
+                    id: 'react',
+                    url: 'myReactURL',
+                    typescriptDefinitionsURL: 'reactDefs',
+                },
+                {
+                    id: 'other',
+                    url: 'myOtherURL',
+                    typescriptDefinitionsURL: 'otherDefs',
+                },
+            ]);
+        });
+
+        it('should resolve with the externals that have already been discovered', async () => {
+            bundler.bundleTag.mockResolvedValueOnce({
+                tag: 'script',
+                source: 'abc',
+                modules: {},
+                externals: {
+                    lodash: {
+                        id: 'lodash',
+                        url: 'myLodashURL',
+                        typescriptDefinitionsURL: 'lodashDefs',
+                    },
+                    react: {
+                        id: 'react',
+                        url: 'myReactURL',
+                        typescriptDefinitionsURL: 'reactDefs',
+                    },
+                },
+                libraries: {},
+                warnings: [],
+            });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    botId: null,
+                    tagOrSource: '🔺script',
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            const existingExternals: ExternalModule[] = [];
+            manager.externalsDiscovered.subscribe((e) =>
+                existingExternals.push(...e)
+            );
+
+            expect(existingExternals).toEqual([
+                {
+                    id: 'lodash',
+                    url: 'myLodashURL',
+                    typescriptDefinitionsURL: 'lodashDefs',
+                },
+                {
+                    id: 'react',
+                    url: 'myReactURL',
+                    typescriptDefinitionsURL: 'reactDefs',
+                },
+            ]);
+        });
+
+        it('should record external modules from builds', async () => {
+            expect(externals).toEqual([]);
+
+            bundler.bundleTag
+                .mockResolvedValueOnce({
+                    tag: 'script',
+                    source: 'abc',
+                    modules: {},
+                    externals: {
+                        lodash: {
+                            id: 'lodash',
+                            url: 'myLodashURL',
+                            typescriptDefinitionsURL: 'lodashDefs',
+                        },
+                        react: {
+                            id: 'react',
+                            url: 'myReactURL',
+                            typescriptDefinitionsURL: 'reactDefs',
+                        },
+                    },
+                    libraries: {},
+                    warnings: [],
+                })
+                .mockResolvedValueOnce({
+                    tag: 'script',
+                    source: 'def',
+                    modules: {},
+                    externals: {
+                        lodash: {
+                            id: 'lodash',
+                            url: 'myLodashURL',
+                            typescriptDefinitionsURL: 'lodashDefs',
+                        },
+                        react: {
+                            id: 'react',
+                            url: 'myReactURL',
+                            typescriptDefinitionsURL: 'reactDefs',
+                        },
+                        other: {
+                            id: 'other',
+                            url: 'myOtherURL',
+                            typescriptDefinitionsURL: 'otherDefs',
+                        },
+                    },
+                    libraries: {},
+                    warnings: [],
+                });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    botId: null,
+                    tagOrSource: '🔺script',
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test2");',
+                    }),
+                })
+            );
+
+            await waitAsync();
+
+            expect(manager.externalModules).toEqual({
+                lodash: {
+                    id: 'lodash',
+                    url: 'myLodashURL',
+                    typescriptDefinitionsURL: 'lodashDefs',
+                },
+                react: {
+                    id: 'react',
+                    url: 'myReactURL',
+                    typescriptDefinitionsURL: 'reactDefs',
+                },
+                other: {
+                    id: 'other',
+                    url: 'myOtherURL',
+                    typescriptDefinitionsURL: 'otherDefs',
+                },
+            });
+        });
+    });
+
+    describe('librariesDiscovered', () => {
+        let externals = [] as LibraryModule[];
+
+        beforeEach(() => {
+            externals = [];
+            sub.add(
+                manager.librariesDiscovered.subscribe((p) =>
+                    externals.push(...p)
+                )
+            );
+        });
+
+        it('should resolve new library modules from builds', async () => {
+            expect(externals).toEqual([]);
+
+            bundler.bundleTag
+                .mockResolvedValueOnce({
+                    tag: 'script',
+                    source: 'abc',
+                    modules: {},
+                    externals: {},
+                    libraries: {
+                        lodash: {
+                            id: 'lodash',
+                            source: 'lodashSource',
+                            language: 'javascript',
+                        },
+                        react: {
+                            id: 'react',
+                            source: 'reactSource',
+                            language: 'javascript',
+                        },
+                    },
+                    warnings: [],
+                })
+                .mockResolvedValueOnce({
+                    tag: 'script',
+                    source: 'def',
+                    modules: {},
+                    externals: {},
+                    libraries: {
+                        lodash: {
+                            id: 'lodash',
+                            source: 'lodashSource',
+                            language: 'javascript',
+                        },
+                        react: {
+                            id: 'react',
+                            source: 'reactSource',
+                            language: 'javascript',
+                        },
+                        other: {
+                            id: 'other',
+                            source: 'otherSource',
+                            language: 'javascript',
+                        },
+                    },
+                    warnings: [],
+                });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    botId: null,
+                    tagOrSource: '🔺script',
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test2");',
+                    }),
+                })
+            );
+
+            await waitAsync();
+
+            expect(externals).toEqual([
+                {
+                    id: 'lodash',
+                    source: 'lodashSource',
+                    language: 'javascript',
+                },
+                {
+                    id: 'react',
+                    source: 'reactSource',
+                    language: 'javascript',
+                },
+                {
+                    id: 'other',
+                    source: 'otherSource',
+                    language: 'javascript',
+                },
+            ]);
+        });
+
+        it('should resolve with the libraries that have already been discovered', async () => {
+            bundler.bundleTag.mockResolvedValueOnce({
+                tag: 'script',
+                source: 'abc',
+                modules: {},
+                externals: {},
+                libraries: {
+                    lodash: {
+                        id: 'lodash',
+                        source: 'lodashSource',
+                        language: 'javascript',
+                    },
+                    react: {
+                        id: 'react',
+                        source: 'reactSource',
+                        language: 'javascript',
+                    },
+                },
+                warnings: [],
+            });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    botId: null,
+                    tagOrSource: '🔺script',
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            const existingExternals: LibraryModule[] = [];
+            manager.librariesDiscovered.subscribe((e) =>
+                existingExternals.push(...e)
+            );
+
+            expect(existingExternals).toEqual([
+                {
+                    id: 'lodash',
+                    source: 'lodashSource',
+                    language: 'javascript',
+                },
+                {
+                    id: 'react',
+                    source: 'reactSource',
+                    language: 'javascript',
+                },
+            ]);
+        });
+
+        it('should record library modules from builds', async () => {
+            expect(externals).toEqual([]);
+
+            bundler.bundleTag
+                .mockResolvedValueOnce({
+                    tag: 'script',
+                    source: 'abc',
+                    modules: {},
+                    externals: {},
+                    libraries: {
+                        lodash: {
+                            id: 'lodash',
+                            source: 'lodashSource',
+                            language: 'javascript',
+                        },
+                        react: {
+                            id: 'react',
+                            source: 'reactSource',
+                            language: 'javascript',
+                        },
+                    },
+                    warnings: [],
+                })
+                .mockResolvedValueOnce({
+                    tag: 'script',
+                    source: 'def',
+                    modules: {},
+                    externals: {},
+                    libraries: {
+                        lodash: {
+                            id: 'lodash',
+                            source: 'lodashSource',
+                            language: 'javascript',
+                        },
+                        react: {
+                            id: 'react',
+                            source: 'reactSource',
+                            language: 'javascript',
+                        },
+                        other: {
+                            id: 'other',
+                            source: 'otherSource',
+                            language: 'javascript',
+                        },
+                    },
+                    warnings: [],
+                });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    botId: null,
+                    tagOrSource: '🔺script',
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test2");',
+                    }),
+                })
+            );
+
+            await waitAsync();
+
+            expect(manager.libraryModules).toEqual({
+                lodash: {
+                    id: 'lodash',
+                    source: 'lodashSource',
+                    language: 'javascript',
+                },
+                react: {
+                    id: 'react',
+                    source: 'reactSource',
+                    language: 'javascript',
+                },
+                other: {
+                    id: 'other',
+                    source: 'otherSource',
+                    language: 'javascript',
+                },
+            });
+        });
+    });
+
+    describe('portalBotIdUpdated', () => {
+        let portals = [] as PortalBotData[];
+
+        beforeEach(() => {
+            portals = [];
+            sub.add(
+                manager.portalBotIdUpdated.subscribe((p) => portals.push(...p))
+            );
+        });
+
+        it('should resolve with new portal bot IDs', async () => {
+            expect(portals).toEqual([]);
+
+            bundler.bundleTag.mockResolvedValueOnce({
+                tag: 'script',
+                source: 'abc',
+                modules: {},
+                externals: {},
+                libraries: {},
+                warnings: [],
+            });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    botId: 'test',
+                    tagOrSource: null,
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(portals).toEqual([
+                {
+                    portalId: 'test-portal',
+                    botId: 'test',
+                },
+            ]);
+        });
+
+        it('should resolve with updated portal bot IDs', async () => {
+            expect(portals).toEqual([]);
+
+            bundler.bundleTag.mockResolvedValueOnce({
+                tag: 'script',
+                source: 'abc',
+                modules: {},
+                externals: {},
+                libraries: {},
+                warnings: [],
+            });
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    prefix: '🔺',
+                    options: {},
+                    taskId: 'task1',
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    botId: 'test',
+                    tagOrSource: null,
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+                {
+                    type: 'open_custom_portal',
+                    portalId: 'test-portal',
+                    botId: 'different',
+                    tagOrSource: null,
+                    taskId: 'task',
+                    options: {
+                        style: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(portals).toEqual([
+                {
+                    portalId: 'test-portal',
+                    botId: 'test',
+                },
+                {
+                    portalId: 'test-portal',
+                    botId: 'different',
                 },
             ]);
         });

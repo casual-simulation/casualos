@@ -1,8 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
-import some from 'lodash/some';
-import union from 'lodash/union';
+import { some, union, sortBy } from 'lodash';
 import {
     botTags,
     isHiddenTag,
@@ -41,7 +40,7 @@ import BotTag from '../BotTag/BotTag';
 import BotID from '../BotID/BotID';
 import { TreeView } from 'vue-json-tree-view';
 import { downloadAuxState } from '../../DownloadHelpers';
-import Cube from '../../public/icons/Cube.svg';
+import NewBot from '../../public/icons/NewBot.svg';
 import Hexagon from '../../public/icons/Hexagon.svg';
 import ResizeIcon from '../../public/icons/Resize.svg';
 import MultiIcon from '../../public/icons/Multi.svg';
@@ -51,9 +50,8 @@ import Bowser from 'bowser';
 import BotTagMini from '../BotTagMini/BotTagMini';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import { first } from 'rxjs/operators';
-import sumBy from 'lodash/sumBy';
+import { sumBy } from 'lodash';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
-import { groupBy, sortBy } from 'lodash';
 
 @Component({
     components: {
@@ -62,7 +60,7 @@ import { groupBy, sortBy } from 'lodash';
         'bot-tag': BotTag,
         'tag-editor': TagEditor,
         'tree-view': TreeView,
-        'cube-icon': Cube,
+        'new-bot-icon': NewBot,
         'hex-icon': Hexagon,
         'resize-icon': ResizeIcon,
         'multi-icon': MultiIcon,

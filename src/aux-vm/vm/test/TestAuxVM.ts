@@ -20,11 +20,11 @@ import {
     DeviceAction,
     CurrentVersion,
 } from '@casual-simulation/causal-trees';
-import values from 'lodash/values';
-import union from 'lodash/union';
+import { union } from 'lodash';
 import { AuxUser } from '../../AuxUser';
 import { StoredAux } from '../../StoredAux';
 import { ChannelActionResult } from '../../vm';
+import { MessageChannel } from 'worker_threads';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -173,6 +173,10 @@ export class TestAuxVM implements AuxVM {
 
     sendState(update: StateUpdatedEvent) {
         this._stateUpdated.next(update);
+    }
+
+    async createEndpoint() {
+        return new MessagePort();
     }
 
     unsubscribe(): void {}

@@ -105,6 +105,7 @@ export type AsyncActions =
     | AsyncErrorAction
     | ShowInputAction
     | ShareAction
+    | RegisterBuiltinPortalAction
     | OpenCustomPortalAction
     | BuildBundleAction
     | RegisterPrefixAction
@@ -180,7 +181,8 @@ export type AsyncActions =
     | CancelSoundAction
     | LocalPositionTweenAction
     | LocalRotationTweenAction
-    | ShowUploadFilesAction;
+    | ShowUploadFilesAction
+    | OpenCircleWipeAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2360,6 +2362,18 @@ export interface OpenCustomPortalOptions {
 }
 
 /**
+ * Defines an event that ensures a portal bot has been created for a portal.
+ */
+export interface RegisterBuiltinPortalAction {
+    type: 'register_builtin_portal';
+
+    /**
+     * The ID of the portal.
+     */
+    portalId: string;
+}
+
+/**
  * Defines an event that creates a custom portal using the given source code.
  */
 export interface OpenCustomPortalAction extends AsyncAction {
@@ -2370,9 +2384,14 @@ export interface OpenCustomPortalAction extends AsyncAction {
     portalId: string;
 
     /**
+     * The ID of the bot that should be used to configure this portal.
+     */
+    botId: string;
+
+    /**
      * The tag or bundle that the portal should use.
      */
-    tagOrSource: string;
+    tagOrSource: string | null;
 
     /**
      * The options for the portal.
@@ -2416,6 +2435,38 @@ export interface RegisterPrefixOptions {
      * The possible languages that prefixes can use.
      */
     language?: 'javascript' | 'typescript' | 'json' | 'jsx' | 'tsx' | 'text';
+}
+
+/**
+ * An event that is used to show or hide the circle wipe.
+ */
+export interface OpenCircleWipeAction extends AsyncAction {
+    type: 'show_circle_wipe';
+
+    /**
+     * Whether the circle wipe should be visible.
+     */
+    open: boolean;
+
+    /**
+     * The options for the circle wipe.
+     */
+    options: OpenCircleWipeOptions;
+}
+
+/**
+ * The options for the circle wipe.
+ */
+export interface OpenCircleWipeOptions {
+    /**
+     * The duration of this half of the circle wipe animation in seconds.
+     */
+    duration: number;
+
+    /**
+     * The color that the circle wipe should be.
+     */
+    color: string;
 }
 
 /**z
@@ -4586,21 +4637,57 @@ export function share(
 }
 
 /**
+ * Creates an action that opens/closes the circle wipe display element.
+ * @param open Whether the circle wipe should transition to open or closed.
+ * @param options The options that the circle wipe should use.
+ * @param taskId The ID of the task.
+ */
+export function circleWipe(
+    open: boolean,
+    options: OpenCircleWipeOptions,
+    taskId?: number | string
+): OpenCircleWipeAction {
+    return {
+        type: 'show_circle_wipe',
+        open,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that registers a portal that is builtin.
+ * This instructs the runtime to create a portal bot if one has not already been created.
+ * @param portalId The ID of the portal.
+ */
+export function registerBuiltinPortal(
+    portalId: string
+): RegisterBuiltinPortalAction {
+    return {
+        type: 'register_builtin_portal',
+        portalId,
+    };
+}
+
+/**
  * Creates an action that registers a custom portal.
  * @param portalId The ID of the portal,
+ * @param botId The ID of the bot that should be used to configure the portal.
  * @param tagOrSource The tag or bundle of source that the portal should use.
  * @param options The options for the portal.
  * @param taskId The ID of the task.
  */
 export function openCustomPortal(
     portalId: string,
-    tagOrSource: string,
+    botId: string,
+    tagOrSource: string | null,
     options: OpenCustomPortalOptions,
     taskId?: number | string
 ): OpenCustomPortalAction {
     return {
         type: 'open_custom_portal',
         portalId,
+        botId,
         tagOrSource,
         options,
         taskId,

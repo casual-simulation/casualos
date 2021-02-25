@@ -341,7 +341,7 @@ If it is a function, then it will be used to match values. Otherwise, only tags 
 1. Find the number of bots named bot and print it.
 ```typescript
 const numberOfBobs = getBotTagValues("#name", "bob").length;
-player.toast(numberOfBobs);
+os.toast(numberOfBobs);
 ```
 
 2. Find all the bot ages above `10`.
@@ -471,7 +471,7 @@ const response = await webhook({
     url: 'https://example.com',
 });
 
-player.toast(response);
+os.toast(response);
 ```
 
 2. Send a HTTP PUT request to `https://example.com` with some data.
@@ -530,7 +530,7 @@ const response = await webhook.post('https://example.com', {
     some: 'data'
 });
 
-player.toast(response);
+os.toast(response);
 ```
 
 ### `uuid()`
@@ -543,7 +543,7 @@ Creates a new UUID. Useful for generating a random identifier that is guaranteed
 ```typescript
 const id = uuid();
 
-player.toast(id);
+os.toast(id);
 ```
 
 ## Utility Actions
@@ -641,7 +641,7 @@ await animateTag(bot, "count", {
     duration: 5
 });
 
-player.toast("Animation finished!");
+os.toast("Animation finished!");
 ```
 
 2. Run 2 animations in sequence.
@@ -700,9 +700,9 @@ animateTag(bot, "homeX", {
     toValue: 5,
     duration: 2
 }).then(() => {
-    player.toast("Animation Finished!");
+    os.toast("Animation Finished!");
 }).catch(() => {
-    player.toast("Animation Canceled!");
+    os.toast("Animation Canceled!");
 });
 
 await sleep(500);
@@ -942,9 +942,9 @@ The **first parameter** is time in ms to wait. 1 second is 1000ms.
 
 1. Wait 2 seconds before proceeding.
 ```typescript
-player.toast("Stop!");
+os.toast("Stop!");
 await sleep(2000);
-player.toast("Hammer Time!");
+os.toast("Hammer Time!");
 ```
 
 ## Bot Filters
@@ -1213,7 +1213,7 @@ Sends the given action to another player.
 
 In CasualOS, all actions are messages which are placed in a queue and processed one at at time.
 
-For example, the <ActionLink action='player.toast(message, duration?)'/> action queues a message which, when processed, will show a toast message.
+For example, the <ActionLink action='os.toast(message, duration?)'/> action queues a message which, when processed, will show a toast message.
 However, before any action is performed, it is run through the <TagLink tag='@onServerAction'/> listener which can decide whether reject an action using <ActionLink action='action.reject(action)'/>.
 This lets you write rules for what actions each player is allowed to take.
 
@@ -1234,7 +1234,7 @@ If specified, then the action is sent to all players that match the given values
 const otherPlayerBotId = 'otherPlayerBotId';
 
 // Create a toast action
-const toastAction = player.toast('My message!');
+const toastAction = os.toast('My message!');
 
 // Send the action to the other player
 // The toastAction will not be performed locally because
@@ -1242,7 +1242,42 @@ const toastAction = player.toast('My message!');
 remote(toastAction, otherPlayerBotId);
 ```
 
+### `sendRemoteData(playerId, name, arg?)`
+
+Sends a <TagLink tag='@onRemoteData'/> shout to the player with the given ID or players if given a list of IDs.
+This is useful for sending arbitrary messages to specific players.
+
+The **first parameter** is the player ID or list of player IDs that the shout should be sent to.
+
+The **second parameter** is the name of the event that is being sent. This is useful for telling the difference between different messages.
+
+The **third parameter** is optional and is the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
+
+#### Examples:
+
+1. Send a "custom" message to another player.
+```typescript
+const otherPlayerBotId = "otherPlayerBotId";
+
+// The other player will receive a @onRemoteData with 
+// that.name === "custom" and that.that === "Hello"
+sendRemoteData(otherPlayerBotId, "custom", "Hello");
+```
+
+2. Send a message to all other players.
+```typescript
+const players = await server.players();
+const playerId = getID(configBot);
+const otherPlayers = players.filter(id => id !== playerId);
+
+// All other players will receive a @onRemoteData with
+// that.name === "custom" and that.that === "Hello"
+sendRemoteData(otherPlayers, "custom", "Hello");
+```
+
 ### `remoteWhisper(playerId, name, arg?)`
+
+NOTICE: This method is deprecated in favor of <ActionLink action='sendRemoteData(playerId, name, arg?)'/>.
 
 Sends a <TagLink tag='@onRemoteWhisper'/> shout to the player with the given ID or players if given a list of IDs.
 This is useful for sending arbitrary messages to specific players.
@@ -1267,7 +1302,7 @@ remoteWhisper(otherPlayerBotId, "custom", "Hello");
 2. Send a message to all other players.
 ```typescript
 const players = await server.players();
-const playerId = getID(player.getBot());
+const playerId = getID(configBot);
 const otherPlayers = players.filter(id => id !== playerId);
 
 // All other players will receive a @onRemoteWhisper with
@@ -1276,6 +1311,8 @@ remoteWhisper(otherPlayers, "custom", "Hello");
 ```
 
 ### `remoteShout(name, arg?)`
+
+NOTICE: This method is deprecated in favor of <ActionLink action='sendRemoteData(playerId, name, arg?)'/>.
 
 Sends a <TagLink tag='@onRemoteWhisper'/> shout to all the players in the current server.
 The listener will be triggered on all players connected to the server, including the local player.
@@ -1322,13 +1359,13 @@ The **first parameter** is the action that should be prevented/rejected.
 
 1. Prevent a toast message from being performed.
 ```typescript
-const toastAction = player.toast("my message");
+const toastAction = os.toast("my message");
 action.reject(toastAction);
 ```
 
-## Player Actions
+## OS Actions
 
-### `player.checkout(options)`
+### `os.checkout(options)`
 
 
 Shows a payment screen modal that lets the player purchase something.
@@ -1344,7 +1381,7 @@ The **first parameter** is the options to use to setup the checkout screen.
 
 1. Show a checkout box for 10 cookies.
 ```typescript
-player.checkout({
+os.checkout({
     publishableKey: 'YOUR_PUBLISHABLE_API_KEY',
     productId: '10_cookies',
     title: '10 Cookies',
@@ -1353,7 +1390,7 @@ player.checkout({
 });
 ```
 
-### `player.download(data, filename, mimeType?)`
+### `os.download(data, filename, mimeType?)`
 
 Downloads the given data with the given filename and [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types).
 
@@ -1370,10 +1407,10 @@ If not provided, then it will be inferred from the provided filename.
 
 1. Download a text file named "test.txt" that contains "abc".
 ```typescript
-player.download("abc", "test.txt");
+os.download("abc", "test.txt");
 ```
 
-### `player.downloadBots(bots, filename)`
+### `os.downloadBots(bots, filename)`
 
 
 Downloads the given array of bots as a `.aux` file with the given filename.
@@ -1388,15 +1425,15 @@ The **second parameter** is the name of the file that the bots should be stored 
 
 1. Download all the bots in the "abc" dimension as "abcBots.aux".
 ```typescript
-player.downloadBots(getBots(inDimension("abc")), "abcBots");
+os.downloadBots(getBots(inDimension("abc")), "abcBots");
 ```
 
 2. Download the current bot as "currentBot.aux".
 ```typescript
-player.downloadBots([bot], "currentBot");
+os.downloadBots([bot], "currentBot");
 ```
 
-### `player.run(script)`
+### `os.run(script)`
 
 
 Runs the given script.
@@ -1411,21 +1448,21 @@ The **first parameter** is the script that should be executed.
 
 1. Run a script that says "hello".
 ```typescript
-player.run("player.toast('hello');");
+os.run("os.toast('hello');");
 ```
 
 2. Run a script from the `#script` tag on the current bot.
 ```typescript
-player.run(tags.script);
+os.run(tags.script);
 ```
 
 3. Run a script and toast the result.
 ```typescript
-const result = await player.run("return 594 + 391");
-player.toast(result);
+const result = await os.run("return 594 + 391");
+os.toast(result);
 ```
 
-### `player.replaceDragBot(botOrMod)`
+### `os.replaceDragBot(botOrMod)`
 
 Replaces the bot that the user is dragging with the given bot or mod.
 
@@ -1441,17 +1478,17 @@ If given a bot when not dragging, then that bot's <TagLink tag='@onDrag'/> and <
 1. Drag a clone of this bot.
 ```typescript
 let clone = create(this);
-player.replaceDragBot(clone);
+os.replaceDragBot(clone);
 ```
 
 2. Drag a mod that makes other bots red.
 ```typescript
-player.replaceDragBot({
+os.replaceDragBot({
     "color": "red"
 });
 ```
 
-### `player.showChat(placeholder?)`
+### `os.showChat(placeholder?)`
 
 
 Shows the "chat bar" at the top of the screen in auxPlayer, optionally using the given text as the placeholder.
@@ -1463,15 +1500,15 @@ The **first parameter** is the text that the chat bar should show as the placeho
 
 1. Show the chat bar.
 ```typescript
-player.showChat();
+os.showChat();
 ```
 
 2. Show the chat bar with some placeholder text.
 ```typescript
-player.showChat("hello");
+os.showChat("hello");
 ```
 
-### `player.showChat(options)`
+### `os.showChat(options)`
 
 
 Shows the "chat bar" at the top of the screen in auxPlayer, using the given options.
@@ -1487,21 +1524,21 @@ It should be an object with the following properties:
 
 1. Show the chat bar with a placeholder.
 ```typescript
-player.showChat({
+os.showChat({
     placeholder: "hello"
 });
 ```
 
 2. Show the chat bar with some prefilled text.
 ```typescript
-player.showChat({
+os.showChat({
     prefill: "this is prefilled"
 });
 ```
 
 3. Show the chat bar with some prefilled text and a placeholder.
 ```typescript
-player.showChat({
+os.showChat({
     prefill: "this is prefilled",
     placeholder: "hello"
 });
@@ -1509,13 +1546,13 @@ player.showChat({
 
 4. Show the chat bar with a custom placeholder color.
 ```typescript
-player.showChat({
+os.showChat({
     placeholder: "hello",
     placeholderColor: '#44a471'
 });
 ```
 
-### `player.hideChat()`
+### `os.hideChat()`
 
 
 Hides the "chat bar" at the top of the screen in auxPlayer.
@@ -1524,10 +1561,10 @@ Hides the "chat bar" at the top of the screen in auxPlayer.
 
 1. Hide the chat bar.
 ```typescript
-player.hideChat();
+os.hideChat();
 ```
 
-### `player.showHtml(html)`
+### `os.showHtml(html)`
 
 
 Shows some HTML to the player in a popup modal. This can be useful for loading a separate webpage or providing some formatted text.
@@ -1538,14 +1575,14 @@ The **first parameter** is the HTML that should be shown to the user.
 
 1. Show a header with some text.
 ```typescript
-player.showHtml(`
+os.showHtml(`
   <h1>This is some text!</h1>
 `);
 ```
 
 2. Show a YouTube video.
 ```typescript
-player.showHtml(`
+os.showHtml(`
   <iframe
       width="560" 
       height="315"
@@ -1557,7 +1594,7 @@ player.showHtml(`
 `);
 ```
 
-### `player.hideHtml()`
+### `os.hideHtml()`
 
 
 Closes the HTML popup modal.
@@ -1566,10 +1603,10 @@ Closes the HTML popup modal.
 
 1. Hide the HTML popup.
 ```typescript
-player.hideHtml();
+os.hideHtml();
 ```
 
-### `player.share(options)`
+### `os.share(options)`
 
 
 Shares the given URL or text via the device's social share capabilities.
@@ -1584,19 +1621,123 @@ The **first parameter** is an object with at least one the following properties:
 
 1. Share a URL.
 ```typescript
-player.share({
+os.share({
     url: 'https://example.com'
 });
 ```
 
 2. Share some text.
 ```typescript
-player.share({
+os.share({
     text: 'abcdefghijklmnopqrstuvwxyz'
 });
 ```
 
-### `player.toast(message, duration?)`
+### `os.openCircleWipe(options?)`
+
+Causes the circular wipe animation to open around the screen. This can be used to reveal the page portal after transitioning between screens.
+Returns a promise that resolves when the animation has finished running.
+The promise will throw an exception if <ActionLink action='os.closeCircleWipe(options?)'/> is called while the animation is running.
+
+The **first parameter** is optional and is an object that contains options for the animation:
+```typescript
+let options: {
+    /**
+     * The duration of this half of the circle wipe animation in seconds.
+     * Defaults to 1.
+     */
+    duration?: number;
+
+    /**
+     * The color that the circle wipe should be.
+     * Defaults to "black".
+     */
+    color?: string;
+}
+```
+
+#### Examples:
+
+1. Reveal the page portal with a circular wipe animation.
+```typescript
+await os.openCircleWipe();
+os.toast("Revealed!");
+```
+
+2. Hide the page portal and show it after an additional second.
+```typescript
+await os.closeCircleWipe();
+await sleep(1000);
+await os.openCircleWipe();
+```
+
+3. Use a custom color for the circle wipe.
+```typescript
+await os.openCircleWipe({
+    color: '#63f1aa'
+});
+```
+
+4. Make the circle wipe take 5 seconds to complete.
+```typescript
+await os.openCircleWipe({
+    duration: 5
+});
+```
+
+### `os.closeCircleWipe(options?)`
+
+Causes a circular wipe animation to close around the screen. This can be used to cover the page portal while transitioning between scenes.
+Returns a promise that resolves when the animation has finished running.
+The promise will throw an exception if <ActionLink action='os.openCircleWipe(options?)'/> is called while the animation is running.
+
+The **first parameter** is optional and is an object that contains options for the animation:
+```typescript
+let options: {
+    /**
+     * The duration of this half of the circle wipe animation in seconds.
+     * Defaults to 1.
+     */
+    duration?: number;
+
+    /**
+     * The color that the circle wipe should be.
+     * Defaults to "black".
+     */
+    color?: string;
+}
+```
+
+#### Examples:
+
+1. Hide the page portal with a circular wipe animation.
+```typescript
+await os.closeCircleWipe();
+os.toast("Hidden!");
+```
+
+2. Hide the page portal and show it after an additional second.
+```typescript
+await os.closeCircleWipe();
+await sleep(1000);
+await os.openCircleWipe();
+```
+
+3. Use a custom color for the circle wipe.
+```typescript
+await os.closeCircleWipe({
+    color: '#63f1aa'
+});
+```
+
+4. Make the circle wipe take 5 seconds to complete.
+```typescript
+await os.closeCircleWipe({
+    duration: 5
+});
+```
+
+### `os.toast(message, duration?)`
 
 
 Shows a temporary "toast" notification to the player at the bottom of the screen with the given message.
@@ -1610,15 +1751,15 @@ The **second parameter** is optional and is the number of seconds that the messa
 
 1. Show a "Hello!" toast message.
 ```typescript
-player.toast("Hello!");
+os.toast("Hello!");
 ```
 
 2. Show the player a code for 5 seconds.
 ```typescript
-player.toast("this is the code", 5);
+os.toast("this is the code", 5);
 ```
 
-### `player.tweenTo(bot, zoomValue?, rotX?, rotY?, duration?)`
+### `os.tweenTo(bot, zoomValue?, rotX?, rotY?, duration?)`
 
 
 Smoothly moves the player's view to center on the given bot. Optionally accepts target values for the zoom, rotation X, and rotation Y.
@@ -1640,10 +1781,10 @@ The **fifth parameter** is optional and is the amount of time in seconds that th
 
 1. Transition the player's view to show a bot named bob.
 ```typescript
-player.tweenTo(getBot("#name", "bob"))
+os.tweenTo(getBot("#name", "bob"))
 ```
 
-### `player.moveTo(bot, zoomValue?, rotX?, rotY?)`
+### `os.moveTo(bot, zoomValue?, rotX?, rotY?)`
 
 
 Instantly moves the player's view to center on the given bot. Optionally accepts target values for the zoom, rotation X, and rotation Y.
@@ -1665,10 +1806,10 @@ If no value is specified, then the Y rotation will remain at its current value.
 
 1. Move the player's view to show a bot named bob.
 ```typescript
-player.moveTo(getBot("#name", "bob"))
+os.moveTo(getBot("#name", "bob"))
 ```
 
-### `player.openQRCodeScanner(camera?)`
+### `os.openQRCodeScanner(camera?)`
 
 
 Opens the [QR Code](https://en.wikipedia.org/wiki/QR_code) scanner. While open, each scanned QR Code will send a <TagLink tag='@onQRCodeScanned'/> shout.
@@ -1691,15 +1832,15 @@ Possible values are:
 
 1. Open the QR Code scanner.
 ```typescript
-player.openQRCodeScanner();
+os.openQRCodeScanner();
 ```
 
 2. Open the QR Code scanner for the front-facing camera.
 ```typescript
-player.openQRCodeScanner("front");
+os.openQRCodeScanner("front");
 ```
 
-### `player.closeQRCodeScanner(camera?)`
+### `os.closeQRCodeScanner(camera?)`
 
 
 Closes the QR Code scanner.
@@ -1708,10 +1849,10 @@ Closes the QR Code scanner.
 
 1. Close the QR Code scanner.
 ```typescript
-player.closeQRCodeScanner();
+os.closeQRCodeScanner();
 ```
 
-### `player.showQRCode(code)`
+### `os.showQRCode(code)`
 
 
 Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) for the given data.
@@ -1722,10 +1863,10 @@ The **first parameter** is the text or data that the generated QR Code should re
 
 1. Show a QR Code that contains the data "hello".
 ```typescript
-player.showQRCode("hello");
+os.showQRCode("hello");
 ```
 
-### `player.hideQRCode()`
+### `os.hideQRCode()`
 
 
 Closes the QR Code popup modal.
@@ -1734,10 +1875,10 @@ Closes the QR Code popup modal.
 
 1. Hides the QR Code popup modal.
 ```typescript
-player.hideQRCode();
+os.hideQRCode();
 ```
 
-### `player.showJoinCode(server?, dimension?)`
+### `os.showJoinCode(server?, dimension?)`
 
 
 Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) with a link to join the given server and dimension.
@@ -1751,15 +1892,15 @@ The **second parameter** is the dimension that the code should be shown for.
 
 1. Show a join QR Code.
 ```typescript
-player.showJoinCode();
+os.showJoinCode();
 ```
 
 2. Show a join QR Code for a server and dimension.
 ```typescript
-player.showJoinCode("server", "dimension");
+os.showJoinCode("server", "dimension");
 ```
 
-### `player.openBarcodeScanner(camera?)`
+### `os.openBarcodeScanner(camera?)`
 
 
 Opens the [Barcode](https://en.wikipedia.org/wiki/Barcode) scanner. While open, each scanned Barcode will send a <TagLink tag='@onBarcodeScanned'/> shout.
@@ -1782,15 +1923,15 @@ Possible values are:
 
 1. Open the Barcode scanner.
 ```typescript
-player.openBarcodeScanner();
+os.openBarcodeScanner();
 ```
 
 2. Open the Barcode scanner for the front-facing camera.
 ```typescript
-player.openBarcodeScanner("front");
+os.openBarcodeScanner("front");
 ```
 
-### `player.closeBarcodeScanner(camera?)`
+### `os.closeBarcodeScanner(camera?)`
 
 
 Closes the Barcode scanner.
@@ -1799,10 +1940,10 @@ Closes the Barcode scanner.
 
 1. Close the Barcode scanner.
 ```typescript
-player.closeBarcodeScanner();
+os.closeBarcodeScanner();
 ```
 
-### `player.showBarcode(code, format?)`
+### `os.showBarcode(code, format?)`
 
 
 Shows a [Barcode](https://en.wikipedia.org/wiki/Barcode) for the given data. Optionally accepts the format that the barcode should be displayed in.
@@ -1845,15 +1986,15 @@ Possible values are:
 
 1. Show a Barcode that contains the data "hello".
 ```typescript
-player.showBarcode("hello");
+os.showBarcode("hello");
 ```
 
 1. Show a UPC Barcode that contains the data "123456".
 ```typescript
-player.showBarcode("123456", 'upc');
+os.showBarcode("123456", 'upc');
 ```
 
-### `player.hideBarcode()`
+### `os.hideBarcode()`
 
 
 Closes the Barcode popup modal.
@@ -1862,17 +2003,17 @@ Closes the Barcode popup modal.
 
 1. Hides the Barcode popup modal.
 ```typescript
-player.hideBarcode();
+os.hideBarcode();
 ```
 
-### `player.showInput(value?, options?)`
+### `os.showInput(value?, options?)`
 
 
 Shows an input modal with the given value and options.
 When shown, the player will be able to change the value.
 
 Returns a [Promise](https://web.dev/promises/) that resolves with the final value when the user is finished editing.
-This function is similar to <ActionLink action='player.showInputForTag(bot, tag, options?)'/> except it doesn't require a bot and a tag.
+This function is similar to <ActionLink action='os.showInputForTag(bot, tag, options?)'/> except it doesn't require a bot and a tag.
 
 The **first parameter** is optional  and is the value that should be shown in the input modal,
 
@@ -1882,45 +2023,45 @@ The **third parameter** is optional and is the possible cusomization options for
 
 1. Show a basic text input modal and displays a toast message with the input value.
 ```typescript
-const value = await player.showInput();
-player.toast(value);
+const value = await os.showInput();
+os.toast(value);
 ```
 
 2. Show a text input modal with a placeholder.
 ```typescript
-const name = await player.showInput(null, {
+const name = await os.showInput(null, {
     placeholder: 'Enter a name'
 });
-player.toast(name);
+os.toast(name);
 ```
 
 3. Show a input modal with a custom title.
 ```typescript
-const name = await player.showInput('My Name', {
+const name = await os.showInput('My Name', {
     title: 'Edit name'
 });
-player.toast(name);
+os.toast(name);
 ```
 
 4. Show a color input modal with a custom title.
 ```typescript
-const color = await player.showInput('green', {
+const color = await os.showInput('green', {
     type: 'color',
     title: 'Enter a custom color'
 });
-player.toast(color);
+os.toast(color);
 ```
 
 5. Show an input for entering secrets (like passwords).
 ```typescript
-const secret = await player.showInput('', {
+const secret = await os.showInput('', {
     type: 'secret',
     title: 'Enter a secret key'
 });
-player.toast(secret);
+os.toast(secret);
 ```
 
-### `player.showInputForTag(bot, tag, options?)`
+### `os.showInputForTag(bot, tag, options?)`
 
 
 Shows an input modal for the given bot and tag with the given options.
@@ -1937,32 +2078,32 @@ The **third parameter** is optional and is the possible cusomization options for
 
 1. Show a basic text input modal for the `#name` tag on this bot.
 ```typescript
-player.showInputForTag(this, "name");
+os.showInputForTag(this, "name");
 ```
 
 2. Show a text input modal with a placeholder for the `#name` tag.
 ```typescript
-player.showInputForTag(this, "name", {
+os.showInputForTag(this, "name", {
     placeholder: 'Enter a name'
 });
 ```
 
 3. Show a input modal with a custom title.
 ```typescript
-player.showInputForTag(this, "name", {
+os.showInputForTag(this, "name", {
     title: 'Edit name'
 });
 ```
 
 4. Show a color input modal with a custom title.
 ```typescript
-player.showInputForTag(this, "color", {
+os.showInputForTag(this, "color", {
     type: 'color',
     title: 'Enter a custom color'
 });
 ```
 
-### `player.setClipboard(text)`
+### `os.setClipboard(text)`
 
 
 Copies the given text to the player's clipboard. On Chrome and Firefox, this will act like a `Ctrl+C`/`Cmd+C`. 
@@ -1974,10 +2115,10 @@ The **first parameter** is the text that should be copied to the player's clipbo
 
 1. Copy "hello" to the player's clipboard.
 ```typescript
-player.setClipboard("hello");
+os.setClipboard("hello");
 ```
 
-### `player.showUploadFiles()`
+### `os.showUploadFiles()`
 
 Shows the "Upload Files" dialog which lets the user select some files to upload to the server.
 Returns a promise that resolves with the list of files that were uploaded.
@@ -2018,12 +2159,12 @@ let file: {
 
 1. Show the "Upload Files" dialog.
 ```typescript
-const files = await player.showUploadFiles();
+const files = await os.showUploadFiles();
 
-player.toast("You uploaded " + files.length + " file(s)!");
+os.toast("You uploaded " + files.length + " file(s)!");
 ```
 
-### `player.showUploadAuxFile()`
+### `os.showUploadAuxFile()`
 
 
 Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to upload to the server.
@@ -2032,10 +2173,10 @@ Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to u
 
 1. Show the "Upload AUX File" dialog.
 ```typescript
-player.showUploadAuxFile();
+os.showUploadAuxFile();
 ```
 
-### `player.loadServer(server)`
+### `os.loadServer(server)`
 
 
 Loads the given univese into the current browser tab. When the server is loaded, the <TagLink tag='@onServerSubscribed'/> shout will be triggered.
@@ -2048,10 +2189,10 @@ The **first parameter** is the name of the server to load.
 
 1. Load the `fun` server.
 ```typescript
-player.loadServer("fun");
+os.loadServer("fun");
 ```
 
-### `player.unloadServer()`
+### `os.unloadServer()`
 
 Unloads the given server from the current browser tab. When the server is unloaded, the <TagLink tag='@onServerUnsubscribed'/> shout will be triggered.
 
@@ -2061,26 +2202,26 @@ The **first parameter** is the name of the server to unload.
 
 1. Unload the `fun` server.
 ```typescript
-player.unloadServer('fun');
+os.unloadServer('fun');
 ```
 
-### `player.downloadServer()`
+### `os.downloadServer()`
 
 
 Downloads all of the shared bots into a `.aux` file on the player's computer.
 The file will have the same name as the server.
 
-Note that this function is almost exactly the same as <ActionLink action='player.downloadBots(bots, filename)'/>.
+Note that this function is almost exactly the same as <ActionLink action='os.downloadBots(bots, filename)'/>.
 The only difference is that all bots in the shared space are included and the file is named for you automatically.
 
 #### Examples:
 
 1. Download the entire server.
 ```typescript
-player.downloadServer();
+os.downloadServer();
 ```
 
-### `player.enableAR()`
+### `os.enableAR()`
 
 
 Enables augmented reality on the device.
@@ -2089,10 +2230,10 @@ Enables augmented reality on the device.
 
 1. Enable AR.
 ```typescript
-player.enableAR();
+os.enableAR();
 ```
 
-### `player.disableAR()`
+### `os.disableAR()`
 
 
 Disables augmented reality on the device.
@@ -2101,10 +2242,10 @@ Disables augmented reality on the device.
 
 1. Disable AR.
 ```typescript
-player.disableAR();
+os.disableAR();
 ```
 
-### `player.enableVR()`
+### `os.enableVR()`
 
 
 Enables virtual reality on the device.
@@ -2113,10 +2254,10 @@ Enables virtual reality on the device.
 
 1. Enable VR.
 ```typescript
-player.enableVR();
+os.enableVR();
 ```
 
-### `player.disableVR()`
+### `os.disableVR()`
 
 
 Disables virtual reality on the device.
@@ -2125,10 +2266,10 @@ Disables virtual reality on the device.
 
 1. Disable VR.
 ```typescript
-player.disableVR();
+os.disableVR();
 ```
 
-### `player.getCurrentServer()`
+### `os.getCurrentServer()`
 
 
 Gets the server that the player is in.
@@ -2137,62 +2278,62 @@ Gets the server that the player is in.
 
 1. Show a message of the current server.
 ```typescript
-const server = player.getCurrentServer();
-player.toast(server);
+const server = os.getCurrentServer();
+os.toast(server);
 ```
 
-### `player.getCurrentDimension()`
+### `os.getCurrentDimension()`
 
 
 Gets the dimension that is loaded into the <TagLink tag='pagePortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "pagePortal".
+    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "pagePortal".
 </Alert>
 
 #### Examples:
 
 1. Show a message of the dimension that is currently in the <TagLink tag='pagePortal'/> portal.
 ```typescript
-const dimension = player.getCurrentDimension();
-player.toast(dimension);
+const dimension = os.getCurrentDimension();
+os.toast(dimension);
 ```
 
-### `player.getMenuDimension()`
+### `os.getMenuDimension()`
 
 
 Gets the dimension that is loaded into the <TagLink tag='menuPortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "menuPortal".
+    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "menuPortal".
 </Alert>
 
 #### Examples:
 
 1. Show a message of the dimension that is currently in the <TagLink tag='menuPortal'/> portal.
 ```typescript
-const dimension = player.getMenuDimension();
-player.toast(dimension);
+const dimension = os.getMenuDimension();
+os.toast(dimension);
 ```
 
-### `player.getInventoryDimension()`
+### `os.getInventoryDimension()`
 
 
 Gets the dimension that is loaded into the <TagLink tag='inventoryPortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "inventoryPortal".
+    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "inventoryPortal".
 </Alert>
 
 #### Examples:
 
 1. Show a message of the dimension that is currently in the <TagLink tag='inventoryPortal'/> portal.
 ```typescript
-const dimension = player.getInventoryDimension();
-player.toast(dimension);
+const dimension = os.getInventoryDimension();
+os.toast(dimension);
 ```
 
-### `player.hasBotInInventory(bot)`
+### `os.hasBotInInventory(bot)`
 
 
 Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='inventoryPortal'/> portal.
@@ -2204,12 +2345,12 @@ The **first parameter** is the bot that should be checked.
 1. Show a message if a bot named bob is in the inventory.
 ```typescript
 const bob = getBot("#name", "bob");
-if (player.hasBotInInventory(bob)) {
-    player.toast("bob is in the inventory!");
+if (os.hasBotInInventory(bob)) {
+    os.toast("bob is in the inventory!");
 }
 ```
 
-### `player.getPortalDimension(portal)`
+### `os.getPortalDimension(portal)`
 
 
 Gets the dimension that is loaded into the given portal.
@@ -2236,20 +2377,20 @@ Possible values are:
 
 1. Get the dimension that is currently showing in the <TagLink tag='pagePortal'/>.
 ```typescript
-const dimension = player.getPortalDimension('page');
+const dimension = os.getPortalDimension('page');
 ```
 
 2. Get the dimension that is currently showing in the <TagLink tag='inventoryPortal'/>.
 ```typescript
-const dimension = player.getPortalDimension('inventory');
+const dimension = os.getPortalDimension('inventory');
 ```
 
 3. Get the dimension that is currently showing in the `#auxCustomPortal` tag.
 ```typescript
-const dimension = player.getPortalDimension('auxCustomPortal');
+const dimension = os.getPortalDimension('auxCustomPortal');
 ```
 
-### `player.getDimensionalDepth(dimension)`
+### `os.getDimensionalDepth(dimension)`
 
 
 Gets the distance that the player bot is from the given dimension.
@@ -2274,36 +2415,33 @@ Possible return values are:
 
 1. Get the distance to the "fun" dimension.
 ```typescript
-const distance = player.getDimensionalDepth("fun");
+const distance = os.getDimensionalDepth("fun");
 if (distance === 0) {
-    player.toast("Player is in the fun dimension");
+    os.toast("Player is in the fun dimension");
 } else if(distance === 1) {
-    player.toast("Player is viewing the fun dimension");
+    os.toast("Player is viewing the fun dimension");
 } else {
-    player.toast("Player cannot access the fun dimension");
+    os.toast("Player cannot access the fun dimension");
 }
 ```
 
-### `player.getBot()`
+### `configBot`
 
-
-Gets the player bot. This is the bot that represents the player's browser tab.
+Gets the config bot (formerly known as the player bot). This is the bot that represents the player's browser tab.
 
 #### Examples:
 
 1. Get the player bot and set a username on it.
 ```typescript
-const playerBot = player.getBot();
-playerBot.tags.username = "bob";
+configBot.tags.username = "bob";
 ```
 
 2. Open the sheet to "testDimension".
 ```typescript
-const playerBot = player.getBot();
-playerBot.tags.sheetPortal = "testDimension";
+configBot.tags.sheetPortal = "testDimension";
 ```
 
-### `player.getCameraPosition(portal?)`
+### `os.getCameraPosition(portal?)`
 
 Gets the 3D position that the player's camera is at in the given portal.
 
@@ -2323,15 +2461,15 @@ Possible values are:
 
 1. Get the position of the player in the page portal.
 ```typescript
-const position = player.getCameraPosition("page");
+const position = os.getCameraPosition("page");
 ```
 
 2. Get the position of the player in the inventory portal.
 ```typescript
-const position = player.getCameraPosition("inventory");
+const position = os.getCameraPosition("inventory");
 ```
 
-### `player.getCameraRotation(portal?)`
+### `os.getCameraRotation(portal?)`
 
 Gets the 3D rotation that the player's camera is at in the given portal.
 
@@ -2351,15 +2489,15 @@ Possible values are:
 
 1. Get the rotation of the player in the page portal.
 ```typescript
-const rotation = player.getCameraRotation("page");
+const rotation = os.getCameraRotation("page");
 ```
 
 2. Get the rotation of the player in the inventory portal.
 ```typescript
-const rotation = player.getCameraRotation("inventory");
+const rotation = os.getCameraRotation("inventory");
 ```
 
-### `player.getPointerPosition(pointer?)`
+### `os.getPointerPosition(pointer?)`
 
 Gets the position that the given pointer is at.
 
@@ -2382,15 +2520,15 @@ Possible values are:
 
 1. Get the position of the mouse pointer.
 ```typescript
-const position = player.getPointerPosition("mouse");
+const position = os.getPointerPosition("mouse");
 ```
 
 2. Get the position of the left pointer.
 ```typescript
-const position = player.getPointerPosition("left");
+const position = os.getPointerPosition("left");
 ```
 
-### `player.getPointerRotation(pointer?)`
+### `os.getPointerRotation(pointer?)`
 
 Gets the rotation that the given pointer is at.
 
@@ -2413,15 +2551,15 @@ Possible values are:
 
 1. Get the rotation of the mouse pointer.
 ```typescript
-const rotation = player.getPointerRotation("mouse");
+const rotation = os.getPointerRotation("mouse");
 ```
 
 2. Get the rotation of the left pointer.
 ```typescript
-const rotation = player.getPointerRotation("left");
+const rotation = os.getPointerRotation("left");
 ```
 
-### `player.getPointerDirection(pointer?)`
+### `os.getPointerDirection(pointer?)`
 
 Gets the direction that the given pointer is pointed in.
 
@@ -2446,22 +2584,22 @@ Possible values are:
 
 1. Get the direction of the mouse pointer.
 ```typescript
-const direction = player.getPointerDirection("mouse");
+const direction = os.getPointerDirection("mouse");
 ```
 
 2. Get the direction of the left pointer.
 ```typescript
-const direction = player.getPointerDirection("left");
+const direction = os.getPointerDirection("left");
 ```
 
 3. Find where the mouse is pointing on the ground.
 ```typescript
-const position = player.getPointerPosition();
-const direction = player.getPointerDirection();
+const position = os.getPointerPosition();
+const direction = os.getPointerDirection();
 const groundPosition = math.intersectPlane(position, direction);
 ```
 
-### `player.getInputState(controller, button)`
+### `os.getInputState(controller, button)`
 
 Gets the state of the given button on the given controller.
 
@@ -2530,33 +2668,33 @@ Possible values are:
 
 1. Send a toast if the left mouse button is clicked.
 ```typescript
-const state = player.getInputState("mousePointer", "left");
+const state = os.getInputState("mousePointer", "left");
 if (state) {
-    player.toast("Left mouse button is down!");
+    os.toast("Left mouse button is down!");
 }
 ```
 
 2. Send a toast if the shift key is down.
 ```typescript
-const state = player.getInputState("keyboard", "Shift");
+const state = os.getInputState("keyboard", "Shift");
 if (state) {
-    player.toast("Shift is down!");
+    os.toast("Shift is down!");
 }
 ```
 
-### `player.getInputList()`
+### `os.getInputList()`
 
-Gets the list of supported inputs. The returned strings can be used for the `controller` property in <ActionLink action='player.getInputState(controller, button)'/> calls.
+Gets the list of supported inputs. The returned strings can be used for the `controller` property in <ActionLink action='os.getInputState(controller, button)'/> calls.
 
 #### Examples:
 
 1. Get a list of inputs and toast them.
 ```typescript
-const state = player.getInputList();
-player.toast(state);
+const state = os.getInputList();
+os.toast(state);
 ```
 
-### `player.goToDimension(dimension)`
+### `os.goToDimension(dimension)`
 
 
 Loads the given dimension into the <TagLink tag='pagePortal'/> portal.
@@ -2568,10 +2706,10 @@ The **first parameter** is the dimension that should be loaded.
 
 1. Load the `abc` dimension.
 ```typescript
-player.goToDimension('abc');
+os.goToDimension('abc');
 ```
 
-### `player.goToURL(url)`
+### `os.goToURL(url)`
 
 
 Redirects the current tab to the given URL. Useful for sending the player to another webpage or ambient experience.
@@ -2582,10 +2720,10 @@ The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) that the
 
 1. Send the player to `https://example.com`.
 ```typescript
-player.goToURL("https://example.com");
+os.goToURL("https://example.com");
 ```
 
-### `player.openURL(url)`
+### `os.openURL(url)`
 
 
 Opens a new tab with the given URL. Useful for opening another webpage without redirecting the current tab.
@@ -2596,10 +2734,10 @@ The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) that sho
 
 1. Open `https://example.com` in a new tab.
 ```typescript
-player.openURL("https://example.com");
+os.openURL("https://example.com");
 ```
 
-### `player.openDevConsole()`
+### `os.openDevConsole()`
 
 
 Opens the developer console which contains a list of errors that scripts have issued.
@@ -2608,15 +2746,15 @@ Opens the developer console which contains a list of errors that scripts have is
 
 1. Open the developer console.
 ```typescript
-player.openDevConsole();
+os.openDevConsole();
 ```
 
-### `player.playSound(url)`
+### `os.playSound(url)`
 
 Loads and plays the audio (MP3, WAV, etc.) from the given URL.
 
 Returns a promise that resolves with the ID of the sound when the sound starts playing.
-The sound ID can then be used with <ActionLink action='player.cancelSound(soundID)'/> to stop the sound.
+The sound ID can then be used with <ActionLink action='os.cancelSound(soundID)'/> to stop the sound.
 
 The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) of the audio/music/sound clip that should be played.
 
@@ -2624,15 +2762,15 @@ The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) of the a
 
 1. Play a MP3 file from another website.
 ```typescript
-player.playSound("https://www.testsounds.com/track06.mp3");
+os.playSound("https://www.testsounds.com/track06.mp3");
 ```
 
-### `player.bufferSound(url)`
+### `os.bufferSound(url)`
 
 Loads the audio from the given URL without playing it.
 Returns a promise that resolves once the sound has been loaded.
 
-This is useful for pre-loading a sound so that there will be no delay when playing it with <ActionLink action='player.playSound(url)'/>.
+This is useful for pre-loading a sound so that there will be no delay when playing it with <ActionLink action='os.playSound(url)'/>.
 
 The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) of the audio/music/sound clip that should be loaded.
 
@@ -2640,25 +2778,25 @@ The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) of the a
 
 1. Pre-load a MP3 fiel from another website.
 ```typescript
-player.bufferSound("https://www.testsounds.com/track06.mp3");
+os.bufferSound("https://www.testsounds.com/track06.mp3");
 ```
 
-### `player.cancelSound(soundID)`
+### `os.cancelSound(soundID)`
 
 Cancels the sound with the given ID.
 Returns a promise that resolves once the sound has been canceled.
 
-The **first parameter** is the ID of the sound that was returned from <ActionLink action='player.playSound(url)'/>.
+The **first parameter** is the ID of the sound that was returned from <ActionLink action='os.playSound(url)'/>.
 
 #### Examples:
 
 1. Cancel a sound that is playing.
 ```typescript
-const id = await player.playSound("https://www.testsounds.com/track06.mp3");
-player.cancelSound(id);
+const id = await os.playSound("https://www.testsounds.com/track06.mp3");
+os.cancelSound(id);
 ```
 
-### `player.isInDimension(dimension)`
+### `os.isInDimension(dimension)`
 
 
 Gets whether the given dimension is loaded into the <TagLink tag='pagePortal'/> portal.
@@ -2669,12 +2807,12 @@ The **first parameter** is the dimension to check for.
 
 1. Show a toast if the player is viewing the `abc` dimension.
 ```typescript
-if (player.isInDimension("abc")) {
-    player.toast("In the dimension!");
+if (os.isInDimension("abc")) {
+    os.toast("In the dimension!");
 }
 ```
 
-### `player.inSheet()`
+### `os.inSheet()`
 
 
 Gets whether the player is in the sheet dimension.
@@ -2683,12 +2821,12 @@ Gets whether the player is in the sheet dimension.
 
 1. Show a toast if the player is viewing the sheet.
 ```typescript
-if (player.inSheet()) {
-    player.toast("You are in the sheet!");
+if (os.inSheet()) {
+    os.toast("You are in the sheet!");
 }
 ```
 
-### `player.importAUX(urlOrJSON)`
+### `os.importAUX(urlOrJSON)`
 
 
 Imports an AUX file from the given string.
@@ -2705,12 +2843,12 @@ The **first parameter** is the JSON or URL that the AUX file should be imported 
 1. Import an AUX file from a file.
 ```typescript
 const path = '/drives/myFile.aux';
-player.importAUX(path);
+os.importAUX(path);
 ```
 
 2. Import an AUX file from JSON.
 ```typescript
-player.importAUX(`{
+os.importAUX(`{
     "version": 1,
     "state": {
         "079847e4-6a58-423d-9a86-8d4ef8be5970": {
@@ -2723,7 +2861,7 @@ player.importAUX(`{
 }`);
 ```
 
-### `player.version()`
+### `os.version()`
 
 
 Gets information about the version of auxPlayer.
@@ -2744,11 +2882,11 @@ const returned: {
 
 1. Get the current version and popup a message with it.
 ```typescript
-const info = player.version();
-player.toast(info.version);
+const info = os.version();
+os.toast(info.version);
 ```
 
-### `player.device()`
+### `os.device()`
 
 
 Gets information about the device that the player is using.
@@ -2766,11 +2904,11 @@ const returned: {
 
 1. Get the device info and popup a message with it.
 ```typescript
-const info = player.device();
-player.toast(info);
+const info = os.device();
+os.toast(info);
 ```
 
-### `player.requestFullscreenMode()`
+### `os.requestFullscreenMode()`
 
 
 Attempts to enter fullscreen mode. Depending on which web browser the player is using, this might ask for permission to go fullscreen.
@@ -2781,10 +2919,10 @@ Note that iPhones currently don't support fullscreen mode.
 
 1. Enter fullscreen mode.
 ```typescript
-player.requestFullscreenMode();
+os.requestFullscreenMode();
 ```
 
-### `player.exitFullscreenMode()`
+### `os.exitFullscreenMode()`
 
 
 Exists fullscreen mode.
@@ -2793,7 +2931,7 @@ Exists fullscreen mode.
 
 1. Exit fullscreen mode.
 ```typescript
-player.exitFullscreenMode();
+os.exitFullscreenMode();
 ```
 
 ## Server Actions
@@ -2837,7 +2975,7 @@ The **first parameter** is an object that indicates which session the zip file s
 1. Backup and download to this tab.
 ```typescript
 server.backupAsDownload({
-    session: getID(player.getBot())
+    session: getID(configBot)
 });
 ```
 
@@ -3010,7 +3148,7 @@ let led_pin = 17;
 
 server.exportGpio(led_pin, 'out');
 let state = await server.getGpio(led_pin);
-player.shout(state);
+os.shout(state);
 
 ```
 
@@ -3145,7 +3283,7 @@ var led_pin = 11;
 server.rpioOpen(led_pin, 'OUTPUT');
 let state = await server.rpioRead(led_pin);
 
-player.shout(state);
+os.shout(state);
 
 ```
 
@@ -4043,7 +4181,7 @@ server.loadFile('/2/book.txt', {
 3. Load a file named "book.txt" and toast the contents.
 ```typescript
 const result = await server.loadFile('book.txt');
-player.toast(result.data);
+os.toast(result.data);
 ```
 
 ### `server.saveFile(path, data, options?)`
@@ -4092,7 +4230,7 @@ await server.saveFile('/2/book.txt', 'My memoirs', {
     overwriteExistingFile: true
 });
 
-player.toast("File Saved!");
+os.toast("File Saved!");
 ```
 
 ### `server.serverPlayerCount(server?)`
@@ -4102,7 +4240,7 @@ Optionally takes a parameter which is the server that the number of players shou
 Returns a promise that resolves with the number of active players.
 
 The **first parameter** is optional and is the name of the server that the number of players should be retrieved for.
-If not specified, then the current server <ActionLink action="player.getCurrentServer()">current server</ActionLink> will be used.
+If not specified, then the current server <ActionLink action="os.getCurrentServer()">current server</ActionLink> will be used.
 
 #### Examples
 
@@ -4110,14 +4248,14 @@ If not specified, then the current server <ActionLink action="player.getCurrentS
 ```typescript
 const numberOfPlayers = await server.serverPlayerCount();
 
-player.toast("Number of Players: " + numberOfPlayers);
+os.toast("Number of Players: " + numberOfPlayers);
 ```
 
 2. Get the number of players in the `test` server.
 ```typescript
 const numberOfPlayers = await server.serverPlayerCount('test');
 
-player.toast("Number of Players: " + numberOfPlayers);
+os.toast("Number of Players: " + numberOfPlayers);
 ```
 
 ### `server.totalPlayerCount()`
@@ -4131,7 +4269,7 @@ Returns a promise that resolves with the number of active players.
 ```typescript
 const numberOfPlayers = await server.totalPlayerCount();
 
-player.toast("Number of Players: " + numberOfPlayers);
+os.toast("Number of Players: " + numberOfPlayers);
 ```
 
 ### `server.stories()`
@@ -4145,7 +4283,7 @@ Returns a promise that resolves with the list of server names.
 ```typescript
 const stories = await server.stories();
 
-player.toast("Stories " + stories.join(','));
+os.toast("Stories " + stories.join(','));
 ```
 
 ### `server.serverStatuses()`
@@ -4161,7 +4299,7 @@ The resolved list is sorted by the most recently updated first and the least rec
 ```typescript
 const stories = await server.serverStatuses();
 
-player.toast("Stories " + getJSON(stories));
+os.toast("Stories " + getJSON(stories));
 ```
 
 ### `server.players()`
@@ -4177,7 +4315,7 @@ The resolved list will always have at least one value that represents the curren
 ```typescript
 const players = await server.players();
 
-player.toast("Players " + players.join(','));
+os.toast("Players " + players.join(','));
 ```
 
 ## Math Actions
@@ -4314,9 +4452,9 @@ The **first parameter** is an object containing the `x`, `y`, and `z` of the rot
 
 1. Get the direction that a pointer is pointing.
 ```typescript
-const pointerRotation = player.getPointerRotation('mouse');
+const pointerRotation = os.getPointerRotation('mouse');
 const pointerDirection = math.getForwardDirection(pointerRotation);
-player.toast(pointerDirection);
+os.toast(pointerDirection);
 ```
 
 ### `math.intersectPlane(origin, direction)`
@@ -4334,11 +4472,11 @@ The **second parameter** is the direction that the ray is traveling along.
 
 1. Get the spot on the ground that a pointer is pointing at.
 ```typescript
-const pointerPosition = player.getPointerPosition('mouse');
-const pointerRotation = player.getPointerRotation('mouse');
+const pointerPosition = os.getPointerPosition('mouse');
+const pointerRotation = os.getPointerRotation('mouse');
 const pointerDirection = math.getForwardDirection(pointerRotation);
 const groundPoint = math.intersectPlane(pointerPosition, pointerDirection);
-player.toast(groundPoint);
+os.toast(groundPoint);
 ```
 
 ### `math.getAnchorPointOffset(anchorPoint)`
@@ -4353,7 +4491,7 @@ The **first parameter** is the anchor point that should be calculated. Can be an
 1. Calculate the anchor point offset for "bottom".
 ```typescript
 const offset = math.getAnchorPointOffset("bottom");
-player.toast(offset);
+os.toast(offset);
 ```
 
 ## Crypto Actions
@@ -4374,7 +4512,7 @@ Supports calculating hashes of strings, numbers, booleans, objects, arrays, and 
 1. Calculate the hash of a string.
 ```typescript
 const hash = crypto.sha256("hello, world");
-player.toast(hash);
+os.toast(hash);
 ```
 
 2. Calculate the hash of an object.
@@ -4382,7 +4520,7 @@ player.toast(hash);
 const hash = crypto.sha256({
     abc: "def"
 });
-player.toast(hash);
+os.toast(hash);
 ```
 
 ### `crypto.sha512(...data)`
@@ -4401,7 +4539,7 @@ Supports calculating hashes of strings, numbers, booleans, objects, arrays, and 
 1. Calculate the hash of a string.
 ```typescript
 const hash = crypto.sha512("hello, world");
-player.toast(hash);
+os.toast(hash);
 ```
 
 2. Calculate the hash of an object.
@@ -4409,7 +4547,7 @@ player.toast(hash);
 const hash = crypto.sha512({
     abc: "def"
 });
-player.toast(hash);
+os.toast(hash);
 ```
 
 ### `crypto.hmacSha256(key, ...data)`
@@ -4430,7 +4568,7 @@ The **other parameters** are the data that should be included in the hash. If mu
 1. Calculate the HMAC of a string with a key.
 ```typescript
 const hash = crypto.hmacSha256("key", "hello, world");
-player.toast(hash);
+os.toast(hash);
 ```
 
 2. Calculate the HMAC of an object.
@@ -4438,7 +4576,7 @@ player.toast(hash);
 const hash = crypto.hmacSha256("key", {
     abc: "def"
 });
-player.toast(hash);
+os.toast(hash);
 ```
 
 ### `crypto.hmacSha512(key, ...data)`
@@ -4459,7 +4597,7 @@ The **other parameters** are the data that should be included in the hash. If mu
 1. Calculate the HMAC of a string with a key.
 ```typescript
 const hash = crypto.hmacSha512("key", "hello, world");
-player.toast(hash);
+os.toast(hash);
 ```
 
 2. Calculate the HMAC of an object.
@@ -4467,7 +4605,7 @@ player.toast(hash);
 const hash = crypto.hmacSha512("key", {
     abc: "def"
 });
-player.toast(hash);
+os.toast(hash);
 ```
 
 ### `crypto.encrypt(key, data)`
@@ -4497,7 +4635,7 @@ The **second parameter** is the string data that should be encrypted.
 1. Encrypt the given data and toast it.
 ```typescript
 const encrypted = crypto.encrypt("key", "hello, world");
-player.toast(encrypted);
+os.toast(encrypted);
 ```
 
 ### `crypto.decrypt(key, data)`
@@ -4515,7 +4653,7 @@ The **second parameter** is the data from <ActionLink action='crypto.encrypt(key
 1. Decrypt the given data and toast it.
 ```typescript
 const decrypted = crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iikPvWN6rNncY3j045gM0268MoRi0NNf.IpWYgzXQmjRea4MNLDXB1GmrinWLSSOMw+NfqeE=");
-player.toast(decrypted);
+os.toast(decrypted);
 ```
 
 ### `crypto.keypair(secret)`
@@ -4541,7 +4679,7 @@ The **first parameter** is the secret that should be used to encrypt the private
 1. Create a keypair and toast it.
 ```typescript
 const keypair = crypto.keypair("my secret");
-player.toast(keypair);
+os.toast(keypair);
 ```
 
 ### `crypt.sign(keypair, secret, data)`
@@ -4554,7 +4692,7 @@ Use <ActionLink action='crypto.verify(keypair, signature, data)'/> to validate s
 
 Digital signatures are used to verifying the authenticity and integrity of data.
 
-This works by leveraging asymetric encryption but in reverse.
+This works by leveraging asymmetric encryption but in reverse.
 
 If we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that
 the data was encrypted (i.e. signed) by the corresponding private key.
@@ -4578,7 +4716,7 @@ The **third parameter** is the string data that should be signed.
 const keypair = "vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MHFzMTBFMXRHamR1ZFhqTmRTV3AycjVyZUsudzFjSWZWVUFQVUdqK3hTM000NUduYUlNQ094SUhCTUEuanYrZEQwNVJFVGo3UzRPSklQQUkxc3U0anZjUmxrTEM2OW1BajkyMkxxdTFZd2sxNzV5QW9Dc3gwU3RENlQ0cmtNTVk4b2Zna2JRVTIrQmp5OUIrTTJsaFI2ajcyb0lJdmdSWkRXRU9lZE09";
 
 const signature = crypto.sign(keypair, "my secret", "hello");
-player.toast(signature);
+os.toast(signature);
 ```
 
 ### `crypto.verify(keypair, signature, data)`
@@ -4607,7 +4745,93 @@ const keypair = "vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MH
 const signature = "vS1.uF93ErJBhdI/vqRF2XD2zgRAO96vKc9mx8crn6Kasijmx92px36B/alLGluU22tgCav/nNQEHdV2zZoHPgy7Dg==";
 
 const valid = crypto.verify(keypair, signature, "hello");
-player.toast(valid);
+os.toast(valid);
+```
+
+### `crypto.asymmetric.keypair(secret)`
+
+Creates a keypair that can be used to [encrypt and decrypt](https://en.wikipedia.org/wiki/Encryption) data.
+
+Use <ActionLink action='crypto.asymmetric.encrypt(keypair, data)'/> and <ActionLink action='crypto.asymmetric.decrypt(keypair, secret, data)'/> to encrypt and decrypt the data.
+
+_Always use a strong and unique secret key._ Use a password manager such as LastPass or 1Password to help you create and keep track of them.
+
+Keypairs are made up of a private key and a public key
+The public key is a special value that can be used to encrypt data and
+the private key is a related value that can be used to decrypt data that was encrypted by the private key.
+
+The private key is called "private" because it is encrypted using the given secret
+while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
+
+Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
+they have access to it.
+
+The **first parameter** is the secret that should be used to encrypt the private key of the keypair.
+
+#### Examples:
+
+1. Create a keypair and toast it.
+```typescript
+const keypair = crypto.asymmetric.keypair("my secret");
+os.toast(keypair);
+```
+
+### `crypto.asymmetric.encrypt(keypair, data)`
+
+[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given keypair's public key and returns the result.
+
+Use the <ActionLink action='crypto.asymmetric.decrypt(keypair, secret, data)'/> function to decrypt the data.
+
+This method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it),
+reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).
+
+As a consequence, encrypting the same data with the same keypair will produce different results.
+This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
+
+Encrypts the given data using an asymmetric authenticated encryption mechanism
+based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
+
+You may notice that this function does not need a secret to decrypt the keypair.
+This is because the public key of the keypair is used to encrypt the data.
+Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.
+
+Encrypts the given data using an authenticated encryption mechanism 
+based on [x25519](https://en.wikipedia.org/wiki/Curve25519), [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).
+
+The **first parameter** is the keypair that should be used to encrypt the data.
+
+The **second parameter** is the string data that should be encrypted.
+
+#### Examples
+
+1. Encrypt the given data and toast it.
+```typescript
+const keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';
+const encrypted = crypto.asymmetric.encrypt(keypair, "hello, world");
+os.toast(encrypted);
+```
+
+### `crypto.asymmetric.decrypt(keypair, secret, data)`
+
+[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data with the given keypair and secret and returns the result.
+If the data was unable to be decrypted, null will be returned.
+
+Use the <ActionLink action='crypto.asymmetric.encrypt(keypair, data)'/> function to encrypt the data.
+
+The **first parameter** is the keypair that should be used to decrypt the data.
+
+The **second parameter** is the secret that should be used to decrypt the keypair's private key.
+
+The **third parameter** is the data that should be decrypted.
+
+#### Examples:
+
+1. Decrypt the given data and toast it.
+```typescript
+const keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';
+const encrypted = 'vA1.3CC1r0fJP2tPS09C8YrTDQCJmgFczxprNEcMOzY4JD4=.3oiC7nG6N4jblFhBd4usrdid/w4Phwg/.X/9mbZYOGBjRX7YAO4D2zYJvZ3c=';
+const decrypted = crypto.asymmetric.decrypt(keypair, 'password', encrypted);
+os.toast(decrypted);
 ```
 
 ### `crypto.createCertificate(certificate, secret, keypair)`
@@ -4657,7 +4881,7 @@ The **third parameter** is the keypair that the new certificate should have.
 const keypair = await crypto.keypair('secretForRootCert');
 const cert = await crypto.createCertificate(null, 'secretForRootCert', keypair);
 
-player.toast(getID(cert));
+os.toast(getID(cert));
 ```
 
 2. Create a non-root certificate and toast the Bot ID:
@@ -4667,7 +4891,7 @@ const rootKeypair = getBot('id', rootCertID);
 const nonRootKeypair = await crypto.keypair('secretForNonRootCert');
 const nonRoot = await crypto.createCertificate(rootCert, 'secretForRootCert', nonRootKeypair);
 
-player.toast(getID(nonRoot));
+os.toast(getID(nonRoot));
 ```
 
 ### `crypto.signTag(certificate, secret, bot, tag)`
@@ -4713,9 +4937,9 @@ The **second parameter** is the tag whose value should be checked.
 const valid = crypto.verifyTag(bot, 'onClick');
 
 if (valid) {
-    player.toast('onClick is valid!');
+    os.toast('onClick is valid!');
 } else {
-    player.toast('onClick is not valid.');
+    os.toast('onClick is not valid.');
 }
 ```
 
@@ -4748,7 +4972,7 @@ Note that any certificate that is specified must either be the original certific
 const cert = getBot('id', certificateId);
 await crypto.revokeCertificate(cert, 'secretForCert');
 
-player.toast('Certificate revoked!');
+os.toast('Certificate revoked!');
 ```
 
 2. Revoke a certificate using another certificate.
@@ -4758,7 +4982,7 @@ const signingCert = getBot('id', signingCertId);
 
 await crypto.revokeCertificate(certToRevoke, 'secretForSigningCert', signingCert);
 
-player.toast('Certificate revoked!');
+os.toast('Certificate revoked!');
 ```
 
 ## Admin Actions
@@ -4779,9 +5003,9 @@ The **first parameter** is the password that should be used to unlock admin spac
 ```typescript
 try {
     await adminSpace.unlock("my-password");
-    player.toast("Admin Space Unlocked!");
+    os.toast("Admin Space Unlocked!");
 } catch(err) {
-    player.toast("Failed to unlock admin space " + err);
+    os.toast("Failed to unlock admin space " + err);
 }
 ```
 
@@ -4802,9 +5026,9 @@ The **second parameter** is the password that should be used to unlock admin spa
 ```typescript
 try {
     await adminSpace.setPassword("old-password", "new-password");
-    player.toast("Admin Space Password Changed!");
+    os.toast("Admin Space Password Changed!");
 } catch(err) {
-    player.toast("Failed to change the password " + err);
+    os.toast("Failed to change the password " + err);
 }
 ```
 
@@ -4904,12 +5128,34 @@ await portal.open("my-portal", `console.log("Hello, Portal!");`, {
 });
 ```
 
-### `portal.registerPrefix(prefix)`
+### `portal.registerPrefix(prefix, options?)`
 
 Specifies that the given prefix should be used to indicate that the tag contains script content that can be used in a custom portal.
 Use this function to specify custom prefixes that function similarly to `@` or `🧬`.
 
 The **first parameter** is the prefix that should indicate that the rest of the tag value is a script.
+
+The **second parameter** is optional and is the options that should be used for the prefix. It is an object and should have the following structure:
+```typescript
+let options: {
+
+    /**
+     * The language that scripts with the prefix should be interpreted as.
+     * 
+     * "javascript" and "typescript" can be used for general purpose programming.
+     * 
+     * "jsx" and "tsx" are extensions to JavaScript and TypeScript which includes the ability
+     * to write HTML-like code that gets converted to JavaScript/TypeScript code.
+     * 
+     * "json" can be used to interpret the data as JSON (like 🧬).
+     * 
+     * "text" can be used to interpret the data as plain text.
+     * 
+     * Defaults to "javascript".
+     */
+    language?: "javascript" | "typescript" | "json" | "jsx" | "tsx" | "text";
+};
+```
 
 #### Examples:
 
@@ -4921,6 +5167,13 @@ await portal.registerPrefix("📖");
 2. Register some arbitrary text as a prefix.
 ```typescript
 await portal.registerPrefix("myPrefix");
+```
+
+3. Register a prefix as [JSX code](https://reactjs.org/docs/introducing-jsx.html).
+```typescript
+await portal.registerPrefix("🔺", {
+    language: "jsx"
+});
 ```
 
 ### `portal.buildBundle(tag)`
@@ -5204,13 +5457,13 @@ The **third parameter** is the anchor point that should be calculated. Can be an
 1. Get the top anchor point of the current bot in the "home" dimension.
 ```typescript
 const point = experiment.getAnchorPointPosition(bot, "home", "top");
-player.toast(point);
+os.toast(point);
 ```
 
 2. Get the back right anchor point of the current bot in the "home" dimension.
 ```typescript
 const point = experiment.getAnchorPointPosition(bot, "home", [ 0.5, -0.5, 0 ]);
-player.toast(point);
+os.toast(point);
 ```
 
 3. Place bots at each of the anchor points.
@@ -5226,14 +5479,14 @@ let points = [
 ];
 
 for(let point of points) {
-    let pos = experiment.getAnchorPointPosition(bot, player.getCurrentDimension(), point);
+    let pos = experiment.getAnchorPointPosition(bot, os.getCurrentDimension(), point);
     create({
         space: 'player',
         color: 'green',
-        [player.getCurrentDimension()]: true,
-        [player.getCurrentDimension() + "X"]: pos.x,
-        [player.getCurrentDimension() + "Y"]: pos.y,
-        [player.getCurrentDimension() + "Z"]: pos.z,
+        [os.getCurrentDimension()]: true,
+        [os.getCurrentDimension() + "X"]: pos.x,
+        [os.getCurrentDimension() + "Y"]: pos.y,
+        [os.getCurrentDimension() + "Z"]: pos.z,
         positioningMode: 'absolute',
         anchorPoint: 'center',
         targetAnchorPoint: point,
@@ -5277,7 +5530,7 @@ let stats: {
 const stats = perf.getStats();
 const slowestTags = stats.shoutTimers.slice(0, 5).map(timer => timer.tag)
 
-player.toast(slowestTags.join());
+os.toast(slowestTags.join());
 ```
 
 [listen-tag]: docs/listen-tags

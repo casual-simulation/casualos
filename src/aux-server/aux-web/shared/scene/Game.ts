@@ -4,18 +4,6 @@ import {
     Color,
     Texture,
     Vector3,
-    Matrix4,
-    Quaternion,
-    MathUtils as ThreeMath,
-    PerspectiveCamera,
-    ArrayCamera,
-    AxesHelper,
-    LineBasicMaterial,
-    NoColors,
-    Box3Helper,
-    BoxHelper,
-    Box3,
-    Object3D,
     Vector2,
     sRGBEncoding,
 } from 'three';
@@ -31,7 +19,6 @@ import {
     CameraType,
     resizeCameraRig,
     createCameraRig,
-    resetCameraRigToDefaultPosition,
 } from './CameraRigFactory';
 import { Time } from './Time';
 import { Input, InputType, ControllerData } from './Input';
@@ -46,15 +33,11 @@ import { map } from 'rxjs/operators';
 import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
 import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
-import find from 'lodash/find';
-import flatMap from 'lodash/flatMap';
+import { flatMap, merge } from 'lodash';
 import { EventBus } from '../EventBus';
 import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
-import Bowser from 'bowser';
 import { AuxBot3D } from './AuxBot3D';
-import { supportsXR } from '../SharedUtils';
-import merge from 'lodash/merge';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -122,12 +105,12 @@ export abstract class Game implements AuxBotVisualizerFinder {
         this.setupScenes();
         this.input = new Input(this);
         this.input.controllerAdded.subscribe(
-            controller => this.handleControllerAdded(controller),
-            err => console.error(err)
+            (controller) => this.handleControllerAdded(controller),
+            (err) => console.error(err)
         );
         this.input.controllerRemoved.subscribe(
-            controller => this.handleControllerRemoved(controller),
-            err => console.error(err)
+            (controller) => this.handleControllerRemoved(controller),
+            (err) => console.error(err)
         );
         this.interaction = this.setupInteraction();
 
@@ -159,7 +142,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
         this.input.dispose();
 
         if (this.subs) {
-            this.subs.forEach(sub => {
+            this.subs.forEach((sub) => {
                 sub.unsubscribe();
             });
             this.subs = [];
@@ -197,6 +180,8 @@ export abstract class Game implements AuxBotVisualizerFinder {
     }
 
     abstract getBackground(): Color | Texture;
+
+    abstract getBackgroundAddress(): string;
 
     /**
      * Get all of the current viewports.
@@ -306,7 +291,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
         if (!cameraRig) return;
 
         let controls = this.interaction.cameraRigControllers.find(
-            c => c.rig.name === cameraRig.name
+            (c) => c.rig.name === cameraRig.name
         );
 
         if (cameraRig.name != 'main') {
@@ -333,7 +318,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
     ) {
         // find the bot with the given ID
         const sims = this.getSimulations();
-        const bots = flatMap(sims, s => s.bots);
+        const bots = flatMap(sims, (s) => s.bots);
         console.log(this.constructor.name, 'tweenCameraToBot all bots:', bots);
         const matches = this.findBotsById(botId);
         console.log(
@@ -407,14 +392,36 @@ export abstract class Game implements AuxBotVisualizerFinder {
         );
     }
 
+    /**
+     * Finds the first simulation that is using the given camera rig as its primary rig.
+     * @param rig The camera rig.
+     */
+    findSimulationForCameraRig(rig: CameraRig) {
+        return this.getSimulations().find(
+            (sim) => sim.getMainCameraRig() === rig
+        );
+    }
+
     protected mainSceneBackgroundUpdate() {
-        const background = this.getBackground();
-        if (background) {
-            this.mainScene.background = background;
+        const address = this.getBackgroundAddress();
+        if (address && !this.xrSession) {
+            this.mainScene.background = null;
+            this.renderer.setClearColor('#fff', 0);
+            this.renderer.autoClear = true;
+            this.gameView.gameView.style.background = `url(${address}) no-repeat center center`;
+            this.gameView.gameView.style.backgroundSize = 'cover';
         } else {
-            this.mainScene.background = new Color(
-                DEFAULT_SCENE_BACKGROUND_COLOR
-            );
+            const background = this.getBackground();
+            delete this.gameView.gameView.style.background;
+            delete this.gameView.gameView.style.backgroundSize;
+            this.renderer.autoClear = false;
+            if (background) {
+                this.mainScene.background = background;
+            } else {
+                this.mainScene.background = new Color(
+                    DEFAULT_SCENE_BACKGROUND_COLOR
+                );
+            }
         }
     }
 
@@ -589,7 +596,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
 
     watchCameraRigDistanceSquared(cameraRig: CameraRig): Observable<number> {
         let rigControls = this.interaction.cameraRigControllers.find(
-            rigControls => rigControls.rig === cameraRig
+            (rigControls) => rigControls.rig === cameraRig
         );
 
         return this._onUpdate.pipe(

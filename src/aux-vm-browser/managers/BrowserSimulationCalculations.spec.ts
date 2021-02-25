@@ -3,6 +3,10 @@ import {
     BotHelper,
     BotWatcher,
     UpdatedBotInfo,
+    PortalManager,
+    CodeBundle,
+    ScriptPrefix,
+    LibraryModule,
 } from '@casual-simulation/aux-vm';
 import {
     BotIndex,
@@ -11,6 +15,11 @@ import {
     Bot,
     PrecalculatedBot,
     botUpdated,
+    BotsState,
+    stateUpdatedEvent,
+    openCustomPortal,
+    LocalActions,
+    registerBuiltinPortal,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import {
@@ -23,6 +32,7 @@ import {
     waitAsync,
     wait,
 } from '@casual-simulation/aux-common/test/TestHelpers';
+import { Subject } from 'rxjs';
 
 console.log = jest.fn();
 
@@ -30,14 +40,24 @@ describe('BrowserSimulationCalculations', () => {
     let login: LoginManager;
     let watcher: BotWatcher;
     let helper: BotHelper;
+    let portals: PortalManager;
     let index: BotIndex;
     let vm: TestAuxVM;
+    let bundler: {
+        bundleTag: jest.Mock<
+            Promise<CodeBundle>,
+            [BotsState, string, ScriptPrefix[]]
+        >;
+        addLibrary: jest.Mock<void, [LibraryModule]>;
+    };
+    let localEvents: Subject<LocalActions[]>;
 
     let userId = 'user';
 
     beforeEach(() => {
         vm = new TestAuxVM();
         vm.processEvents = true;
+        localEvents = vm.localEvents = new Subject();
         login = new LoginManager(vm);
         helper = new BotHelper(vm);
         helper.userId = userId;
@@ -48,6 +68,11 @@ describe('BrowserSimulationCalculations', () => {
             vm.stateUpdated,
             vm.versionUpdated
         );
+        bundler = {
+            bundleTag: jest.fn(),
+            addLibrary: jest.fn(),
+        };
+        portals = new PortalManager(vm, helper, watcher, bundler);
     });
 
     describe('userBotChangedCore()', () => {
@@ -146,9 +171,7 @@ describe('BrowserSimulationCalculations', () => {
 
     describe('watchPortalConfigBot()', () => {
         it('should resolve with the bot immediately if it is already created', async () => {
-            await helper.createBot(userId, {
-                auxPortalConfigBot: 'test',
-            });
+            await helper.createBot(userId, {});
             await helper.createBot('test', {
                 abc: 'def',
             });
@@ -163,9 +186,11 @@ describe('BrowserSimulationCalculations', () => {
                 },
             });
 
+            localEvents.next([openCustomPortal('auxPortal', 'test', null, {})]);
+
             const update = await watchPortalConfigBotCore(
-                login,
                 watcher,
+                portals,
                 helper,
                 'auxPortal'
             )
@@ -182,15 +207,13 @@ describe('BrowserSimulationCalculations', () => {
         it('should resolve with the bot once it is created', async () => {
             let update: PrecalculatedBot = null;
             watchPortalConfigBotCore(
-                login,
                 watcher,
+                portals,
                 helper,
                 'auxPortal'
             ).subscribe((bot) => (update = bot));
 
-            await helper.createBot(userId, {
-                auxPortalConfigBot: 'test',
-            });
+            await helper.createBot(userId, {});
             vm.connectionStateChanged.next({
                 type: 'authentication',
                 authenticated: true,
@@ -201,6 +224,8 @@ describe('BrowserSimulationCalculations', () => {
                     username: 'username',
                 },
             });
+
+            localEvents.next([openCustomPortal('auxPortal', 'test', null, {})]);
 
             await waitAsync();
 
@@ -222,15 +247,13 @@ describe('BrowserSimulationCalculations', () => {
         it('should resolve with null if the bot is cleared', async () => {
             let update: PrecalculatedBot = null;
             watchPortalConfigBotCore(
-                login,
                 watcher,
+                portals,
                 helper,
                 'auxPortal'
             ).subscribe((bot) => (update = bot));
 
-            await helper.createBot(userId, {
-                auxPortalConfigBot: 'test',
-            });
+            await helper.createBot(userId, {});
             vm.connectionStateChanged.next({
                 type: 'authentication',
                 authenticated: true,
@@ -241,6 +264,8 @@ describe('BrowserSimulationCalculations', () => {
                     username: 'username',
                 },
             });
+
+            localEvents.next([openCustomPortal('auxPortal', 'test', null, {})]);
 
             await waitAsync();
 
@@ -254,17 +279,17 @@ describe('BrowserSimulationCalculations', () => {
 
             expect(update).not.toEqual(null);
 
-            await helper.transaction(
-                botUpdated(userId, {
-                    tags: {
-                        auxPortalConfigBot: null,
-                    },
-                })
-            );
+            localEvents.next([openCustomPortal('auxPortal', null, null, {})]);
 
             await waitAsync();
 
             expect(update).toEqual(null);
+        });
+
+        it('should send a register_builtin_portal event', async () => {
+            watchPortalConfigBotCore(watcher, portals, helper, 'auxPortal');
+
+            expect(vm.events).toEqual([registerBuiltinPortal('auxPortal')]);
         });
     });
 });

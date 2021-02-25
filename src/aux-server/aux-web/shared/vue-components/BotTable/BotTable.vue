@@ -17,7 +17,7 @@
                                 class="md-icon-button create-bot"
                                 @click="createBot()"
                             >
-                                <cube-icon></cube-icon>
+                                <new-bot-icon></new-bot-icon>
                                 <md-tooltip>Create Empty Bot</md-tooltip>
                             </md-button>
                             <md-button
@@ -189,7 +189,7 @@
             <md-button class="md-primary" @click="undoDelete()">Undo</md-button>
         </md-snackbar>
 
-        <md-dialog :md-active.sync="isMakingNewTag">
+        <md-dialog :md-active.sync="isMakingNewTag" class="new-tag-dialog">
             <md-dialog-title>Add New Tag</md-dialog-title>
             <md-dialog-content>
                 <form class="bot-table-form" @submit.prevent="addTag()">

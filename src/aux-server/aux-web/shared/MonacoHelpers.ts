@@ -22,7 +22,6 @@ import {
     hasPortalScript,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
-import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
 import HtmlWorker from 'worker-loader!monaco-editor/esm/vs/language/html/html.worker';
 import CssWorker from 'worker-loader!monaco-editor/esm/vs/language/css/css.worker';
 import JsonWorker from 'worker-loader!monaco-editor/esm/vs/language/json/json.worker';
@@ -44,10 +43,13 @@ import {
     takeUntil,
     debounceTime,
 } from 'rxjs/operators';
-import { Simulation } from '@casual-simulation/aux-vm';
+import {
+    LibraryModule,
+    ScriptPrefix,
+    Simulation,
+} from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import union from 'lodash/union';
-import sortBy from 'lodash/sortBy';
+import { union, sortBy } from 'lodash';
 import { propertyInsertText } from './CompletionHelpers';
 import {
     bot,
@@ -63,14 +65,31 @@ import { CurrentVersion } from '@casual-simulation/causal-trees';
 import { Color } from 'three';
 import { invertColor } from './scene/ColorUtils';
 import { getCursorColorClass, getCursorLabelClass } from './StyleHelpers';
-import jscodeshift from 'jscodeshift';
-import MonacoJSXHighlighter from './public/monaco-jsx-highlighter/index';
+// import jscodeshift from 'jscodeshift';
+// import MonacoJSXHighlighter from './public/monaco-jsx-highlighter/index';
+import axios from 'axios';
+import { customPortalLanguageId } from './public/monaco-editor/custom-portal-typescript/custom-portal-typescript.contribution';
+import {
+    customPortalJavaScriptDefaults,
+    customPortalTypescriptDefaults,
+    getCustomPortalWorker,
+} from './public/monaco-editor/languages.contribution';
+
+// load TypescriptWorker by require().
+// For some reason, loading relative imports with worker-loader fails when using the import syntax
+// but the require syntax works.
+const TypescriptWorker = require('./public/monaco-editor/typescript/ts.worker')
+    .default;
 
 export function setup() {
     // Tell monaco how to create the web workers
     (<any>self).MonacoEnvironment = {
         getWorker: function (moduleId: string, label: string) {
-            if (label === 'typescript' || label === 'javascript') {
+            if (
+                label === 'typescript' ||
+                label === 'javascript' ||
+                label === customPortalLanguageId
+            ) {
                 return new TypescriptWorker();
             } else if (label === 'html') {
                 return new HtmlWorker();
@@ -268,18 +287,118 @@ export function watchSimulation(
         completionDisposable.dispose();
     });
 
+    sub.add(
+        simulation.portals.externalsDiscovered
+            .pipe(
+                flatMap((e) => e),
+                filter((e) => !!e.typescriptDefinitionsURL),
+                flatMap((e) => axios.get(e.typescriptDefinitionsURL)),
+                tap((request) => {
+                    if (typeof request.data === 'string') {
+                        customPortalJavaScriptDefaults.addExtraLib(
+                            request.data,
+                            request.config.url
+                        );
+                        customPortalTypescriptDefaults.addExtraLib(
+                            request.data,
+                            request.config.url
+                        );
+                    }
+                })
+            )
+            .subscribe()
+    );
+
+    monaco.languages.onLanguage(customPortalLanguageId, () => {
+        sub.add(
+            simulation.portals.prefixesDiscovered
+                .pipe(flatMap((prefix) => addPrefixesToLanguageService(prefix)))
+                .subscribe()
+        );
+    });
+
+    sub.add(
+        simulation.portals.portalBotIdUpdated
+            .pipe(
+                flatMap((b) => b),
+                tap((data) => {
+                    addDefinitionsForPortalBot(
+                        data.portalId,
+                        data.botId,
+                        monaco.languages.typescript.javascriptDefaults
+                    );
+                    addDefinitionsForPortalBot(
+                        data.portalId,
+                        data.botId,
+                        customPortalJavaScriptDefaults
+                    );
+                })
+            )
+            .subscribe()
+    );
+
     return sub;
+}
+
+export function addDefinitionsForPortalBot(
+    portalId: string,
+    botId: string,
+    defaults: typeof monaco.languages.typescript.javascriptDefaults
+) {
+    const extraLibs = defaults.getExtraLibs();
+    const libs: { filePath: string; content: string }[] = [];
+    const portalFilePath = `file:///${portalId}Bot.d.ts`;
+    const portalContent = `import type { Bot } from './AuxDefinitions';
+declare global { 
+    const ${portalId}Bot: Bot;
+}`;
+
+    let hasLib: boolean = false;
+    for (let key in extraLibs) {
+        if (key === portalFilePath) {
+            hasLib = true;
+            if (!botId) {
+                continue;
+            }
+        }
+        libs.push({
+            filePath: key,
+            content: extraLibs[key].content,
+        });
+    }
+
+    if (!hasLib) {
+        libs.push({
+            filePath: portalFilePath,
+            content: portalContent,
+        });
+    }
+
+    defaults.setExtraLibs(libs);
+}
+
+export function addDefinitionsForLibrary(lib: LibraryModule) {
+    if (lib.typescriptDefinitions) {
+        customPortalJavaScriptDefaults.addExtraLib(
+            lib.typescriptDefinitions,
+            `file:///${lib.id}.d.ts`
+        );
+        customPortalTypescriptDefaults.addExtraLib(
+            lib.typescriptDefinitions,
+            `file:///${lib.id}.d.ts`
+        );
+    }
 }
 
 export function watchEditor(
     simulation: Simulation,
     editor: monaco.editor.ICodeEditor
 ): Subscription {
-    const monacoJsxHighlighter = new MonacoJSXHighlighter(
-        monaco,
-        jscodeshift,
-        editor
-    );
+    // const monacoJsxHighlighter = new MonacoJSXHighlighter(
+    //     monaco,
+    //     jscodeshift,
+    //     editor
+    // );
 
     const modelChangeObservable = new Observable<
         monaco.editor.IModelChangedEvent
@@ -472,35 +591,35 @@ export function watchEditor(
         )
     );
 
-    const enableJsxHighlightingOnCorrectModels = modelInfos.pipe(
-        map(
-            (info) =>
-                info.language === 'javascript' || info.language === 'typescript'
-        ),
-        scan(
-            (acc, needsJsxHighlighting) => {
-                if (acc) {
-                    acc();
-                }
-                if (needsJsxHighlighting) {
-                    return monacoJsxHighlighter.highLightOnDidChangeModelContent(
-                        undefined,
-                        () => {},
-                        undefined,
-                        () => {}
-                    );
-                } else {
-                    return () => {};
-                }
-            },
-            () => {}
-        )
-    );
+    // const enableJsxHighlightingOnCorrectModels = modelInfos.pipe(
+    //     map(
+    //         (info) =>
+    //             info.language === 'javascript' || info.language === 'typescript'
+    //     ),
+    //     scan(
+    //         (acc, needsJsxHighlighting) => {
+    //             if (acc) {
+    //                 acc();
+    //             }
+    //             if (needsJsxHighlighting) {
+    //                 return monacoJsxHighlighter.highLightOnDidChangeModelContent(
+    //                     undefined,
+    //                     () => {},
+    //                     undefined,
+    //                     () => {}
+    //                 );
+    //             } else {
+    //                 return () => {};
+    //             }
+    //         },
+    //         () => {}
+    //     )
+    // );
 
     const sub = new Subscription();
 
     sub.add(decorators.subscribe());
-    sub.add(enableJsxHighlightingOnCorrectModels.subscribe());
+    // sub.add(enableJsxHighlightingOnCorrectModels.subscribe());
 
     sub.add(
         toSubscription(
@@ -598,8 +717,11 @@ function tagScriptLanguage(
     if (prefix) {
         return prefix.language === 'text'
             ? 'plaintext'
-            : prefix.language === 'jsx'
-            ? 'javascript'
+            : prefix.language === 'jsx' ||
+              prefix.language === 'tsx' ||
+              prefix.language === 'typescript' ||
+              prefix.language === 'javascript'
+            ? customPortalLanguageId
             : prefix.language;
     }
 
@@ -906,6 +1028,12 @@ function watchModel(
     }
 
     subs.push(sub);
+}
+
+async function addPrefixesToLanguageService(prefixes: ScriptPrefix[]) {
+    const workerFactory = await getCustomPortalWorker();
+    const worker = await workerFactory();
+    (<any>worker).addScriptPrefixes(prefixes.map((p) => p.prefix));
 }
 
 function offsetSelections(

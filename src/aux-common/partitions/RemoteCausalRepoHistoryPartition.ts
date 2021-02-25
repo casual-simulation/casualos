@@ -35,8 +35,8 @@ import {
     RemoteCausalRepoPartition,
     AuxPartitionRealtimeStrategy,
 } from './AuxPartition';
-import uuid from 'uuid/v5';
-import reverse from 'lodash/reverse';
+import { v5 as uuid } from 'uuid';
+import { reverse } from 'lodash';
 
 export const COMMIT_ID_NAMESPACE = 'b1a81255-568b-4f09-ab0b-4eeb607b82ed';
 

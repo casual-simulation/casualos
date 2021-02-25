@@ -84,7 +84,7 @@ import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
 import { map, concatMap } from 'rxjs/operators';
 import { Observable, merge } from 'rxjs';
-import orderBy from 'lodash/orderBy';
+import { orderBy } from 'lodash';
 import { verifyPassword, hashPassword } from '../crypto';
 
 /**

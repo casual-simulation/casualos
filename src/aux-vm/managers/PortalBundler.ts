@@ -16,28 +16,67 @@ import {
     trimPrefixedScript,
     Bot,
     RegisterPrefixOptions,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
-import values from 'lodash/values';
-import { isEqual, pick, sortBy } from 'lodash';
+import { values, isEqual, pick, sortBy } from 'lodash';
 import axios from 'axios';
+import type { AxiosResponse } from 'axios';
 import type ESBuild from 'esbuild';
 import * as esbuild from 'esbuild';
 
 export const DEFAULT_IMPORT_LANGUAGE = 'js';
-
-export const EXTERNAL_MODULE_SYMBOL = Symbol('external_module');
 
 /**
  * Defines an interface that represents the list of bots and tags that are included in a bundle.
  */
 export interface BundleModules {
     [id: string]: Set<string>;
+}
+
+/**
+ * Defines an interface that represents data about an external module.
+ */
+export interface ExternalModule {
+    /**
+     * The ID that was imported.
+     */
+    id: string;
 
     /**
-     * The set of external modules that were included in the bundle.
+     * The URL that was imported.
      */
-    [EXTERNAL_MODULE_SYMBOL]?: Set<string>;
+    url: string;
+
+    /**
+     * The URL to the typescript definitions
+     */
+    typescriptDefinitionsURL: string | null;
+}
+
+/**
+ * Defines an interface that represents data about an injected library.
+ */
+export interface LibraryModule {
+    /**
+     * The ID that was imported.
+     */
+    id: string;
+
+    /**
+     * The source code that was imported.
+     */
+    source: string;
+
+    /**
+     * The typescript definitions that should be used for the module.
+     */
+    typescriptDefinitions?: string;
+
+    /**
+     * The language that this module is in.
+     */
+    language: RegisterPrefixOptions['language'];
 }
 
 /**
@@ -70,12 +109,47 @@ export interface CodeBundle {
      * The list of modules that the bundle contains.
      */
     modules: BundleModules;
+
+    /**
+     * The list of modules that were imported from the web.
+     */
+    externals: {
+        [id: string]: ExternalModule;
+    };
+
+    /**
+     * The list of libraries that were imported.
+     */
+    libraries: {
+        [id: string]: LibraryModule;
+    };
 }
 
+/**
+ * Defines an interface that represents a script prefix.
+ * That is, a prefix that indicates the value should be treated as a particular language.
+ */
 export interface ScriptPrefix {
+    /**
+     * The prefix.
+     */
     prefix: string;
+
+    /**
+     * The language that values should be treated as.
+     */
     language: RegisterPrefixOptions['language'];
+
+    /**
+     * Whether the prefix is a builtin value.
+     */
     isDefault?: boolean;
+
+    /**
+     * Whether the prefix should be treated as a fallback.
+     * That is, values that are imported using it will be imported verbatim.
+     */
+    isFallback?: boolean;
 }
 
 export const DEFAULT_BASE_MODULE_URL: string = 'https://cdn.skypack.dev';
@@ -95,6 +169,12 @@ export interface PortalBundler {
         tag: string,
         prefixes: ScriptPrefix[]
     ): Promise<CodeBundle>;
+
+    /**
+     * Adds the given library source under the given name.
+     * @param module The module that should be used.
+     */
+    addLibrary(module: LibraryModule): void;
 }
 
 /**
@@ -104,12 +184,23 @@ export interface PortalBundler {
 export class ESBuildPortalBundler implements PortalBundler {
     private _esbuildService: ESBuild.Service;
     private _baseModuleUrl: string = DEFAULT_BASE_MODULE_URL;
-    private _httpCache: Map<string, Promise<string>>;
+    private _httpCache: Map<string, Promise<AxiosResponse<string>>>;
+    private _libraries: Map<string, LibraryModule>;
     private _esbuildWasmUrl: string;
 
     constructor(options: { esbuildWasmUrl?: string } = {}) {
         this._httpCache = new Map();
+        this._libraries = new Map();
+        this._libraries;
         this._esbuildWasmUrl = options.esbuildWasmUrl || null;
+    }
+
+    /**
+     * Adds the given library source under the given name.
+     * @param source The source code to use.
+     */
+    addLibrary(module: LibraryModule) {
+        this._libraries.set(module.id, module);
     }
 
     /**
@@ -178,6 +269,8 @@ export class ESBuildPortalBundler implements PortalBundler {
         }
 
         let modules: BundleModules = {};
+        let externals: CodeBundle['externals'] = {};
+        let libraries: CodeBundle['libraries'] = {};
         try {
             const result = await this._esbuildService.build({
                 entryPoints: ['__entry'],
@@ -191,7 +284,9 @@ export class ESBuildPortalBundler implements PortalBundler {
                         entryCode,
                         state,
                         bots,
-                        modules
+                        modules,
+                        externals,
+                        libraries
                     ),
                 ],
             });
@@ -208,6 +303,8 @@ export class ESBuildPortalBundler implements PortalBundler {
                 source: final,
                 warnings,
                 modules,
+                externals,
+                libraries,
             };
         } catch (err) {
             return {
@@ -215,6 +312,8 @@ export class ESBuildPortalBundler implements PortalBundler {
                 error: err.toString(),
                 warnings: [],
                 modules,
+                externals,
+                libraries,
             };
         }
     }
@@ -224,7 +323,9 @@ export class ESBuildPortalBundler implements PortalBundler {
         entryCode: string,
         state: BotsState,
         bots: Bot[],
-        modules: BundleModules
+        modules: BundleModules,
+        externals: CodeBundle['externals'],
+        libraries: CodeBundle['libraries']
     ): ESBuild.Plugin {
         return {
             name: 'casualos',
@@ -256,12 +357,16 @@ export class ESBuildPortalBundler implements PortalBundler {
                                 prefix.prefix,
                                 args.path
                             );
-                            const bot = bots.find((b) =>
-                                isPortalScript(
-                                    prefix.prefix,
-                                    calculateBotValue(null, b, tag)
-                                )
-                            );
+                            const bot = p.isFallback
+                                ? bots.find((b) =>
+                                      hasValue(calculateBotValue(null, b, tag))
+                                  )
+                                : bots.find((b) =>
+                                      isPortalScript(
+                                          prefix.prefix,
+                                          calculateBotValue(null, b, tag)
+                                      )
+                                  );
 
                             if (!bot) {
                                 return {
@@ -275,7 +380,9 @@ export class ESBuildPortalBundler implements PortalBundler {
 
                             return {
                                 path: auxModuleId(prefix.prefix, bot.id, tag),
-                                namespace: 'aux-ns',
+                                namespace: p.isFallback
+                                    ? 'aux-fallback-ns'
+                                    : 'aux-ns',
                             };
                         }
                     );
@@ -283,7 +390,148 @@ export class ESBuildPortalBundler implements PortalBundler {
 
                 build.onLoad(
                     { filter: /\\?auxmodule$/, namespace: 'aux-ns' },
-                    (args) => {
+                    buildAuxLoader(false)
+                );
+
+                build.onLoad(
+                    { filter: /\\?auxmodule$/, namespace: 'aux-fallback-ns' },
+                    buildAuxLoader(true)
+                );
+
+                build.onResolve({ filter: /^https?/ }, (args) => ({
+                    path: args.path,
+                    namespace: 'http-ns',
+                }));
+
+                build.onResolve({ filter: /.*/ }, (args) => {
+                    const importee = args.path;
+                    let importer = args.importer;
+
+                    if (this._libraries.has(importee)) {
+                        return {
+                            path: importee,
+                            namespace: 'lib-ns',
+                        };
+                    }
+
+                    // convert to HTTP(S) import.
+                    if (
+                        importee.startsWith('/') ||
+                        importee.startsWith('./') ||
+                        importee.startsWith('../')
+                    ) {
+                        const lastForwardSlash = importer.lastIndexOf('/');
+                        const lastDot = importer.lastIndexOf('.');
+
+                        // We can determine that the importer was a file with an extension
+                        // by looking at whether the index of the last period is after the
+                        // index of the last forward slash. If it is, then we know the file has
+                        // a valid extension. If it is not, then it should be treated as a directory name.
+                        const hasFileExtension =
+                            lastDot >= 0 && lastForwardSlash < lastDot;
+
+                        // use importer as base URL
+                        if (!hasFileExtension && !importer.endsWith('/')) {
+                            const importerUrl = new URL(importer);
+                            importer = `${importerUrl.origin}${importerUrl.pathname}/`;
+                        }
+
+                        const url = new URL(importee, importer);
+                        return { path: url.href, namespace: 'http-ns' };
+                    } else {
+                        const url = `${this._baseModuleUrl}/${importee}?dts`;
+                        externals[importee] = {
+                            id: importee,
+                            url,
+                            typescriptDefinitionsURL: null,
+                        };
+                        return {
+                            path: url,
+                            namespace: 'http-ns',
+                        };
+                    }
+                });
+
+                build.onLoad(
+                    { filter: /^https?/, namespace: 'http-ns' },
+                    async (args) => {
+                        try {
+                            const cached = this._httpCache.get(args.path);
+                            if (typeof cached !== 'undefined') {
+                                return {
+                                    contents: handleHttpResponse(
+                                        args.path,
+                                        await cached,
+                                        externals
+                                    ),
+                                    loader: 'js',
+                                };
+                            }
+
+                            let promise = axios.get(args.path);
+
+                            this._httpCache.set(args.path, promise);
+
+                            const script = handleHttpResponse(
+                                args.path,
+                                await promise,
+                                externals
+                            );
+                            return {
+                                contents: script,
+                                loader: 'js',
+                            };
+                        } catch (err) {
+                            return {
+                                errors: [
+                                    {
+                                        text: `${err}`,
+                                    },
+                                ],
+                            };
+                        }
+                    }
+                );
+
+                build.onLoad(
+                    { filter: /.*/, namespace: 'lib-ns' },
+                    async (args) => {
+                        try {
+                            const module = this._libraries.get(args.path);
+                            if (module) {
+                                libraries[args.path] = module;
+                                return {
+                                    contents: module.source,
+                                    loader: loaderForLanguage(
+                                        module.language,
+                                        DEFAULT_IMPORT_LANGUAGE
+                                    ),
+                                };
+                            }
+
+                            return {
+                                errors: [
+                                    {
+                                        text: `Unable to find library for ${args.path}`,
+                                    },
+                                ],
+                            };
+                        } catch (err) {
+                            return {
+                                errors: [
+                                    {
+                                        text: `${err}`,
+                                    },
+                                ],
+                            };
+                        }
+                    }
+                );
+
+                function buildAuxLoader(
+                    isFallback: boolean
+                ): (args: ESBuild.OnLoadArgs) => ESBuild.OnLoadResult {
+                    return (args) => {
                         const { prefix, botId, tag } = parseAuxModuleId(
                             prefixes,
                             args.path
@@ -308,24 +556,13 @@ export class ESBuildPortalBundler implements PortalBundler {
 
                             const code = calculateBotValue(null, bot, tag);
                             return {
-                                contents: trimPrefixedScript(
-                                    prefix.prefix,
-                                    code
+                                contents: isFallback
+                                    ? code
+                                    : trimPrefixedScript(prefix.prefix, code),
+                                loader: loaderForLanguage(
+                                    prefix.language,
+                                    DEFAULT_IMPORT_LANGUAGE
                                 ),
-                                loader:
-                                    prefix.language === 'javascript'
-                                        ? 'js'
-                                        : prefix.language === 'typescript'
-                                        ? 'ts'
-                                        : prefix.language === 'json'
-                                        ? 'json'
-                                        : prefix.language === 'jsx'
-                                        ? 'jsx'
-                                        : prefix.language === 'tsx'
-                                        ? 'tsx'
-                                        : prefix.language === 'text'
-                                        ? 'text'
-                                        : DEFAULT_IMPORT_LANGUAGE,
                             };
                         }
 
@@ -336,84 +573,55 @@ export class ESBuildPortalBundler implements PortalBundler {
                                 },
                             ],
                         };
-                    }
-                );
-
-                build.onResolve({ filter: /^https?/ }, (args) => ({
-                    path: args.path,
-                    namespace: 'http-ns',
-                }));
-
-                build.onResolve({ filter: /.*/ }, (args) => {
-                    const importee = args.path;
-                    let importer = args.importer;
-                    // convert to HTTP(S) import.
-                    if (importee.startsWith('/') || importee.startsWith('./')) {
-                        // use importer as base URL
-                        if (!importer.endsWith('/')) {
-                            importer = importer + '/';
-                        }
-                        const url = new URL(importee, importer);
-                        return { path: url.href, namespace: 'http-ns' };
-                    } else {
-                        let moduleTags = modules[EXTERNAL_MODULE_SYMBOL];
-                        if (!moduleTags) {
-                            moduleTags = new Set();
-                            modules[EXTERNAL_MODULE_SYMBOL] = moduleTags;
-                        }
-                        moduleTags.add(importee);
-                        return {
-                            path: `${this._baseModuleUrl}/${importee}`,
-                            namespace: 'http-ns',
-                        };
-                    }
-                });
-
-                build.onLoad(
-                    { filter: /^https?/, namespace: 'http-ns' },
-                    async (args) => {
-                        try {
-                            const cached = this._httpCache.get(args.path);
-                            if (typeof cached !== 'undefined') {
-                                return {
-                                    contents: await cached,
-                                    loader: 'js',
-                                };
-                            }
-
-                            let promise = axios
-                                .get(args.path)
-                                .then((response) => {
-                                    if (typeof response.data === 'string') {
-                                        const script = response.data;
-                                        return script;
-                                    } else {
-                                        throw new Error(
-                                            `The module server did not return a string.`
-                                        );
-                                    }
-                                });
-
-                            this._httpCache.set(args.path, promise);
-
-                            const script = await promise;
-                            return {
-                                contents: script,
-                                loader: 'js',
-                            };
-                        } catch (err) {
-                            return {
-                                errors: [
-                                    {
-                                        text: `${err}`,
-                                    },
-                                ],
-                            };
-                        }
-                    }
-                );
+                    };
+                }
             },
         };
+    }
+}
+
+function loaderForLanguage(
+    language: RegisterPrefixOptions['language'],
+    defaultLoader: ESBuild.Loader
+): ESBuild.Loader {
+    return language === 'javascript'
+        ? 'js'
+        : language === 'typescript'
+        ? 'ts'
+        : language === 'json'
+        ? 'json'
+        : language === 'jsx'
+        ? 'jsx'
+        : language === 'tsx'
+        ? 'tsx'
+        : language === 'text'
+        ? 'text'
+        : defaultLoader;
+}
+
+function handleHttpResponse(
+    path: string,
+    response: AxiosResponse<string>,
+    externals: CodeBundle['externals']
+) {
+    if (typeof response.data === 'string') {
+        const script = response.data;
+
+        const external = values(externals).find((e) => e.url === path);
+
+        if (external) {
+            const declarations = response?.headers?.['x-typescript-types'];
+            if (typeof declarations === 'string') {
+                external.typescriptDefinitionsURL = new URL(
+                    declarations,
+                    path
+                ).href;
+            }
+        }
+
+        return script;
+    } else {
+        throw new Error(`The module server did not return a string.`);
     }
 }
 

@@ -26,8 +26,6 @@ import {
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import differenceBy from 'lodash/differenceBy';
-import maxBy from 'lodash/maxBy';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { AuxBot3DDecoratorFactory } from '../../scene/decorators/AuxBot3DDecoratorFactory';
 import { setParent } from '../../scene/SceneUtils';

@@ -8,6 +8,7 @@
 module.exports = {
     docs: {
       'Reference Documentation': ['tags', 'listen-tags', 'actions'],
+      'Custom Portals': ['custom-portals/introduction']
     },
   };
   

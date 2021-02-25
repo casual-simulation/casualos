@@ -1,4 +1,3 @@
-import omitBy from 'lodash/omitBy';
 import {
     PrecalculatedBotsState,
     Bot,
@@ -9,7 +8,7 @@ import {
 import { merge } from '../utils';
 import { apply } from '../aux-format-2/AuxStateHelpers';
 import { hasValue } from './BotCalculations';
-import { cloneDeep, partial } from 'lodash';
+import { cloneDeep } from 'lodash';
 
 /**
  * Defines an event for state updates from the VM.

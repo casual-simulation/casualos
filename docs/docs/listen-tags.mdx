@@ -18,7 +18,7 @@ import {
   Alert,
   TagLink,
   NormalCode,
-  UserBotBadge,
+  ConfigBotBadge,
   ActionLink,
 } from './components.mdx';
 
@@ -331,6 +331,32 @@ Focus is when the bot is in the center of the screen.
 let that: {
   bot: Bot,
   dimension: string
+};
+```
+
+### `@onInputTyping`
+
+A whisper that is sent whenever the player is typing in the menu bot's input box.
+Only sent for bots that are in a menu and have <TagLink tag='form'/> set to `input`.
+
+#### Arguments:
+```typescript
+let that: {
+  text: string
+};
+```
+
+### `@onSubmit`
+
+A whisper that is sent whenever the player submits the text in the menu bot's input box.
+This can happen by pressing enter while there is text in the box or by clicking the send button on the right side of the box.
+
+Only sent for bots that are in a menu and have <TagLink tag='form'/> set to `input`.
+
+#### Arguments:
+```typescript
+let that: {
+  text: string
 };
 ```
 
@@ -997,6 +1023,30 @@ let that: {
 };
 ```
 
+### `@onRemoteData`
+
+A shout that is sent whenever a message is received from another player.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the message.
+     */
+    name: string,
+
+    /**
+     * The argument that was included in the message.
+     */
+    that: any,
+
+    /**
+     * The ID of the player that sent the message.
+     */
+    playerId: string
+};
+```
+
 ### `@onRemoteWhisper`
 
 A shout that is sent whenever a message is received from another player.
@@ -1135,7 +1185,7 @@ let that: {
 A shout that is sent when a list of bots is removed from the current server.
 
 Unlike <TagLink tag='@onDestroy'/>, this listen tag is triggered whenever the bots have been removed from the current player's server, even if the bots were not destroyed.
-An example of this happening is when another player disconnects. Even though their player bots were not destroyed, they still need to be removed from the server.
+An example of this happening is when another player disconnects. Even though their config bots were not destroyed, they still need to be removed from the server.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script deletes multiple bots, `@onAnyBotsRemoved` will only be triggered once.
 

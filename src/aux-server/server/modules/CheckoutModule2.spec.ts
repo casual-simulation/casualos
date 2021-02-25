@@ -15,7 +15,7 @@ import {
 import { Subscription } from 'rxjs';
 import { AuxUser, Simulation } from '@casual-simulation/aux-vm';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import { CheckoutModule2 } from './CheckoutModule2';
 import {
     CausalRepoClient,
@@ -34,7 +34,7 @@ console.log = jest.fn();
 console.error = jest.fn();
 
 const uuidMock: jest.Mock = <any>uuid;
-jest.mock('uuid/v4');
+jest.mock('uuid');
 
 describe('CheckoutModule2', () => {
     let user: AuxUser;
@@ -154,13 +154,13 @@ describe('CheckoutModule2', () => {
                 await processingSimulation.init();
 
                 const actions: LocalActions[] = [];
-                processingSimulation.deviceEvents.subscribe(e =>
+                processingSimulation.deviceEvents.subscribe((e) =>
                     actions.push(e.event as LocalActions)
                 );
 
                 await processingSimulation.helper.createBot('checkoutBot', {
                     onCheckout: `@remote(
-                                player.toast("Checked out " + that.productId + " " + that.token + " " + that.user.session),
+                                os.toast("Checked out " + that.productId + " " + that.token + " " + that.user.session),
                                 {
                                     session: 'processing'
                                 })`,

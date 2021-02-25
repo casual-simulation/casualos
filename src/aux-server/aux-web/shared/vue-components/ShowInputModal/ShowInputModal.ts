@@ -182,36 +182,47 @@ export default class ShowInputModal extends Vue {
             value = this.currentValue;
         }
 
-        if (this._currentBot && this._currentTag) {
-            await this._saveInputForTag(value);
+        const currentBot = this._currentBot;
+        const currentTag = this._currentTag;
+        const currentTask = this._currentTask;
+        // Close the dialog first before
+        // sending the result events back to the backend.
+        // This will let dialogs be opened in sequence.
+        this._saved = true;
+        await this.closeInputDialog();
+
+        if (currentBot && currentTag) {
+            await this._saveInputForTag(currentBot, currentTag, value);
         } else if (
-            typeof this._currentTask === 'number' ||
-            typeof this._currentTask === 'string'
+            typeof currentTask === 'number' ||
+            typeof currentTask === 'string'
         ) {
-            await this._saveInput(value);
+            await this._saveInput(currentTask, value);
         } else {
             console.error(
                 '[ShowInputModal] Unable to save since no bot or task was specified'
             );
         }
-        this._saved = true;
-        await this.closeInputDialog();
     }
 
-    private async _saveInput(value: any) {
+    private async _saveInput(currentTask: string | number, value: any) {
         await this._inputDialogSimulation.helper.transaction(
-            asyncResult(this._currentTask, value)
+            asyncResult(currentTask, value)
         );
     }
 
-    private async _saveInputForTag(value: any) {
-        await this._inputDialogSimulation.helper.updateBot(this._currentBot, {
+    private async _saveInputForTag(
+        currentBot: Bot,
+        currentTag: string,
+        value: any
+    ) {
+        await this._inputDialogSimulation.helper.updateBot(currentBot, {
             tags: {
-                [this._currentTag]: value,
+                [currentTag]: value,
             },
         });
         await this._inputDialogSimulation.helper.action('onSaveInput', [
-            this._currentBot,
+            currentBot,
         ]);
     }
 

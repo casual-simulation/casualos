@@ -1703,6 +1703,37 @@ declare interface ShareAction extends AsyncAction, ShareOptions {
     type: 'share';
 }
 
+/**
+ * An event that is used to show or hide the circle wipe.
+ */
+export interface OpenCircleWipeAction extends AsyncAction {
+    type: 'show_circle_wipe';
+
+    /**
+     * Whether the circle wipe should be visible.
+     */
+    open: boolean;
+
+    /**
+     * The options for the circle wipe.
+     */
+    options: OpenCircleWipeOptions;
+}
+
+/**
+ * The options for the circle wipe.
+ */
+export interface OpenCircleWipeOptions {
+    /**
+     * The duration of this half of the circle wipe animation in seconds.
+     */
+    duration: number;
+
+    /**
+     * The color that the circle wipe should be.
+     */
+    color: string;
+}
 
 /**
  * The possible options for a custom portal.
@@ -1903,7 +1934,7 @@ declare interface BotTags {
 /**
  * Defines the basic structure of a bot.
  */
-declare interface Bot {
+export interface Bot {
     /**
      * The ID of the bot.
      */
@@ -2151,17 +2182,12 @@ declare global {
     /**
      * The config Bot for this Bot.
      */
-    const config: Bot;
+    const configBot: Bot;
 
     /**
      * The name of the tag that this script is running in.
      */
     const tagName: string;
-
-    /**
-     * The value of the same tag in the config Bot.
-     */
-    const configTag: any;
 
     /**
      * Creates a new bot and returns it.
@@ -2388,6 +2414,18 @@ declare global {
         selector?: SessionSelector | string | (SessionSelector | string)[],
         allowBatching?: boolean
     ): RemoteAction | RemoteAction[];
+
+    /**
+     * Sends an event to the given player or list of players.
+     * The other players will recieve an onRemoteData shout for this whisper.
+     * 
+     * In effect, this allows players to communicate with each other by sending arbitrary events.
+     * 
+     * @param playerId The ID of the other player or players to whisper to.
+     * @param name The name of the event.
+     * @param arg The optional argument to include in the event.
+     */
+    function sendRemoteData(playerId: string | string[], name: string, arg?: any): RemoteAction | RemoteAction[];
 
     /**
      * Sends the given shout to the given player or list of players.
@@ -2758,9 +2796,9 @@ declare global {
     function subtractMods(bot: any, ...diffs: Mod[]): void;
 
     /**
-     * Defines a set of functions that relate to common player operations.
+     * Defines a set of functions that relate to common OS operations.
      */
-    const player: {
+    const os: {
 
         /**
          * Derermines whether the player is in the given dimension.
@@ -2971,6 +3009,18 @@ declare global {
          * @param options The options.
          */
         share(options: ShareOptions): ShareAction;
+
+        /**
+         * Closes the circle wipe transition effect.
+         * @param options The options that should be used for the effect.
+         */
+        closeCircleWipe(options?: Partial<OpenCircleWipeOptions>): Promise<void>;
+
+        /**
+         * Opens the circle wipe transition effect.
+         * @param options The options that should be used for the effect.
+         */
+        openCircleWipe(options?: Partial<OpenCircleWipeOptions>): Promise<void>;
 
         /**
          * Shows some HTML to the user.
@@ -3289,12 +3339,14 @@ declare global {
         /**
          * Registers a custom portal with the given source code.
          * @param portalId The ID of the portal.
+         * @param bot The bot that should be used to configure the portal.
          * @param tagOrSource The tag or source code that the portal should be created from.
          * @param options The options for the portal.
          */
         open(
             portalId: string,
-            tagOrSource: string,
+            bot: Bot | string,
+            tagOrSource?: string,
             options?: OpenCustomPortalOptions
         ): Promise<void>;
 
@@ -3984,6 +4036,62 @@ declare global {
          * @param data The data to decrypt.
          */
         decrypt(secret: string, data: string): string;
+
+        /**
+         * Contains functions useful for asymmetric encryption.
+         */
+        asymmetric: {
+            /**
+             * Creates a new keypair that can be used for encrypting and decrypting data.
+             *
+             * @description Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to
+             * help you create and keep track of them.
+             * 
+             * Keypairs are made up of a private key and a public key.
+             * The public key is a special value that can be used to encrypt data and 
+             * the private key is a related value that can be used to decrypt data that was encrypted by the public key.
+             *
+             * The private key is called "private" because it is encrypted using the given secret
+             * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
+             *
+             * Note that both the private and public keys are randomly generated, so while the public key is unencrypted, it won't be able to be used by someone else unless
+             * they have access to it.
+             *
+             * @param secret The secret that should be used to encrypt the private key.
+             */
+            keypair(secret: string): string;
+
+            /**
+             * Encrypts the given data with the given keypair and returns the result.
+             *
+             * @description This method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it),
+             * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).
+             *
+             * As a consequence, encrypting the same data with the same keypair will produce different results.
+             * This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
+             *
+             * Encrypts the given data using an asymmetric authenticated encryption mechanism
+             * based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
+             * 
+             * You may notice that this function does not need a secret to decrypt the keypair.
+             * This is because the public key of the keypair is used to encrypt the data.
+             * Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.
+             *
+             * @param keypair The keypair to use to secure the data.
+             * @param data The data to encrypt.
+             */
+            encrypt(keypair: string, data: string): string;
+
+            /**
+             * Decrypts the given data with the given keypair and secret and returns the result.
+             * If the data was unable to be decrypted, null will be returned.
+             *
+             * @param keypair The keypair to use to decrypt the data.
+             * @param secret The secret to use to decrypt the keypair's private key.
+             * @param data The data to decrypt.
+             */
+            decrypt(keypair: string, secret: string, data: string): string;
+        };
 
         /**
          * Creates a new keypair that can be used for signing and verifying data.

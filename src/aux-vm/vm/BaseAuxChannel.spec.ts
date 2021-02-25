@@ -42,14 +42,13 @@ import {
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
-import uuid from 'uuid/v4';
-import merge from 'lodash/merge';
+import { v4 as uuid } from 'uuid';
+import { merge, cloneDeep } from 'lodash';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subject, Subscription } from 'rxjs';
-import { cloneDeep } from 'lodash';
 
 const uuidMock: jest.Mock = <any>uuid;
-jest.mock('uuid/v4');
+jest.mock('uuid');
 
 console.log = jest.fn();
 console.warn = jest.fn();
@@ -584,7 +583,7 @@ describe('BaseAuxChannel', () => {
             await memory.applyEvents([
                 botAdded(
                     createBot('test1', {
-                        test: '@player.toast("abc");',
+                        test: '@os.toast("abc");',
                     })
                 ),
             ]);
@@ -600,7 +599,7 @@ describe('BaseAuxChannel', () => {
             subject.next(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        test: '@player.toast("abc");',
+                        test: '@os.toast("abc");',
                     }),
                 })
             );
@@ -641,7 +640,7 @@ describe('BaseAuxChannel', () => {
             await memory.applyEvents([
                 botAdded(
                     createBot('test1', {
-                        test: '@player.toast("abc");',
+                        test: '@os.toast("abc");',
                     })
                 ),
             ]);
@@ -656,7 +655,7 @@ describe('BaseAuxChannel', () => {
             subject.next(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        test: '@player.toast("abc");',
+                        test: '@os.toast("abc");',
                     }),
                 })
             );
@@ -775,7 +774,7 @@ describe('BaseAuxChannel', () => {
                     {
                         type: 'run_script',
                         script:
-                            'create({ value: "fun" }); let bot = create({ space: "random", value: 123 }); player.toast(bot)',
+                            'create({ value: "fun" }); let bot = create({ space: "random", value: 123 }); os.toast(bot)',
                         taskId: null,
                     },
                 ]);
@@ -877,7 +876,7 @@ describe('BaseAuxChannel', () => {
                 ),
                 botAdded(
                     createBot('test2', {
-                        getValue: `@player.toast("abc");`,
+                        getValue: `@os.toast("abc");`,
                     })
                 ),
             ]);
@@ -901,7 +900,7 @@ describe('BaseAuxChannel', () => {
                 ),
                 botAdded(
                     createBot('test2', {
-                        getValue: `@player.toast("abc");`,
+                        getValue: `@os.toast("abc");`,
                     })
                 ),
                 botAdded(
@@ -932,7 +931,7 @@ describe('BaseAuxChannel', () => {
         it('should send remote events', async () => {
             await channel.initAndWait();
 
-            await channel.formulaBatch(['remote(player.toast("abc"))']);
+            await channel.formulaBatch(['remote(os.toast("abc"))']);
 
             expect(channel.remoteEvents).toEqual([remote(toast('abc'))]);
         });

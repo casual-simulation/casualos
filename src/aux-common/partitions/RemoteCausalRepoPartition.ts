@@ -58,8 +58,10 @@ import {
     SetSpacePasswordAction,
     StateUpdatedEvent,
     stateUpdatedEvent,
+    BotsState,
+    ON_REMOTE_DATA_ACTION_NAME,
 } from '../bots';
-import flatMap from 'lodash/flatMap';
+import { flatMap } from 'lodash';
 import {
     PartitionConfig,
     RemoteCausalRepoPartitionConfig,
@@ -171,7 +173,7 @@ export class RemoteCausalRepoPartitionImpl
         return this._sub.closed;
     }
 
-    get state() {
+    get state(): BotsState {
         return this._tree.state;
     }
 
@@ -525,6 +527,19 @@ export class RemoteCausalRepoPartitionImpl
                                     const remoteAction = event.action
                                         .event as ShoutAction;
                                     this._onEvents.next([
+                                        action(
+                                            ON_REMOTE_DATA_ACTION_NAME,
+                                            null,
+                                            null,
+                                            {
+                                                name: remoteAction.eventName,
+                                                that: remoteAction.argument,
+                                                playerId:
+                                                    event.action.device.claims[
+                                                        SESSION_ID_CLAIM
+                                                    ],
+                                            }
+                                        ),
                                         action(
                                             ON_REMOTE_WHISPER_ACTION_NAME,
                                             null,

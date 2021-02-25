@@ -3,7 +3,7 @@
         <div class="game-canvas" ref="gameView"></div>
         <slot></slot>
         <div class="ui-container">
-            <div class="toolbar menu">
+            <div ref="menuElement" class="toolbar menu" :style="finalMenuStyle">
                 <div>
                     <md-list class="md-dense">
                         <menu-bot
@@ -47,6 +47,8 @@
 
             <!-- Main viewport -->
             <div v-if="hasMainViewport" class="viewport" :style="mainViewportStyle"></div>
+
+            <circle-wipe></circle-wipe>
         </div>
     </div>
 </template>

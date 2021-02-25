@@ -9,12 +9,15 @@ import { PlayerGame } from '../scene/PlayerGame';
 import { Game } from '../../shared/scene/Game';
 import { map, tap, combineLatest } from 'rxjs/operators';
 import { DimensionItem } from '../DimensionItem';
-import { ItemDimension } from '../ItemDimension';
+import { MenuPortal } from '../MenuPortal';
 import { appManager } from '../../shared/AppManager';
+import CircleWipe from '../../shared/vue-components/CircleWipe/CircleWipe';
+import { hasValue } from '@casual-simulation/aux-common';
 
 @Component({
     components: {
         'menu-bot': MenuBot,
+        'circle-wipe': CircleWipe,
     },
 })
 export default class PlayerGameView extends BaseGameView implements IGameView {
@@ -27,6 +30,8 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     hasMainViewport: boolean = false;
     hasInventoryViewport: boolean = false;
     menu: DimensionItem[] = [];
+    extraMenuStyle: Partial<HTMLElement['style']> = {};
+    menuStyle: Partial<HTMLElement['style']> = {};
 
     @Inject() addSidebarItem: PlayerApp['addSidebarItem'];
     @Inject() removeSidebarItem: PlayerApp['removeSidebarItem'];
@@ -36,6 +41,13 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
     constructor() {
         super();
+    }
+
+    get finalMenuStyle() {
+        return {
+            ...this.menuStyle,
+            ...this.extraMenuStyle,
+        };
     }
 
     protected createGame(): Game {
@@ -56,6 +68,8 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
     setupCore() {
         this.menu = [];
+        this.menuStyle = {};
+        this.extraMenuStyle = {};
         this._subscriptions.push(
             this._game
                 .watchCameraRigDistanceSquared(this._game.inventoryCameraRig)
@@ -66,12 +80,31 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                 .subscribe()
         );
 
-        let menuContext = new ItemDimension(appManager.simulationManager, [
+        let menuContext = new MenuPortal(appManager.simulationManager, [
             'menuPortal',
         ]);
         this._subscriptions.push(menuContext);
         this._subscriptions.push(
-            menuContext.itemsUpdated.subscribe((items) => (this.menu = items))
+            menuContext.itemsUpdated.subscribe((items) => (this.menu = items)),
+            menuContext.configUpdated.subscribe(() => {
+                this.extraMenuStyle = menuContext.extraStyle as any;
+                if (
+                    hasValue(this.extraMenuStyle.width) &&
+                    !hasValue(this.extraMenuStyle.left) &&
+                    !hasValue(this.extraMenuStyle.right)
+                ) {
+                    const width = this.extraMenuStyle.width;
+                    if (typeof width === 'string' && width.endsWith('%')) {
+                        const percent = parseFloat(
+                            width.slice(0, width.length - 1)
+                        );
+                        const left = (100 - percent) / 2;
+                        if (isFinite(left)) {
+                            this.extraMenuStyle.left = `${left}%`;
+                        }
+                    }
+                }
+            })
         );
 
         if (this._game.inventoryViewport) {
@@ -132,5 +165,9 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
     centerInventoryCamera() {
         this._game.onCenterCamera(this._game.inventoryCameraRig);
+    }
+
+    setMenuStyle(style: Partial<HTMLElement['style']>) {
+        this.menuStyle = style;
     }
 }

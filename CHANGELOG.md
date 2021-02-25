@@ -1,8 +1,132 @@
 # CasualOS Changelog
 
+## V1.4.7
+
+#### Date: 2/24/2021
+
+### :boom: Breaking Changes
+
+-   Renamed all the `player` functions to `os`.
+    -   Instead of `player.toast()` you should now do `os.toast()`.
+-   Removed the `configBot` and `configTag` variables.
+-   Removed the portal config bot tags and replaced them with variables.
+    -   e.g. `pagePortalConfigBot` can now be accessed with the `pagePortalBot` variable.
+    -   You can now set the page portal color by doing `pagePortalBot.tags.portalColor = "green"`.
+    -   By default a `tempLocal` bot will be created for each builtin portal.
+    -   You can also provide your own bot by calling `portal.open(portalName, bot)`.
+-   Changed the `portal.open()` function to take a bot as a parameter.
+    -   It should now be called like `portal.open(name, bot, tag?, options?)`.
+    -   After callilng this, the given bot will be available globally at `{name}Bot`.
+    -   For example `portal.open("myPortal", bot, "main")` will make `bot` available as `myPortalBot`.
+-   Removed `player.getBot()` and replaced it with `configBot`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where variables from other listen tags would appear as autocomplete options.
+
+## V1.4.6
+
+#### Date: 2/23/2021
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the circle wipe element would not cover modals like `player.showHtml()` or `player.showInput()`.
+-   Fixed an issue where calling `player.showInput()` in sequence would show the first input but not the second input.
+
+## V1.4.5
+
+#### Date: 2/23/2021
+
+### :rocket: Improvements
+
+-   Changed the ab-1 bootstrap URL to `https://bootstrap.casualos.com/ab1.aux`.
+-   Updated to three.js r125.
+    -   This fixes WebXR for Chrome 88 and later.
+-   Added the ability to disable hover states on menu item buttons using the `menuItemHoverMode` tag. It has three possible options:
+    -   `auto` - The bot will appear hoverable based on if it has a `@onClick` tag. (Default)
+    -   `hover` - The bot will appear hoverable.
+    -   `none` - The bot will not appear hoverable.
+    -   None of these options affect the existing functionality of any listen tags on menu bots.
+-   Added an initial version of the `idePortal` (IDE portal).
+    -   The IDE portal makes it easier to jump between tags to edit them in the multiline tag editor.
+    -   Setting the `idePortal` tag to a prefix (like 📖) will load every tag that starts with the prefix into the IDE portal and let you jump between them as if they are files in a text editor.
+    -   Currently it is pretty limited, but can be very useful for custom portals.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was not possible to enter numbers in menu bot input boxes.
+
+## V1.4.4
+
+#### Date: 2/18/2021
+
+### :rocket: Improvements
+
+-   Added additional crypto functions to support asymmetric encryption and decryption.
+    -   `crypto.asymmetric.keypair(secret)` - Creates a keypair that can be used for asymmetric encryption and decryption.
+    -   `crypto.asymmetric.encrypt(keypair, data)` - Encrypts some data using the given keypair.
+    -   `crypto.asymmetric.decrypt(keypair, secret, data)` - Decrypts some data using the given keypair and secret.
+    -   Check the documentation for more info.
+-   Added a better error message when trying to save a bot to a tag value.
+-   Added the `dimension` bot form as a preferred alias to `portal`.
+
+## V1.4.3
+
+#### Date: 2/17/2021
+
+### :rocket: Improvements
+
+-   Added the ability to interface with CasualOS from inside a custom portal.
+    -   CasualOS-related functionality is available by importing functions and objects from the `casualos` module.
+    -   Among the available functionality is `onBotsDiscovered`, `onBotsRemoved`, `onBotsUpdated`, `createBot()`, `destroyBot()`, and `updateBot()`.
+    -   Additionally autocomplete is available for the available features.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where webhook errors could not be caught on Safari based browsers.
+
+## V1.4.2
+
+#### Date: 2/11/2021
+
+### :rocket: Improvements
+
+-   Added the ability to zoom by scrolling.
+    -   Previously this was possible by holding the Ctrl button down.
+-   Added the `#portalCameraControls` tag to allow disabling moving the camera.
+    -   Can be set on the portal config bot for the page and inventory portals.
+    -   Supported values are:
+        -   `player` - Allows the player to move the camera around like normal. (Default)
+        -   `false` - Disables camera movement in the portal.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the inventory portal color could not be set when the page portal is using an image for the background.
+
+## V1.4.1
+
+#### Date: 2/10/2021
+
+### :rocket: Improvements
+
+-   Added the `player.openCircleWipe()` and `player.closeCircleWipe()` functions.
+    -   These are useful for hiding the page portal while transitioning between scenes.
+    -   See the documentation for usage information.
+-   Added "cube", "helix", and "egg" as additional options for the `#formAddress` tag on menu bots.
+-   Added the `input` form for menu bots.
+    -   Setting `#form` to "input" on a bot that is in the menu portal will give it an input box that can be typed in.
+    -   Typing in the box will send `@onInputTyping` whispers to the bot. And submitting the data by hitting enter or the send button will send a `@onSubmit` whisper to the bot.
+    -   Additionally, the text in the input will be stored in the `tempLocal` `#menuItemText` tag.
+-   Adjusted the chat bar to be inset in the page portal to give it the feel of being part of the page portal.
+-   Added the `#menuPortalStyle` tag to allow customizing the menu portal with CSS.
+    -   This works similarly to `#menuItemStyle` except that it applies to the entire menu portal instead of just one item.
+    -   Set it on the `#menuPortalConfigBot`.
+-   Added the `#portalBackgroundAddress` tag to allow specifying a custom image for the page portal background.
+    -   Does not work in VR.
+
 ## V1.4.0
 
-#### Date: 2/4/2021
+#### Date: 2/8/2021
 
 ### :rocket: Improvements
 

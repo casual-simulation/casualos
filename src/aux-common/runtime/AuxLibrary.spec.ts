@@ -139,6 +139,7 @@ import {
     showUploadFiles,
     registerPrefix,
     buildBundle,
+    circleWipe,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -146,7 +147,7 @@ import {
     possibleTagValueCases,
 } from '../bots/test/BotTestHelpers';
 import { remote } from '@casual-simulation/causal-trees';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import {
     TestScriptBotFactory,
     createDummyRuntimeBot,
@@ -156,7 +157,12 @@ import { RuntimeBatcher } from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
-import { decryptV1, keypair } from '@casual-simulation/crypto';
+import {
+    asymmetricDecryptV1,
+    asymmetricKeypairV1,
+    decryptV1,
+    keypair,
+} from '@casual-simulation/crypto';
 import { CERTIFIED_SPACE } from '../aux-format-2/AuxWeaveReducer';
 import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { RanOutOfEnergyError } from './AuxResults';
@@ -164,7 +170,7 @@ import { Subscription, SubscriptionLike } from 'rxjs';
 import { waitAsync } from '../test/TestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
-jest.mock('uuid/v4');
+jest.mock('uuid');
 
 describe('AuxLibrary', () => {
     let library: ReturnType<typeof createDefaultLibrary>;
@@ -1394,16 +1400,16 @@ describe('AuxLibrary', () => {
             addToContext(context, bot1, bot2);
         });
 
-        describe('player.toast()', () => {
+        describe('os.toast()', () => {
             it('should emit a ShowToastAction', () => {
-                let action = library.api.player.toast('hello, world!');
+                let action = library.api.os.toast('hello, world!');
 
                 expect(action).toEqual(toast('hello, world!'));
                 expect(context.actions).toEqual([toast('hello, world!')]);
             });
 
             it('should convert bots to copiable values', () => {
-                let action = library.api.player.toast(bot1 as any);
+                let action = library.api.os.toast(bot1 as any);
 
                 expect(action).toEqual(
                     toast({
@@ -1416,21 +1422,21 @@ describe('AuxLibrary', () => {
             });
 
             it('should preserve null', () => {
-                let action = library.api.player.toast(null);
+                let action = library.api.os.toast(null);
 
                 expect(action).toEqual(toast(null));
             });
         });
 
-        describe('player.showJoinCode()', () => {
+        describe('os.showJoinCode()', () => {
             it('should emit a ShowJoinCodeEvent', () => {
-                const action = library.api.player.showJoinCode();
+                const action = library.api.os.showJoinCode();
                 expect(action).toEqual(showJoinCode());
                 expect(context.actions).toEqual([showJoinCode()]);
             });
 
             it('should allow linking to a specific server and dimension', () => {
-                const action = library.api.player.showJoinCode(
+                const action = library.api.os.showJoinCode(
                     'server',
                     'dimension'
                 );
@@ -1441,61 +1447,61 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.requestFullscreenMode()', () => {
+        describe('os.requestFullscreenMode()', () => {
             it('should issue a request_fullscreen action', () => {
-                const action = library.api.player.requestFullscreenMode();
+                const action = library.api.os.requestFullscreenMode();
                 expect(action).toEqual(requestFullscreen());
                 expect(context.actions).toEqual([requestFullscreen()]);
             });
         });
 
-        describe('player.exitFullscreenMode()', () => {
+        describe('os.exitFullscreenMode()', () => {
             it('should issue a exit_fullscreen_mode action', () => {
-                const action = library.api.player.exitFullscreenMode();
+                const action = library.api.os.exitFullscreenMode();
                 expect(action).toEqual(exitFullscreen());
                 expect(context.actions).toEqual([exitFullscreen()]);
             });
         });
 
-        describe('player.showHtml()', () => {
+        describe('os.showHtml()', () => {
             it('should issue a show_html action', () => {
-                const action = library.api.player.showHtml('hello, world!');
+                const action = library.api.os.showHtml('hello, world!');
                 expect(action).toEqual(html('hello, world!'));
                 expect(context.actions).toEqual([html('hello, world!')]);
             });
         });
 
-        describe('player.hideHtml()', () => {
+        describe('os.hideHtml()', () => {
             it('should issue a hide_html action', () => {
-                const action = library.api.player.hideHtml();
+                const action = library.api.os.hideHtml();
                 expect(action).toEqual(hideHtml());
                 expect(context.actions).toEqual([hideHtml()]);
             });
         });
 
-        describe('player.setClipboard()', () => {
+        describe('os.setClipboard()', () => {
             it('should emit a SetClipboardEvent', () => {
-                const action = library.api.player.setClipboard('test');
+                const action = library.api.os.setClipboard('test');
                 expect(action).toEqual(setClipboard('test'));
                 expect(context.actions).toEqual([setClipboard('test')]);
             });
         });
 
-        describe('player.tweenTo()', () => {
+        describe('os.tweenTo()', () => {
             it('should emit a TweenToAction', () => {
-                const action = library.api.player.tweenTo('test');
+                const action = library.api.os.tweenTo('test');
                 expect(action).toEqual(tweenTo('test'));
                 expect(context.actions).toEqual([tweenTo('test')]);
             });
 
             it('should handle bots', () => {
-                const action = library.api.player.tweenTo(bot1);
+                const action = library.api.os.tweenTo(bot1);
                 expect(action).toEqual(tweenTo(bot1.id));
                 expect(context.actions).toEqual([tweenTo(bot1.id)]);
             });
 
             it('should support specifying a duration', () => {
-                const action = library.api.player.tweenTo(
+                const action = library.api.os.tweenTo(
                     'test',
                     undefined,
                     undefined,
@@ -1511,9 +1517,9 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.moveTo()', () => {
+        describe('os.moveTo()', () => {
             it('should emit a TweenToAction with the duration set to 0', () => {
-                const action = library.api.player.moveTo('test');
+                const action = library.api.os.moveTo('test');
                 expect(action).toEqual({
                     type: 'tween_to',
                     botId: 'test',
@@ -1533,15 +1539,15 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.showChat()', () => {
+        describe('os.showChat()', () => {
             it('should emit a ShowChatBarAction', () => {
-                const action = library.api.player.showChat();
+                const action = library.api.os.showChat();
                 expect(action).toEqual(showChat());
                 expect(context.actions).toEqual([showChat()]);
             });
 
             it('should emit a ShowChatBarAction with the given prefill', () => {
-                const action = library.api.player.showChat('test');
+                const action = library.api.os.showChat('test');
                 expect(action).toEqual(
                     showChat({
                         placeholder: 'test',
@@ -1555,7 +1561,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should emit a ShowChatBarAction with the given options', () => {
-                const action = library.api.player.showChat({
+                const action = library.api.os.showChat({
                     placeholder: 'abc',
                     prefill: 'def',
                 });
@@ -1574,39 +1580,39 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.hideChat()', () => {
+        describe('os.hideChat()', () => {
             it('should emit a ShowChatBarAction', () => {
-                const action = library.api.player.hideChat();
+                const action = library.api.os.hideChat();
                 expect(action).toEqual(hideChat());
                 expect(context.actions).toEqual([hideChat()]);
             });
         });
 
-        describe('player.run()', () => {
+        describe('os.run()', () => {
             it('should emit a RunScriptAction', () => {
-                const action: any = library.api.player.run('abc');
+                const action: any = library.api.os.run('abc');
                 const expected = runScript('abc', context.tasks.size);
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
 
-        describe('player.version()', () => {
+        describe('os.version()', () => {
             it('should return an object with version information', () => {
-                const v = library.api.player.version();
+                const v = library.api.os.version();
                 expect(v).toEqual(version);
             });
         });
 
-        describe('player.device()', () => {
+        describe('os.device()', () => {
             it('should return an object with device information', () => {
-                const d = library.api.player.device();
+                const d = library.api.os.device();
                 expect(d).toEqual(device);
             });
 
             it('should return info with null values if not specified', () => {
                 context.device = null;
-                const d = library.api.player.device();
+                const d = library.api.os.device();
                 expect(d).toEqual({
                     supportsAR: null,
                     supportsVR: null,
@@ -1614,51 +1620,48 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.enableAR()', () => {
+        describe('os.enableAR()', () => {
             it('should issue an EnableARAction', () => {
-                const action = library.api.player.enableAR();
+                const action = library.api.os.enableAR();
                 expect(action).toEqual(enableAR());
                 expect(context.actions).toEqual([enableAR()]);
             });
         });
 
-        describe('player.disableAR()', () => {
+        describe('os.disableAR()', () => {
             it('should issue an EnableVRAction', () => {
-                const action = library.api.player.disableAR();
+                const action = library.api.os.disableAR();
                 expect(action).toEqual(disableAR());
                 expect(context.actions).toEqual([disableAR()]);
             });
         });
 
-        describe('player.enableVR()', () => {
+        describe('os.enableVR()', () => {
             it('should issue an EnableVRAction', () => {
-                const action = library.api.player.enableVR();
+                const action = library.api.os.enableVR();
                 expect(action).toEqual(enableVR());
                 expect(context.actions).toEqual([enableVR()]);
             });
         });
 
-        describe('player.disableVR()', () => {
+        describe('os.disableVR()', () => {
             it('should issue an EnableVRAction', () => {
-                const action = library.api.player.disableVR();
+                const action = library.api.os.disableVR();
                 expect(action).toEqual(disableVR());
                 expect(context.actions).toEqual([disableVR()]);
             });
         });
 
-        describe('player.download()', () => {
+        describe('os.download()', () => {
             it('should emit a DownloadAction with the string data', () => {
-                const action = library.api.player.download(
-                    'abcdef',
-                    'test.txt'
-                );
+                const action = library.api.os.download('abcdef', 'test.txt');
                 const expected = download('abcdef', 'test.txt', 'text/plain');
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should download objects as JSON', () => {
-                const action = library.api.player.download(
+                const action = library.api.os.download(
                     { abc: 'def' },
                     'test.json'
                 );
@@ -1672,7 +1675,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should download array buffers as binary', () => {
-                const action = library.api.player.download(
+                const action = library.api.os.download(
                     new ArrayBuffer(20),
                     'test.zip'
                 );
@@ -1686,7 +1689,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should download blobs as whatever they are', () => {
-                const action = library.api.player.download(
+                const action = library.api.os.download(
                     new Blob([], { type: 'my-type' }),
                     'test.zip'
                 );
@@ -1700,7 +1703,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should allow specifying a custom content type', () => {
-                const action = library.api.player.download(
+                const action = library.api.os.download(
                     'my XML',
                     'test.xml',
                     'application/xml'
@@ -1715,9 +1718,9 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.downloadBots()', () => {
+        describe('os.downloadBots()', () => {
             it('should emit a DownloadAction with the given bots formatted as JSON', () => {
-                const action = library.api.player.downloadBots(
+                const action = library.api.os.downloadBots(
                     [bot1, bot2],
                     'test'
                 );
@@ -1737,7 +1740,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should support specifying the .aux extension manually', () => {
-                const action = library.api.player.downloadBots(
+                const action = library.api.os.downloadBots(
                     [bot1, bot2],
                     'test.aux'
                 );
@@ -1755,7 +1758,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.downloadServer()', () => {
+        describe('os.downloadServer()', () => {
             let bot3: RuntimeBot;
             let player: RuntimeBot;
 
@@ -1773,7 +1776,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should emit a DownloadAction with the current state and server name', () => {
-                const action = library.api.player.downloadServer();
+                const action = library.api.os.downloadServer();
                 const expected = download(
                     JSON.stringify({
                         version: 1,
@@ -1796,7 +1799,7 @@ describe('AuxLibrary', () => {
                 const bot6 = createDummyRuntimeBot('test6', {}, 'tempLocal');
                 const bot7 = createDummyRuntimeBot('test7', {}, 'admin');
                 addToContext(context, bot4, bot5, bot6, bot7);
-                const action = library.api.player.downloadServer();
+                const action = library.api.os.downloadServer();
                 const expected = download(
                     JSON.stringify({
                         version: 1,
@@ -1814,32 +1817,32 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.showUploadAuxFile()', () => {
+        describe('os.showUploadAuxFile()', () => {
             it('should emit a showUploadAuxFileAction', () => {
-                const action = library.api.player.showUploadAuxFile();
+                const action = library.api.os.showUploadAuxFile();
                 expect(action).toEqual(showUploadAuxFile());
                 expect(context.actions).toEqual([showUploadAuxFile()]);
             });
         });
 
-        describe('player.showUploadFiles()', () => {
+        describe('os.showUploadFiles()', () => {
             it('should emit a ShowUploadFileAction', () => {
-                const promise: any = library.api.player.showUploadFiles();
+                const promise: any = library.api.os.showUploadFiles();
                 const expected = showUploadFiles(context.tasks.size);
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
 
-        describe('player.openQRCodeScanner()', () => {
+        describe('os.openQRCodeScanner()', () => {
             it('should emit a OpenQRCodeScannerAction', () => {
-                const action = library.api.player.openQRCodeScanner();
+                const action = library.api.os.openQRCodeScanner();
                 expect(action).toEqual(openQRCodeScanner(true));
                 expect(context.actions).toEqual([openQRCodeScanner(true)]);
             });
 
             it('should use the given camera type', () => {
-                const action = library.api.player.openQRCodeScanner('front');
+                const action = library.api.os.openQRCodeScanner('front');
                 expect(action).toEqual(openQRCodeScanner(true, 'front'));
                 expect(context.actions).toEqual([
                     openQRCodeScanner(true, 'front'),
@@ -1847,39 +1850,39 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.closeQRCodeScanner()', () => {
+        describe('os.closeQRCodeScanner()', () => {
             it('should emit a OpenQRCodeScannerAction', () => {
-                const action = library.api.player.closeQRCodeScanner();
+                const action = library.api.os.closeQRCodeScanner();
                 expect(action).toEqual(openQRCodeScanner(false));
                 expect(context.actions).toEqual([openQRCodeScanner(false)]);
             });
         });
 
-        describe('player.showQRCode()', () => {
+        describe('os.showQRCode()', () => {
             it('should emit a ShowQRCodeAction', () => {
-                const action = library.api.player.showQRCode('abc');
+                const action = library.api.os.showQRCode('abc');
                 expect(action).toEqual(showQRCode(true, 'abc'));
                 expect(context.actions).toEqual([showQRCode(true, 'abc')]);
             });
         });
 
-        describe('player.hideQRCode()', () => {
+        describe('os.hideQRCode()', () => {
             it('should emit a ShowQRCodeAction', () => {
-                const action = library.api.player.hideQRCode();
+                const action = library.api.os.hideQRCode();
                 expect(action).toEqual(showQRCode(false));
                 expect(context.actions).toEqual([showQRCode(false)]);
             });
         });
 
-        describe('player.openBarcodeScanner()', () => {
+        describe('os.openBarcodeScanner()', () => {
             it('should emit a OpenBarcodeScannerAction', () => {
-                const action = library.api.player.openBarcodeScanner();
+                const action = library.api.os.openBarcodeScanner();
                 expect(action).toEqual(openBarcodeScanner(true));
                 expect(context.actions).toEqual([openBarcodeScanner(true)]);
             });
 
             it('should use the given camera type', () => {
-                const action = library.api.player.openBarcodeScanner('front');
+                const action = library.api.os.openBarcodeScanner('front');
                 expect(action).toEqual(openBarcodeScanner(true, 'front'));
                 expect(context.actions).toEqual([
                     openBarcodeScanner(true, 'front'),
@@ -1887,23 +1890,23 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.closeBarcodeScanner()', () => {
+        describe('os.closeBarcodeScanner()', () => {
             it('should emit a OpenBarcodeScannerAction', () => {
-                const action = library.api.player.closeBarcodeScanner();
+                const action = library.api.os.closeBarcodeScanner();
                 expect(action).toEqual(openBarcodeScanner(false));
                 expect(context.actions).toEqual([openBarcodeScanner(false)]);
             });
         });
 
-        describe('player.showBarcode()', () => {
+        describe('os.showBarcode()', () => {
             it('should emit a ShowBarcodeAction', () => {
-                const action = library.api.player.showBarcode('hello');
+                const action = library.api.os.showBarcode('hello');
                 expect(action).toEqual(showBarcode(true, 'hello'));
                 expect(context.actions).toEqual([showBarcode(true, 'hello')]);
             });
 
             it('should include the given format', () => {
-                const action = library.api.player.showBarcode(
+                const action = library.api.os.showBarcode(
                     'hello',
                     <any>'format'
                 );
@@ -1916,33 +1919,33 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.hideBarcode()', () => {
+        describe('os.hideBarcode()', () => {
             it('should emit a ShowBarcodeAction', () => {
-                const action = library.api.player.hideBarcode();
+                const action = library.api.os.hideBarcode();
                 expect(action).toEqual(showBarcode(false));
                 expect(context.actions).toEqual([showBarcode(false)]);
             });
         });
 
-        describe('player.loadServer()', () => {
+        describe('os.loadServer()', () => {
             it('should emit a LoadServerAction', () => {
-                const action = library.api.player.loadServer('abc');
+                const action = library.api.os.loadServer('abc');
                 expect(action).toEqual(loadSimulation('abc'));
                 expect(context.actions).toEqual([loadSimulation('abc')]);
             });
         });
 
-        describe('player.unloadServer()', () => {
+        describe('os.unloadServer()', () => {
             it('should emit a UnloadServerAction', () => {
-                const action = library.api.player.unloadServer('abc');
+                const action = library.api.os.unloadServer('abc');
                 expect(action).toEqual(unloadSimulation('abc'));
                 expect(context.actions).toEqual([unloadSimulation('abc')]);
             });
         });
 
-        describe('player.importAUX()', () => {
+        describe('os.importAUX()', () => {
             it('should emit a ImportAUXEvent', () => {
-                const action = library.api.player.importAUX('abc');
+                const action = library.api.os.importAUX('abc');
                 expect(action).toEqual(importAUX('abc'));
                 expect(context.actions).toEqual([importAUX('abc')]);
             });
@@ -1960,15 +1963,15 @@ describe('AuxLibrary', () => {
                     version: 1,
                     state: uploadState,
                 });
-                const action = library.api.player.importAUX(json);
+                const action = library.api.os.importAUX(json);
                 expect(action).toEqual(addState(uploadState));
                 expect(context.actions).toEqual([addState(uploadState)]);
             });
         });
 
-        describe('player.replaceDragBot()', () => {
+        describe('os.replaceDragBot()', () => {
             it('should send a replace_drag_bot event', () => {
-                const action = library.api.player.replaceDragBot(bot1);
+                const action = library.api.os.replaceDragBot(bot1);
                 expect(action).toEqual(
                     replaceDragBot({
                         id: bot1.id,
@@ -1986,7 +1989,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should return a copiable bot', () => {
-                const action = library.api.player.replaceDragBot(bot1);
+                const action = library.api.os.replaceDragBot(bot1);
                 const bot = action.bot as any;
                 expect(bot).not.toBe(bot1);
                 for (let key in bot) {
@@ -1995,22 +1998,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.getBot()', () => {
-            let player: RuntimeBot;
-
-            beforeEach(() => {
-                player = createDummyRuntimeBot('player', {}, 'tempLocal');
-                addToContext(context, player);
-                context.playerBot = player;
-            });
-
-            it('should get the current users bot', () => {
-                const bot = library.api.player.getBot();
-                expect(bot).toBe(player);
-            });
-        });
-
-        describe('player.isInDimension()', () => {
+        describe('os.isInDimension()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
@@ -2027,18 +2015,18 @@ describe('AuxLibrary', () => {
 
             it('should return true when pagePortal equals the given value', () => {
                 player.tags.pagePortal = 'dimension';
-                const result = library.api.player.isInDimension('dimension');
+                const result = library.api.os.isInDimension('dimension');
                 expect(result).toEqual(true);
             });
 
             it('should return false when pagePortal does not equal the given value', () => {
                 player.tags.pagePortal = 'dimension';
-                const result = library.api.player.isInDimension('abc');
+                const result = library.api.os.isInDimension('abc');
                 expect(result).toEqual(false);
             });
 
             it('should return false when pagePortal is not set', () => {
-                const result = library.api.player.isInDimension('dimension');
+                const result = library.api.os.isInDimension('dimension');
                 expect(result).toEqual(false);
             });
 
@@ -2046,13 +2034,13 @@ describe('AuxLibrary', () => {
                 'should support "%s" when given %s',
                 (expected, given) => {
                     player.tags.pagePortal = given;
-                    const result = library.api.player.isInDimension(expected);
+                    const result = library.api.os.isInDimension(expected);
                     expect(result).toEqual(true);
                 }
             );
         });
 
-        describe('player.getCurrentDimension()', () => {
+        describe('os.getCurrentDimension()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
@@ -2069,12 +2057,12 @@ describe('AuxLibrary', () => {
 
             it('should return pagePortal', () => {
                 player.tags.pagePortal = 'dimension';
-                const result = library.api.player.getCurrentDimension();
+                const result = library.api.os.getCurrentDimension();
                 expect(result).toEqual('dimension');
             });
 
             it('should return undefined when pagePortal is not set', () => {
-                const result = library.api.player.getCurrentDimension();
+                const result = library.api.os.getCurrentDimension();
                 expect(result).toBeUndefined();
             });
 
@@ -2082,13 +2070,13 @@ describe('AuxLibrary', () => {
                 'should return "%s" when given %s',
                 (expected, given) => {
                     player.tags.pagePortal = given;
-                    const result = library.api.player.getCurrentDimension();
+                    const result = library.api.os.getCurrentDimension();
                     expect(result).toEqual(expected);
                 }
             );
         });
 
-        describe('player.getCurrentServer()', () => {
+        describe('os.getCurrentServer()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
@@ -2099,12 +2087,12 @@ describe('AuxLibrary', () => {
 
             it('should return server', () => {
                 player.tags.server = 'server';
-                const result = library.api.player.getCurrentServer();
+                const result = library.api.os.getCurrentServer();
                 expect(result).toEqual('server');
             });
 
             it('should return undefined when server is not set', () => {
-                const result = library.api.player.getCurrentServer();
+                const result = library.api.os.getCurrentServer();
                 expect(result).toBeUndefined();
             });
 
@@ -2112,13 +2100,13 @@ describe('AuxLibrary', () => {
                 'should return "%s" when given %s',
                 (expected, given) => {
                     player.tags.server = given;
-                    const result = library.api.player.getCurrentServer();
+                    const result = library.api.os.getCurrentServer();
                     expect(result).toEqual(expected);
                 }
             );
         });
 
-        describe('player.getInventoryDimension()', () => {
+        describe('os.getInventoryDimension()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
@@ -2129,7 +2117,7 @@ describe('AuxLibrary', () => {
 
             it('should return the inventoryPortal tag from the user bot', () => {
                 player.tags.inventoryPortal = 'abc';
-                const result = library.api.player.getInventoryDimension();
+                const result = library.api.os.getInventoryDimension();
                 expect(result).toEqual('abc');
             });
 
@@ -2137,13 +2125,13 @@ describe('AuxLibrary', () => {
                 'should return "%s" when given %s',
                 (expected, given) => {
                     player.tags.inventoryPortal = given;
-                    const result = library.api.player.getInventoryDimension();
+                    const result = library.api.os.getInventoryDimension();
                     expect(result).toEqual(expected);
                 }
             );
         });
 
-        describe('player.getMenuDimension()', () => {
+        describe('os.getMenuDimension()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
@@ -2154,7 +2142,7 @@ describe('AuxLibrary', () => {
 
             it('should return the menuPortal tag from the user bot', () => {
                 player.tags.menuPortal = 'abc';
-                const result = library.api.player.getMenuDimension();
+                const result = library.api.os.getMenuDimension();
                 expect(result).toEqual('abc');
             });
 
@@ -2162,13 +2150,13 @@ describe('AuxLibrary', () => {
                 'should return "%s" when given %s',
                 (expected, given) => {
                     player.tags.menuPortal = given;
-                    const result = library.api.player.getMenuDimension();
+                    const result = library.api.os.getMenuDimension();
                     expect(result).toEqual(expected);
                 }
             );
         });
 
-        describe('player.getPortalDimension()', () => {
+        describe('os.getPortalDimension()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
@@ -2198,9 +2186,7 @@ describe('AuxLibrary', () => {
                     player.tags.sheetPortal = 'sheetDimension';
                     player.tags.falsy = false;
                     player.tags.number = 0;
-                    const result = library.api.player.getPortalDimension(
-                        portal
-                    );
+                    const result = library.api.os.getPortalDimension(portal);
                     expect(result).toEqual(expectedDimension);
                 });
 
@@ -2213,7 +2199,7 @@ describe('AuxLibrary', () => {
                         player.tags.sheetPortal = given;
                         player.tags.falsy = false;
                         player.tags.number = 0;
-                        const result = library.api.player.getPortalDimension(
+                        const result = library.api.os.getPortalDimension(
                             portal
                         );
 
@@ -2227,7 +2213,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.getDimensionalDepth()', () => {
+        describe('os.getDimensionalDepth()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
@@ -2238,9 +2224,7 @@ describe('AuxLibrary', () => {
 
             it('should return 0 when the bot is in the given dimension', () => {
                 player.tags.dimension = true;
-                const result = library.api.player.getDimensionalDepth(
-                    'dimension'
-                );
+                const result = library.api.os.getDimensionalDepth('dimension');
                 expect(result).toEqual(0);
             });
 
@@ -2250,7 +2234,7 @@ describe('AuxLibrary', () => {
                 'should return 1 when the dimension is in the %s portal',
                 (portal) => {
                     player.tags[portal] = 'dimension';
-                    const result = library.api.player.getDimensionalDepth(
+                    const result = library.api.os.getDimensionalDepth(
                         'dimension'
                     );
                     expect(result).toEqual(1);
@@ -2258,16 +2242,14 @@ describe('AuxLibrary', () => {
             );
 
             it('should return -1 otherwise', () => {
-                const result = library.api.player.getDimensionalDepth(
-                    'dimension'
-                );
+                const result = library.api.os.getDimensionalDepth('dimension');
                 expect(result).toEqual(-1);
             });
         });
 
-        describe('player.showInputForTag()', () => {
+        describe('os.showInputForTag()', () => {
             it('should emit a ShowInputForTagAction', () => {
-                const action = library.api.player.showInputForTag(bot1, 'abc');
+                const action = library.api.os.showInputForTag(bot1, 'abc');
                 expect(action).toEqual(showInputForTag(bot1.id, 'abc'));
                 expect(context.actions).toEqual([
                     showInputForTag(bot1.id, 'abc'),
@@ -2275,10 +2257,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should support passing a bot ID', () => {
-                const action = library.api.player.showInputForTag(
-                    'test',
-                    'abc'
-                );
+                const action = library.api.os.showInputForTag('test', 'abc');
                 expect(action).toEqual(showInputForTag('test', 'abc'));
                 expect(context.actions).toEqual([
                     showInputForTag('test', 'abc'),
@@ -2286,15 +2265,9 @@ describe('AuxLibrary', () => {
             });
 
             it('should trim the first hash from the tag', () => {
-                const first = library.api.player.showInputForTag(
-                    'test',
-                    '##abc'
-                );
+                const first = library.api.os.showInputForTag('test', '##abc');
                 expect(first).toEqual(showInputForTag('test', '#abc'));
-                const second = library.api.player.showInputForTag(
-                    'test',
-                    '#abc'
-                );
+                const second = library.api.os.showInputForTag('test', '#abc');
                 expect(second).toEqual(showInputForTag('test', 'abc'));
                 expect(context.actions).toEqual([
                     showInputForTag('test', '#abc'),
@@ -2303,14 +2276,10 @@ describe('AuxLibrary', () => {
             });
 
             it('should support extra options', () => {
-                const action = library.api.player.showInputForTag(
-                    'test',
-                    'abc',
-                    {
-                        backgroundColor: 'red',
-                        foregroundColor: 'green',
-                    }
-                );
+                const action = library.api.os.showInputForTag('test', 'abc', {
+                    backgroundColor: 'red',
+                    foregroundColor: 'green',
+                });
                 expect(action).toEqual(
                     showInputForTag('test', 'abc', {
                         backgroundColor: 'red',
@@ -2326,9 +2295,9 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.showInput()', () => {
+        describe('os.showInput()', () => {
             it('should emit a ShowInputAction', () => {
-                const promise: any = library.api.player.showInput();
+                const promise: any = library.api.os.showInput();
                 const expected = showInput(
                     undefined,
                     undefined,
@@ -2339,7 +2308,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should support passing the current value', () => {
-                const promise: any = library.api.player.showInput('abc');
+                const promise: any = library.api.os.showInput('abc');
                 const expected = showInput(
                     'abc',
                     undefined,
@@ -2350,7 +2319,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should support passing extra options', () => {
-                const promise: any = library.api.player.showInput('abc', {
+                const promise: any = library.api.os.showInput('abc', {
                     backgroundColor: 'red',
                     foregroundColor: 'green',
                 });
@@ -2367,15 +2336,15 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.goToDimension()', () => {
+        describe('os.goToDimension()', () => {
             it('should issue a GoToDimension event', () => {
-                const action = library.api.player.goToDimension('abc');
+                const action = library.api.os.goToDimension('abc');
                 expect(action).toEqual(goToDimension('abc'));
                 expect(context.actions).toEqual([goToDimension('abc')]);
             });
 
             it('should ignore extra parameters', () => {
-                const action = (<any>library.api.player.goToDimension)(
+                const action = (<any>library.api.os.goToDimension)(
                     'abc',
                     'def'
                 );
@@ -2384,33 +2353,33 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.goToURL()', () => {
+        describe('os.goToURL()', () => {
             it('should issue a GoToURL event', () => {
-                const action = library.api.player.goToURL('abc');
+                const action = library.api.os.goToURL('abc');
                 expect(action).toEqual(goToURL('abc'));
                 expect(context.actions).toEqual([goToURL('abc')]);
             });
         });
 
-        describe('player.openURL()', () => {
+        describe('os.openURL()', () => {
             it('should issue a OpenURL event', () => {
-                const action = library.api.player.openURL('abc');
+                const action = library.api.os.openURL('abc');
                 expect(action).toEqual(openURL('abc'));
                 expect(context.actions).toEqual([openURL('abc')]);
             });
         });
 
-        describe('player.openDevConsole()', () => {
+        describe('os.openDevConsole()', () => {
             it('should issue a OpenConsole event', () => {
-                const action = library.api.player.openDevConsole();
+                const action = library.api.os.openDevConsole();
                 expect(action).toEqual(openConsole());
                 expect(context.actions).toEqual([openConsole()]);
             });
         });
 
-        describe('player.checkout()', () => {
+        describe('os.checkout()', () => {
             it('should emit a start checkout event', () => {
-                const action = library.api.player.checkout({
+                const action = library.api.os.checkout({
                     publishableKey: 'key',
                     productId: 'ID1',
                     title: 'Product 1',
@@ -2429,9 +2398,9 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.playSound()', () => {
+        describe('os.playSound()', () => {
             it('should emit a PlaySoundEvent', () => {
-                const promise: any = library.api.player.playSound('abc');
+                const promise: any = library.api.os.playSound('abc');
                 const expected = playSound(
                     'abc',
                     context.tasks.size,
@@ -2442,18 +2411,18 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.bufferSound()', () => {
+        describe('os.bufferSound()', () => {
             it('should emit a BufferSoundEvent', () => {
-                const promise: any = library.api.player.bufferSound('abc');
+                const promise: any = library.api.os.bufferSound('abc');
                 const expected = bufferSound('abc', context.tasks.size);
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
 
-        describe('player.cancelSound()', () => {
+        describe('os.cancelSound()', () => {
             it('should emit a CancelSoundEvent', () => {
-                const promise: any = library.api.player.cancelSound(1);
+                const promise: any = library.api.os.cancelSound(1);
                 const expected = cancelSound(1, context.tasks.size);
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -2463,14 +2432,14 @@ describe('AuxLibrary', () => {
                 const event = {
                     [ORIGINAL_OBJECT]: playSound('abc', 1),
                 };
-                const promise: any = library.api.player.cancelSound(event);
+                const promise: any = library.api.os.cancelSound(event);
                 const expected = cancelSound(1, context.tasks.size);
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
 
-        describe('player.hasBotInInventory()', () => {
+        describe('os.hasBotInInventory()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
@@ -2482,7 +2451,7 @@ describe('AuxLibrary', () => {
             it('should return true if the given bot is in the users inventory dimension', () => {
                 player.tags.inventoryPortal = 'abc';
                 bot1.tags.abc = true;
-                const result = library.api.player.hasBotInInventory(bot1);
+                const result = library.api.os.hasBotInInventory(bot1);
                 expect(result).toEqual(true);
             });
 
@@ -2490,10 +2459,7 @@ describe('AuxLibrary', () => {
                 player.tags.inventoryPortal = 'abc';
                 bot1.tags.abc = true;
                 bot2.tags.abc = true;
-                const result = library.api.player.hasBotInInventory([
-                    bot1,
-                    bot2,
-                ]);
+                const result = library.api.os.hasBotInInventory([bot1, bot2]);
                 expect(result).toEqual(true);
             });
 
@@ -2501,27 +2467,21 @@ describe('AuxLibrary', () => {
                 player.tags.inventoryPortal = 'abc';
                 bot1.tags.abc = false;
                 bot2.tags.abc = true;
-                const result = library.api.player.hasBotInInventory([
-                    bot1,
-                    bot2,
-                ]);
+                const result = library.api.os.hasBotInInventory([bot1, bot2]);
                 expect(result).toEqual(false);
             });
 
             it('should return false if the player does not have an inventory', () => {
                 bot1.tags.abc = true;
                 bot2.tags.abc = true;
-                const result = library.api.player.hasBotInInventory([
-                    bot1,
-                    bot2,
-                ]);
+                const result = library.api.os.hasBotInInventory([bot1, bot2]);
                 expect(result).toEqual(false);
             });
         });
 
-        describe('player.share()', () => {
+        describe('os.share()', () => {
             it('should return a ShareAction', () => {
-                const promise: any = library.api.player.share({
+                const promise: any = library.api.os.share({
                     url: 'http://example.com',
                     title: 'Example',
                 });
@@ -2537,11 +2497,82 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.closeCircleWipe()', () => {
+            it('should return a OpenCircleWipeAction', () => {
+                const promise: any = library.api.os.closeCircleWipe({
+                    color: 'green',
+                    duration: 5,
+                });
+                const expected = circleWipe(
+                    false,
+                    {
+                        color: 'green',
+                        duration: 5,
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should have reasonable defaults', () => {
+                const promise: any = library.api.os.closeCircleWipe();
+                const expected = circleWipe(
+                    false,
+                    {
+                        color: 'black',
+                        duration: 1,
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.openCircleWipe()', () => {
+            it('should return a OpenCircleWipeAction', () => {
+                const promise: any = library.api.os.openCircleWipe({
+                    color: 'green',
+                    duration: 5,
+                });
+                const expected = circleWipe(
+                    true,
+                    {
+                        color: 'green',
+                        duration: 5,
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should have reasonable defaults', () => {
+                const promise: any = library.api.os.openCircleWipe();
+                const expected = circleWipe(
+                    true,
+                    {
+                        color: 'black',
+                        duration: 1,
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('portal.open()', () => {
             it('should return a OpenCustomPortal action', () => {
-                const promise: any = library.api.portal.open('test', 'tag');
+                const promise: any = library.api.portal.open(
+                    'test',
+                    bot1,
+                    'tag'
+                );
                 const expected = openCustomPortal(
                     'test',
+                    bot1.id,
                     'tag',
                     {
                         style: {},
@@ -2554,14 +2585,20 @@ describe('AuxLibrary', () => {
             });
 
             it('should include the specified options', () => {
-                const promise: any = library.api.portal.open('test', 'tag', {
-                    style: {
-                        abc: 'def',
-                    },
-                    mode: 'source',
-                });
+                const promise: any = library.api.portal.open(
+                    'test',
+                    bot1,
+                    'tag',
+                    {
+                        style: {
+                            abc: 'def',
+                        },
+                        mode: 'source',
+                    }
+                );
                 const expected = openCustomPortal(
                     'test',
+                    bot1.id,
                     'tag',
                     {
                         style: {
@@ -4209,10 +4246,8 @@ describe('AuxLibrary', () => {
 
         describe('remote()', () => {
             it('should replace the original event in the queue', () => {
-                const action = library.api.remote(
-                    library.api.player.toast('abc')
-                );
-                library.api.player.showChat();
+                const action = library.api.remote(library.api.os.toast('abc'));
+                library.api.os.showChat();
                 expect(action).toEqual(remote(toast('abc')));
                 expect(context.actions).toEqual([
                     remote(toast('abc')),
@@ -4221,14 +4256,11 @@ describe('AuxLibrary', () => {
             });
 
             it('should send the right selector', () => {
-                const action = library.api.remote(
-                    library.api.player.toast('abc'),
-                    {
-                        session: 's',
-                        username: 'u',
-                        device: 'd',
-                    }
-                );
+                const action = library.api.remote(library.api.os.toast('abc'), {
+                    session: 's',
+                    username: 'u',
+                    device: 'd',
+                });
                 const expected = remote(toast('abc'), {
                     sessionId: 's',
                     username: 'u',
@@ -4240,7 +4272,7 @@ describe('AuxLibrary', () => {
 
             it('should use the given player ID as the session ID', () => {
                 const action = library.api.remote(
-                    library.api.player.toast('abc'),
+                    library.api.os.toast('abc'),
                     'abc'
                 );
                 const expected = remote(toast('abc'), {
@@ -4251,12 +4283,9 @@ describe('AuxLibrary', () => {
             });
 
             it('should be able to broadcast to all players', () => {
-                const action = library.api.remote(
-                    library.api.player.toast('abc'),
-                    {
-                        broadcast: true,
-                    }
-                );
+                const action = library.api.remote(library.api.os.toast('abc'), {
+                    broadcast: true,
+                });
                 const expected = remote(toast('abc'), {
                     broadcast: true,
                 });
@@ -4265,17 +4294,14 @@ describe('AuxLibrary', () => {
             });
 
             it('should support multiple selectors to send the same event to multiple places', () => {
-                const action = library.api.remote(
-                    library.api.player.toast('abc'),
-                    [
-                        'abc',
-                        {
-                            session: 's',
-                            username: 'u',
-                            device: 'd',
-                        },
-                    ]
-                );
+                const action = library.api.remote(library.api.os.toast('abc'), [
+                    'abc',
+                    {
+                        session: 's',
+                        username: 'u',
+                        device: 'd',
+                    },
+                ]);
                 const expected = [
                     remote(toast('abc'), {
                         sessionId: 'abc',
@@ -4287,6 +4313,42 @@ describe('AuxLibrary', () => {
                     }),
                 ];
                 expect(action).toEqual(expected);
+                expect(context.actions).toEqual(expected);
+            });
+        });
+
+        describe('sendRemoteData()', () => {
+            it('should send a remote action with a shout', () => {
+                const actions = library.api.sendRemoteData(
+                    'playerId',
+                    'eventName'
+                );
+
+                const expected = remote(
+                    action('eventName', null, null, undefined),
+                    {
+                        sessionId: 'playerId',
+                    }
+                );
+                expect(actions).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support multiple player IDs', () => {
+                const actions = library.api.sendRemoteData(
+                    ['playerId1', 'playerId2'],
+                    'eventName'
+                );
+
+                const expected = [
+                    remote(action('eventName', null, null, undefined), {
+                        sessionId: 'playerId1',
+                    }),
+                    remote(action('eventName', null, null, undefined), {
+                        sessionId: 'playerId2',
+                    }),
+                ];
+                expect(actions).toEqual(expected);
                 expect(context.actions).toEqual(expected);
             });
         });
@@ -4892,7 +4954,7 @@ describe('AuxLibrary', () => {
 
             it('should add the action even if it is already going to be performed', () => {
                 const action = library.api.action.perform(
-                    library.api.player.toast('abc')
+                    library.api.os.toast('abc')
                 );
                 const expected = toast('abc');
                 expect(action).toEqual(expected);
@@ -4900,7 +4962,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should should add the action if it has been rejected', () => {
-                const action = library.api.player.toast('abc');
+                const action = library.api.os.toast('abc');
                 library.api.action.reject(action);
                 library.api.action.perform(action);
                 expect(context.actions).toEqual([
@@ -8125,7 +8187,7 @@ describe('AuxLibrary', () => {
         });
     });
 
-    describe('player.inSheet()', () => {
+    describe('os.inSheet()', () => {
         let player: RuntimeBot;
 
         beforeEach(() => {
@@ -8137,15 +8199,15 @@ describe('AuxLibrary', () => {
         it('should return true if the player bot has a sheet portal', () => {
             player.tags.sheetPortal = 'sheet';
 
-            expect(library.api.player.inSheet()).toBe(true);
+            expect(library.api.os.inSheet()).toBe(true);
         });
 
         it('should return false if the player bot does not have a sheet portal', () => {
-            expect(library.api.player.inSheet()).toBe(false);
+            expect(library.api.os.inSheet()).toBe(false);
         });
     });
 
-    describe('player.getCameraPosition()', () => {
+    describe('os.getCameraPosition()', () => {
         let player: RuntimeBot;
 
         beforeEach(() => {
@@ -8167,7 +8229,7 @@ describe('AuxLibrary', () => {
 
         it('should return NaN for x, y, and z if the player bot is null', () => {
             context.playerBot = null;
-            const result = library.api.player.getCameraPosition();
+            const result = library.api.os.getCameraPosition();
 
             expect(result).toEqual({
                 x: NaN,
@@ -8177,7 +8239,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should return the x, y, and z of the player camera for the page portal', () => {
-            const result = library.api.player.getCameraPosition();
+            const result = library.api.os.getCameraPosition();
 
             expect(result).toEqual({
                 x: 1,
@@ -8187,7 +8249,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to get the inventory camera position', () => {
-            const result = library.api.player.getCameraPosition('inventory');
+            const result = library.api.os.getCameraPosition('inventory');
 
             expect(result).toEqual({
                 x: 4,
@@ -8197,7 +8259,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to get the page camera position', () => {
-            const result = library.api.player.getCameraPosition('page');
+            const result = library.api.os.getCameraPosition('page');
 
             expect(result).toEqual({
                 x: 1,
@@ -8207,7 +8269,7 @@ describe('AuxLibrary', () => {
         });
     });
 
-    describe('player.getCameraRotation()', () => {
+    describe('os.getCameraRotation()', () => {
         let player: RuntimeBot;
 
         beforeEach(() => {
@@ -8229,7 +8291,7 @@ describe('AuxLibrary', () => {
 
         it('should return NaN for x, y, and z if the player bot is null', () => {
             context.playerBot = null;
-            const result = library.api.player.getCameraRotation();
+            const result = library.api.os.getCameraRotation();
 
             expect(result).toEqual({
                 x: NaN,
@@ -8239,7 +8301,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should return the x, y, and z of the player camera for the page portal', () => {
-            const result = library.api.player.getCameraRotation();
+            const result = library.api.os.getCameraRotation();
 
             expect(result).toEqual({
                 x: 1,
@@ -8249,7 +8311,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to get the inventory camera rotation', () => {
-            const result = library.api.player.getCameraRotation('inventory');
+            const result = library.api.os.getCameraRotation('inventory');
 
             expect(result).toEqual({
                 x: 4,
@@ -8259,7 +8321,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to get the page camera rotation', () => {
-            const result = library.api.player.getCameraRotation('page');
+            const result = library.api.os.getCameraRotation('page');
 
             expect(result).toEqual({
                 x: 1,
@@ -8269,7 +8331,7 @@ describe('AuxLibrary', () => {
         });
     });
 
-    describe('player.getPointerPosition()', () => {
+    describe('os.getPointerPosition()', () => {
         let player: RuntimeBot;
 
         beforeEach(() => {
@@ -8294,7 +8356,7 @@ describe('AuxLibrary', () => {
 
         it('should return NaN for x, y, and z if the player bot is null', () => {
             context.playerBot = null;
-            const result = library.api.player.getPointerPosition();
+            const result = library.api.os.getPointerPosition();
 
             expect(result).toEqual({
                 x: NaN,
@@ -8304,7 +8366,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should return the x, y, and z of the player camera for the mouse', () => {
-            const result = library.api.player.getPointerPosition();
+            const result = library.api.os.getPointerPosition();
 
             expect(result).toEqual({
                 x: 7,
@@ -8314,7 +8376,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to get the left pointer position', () => {
-            const result = library.api.player.getPointerPosition('left');
+            const result = library.api.os.getPointerPosition('left');
 
             expect(result).toEqual({
                 x: 1,
@@ -8324,7 +8386,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to get the right pointer position', () => {
-            const result = library.api.player.getPointerPosition('right');
+            const result = library.api.os.getPointerPosition('right');
 
             expect(result).toEqual({
                 x: 4,
@@ -8334,7 +8396,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to get the mouse pointer position', () => {
-            const result = library.api.player.getPointerPosition('mouse');
+            const result = library.api.os.getPointerPosition('mouse');
 
             expect(result).toEqual({
                 x: 7,
@@ -8344,7 +8406,7 @@ describe('AuxLibrary', () => {
         });
     });
 
-    describe('player.getPointerRotation()', () => {
+    describe('os.getPointerRotation()', () => {
         let player: RuntimeBot;
 
         beforeEach(() => {
@@ -8369,7 +8431,7 @@ describe('AuxLibrary', () => {
 
         it('should return NaN for x, y, and z if the player bot is null', () => {
             context.playerBot = null;
-            const result = library.api.player.getPointerRotation();
+            const result = library.api.os.getPointerRotation();
 
             expect(result).toEqual({
                 x: NaN,
@@ -8379,7 +8441,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should return the x, y, and z of the player camera for the mouse', () => {
-            const result = library.api.player.getPointerRotation();
+            const result = library.api.os.getPointerRotation();
 
             expect(result).toEqual({
                 x: 7,
@@ -8389,7 +8451,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to get the left pointer position', () => {
-            const result = library.api.player.getPointerRotation('left');
+            const result = library.api.os.getPointerRotation('left');
 
             expect(result).toEqual({
                 x: 1,
@@ -8399,7 +8461,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to get the right pointer position', () => {
-            const result = library.api.player.getPointerRotation('right');
+            const result = library.api.os.getPointerRotation('right');
 
             expect(result).toEqual({
                 x: 4,
@@ -8409,7 +8471,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to get the mouse pointer position', () => {
-            const result = library.api.player.getPointerRotation('mouse');
+            const result = library.api.os.getPointerRotation('mouse');
 
             expect(result).toEqual({
                 x: 7,
@@ -8419,7 +8481,7 @@ describe('AuxLibrary', () => {
         });
     });
 
-    describe('player.getPointerDirection()', () => {
+    describe('os.getPointerDirection()', () => {
         let player: RuntimeBot;
 
         beforeEach(() => {
@@ -8444,7 +8506,7 @@ describe('AuxLibrary', () => {
 
         it('should return NaN for x, y, and z if the player bot is null', () => {
             context.playerBot = null;
-            const result = library.api.player.getPointerDirection();
+            const result = library.api.os.getPointerDirection();
 
             expect(result).toEqual({
                 x: NaN,
@@ -8454,7 +8516,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should return the x, y, and z of the player camera for the mouse', () => {
-            const result = library.api.player.getPointerDirection();
+            const result = library.api.os.getPointerDirection();
 
             expect(result.x).toBeCloseTo(0);
             expect(result.y).toBeCloseTo(1);
@@ -8462,7 +8524,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to get the left pointer position', () => {
-            const result = library.api.player.getPointerDirection('left');
+            const result = library.api.os.getPointerDirection('left');
 
             expect(result.x).toBeCloseTo(1);
             expect(result.y).toBeCloseTo(0);
@@ -8470,7 +8532,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to get the right pointer position', () => {
-            const result = library.api.player.getPointerDirection('right');
+            const result = library.api.os.getPointerDirection('right');
 
             expect(result.x).toBeCloseTo(0);
             expect(result.y).toBeCloseTo(0);
@@ -8478,7 +8540,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to get the mouse pointer position', () => {
-            const result = library.api.player.getPointerDirection('mouse');
+            const result = library.api.os.getPointerDirection('mouse');
 
             expect(result.x).toBeCloseTo(0);
             expect(result.y).toBeCloseTo(1);
@@ -8486,7 +8548,7 @@ describe('AuxLibrary', () => {
         });
     });
 
-    describe('player.getInputState()', () => {
+    describe('os.getInputState()', () => {
         let player: RuntimeBot;
 
         beforeEach(() => {
@@ -8497,7 +8559,7 @@ describe('AuxLibrary', () => {
 
         it('should return null if the player bot is null', () => {
             context.playerBot = null;
-            const result = library.api.player.getInputState('keyboard', 'a');
+            const result = library.api.os.getInputState('keyboard', 'a');
 
             expect(result).toEqual(null);
         });
@@ -8569,17 +8631,14 @@ describe('AuxLibrary', () => {
                     player.tags[tag] = state[tag];
                 }
 
-                const result = library.api.player.getInputState(
-                    controller,
-                    button
-                );
+                const result = library.api.os.getInputState(controller, button);
 
                 expect(result).toEqual(expected);
             }
         );
     });
 
-    describe('player.getInputList()', () => {
+    describe('os.getInputList()', () => {
         let player: RuntimeBot;
 
         beforeEach(() => {
@@ -8596,20 +8655,20 @@ describe('AuxLibrary', () => {
 
         it('should return an empty list if the player bot is null', () => {
             context.playerBot = null;
-            const result = library.api.player.getInputList();
+            const result = library.api.os.getInputList();
 
             expect(result).toEqual([]);
         });
 
         it('should return an empty list if the player bot has no input list tag', () => {
             player.tags.inputList = null;
-            const result = library.api.player.getInputList();
+            const result = library.api.os.getInputList();
 
             expect(result).toEqual([]);
         });
 
         it('should return the input list of the player', () => {
-            const result = library.api.player.getInputList();
+            const result = library.api.os.getInputList();
 
             expect(result).toEqual(['abc', 'def', 'ghi']);
         });
@@ -9421,6 +9480,54 @@ describe('AuxLibrary', () => {
 
         it('should return null if the data was not able to be decrypted', () => {
             const result = library.api.crypto.decrypt('password', 'wrong');
+            expect(result).toBe(null);
+        });
+    });
+
+    describe('crypto.asymmetric.keypair()', () => {
+        it('should create and return a keypair', () => {
+            const result = library.api.crypto.asymmetric.keypair('password');
+            expect(typeof result).toEqual('string');
+        });
+    });
+
+    describe('crypto.asymmetric.encrypt()', () => {
+        it('should encrypt the given string with the given password', () => {
+            const keypair = asymmetricKeypairV1('password');
+            const result = library.api.crypto.asymmetric.encrypt(
+                keypair,
+                'data'
+            );
+            const decrypted = asymmetricDecryptV1(keypair, 'password', result);
+
+            const decoder = new TextDecoder();
+            const final = decoder.decode(decrypted);
+            expect(final).toEqual('data');
+        });
+    });
+
+    describe('crypto.asymmetric.decrypt()', () => {
+        it('should be able to decrypt the given encrypted data', () => {
+            const keypair = asymmetricKeypairV1('password');
+            const encrypted = library.api.crypto.asymmetric.encrypt(
+                keypair,
+                'data'
+            );
+            const result = library.api.crypto.asymmetric.decrypt(
+                keypair,
+                'password',
+                encrypted
+            );
+            expect(result).toEqual('data');
+        });
+
+        it('should return null if the data was not able to be decrypted', () => {
+            const keypair = asymmetricKeypairV1('password');
+            const result = library.api.crypto.asymmetric.decrypt(
+                keypair,
+                'password',
+                'wrong'
+            );
             expect(result).toBe(null);
         });
     });

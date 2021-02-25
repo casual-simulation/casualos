@@ -99,14 +99,16 @@ export const ReadOnlyBadge = ({}) => (<Badge type='warning'>Read-Only</Badge>);
 
 export const VideoBadge = ({url}) => (<Badge type='info'><a href={url} target='_blank'>Video</a></Badge>);
 
-export const UserBotBadge = ({url}) => (<Badge type='primary'>Player Bot</Badge>);
+export const ConfigBotBadge = ({url}) => (<Badge type='primary'>Config Bot</Badge>);
 
 export const HistoryBotBadge = ({url}) => (<Badge type='primary'>History Bot</Badge>);
-
-export const ConfigBotBadge = ({url}) => (<Badge type='primary'>Config Bot</Badge>);
 
 export const Alert = ({type, children}) => (
     <div className={`alert alert--${type}`} role='alert'>
         {children}
     </div>
 );
+
+export const Example = ({code}) => (<Badge type='info'><a target='_blank' href={`https://casualos.com?auxCode=${code}`}>Example</a></Badge>);
+
+export const ExampleIframe = ({ code }) => (<iframe className="example" src={`https://casualos.com?auxCode=${code}`}></iframe>);

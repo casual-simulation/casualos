@@ -4,7 +4,6 @@ export type PartialBot = Partial<Bot>;
 
 export type AuxDomain = 'builder' | 'player';
 
-export type Object = Bot;
 export type Workspace = Bot;
 
 /**
@@ -299,7 +298,6 @@ export interface BotTags {
     ['orientationMode']?: string;
     ['anchorPoint']?: string;
     ['creator']?: string;
-    ['configBot']?: string;
     ['progressBar']?: unknown;
     ['progressBarColor']?: unknown;
     ['progressBarBackgroundColor']?: unknown;
@@ -316,12 +314,6 @@ export interface BotTags {
     ['menuPortal']?: string;
     ['leftWristPortal']?: string;
     ['rightWristPortal']?: string;
-    ['pagePortalConfigBot']?: string;
-    ['sheetPortalConfigBot']?: string;
-    ['inventoryPortalConfigBot']?: string;
-    ['menuPortalConfigBot']?: string;
-    ['leftWristPortalConfigBot']?: string;
-    ['rightWristPortalConfigBot']?: string;
     ['editingBot']?: string;
     cursorStartIndex?: number;
     cursorEndIndex?: number;
@@ -436,7 +428,24 @@ export type BotShape =
     | 'hex'
     | 'cursor'
     | 'portal'
+    | 'dimension'
     | 'nothing';
+
+/**
+ * Defines the possible forms that a menu bot can appear as.
+ */
+export type MenuBotForm = 'button' | 'input';
+
+/**
+ * Defines the possible hover styles that can be used for a menu bot.
+ * Currently only applies to button menu bots.
+ */
+export type MenuBotHoverStyle = 'auto' | 'hover' | 'none';
+
+/**
+ * Defines the possible hover styles that have been resolved from a bot.
+ */
+export type MenuBotResolvedHoverStyle = 'hover' | 'none';
 
 /**
  * Defines the possible subtypes for shapes that a bot can appear as.
@@ -562,9 +571,24 @@ export type DimensionVisualizeMode = true | false | 'surface';
 export type BotLOD = 'normal' | 'min' | 'max';
 
 /**
+ * The possible camera control modes.
+ */
+export type PortalCameraControlsMode = 'player' | false;
+
+/**
  * The default bot shape.
  */
 export const DEFAULT_BOT_SHAPE: BotShape = 'cube';
+
+/**
+ * The default menu bot form.
+ */
+export const DEFAULT_MENU_BOT_FORM: MenuBotForm = 'button';
+
+/**
+ * The default menu bot hover style.
+ */
+export const DEFAULT_MENU_BOT_HOVER_STYLE: MenuBotHoverStyle = 'auto';
 
 /**
  * The default bot label anchor.
@@ -595,6 +619,12 @@ export const DEFAULT_ANCHOR_POINT: BotAnchorPoint = 'bottom';
  * The default portal raycast mode.
  */
 export const DEFAULT_PORTAL_POINTER_DRAG_MODE: PortalPointerDragMode = 'world';
+
+/**
+ * The default portal camera controls mode.
+ */
+export const DEFAULT_PORTAL_CAMERA_CONTROLS_MODE: PortalCameraControlsMode =
+    'player';
 
 /**
  * The default bot label font address.
@@ -1021,6 +1051,11 @@ export const ON_ACTION_ACTION_NAME: string = 'onServerAction';
 export const ON_REMOTE_WHISPER_ACTION_NAME: string = 'onRemoteWhisper';
 
 /**
+ * The name of the event that is triggered when a remote whisper is executed.
+ */
+export const ON_REMOTE_DATA_ACTION_NAME: string = 'onRemoteData';
+
+/**
  * The name of the event that is triggered when a channel becomes synced.
  */
 export const ON_SERVER_STREAMING_ACTION_NAME: string = 'onServerStreaming';
@@ -1061,6 +1096,16 @@ export const ON_CHAT_TYPING_ACTION_NAME: string = 'onChatTyping';
  * The name of the event that is triggered when the text in the chat bar is submitted.
  */
 export const ON_CHAT_ACTION_NAME: string = 'onChat';
+
+/**
+ * The name of the event that is triggered when the text in a menu bot input is submitted.
+ */
+export const ON_SUBMIT_ACTION_NAME: string = 'onSubmit';
+
+/**
+ * The name of the event that is triggered when the text in a menu bot input is updated.
+ */
+export const ON_INPUT_TYPING_ACTION_NAME: string = 'onInputTyping';
 
 /**
  * The name of the event that is triggered when text is pasted into aux.
@@ -1233,6 +1278,11 @@ export const DATA_PORTAL: string = 'dataPortal';
 export const SHEET_PORTAL: string = 'sheetPortal';
 
 /**
+ * The name of the IDE portal.
+ */
+export const IDE_PORTAL: string = 'idePortal';
+
+/**
  * The prefix for DNA Tags.
  */
 export const DNA_TAG_PREFIX: string = '🧬';
@@ -1248,6 +1298,7 @@ export const DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES: string[] = ['📖'];
 export const KNOWN_PORTALS: string[] = [
     'pagePortal',
     SHEET_PORTAL,
+    IDE_PORTAL,
     'inventoryPortal',
     'menuPortal',
     'leftWristPortal',
@@ -1261,7 +1312,8 @@ export const KNOWN_PORTALS: string[] = [
  */
 export const QUERY_PORTALS: string[] = [
     'pagePortal',
-    'sheetPortal',
+    SHEET_PORTAL,
+    IDE_PORTAL,
     MEET_PORTAL,
     TAG_PORTAL,
     TAG_PORTAL_SPACE,
@@ -1273,25 +1325,18 @@ export const QUERY_PORTALS: string[] = [
 export const KNOWN_TAGS: string[] = [
     'playerActive',
     'pagePortal',
-    'sheetPortal',
+    SHEET_PORTAL,
+    IDE_PORTAL,
     'server',
     'inventoryPortal',
     'menuPortal',
     'leftWristPortal',
     'rightWristPortal',
-    'pagePortalConfigBot',
-    'sheetPortalConfigBot',
-    'inventoryPortalConfigBot',
-    'menuPortalConfigBot',
-    'leftWristPortalConfigBot',
-    'rightWristPortalConfigBot',
 
     MEET_PORTAL,
-    `${MEET_PORTAL}ConfigBot`,
     DATA_PORTAL,
     TAG_PORTAL,
     TAG_PORTAL_SPACE,
-    `${TAG_PORTAL}ConfigBot`,
 
     'pageCameraPositionX',
     'pageCameraPositionY',
@@ -1361,6 +1406,7 @@ export const KNOWN_TAGS: string[] = [
     'cursorEndIndex',
 
     'portalColor',
+    'portalBackgroundAddress',
     'portalLocked',
     'portalPannable',
     `portalPannableMinX`,
@@ -1377,6 +1423,7 @@ export const KNOWN_TAGS: string[] = [
     `portalPlayerRotationX`,
     `portalPlayerRotationY`,
     'portalPointerDragMode',
+    'portalCameraControls',
     'portalShowFocusPoint',
     'portalDisableCanvasTransparency',
     'inventoryPortalHeight',
@@ -1396,10 +1443,10 @@ export const KNOWN_TAGS: string[] = [
     'sheetPortalButtonIcon',
     'sheetPortalButtonHint',
     'sheetPortalAllowedTags',
+    'menuPortalStyle',
 
     'color',
     'creator',
-    'configBot',
     'draggable',
     'draggableMode',
     'positioningMode',
@@ -1443,6 +1490,8 @@ export const KNOWN_TAGS: string[] = [
     'focusable',
     'transformer',
     'menuItemStyle',
+    'menuItemHoverMode',
+    'menuItemText',
 
     'taskOutput',
     'taskError',
@@ -1527,6 +1576,8 @@ export const KNOWN_TAGS: string[] = [
     ON_RUN_ACTION_NAME,
     ON_CHAT_TYPING_ACTION_NAME,
     ON_CHAT_ACTION_NAME,
+    ON_SUBMIT_ACTION_NAME,
+    ON_INPUT_TYPING_ACTION_NAME,
     ON_PASTE_ACTION_NAME,
     ON_MAX_LOD_ENTER_ACTION_NAME,
     ON_MIN_LOD_ENTER_ACTION_NAME,
@@ -1659,6 +1710,12 @@ export function onPointerUpDownArg(bot: Bot, dimension: string) {
     return {
         bot,
         dimension,
+    };
+}
+
+export function onSubmitArg(text: string) {
+    return {
+        text,
     };
 }
 

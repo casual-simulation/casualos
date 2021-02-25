@@ -13,17 +13,17 @@ import {
     posToKey,
     hexRing,
 } from './scene/hex';
-import flatMap from 'lodash/flatMap';
+import { flatMap } from 'lodash';
 import { Vector2 } from 'three';
 
 export function nextAvailableWorkspacePosition(calc: BotCalculationContext) {
     const visibleWorkspacePositions = flatMap(
         calc.objects.filter(
-            f =>
+            (f) =>
                 isDimension(calc, f) &&
                 getDimensionVisualizeMode(calc, f) === 'surface'
         ),
-        f => {
+        (f) => {
             const position = getDimensionPosition(calc, f);
             const scale = getDimensionScale(calc, f);
             const positions = hexesInRadius(getDimensionSize(calc, f));
@@ -32,7 +32,7 @@ export function nextAvailableWorkspacePosition(calc: BotCalculationContext) {
                 scale
             );
 
-            return positions.map(hex => {
+            return positions.map((hex) => {
                 return new Axial(
                     hex.q + centerPosition.q,
                     hex.r + centerPosition.r

@@ -77,3 +77,9 @@
       width: 64px;
       height: 64px;
   }
+
+  iframe.example {
+      border: none;
+      width: 100%;
+      min-height: 768px;
+  }

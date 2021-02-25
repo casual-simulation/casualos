@@ -13,7 +13,7 @@ import { appManager } from '../../AppManager';
 import { SubscriptionLike } from 'rxjs';
 import MiniBot from '../MiniBot/MiniBot';
 import { BotRenderer, getRenderer } from '../../scene/BotRenderer';
-import Cube from '../../public/icons/Cube.svg';
+import Cube from '../../public/icons/NewBot.svg';
 import CubeSearch from '../../public/icons/CubeSearch.svg';
 
 @Component({
@@ -57,7 +57,7 @@ export default class BotSearch extends Vue {
         if (this.bots.length > 0) {
             let val = formatValue(this.bots);
 
-            if (!this.bots.every(f => this.isEmptyOrDiff(f))) {
+            if (!this.bots.every((f) => this.isEmptyOrDiff(f))) {
                 if (val.length > 50) {
                     val = val.substring(0, 50) + '..';
                 }
@@ -98,7 +98,7 @@ export default class BotSearch extends Vue {
         appManager.whileLoggedIn((user, botManager) => {
             let subs: SubscriptionLike[] = [];
             subs.push(
-                botManager.botPanel.botsUpdated.subscribe(e => {
+                botManager.botPanel.botsUpdated.subscribe((e) => {
                     this.bots = e.bots;
                 })
             );

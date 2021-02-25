@@ -16,7 +16,7 @@ import {
     RealtimeEditMode,
 } from '../RuntimeBot';
 import { createCompiledBot, CompiledBot } from '../CompiledBot';
-import pickBy from 'lodash/pickBy';
+import { pickBy } from 'lodash';
 import { applyEdit, isTagEdit } from '../../aux-format-2';
 
 export class TestScriptBotFactory implements RuntimeBotFactory {

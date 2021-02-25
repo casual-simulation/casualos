@@ -33,8 +33,7 @@ import { Input, InputMethod } from '../../../shared/scene/Input';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
-import take from 'lodash/take';
-import drop from 'lodash/drop';
+import { take, drop } from 'lodash';
 import { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
@@ -406,9 +405,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 if (parent instanceof AuxBot3D) {
                     hasTransformer = true;
                     const matrixWorldInverse = new Matrix4();
-                    matrixWorldInverse.getInverse(
-                        parent.transformContainer.matrixWorld
-                    );
+                    matrixWorldInverse
+                        .copy(parent.transformContainer.matrixWorld)
+                        .invert();
 
                     targetMatrix.premultiply(matrixWorldInverse);
                 }

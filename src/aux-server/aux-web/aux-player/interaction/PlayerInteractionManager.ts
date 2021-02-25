@@ -47,7 +47,7 @@ import {
 import { appManager } from '../../shared/AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
-import flatMap from 'lodash/flatMap';
+import { flatMap, isEqual } from 'lodash';
 import { InventoryContextGroup3D } from '../scene/InventoryContextGroup3D';
 import {
     isObjectVisible,
@@ -69,7 +69,6 @@ import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
 import { InventorySimulation3D } from '../scene/InventorySimulation3D';
 import { Physics } from '../../shared/scene/Physics';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
-import isEqual from 'lodash/isEqual';
 import { PlayerBotDragOperation } from './DragOperation/PlayerBotDragOperation';
 import { PlayerModDragOperation } from './DragOperation/PlayerModDragOperation';
 

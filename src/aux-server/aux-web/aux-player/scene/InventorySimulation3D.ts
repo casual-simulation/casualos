@@ -1,5 +1,4 @@
 import {
-    Object,
     BotCalculationContext,
     PrecalculatedBot,
     calculateGridScale,
@@ -45,11 +44,23 @@ export class InventorySimulation3D extends PlayerSimulation3D {
         return <InventoryPortalConfig>this.getPortalConfig('inventoryPortal');
     }
 
+    get cameraControlsMode() {
+        return (
+            this.inventoryConfig.cameraControlsMode ?? super.cameraControlsMode
+        );
+    }
+
     /**
      * Gets the background color that the simulation defines.
      */
     get backgroundColor() {
         return this.inventoryConfig.backgroundColor || super.backgroundColor;
+    }
+
+    get backgroundAddress() {
+        return (
+            this.inventoryConfig.backgroundAddress || super.backgroundAddress
+        );
     }
 
     /**

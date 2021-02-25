@@ -32,7 +32,7 @@ import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { tap } from 'rxjs/operators';
-import findIndex from 'lodash/findIndex';
+import { findIndex, merge } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
 import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
@@ -62,8 +62,7 @@ import ShowInputModal from '../../shared/vue-components/ShowInputModal/ShowInput
 import MeetPortal from '../../shared/vue-components/MeetPortal/MeetPortal';
 import TagPortal from '../../shared/vue-components/TagPortal/TagPortal';
 import CustomPortals from '../../shared/vue-components/CustomPortals/CustomPortals';
-
-import merge from 'lodash/merge';
+import IdePortal from '../../shared/vue-components/IdePortal/IdePortal';
 
 @Component({
     components: {
@@ -82,6 +81,7 @@ import merge from 'lodash/merge';
         'meet-portal': MeetPortal,
         'tag-portal': TagPortal,
         'custom-portals': CustomPortals,
+        'ide-portal': IdePortal,
         console: Console,
         tagline: Tagline,
         checkout: Checkout,

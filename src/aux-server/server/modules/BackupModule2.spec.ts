@@ -16,7 +16,7 @@ import { Subscription } from 'rxjs';
 import { AuxUser, Simulation } from '@casual-simulation/aux-vm';
 import { BackupModule2 } from './BackupModule2';
 import { take } from 'rxjs/operators';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import {
     CausalRepoClient,
     MemoryCausalRepoStore,
@@ -35,7 +35,7 @@ console.log = jest.fn();
 console.error = jest.fn();
 
 const uuidMock: jest.Mock = <any>uuid;
-jest.mock('uuid/v4');
+jest.mock('uuid');
 
 describe('BackupModule2', () => {
     let user: AuxUser;
@@ -133,7 +133,7 @@ describe('BackupModule2', () => {
 
         await simulation.helper.transaction();
 
-        subject = new BackupModule2(serverUser, serverClient, auth => api);
+        subject = new BackupModule2(serverUser, serverClient, (auth) => api);
         sub = await subject.setup(simulation);
     });
 

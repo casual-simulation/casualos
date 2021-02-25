@@ -5,8 +5,7 @@ import {
 } from './BotLookupTable';
 import { Bot } from './Bot';
 import { BotObjectsContext } from './BotObjectsContext';
-import zip from 'lodash/zip';
-import sortBy from 'lodash/sortBy';
+import { zip, sortBy } from 'lodash';
 
 /**
  * Defines a helper class for BotLookupTable which is able to dynamically create and reuse
@@ -33,10 +32,10 @@ export class BotLookupTableHelper {
         defaults?: any[]
     ): Bot[] {
         const zipped = zip(tags, values);
-        const sorted = sortBy(zipped, z => z[0]);
+        const sorted = sortBy(zipped, (z) => z[0]);
 
-        const sortedTags = sorted.map(s => s[0]);
-        const sortedValues = sorted.map(s => s[1]);
+        const sortedTags = sorted.map((s) => s[0]);
+        const sortedValues = sorted.map((s) => s[1]);
         let key = valuesToKey(sortedTags);
         let table = this._tables.get(key);
         if (!table) {

@@ -12,11 +12,11 @@ import {
     Color,
     Box3,
     Sphere,
-    MeshToonMaterial,
 } from 'three';
 import { Axial } from './Axial';
 import { gridPosToRealPos } from './HexGrid';
 import { baseAuxMeshMaterial } from '../SceneUtils';
+import { MeshToonMaterial } from '../../public/MeshToonMaterial';
 
 /**
  * Defines a class that represents a 3D Hex.

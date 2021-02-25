@@ -7,10 +7,12 @@ import {
     PrecalculatedBot,
     BotIndexEvent,
     LocalActions,
+    PortalCameraControlsMode,
+    DEFAULT_PORTAL_CAMERA_CONTROLS_MODE,
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike, Subject, Observable, Subscription } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
-import flatMap from 'lodash/flatMap';
+import { flatMap } from 'lodash';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { CameraRig } from './CameraRigFactory';
 import { Game } from './Game';
@@ -127,10 +129,24 @@ export abstract class Simulation3D
     }
 
     /**
+     * Gets the camera controls mode for the simulation.
+     */
+    get cameraControlsMode(): PortalCameraControlsMode {
+        return DEFAULT_PORTAL_CAMERA_CONTROLS_MODE;
+    }
+
+    /**
      * Gets the background color for the simulation.
      */
     get backgroundColor(): Color | Texture {
         return this._sceneBackground;
+    }
+
+    /**
+     * Gets the address that should be used as the background.
+     */
+    get backgroundAddress(): string {
+        return null;
     }
 
     get decoratorFactory() {
