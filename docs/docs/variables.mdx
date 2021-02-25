@@ -5,11 +5,43 @@ sidebar_label: Variables
 description: Learn about variables in CasualOS
 ---
 
-import { 
-  Alert,
-  TagLink,
-  NormalCode
-} from './components.mdx';
+<!-- All these components are duplicated because importing them  -->
+<!-- breaks the build for some reason -->
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+export const Alert = ({type, children}) => (
+    <div className={`alert alert--${type}`} role='alert'>
+        {children}
+    </div>
+);
+
+export const NormalCode = ({children}) => (
+  React.createElement('code', {}, ...children)
+);
+
+export const ActionLink = ({action, children}) => (
+  <a href={useBaseUrl('docs/actions') + '#' + action.replace(/[\.\(\)\,\?]/g, '').replace(/\s/g, '-').toLowerCase()}>
+  {children ? children : (
+      <NormalCode>{action}</NormalCode>
+  )}
+  </a>
+);
+
+export const DataTagLink = ({tag}) => (
+  <a href={useBaseUrl('docs/tags') + '#' + tag.replace(/\./g, '').toLowerCase()}>
+    <NormalCode>#{tag}</NormalCode>
+  </a>
+);
+
+export const ListenTagLink = ({tag}) => (
+  <a href={useBaseUrl('docs/listen-tags') + '#' + tag.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}>
+    <NormalCode>{tag}</NormalCode>
+  </a>
+);
+
+export const TagLink = ({tag}) => tag.startsWith('@') ? 
+  (<ListenTagLink tag={tag}/>) : 
+  (<DataTagLink tag={tag}/>);
 
 CasualOS defines some variables for each listen tag that you create.
 Unlike [actions](./actions.mdx), variables exist to make it easy to access common data.
