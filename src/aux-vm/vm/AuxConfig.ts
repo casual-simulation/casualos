@@ -78,7 +78,7 @@ export function parseVersionNumber(version: string) {
             alpha: null,
         };
     }
-    const versionRegex = /^v(\d+)\.(\d+)\.(\d+)(-\w+\.?\d*)?$/i;
+    const versionRegex = /^v(\d+)\.(\d+)\.(\d+)((\:|-)\w+\.?\d*)*$/i;
     const [str, major, minor, patch, prerelease] = versionRegex.exec(version);
 
     let alpha: boolean | number = false;

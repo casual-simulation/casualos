@@ -63,6 +63,16 @@ describe('AuxConfig', () => {
                     alpha: true,
                 },
             ] as const,
+            [
+                'v0.22.4-dev:alpha',
+                {
+                    version: 'v0.22.4-dev:alpha',
+                    major: 0,
+                    minor: 22,
+                    patch: 4,
+                    alpha: true,
+                },
+            ] as const,
         ];
 
         it.each(cases)('should parse %s', (version, expected) => {
