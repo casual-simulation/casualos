@@ -410,40 +410,40 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 calculateNumericalTagValue(
                     null,
                     portalBot,
-                    `${portal}CameraPositionOffsetX`,
+                    `cameraPositionOffsetX`,
                     0
                 ) * gridScale;
             const targetYPos =
                 calculateNumericalTagValue(
                     null,
                     portalBot,
-                    `${portal}CameraPositionOffsetZ`,
+                    `cameraPositionOffsetZ`,
                     0
                 ) * gridScale;
             const targetZPos =
                 calculateNumericalTagValue(
                     null,
                     portalBot,
-                    `${portal}CameraPositionOffsetY`,
+                    `cameraPositionOffsetY`,
                     0
                 ) * -gridScale;
 
             const targetXRot = calculateNumericalTagValue(
                 null,
                 portalBot,
-                `${portal}CameraRotationOffsetX`,
+                `cameraRotationOffsetX`,
                 0
             );
             const targetYRot = calculateNumericalTagValue(
                 null,
                 portalBot,
-                `${portal}CameraRotationOffsetZ`,
+                `cameraRotationOffsetZ`,
                 0
             );
             const targetZRot = calculateNumericalTagValue(
                 null,
                 portalBot,
-                `${portal}CameraRotationOffsetY`,
+                `cameraRotationOffsetY`,
                 0
             );
 
@@ -547,12 +547,12 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             const [portal, gridScale, inverseScale] = portalInfoForSim(sim);
 
             let update = {
-                [`${portal}CameraPositionX`]: cameraWorld.x * inverseScale,
-                [`${portal}CameraPositionY`]: -cameraWorld.z * inverseScale,
-                [`${portal}CameraPositionZ`]: cameraWorld.y * inverseScale,
-                [`${portal}CameraRotationX`]: cameraRotation.x,
-                [`${portal}CameraRotationY`]: cameraRotation.z,
-                [`${portal}CameraRotationZ`]: cameraRotation.y,
+                [`cameraPositionX`]: cameraWorld.x * inverseScale,
+                [`cameraPositionY`]: -cameraWorld.z * inverseScale,
+                [`cameraPositionZ`]: cameraWorld.y * inverseScale,
+                [`cameraRotationX`]: cameraRotation.x,
+                [`cameraRotationY`]: cameraRotation.z,
+                [`cameraRotationZ`]: cameraRotation.y,
             };
 
             for (let i = 0; i < draggableGroups.length; i++) {

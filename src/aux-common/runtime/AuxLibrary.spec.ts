@@ -8215,18 +8215,18 @@ describe('AuxLibrary', () => {
             pagePortal = createDummyRuntimeBot(
                 'pagePortal',
                 {
-                    pageCameraPositionX: 1,
-                    pageCameraPositionY: 2,
-                    pageCameraPositionZ: 3,
+                    cameraPositionX: 1,
+                    cameraPositionY: 2,
+                    cameraPositionZ: 3,
                 },
                 'tempLocal'
             );
             inventoryPortal = createDummyRuntimeBot(
                 'inventoryPortal',
                 {
-                    inventoryCameraPositionX: 4,
-                    inventoryCameraPositionY: 5,
-                    inventoryCameraPositionZ: 6,
+                    cameraPositionX: 4,
+                    cameraPositionY: 5,
+                    cameraPositionZ: 6,
                 },
                 'tempLocal'
             );
@@ -8291,18 +8291,18 @@ describe('AuxLibrary', () => {
             pagePortal = createDummyRuntimeBot(
                 'pagePortal',
                 {
-                    pageCameraRotationX: 1,
-                    pageCameraRotationY: 2,
-                    pageCameraRotationZ: 3,
+                    cameraRotationX: 1,
+                    cameraRotationY: 2,
+                    cameraRotationZ: 3,
                 },
                 'tempLocal'
             );
             inventoryPortal = createDummyRuntimeBot(
                 'inventoryPortal',
                 {
-                    inventoryCameraRotationX: 4,
-                    inventoryCameraRotationY: 5,
-                    inventoryCameraRotationZ: 6,
+                    cameraRotationX: 4,
+                    cameraRotationY: 5,
+                    cameraRotationZ: 6,
                 },
                 'tempLocal'
             );

@@ -317,8 +317,8 @@ export interface BotTags {
     ['editingBot']?: string;
     cursorStartIndex?: number;
     cursorEndIndex?: number;
-    ['pagePixelWidth']?: number;
-    ['pagePixelHeight']?: number;
+    ['pixelWidth']?: number;
+    ['pixelHeight']?: number;
 
     // Admin channel task tags
     ['auxRunningTasks']?: boolean;
@@ -1338,33 +1338,22 @@ export const KNOWN_TAGS: string[] = [
     TAG_PORTAL,
     TAG_PORTAL_SPACE,
 
-    'pageCameraPositionX',
-    'pageCameraPositionY',
-    'pageCameraPositionZ',
-    'pageCameraPositionOffsetX',
-    'pageCameraPositionOffsetY',
-    'pageCameraPositionOffsetZ',
-    'inventoryCameraPositionX',
-    'inventoryCameraPositionY',
-    'inventoryCameraPositionZ',
-    'inventoryCameraPositionOffsetX',
-    'inventoryCameraPositionOffsetY',
-    'inventoryCameraPositionOffsetZ',
+    'cameraPositionX',
+    'cameraPositionY',
+    'cameraPositionZ',
+    'cameraPositionOffsetX',
+    'cameraPositionOffsetY',
+    'cameraPositionOffsetZ',
 
-    'pageCameraRotationX',
-    'pageCameraRotationY',
-    'pageCameraRotationZ',
-    'pageCameraRotationOffsetX',
-    'pageCameraRotationOffsetY',
-    'pageCameraRotationOffsetZ',
-    'inventoryCameraRotationX',
-    'inventoryCameraRotationY',
-    'inventoryCameraRotationZ',
-    'inventoryCameraRotationOffsetX',
-    'inventoryCameraRotationOffsetY',
-    'inventoryCameraRotationOffsetZ',
-    'pagePixelWidth',
-    'pagePixelHeight',
+    'cameraRotationX',
+    'cameraRotationY',
+    'cameraRotationZ',
+    'cameraRotationOffsetX',
+    'cameraRotationOffsetY',
+    'cameraRotationOffsetZ',
+
+    'pixelWidth',
+    'pixelHeight',
     'pageTitle',
 
     'mousePointerPositionX',

@@ -4681,9 +4681,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return {
-            x: bot.tags[`${portal}CameraPositionX`],
-            y: bot.tags[`${portal}CameraPositionY`],
-            z: bot.tags[`${portal}CameraPositionZ`],
+            x: bot.tags[`cameraPositionX`],
+            y: bot.tags[`cameraPositionY`],
+            z: bot.tags[`cameraPositionZ`],
         };
     }
 
@@ -4704,9 +4704,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return {
-            x: bot.tags[`${portal}CameraRotationX`],
-            y: bot.tags[`${portal}CameraRotationY`],
-            z: bot.tags[`${portal}CameraRotationZ`],
+            x: bot.tags[`cameraRotationX`],
+            y: bot.tags[`cameraRotationY`],
+            z: bot.tags[`cameraRotationZ`],
         };
     }
 

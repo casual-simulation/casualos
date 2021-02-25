@@ -1117,13 +1117,13 @@ export class PlayerGame extends Game {
             const portalConfig = getPortalConfigBot(sim, 'pagePortal');
             if (
                 portalConfig &&
-                (portalConfig.tags['pagePixelWidth'] !== renderingSize.x ||
-                    portalConfig.tags['pagePixelHeight'] !== renderingSize.y)
+                (portalConfig.tags['pixelWidth'] !== renderingSize.x ||
+                    portalConfig.tags['pixelHeight'] !== renderingSize.y)
             ) {
                 sim.helper.updateBot(portalConfig, {
                     tags: {
-                        pagePixelWidth: renderingSize.x,
-                        pagePixelHeight: renderingSize.y,
+                        pixelWidth: renderingSize.x,
+                        pixelHeight: renderingSize.y,
                     },
                 });
             }
