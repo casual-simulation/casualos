@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/crypto",
-    "version": "1.4.4",
+    "version": "1.4.7-alpha.32",
     "description": "Crypto helpers used by AUX",
     "keywords": [
         "cryptography",
