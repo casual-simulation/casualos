@@ -5055,12 +5055,12 @@ div.textContent = 'Hello, World!';
 Next, create an `onClick` tag and type this:
 ```
 @await portal.registerPrefix('📖');
-await portal.open('my-portal', '📖main');
+await portal.open('my-portal', null, '📖main');
 ```
 
 Finally, click the bot to start the portal. You should see a white frame appear over the top half of the screen and have the text "Hello, World!" in it.
 
-### `portal.open(portalId, tag, options?)`
+### `portal.open(portalId, bot, tag?, options?)`
 
 Registers a custom portal with the given ID and options. Returns a promise that resolves when the portal has been registered.
 Can be called multiple times with new options to override previous options.
@@ -5068,13 +5068,18 @@ Can be called multiple times with new options to override previous options.
 After calling this function for a portal, CasualOS will look for tags that are referenced by the specified tag via import statements and produce a script bundle that is injected into the portal.
 Additionally, whenever one of those tags are changed the portal will be reloaded with the new bundle.
 
+CasualOS will also define a global variable `{portalId}Bot` that points to the given bot.
+This lets you override the default config bot for builtin portals like `pagePortal` and `tagPortal`.
+
 The **first parameter** is the ID that the portal should have. This is used to distinguish portals from each other.
 
-The **second parameter** is the tag or source code that the portal should be loaded from.
+The **second parameter** is the bot that should be used to configure the portal. You can provide `null` if you do not want the portal to have a config bot.
+
+The **third parameter** is optional and is the tag or source code that the portal should be loaded from.
 This value can be prefixed with a registered prefix to limit which tags can be used as entrypoints.
 The `mode` property of the options parameter determines whether this parameter should be a tag or some source code.
 
-The **third parameter** is optional and is the options that the portal should use. It is an object and should have the following structure:
+The **fourth parameter** is optional and is the options that the portal should use. It is an object and should have the following structure:
 
 ```typescript
 let options: {
@@ -5101,29 +5106,38 @@ let options: {
 
 #### Examples:
 
-1. Open a custom portal for the `test` tag.
+1. Replace the `pagePortalBot` with a custom bot.
 ```typescript
-await portal.open("my-portal", "test");
+let myConfigBot = create({
+    space: "tempLocal",
+    portalColor: "blue"
+});
+await portal.open("pagePortal", myConfigBot);
 ```
 
-2. Open a custom portal for `test` tags that are prefixed with `🔺`.
+2. Open a custom portal for the `test` tag.
+```typescript
+await portal.open("my-portal", null, "test");
+```
+
+3. Open a custom portal for `test` tags that are prefixed with `🔺`.
 ```typescript
 await portal.registerPrefix('🔺');
-await portal.open("my-portal", "🔺test");
+await portal.open("my-portal", null, "🔺test");
 ```
 
-3. Open a custom portal with a custom CSS style.
+4. Open a custom portal with a custom CSS style.
 ```typescript
-await portal.open("my-portal", "test", {
+await portal.open("my-portal", null, "test", {
     style: {
         height: '30%'
     }
 });
 ```
 
-4. Open a custom portal with some source code.
+5. Open a custom portal with some source code.
 ```typescript
-await portal.open("my-portal", `console.log("Hello, Portal!");`, {
+await portal.open("my-portal", null, `console.log("Hello, Portal!");`, {
     mode: "source"
 });
 ```
