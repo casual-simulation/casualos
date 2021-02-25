@@ -6597,6 +6597,32 @@ describe('original action tests', () => {
         });
     });
 
+    describe('thisBot', () => {
+        it('should pass in a thisBot variable which is the bot that is currently executing', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        test: '@setTag(thisBot, "runningTag", tagName)',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionResults(state, botAction);
+
+            expect(result.actions).toEqual([
+                botUpdated('thisBot', {
+                    tags: {
+                        runningTag: 'test',
+                    },
+                }),
+            ]);
+        });
+    });
+
     it('should not allow changing the ID', () => {
         const state: BotsState = {
             thisBot: {
