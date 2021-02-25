@@ -1934,7 +1934,7 @@ declare interface BotTags {
 /**
  * Defines the basic structure of a bot.
  */
-declare interface Bot {
+export interface Bot {
     /**
      * The ID of the bot.
      */

@@ -317,7 +317,64 @@ export function watchSimulation(
         );
     });
 
+    sub.add(
+        simulation.portals.portalBotIdUpdated
+            .pipe(
+                flatMap((b) => b),
+                tap((data) => {
+                    addDefinitionsForPortalBot(
+                        data.portalId,
+                        data.botId,
+                        monaco.languages.typescript.javascriptDefaults
+                    );
+                    addDefinitionsForPortalBot(
+                        data.portalId,
+                        data.botId,
+                        customPortalJavaScriptDefaults
+                    );
+                })
+            )
+            .subscribe()
+    );
+
     return sub;
+}
+
+export function addDefinitionsForPortalBot(
+    portalId: string,
+    botId: string,
+    defaults: typeof monaco.languages.typescript.javascriptDefaults
+) {
+    const extraLibs = defaults.getExtraLibs();
+    const libs: { filePath: string; content: string }[] = [];
+    const portalFilePath = `file:///${portalId}Bot.d.ts`;
+    const portalContent = `import type { Bot } from './AuxDefinitions';
+declare global { 
+    const ${portalId}Bot: Bot;
+}`;
+
+    let hasLib: boolean = false;
+    for (let key in extraLibs) {
+        if (key === portalFilePath) {
+            hasLib = true;
+            if (!botId) {
+                continue;
+            }
+        }
+        libs.push({
+            filePath: key,
+            content: extraLibs[key].content,
+        });
+    }
+
+    if (!hasLib) {
+        libs.push({
+            filePath: portalFilePath,
+            content: portalContent,
+        });
+    }
+
+    defaults.setExtraLibs(libs);
 }
 
 export function addDefinitionsForLibrary(lib: LibraryModule) {
