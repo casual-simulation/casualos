@@ -29,7 +29,7 @@ import {
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { BotDimensionEvent } from '@casual-simulation/aux-vm';
-import { Color, Texture } from 'three';
+import { Color, Texture } from '@casual-simulation/three';
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { InventoryPortalConfig } from './InventoryPortalConfig';

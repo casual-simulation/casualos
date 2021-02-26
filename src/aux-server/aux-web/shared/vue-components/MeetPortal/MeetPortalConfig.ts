@@ -17,7 +17,7 @@ import {
     DEFAULT_MEET_PORTAL_ANCHOR_POINT,
     calculateMeetPortalAnchorPointOffset,
 } from '@casual-simulation/aux-common';
-import { Color } from 'three';
+import { Color } from '@casual-simulation/three';
 import {
     BrowserSimulation,
     watchPortalConfigBot,
@@ -80,7 +80,7 @@ export class MeetPortalConfig implements SubscriptionLike {
         this._updated = new Subject();
         this._sub = watchPortalConfigBot(simulation, portalTag)
             .pipe(
-                tap(update => {
+                tap((update) => {
                     const bot = update;
 
                     if (bot) {

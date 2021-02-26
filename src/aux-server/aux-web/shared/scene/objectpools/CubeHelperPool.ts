@@ -4,7 +4,12 @@ import {
     createCubeStrokeGeometry,
 } from '../SceneUtils';
 import { ObjectPool } from './ObjectPool';
-import { Vector3, Mesh, LineSegments, LineBasicMaterial } from 'three';
+import {
+    Vector3,
+    Mesh,
+    LineSegments,
+    LineBasicMaterial,
+} from '@casual-simulation/three';
 
 export class CubeHelperPool extends ObjectPool<LineSegments> {
     constructor(name?: string, poolEmptyWarn?: boolean) {

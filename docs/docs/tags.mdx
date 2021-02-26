@@ -2,7 +2,7 @@
 id: tags
 title: Tags
 sidebar_label: Tags
-description: AUX has many tags.
+description: CasualOS has many tags.
 ---
 
 import { 
@@ -19,9 +19,17 @@ import {
   ActionLink,
   TagLink,
   NormalCode,
-  UserBotBadge,
-  HistoryBotBadge,
   ConfigBotBadge,
+  HistoryBotBadge,
+  AutomaticBadge,
+  PagePortalBadge,
+  InventoryPortalBadge,
+  MenuPortalBadge,
+  MeetPortalBadge,
+  LeftWristPortalBadge,
+  RightWristPortalBadge,
+  SheetPortalBadge,
+  TagPortalBadge,
   Example,
 } from './components.mdx';
 
@@ -244,11 +252,6 @@ Determines whether this bot responds to whispers or shouts. If this tag is set t
     The bot will not respond to whispers or shouts.
   </PossibleValueCode>
 </PossibleValuesTable>
-
-### `configBot`
-
-The ID of the bot that "configures" this bot.
-When set, the `config` variable will be available in scripts as a shortcut to the specified bot.
 
 ## Visualization Tags
 
@@ -816,7 +819,7 @@ When the minimum LOD is exited the <TagLink tag='@onMinLODExit'/> listener is tr
 The ID of the bot that should transform this bot in the page and inventory portals.
 When the transformer bot and this bot are in the same dimension, this bot will inherit the position and rotation of the transformer bot.
 
-When set on the player bot, this will transform the portal camera by the specified bot.
+When set on a portal bot (like `pagePortalBot`), this will transform the portal camera by the specified bot.
 
 <PossibleValuesTable>
   <PossibleValueCode value='null'>
@@ -1019,14 +1022,17 @@ The selection end index for cursor bots that are in the multi-line editor (tag p
   </PossibleValue>
 </PossibleValuesTable>
 
-## Portal Config Tags
+## Portal Bot Tags
 
 These tags are used to configure portals.
+They can be set on the corresponding portal bot.
+
+Some of them are automatically set by the corresponding portal but most of them (like the `cameraPositionOffset` tags) can be changed manually.
 
 ### `portalColor`
-
 <Badges>
-  <VideoBadge url='https://youtu.be/mbUHq94OGEg' />
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
 </Badges>
 
 The color of the background of the portal.
@@ -1040,6 +1046,10 @@ The color of the background of the portal.
 </PossibleValuesTable>
 
 ### `portalBackgroundAddress`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The URL of the image that should be displayed as the background of the portal.
 
@@ -1057,6 +1067,10 @@ Additionally, this tag does nothing when in VR.
 </PossibleValuesTable>
 
 ### `portalLocked`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 Determines if the portal can be loaded.
 
@@ -1071,6 +1085,10 @@ Determines if the portal can be loaded.
 </PossibleValuesTable>
 
 ### `portalPannable`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 Whether the player will be able to pan the camera inside the portal.
 
@@ -1085,6 +1103,10 @@ Whether the player will be able to pan the camera inside the portal.
 </PossibleValuesTable>
 
 ### `portalPannableMinX`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The minimum X value that the camera can pan to in the portal.
 
@@ -1096,6 +1118,10 @@ The minimum X value that the camera can pan to in the portal.
 </PossibleValuesTable>
 
 ### `portalPannableMaxX`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The maximum X value that the camera can pan to in the portal.
 
@@ -1107,6 +1133,10 @@ The maximum X value that the camera can pan to in the portal.
 </PossibleValuesTable>
 
 ### `portalPannableMinY`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The minimum Y value that the camera can pan to in the portal.
 
@@ -1118,6 +1148,10 @@ The minimum Y value that the camera can pan to in the portal.
 </PossibleValuesTable>
 
 ### `portalPannableMaxY`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The maximum Y value that the camera can pan to in the portal.
 
@@ -1129,6 +1163,10 @@ The maximum Y value that the camera can pan to in the portal.
 </PossibleValuesTable>
 
 ### `portalRotatable`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 Whether the player will be able to rotate the camera inside the inventory in this portal.
 
@@ -1143,6 +1181,10 @@ Whether the player will be able to rotate the camera inside the inventory in thi
 </PossibleValuesTable>
 
 ### `portalPlayerRotationX`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The X rotation that the camera starts at in the portal.
 
@@ -1154,6 +1196,10 @@ The X rotation that the camera starts at in the portal.
 </PossibleValuesTable>
 
 ### `portalPlayerRotationY`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The Y rotation that the camera starts at in the portal.
 
@@ -1165,6 +1211,10 @@ The Y rotation that the camera starts at in the portal.
 </PossibleValuesTable>
 
 ### `portalZoomable`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 Whether the player will be able to zoom the camera inside the portal.
 
@@ -1179,6 +1229,10 @@ Whether the player will be able to zoom the camera inside the portal.
 </PossibleValuesTable>
 
 ### `portalZoomableMin`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The minimum value that the camera can zoom to in the portal.
 
@@ -1190,6 +1244,10 @@ The minimum value that the camera can zoom to in the portal.
 </PossibleValuesTable>
 
 ### `portalZoomableMax`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The maximum value that the camera can zoom to in the portal.
 
@@ -1201,6 +1259,10 @@ The maximum value that the camera can zoom to in the portal.
 </PossibleValuesTable>
 
 ### `portalPlayerZoom`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The zoom value that the camera starts at in the portal.
 
@@ -1212,6 +1274,10 @@ The zoom value that the camera starts at in the portal.
 </PossibleValuesTable>
 
 ### `portalGridScale`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The size of bots in the portal.
 
@@ -1223,6 +1289,10 @@ The size of bots in the portal.
 </PossibleValuesTable>
 
 ### `portalSurfaceScale`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The scale of surfaces.
 
@@ -1234,6 +1304,10 @@ The scale of surfaces.
 </PossibleValuesTable>
 
 ### `portalPointerDragMode`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The mode that specifies how the mouse pointer/controller drags bots in the portal.
 
@@ -1248,6 +1322,10 @@ The mode that specifies how the mouse pointer/controller drags bots in the porta
 </PossibleValuesTable>
 
 ### `portalCameraControls`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 The mode that specifies how the camera controls work in the portal.
 
@@ -1263,6 +1341,10 @@ The mode that specifies how the camera controls work in the portal.
 </PossibleValuesTable>
 
 ### `portalShowFocusPoint`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
 
 Whether the focus point of the portal camera should be shown as a small sphere.
 
@@ -1281,6 +1363,9 @@ When a bot is between the focus point and the camera, then focus events will tri
 </PossibleValuesTable>
 
 ### `portalDisableCanvasTransparency`
+<Badges>
+    <PagePortalBadge/>
+</Badges>
 
 Whether to disable transparency on the [canvas element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/canvas) that the 3D content is displayed on.
 
@@ -1298,6 +1383,9 @@ Note that when this value is `true`, [iframe forms](#iframe-form) will cease to 
 </PossibleValuesTable>
 
 ### `inventoryPortalHeight`
+<Badges>
+    <InventoryPortalBadge/>
+</Badges>
 
 Sets the initial height of the inventory viewport for the portal.
 
@@ -1309,6 +1397,9 @@ Sets the initial height of the inventory viewport for the portal.
 </PossibleValuesTable>
 
 ### `inventoryPortalResizable`
+<Badges>
+    <InventoryPortalBadge/>
+</Badges>
 
 Whether the player will be able to resize the viewport for the inventory portal.
 
@@ -1323,6 +1414,10 @@ Whether the player will be able to resize the viewport for the inventory portal.
 </PossibleValuesTable>
 
 ### `wristPortalHeight`
+<Badges>
+    <LeftWristPortalBadge/>
+    <RightWristPortalBadge/>
+</Badges>
 
 The number of grid spaces that the wrist portal should have in the Y direction.
 
@@ -1334,6 +1429,10 @@ The number of grid spaces that the wrist portal should have in the Y direction.
 </PossibleValuesTable>
 
 ### `wristPortalWidth`
+<Badges>
+    <LeftWristPortalBadge/>
+    <RightWristPortalBadge/>
+</Badges>
 
 The number of grid spaces that the wrist portal should have in the X direction.
 
@@ -1345,6 +1444,9 @@ The number of grid spaces that the wrist portal should have in the X direction.
 </PossibleValuesTable>
 
 ### `meetPortalVisible`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
 
 Whether the meet portal should be visible.
 This is useful for hiding the meet portal while still in a meeting.
@@ -1360,6 +1462,9 @@ This is useful for hiding the meet portal while still in a meeting.
 </PossibleValuesTable>
 
 ### `meetPortalAnchorPoint`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
 
 The position on the screen that the meet portal should be anchored to.
 Overrides any conflicting properties set by <TagLink tag='meetPortalStyle'/>.
@@ -1401,6 +1506,9 @@ Overrides any conflicting properties set by <TagLink tag='meetPortalStyle'/>.
 </PossibleValuesTable>
 
 ### `meetPortalStyle`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
 
 The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the meet portal container.
 This is useful for positioning the meet portal in ways that are not possible using <TagLink tag='meetPortalAnchorPoint'/>.
@@ -1431,6 +1539,9 @@ When setting this tag via the sheet, it is useful to utilize DNA tags to ensure 
 ```
 
 ### `tagPortalAnchorPoint`
+<Badges>
+    <TagPortalBadge/>
+</Badges>
 
 The position on the screen that the tag portal should be anchored to.
 Overrides any conflicting properties set by <TagLink tag='tagPortalStyle'/>.
@@ -1472,6 +1583,9 @@ Overrides any conflicting properties set by <TagLink tag='tagPortalStyle'/>.
 </PossibleValuesTable>
 
 ### `tagPortalStyle`
+<Badges>
+    <TagPortalBadge/>
+</Badges>
 
 The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the tag portal container.
 This is useful for positioning the tag portal in ways that are not possible using <TagLink tag='tagPortalAnchorPoint'/>.
@@ -1502,11 +1616,15 @@ When setting this tag via the sheet, it is useful to utilize DNA tags to ensure 
 ```
 
 ### `tagPortalShowButton`
+<Badges>
+    <TagPortalBadge/>
+</Badges>
 
 Whether the tag portal should show a button that allows a custom action.
 When set to true, the button will be displayed in the lower right hand corner of the tag portal.
 
 Clicking the button will trigger a <TagLink tag='@onClick'/> on the tag portal config bot.
+
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1519,6 +1637,9 @@ Clicking the button will trigger a <TagLink tag='@onClick'/> on the tag portal c
 </PossibleValuesTable>
 
 ### `tagPortalButtonIcon`
+<Badges>
+    <TagPortalBadge/>
+</Badges>
 
 The [Material Icon](https://material.io/resources/icons/?style=baseline) that should be shown on the tag portal button.
 
@@ -1533,6 +1654,9 @@ The [Material Icon](https://material.io/resources/icons/?style=baseline) that sh
 </PossibleValuesTable>
 
 ### `tagPortalButtonHint`
+<Badges>
+    <TagPortalBadge/>
+</Badges>
 
 The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the tag portal button.
 
@@ -1550,6 +1674,7 @@ The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the
 
 <Badges>
     <Example code='menuPortalStyle'/>
+    <MenuPortalBadge/>
 </Badges>
 
 The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the menu portal container.
@@ -1577,6 +1702,9 @@ When setting this tag via the sheet, it is useful to utilize DNA tags to ensure 
 ```
 
 ### `sheetPortalShowButton`
+<Badges>
+    <SheetPortalBadge/>
+</Badges>
 
 Whether the sheet portal should show a button that allows a custom action.
 When set to true, the button will be displayed in the lower right hand corner of the sheet portal.
@@ -1595,6 +1723,9 @@ If there is no `@onClick`, then the sheet portal will be closed.
 </PossibleValuesTable>
 
 ### `sheetPortalButtonIcon`
+<Badges>
+    <SheetPortalBadge/>
+</Badges>
 
 The [Material Icon](https://material.io/resources/icons/?style=baseline) that should be shown on the sheet portal button.
 
@@ -1609,8 +1740,12 @@ The [Material Icon](https://material.io/resources/icons/?style=baseline) that sh
 </PossibleValuesTable>
 
 ### `sheetPortalButtonHint`
+<Badges>
+    <SheetPortalBadge/>
+</Badges>
 
 The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the sheet portal button.
+
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1623,6 +1758,9 @@ The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the
 </PossibleValuesTable>
 
 ### `sheetPortalAllowedTags`
+<Badges>
+    <SheetPortalBadge/>
+</Badges>
 
 The list of tags that should be allowed in the sheet portal.
 
@@ -1635,6 +1773,163 @@ The list of tags that should be allowed in the sheet portal.
     Only the specified tags can be shown in the sheet portal.
   </PossibleValue>
 </PossibleValuesTable>
+
+### `pixelWidth`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+</Badges>
+
+The width of the page portal in pixels. Because the inventory portal is contained by the page portal, this value also applies to the inventory portal.
+
+Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
+Additionally, a device with a larger width than height does not necessarily mean that it is in landscape mode.
+
+### `pixelHeight`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+</Badges>
+
+The height of the page portal in pixels. Because the inventory portal is contained by the page portal, this value also applies to the inventory portal.
+
+Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
+Additionally, a device with a larger height than width does not necessarily mean that it is in portrait mode.
+
+### `cameraPositionX`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The X position of the player's camera in the page portal.
+
+### `cameraPositionY`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The Y position of the player's camera in the page portal.
+
+### `cameraPositionZ`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The Z position of the player's camera in the page portal.
+
+### `cameraPositionOffsetX`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The offset that should be applied to the X position of the player's camera in the page portal.
+
+Useful for moving the player around in VR.
+
+### `cameraPositionOffsetY`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The offset that should be applied to the Y position of the player's camera in the page portal.
+
+Useful for moving the player around in VR.
+
+### `cameraPositionOffsetZ`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The offset that should be applied to the Z position of the player's camera in the page portal.
+
+Useful for moving the player around in VR.
+
+### `cameraRotationX`
+
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The X rotation of the player's camera in the page portal.
+
+Units are in radians.
+
+### `cameraRotationY`
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The Y rotation of the player's camera in the page portal.
+
+Units are in radians.
+
+### `cameraRotationZ`
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The Z rotation of the player's camera in the page portal.
+
+Units are in radians.
+
+### `cameraRotationOffsetX`
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The offset that should be applied to the X rotation of the player's camera in the page portal.
+
+Units are in radians.
+
+### `cameraRotationOffsetY`
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The offset that should be applied to the Y rotation of the player's camera in the page portal.
+
+Units are in radians.
+
+### `cameraRotationOffsetZ`
+<Badges>
+    <AutomaticBadge/>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The offset that should be applied to the Z rotation of the player's camera in the page portal.
+
+Units are in radians.
 
 ## History Tags
 
@@ -1701,16 +1996,16 @@ The bot that the error occurred in.
 
 The tag that the error occurred in.
 
-## Player Bot Tags
+## Config bot Tags
 
-All tags on the player bot will be synced with the URL query parameters.
-This means that setting the `#abc` tag on the player bot to `hello` will update the URL to include `abc=hello`.
+All tags on the config bot will be synced with the URL query parameters.
+This means that setting the `#abc` tag on the config bot to `hello` will update the URL to include `abc=hello`.
 It also means that putting `inventoryPortal=myDimension` into the query string will set the <TagLink tag='inventoryPortal'/> tag to `myDimension`.
 
 ### `server`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The server that is loaded into CasualOS.
@@ -1718,70 +2013,70 @@ The server that is loaded into CasualOS.
 ### `pagePortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded into the "page" portal in CasualOS.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `sheetPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded into the "sheet" portal in CasualOS.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `idePortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The prefix that indicates which tags should be loaded into the "IDE" portal in CasualOS.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `inventoryPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded into the "inventory" portal in CasualOS.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `menuPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded into the "menu" portal in CasualOS.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `leftWristPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded onto the left controller near the wrist when in VR.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `rightWristPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The dimension that is loaded onto the right controller near the wrist when in VR.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `meetPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The [Jitsi Meet](https://meet.jit.si/) room code of the meeting that should be joined.
@@ -1789,12 +2084,12 @@ This will join the current tab to the meeting and provide audiovisual communicat
 
 This is similar to a Skype or Zoom call except that all data is encrypted and is deleted once you are done with it. Check out the Jitsi Meet privacy policy [here](https://jitsi.org/meet-jit-si-privacy/).
 
-Only available on the player bot.
+Only available on the config bot.
 
 ### `tagPortal`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The Bot ID and tag that should be edited in the tag portal.
@@ -1802,36 +2097,34 @@ This will show just the code editor without the rest of the sheet and makes it p
 
 When you are setting the tag portal, you should format it so the bot ID and tag name are separated by a single period (.).
 
-Only available on the player bot.
+Only available on the config bot.
 
 #### Examples:
 
-1. Open the tag portal for the `abc` tag on the player bot.
+1. Open the tag portal for the `abc` tag on the config bot.
 ```typescript
-const playerBot = player.getBot();
 const tag = "abc";
-playerBot.tags.tagPortal = getID(playerBot) + "." + tag;
+playerBot.tags.tagPortal = getID(configBot) + "." + tag;
 ```
 
 ### `tagPortalSpace`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The space of the tag mask that should be edited in the tag portal.
 If not set, then the tag on the bot will be edited.
 If set, then the tag mask in the given space will be edited.
 
-Only available on the player bot.
+Only available on the config bot.
 
 #### Examples:
 
-1. Open the tag portal for the `abc` tag mask in the `tempLocal` space on the player bot.
+1. Open the tag portal for the `abc` tag mask in the `tempLocal` space on the config bot.
 ```typescript
-const playerBot = player.getBot();
 const tag = "abc";
-playerBot.tags.tagPortal = getID(playerBot) + "." + tag;
+playerBot.tags.tagPortal = getID(configBot) + "." + tag;
 playerBot.tags.tagPortalSpace = "tempLocal";
 ```
 
@@ -1866,268 +2159,6 @@ https://auxplayer.com?server=my-server&dataPortal=label
 ```
 https://auxplayer.com?server=my-server&dataPortal=test.html
 ```
-
-### `pagePortalConfigBot`
-
-<Badges>
-  <UserBotBadge/>
-</Badges>
-
-The ID of the bot that should be used to configure the <TagLink tag='pagePortal'>page portal</TagLink>.
-
-Supports the following tags:
-
-- <TagLink tag='portalColor'/>
-- <TagLink tag='portalLocked'/>
-- <TagLink tag='portalPannable'/>
-- <TagLink tag='portalPannableMinX'/>
-- <TagLink tag='portalPannableMaxX'/>
-- <TagLink tag='portalPannableMinY'/>
-- <TagLink tag='portalPannableMaxY'/>
-- <TagLink tag='portalRotatable'/>
-- <TagLink tag='portalPlayerRotationX'/>
-- <TagLink tag='portalPlayerRotationY'/>
-- <TagLink tag='portalZoomable'/>
-- <TagLink tag='portalGridScale'/>
-- <TagLink tag='portalSurfaceScale'/>
-- <TagLink tag='portalPointerDragMode'/>
-- <TagLink tag='portalShowFocusPoint'/>
-- <TagLink tag='portalDisableCanvasTransparency'/>
-
-Only available on the player bot.
-
-### `sheetPortalConfigBot`
-
-<Badges>
-  <UserBotBadge/>
-</Badges>
-
-The ID of the bot that should be used to configure the <TagLink tag='sheetPortal'>sheet portal</TagLink>.
-
-Currently not used. Only available on the player bot.
-
-### `inventoryPortalConfigBot`
-
-<Badges>
-  <UserBotBadge/>
-</Badges>
-
-The ID of the bot that should be used to configure the <TagLink tag='inventoryPortal'>inventory portal</TagLink>.
-
-Supports the following tags:
-
-- <TagLink tag='portalColor'/>
-- <TagLink tag='portalLocked'/>
-- <TagLink tag='portalPannable'/>
-- <TagLink tag='portalPannableMinX'/>
-- <TagLink tag='portalPannableMaxX'/>
-- <TagLink tag='portalPannableMinY'/>
-- <TagLink tag='portalPannableMaxY'/>
-- <TagLink tag='portalRotatable'/>
-- <TagLink tag='portalPlayerRotationX'/>
-- <TagLink tag='portalPlayerRotationY'/>
-- <TagLink tag='portalZoomable'/>
-- <TagLink tag='portalGridScale'/>
-- <TagLink tag='portalSurfaceScale'/>
-- <TagLink tag='portalPointerDragMode'/>
-- <TagLink tag='inventoryPortalHeight'/>
-- <TagLink tag='inventoryPortalResizable'/>
-
-Only available on the player bot.
-
-### `menuPortalConfigBot`
-
-<Badges>
-  <UserBotBadge/>
-</Badges>
-
-The ID of the bot that should be used to configure the <TagLink tag='menuPortal'>menu portal</TagLink>.
-
-Currently not used. Only available on the player bot.
-
-### `leftWristPortalConfigBot`
-
-<Badges>
-  <UserBotBadge/>
-</Badges>
-
-The ID of the bot that should be used to configure the <TagLink tag='leftWristPortal'>left wrist portal</TagLink>.
-
-Supports the following tags:
-
-- <TagLink tag='portalGridScale'/>
-- <TagLink tag='portalSurfaceScale'/>
-- <TagLink tag='wristPortalHeight'/>
-- <TagLink tag='wristPortalWidth'/>
-
-Only available on the player bot.
-
-### `rightWristPortalConfigBot`
-
-<Badges>
-  <UserBotBadge/>
-</Badges>
-
-The ID of the bot that should be used to configure the <TagLink tag='rightWristPortal'>right wrist portal</TagLink>.
-
-Supports the following tags:
-
-- <TagLink tag='portalGridScale'/>
-- <TagLink tag='portalSurfaceScale'/>
-- <TagLink tag='wristPortalHeight'/>
-- <TagLink tag='wristPortalWidth'/>
-
-Only available on the player bot.
-
-### `meetPortalConfigBot`
-
-<Badges>
-  <UserBotBadge/>
-</Badges>
-
-The ID of the bot that should be used to configure the <TagLink tag='meetPortal'>meet portal</TagLink>.
-
-Supports the following tags:
-
-- <TagLink tag='meetPortalVisible'/>
-- <TagLink tag='meetPortalAnchorPoint'/>
-- <TagLink tag='meetPortalStyle'/>
-
-Only available on the player bot.
-
-### `pagePixelWidth`
-
-The width of the page and inventory portals in pixels.
-
-Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
-Additionally, a device with a larger width than height does not necessarily mean that it is in landscape mode.
-
-### `pagePixelHeight`
-
-The height of the page and inventory portals in pixels.
-
-Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
-Additionally, a device with a larger height than width does not necessarily mean that it is in portrait mode.
-
-### `pageCameraPositionX`
-
-The X position of the player's camera in the page portal.
-
-### `pageCameraPositionY`
-
-The Y position of the player's camera in the page portal.
-
-### `pageCameraPositionZ`
-
-The Z position of the player's camera in the page portal.
-
-### `pageCameraPositionOffsetX`
-
-The offset that should be applied to the X position of the player's camera in the page portal.
-
-Useful for moving the player around in VR.
-
-### `pageCameraPositionOffsetY`
-
-The offset that should be applied to the Y position of the player's camera in the page portal.
-
-Useful for moving the player around in VR.
-
-### `pageCameraPositionOffsetZ`
-
-The offset that should be applied to the Z position of the player's camera in the page portal.
-
-Useful for moving the player around in VR.
-
-### `inventoryCameraPositionX`
-
-The X position of the player's camera in the inventory portal.
-
-### `inventoryCameraPositionY`
-
-The Y position of the player's camera in the inventory portal.
-
-### `inventoryCameraPositionZ`
-
-The Z position of the player's camera in the inventory portal.
-
-### `inventoryCameraPositionOffsetX`
-
-The offset that should be applied to the X position of the player's camera in the inventory portal.
-
-### `inventoryCameraPositionOffsetY`
-
-The offset that should be applied to the Y position of the player's camera in the inventory portal.
-
-### `inventoryCameraPositionOffsetZ`
-
-The offset that should be applied to the Z position of the player's camera in the inventory portal.
-
-### `pageCameraRotationX`
-
-The X rotation of the player's camera in the page portal.
-
-Units are in radians.
-
-### `pageCameraRotationY`
-
-The Y rotation of the player's camera in the page portal.
-
-Units are in radians.
-
-### `pageCameraRotationZ`
-
-The Z rotation of the player's camera in the page portal.
-
-Units are in radians.
-
-### `pageCameraRotationOffsetX`
-
-The offset that should be applied to the X rotation of the player's camera in the page portal.
-
-Units are in radians.
-
-### `pageCameraRotationOffsetY`
-
-The offset that should be applied to the Y rotation of the player's camera in the page portal.
-
-Units are in radians.
-
-### `pageCameraRotationOffsetZ`
-
-The offset that should be applied to the Z rotation of the player's camera in the page portal.
-
-Units are in radians.
-
-### `inventoryCameraRotationX`
-
-The X rotation of the player's camera in the inventory portal.
-
-### `inventoryCameraRotationY`
-
-The Y rotation of the player's camera in the inventory portal.
-
-### `inventoryCameraRotationZ`
-
-The Z rotation of the player's camera in the inventory portal.
-
-### `inventoryCameraRotationOffsetX`
-
-The offset that should be applied to the X rotation of the player's camera in the inventory portal.
-
-Units are in radians.
-
-### `inventoryCameraRotationOffsetY`
-
-The offset that should be applied to the Y rotation of the player's camera in the inventory portal.
-
-Units are in radians.
-
-### `inventoryCameraRotationOffsetZ`
-
-The offset that should be applied to the Z rotation of the player's camera in the inventory portal.
-
-Units are in radians.
 
 ### `mousePointerPositionX`
 
@@ -2428,25 +2459,25 @@ The title that should be displayed on the web browser tab.
 ### `editingBot`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The ID of the bot that the user is currently editing.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `editingTag`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The tag that the user is currently editing.
-Only available on the player bot.
+Only available on the config bot.
 
 ### `cursorStartIndex`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The selection start index of the player's cursor in the current <TagLink tag='editingTag'/>.
@@ -2455,12 +2486,12 @@ Note that when <TagLink tag='cursorStartIndex'/> is larger than <TagLink tag='cu
 that the player has selected text from the right to the left.
 This is important because text will always be inserted at <TagLink tag='cursorEndIndex'/>.
 
-Only available on the player bot.
+Only available on the config bot.
 
 ### `cursorEndIndex`
 
 <Badges>
-  <UserBotBadge/>
+  <ConfigBotBadge/>
 </Badges>
 
 The selection end index of the player's cursor in the current <TagLink tag='editingTag'/>.
@@ -2469,7 +2500,7 @@ Note that when <TagLink tag='cursorEndIndex'/> is smaller than <TagLink tag='cur
 that the player has selected text from the right to the left.
 This is important because text will always be inserted at <TagLink tag='cursorEndIndex'/>.
 
-Only available on the player bot.
+Only available on the config bot.
 
 ## Hidden Tags
 

@@ -1,5 +1,12 @@
 import { GameObject } from './GameObject';
-import { Object3D, Box3, Sphere, Group, Color, Vector3 } from 'three';
+import {
+    Object3D,
+    Box3,
+    Sphere,
+    Group,
+    Color,
+    Vector3,
+} from '@casual-simulation/three';
 import {
     Bot,
     BotCalculationContext,

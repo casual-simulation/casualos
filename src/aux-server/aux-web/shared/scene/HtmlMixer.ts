@@ -14,11 +14,11 @@ import {
     Vector3,
     Quaternion,
     Vector2,
-} from 'three';
+} from '@casual-simulation/three';
 import {
     CSS3DRenderer,
     CSS3DObject,
-} from 'three/examples/jsm/renderers/CSS3DRenderer';
+} from '@casual-simulation/three/examples/jsm/renderers/CSS3DRenderer';
 import { wrapHtmlWithSandboxContentSecurityPolicy } from '../SharedUtils';
 import { buildSRGBColor } from './SceneUtils';
 
@@ -92,7 +92,7 @@ export namespace HtmlMixer {
             this.cssCamera.updateMatrixWorld(true);
 
             // Update mixer planes.
-            this.cssScene.traverse(object3d => {
+            this.cssScene.traverse((object3d) => {
                 let mixerPlane = object3d.userData.mixerPlane as Plane;
                 if (!mixerPlane) return;
                 mixerPlane.update();
@@ -199,10 +199,10 @@ export namespace HtmlMixer {
             this.cssObject.userData.mixerPlane = this;
 
             // Hook event so cssObject is attached to cssScene when object3d is added/removed
-            this.object3d.addEventListener('added', event => {
+            this.object3d.addEventListener('added', (event) => {
                 mixerContext.cssScene.add(this.cssObject);
             });
-            this.object3d.addEventListener('removed', event => {
+            this.object3d.addEventListener('removed', (event) => {
                 mixerContext.cssScene.remove(this.cssObject);
             });
         }
@@ -256,7 +256,7 @@ export namespace HtmlMixer {
 
         isOverDomElement(clientPos: Vector2): boolean {
             let elements = document.elementsFromPoint(clientPos.x, clientPos.y);
-            return elements.some(element => element === this.domElement);
+            return elements.some((element) => element === this.domElement);
         }
 
         dispose(): void {

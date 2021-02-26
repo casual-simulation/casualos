@@ -1,4 +1,4 @@
-import { Vector3, Euler, OrthographicCamera } from 'three';
+import { Vector3, Euler, OrthographicCamera } from '@casual-simulation/three';
 import {
     BotCalculationContext,
     calculateGridScale,

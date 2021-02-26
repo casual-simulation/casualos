@@ -1,5 +1,37 @@
 # CasualOS Changelog
 
+## V1.4.7
+
+#### Date: 2/26/2021
+
+### :boom: Breaking Changes
+
+-   Renamed all the `player` functions to `os`.
+    -   Instead of `player.toast()` you should now do `os.toast()`.
+-   Removed the `configBot` and `configTag` variables.
+-   Removed the portal config bot tags and replaced them with variables.
+    -   e.g. `pagePortalConfigBot` can now be accessed with the `pagePortalBot` variable.
+    -   You can now set the page portal color by doing `pagePortalBot.tags.portalColor = "green"`.
+    -   By default a `tempLocal` bot will be created for each builtin portal.
+    -   You can also provide your own bot by calling `portal.open(portalName, bot)`.
+-   Changed the `portal.open()` function to take a bot as a parameter.
+    -   It should now be called like `portal.open(name, bot, tag?, options?)`.
+    -   After callilng this, the given bot will be available globally at `{name}Bot`.
+    -   For example `portal.open("myPortal", bot, "main")` will make `bot` available as `myPortalBot`.
+-   Removed `player.getBot()` and replaced it with `configBot`.
+-   Renamed the `creator` variable to `creatorBot`.
+-   Added the `thisBot` variable as a preferred alternative to `this` and `bot`.
+-   Moved the page and inventory camera tags to their portal config bots from the player bot.
+    -   e.g. `pageCameraPositionX` used to be on the player bot (now the config bot) but is now on the page portal bot.
+-   Changed the behavior of the `transformer` tag to use the page and inventory portal bots instead of the config bot (previously the player bot).
+-   Renamed the `pageCameraPosition{X,Y,Z}` and `inventoryCameraPosition{X,Y,Z}` tags to `cameraPosition{X,Y,Z}`.
+-   Renamed the `pageCameraRotation{X,Y,Z}` and `inventoryCameraRotation{X,Y,Z}` tags to `cameraRotation{X,Y,Z}`.
+-   Renamed the `pagePixelHeight` and `pagePixelWidth` tags to `pixelHeight` and `pixelWidth`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where variables from other listen tags would appear as autocomplete options.
+
 ## V1.4.6
 
 #### Date: 2/23/2021

@@ -29,7 +29,11 @@ import {
     AuxConfig,
 } from '@casual-simulation/aux-vm';
 import { DenoVM } from '../vm/DenoVM';
-import { ProgressManager } from '@casual-simulation/aux-vm/managers';
+import {
+    ESBuildPortalBundler,
+    PortalManager,
+    ProgressManager,
+} from '@casual-simulation/aux-vm/managers';
 import { filter, flatMap, tap, map } from 'rxjs/operators';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
@@ -56,6 +60,7 @@ export class DenoSimulationImpl
     implements DenoSimulation {
     private _login: LoginManager;
     private _progress: ProgressManager;
+    private _portals: PortalManager;
 
     get login() {
         return this._login;
@@ -63,6 +68,10 @@ export class DenoSimulationImpl
 
     get progress() {
         return this._progress;
+    }
+
+    get portals() {
+        return this._portals;
     }
 
     constructor(
@@ -117,5 +126,16 @@ export class DenoSimulationImpl
                 },
             };
         }
+    }
+
+    protected _initManagers() {
+        super._initManagers();
+        const bundler = new ESBuildPortalBundler();
+        this._portals = new PortalManager(
+            this._vm,
+            this._helper,
+            this._watcher,
+            bundler
+        );
     }
 }

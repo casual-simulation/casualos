@@ -1,7 +1,7 @@
 import { BaseBotClickOperation } from '../../../shared/interaction/ClickOperation/BaseBotClickOperation';
 import PlayerGameView from '../../PlayerGameView/PlayerGameView';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import { Intersection, Vector2 } from 'three';
+import { Intersection, Vector2 } from '@casual-simulation/three';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
     BotCalculationContext,

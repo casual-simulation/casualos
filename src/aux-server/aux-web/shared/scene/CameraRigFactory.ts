@@ -4,7 +4,7 @@ import {
     Scene,
     Vector3,
     Group,
-} from 'three';
+} from '@casual-simulation/three';
 import { Viewport } from './Viewport';
 
 export const Orthographic_FrustrumSize: number = 100;

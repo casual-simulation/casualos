@@ -12,7 +12,7 @@ import {
     isMinimized,
     getDimensionRotation,
 } from '@casual-simulation/aux-common';
-import { Object3D } from 'three';
+import { Object3D } from '@casual-simulation/three';
 import { Simulation3D } from './Simulation3D';
 
 /**

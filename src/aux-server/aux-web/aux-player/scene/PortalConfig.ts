@@ -17,7 +17,7 @@ import {
     PortalCameraControlsMode,
     calculatePortalCameraControlsMode,
 } from '@casual-simulation/aux-common';
-import { Color, Texture } from 'three';
+import { Color, Texture } from '@casual-simulation/three';
 import {
     BrowserSimulation,
     watchPortalConfigBot,

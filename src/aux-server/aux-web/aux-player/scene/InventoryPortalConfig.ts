@@ -13,7 +13,7 @@ import {
     DEFAULT_INVENTORY_PORTAL_RESIZABLE,
     DEFAULT_INVENTORY_PORTAL_HEIGHT,
 } from '@casual-simulation/aux-common';
-import { Color } from 'three';
+import { Color } from '@casual-simulation/three';
 import {
     BrowserSimulation,
     watchPortalConfigBot,

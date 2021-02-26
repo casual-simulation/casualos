@@ -3,8 +3,8 @@ import {
     Camera,
     LoadingManager,
     Scene,
-  } from 'three';
-import {GLTF} from 'three/examples/jsm/loaders/GLTFLoader';
+  } from '@casual-simulation/three';
+import {GLTF} from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
   
 export class LegacyGLTFLoader {
     constructor(manager?: LoadingManager);

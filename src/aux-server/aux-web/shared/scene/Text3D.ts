@@ -13,7 +13,7 @@ import {
     Euler,
     Matrix4,
     Quaternion,
-} from 'three';
+} from '@casual-simulation/three';
 
 import {
     BotLabelAnchor,

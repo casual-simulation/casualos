@@ -1934,7 +1934,7 @@ declare interface BotTags {
 /**
  * Defines the basic structure of a bot.
  */
-declare interface Bot {
+export interface Bot {
     /**
      * The ID of the bot.
      */
@@ -2162,6 +2162,11 @@ declare global {
     /**
      * The Bot that this script is running in.
      */
+    const thisBot: Bot;
+
+    /**
+     * The Bot that this script is running in.
+     */
     const bot: Bot;
 
     /**
@@ -2177,22 +2182,17 @@ declare global {
     /**
      * The Bot that created this Bot.
      */
-    const creator: Bot;
+    const creatorBot: Bot;
 
     /**
      * The config Bot for this Bot.
      */
-    const config: Bot;
+    const configBot: Bot;
 
     /**
      * The name of the tag that this script is running in.
      */
     const tagName: string;
-
-    /**
-     * The value of the same tag in the config Bot.
-     */
-    const configTag: any;
 
     /**
      * Creates a new bot and returns it.
@@ -2801,9 +2801,9 @@ declare global {
     function subtractMods(bot: any, ...diffs: Mod[]): void;
 
     /**
-     * Defines a set of functions that relate to common player operations.
+     * Defines a set of functions that relate to common OS operations.
      */
-    const player: {
+    const os: {
 
         /**
          * Derermines whether the player is in the given dimension.
@@ -3344,12 +3344,14 @@ declare global {
         /**
          * Registers a custom portal with the given source code.
          * @param portalId The ID of the portal.
+         * @param bot The bot that should be used to configure the portal.
          * @param tagOrSource The tag or source code that the portal should be created from.
          * @param options The options for the portal.
          */
         open(
             portalId: string,
-            tagOrSource: string,
+            bot: Bot | string,
+            tagOrSource?: string,
             options?: OpenCustomPortalOptions
         ): Promise<void>;
 

@@ -9,6 +9,12 @@ const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const common = require('./webpack.common.js');
+const childProcess = require('child_process');
+
+const latestTag = childProcess
+    .execSync('git describe --abbrev=0 --tags')
+    .toString()
+    .trim();
 
 const mergeModule = mergeWithRules({
     rules: {
@@ -30,8 +36,11 @@ const merge = mergeWithCustomize({
     },
 });
 
-const finalPlayerConfig = merge(common.player, productionPlayerConfig());
-const finalDenoConfig = merge(common.deno, productionDenoConfig());
+const finalPlayerConfig = merge(
+    common.player(latestTag),
+    productionPlayerConfig()
+);
+const finalDenoConfig = merge(common.deno(latestTag), productionDenoConfig());
 
 module.exports = [finalPlayerConfig, finalDenoConfig];
 

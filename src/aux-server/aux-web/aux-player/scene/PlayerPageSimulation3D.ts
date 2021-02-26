@@ -43,7 +43,7 @@ import {
     Object3D,
     Vector3,
     Euler,
-} from 'three';
+} from '@casual-simulation/three';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';

@@ -41,7 +41,7 @@ import {
     Object3D,
     MathUtils as ThreeMath,
     Matrix4,
-} from 'three';
+} from '@casual-simulation/three';
 import { calculateGridTileLocalCenter } from '../grid/Grid';
 import { realPosToGridPos, Axial, posToKey } from '../hex';
 import { BuilderGroup3D } from '../BuilderGroup3D';

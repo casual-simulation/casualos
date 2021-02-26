@@ -93,17 +93,26 @@ export const Badges = ({children}) => (
   </div>
 );
 
-export const Badge = ({type, children}) => (<span className={`badge badge--${type}`}>{children}</span>);
+export const Badge = ({type, title, children}) => (<span title={title} className={`badge badge--${type}`}>{children}</span>);
 
 export const ReadOnlyBadge = ({}) => (<Badge type='warning'>Read-Only</Badge>);
 
 export const VideoBadge = ({url}) => (<Badge type='info'><a href={url} target='_blank'>Video</a></Badge>);
 
-export const UserBotBadge = ({url}) => (<Badge type='primary'>Player Bot</Badge>);
+export const ConfigBotBadge = ({url}) => (<Badge type='primary'>Config Bot</Badge>);
 
 export const HistoryBotBadge = ({url}) => (<Badge type='primary'>History Bot</Badge>);
 
-export const ConfigBotBadge = ({url}) => (<Badge type='primary'>Config Bot</Badge>);
+export const AutomaticBadge = ({url}) => (<Badge type='success' title='This tag is automatically set by CasualOS.'>Automatic</Badge>);
+
+export const PagePortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the page portal bot.'>pagePortalBot</Badge>);
+export const InventoryPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the inventory portal bot.'>inventoryPortalBot</Badge>);
+export const MenuPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the menu portal bot.'>menuPortalBot</Badge>);
+export const MeetPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the meet portal bot.'>meetPortalBot</Badge>);
+export const LeftWristPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the left wrist portal bot.'>leftWristPortalBot</Badge>);
+export const RightWristPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the right wrist portal bot.'>rightWristPortalBot</Badge>);
+export const SheetPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the sheet portal bot.'>sheetPortalBot</Badge>);
+export const TagPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the tag portal bot.'>tagPortalBot</Badge>);
 
 export const Alert = ({type, children}) => (
     <div className={`alert alert--${type}`} role='alert'>

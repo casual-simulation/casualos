@@ -19,7 +19,7 @@ import {
     DEFAULT_WRIST_PORTAL_GRID_SCALE,
     calculateGridScaleFromConstants,
 } from '@casual-simulation/aux-common';
-import { Color } from 'three';
+import { Color } from '@casual-simulation/three';
 import {
     BrowserSimulation,
     watchPortalConfigBot,

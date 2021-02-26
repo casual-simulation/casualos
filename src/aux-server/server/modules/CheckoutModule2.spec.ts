@@ -160,7 +160,7 @@ describe('CheckoutModule2', () => {
 
                 await processingSimulation.helper.createBot('checkoutBot', {
                     onCheckout: `@remote(
-                                player.toast("Checked out " + that.productId + " " + that.token + " " + that.user.session),
+                                os.toast("Checked out " + that.productId + " " + that.token + " " + that.user.session),
                                 {
                                     session: 'processing'
                                 })`,

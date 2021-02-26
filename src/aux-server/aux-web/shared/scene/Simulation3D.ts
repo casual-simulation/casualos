@@ -1,4 +1,10 @@
-import { Object3D, Texture, Color, Vector2, Scene } from 'three';
+import {
+    Object3D,
+    Texture,
+    Color,
+    Vector2,
+    Scene,
+} from '@casual-simulation/three';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
     Bot,

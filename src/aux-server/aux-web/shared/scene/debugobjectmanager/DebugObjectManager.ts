@@ -15,7 +15,7 @@ import {
     Mesh,
     MeshBasicMaterial,
     Quaternion,
-} from 'three';
+} from '@casual-simulation/three';
 import { Time } from '../Time';
 import { getOptionalValue } from '../../SharedUtils';
 import { PointHelper } from '../helpers/PointHelper';

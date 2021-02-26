@@ -5,7 +5,7 @@ import {
     Color,
     MeshBasicMaterial,
     BackSide,
-} from 'three';
+} from '@casual-simulation/three';
 import {
     BotCalculationContext,
     calculateBotValue,
@@ -29,7 +29,8 @@ const DEFAULT_OUTLINE_WIDTH: number = 1;
 
 // NOTE: This decorator is supposed to replace the aux.stroke implementation
 //       that is currently in BotShapeDecorator sometime in the future.
-export class OutlineDecorator extends AuxBot3DDecoratorBase
+export class OutlineDecorator
+    extends AuxBot3DDecoratorBase
     implements IMeshDecorator {
     /**
      * The mesh for the outline.

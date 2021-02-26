@@ -13,7 +13,7 @@ import {
     BotCalculationContext,
 } from '@casual-simulation/aux-common';
 import { MenuPortalConfig } from './MenuPortalConfig';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 
 /**
  * Defines a dimension that watches a set of simulations for changes to items in a dimension.
@@ -45,7 +45,7 @@ export class MenuPortal implements SubscriptionLike {
     private _config: MenuPortalConfig;
 
     constructor(
-        simulationManager: SimulationManager<Simulation>,
+        simulationManager: SimulationManager<RemoteSimulation>,
         dimensionTags: string[]
     ) {
         this._dimensionTags = dimensionTags;
@@ -79,15 +79,12 @@ export class MenuPortal implements SubscriptionLike {
         return this._sub.closed;
     }
 
-    private _onSimulationAdded(sim: Simulation): void {
+    private _onSimulationAdded(sim: RemoteSimulation): void {
         let sub = new Subscription();
         this._simulations.set(sim, sub);
 
         if (!this._config) {
-            this._config = new MenuPortalConfig(
-                this._dimensionTags[0],
-                sim as BrowserSimulation
-            );
+            this._config = new MenuPortalConfig(this._dimensionTags[0], sim);
             sub.add(this._config);
             sub.add(
                 this._config.onUpdated.subscribe(() => {

@@ -1,5 +1,5 @@
 import { InputType, InputMethod } from '../../../shared/scene/Input';
-import { Vector2 } from 'three';
+import { Vector2 } from '@casual-simulation/three';
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
 import {

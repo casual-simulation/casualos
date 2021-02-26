@@ -30,8 +30,14 @@ const merge = mergeWithCustomize({
     },
 });
 
-const finalPlayerConfig = merge(common.player, developmentConfig());
-const finalDenoConfig = merge(common.deno, developmentConfig());
+const finalPlayerConfig = merge(
+    common.player('v9.9.9-dev:alpha'),
+    developmentConfig()
+);
+const finalDenoConfig = merge(
+    common.deno('v9.9.9-dev:alpha'),
+    developmentConfig()
+);
 
 module.exports = [finalPlayerConfig, finalDenoConfig];
 

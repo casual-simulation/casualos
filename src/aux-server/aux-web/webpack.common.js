@@ -15,17 +15,13 @@ const commitHash = childProcess
     .execSync('git rev-parse HEAD')
     .toString()
     .trim();
-const latestTag = childProcess
-    .execSync('git describe --abbrev=0 --tags')
-    .toString()
-    .trim();
 
 module.exports = {
-    player: playerConfig(),
-    deno: denoConfig(),
+    player: playerConfig,
+    deno: denoConfig,
 };
 
-function playerConfig() {
+function playerConfig(latestTag) {
     return merge(baseConfig(), {
         entry: {
             player: path.resolve(__dirname, 'aux-player', 'index.ts'),
@@ -84,9 +80,9 @@ function playerConfig() {
                 filename: 'aux-vm-iframe.html',
             }),
             new webpack.ProvidePlugin({
-                THREE: 'three',
+                THREE: '@casual-simulation/three',
             }),
-            ...commonPlugins(),
+            ...commonPlugins(latestTag),
             new WorkboxPlugin.GenerateSW({
                 clientsClaim: true,
                 skipWaiting: true,
@@ -213,7 +209,7 @@ function playerConfig() {
     });
 }
 
-function denoConfig() {
+function denoConfig(latestTag) {
     return merge(baseConfig(), {
         entry: {
             deno: path.resolve(
@@ -225,11 +221,11 @@ function denoConfig() {
                 'DenoAuxChannel.worker.js'
             ),
         },
-        plugins: [...commonPlugins()],
+        plugins: [...commonPlugins(latestTag)],
     });
 }
 
-function commonPlugins() {
+function commonPlugins(latestTag) {
     return [
         new webpack.DefinePlugin({
             GIT_HASH: JSON.stringify(commitHash),
@@ -237,6 +233,10 @@ function commonPlugins() {
             PROXY_CORS_REQUESTS: process.env.PROXY_CORS_REQUESTS !== 'false',
         }),
         new webpack.NormalModuleReplacementPlugin(/^esbuild$/, 'esbuild-wasm'),
+        new webpack.NormalModuleReplacementPlugin(
+            /^three$/,
+            '@casual-simulation/three'
+        ),
     ];
 }
 

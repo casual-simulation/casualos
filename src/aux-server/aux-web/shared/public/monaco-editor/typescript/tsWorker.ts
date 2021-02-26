@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 'use strict';
 
-import * as ts from 'monaco-editor/esm/vs/language/typescript/lib/typescriptServices';
+import * as ts from '@casual-simulation/aux-custom-portals/monaco/typescript/lib/typescriptServices';
 import { libFileMap } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
 import {
     Diagnostic,

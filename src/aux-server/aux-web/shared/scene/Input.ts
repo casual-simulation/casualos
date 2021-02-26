@@ -1,5 +1,11 @@
 import Vue from 'vue';
-import { Vector2, Vector3, Ray, Group, Object3D } from 'three';
+import {
+    Vector2,
+    Vector3,
+    Ray,
+    Group,
+    Object3D,
+} from '@casual-simulation/three';
 import { find, some } from 'lodash';
 import { Viewport } from './Viewport';
 import { Game } from './Game';

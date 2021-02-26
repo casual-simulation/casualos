@@ -230,7 +230,7 @@ import {
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, del, insert, preserve } from '../aux-format-2';
-import { Euler, Vector3, Plane, Ray } from 'three';
+import { Euler, Vector3, Plane, Ray } from '@casual-simulation/three';
 import mime from 'mime';
 import TWEEN from '@tweenjs/tween.js';
 import './PerformanceNowPolyfill';
@@ -601,7 +601,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             __energyCheck,
 
-            player: {
+            os: {
                 toast,
                 showJoinCode,
                 requestFullscreenMode,
@@ -637,8 +637,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 unloadServer,
                 importAUX,
                 replaceDragBot,
-
-                getBot: getPlayerBot,
                 isInDimension,
                 getCurrentDimension,
                 getCurrentServer,
@@ -1605,13 +1603,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Get's the current player's bot.
-     */
-    function getPlayerBot(): RuntimeBot {
-        return context.playerBot;
-    }
-
-    /**
      * Derermines whether the player is in the given dimension.
      * @param dimension The dimension.
      */
@@ -1962,17 +1953,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Registers a custom portal with the given source code.
      * @param portalId The ID of the portal.
+     * @param bot The bot that should be used to configure the portal.
      * @param tagOrSource The tag or source code that the portal should be created from.
      * @param options The options for the portal.
      */
     function openCustomPortal(
         portalId: string,
-        tagOrSource: string,
+        bot: Bot | string,
+        tagOrSource: string = null,
         options: OpenCustomPortalOptions = {}
     ): Promise<void> {
         const task = context.createTask();
         const event = calcOpenCustomPortal(
             portalId,
+            getID(bot),
             tagOrSource,
             {
                 mode: options?.mode || 'tag',
@@ -4677,8 +4671,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getCameraPosition(
         portal: 'page' | 'inventory' = 'page'
     ): { x: number; y: number; z: number } {
-        const user = context.playerBot;
-        if (!user) {
+        const bot = (<any>globalThis)[`${portal}PortalBot`];
+        if (!bot) {
             return {
                 x: NaN,
                 y: NaN,
@@ -4687,9 +4681,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return {
-            x: user.tags[`${portal}CameraPositionX`],
-            y: user.tags[`${portal}CameraPositionY`],
-            z: user.tags[`${portal}CameraPositionZ`],
+            x: bot.tags[`cameraPositionX`],
+            y: bot.tags[`cameraPositionY`],
+            z: bot.tags[`cameraPositionZ`],
         };
     }
 
@@ -4700,8 +4694,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getCameraRotation(
         portal: 'page' | 'inventory' = 'page'
     ): { x: number; y: number; z: number } {
-        const user = context.playerBot;
-        if (!user) {
+        const bot = (<any>globalThis)[`${portal}PortalBot`];
+        if (!bot) {
             return {
                 x: NaN,
                 y: NaN,
@@ -4710,9 +4704,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return {
-            x: user.tags[`${portal}CameraRotationX`],
-            y: user.tags[`${portal}CameraRotationY`],
-            z: user.tags[`${portal}CameraRotationZ`],
+            x: bot.tags[`cameraRotationX`],
+            y: bot.tags[`cameraRotationY`],
+            z: bot.tags[`cameraRotationZ`],
         };
     }
 

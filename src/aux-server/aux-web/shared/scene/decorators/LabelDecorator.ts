@@ -18,7 +18,12 @@ import {
     BotLabelFontSize,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
-import { Color, Vector3, Box3, PerspectiveCamera } from 'three';
+import {
+    Color,
+    Vector3,
+    Box3,
+    PerspectiveCamera,
+} from '@casual-simulation/three';
 import { WordBubbleElement } from '../WordBubbleElement';
 import { Game } from '../Game';
 import { Orthographic_FrustrumSize } from '../CameraRigFactory';

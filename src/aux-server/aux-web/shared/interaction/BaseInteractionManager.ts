@@ -6,7 +6,7 @@ import {
     OrthographicCamera,
     Ray,
     Color,
-} from 'three';
+} from '@casual-simulation/three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
 import {
     BotCalculationContext,

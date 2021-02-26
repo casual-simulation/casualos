@@ -1,6 +1,6 @@
 import { disposeObject3D } from '../SceneUtils';
 import { ObjectPool } from './ObjectPool';
-import { ArrowHelper, Vector3 } from 'three';
+import { ArrowHelper, Vector3 } from '@casual-simulation/three';
 
 export class ArrowHelperPool extends ObjectPool<ArrowHelper> {
     constructor(name?: string, poolEmptyWarn?: boolean) {

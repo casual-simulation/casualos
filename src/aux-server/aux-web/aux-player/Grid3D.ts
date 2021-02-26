@@ -1,4 +1,4 @@
-import { Ray, Vector3, Vector2 } from 'three';
+import { Ray, Vector3, Vector2 } from '@casual-simulation/three';
 
 /**
  * Defines an interface for a 3D grid.

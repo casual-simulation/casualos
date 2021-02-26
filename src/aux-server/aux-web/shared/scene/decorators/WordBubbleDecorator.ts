@@ -7,7 +7,7 @@ import {
 import { WordBubble3D } from '../WordBubble3D';
 import { WordBubbleElement } from '../WordBubbleElement';
 import { setLayer, convertToBox2 } from '../SceneUtils';
-import { Scene, Box3, Vector3, Color } from 'three';
+import { Scene, Box3, Vector3, Color } from '@casual-simulation/three';
 
 export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
     /**
@@ -77,7 +77,7 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
 
         let elementsBoundingBox: Box3 = null;
 
-        this._elements.forEach(e => {
+        this._elements.forEach((e) => {
             let elementBox = e.getBoundingBox();
             if (elementBox) {
                 if (elementsBoundingBox === null) {

@@ -7,7 +7,7 @@ import {
     Euler,
     Matrix4,
     Vector2,
-} from 'three';
+} from '@casual-simulation/three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
 import {
     Bot,
@@ -71,6 +71,7 @@ import { Physics } from '../../shared/scene/Physics';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { PlayerBotDragOperation } from './DragOperation/PlayerBotDragOperation';
 import { PlayerModDragOperation } from './DragOperation/PlayerModDragOperation';
+import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -396,54 +397,57 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     protected _updateCameraOffsets() {
         for (let sim of this._game.getSimulations()) {
             const rig = sim.getMainCameraRig();
-            const userBot = sim.simulation.helper.userBot;
-            if (!userBot) {
+            const [portal, gridScale] = portalInfoForSim(sim);
+            const portalBot = getPortalConfigBot(
+                sim.simulation,
+                `${portal}Portal`
+            );
+            if (!portalBot) {
                 continue;
             }
-            const [portal, gridScale] = portalInfoForSim(sim);
 
             const targetXPos =
                 calculateNumericalTagValue(
                     null,
-                    userBot,
-                    `${portal}CameraPositionOffsetX`,
+                    portalBot,
+                    `cameraPositionOffsetX`,
                     0
                 ) * gridScale;
             const targetYPos =
                 calculateNumericalTagValue(
                     null,
-                    userBot,
-                    `${portal}CameraPositionOffsetZ`,
+                    portalBot,
+                    `cameraPositionOffsetZ`,
                     0
                 ) * gridScale;
             const targetZPos =
                 calculateNumericalTagValue(
                     null,
-                    userBot,
-                    `${portal}CameraPositionOffsetY`,
+                    portalBot,
+                    `cameraPositionOffsetY`,
                     0
                 ) * -gridScale;
 
             const targetXRot = calculateNumericalTagValue(
                 null,
-                userBot,
-                `${portal}CameraRotationOffsetX`,
+                portalBot,
+                `cameraRotationOffsetX`,
                 0
             );
             const targetYRot = calculateNumericalTagValue(
                 null,
-                userBot,
-                `${portal}CameraRotationOffsetZ`,
+                portalBot,
+                `cameraRotationOffsetZ`,
                 0
             );
             const targetZRot = calculateNumericalTagValue(
                 null,
-                userBot,
-                `${portal}CameraRotationOffsetY`,
+                portalBot,
+                `cameraRotationOffsetY`,
                 0
             );
 
-            const transformer = getBotTransformer(null, userBot);
+            const transformer = getBotTransformer(null, portalBot);
             let hasParent = false;
             if (transformer) {
                 const bots = sim.findBotsById(transformer);
@@ -543,13 +547,12 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             const [portal, gridScale, inverseScale] = portalInfoForSim(sim);
 
             let update = {
-                ...inputUpdate,
-                [`${portal}CameraPositionX`]: cameraWorld.x * inverseScale,
-                [`${portal}CameraPositionY`]: -cameraWorld.z * inverseScale,
-                [`${portal}CameraPositionZ`]: cameraWorld.y * inverseScale,
-                [`${portal}CameraRotationX`]: cameraRotation.x,
-                [`${portal}CameraRotationY`]: cameraRotation.z,
-                [`${portal}CameraRotationZ`]: cameraRotation.y,
+                [`cameraPositionX`]: cameraWorld.x * inverseScale,
+                [`cameraPositionY`]: -cameraWorld.z * inverseScale,
+                [`cameraPositionZ`]: cameraWorld.y * inverseScale,
+                [`cameraRotationX`]: cameraRotation.x,
+                [`cameraRotationY`]: cameraRotation.z,
+                [`cameraRotationZ`]: cameraRotation.y,
             };
 
             for (let i = 0; i < draggableGroups.length; i++) {
@@ -584,7 +587,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 const worldRotation = new Euler();
                 worldRotation.setFromRotationMatrix(mat);
 
-                Object.assign(update, {
+                Object.assign(inputUpdate, {
                     [`mousePointerPositionX`]: ray.origin.x * inverseScale,
                     [`mousePointerPositionY`]: -ray.origin.z * inverseScale,
                     [`mousePointerPositionZ`]: ray.origin.y * inverseScale,
@@ -620,7 +623,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                         inputStates
                     );
 
-                    Object.assign(update, {
+                    Object.assign(inputUpdate, {
                         ...inputStates,
                         [`${hand}PointerPositionX`]:
                             ray.origin.x * inverseScale,
@@ -636,29 +639,20 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 }
             }
 
-            const userBot = sim.simulation.helper.userBot;
-            for (let key in update) {
-                const userValue = userBot.tags[key];
-                const updateValue = update[key];
-                if (
-                    userValue === updateValue ||
-                    (!hasValue(userValue) && !hasValue(updateValue)) ||
-                    (hasValue(userValue) &&
-                        hasValue(updateValue) &&
-                        isEqual(userValue, updateValue)) ||
-                    (typeof userValue === 'number' &&
-                        typeof updateValue === 'number' &&
-                        isNaN(userValue) &&
-                        isNaN(updateValue))
-                ) {
-                    delete update[key];
-                }
+            // We have to postfix with "Portal" because the portal names are "pagePortal"
+            // and "inventoryPortal" but are abbreviated to "page" and "inventory".
+            const portalBot = getPortalConfigBot(
+                sim.simulation,
+                `${portal}Portal`
+            );
+
+            if (portalBot) {
+                applyUpdateToBot(sim.simulation, update, portalBot);
             }
 
-            if (Object.keys(update).length > 0) {
-                sim.simulation.helper.updateBot(sim.simulation.helper.userBot, {
-                    tags: update,
-                });
+            const userBot = sim.simulation.helper.userBot;
+            if (userBot) {
+                applyUpdateToBot(sim.simulation, inputUpdate, userBot);
             }
         }
 
@@ -690,7 +684,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 }
 
 function portalInfoForSim(sim: Simulation3D) {
-    let portal: PortalType;
+    let portal: 'page' | 'inventory';
     let gridScale: number;
     if (sim instanceof PlayerPageSimulation3D) {
         portal = 'page';
@@ -702,4 +696,34 @@ function portalInfoForSim(sim: Simulation3D) {
     let inverseScale = 1 / gridScale;
 
     return [portal, gridScale, inverseScale] as const;
+}
+
+async function applyUpdateToBot(
+    simulation: Simulation,
+    update: BotTags,
+    bot: Bot
+) {
+    for (let key in update) {
+        const portalValue = bot.tags[key];
+        const updateValue = update[key];
+        if (
+            portalValue === updateValue ||
+            (!hasValue(portalValue) && !hasValue(updateValue)) ||
+            (hasValue(portalValue) &&
+                hasValue(updateValue) &&
+                isEqual(portalValue, updateValue)) ||
+            (typeof portalValue === 'number' &&
+                typeof updateValue === 'number' &&
+                isNaN(portalValue) &&
+                isNaN(updateValue))
+        ) {
+            delete update[key];
+        }
+    }
+
+    if (Object.keys(update).length > 0) {
+        await simulation.helper.updateBot(bot, {
+            tags: update,
+        });
+    }
 }

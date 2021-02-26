@@ -23,7 +23,7 @@ import {
     CLICK_ACTION_NAME,
     onClickArg,
 } from '@casual-simulation/aux-common';
-import { Color } from 'three';
+import { Color } from '@casual-simulation/three';
 import {
     BrowserSimulation,
     watchPortalConfigBot,
@@ -31,6 +31,7 @@ import {
 import { tap } from 'rxjs/operators';
 import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
 import { Simulation } from '@casual-simulation/aux-vm';
+import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 
 /**
  * Defines a class that is able to watch dimension confic bots and update values.
@@ -85,7 +86,7 @@ export class MenuPortalConfig implements SubscriptionLike {
         );
     }
 
-    constructor(portalTag: string, simulation: BrowserSimulation) {
+    constructor(portalTag: string, simulation: RemoteSimulation) {
         this._portalTag = portalTag;
         this._updated = new Subject();
         this._simulation = simulation;

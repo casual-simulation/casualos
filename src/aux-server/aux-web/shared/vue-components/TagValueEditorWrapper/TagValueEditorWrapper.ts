@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
 import { Input } from '../../scene/Input';
-import { Vector2 } from 'three';
+import { Vector2 } from '@casual-simulation/three';
 
 @Component({
     components: {},

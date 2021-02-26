@@ -18,6 +18,11 @@
     --ifm-contents-link-color:#d3a31f;
   }
   
+html:not([data-theme="dark"]) .badge.badge--normal {
+    --ifm-badge-border-color: var(--ifm-color-black);
+    --ifm-badge-color: var(--ifm-color-black);
+}
+
   .hero.hero--primary {
     --ifm-hero-background-color: #1c1c1c;
     --ifm-hero-text-color: rgb(235, 237, 240);

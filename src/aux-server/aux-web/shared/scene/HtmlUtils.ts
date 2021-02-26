@@ -3,7 +3,7 @@ import {
     PerspectiveCamera,
     OrthographicCamera,
     Vector2,
-} from 'three';
+} from '@casual-simulation/three';
 import { HtmlMixer } from './HtmlMixer';
 import Bowser from 'bowser';
 

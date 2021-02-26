@@ -298,7 +298,6 @@ export interface BotTags {
     ['orientationMode']?: string;
     ['anchorPoint']?: string;
     ['creator']?: string;
-    ['configBot']?: string;
     ['progressBar']?: unknown;
     ['progressBarColor']?: unknown;
     ['progressBarBackgroundColor']?: unknown;
@@ -315,17 +314,11 @@ export interface BotTags {
     ['menuPortal']?: string;
     ['leftWristPortal']?: string;
     ['rightWristPortal']?: string;
-    ['pagePortalConfigBot']?: string;
-    ['sheetPortalConfigBot']?: string;
-    ['inventoryPortalConfigBot']?: string;
-    ['menuPortalConfigBot']?: string;
-    ['leftWristPortalConfigBot']?: string;
-    ['rightWristPortalConfigBot']?: string;
     ['editingBot']?: string;
     cursorStartIndex?: number;
     cursorEndIndex?: number;
-    ['pagePixelWidth']?: number;
-    ['pagePixelHeight']?: number;
+    ['pixelWidth']?: number;
+    ['pixelHeight']?: number;
 
     // Admin channel task tags
     ['auxRunningTasks']?: boolean;
@@ -1339,48 +1332,28 @@ export const KNOWN_TAGS: string[] = [
     'menuPortal',
     'leftWristPortal',
     'rightWristPortal',
-    'pagePortalConfigBot',
-    `${SHEET_PORTAL}ConfigBot`,
-    `${IDE_PORTAL}ConfigBot`,
-    'inventoryPortalConfigBot',
-    'menuPortalConfigBot',
-    'leftWristPortalConfigBot',
-    'rightWristPortalConfigBot',
 
     MEET_PORTAL,
-    `${MEET_PORTAL}ConfigBot`,
     DATA_PORTAL,
     TAG_PORTAL,
     TAG_PORTAL_SPACE,
-    `${TAG_PORTAL}ConfigBot`,
 
-    'pageCameraPositionX',
-    'pageCameraPositionY',
-    'pageCameraPositionZ',
-    'pageCameraPositionOffsetX',
-    'pageCameraPositionOffsetY',
-    'pageCameraPositionOffsetZ',
-    'inventoryCameraPositionX',
-    'inventoryCameraPositionY',
-    'inventoryCameraPositionZ',
-    'inventoryCameraPositionOffsetX',
-    'inventoryCameraPositionOffsetY',
-    'inventoryCameraPositionOffsetZ',
+    'cameraPositionX',
+    'cameraPositionY',
+    'cameraPositionZ',
+    'cameraPositionOffsetX',
+    'cameraPositionOffsetY',
+    'cameraPositionOffsetZ',
 
-    'pageCameraRotationX',
-    'pageCameraRotationY',
-    'pageCameraRotationZ',
-    'pageCameraRotationOffsetX',
-    'pageCameraRotationOffsetY',
-    'pageCameraRotationOffsetZ',
-    'inventoryCameraRotationX',
-    'inventoryCameraRotationY',
-    'inventoryCameraRotationZ',
-    'inventoryCameraRotationOffsetX',
-    'inventoryCameraRotationOffsetY',
-    'inventoryCameraRotationOffsetZ',
-    'pagePixelWidth',
-    'pagePixelHeight',
+    'cameraRotationX',
+    'cameraRotationY',
+    'cameraRotationZ',
+    'cameraRotationOffsetX',
+    'cameraRotationOffsetY',
+    'cameraRotationOffsetZ',
+
+    'pixelWidth',
+    'pixelHeight',
     'pageTitle',
 
     'mousePointerPositionX',
@@ -1463,7 +1436,6 @@ export const KNOWN_TAGS: string[] = [
 
     'color',
     'creator',
-    'configBot',
     'draggable',
     'draggableMode',
     'positioningMode',
