@@ -3,7 +3,7 @@ import Vue from 'vue';
 import { CameraRig } from '../../scene/CameraRigFactory';
 import { Prop } from 'vue-property-decorator';
 import { EventBus } from '../../../shared/EventBus';
-import { PerspectiveCamera } from 'three';
+import { PerspectiveCamera } from '@casual-simulation/three';
 
 @Component({})
 export default class CameraType extends Vue {

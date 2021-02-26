@@ -8,7 +8,7 @@ import {
     Float32BufferAttribute,
     LineBasicMaterial,
     LineSegments,
-} from 'three';
+} from '@casual-simulation/three';
 import { GridLevel } from './GridLevel';
 import { Dictionary, flatMap, groupBy, minBy, sortBy } from 'lodash';
 import { disposeMesh } from '../SceneUtils';

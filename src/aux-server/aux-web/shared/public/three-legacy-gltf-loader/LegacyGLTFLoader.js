@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from '@casual-simulation/three';
 
 /**
  * @author Rich Tibbett / https://github.com/richtr

@@ -1,6 +1,6 @@
 import { disposeObject3D } from '../SceneUtils';
 import { ObjectPool } from './ObjectPool';
-import { Box3Helper, Vector3, Box3 } from 'three';
+import { Box3Helper, Vector3, Box3 } from '@casual-simulation/three';
 
 export class Box3HelperPool extends ObjectPool<Box3Helper> {
     constructor(name?: string, poolEmptyWarn?: boolean) {

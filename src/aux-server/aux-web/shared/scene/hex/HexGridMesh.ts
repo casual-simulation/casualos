@@ -1,4 +1,4 @@
-import { Mesh, Object3D } from 'three';
+import { Mesh, Object3D } from '@casual-simulation/three';
 import { HexGrid, hexesInRadius } from './HexGrid';
 import { HexMesh } from './HexMesh';
 import { Axial } from './Axial';
@@ -83,14 +83,14 @@ export class HexGridMesh extends Object3D {
     }
 
     dispose() {
-        this.hexes.forEach(h => {
+        this.hexes.forEach((h) => {
             disposeMesh(h);
         });
     }
 
     private _fillHexesInRadius() {
         const hexPositions = hexesInRadius(this._radius);
-        hexPositions.forEach(p => {
+        hexPositions.forEach((p) => {
             this.addAt(p);
         });
     }

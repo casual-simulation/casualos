@@ -1,5 +1,5 @@
 import { Input, InputMethod } from '../../../shared/scene/Input';
-import { Ray } from 'three';
+import { Ray } from '@casual-simulation/three';
 import { appManager } from '../../../shared/AppManager';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';

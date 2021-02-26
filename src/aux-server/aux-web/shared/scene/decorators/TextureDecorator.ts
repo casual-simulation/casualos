@@ -4,8 +4,8 @@ import {
     MeshStandardMaterial,
     SpriteMaterial,
     sRGBEncoding,
-} from 'three';
-import { MeshToonMaterial } from '../../public/MeshToonMaterial';
+    MeshToonMaterial,
+} from '@casual-simulation/three';
 import {
     BotCalculationContext,
     calculateBotValue,

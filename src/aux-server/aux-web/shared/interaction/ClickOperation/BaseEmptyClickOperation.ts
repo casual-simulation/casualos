@@ -3,7 +3,7 @@ import {
     InputMethod,
     ControllerData,
 } from '../../../shared/scene/Input';
-import { Vector2, Object3D } from 'three';
+import { Vector2, Object3D } from '@casual-simulation/three';
 import { IOperation } from '../../../shared/interaction/IOperation';
 import {
     DEFAULT_SCENE_BACKGROUND_COLOR,

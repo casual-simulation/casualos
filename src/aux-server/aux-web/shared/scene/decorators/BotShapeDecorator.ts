@@ -27,7 +27,7 @@ import {
     MathUtils as ThreeMath,
     LoopRepeat,
     LoopOnce,
-} from 'three';
+} from '@casual-simulation/three';
 import {
     createCube,
     createCubeStrokeGeometry,
@@ -44,7 +44,7 @@ import {
 } from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
-import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
+import { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
 import { getGLTFPool } from '../GLTFHelpers';
 import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
 import { Game } from '../Game';

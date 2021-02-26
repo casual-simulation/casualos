@@ -13,7 +13,7 @@ import {
     Vector3,
     Vector2,
     Mesh,
-} from 'three';
+} from '@casual-simulation/three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 import { InventorySimulation3D } from './InventorySimulation3D';
 import { Viewport } from '../../shared/scene/Viewport';

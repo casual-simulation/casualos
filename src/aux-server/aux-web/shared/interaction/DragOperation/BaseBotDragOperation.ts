@@ -1,6 +1,12 @@
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
-import { Vector2, Object3D, Vector3, Euler, Intersection } from 'three';
+import {
+    Vector2,
+    Object3D,
+    Vector3,
+    Euler,
+    Intersection,
+} from '@casual-simulation/three';
 import {
     Bot,
     botUpdated,

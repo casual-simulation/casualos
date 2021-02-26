@@ -1,4 +1,4 @@
-import { Color } from 'three';
+import { Color } from '@casual-simulation/three';
 
 let cursorColors = document.createElement('style');
 document.body.appendChild(cursorColors);

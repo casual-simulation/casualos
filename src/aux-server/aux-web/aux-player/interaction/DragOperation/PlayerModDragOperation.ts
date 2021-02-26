@@ -18,7 +18,7 @@ import {
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { BaseModDragOperation } from '../../../shared/interaction/DragOperation/BaseModDragOperation';
 import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
-import { Vector2, Ray } from 'three';
+import { Vector2, Ray } from '@casual-simulation/three';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';

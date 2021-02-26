@@ -20,8 +20,8 @@ import {
     Vector3,
     Euler,
     MathUtils as ThreeMath,
-} from 'three';
-import { MeshToonMaterial } from '../../public/MeshToonMaterial';
+    MeshToonMaterial,
+} from '@casual-simulation/three';
 import {
     isTransparent,
     disposeMesh,

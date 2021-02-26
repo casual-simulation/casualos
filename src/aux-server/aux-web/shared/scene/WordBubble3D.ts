@@ -10,7 +10,7 @@ import {
     Shape,
     MeshBasicMaterial,
     ShapeBufferGeometry,
-} from 'three';
+} from '@casual-simulation/three';
 import { merge } from '@casual-simulation/aux-common/utils';
 import { setLayerMask, buildSRGBColor } from './SceneUtils';
 

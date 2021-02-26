@@ -11,7 +11,7 @@ import {
     Vector2,
     Object3D,
     Box3Helper,
-} from 'three';
+} from '@casual-simulation/three';
 import { groupBy, keys } from 'lodash';
 import { HexGridMesh, HexMesh } from '../hex';
 import { GridLevel } from './GridLevel';

@@ -1,5 +1,5 @@
 declare module 'troika-three-text' {
-    import { Color, Material, Mesh } from 'three';
+    import { Color, Material, Mesh } from '@casual-simulation/three';
 
     /**
      * Defines a class that is able to render some text as a Three.js mesh.

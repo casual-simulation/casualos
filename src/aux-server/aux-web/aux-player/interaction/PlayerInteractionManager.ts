@@ -7,7 +7,7 @@ import {
     Euler,
     Matrix4,
     Vector2,
-} from 'three';
+} from '@casual-simulation/three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
 import {
     Bot,

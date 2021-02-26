@@ -6,8 +6,8 @@
  */
 
 // Kallyn Gowdy <kal@casualsimulation.com>
-// Changed to require the 'three' module instead of 'three-full'
-const {Object3D, Matrix4, Vector3, Quaternion, Euler, _Math} = require('three')
+// Changed to require the '@casual-simulation/three' module instead of 'three-full'
+const {Object3D, Matrix4, Vector3, Quaternion, Euler, _Math} = require('@casual-simulation/three')
 
 
 

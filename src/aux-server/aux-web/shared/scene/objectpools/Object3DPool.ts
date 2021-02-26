@@ -1,4 +1,4 @@
-import { Object3D } from 'three';
+import { Object3D } from '@casual-simulation/three';
 import { disposeObject3D } from '../SceneUtils';
 import { ObjectPool } from './ObjectPool';
 

@@ -1,4 +1,4 @@
-import { Object3D } from 'three';
+import { Object3D } from '@casual-simulation/three';
 
 /**
  * Defines an interface for a game object that contains a set of colliders.

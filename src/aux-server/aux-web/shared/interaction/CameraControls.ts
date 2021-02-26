@@ -9,7 +9,7 @@ import {
     OrthographicCamera,
     Plane,
     Camera,
-} from 'three';
+} from '@casual-simulation/three';
 import { InputType, MouseButtonId, Input } from '../../shared/scene/Input';
 import { lerp, normalize } from '@casual-simulation/aux-common';
 import { Viewport } from '../scene/Viewport';

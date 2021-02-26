@@ -12,7 +12,7 @@ import {
     Plane,
     PlaneHelper,
     Quaternion,
-} from 'three';
+} from '@casual-simulation/three';
 import { getOptionalValue } from '../shared/SharedUtils';
 import { DebugObjectManager } from '../shared/scene/debugobjectmanager/DebugObjectManager';
 import { Physics } from '../shared/scene/Physics';

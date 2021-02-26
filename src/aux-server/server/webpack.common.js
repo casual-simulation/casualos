@@ -59,6 +59,10 @@ module.exports = {
     plugins: [
         new webpack.ContextReplacementPlugin(/socket\.io/, /socket\.io-client/),
         new webpack.ContextReplacementPlugin(/express/, /express/),
+        new webpack.NormalModuleReplacementPlugin(
+            /^three$/,
+            '@casual-simulation/three'
+        ),
         new webpack.DefinePlugin({
             GIT_HASH: JSON.stringify(commitHash),
             GIT_TAG: JSON.stringify(latestTag),

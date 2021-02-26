@@ -19,7 +19,7 @@ module.exports = [
                 '../dist/esbuild/casualos.meta.json'
             ),
             plugins: [
-                emptyModulePlugin('three'),
+                emptyModulePlugin('@casual-simulation/three'),
                 emptyModulePlugin('scrypt-js'),
                 emptyModulePlugin('base64-js'),
                 emptyModulePlugin('hash.js', /^hash\.js$/),
@@ -58,7 +58,7 @@ module.exports = [
                 'rxjs/operators',
                 'base64-js',
                 'hash.js',
-                'three',
+                '@casual-simulation/three',
                 'scrypt-js',
                 'tweetnacl',
                 'astring',

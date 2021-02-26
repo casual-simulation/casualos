@@ -13,7 +13,7 @@ import {
     Euler,
     BufferGeometry,
     BufferAttribute,
-} from 'three';
+} from '@casual-simulation/three';
 
 import {
     isMinimized,

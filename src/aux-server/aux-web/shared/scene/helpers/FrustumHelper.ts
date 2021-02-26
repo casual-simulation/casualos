@@ -13,7 +13,7 @@ import {
     PerspectiveCamera,
     LineSegments,
     Float32BufferAttribute,
-} from 'three';
+} from '@casual-simulation/three';
 
 const _vector = new Vector3();
 const _camera = new Camera();

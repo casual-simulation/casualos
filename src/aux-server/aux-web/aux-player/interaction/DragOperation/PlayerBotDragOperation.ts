@@ -27,7 +27,7 @@ import {
     Box3,
     Matrix4,
     Group,
-} from 'three';
+} from '@casual-simulation/three';
 import { Physics } from '../../../shared/scene/Physics';
 import { Input, InputMethod } from '../../../shared/scene/Input';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';

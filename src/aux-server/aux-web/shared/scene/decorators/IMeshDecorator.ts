@@ -1,4 +1,4 @@
-import { Mesh, Group, Sprite, LineSegments } from 'three';
+import { Mesh, Group, Sprite, LineSegments } from '@casual-simulation/three';
 import { AuxBot3D } from '../AuxBot3D';
 import { Event, ArgEvent } from '@casual-simulation/aux-common/Events';
 

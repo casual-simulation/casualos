@@ -24,7 +24,7 @@ import {
     ON_ANY_MAX_LOD_ENTER_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import { calculateScale, percentOfScreen } from '../SceneUtils';
-import { Camera } from 'three';
+import { Camera } from '@casual-simulation/three';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { DebugObjectManager } from '../debugobjectmanager/DebugObjectManager';
 

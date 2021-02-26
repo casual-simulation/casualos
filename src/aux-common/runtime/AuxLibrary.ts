@@ -230,7 +230,7 @@ import {
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, del, insert, preserve } from '../aux-format-2';
-import { Euler, Vector3, Plane, Ray } from 'three';
+import { Euler, Vector3, Plane, Ray } from '@casual-simulation/three';
 import mime from 'mime';
 import TWEEN from '@tweenjs/tween.js';
 import './PerformanceNowPolyfill';

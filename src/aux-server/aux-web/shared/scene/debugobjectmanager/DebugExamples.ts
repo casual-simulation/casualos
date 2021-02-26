@@ -1,4 +1,4 @@
-import { Box3, Vector3, Color, Ray } from 'three';
+import { Box3, Vector3, Color, Ray } from '@casual-simulation/three';
 import { Time } from '../Time';
 import { DebugObjectManager } from './DebugObjectManager';
 
@@ -46,7 +46,7 @@ export function drawExamples(time: Time): void {
         new Vector3(_box.min.x, _box.max.y, _box.min.z),
     ];
 
-    boxCorners.forEach(point => {
+    boxCorners.forEach((point) => {
         DebugObjectManager.drawPoint(point, 0.5, new Color('white'));
     });
 
@@ -95,7 +95,7 @@ export function drawExamples(time: Time): void {
     // Apply letter point transformations
 
     letters.forEach((letter, letterIndex) => {
-        letter.forEach(line => {
+        letter.forEach((line) => {
             // Apply line point transformations.
             line.start.x += xOffset;
             line.start.multiplyScalar(scale);

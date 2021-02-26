@@ -1,4 +1,4 @@
-import { Vector3, Vector2 } from 'three';
+import { Vector3, Vector2 } from '@casual-simulation/three';
 
 /**
  * Defines an interface that represents a single grid tile.
