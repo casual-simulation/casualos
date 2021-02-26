@@ -9,6 +9,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const common = require('./webpack.common.js');
+const childProcess = require('child_process');
 
 const latestTag = childProcess
     .execSync('git describe --abbrev=0 --tags')
