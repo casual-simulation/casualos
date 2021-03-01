@@ -27,6 +27,7 @@ import {
     OpenCustomPortalOptions,
     DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
     stateUpdatedEvent,
+    registerBuiltinPortal,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
@@ -497,6 +498,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this._registerSubscriptions();
         }
 
+        await this._initPortalBots();
+
         await this._initBuilderBots();
 
         if (!this._checkAccessAllowed()) {
@@ -653,6 +656,22 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 '[BaseAuxChannel] Unable to init user dimension bot:',
                 err
             );
+        }
+    }
+
+    private async _initPortalBots() {
+        try {
+            if (
+                this._config.config.builtinPortals &&
+                this._config.config.builtinPortals.length > 0
+            ) {
+                let actions = this._config.config.builtinPortals.map((portal) =>
+                    registerBuiltinPortal(portal)
+                );
+                this._runtime.process(actions);
+            }
+        } catch (err) {
+            console.error('[BaseAuxChannel] Unable to init portal bots:', err);
         }
     }
 

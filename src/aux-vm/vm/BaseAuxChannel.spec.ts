@@ -339,6 +339,46 @@ describe('BaseAuxChannel', () => {
             );
         });
 
+        it('should ensure that bots are created for builtin portals', async () => {
+            const tempLocal = new MemoryPartitionImpl({
+                type: 'memory',
+                initialState: {},
+            });
+            config = {
+                config: {
+                    version: 'v1.0.0',
+                    versionHash: 'hash',
+                    builtinPortals: ['pagePortal', 'sheetPortal'],
+                },
+                partitions: {
+                    shared: {
+                        type: 'memory',
+                        partition: memory,
+                    },
+                    tempLocal: {
+                        type: 'memory',
+                        partition: tempLocal,
+                    },
+                },
+            };
+            channel = new AuxChannelImpl(user, device, config);
+
+            uuidMock
+                .mockReturnValueOnce('uuid0')
+                .mockReturnValueOnce('uuid1')
+                .mockReturnValueOnce('uuid2');
+
+            await channel.initAndWait();
+
+            const pagePortal = channel.helper.botsState['uuid1'];
+            const sheetPortal = channel.helper.botsState['uuid2'];
+            expect(pagePortal).toEqual(createBot('uuid1', {}, 'tempLocal'));
+            expect(sheetPortal).toEqual(createBot('uuid2', {}, 'tempLocal'));
+
+            expect(tempLocal.state['uuid1']).toEqual(pagePortal);
+            expect(tempLocal.state['uuid2']).toEqual(sheetPortal);
+        });
+
         it('should keep dimensions in users that define a dimension', async () => {
             await memory.applyEvents([
                 botAdded(
