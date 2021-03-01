@@ -10,6 +10,10 @@
     -   It is a shout and is triggered when an unhandled error occurs in a listen tag.
 -   Improved CasualOS to now include the Bot ID and tag name in internal console logs for unhandled errors.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where portal bots may not be defined before `@onServerSubscribed` is triggered.
+
 ## V1.4.7
 
 #### Date: 2/26/2021
