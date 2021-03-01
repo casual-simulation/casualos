@@ -64,7 +64,7 @@ export default class MenuBot extends Vue {
     labelAlign: BotLabelAlignment = 'center';
     backgroundColor: string = '#FFF';
     scaleY: number = 1;
-    extraStyle: Object = {};
+    extraStyle: any = {};
     icon: string = null;
     iconIsURL: boolean = false;
     progress: number = null;
@@ -98,6 +98,14 @@ export default class MenuBot extends Vue {
         return {
             '--menu-label-color': this.labelColor || 'rgba(0,0,0,0.54)',
         };
+    }
+
+    get whiteSpace() {
+        return (
+            this.extraStyle?.['white-space'] ??
+            this.extraStyle?.['whiteSpace'] ??
+            'normal'
+        );
     }
 
     @Watch('item')
