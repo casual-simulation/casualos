@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V1.4.6
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `@onError` listen tag.
+    -   It is a shout and is triggered when an unhandled error occurs in a listen tag.
+-   Improved CasualOS to now include the Bot ID and tag name in internal console logs for unhandled errors.
+
 ## V1.4.7
 
 #### Date: 2/26/2021
