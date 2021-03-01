@@ -13,6 +13,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where portal bots may not be defined before `@onServerSubscribed` is triggered.
+-   Fixed an issue where the `white-space` CSS property could not be used on menu bots.
 
 ## V1.4.7
 
