@@ -1224,3 +1224,31 @@ let that: {
     tags: string[]
 }[];
 ```
+
+### `@onError`
+
+A shout that is sent when an unhandled error occurs in a listen tag.
+Errors can occur for many reasons, but common ones include data being unexpectedly missing (e.g. "Cannot read property xyz of undefined") or invalid usage (e.g. "xyz is not a function").
+
+Note that errors which occur in a `@onError` listen tag will not trigger further `onError` calls.
+To view those errors, open the developer tools console.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The bot that the error originated from.
+     */
+    bot: Bot,
+
+    /**
+     * The tag that the error originated from.
+     */
+    tag: string,
+
+    /**
+     * The error that occurred.
+     */
+    error: Error
+}
+```
