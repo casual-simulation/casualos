@@ -1245,6 +1245,11 @@ export const ON_SHEET_BOT_ID_CLICK = 'onSheetBotIDClick';
 export const ON_SHEET_BOT_CLICK = 'onSheetBotClick';
 
 /**
+ * The name of the event that is triggered when a listen tag encounters an unhandled error.
+ */
+export const ON_ERROR = 'onError';
+
+/**
  * The tag used to set the space that the tag portal operates in.
  */
 export const TAG_PORTAL_SPACE: string = 'tagPortalSpace';
