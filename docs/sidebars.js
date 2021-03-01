@@ -7,8 +7,19 @@
 
 module.exports = {
     docs: {
-      'Reference Documentation': ['tags', 'listen-tags', 'actions', 'variables'],
-      'Custom Portals': ['custom-portals/introduction']
+      'Reference Documentation': [
+            'tags', 
+            { 
+                type: 'category',
+                label: 'Listen Tags',
+                items: [
+                    'listen-tags/tags',
+                    'listen-tags/variables'
+                ]
+            },
+            'actions'
+        ],
+        'Custom Portals': ['custom-portals/introduction']
     },
   };
   
