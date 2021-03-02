@@ -14,6 +14,7 @@ import {
     ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
     calculateStringTagValue,
     calculateStringListTagValue,
+    ON_PORTAL_CHANGED_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { appManager } from '../../shared/AppManager';
@@ -191,6 +192,14 @@ export default class PlayerHome extends Vue {
                 const value = calculateBotValue(calc, update.bot, portal);
                 actions.push(
                     ...sim.helper.actions([
+                        {
+                            bots: null,
+                            eventName: ON_PORTAL_CHANGED_ACTION_NAME,
+                            arg: {
+                                portal: portal,
+                                dimension: value,
+                            },
+                        },
                         {
                             bots: null,
                             eventName: ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,

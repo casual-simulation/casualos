@@ -1090,10 +1090,16 @@ export const ON_SERVER_UNSUBSCRIBED_ACTION_NAME: string =
 export const ON_SERVER_LEAVE_ACTION_NAME: string = 'onServerLeave';
 
 /**
- * The name of the event that is triggered when portal tag is changed on the player.
+ * The name of the event that is triggered when portal tag is changed on the config bot.
  */
+// TODO: Remove this action
 export const ON_PLAYER_PORTAL_CHANGED_ACTION_NAME: string =
     'onPlayerPortalChanged';
+
+/**
+ * The name of the event that is triggered when portal tag is changed on the config bot.
+ */
+export const ON_PORTAL_CHANGED_ACTION_NAME: string = 'onPortalChanged';
 
 /**
  * The name of the event that is triggered when a script is executed.
@@ -1568,7 +1574,7 @@ export const KNOWN_TAGS: string[] = [
     ON_SERVER_JOINED_ACTION_NAME,
     ON_SERVER_LEAVE_ACTION_NAME,
 
-    ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
+    ON_PORTAL_CHANGED_ACTION_NAME,
     'onKeyDown',
     'onKeyUp',
     ON_GRID_CLICK_ACTION_NAME,
