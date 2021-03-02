@@ -54,7 +54,7 @@ describe('BotPartition', () => {
             ),
         ]);
 
-        expect(client.stories).toEqual({
+        expect(client.servers).toEqual({
             server: {
                 test: createBot('test', {
                     abc: 'def',
@@ -77,7 +77,7 @@ describe('BotPartition', () => {
             }),
         ]);
 
-        expect(client.stories).toEqual({
+        expect(client.servers).toEqual({
             server: {
                 test: createBot('test', {
                     abc: 'def',
@@ -96,7 +96,7 @@ describe('BotPartition', () => {
             botRemoved('test'),
         ]);
 
-        expect(client.stories).toEqual({
+        expect(client.servers).toEqual({
             server: {
                 test: createBot('test', {
                     abc: 'def',
@@ -341,7 +341,7 @@ describe('BotPartition', () => {
 
             await waitAsync();
 
-            const bots = await client.stories['server'];
+            const bots = await client.servers['server'];
             expect(bots).toEqual({});
 
             // Should emit them in order of ID

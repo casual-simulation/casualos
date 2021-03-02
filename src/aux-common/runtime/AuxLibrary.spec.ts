@@ -68,9 +68,9 @@ import {
     showInput,
     share,
     unlockSpace,
-    getPlayerCount,
-    getStories,
-    getPlayers,
+    getRemoteCount,
+    getServers,
+    getRemotes,
     action,
     getServerStatuses,
     exportGpioPin,
@@ -4094,7 +4094,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.serverPlayerCount()', () => {
+        describe('server.serverRemoteCount()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
@@ -4109,11 +4109,11 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should emit a remote action with a get_player_count action', () => {
+            it('should emit a remote action with a get_remote_count action', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const action: any = library.api.server.serverPlayerCount();
+                const action: any = library.api.server.serverRemoteCount();
                 const expected = remote(
-                    getPlayerCount('channel'),
+                    getRemoteCount('channel'),
                     undefined,
                     undefined,
                     'uuid'
@@ -4125,11 +4125,11 @@ describe('AuxLibrary', () => {
 
             it('should accept a custom server ID', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const action: any = library.api.server.serverPlayerCount(
+                const action: any = library.api.server.serverRemoteCount(
                     'test'
                 );
                 const expected = remote(
-                    getPlayerCount('test'),
+                    getRemoteCount('test'),
                     undefined,
                     undefined,
                     'uuid'
@@ -4141,19 +4141,19 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serverPlayerCount('test');
+                library.api.server.serverRemoteCount('test');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
             });
         });
 
-        describe('server.totalPlayerCount()', () => {
-            it('should emit a remote action with a get_player_count action', () => {
+        describe('server.totalRemoteCount()', () => {
+            it('should emit a remote action with a get_remote_count action', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const action: any = library.api.server.totalPlayerCount();
+                const action: any = library.api.server.totalRemoteCount();
                 const expected = remote(
-                    getPlayerCount(),
+                    getRemoteCount(),
                     undefined,
                     undefined,
                     'uuid'
@@ -4165,19 +4165,19 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.totalPlayerCount();
+                library.api.server.totalRemoteCount();
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
             });
         });
 
-        describe('server.stories()', () => {
-            it('should emit a remote action with a get_stories action', () => {
+        describe('server.servers()', () => {
+            it('should emit a remote action with a get_servers action', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const action: any = library.api.server.stories();
+                const action: any = library.api.server.servers();
                 const expected = remote(
-                    getStories(),
+                    getServers(),
                     undefined,
                     undefined,
                     'uuid'
@@ -4189,7 +4189,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.stories();
+                library.api.server.servers();
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -4220,12 +4220,12 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.players()', () => {
-            it('should emit a remote action with a get_players action', () => {
+        describe('server.remotes()', () => {
+            it('should emit a remote action with a get_remotes action', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const action: any = library.api.server.players();
+                const action: any = library.api.server.remotes();
                 const expected = remote(
-                    getPlayers(),
+                    getRemotes(),
                     undefined,
                     undefined,
                     'uuid'
@@ -4237,7 +4237,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.players();
+                library.api.server.remotes();
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);

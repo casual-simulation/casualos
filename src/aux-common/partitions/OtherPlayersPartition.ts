@@ -34,7 +34,7 @@ import {
     AddBotAction,
     RemoveBotAction,
     UpdateBotAction,
-    GetPlayersAction,
+    GetRemotesAction,
     asyncResult,
     action,
     ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
@@ -212,8 +212,8 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
 
     async sendRemoteEvents(events: RemoteActions[]): Promise<void> {
         for (let event of events) {
-            if (event.type === 'remote' && event.event.type === 'get_players') {
-                const action = <GetPlayersAction>event.event;
+            if (event.type === 'remote' && event.event.type === 'get_remotes') {
+                const action = <GetRemotesAction>event.event;
                 const connectedDevices = [...this._devices.values()];
                 const sessionIds = sortBy([
                     this._user.id,

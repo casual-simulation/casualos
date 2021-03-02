@@ -27,7 +27,7 @@ import {
     UpdatedBot,
     createBot,
     botAdded,
-    getPlayers,
+    getRemotes,
     asyncResult,
     action,
     ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
@@ -153,7 +153,7 @@ describe('OtherPlayersPartition', () => {
                 expect(connection.sentMessages).toEqual([]);
             });
 
-            describe('get_players', () => {
+            describe('get_remotes', () => {
                 it(`should send an async result with the player list`, async () => {
                     setupPartition({
                         type: 'other_players_repo',
@@ -195,10 +195,10 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     await partition.sendRemoteEvents([
-                        remote(getPlayers(), undefined, undefined, 'task1'),
+                        remote(getRemotes(), undefined, undefined, 'task1'),
                     ]);
 
-                    expect(events.slice(2)).toEqual([
+                    expect(events.slice(4)).toEqual([
                         asyncResult('task1', [
                             'info1Session',
                             'info2Session',
@@ -255,10 +255,10 @@ describe('OtherPlayersPartition', () => {
                     });
 
                     await partition.sendRemoteEvents([
-                        remote(getPlayers(), undefined, undefined, 'task1'),
+                        remote(getRemotes(), undefined, undefined, 'task1'),
                     ]);
 
-                    expect(events.slice(3)).toEqual([
+                    expect(events.slice(6)).toEqual([
                         asyncResult('task1', [
                             'info1Session',
                             // Should include the current player
@@ -313,7 +313,7 @@ describe('OtherPlayersPartition', () => {
                     });
 
                     await partition.sendRemoteEvents([
-                        remote(getPlayers(), undefined, undefined, 'task1'),
+                        remote(getRemotes(), undefined, undefined, 'task1'),
                     ]);
 
                     expect(events).toEqual([

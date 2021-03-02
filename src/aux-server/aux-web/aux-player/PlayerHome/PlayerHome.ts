@@ -168,7 +168,7 @@ export default class PlayerHome extends Vue {
                                 null,
                                 update.bot,
                                 'pageTitle',
-                                'auxPlayer'
+                                'CasualOS'
                             );
                             document.title = title;
                         }

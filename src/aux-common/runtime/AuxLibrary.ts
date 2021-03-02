@@ -97,9 +97,9 @@ import {
     AsyncActions,
     ShareOptions,
     unlockSpace,
-    getPlayerCount,
-    getStories,
-    getPlayers,
+    getRemoteCount,
+    getServers,
+    getRemotes,
     action,
     getServerStatuses,
     setSpacePassword,
@@ -735,11 +735,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 restoreHistoryMarkToServer,
                 loadFile,
                 saveFile,
-                serverPlayerCount,
-                totalPlayerCount,
-                stories,
+                serverRemoteCount,
+                totalRemoteCount,
                 serverStatuses,
-                players,
+                remotes,
+                servers,
+
+                // TODO: Remove deprecated function names
+                stories: servers,
+                players: remotes,
+                serverPlayerCount: serverRemoteCount,
+                totalPlayerCount: totalRemoteCount,
             },
 
             action: {
@@ -1725,14 +1731,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Show an input box for `this` bot's label.
-     * player.showInputForTag(this, "label", {
+     * os.showInputForTag(this, "label", {
      *            title: "Change the label",
      *            type: "text"
      * });
      *
      * @example
      * // Show a color picker for the bot's color.
-     * player.showInputForTag(this, "color", {
+     * os.showInputForTag(this, "color", {
      *            title: "Change the color",
      *            type: "color",
      *            subtype: "advanced"
@@ -1756,7 +1762,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Show an input box.
-     * const result = await player.showInput({
+     * const result = await os.showInput({
      *    title: "Change the label",
      *    type: "text"
      * });
@@ -1776,7 +1782,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Send the player to the "welcome" dimension.
-     * player.goToDimension("welcome");
+     * os.goToDimension("welcome");
      */
     function goToDimension(dimension: string): GoToDimensionAction {
         const event = calcGoToDimension(dimension);
@@ -1789,7 +1795,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Send the player to wikipedia.
-     * player.goToURL("https://wikipedia.org");
+     * os.goToURL("https://wikipedia.org");
      */
     function goToURL(url: string): GoToURLAction {
         const event = calcGoToURL(url);
@@ -1802,7 +1808,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Open wikipedia in a new tab.
-     * player.openURL("https://wikipedia.org");
+     * os.openURL("https://wikipedia.org");
      */
     function openURL(url: string): OpenURLAction {
         const event = calcOpenURL(url);
@@ -1810,7 +1816,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Instructs auxPlayer to open the built-in developer console.
+     * Instructs CasualOS to open the built-in developer console.
      * The dev console provides easy access to error messages and debug logs for formulas and actions.
      */
     function openDevConsole(): OpenConsoleAction {
@@ -1825,7 +1831,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Show a checkout box for 10 cookies
-     * player.checkout({
+     * os.checkout({
      *   productId: '10_cookies',
      *   title: '10 Cookies',
      *   description: '$5.00',
@@ -1844,7 +1850,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Play a cow "moo"
-     * player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+     * os.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
      */
     function playSound(url: string) {
         const task = context.createTask();
@@ -1859,7 +1865,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Preload a cow "moo"
-     * player.bufferSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+     * os.bufferSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
      */
     function bufferSound(url: string) {
         const task = context.createTask();
@@ -1874,8 +1880,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Play and cancel a sound
-     * const id = await player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
-     * player.cancelSound(id);
+     * const id = await os.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+     * os.cancelSound(id);
      */
     function cancelSound(soundId: number | string | object) {
         const task = context.createTask();
@@ -2855,7 +2861,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Backs up all the AUX stories to a Github Gist.
+     * Backs up all the AUX servers to a Github Gist.
      * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
      */
     function backupToGithub(auth: string): RemoteAction | RemoteAction[] {
@@ -2863,7 +2869,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Backs up all the AUX stories to a zip bot.
+     * Backs up all the AUX servers to a zip bot.
      */
     function backupAsDownload(
         target: SessionSelector
@@ -3018,14 +3024,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the number of players that are viewing the current server.
+     * Gets the number of remotes that are viewing the current server.
      * @param server The server to get the statistics for. If omitted, then the current server is used.
      */
-    function serverPlayerCount(server?: string): Promise<number> {
+    function serverRemoteCount(server?: string): Promise<number> {
         const task = context.createTask(true, true);
         const actualServer = hasValue(server) ? server : getCurrentServer();
         const event = calcRemote(
-            getPlayerCount(actualServer),
+            getRemoteCount(actualServer),
             undefined,
             undefined,
             task.taskId
@@ -3034,12 +3040,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the total number of players that are connected to the server.
+     * Gets the total number of remotes that are connected to the server.
      */
-    function totalPlayerCount(): Promise<number> {
+    function totalRemoteCount(): Promise<number> {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            getPlayerCount(),
+            getRemoteCount(),
             undefined,
             undefined,
             task.taskId
@@ -3048,12 +3054,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the list of stories that are on the server.
+     * Gets the list of servers that are on the server.
      */
-    function stories(): Promise<string[]> {
+    function servers(): Promise<string[]> {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            getStories(),
+            getServers(),
             undefined,
             undefined,
             task.taskId
@@ -3062,7 +3068,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the list of stories that are on the server.
+     * Gets the list of servers that are on the server.
      */
     function serverStatuses(): Promise<
         {
@@ -3081,12 +3087,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the list of player IDs that are connected to the server.
+     * Gets the list of remote IDs that are connected to the server.
      */
-    function players(): Promise<string[]> {
+    function remotes(): Promise<string[]> {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            getPlayers(),
+            getRemotes(),
             undefined,
             undefined,
             task.taskId
@@ -3109,7 +3115,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Send a toast to all sessions for the username "bob"
-     * remote(player.toast("Hello, Bob!"), { username: "bob" });
+     * remote(os.toast("Hello, Bob!"), { username: "bob" });
      */
     function remote(
         event: BotAction,
@@ -3138,28 +3144,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sends the given shout to the given player or list of players.
-     * The other players will recieve an onRemoteWhisper event for this whisper.
+     * Sends the given shout to the given remote or list of remotes.
+     * The other remotes will recieve an onRemoteWhisper event for this whisper.
      *
-     * In effect, this allows players to communicate with each other by sending arbitrary events.
+     * In effect, this allows remotes to communicate with each other by sending arbitrary events.
      *
-     * @param playerId The ID of the other player or players to whisper to.
+     * @param remoteId The ID of the other remote or remotes to whisper to.
      * @param name The name of the event.
      * @param arg The optional argument to include in the whisper.
      */
     function remoteWhisper(
-        playerId: string | string[],
+        remoteId: string | string[],
         name: string,
         arg?: any
     ): RemoteAction | RemoteAction[] {
-        return remote(action(name, null, null, arg), playerId);
+        return remote(action(name, null, null, arg), remoteId);
     }
 
     /**
-     * Sends the given shout to all players.
-     * The other players will recieve an onRemoteWhisper event for this whisper.
+     * Sends the given shout to all remotes.
+     * The other remotes will recieve an onRemoteWhisper event for this whisper.
      *
-     * In effect, this allows players to communicate with each other by sending arbitrary events.
+     * In effect, this allows remotes to communicate with each other by sending arbitrary events.
      *
      * @param name The name of the event.
      * @param arg The optional argument to include in the whisper.

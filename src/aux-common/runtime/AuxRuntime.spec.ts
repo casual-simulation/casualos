@@ -65,7 +65,7 @@ import {
     showInput,
     asyncResult,
     asyncError,
-    getPlayerCount,
+    getRemoteCount,
     stateUpdatedEvent,
     DEFAULT_TAG_MASK_SPACE,
     DNA_TAG_PREFIX,
@@ -3274,14 +3274,14 @@ describe('AuxRuntime', () => {
             uuidMock.mockReturnValueOnce('task1');
             runtime.process([
                 runScript(
-                    'server.serverPlayerCount("test").then(result => os.toast(result))'
+                    'server.serverRemoteCount("test").then(result => os.toast(result))'
                 ),
             ]);
 
             await waitAsync();
 
             expect(events).toEqual([
-                [remote(getPlayerCount('test'), undefined, undefined, 'task1')],
+                [remote(getRemoteCount('test'), undefined, undefined, 'task1')],
             ]);
 
             runtime.process([deviceResult(null, 123, 'task1')]);
@@ -3295,14 +3295,14 @@ describe('AuxRuntime', () => {
             uuidMock.mockReturnValueOnce('task1');
             runtime.process([
                 runScript(
-                    'server.serverPlayerCount("test").catch(err => os.toast(err))'
+                    'server.serverRemoteCount("test").catch(err => os.toast(err))'
                 ),
             ]);
 
             await waitAsync();
 
             expect(events).toEqual([
-                [remote(getPlayerCount('test'), undefined, undefined, 'task1')],
+                [remote(getRemoteCount('test'), undefined, undefined, 'task1')],
             ]);
 
             runtime.process([deviceError(null, 'bad', 'task1')]);

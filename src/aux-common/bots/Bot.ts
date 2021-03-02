@@ -207,7 +207,7 @@ export interface UpdatedBot {
  * - "local" means that the bot is stored in the local storage partition.
  * - "tempLocal" means that the bot is stored in the temporary partition.
  * - "history" means that the bot represents a version of another space.
- * - "admin" means that the bot is shared across all stories.
+ * - "admin" means that the bot is shared across all servers.
  * - "player" means that the bot is temporary and shared with other players.
  * - "otherPlayers" means that the bot is temporary and shared with this player from another player.
  * - "certified" means that the bot is a certificate.
@@ -230,7 +230,6 @@ export type PortalType =
     | 'inventory'
     | 'menu'
     | 'sheet'
-    | 'stories'
     | 'meet'
     | string;
 
