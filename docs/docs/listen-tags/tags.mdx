@@ -1027,7 +1027,7 @@ let that: {
 
 ### `@onRemoteData`
 
-A shout that is sent whenever a message is received from another player.
+A shout that is sent whenever a message is received from another remote device.
 
 #### Arguments:
 ```typescript
@@ -1043,33 +1043,9 @@ let that: {
     that: any,
 
     /**
-     * The ID of the player that sent the message.
+     * The ID of the remote device that sent the message.
      */
-    playerId: string
-};
-```
-
-### `@onRemoteWhisper`
-
-A shout that is sent whenever a message is received from another player.
-
-#### Arguments:
-```typescript
-let that: {
-    /**
-     * The name of the message.
-     */
-    name: string,
-
-    /**
-     * The argument that was included in the message.
-     */
-    that: any,
-
-    /**
-     * The ID of the player that sent the message.
-     */
-    playerId: string
+    remoteId: string
 };
 ```
 
@@ -1078,14 +1054,14 @@ let that: {
 1. Show a toast when a "custom" message is received.
 ```typescript
 if (that.name === "custom") {
-    player.toast("Got message from " + that.playerId + " with " + that.that);
+    player.toast("Got message from " + that.remoteId + " with " + that.that);
 }
 ```
 
-2. Send a message back to the player that sent the message.
+2. Send a message back to the remote that sent the message.
 ```typescript
 if (that.name === "hello") {
-    remoteWhisper(that.playerId, "hi");
+    sendRemoteData(that.remoteId, "hi");
 }
 ```
 
