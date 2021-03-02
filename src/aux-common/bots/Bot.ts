@@ -1575,7 +1575,6 @@ export const KNOWN_TAGS: string[] = [
     'onWebhook',
     'onAnyListen',
     'onListen',
-    ON_REMOTE_WHISPER_ACTION_NAME,
     ON_REMOTE_DATA_ACTION_NAME,
     ON_ACTION_ACTION_NAME,
     ON_RUN_ACTION_NAME,
