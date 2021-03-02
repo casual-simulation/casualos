@@ -1066,10 +1066,16 @@ export const ON_SERVER_STREAMING_ACTION_NAME: string = 'onServerStreaming';
  */
 export const ON_SERVER_STREAM_LOST_ACTION_NAME: string = 'onServerStreamLost';
 
+// TODO: Remove this action
 /**
  * The name of the event that is triggered when a channel is loaded.
  */
 export const ON_SERVER_SUBSCRIBED_ACTION_NAME: string = 'onServerSubscribed';
+
+/**
+ * The name of the event that is triggered when a channel is loaded.
+ */
+export const ON_SERVER_JOINED_ACTION_NAME: string = 'onServerJoined';
 
 /**
  * The name of the event that is triggered when a channel is unloaded.
@@ -1554,6 +1560,9 @@ export const KNOWN_TAGS: string[] = [
     ON_SERVER_STREAM_LOST_ACTION_NAME,
     ON_SERVER_SUBSCRIBED_ACTION_NAME,
     ON_SERVER_UNSUBSCRIBED_ACTION_NAME,
+
+    ON_SERVER_JOINED_ACTION_NAME,
+
     ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
     'onKeyDown',
     'onKeyUp',
