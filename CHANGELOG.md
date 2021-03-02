@@ -7,6 +7,7 @@
 ### :boom: Breaking Changes
 
 -   `onRemoteData` now uses `that.remoteId` instead of `that.playerId`.
+-   Renamed the `portalPlayerZoom`, `portalPlayerRotationX` and `portalPlayerRotationY` tags to `portalCameraZoom` and `portalCameraRotationX` and `portalCameraRotationY`.
 
 ### :rocket: Improvements
 
