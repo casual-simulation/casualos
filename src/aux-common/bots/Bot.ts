@@ -1045,10 +1045,10 @@ export const ON_SHOUT_ACTION_NAME: string = 'onListen';
  */
 export const ON_ACTION_ACTION_NAME: string = 'onServerAction';
 
-// TODO: Remove this action
 /**
  * The name of the event that is triggered when a remote whisper is executed.
  */
+// TODO: Remove this action
 export const ON_REMOTE_WHISPER_ACTION_NAME: string = 'onRemoteWhisper';
 
 /**
@@ -1066,10 +1066,10 @@ export const ON_SERVER_STREAMING_ACTION_NAME: string = 'onServerStreaming';
  */
 export const ON_SERVER_STREAM_LOST_ACTION_NAME: string = 'onServerStreamLost';
 
-// TODO: Remove this action
 /**
  * The name of the event that is triggered when a channel is loaded.
  */
+// TODO: Remove this action
 export const ON_SERVER_SUBSCRIBED_ACTION_NAME: string = 'onServerSubscribed';
 
 /**
@@ -1080,8 +1080,14 @@ export const ON_SERVER_JOINED_ACTION_NAME: string = 'onServerJoined';
 /**
  * The name of the event that is triggered when a channel is unloaded.
  */
+// TODO: Remove this action
 export const ON_SERVER_UNSUBSCRIBED_ACTION_NAME: string =
     'onServerUnsubscribed';
+
+/**
+ * The name of the event that is triggered when a channel is unloaded.
+ */
+export const ON_SERVER_LEAVE_ACTION_NAME: string = 'onServerLeave';
 
 /**
  * The name of the event that is triggered when portal tag is changed on the player.
@@ -1558,10 +1564,9 @@ export const KNOWN_TAGS: string[] = [
     'onPointerUp',
     ON_SERVER_STREAMING_ACTION_NAME,
     ON_SERVER_STREAM_LOST_ACTION_NAME,
-    ON_SERVER_SUBSCRIBED_ACTION_NAME,
-    ON_SERVER_UNSUBSCRIBED_ACTION_NAME,
 
     ON_SERVER_JOINED_ACTION_NAME,
+    ON_SERVER_LEAVE_ACTION_NAME,
 
     ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
     'onKeyDown',

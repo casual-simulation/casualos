@@ -28,6 +28,7 @@ import {
     asyncError,
     asyncResult,
     ON_SERVER_JOINED_ACTION_NAME,
+    ON_SERVER_LEAVE_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -812,6 +813,10 @@ export default class PlayerApp extends Vue {
                 recordMessage(m);
             }),
             new Subscription(async () => {
+                await this._superAction(
+                    ON_SERVER_LEAVE_ACTION_NAME,
+                    onServerUnsubscribedArg(simulation.id)
+                );
                 await this._superAction(
                     ON_SERVER_UNSUBSCRIBED_ACTION_NAME,
                     onServerUnsubscribedArg(simulation.id)
