@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-server",
-    "version": "1.4.7-alpha.33",
+    "version": "1.4.8-alpha.34",
     "description": "Abstractions for serving causal trees in Node.js.",
     "keywords": [
         "crdt",
@@ -42,8 +42,8 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/causal-trees": "^1.4.7-alpha.33",
-        "@casual-simulation/crypto": "^1.4.7-alpha.33",
+        "@casual-simulation/causal-trees": "^1.4.8-alpha.34",
+        "@casual-simulation/crypto": "^1.4.8-alpha.34",
         "rxjs": "^6.5.2"
     }
 }
