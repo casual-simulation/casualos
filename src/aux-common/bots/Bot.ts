@@ -208,8 +208,8 @@ export interface UpdatedBot {
  * - "tempLocal" means that the bot is stored in the temporary partition.
  * - "history" means that the bot represents a version of another space.
  * - "admin" means that the bot is shared across all servers.
- * - "player" means that the bot is temporary and shared with other players.
- * - "otherPlayers" means that the bot is temporary and shared with this player from another player.
+ * - "tempShared" means that the bot is temporary and shared with other devices.
+ * - "remoteTempShared" means that the bot is temporary and shared with this device from a remote device.
  * - "certified" means that the bot is a certificate.
  */
 export type BotSpace =
@@ -218,8 +218,8 @@ export type BotSpace =
     | 'tempLocal'
     | 'history'
     | 'admin'
-    | 'player'
-    | 'otherPlayers'
+    | 'tempShared'
+    | 'remoteTempShared'
     | 'certified';
 
 /**
@@ -825,9 +825,9 @@ export const TEMPORARY_BOT_PARTITION_ID = 'tempLocal';
 export const ADMIN_PARTITION_ID = 'admin';
 
 /**
- * The partition ID for player bots.
+ * The partition ID for temporary shared bots.
  */
-export const PLAYER_PARTITION_ID = 'player';
+export const TEMPORARY_SHARED_PARTITION_ID = 'tempShared';
 
 /**
  * The partition ID for bots that are automatically added to the server.
@@ -835,9 +835,9 @@ export const PLAYER_PARTITION_ID = 'player';
 export const BOOTSTRAP_PARTITION_ID = 'bootstrap';
 
 /**
- * The partition ID for other player bots.
+ * The partition ID for other temp shared bots.
  */
-export const OTHER_PLAYERS_PARTITION_ID = 'otherPlayers';
+export const REMOTE_TEMPORARY_SHARED_PARTITION_ID = 'remoteTempShared';
 
 /**
  * The space that tag masks get placed in by default.
@@ -851,8 +851,8 @@ export const DEFAULT_TAG_MASK_SPACE: BotSpace = 'tempLocal';
 export const TAG_MASK_SPACE_PRIORITIES_REVERSE = [
     'admin',
     'shared',
-    'otherPlayers',
-    'player',
+    'remoteTempShared',
+    'tempShared',
     'local',
     'tempLocal',
 ] as BotSpace[];
@@ -863,8 +863,8 @@ export const TAG_MASK_SPACE_PRIORITIES_REVERSE = [
 export const TAG_MASK_SPACE_PRIORITIES = [
     'tempLocal',
     'local',
-    'player',
-    'otherPlayers',
+    'tempShared',
+    'remoteTempShared',
     'shared',
     'admin',
 ] as BotSpace[];

@@ -15,8 +15,8 @@ import {
     AuxPartitionConfig,
     ADMIN_PARTITION_ID,
     ADMIN_BRANCH_NAME,
-    PLAYER_PARTITION_ID,
-    OTHER_PLAYERS_PARTITION_ID,
+    TEMPORARY_SHARED_PARTITION_ID,
+    REMOTE_TEMPORARY_SHARED_PARTITION_ID,
     BOOTSTRAP_PARTITION_ID,
     getTagValueForSpace,
     getUpdateForTagAndSpace,
@@ -147,7 +147,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     private: true,
                     initialState: {},
                 },
-                [PLAYER_PARTITION_ID]: {
+                [TEMPORARY_SHARED_PARTITION_ID]: {
                     type: 'remote_causal_repo',
                     branch: `${parsedId.channel}-player-${user.id}`,
                     host: causalRepoHost,
@@ -155,7 +155,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     temporary: true,
                     remoteEvents: false,
                 },
-                [OTHER_PLAYERS_PARTITION_ID]: {
+                [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
                     type: 'other_players_repo',
                     branch: parsedId.channel,
                     host: causalRepoHost,

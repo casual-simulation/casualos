@@ -4,8 +4,8 @@ import {
     BotTagMasks,
     TEMPORARY_BOT_PARTITION_ID,
     COOKIE_BOT_PARTITION_ID,
-    PLAYER_PARTITION_ID,
-    OTHER_PLAYERS_PARTITION_ID,
+    TEMPORARY_SHARED_PARTITION_ID,
+    REMOTE_TEMPORARY_SHARED_PARTITION_ID,
     DEFAULT_TAG_MASK_SPACE,
     RuntimeBot,
     CLEAR_CHANGES_SYMBOL,
@@ -1227,12 +1227,12 @@ describe('flattenTagMasks()', () => {
                 abc: 2,
                 def: 1,
             },
-            [PLAYER_PARTITION_ID]: {
+            [TEMPORARY_SHARED_PARTITION_ID]: {
                 abc: 3,
                 def: 2,
                 ghi: 1,
             },
-            [OTHER_PLAYERS_PARTITION_ID]: {
+            [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
                 abc: 4,
                 def: 3,
                 ghi: 2,

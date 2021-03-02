@@ -366,7 +366,7 @@ let that: {
 
 A whisper that is sent when the bot is added to the local server.
 
-Unlike <TagLink tag='@onCreate'/>, this listen tag is triggered whenever the bot as been added to the current player's server, even if the bot has already been created.
+Unlike <TagLink tag='@onCreate'/>, this listen tag is triggered whenever the bot as been added to the current device's server, even if the bot has already been created.
 An example of this happening is when you first load a server. Even though all the bots have already been created, they still need to be added to the server in order for you to interact with them.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script creates multiple bots, `@onBotAdded` will be triggered after all the bots have been created.
@@ -377,7 +377,7 @@ There is no `that` argument for this listen tag.
 
 A whisper that is sent when a tag on the bot is updated.
 
-This listen tag is triggered whenever the bot has been updated in the current player's server, even if the bot was not updated locally.
+This listen tag is triggered whenever the bot has been updated in the current device's server, even if the bot was not updated locally.
 An example of this happening is when another player changes a tag in the sheet portal. Even though the change was made on their device, it will show up on the current device.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script updates the same tag multiple times, `@onBotChanged` will still only be triggered once.
@@ -1119,7 +1119,7 @@ os.toast("Remote joined: " + that.remoteId);
 
 A shout that is sent when a list of bots is added to the current server.
 
-Unlike <TagLink tag='@onAnyCreate'/>, this listen tag is triggered whenever the bots have been added to the current player's server, even if the bots have already been created.
+Unlike <TagLink tag='@onAnyCreate'/>, this listen tag is triggered whenever the bots have been added to the current device's server, even if the bots have already been created.
 An example of this happening is when you first load a server. Even though all the bots have already been created, they still need to be added to the server in order for you to interact with them.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script creates multiple bots, `@onAnyBotsAdded` will only be triggered once.
@@ -1138,7 +1138,7 @@ let that: {
 
 A shout that is sent when a list of bots is removed from the current server.
 
-Unlike <TagLink tag='@onDestroy'/>, this listen tag is triggered whenever the bots have been removed from the current player's server, even if the bots were not destroyed.
+Unlike <TagLink tag='@onDestroy'/>, this listen tag is triggered whenever the bots have been removed from the current device's server, even if the bots were not destroyed.
 An example of this happening is when another player disconnects. Even though their config bots were not destroyed, they still need to be removed from the server.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script deletes multiple bots, `@onAnyBotsRemoved` will only be triggered once.
@@ -1157,7 +1157,7 @@ let that: {
 
 A shout that is sent when one or more tags are changed on a list of bots in the current server.
 
-This listen tag is triggered whenever the bots have been updated in the current player's server, even if the bots were not updated locally.
+This listen tag is triggered whenever the bots have been updated in the current device's server, even if the bots were not updated locally.
 An example of this happening is when another player changes a tag in the sheet portal. Even though the change was made on their device, it will show up on the current device.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script updates multiple bots, `@onAnyBotsChanged` will only be triggered once.

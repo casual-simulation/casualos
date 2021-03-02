@@ -591,7 +591,7 @@ let options: {
      * Additionally, if the specified space is the same as the space the bot lives in
      * then the bot will be edited directly.
      */
-    tagMaskSpace?: 'tempLocal' | 'local' | 'player' | 'shared' | false;
+    tagMaskSpace?: 'tempLocal' | 'local' | 'tempShared' | 'shared' | false;
 
     /**
      * The options for easing.
@@ -683,13 +683,13 @@ await animateTag(bot, "homeX", {
 });
 ```
 
-5. Animate a tag in `player` space.
+5. Animate a tag in `tempShared` space.
 ```typescript
 await animateTag(bot, "homeX", {
     fromValue: 0,
     toValue: 5,
     duration: 2,
-    tagMaskSpace: 'player'
+    tagMaskSpace: 'tempShared'
 });
 ```
 
@@ -5421,7 +5421,7 @@ let points = [
 for(let point of points) {
     let pos = experiment.getAnchorPointPosition(bot, os.getCurrentDimension(), point);
     create({
-        space: 'player',
+        space: 'tempShared',
         color: 'green',
         [os.getCurrentDimension()]: true,
         [os.getCurrentDimension() + "X"]: pos.x,
