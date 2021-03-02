@@ -27,6 +27,8 @@
     -   `onRemotePlayerSubscribed` is now `onRemoteJoined`
     -   `onRemotePlayerUnsubscribed` is now `onRemoteLeave`.
     -   Additionally, the `that.playerId` has been changed to `that.remoteId` in the new listen tags.
+    -   Note that the original tags and functions remain the same but will be removed at some point in the future.
+-   Added the `web.get()`, `web.post()`, and `web.hook()` functions as future replacements for the `webhook()` and `webhook.post()` functions.
 
 ### :bug: Bug Fixes
 
