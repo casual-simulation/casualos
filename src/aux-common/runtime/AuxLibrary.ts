@@ -537,6 +537,7 @@ export interface CodeBundle {
  * @param context The global context that should be used.
  */
 export function createDefaultLibrary(context: AuxGlobalContext) {
+    // TODO: Remove deprecated functions
     webhook.post = function (
         url: string,
         data?: any,
@@ -593,12 +594,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             sendRemoteData: remoteWhisper,
             remoteWhisper,
             remoteShout,
-            webhook,
             uuid,
             animateTag,
             clearAnimations,
 
             // TODO: Remove deprecated functions
+            webhook,
             sleep,
 
             __energyCheck,
