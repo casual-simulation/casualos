@@ -806,6 +806,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             perf: {
                 getStats,
             },
+
+            web: {
+                get: webGet,
+                post: webPost,
+                hook: webhook,
+            },
         },
 
         tagSpecificApi: {
@@ -3191,6 +3197,42 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         });
     }
 
+    /**
+     * Sends an HTTP GET request for the given URL using the given options.
+     * @param url The URL to request.
+     * @param options The options to use.
+     */
+    function webGet(url: string, options: WebhookOptions = {}): Promise<any> {
+        return webhook({
+            ...options,
+            method: 'GET',
+            url,
+        });
+    }
+
+    /**
+     * Sends a HTTP POST request to the given URL with the given data and options.
+     * @param url The URL that the request should be sent to.
+     * @param data The data that should be included in the request.
+     * @param options The options to use.
+     */
+    function webPost(
+        url: string,
+        data?: any,
+        options?: WebhookOptions
+    ): Promise<any> {
+        return webhook({
+            ...options,
+            method: 'POST',
+            url,
+            data,
+        });
+    }
+
+    /**
+     * Sends an HTTP request based on the given options.
+     * @param options The options that should be used to send the webhook.
+     */
     function webhook(options: WebhookOptions): Promise<any> {
         const task = context.createTask();
         const event = calcWebhook(<any>options, task.taskId);

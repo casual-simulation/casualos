@@ -4423,6 +4423,69 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('web.get()', () => {
+            it('should emit a SendWebhookAction', () => {
+                const action: any = library.api.web.get('https://example.com', {
+                    responseShout: 'test.response()',
+                });
+                const expected = webhook(
+                    {
+                        method: 'GET',
+                        url: 'https://example.com',
+                        responseShout: 'test.response()',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('web.post()', () => {
+            it('should emit a SendWebhookAction', () => {
+                const action: any = library.api.web.post(
+                    'https://example.com',
+                    { data: true },
+                    {
+                        responseShout: 'test.response()',
+                    }
+                );
+                const expected = webhook(
+                    {
+                        method: 'POST',
+                        url: 'https://example.com',
+                        data: { data: true },
+                        responseShout: 'test.response()',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('web.hook()', () => {
+            it('should emit a SendWebhookAction', () => {
+                const action: any = library.api.web.hook({
+                    method: 'TEST',
+                    data: { myData: 'abc' },
+                    url: 'https://example.com',
+                    responseShout: 'test.response()',
+                });
+                const expected = webhook(
+                    {
+                        method: 'TEST',
+                        url: 'https://example.com',
+                        data: { myData: 'abc' },
+                        responseShout: 'test.response()',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('webhook()', () => {
             it('should emit a SendWebhookAction', () => {
                 const action: any = library.api.webhook({
