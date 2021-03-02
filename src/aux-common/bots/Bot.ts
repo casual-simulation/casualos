@@ -335,9 +335,9 @@ export interface BotTags {
     ['portalLocked']?: unknown;
     ['portalGridScale']?: number;
     ['portalSurfaceScale']?: number;
-    ['portalPlayerRotationX']?: number;
-    ['portalPlayerRotationY']?: number;
-    ['portalPlayerZoom']?: number;
+    ['portalCameraRotationX']?: number;
+    ['portalCameraRotationY']?: number;
+    ['portalCameraZoom']?: number;
     ['portalPannable']?: number | null;
     [`portalPannableMinX`]?: number | null;
     [`portalPannableMaxX`]?: number | null;
@@ -1443,9 +1443,9 @@ export const KNOWN_TAGS: string[] = [
     'portalRotatable',
     'portalGridScale',
     'portalSurfaceScale',
-    `portalPlayerZoom`,
-    `portalPlayerRotationX`,
-    `portalPlayerRotationY`,
+    `portalCameraZoom`,
+    `portalCameraRotationX`,
+    `portalCameraRotationY`,
     'portalPointerDragMode',
     'portalCameraControls',
     'portalShowFocusPoint',
