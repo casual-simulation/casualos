@@ -930,23 +930,6 @@ deleteTagText(bot, "myTag", tags.myTag.length - 2, 2);
 deleteTagText(bot, "myTag", 0, 3, "local");
 ```
 
-### `os.sleep(time)`
-
-Waits the amount of time provided, in [miliseconds](https://en.wikipedia.org/wiki/Millisecond).
-
-Returns a promise that resolves when the time has been waited.
-
-The **first parameter** is time in ms to wait. 1 second is 1000ms.
-
-#### Examples:
-
-1. Wait 2 seconds before proceeding.
-```typescript
-os.toast("Stop!");
-await os.sleep(2000);
-os.toast("Hammer Time!");
-```
-
 ## Bot Filters
 
 ### `byTag(tag, value?)`
@@ -1290,6 +1273,37 @@ action.reject(toastAction);
 ```
 
 ## OS Actions
+
+
+### `os.sleep(time)`
+
+Waits the amount of time provided, in [miliseconds](https://en.wikipedia.org/wiki/Millisecond).
+
+Returns a promise that resolves when the time has been waited.
+
+The **first parameter** is time in ms to wait. 1 second is 1000ms.
+
+#### Examples:
+
+1. Wait 2 seconds before proceeding.
+```typescript
+os.toast("Stop!");
+await os.sleep(2000);
+os.toast("Hammer Time!");
+```
+
+### `os.log(...args)`
+
+Logs the given data to the developer console.
+
+**Every parameter** is the data that should be logged.
+
+#### Examples:
+
+1. Log "Hello, World!" to the browser developer console.
+```typescript
+os.log("Hello, World!");
+```
 
 ### `os.checkout(options)`
 
