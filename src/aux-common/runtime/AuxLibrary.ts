@@ -661,6 +661,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 share,
                 closeCircleWipe,
                 openCircleWipe,
+                log,
                 inSheet,
 
                 getCameraPosition,
@@ -1957,6 +1958,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             task.taskId
         );
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Logs the given data.
+     * @param args The data that should be logged.
+     */
+    function log(...args: any[]) {
+        console.log(...args);
     }
 
     /**

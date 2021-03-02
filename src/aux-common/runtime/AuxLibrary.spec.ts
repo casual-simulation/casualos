@@ -2563,6 +2563,25 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.log()', () => {
+            let logMock: jest.Mock<any>;
+            let consoleLog: any;
+
+            beforeEach(() => {
+                consoleLog = console.log;
+                logMock = console.log = jest.fn();
+            });
+
+            afterEach(() => {
+                console.log = consoleLog;
+            });
+
+            it('should pipe everything to console.log', () => {
+                library.api.os.log('This', 'is', 'a', 'test');
+                expect(logMock).toBeCalledWith('This', 'is', 'a', 'test');
+            });
+        });
+
         describe('portal.open()', () => {
             it('should return a OpenCustomPortal action', () => {
                 const promise: any = library.api.portal.open(

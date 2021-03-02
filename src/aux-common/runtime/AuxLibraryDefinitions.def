@@ -3001,6 +3001,12 @@ declare global {
         openCircleWipe(options?: Partial<OpenCircleWipeOptions>): Promise<void>;
 
         /**
+         * Logs the given data to the developer console.
+         * @param args The data to log.
+         */
+        log(...args: any[]): void;
+
+        /**
          * Shows some HTML to the user.
          * @param html The HTML to show.
          */
