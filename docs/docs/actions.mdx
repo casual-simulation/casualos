@@ -413,9 +413,24 @@ let mod = getMod(bot, "color", "label");
 let mod = getMod(bot, /^on/g);
 ```
 
-### `webhook(options)`
+### `uuid()`
 
-Sends a webhook using the given options.
+Creates a new UUID. Useful for generating a random identifier that is guaranteed to be unique.
+
+#### Examples:
+
+1. Generate a new UUID and toast it:
+```typescript
+const id = uuid();
+
+os.toast(id);
+```
+
+## Web Actions
+
+### `web.hook(options)`
+
+Sends a HTTP request using the given options.
 
 Returns a Promise that resolves with the following properties:
 
@@ -466,7 +481,7 @@ let options: {
 
 1. Send a HTTP GET request to `https://example.com` and toast the result.
 ```typescript
-const response = await webhook({
+const response = await web.hook({
     method: 'GET',
     url: 'https://example.com',
 });
@@ -476,7 +491,7 @@ os.toast(response);
 
 2. Send a HTTP PUT request to `https://example.com` with some data.
 ```typescript
-webhook({
+web.hook({
     method: 'PUT',
     url: 'https://example.com',
     data: {
@@ -485,9 +500,52 @@ webhook({
 });
 ```
 
-### `webhook.post(url, data?, options?)`
+### `web.get(url, options?)`
 
-Sends a HTTP POST request using the given options.
+Sends a HTTP GET request for the given URL using the given options.
+
+Returns a promise that resolves with the following properties:
+
+```typescript
+{
+    data: any,
+    status: number,
+    statusText: string,
+    headers: any
+}
+```
+
+The **first parameter** is the URL that the request should be sent to.
+
+The **second parameter** is optional and is an object with the following properties:
+
+```typescript
+let options: {
+    /**
+     * The headers to include in the request.
+     */
+    headers?: {
+        [key: string]: string;
+    };
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    responseShout?: string;
+};
+```
+
+#### Examples:
+
+1. Send a HTTP GET request for `https://example.com` and toast the result.
+```typescript
+const response = await web.get('https://example.com');
+os.toast(response);
+```
+
+### `web.post(url, data?, options?)`
+
+Sends a HTTP POST request to the URL with the given data and using the given options.
 
 Returns a Promise that resolves with the following properties:
 
@@ -526,24 +584,11 @@ let options: {
 
 1. Send a HTTP POST request to `https://example.com` and toast the result.
 ```typescript
-const response = await webhook.post('https://example.com', {
+const response = await web.post('https://example.com', {
     some: 'data'
 });
 
 os.toast(response);
-```
-
-### `uuid()`
-
-Creates a new UUID. Useful for generating a random identifier that is guaranteed to be unique.
-
-#### Examples:
-
-1. Generate a new UUID and toast it:
-```typescript
-const id = uuid();
-
-os.toast(id);
 ```
 
 ## Utility Actions

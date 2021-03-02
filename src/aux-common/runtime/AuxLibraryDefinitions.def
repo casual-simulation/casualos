@@ -2331,22 +2331,19 @@ declare global {
      *   responseShout: 'requestFinished'
      * });
      */
-    const webhook: {
+    const web: {
+
         /**
-         * Sends a web request based on the given options.
-         * @param options The options that specify where and what to send in the web request.
-         *
+         * Sends an HTTP GET request for the given URL using the given options.
+         * @param url The URL to request.
+         * @param options The options to use.
+         * 
          * @example
          * 
-         * // Send a HTTP GET request to https://example.com
-         * const result = await webhook({
-         *   method: 'GET',
-         *   url: 'https://example.com'
-         * });
-         * 
-         * os.toast(result);
+         * // Send a HTTP GET request for https://www.example.com
+         * const result = await web.get('https://www.example.com');
          */
-        (options: WebhookOptions): Promise<WebhookResult>;
+        get(url: string, options?: WebhookOptions): Promise<WebhookResult>;
 
         /**
          * Sends a HTTP POST request to the given URL with the given data.
@@ -2358,12 +2355,28 @@ declare global {
          * @example
          * 
          * // Send a HTTP POST request to https://www.example.com/api/createThing
-         * const result = await webhook.post('https://www.example.com/api/createThing', {
+         * const result = await web.post('https://www.example.com/api/createThing', {
          *   hello: 'world'
          * });
          * 
          */
         post(url: string, data?: any, options?: WebhookOptions): Promise<WebhookResult>;
+
+        /**
+         * Sends a web request based on the given options.
+         * @param options The options that specify where and what to send in the web request.
+         *
+         * @example
+         * 
+         * // Send a HTTP GET request to https://example.com
+         * const result = await web.hook({
+         *   method: 'GET',
+         *   url: 'https://example.com'
+         * });
+         * 
+         * os.toast(result);
+         */
+        hook(options: WebhookOptions): Promise<WebhookResult>;
     };
     
     /**
