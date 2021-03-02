@@ -705,7 +705,7 @@ animateTag(bot, "homeX", {
     os.toast("Animation Canceled!");
 });
 
-await sleep(500);
+await os.sleep(500);
 
 animateTag(bot, "homeX", null);
 ```
@@ -930,7 +930,7 @@ deleteTagText(bot, "myTag", tags.myTag.length - 2, 2);
 deleteTagText(bot, "myTag", 0, 3, "local");
 ```
 
-### `sleep(time)`
+### `os.sleep(time)`
 
 Waits the amount of time provided, in [miliseconds](https://en.wikipedia.org/wiki/Millisecond).
 
@@ -943,7 +943,7 @@ The **first parameter** is time in ms to wait. 1 second is 1000ms.
 1. Wait 2 seconds before proceeding.
 ```typescript
 os.toast("Stop!");
-await sleep(2000);
+await os.sleep(2000);
 os.toast("Hammer Time!");
 ```
 
@@ -1593,7 +1593,7 @@ os.toast("Revealed!");
 2. Hide the page portal and show it after an additional second.
 ```typescript
 await os.closeCircleWipe();
-await sleep(1000);
+await os.sleep(1000);
 await os.openCircleWipe();
 ```
 
@@ -1645,7 +1645,7 @@ os.toast("Hidden!");
 2. Hide the page portal and show it after an additional second.
 ```typescript
 await os.closeCircleWipe();
-await sleep(1000);
+await os.sleep(1000);
 await os.openCircleWipe();
 ```
 

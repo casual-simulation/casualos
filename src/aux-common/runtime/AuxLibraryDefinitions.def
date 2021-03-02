@@ -2372,12 +2372,6 @@ declare global {
     function uuid(): string;
 
     /**
-     * Sleeps for time in ms.
-     * @param time Time in ms. 1 second is 1000ms.
-     */
-    function sleep(time: number): Promise<void>;
-
-    /**
      * Animates the given tag. Returns a promise when the animation is finished.
      * @param bot The bot or list of bots that should be animated.
      * @param tag The tag that should be animated.
@@ -2777,6 +2771,12 @@ declare global {
      * Defines a set of functions that relate to common OS operations.
      */
     const os: {
+
+        /**
+         * Sleeps for time in ms.
+         * @param time Time in ms. 1 second is 1000ms.
+         */
+        sleep(time: number): Promise<void>;
 
         /**
          * Derermines whether the player is in the given dimension.

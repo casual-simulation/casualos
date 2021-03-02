@@ -595,13 +595,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             remoteShout,
             webhook,
             uuid,
-            sleep,
             animateTag,
             clearAnimations,
+
+            // TODO: Remove deprecated functions
+            sleep,
 
             __energyCheck,
 
             os: {
+                sleep,
                 toast,
                 showJoinCode,
                 requestFullscreenMode,
