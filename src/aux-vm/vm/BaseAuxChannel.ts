@@ -662,8 +662,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private async _initPortalBots() {
         try {
             if (
-                this._config.config.builtinPortals &&
-                this._config.config.builtinPortals.length > 0
+                this._config.config?.builtinPortals &&
+                this._config.config?.builtinPortals.length > 0
             ) {
                 let actions = this._config.config.builtinPortals.map((portal) =>
                     registerBuiltinPortal(portal)
