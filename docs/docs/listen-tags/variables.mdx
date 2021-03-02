@@ -72,6 +72,46 @@ thisBot.tags.color = "green";
 whisper(thisBot, "myShout");
 ```
 
+### `that`
+
+The data which was included in a shout or whisper. It is also known as an "argument".
+It can be any [kind of JavaScript data](https://javascript.info/types).
+This includes strings, numbers, booleans, objects (Bots, arrays, etc.) and more.
+
+Most listen tags specify what kind of data `that` is.
+Usually it is an object that contains properties which describe the action in further detail.
+
+#### Examples:
+
+1. The <TagLink tag='@onAnyBotClicked'/> listen tag specifies the bot which was clicked.
+You could set the clicked bot's color to "green" using a tag mask.
+```typescript
+that.bot.masks.color = "green";
+```
+
+2. The <TagLink tag='@onBarcodeScanned'/> listen tag only specifies the barcode string which was scanned.
+You could toast it like this:
+```typescript
+os.toast(that);
+```
+
+3. You can include your own `that` variable when you shout or whisper to other bots.
+
+First you have to have a script which sends the shout and argument.
+```typescript
+// In a normal listener like @onClick
+const myThatObject = {
+    message: "This is a custom message which I am including in the shout"
+};
+shout("myShout", myThatObject);
+```
+
+Second you have to have a listener for your shout.
+```typescript
+// Put this in @myShout
+os.toast(that.message);
+```
+
 ### `tagName`
 
 The name of the tag that this listener is defined in.
