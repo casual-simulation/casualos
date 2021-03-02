@@ -8,6 +8,7 @@
 
 -   `onRemoteData` now uses `that.remoteId` instead of `that.playerId`.
 -   Renamed the `portalPlayerZoom`, `portalPlayerRotationX` and `portalPlayerRotationY` tags to `portalCameraZoom` and `portalCameraRotationX` and `portalCameraRotationY`.
+-   Renamed the `player` and `otherPlayers` spaces to `tempShared` and `remoteTempShared`.
 
 ### :rocket: Improvements
 
@@ -19,6 +20,7 @@
     -   `server.totalPlayerCount()` is now `server.totalRemoteCount()`.
     -   `server.stories()` is now `server.servers()`.
     -   `server.players()` is now `server.remotes()`.
+    -   `sleep()` is now `os.sleep()`
     -   `onServerSubscribed` is now `onServerJoined`.
     -   `onServerUnsubscribed` is now `onServerLeave`.
     -   `onPlayerPortalChanged` is now `onPortalChanged`.
