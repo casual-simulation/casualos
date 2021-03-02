@@ -1,4 +1,10 @@
-import { Texture, ImageLoader, RGBFormat, RGBAFormat, Loader } from 'three';
+import {
+    Texture,
+    ImageLoader,
+    RGBFormat,
+    RGBAFormat,
+    Loader,
+} from '@casual-simulation/three';
 
 // TODO: Put a max size on the cache.
 const cache = new Map<string, Promise<Texture>>();

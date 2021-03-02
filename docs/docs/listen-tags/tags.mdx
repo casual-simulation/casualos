@@ -1,7 +1,7 @@
 ---
-id: listen-tags
+id: tags
 title: Listen Tags
-sidebar_label: Listen Tags
+sidebar_label: Tags
 description: Listen tags are tags that can receive shouts and whispers from other bots and actoins that happen from the user.
 ---
 
@@ -20,7 +20,7 @@ import {
   NormalCode,
   ConfigBotBadge,
   ActionLink,
-} from './components.mdx';
+} from '../components.mdx';
 
 Listen tags are tags that can receive shouts and whispers from other bots and actions that happen from the user.
 To create a listen tag, you make a normal tag and enter a "@" as the first character of the tag's value.
@@ -366,7 +366,7 @@ let that: {
 
 A whisper that is sent when the bot is added to the local server.
 
-Unlike <TagLink tag='@onCreate'/>, this listen tag is triggered whenever the bot as been added to the current player's server, even if the bot has already been created.
+Unlike <TagLink tag='@onCreate'/>, this listen tag is triggered whenever the bot as been added to the current device's server, even if the bot has already been created.
 An example of this happening is when you first load a server. Even though all the bots have already been created, they still need to be added to the server in order for you to interact with them.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script creates multiple bots, `@onBotAdded` will be triggered after all the bots have been created.
@@ -377,7 +377,7 @@ There is no `that` argument for this listen tag.
 
 A whisper that is sent when a tag on the bot is updated.
 
-This listen tag is triggered whenever the bot has been updated in the current player's server, even if the bot was not updated locally.
+This listen tag is triggered whenever the bot has been updated in the current device's server, even if the bot was not updated locally.
 An example of this happening is when another player changes a tag in the sheet portal. Even though the change was made on their device, it will show up on the current device.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script updates the same tag multiple times, `@onBotChanged` will still only be triggered once.
@@ -583,9 +583,9 @@ let that: {
 };
 ```
 
-### `@onPlayerPortalChanged`
+### `@onPortalChanged`
 
-A shout that is sent to all bots when a portal changes on the player.
+A shout that is sent to all bots when a portal changes on the config bot.
 
 #### Arguments:
 ```typescript
@@ -660,7 +660,7 @@ let that: {
 };
 ```
 
-### `@onServerSubscribed`
+### `@onServerJoined`
 
 A shout that is sent when a server is loaded.
 Sent to every server that is loaded.
@@ -672,7 +672,7 @@ let that: {
 };
 ```
 
-### `@onServerUnsubscribed`
+### `@onServerLeave`
 
 A shout that is sent when a server is unloaded.
 Sent to every server that is loaded.
@@ -1027,7 +1027,7 @@ let that: {
 
 ### `@onRemoteData`
 
-A shout that is sent whenever a message is received from another player.
+A shout that is sent whenever a message is received from another remote device.
 
 #### Arguments:
 ```typescript
@@ -1043,33 +1043,9 @@ let that: {
     that: any,
 
     /**
-     * The ID of the player that sent the message.
+     * The ID of the remote device that sent the message.
      */
-    playerId: string
-};
-```
-
-### `@onRemoteWhisper`
-
-A shout that is sent whenever a message is received from another player.
-
-#### Arguments:
-```typescript
-let that: {
-    /**
-     * The name of the message.
-     */
-    name: string,
-
-    /**
-     * The argument that was included in the message.
-     */
-    that: any,
-
-    /**
-     * The ID of the player that sent the message.
-     */
-    playerId: string
+    remoteId: string
 };
 ```
 
@@ -1078,69 +1054,57 @@ let that: {
 1. Show a toast when a "custom" message is received.
 ```typescript
 if (that.name === "custom") {
-    player.toast("Got message from " + that.playerId + " with " + that.that);
+    os.toast("Got message from " + that.remoteId + " with " + that.that);
 }
 ```
 
-2. Send a message back to the player that sent the message.
+2. Send a message back to the remote that sent the message.
 ```typescript
 if (that.name === "hello") {
-    remoteWhisper(that.playerId, "hi");
+    sendRemoteData(that.remoteId, "hi");
 }
 ```
 
-### `@onRemotePlayerSubscribed`
+### `@onRemoteJoined`
 
-A shout that is run on every other player when a player joins the current server.
+A shout that is run on every other remote device when it joins the current server.
 
-Since this shout is run on every player, you should be careful about performing duplicate actions.
-When in doubt, elect a player to perform all actions that should only be executed once.
+Since this shout is run on every device, you should be careful about performing duplicate actions.
+When in doubt, elect a remote to perform all actions that should only be executed once.
 See example 2 below.
 
 #### Arguments:
 ```typescript
 let that: {
     /**
-     * The ID of the player that joined the server.
+     * The ID of the remote that joined the server.
      */
-    playerId: string
+    remoteId: string
 };
 ```
 
 #### Examples:
 
-1. Show a toast when a player joins.
+1. Show a toast when a remote joins.
 ```typescript
-player.toast("Player joined: " + that.playerId);
+os.toast("Remote joined: " + that.remoteId);
 ```
 
-2. Create a bot when a player joins.
-```typescript
-// Check if the current player is the "server" player.
-// This will ensure that only one bot is created.
-if (getID(player.getBot()) === 'server') {
-    create({
-        playerLog: true,
-        label: 'Player Joined: ' + that.playerId
-    });
-}
-```
+### `@onRemoteLeave`
 
-### `@onRemotePlayerUnsubscribed`
+A shout that is run on every other remote device when it leaves the current server.
 
-A shout that is run on every other player when a player leaves the current server.
-
-Since this shout is run on every player, you should be careful about performing duplicate actions.
-When in doubt, elect a player to perform all actions that should only be executed once.
+Since this shout is run on every device, you should be careful about performing duplicate actions.
+When in doubt, elect a remote to perform all actions that should only be executed once.
 See example 2 below.
 
 #### Arguments:
 ```typescript
 let that: {
     /**
-     * The ID of the player that left the server.
+     * The ID of the remote that left the server.
      */
-    playerId: string
+    remoteId: string
 };
 ```
 
@@ -1148,26 +1112,14 @@ let that: {
 
 1. Show a toast when a player leaves.
 ```typescript
-player.toast("Player joined: " + that.playerId);
-```
-
-2. Create a bot when a player leaves.
-```typescript
-// Check if the current player is the "server" player.
-// This will ensure that only one bot is created.
-if (getID(player.getBot()) === 'server') {
-    create({
-        playerLog: true,
-        label: 'Player Left: ' + that.playerId
-    });
-}
+os.toast("Remote joined: " + that.remoteId);
 ```
 
 ### `@onAnyBotsAdded`
 
 A shout that is sent when a list of bots is added to the current server.
 
-Unlike <TagLink tag='@onAnyCreate'/>, this listen tag is triggered whenever the bots have been added to the current player's server, even if the bots have already been created.
+Unlike <TagLink tag='@onAnyCreate'/>, this listen tag is triggered whenever the bots have been added to the current device's server, even if the bots have already been created.
 An example of this happening is when you first load a server. Even though all the bots have already been created, they still need to be added to the server in order for you to interact with them.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script creates multiple bots, `@onAnyBotsAdded` will only be triggered once.
@@ -1186,7 +1138,7 @@ let that: {
 
 A shout that is sent when a list of bots is removed from the current server.
 
-Unlike <TagLink tag='@onDestroy'/>, this listen tag is triggered whenever the bots have been removed from the current player's server, even if the bots were not destroyed.
+Unlike <TagLink tag='@onDestroy'/>, this listen tag is triggered whenever the bots have been removed from the current device's server, even if the bots were not destroyed.
 An example of this happening is when another player disconnects. Even though their config bots were not destroyed, they still need to be removed from the server.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script deletes multiple bots, `@onAnyBotsRemoved` will only be triggered once.
@@ -1205,7 +1157,7 @@ let that: {
 
 A shout that is sent when one or more tags are changed on a list of bots in the current server.
 
-This listen tag is triggered whenever the bots have been updated in the current player's server, even if the bots were not updated locally.
+This listen tag is triggered whenever the bots have been updated in the current device's server, even if the bots were not updated locally.
 An example of this happening is when another player changes a tag in the sheet portal. Even though the change was made on their device, it will show up on the current device.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script updates multiple bots, `@onAnyBotsChanged` will only be triggered once.
@@ -1223,4 +1175,32 @@ let that: {
      */
     tags: string[]
 }[];
+```
+
+### `@onError`
+
+A shout that is sent when an unhandled error occurs in a listen tag.
+Errors can occur for many reasons, but common ones include data being unexpectedly missing (e.g. "Cannot read property xyz of undefined") or invalid usage (e.g. "xyz is not a function").
+
+Note that errors which occur in a `@onError` listen tag will not trigger further `onError` calls.
+To view those errors, open the developer tools console.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The bot that the error originated from.
+     */
+    bot: Bot,
+
+    /**
+     * The tag that the error originated from.
+     */
+    tag: string,
+
+    /**
+     * The error that occurred.
+     */
+    error: Error
+}
 ```

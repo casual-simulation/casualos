@@ -8,7 +8,7 @@ import {
     Intersection,
     Mesh,
     Plane,
-} from 'three';
+} from '@casual-simulation/three';
 
 /**
  * Container for all custom physics functions for game engine.
@@ -146,7 +146,7 @@ export namespace Physics {
         hitFilter: (hit: Intersection) => boolean = null
     ) {
         if (hitFilter) {
-            return result.intersects.find(i => hitFilter(i)) || null;
+            return result.intersects.find((i) => hitFilter(i)) || null;
         }
         return result.intersects.length > 0 ? result.intersects[0] : null;
     }

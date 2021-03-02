@@ -1,8 +1,43 @@
 # CasualOS Changelog
 
+## V1.4.8
+
+#### Date: 3/2/2021
+
+### :boom: Breaking Changes
+
+-   `onRemoteData` now uses `that.remoteId` instead of `that.playerId`.
+-   Renamed the `portalPlayerZoom`, `portalPlayerRotationX` and `portalPlayerRotationY` tags to `portalCameraZoom` and `portalCameraRotationX` and `portalCameraRotationY`.
+-   Renamed the `player` and `otherPlayers` spaces to `tempShared` and `remoteTempShared`.
+
+### :rocket: Improvements
+
+-   Added the `@onError` listen tag.
+    -   It is a shout and is triggered when an unhandled error occurs in a listen tag.
+-   Improved CasualOS to now include the Bot ID and tag name in internal console logs for unhandled errors.
+-   Added perferred alternatives for the following functions and listen tags:
+    -   `server.serverPlayerCount()` is now `server.serverRemoteCount()`.
+    -   `server.totalPlayerCount()` is now `server.totalRemoteCount()`.
+    -   `server.stories()` is now `server.servers()`.
+    -   `server.players()` is now `server.remotes()`.
+    -   `sleep()` is now `os.sleep()`
+    -   `onServerSubscribed` is now `onServerJoined`.
+    -   `onServerUnsubscribed` is now `onServerLeave`.
+    -   `onPlayerPortalChanged` is now `onPortalChanged`.
+    -   `onRemotePlayerSubscribed` is now `onRemoteJoined`
+    -   `onRemotePlayerUnsubscribed` is now `onRemoteLeave`.
+    -   Additionally, the `that.playerId` has been changed to `that.remoteId` in the new listen tags.
+    -   Note that the original tags and functions remain the same but will be removed at some point in the future.
+-   Added the `web.get()`, `web.post()`, and `web.hook()` functions as future replacements for the `webhook()` and `webhook.post()` functions.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where portal bots may not be defined before `@onServerSubscribed` is triggered.
+-   Fixed an issue where the `white-space` CSS property could not be used on menu bots.
+
 ## V1.4.7
 
-#### Date: 2/25/2021
+#### Date: 2/26/2021
 
 ### :boom: Breaking Changes
 

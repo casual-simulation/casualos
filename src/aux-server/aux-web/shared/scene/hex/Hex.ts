@@ -1,4 +1,4 @@
-import { Vector2 } from 'three';
+import { Vector2 } from '@casual-simulation/three';
 import { range } from 'lodash';
 
 // (kal)

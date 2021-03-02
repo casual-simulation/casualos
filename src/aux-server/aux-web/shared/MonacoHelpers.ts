@@ -62,7 +62,7 @@ import {
     TagEditOp,
 } from '@casual-simulation/aux-common/aux-format-2';
 import { CurrentVersion } from '@casual-simulation/causal-trees';
-import { Color } from 'three';
+import { Color } from '@casual-simulation/three';
 import { invertColor } from './scene/ColorUtils';
 import { getCursorColorClass, getCursorLabelClass } from './StyleHelpers';
 // import jscodeshift from 'jscodeshift';

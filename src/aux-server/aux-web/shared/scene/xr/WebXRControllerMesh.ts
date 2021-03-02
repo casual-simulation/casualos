@@ -11,7 +11,7 @@ import {
     MeshBasicMaterial,
     SphereGeometry,
     Intersection,
-} from 'three';
+} from '@casual-simulation/three';
 import { getGLTFPool } from '../GLTFHelpers';
 import { SubscriptionLike } from 'rxjs';
 import {

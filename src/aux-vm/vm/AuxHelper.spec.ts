@@ -1167,7 +1167,7 @@ describe('AuxHelper', () => {
 
                 await waitAsync();
 
-                expect(searchClient.stories['server']).toEqual({});
+                expect(searchClient.servers['server']).toEqual({});
             });
         });
 

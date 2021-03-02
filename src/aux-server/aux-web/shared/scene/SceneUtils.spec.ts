@@ -11,7 +11,7 @@ import {
     Camera,
     Mesh,
     Vector3,
-} from 'three';
+} from '@casual-simulation/three';
 
 describe('SceneUtils', () => {
     describe('calculateScale()', () => {

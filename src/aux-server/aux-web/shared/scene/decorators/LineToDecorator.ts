@@ -9,7 +9,7 @@ import {
     calculateStringTagValue,
 } from '@casual-simulation/aux-common';
 import { Arrow3D } from '../Arrow3D';
-import { Color } from 'three';
+import { Color } from '@casual-simulation/three';
 import { AuxBotVisualizerFinder } from '../../../shared/AuxBotVisualizerFinder';
 import { Wall3D } from '../Wall3D';
 import { buildSRGBColor } from '../SceneUtils';

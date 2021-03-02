@@ -1998,7 +1998,7 @@ declare interface BotsState {
 /**
  * The possible bot spaces.
  */
-declare type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history' | 'admin' | 'player' | 'otherPlayers';
+declare type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history' | 'admin' | 'tempShared' | 'remoteTempShared';
 
 /**
  * The possible portal types.
@@ -2008,7 +2008,6 @@ declare type PortalType =
     | 'inventory'
     | 'menu'
     | 'sheet'
-    | 'stories'
     | string;
 
 /**
@@ -2332,22 +2331,19 @@ declare global {
      *   responseShout: 'requestFinished'
      * });
      */
-    const webhook: {
+    const web: {
+
         /**
-         * Sends a web request based on the given options.
-         * @param options The options that specify where and what to send in the web request.
-         *
+         * Sends an HTTP GET request for the given URL using the given options.
+         * @param url The URL to request.
+         * @param options The options to use.
+         * 
          * @example
          * 
-         * // Send a HTTP GET request to https://auxplayer.com
-         * const result = await webhook({
-         *   method: 'GET',
-         *   url: 'https://auxplayer.com'
-         * });
-         * 
-         * player.toast(result);
+         * // Send a HTTP GET request for https://www.example.com
+         * const result = await web.get('https://www.example.com');
          */
-        (options: WebhookOptions): Promise<WebhookResult>;
+        get(url: string, options?: WebhookOptions): Promise<WebhookResult>;
 
         /**
          * Sends a HTTP POST request to the given URL with the given data.
@@ -2359,24 +2355,34 @@ declare global {
          * @example
          * 
          * // Send a HTTP POST request to https://www.example.com/api/createThing
-         * const result = await webhook.post('https://www.example.com/api/createThing', {
+         * const result = await web.post('https://www.example.com/api/createThing', {
          *   hello: 'world'
          * });
          * 
          */
         post(url: string, data?: any, options?: WebhookOptions): Promise<WebhookResult>;
+
+        /**
+         * Sends a web request based on the given options.
+         * @param options The options that specify where and what to send in the web request.
+         *
+         * @example
+         * 
+         * // Send a HTTP GET request to https://example.com
+         * const result = await web.hook({
+         *   method: 'GET',
+         *   url: 'https://example.com'
+         * });
+         * 
+         * os.toast(result);
+         */
+        hook(options: WebhookOptions): Promise<WebhookResult>;
     };
     
     /**
     * Creates a Universally Unique IDentifier (UUID).
     */
     function uuid(): string;
-
-    /**
-     * Sleeps for time in ms.
-     * @param time Time in ms. 1 second is 1000ms.
-     */
-    function sleep(time: number): Promise<void>;
 
     /**
      * Animates the given tag. Returns a promise when the animation is finished.
@@ -2412,7 +2418,7 @@ declare global {
      *
      * @example
      * // Send a toast to all sessions for the username "bob"
-     * remote(player.toast("Hello, Bob!"), { username: "bob" });
+     * remote(os.toast("Hello, Bob!"), { username: "bob" });
      */
     function remote(
         event: BotAction,
@@ -2421,42 +2427,16 @@ declare global {
     ): RemoteAction | RemoteAction[];
 
     /**
-     * Sends an event to the given player or list of players.
-     * The other players will recieve an onRemoteData shout for this whisper.
+     * Sends an event to the given remote or list of remotes.
+     * The other remotes will recieve an onRemoteData shout for this whisper.
      * 
-     * In effect, this allows players to communicate with each other by sending arbitrary events.
+     * In effect, this allows remotes to communicate with each other by sending arbitrary events.
      * 
-     * @param playerId The ID of the other player or players to whisper to.
+     * @param remoteId The ID of the other remote or remotes to whisper to.
      * @param name The name of the event.
      * @param arg The optional argument to include in the event.
      */
-    function sendRemoteData(playerId: string | string[], name: string, arg?: any): RemoteAction | RemoteAction[];
-
-    /**
-     * Sends the given shout to the given player or list of players.
-     * The other players will recieve an onRemoteWhisper event for this whisper.
-     * 
-     * In effect, this allows players to communicate with each other by sending arbitrary events.
-     * 
-     * @param playerId The ID of the other player or players to whisper to.
-     * @param name The name of the event.
-     * @param arg The optional argument to include in the whisper.
-     */
-    function remoteWhisper(playerId: string | string[], name: string, arg?: any): RemoteAction | RemoteAction[];
-
-    /**
-     * Sends the given shout to all players.
-     * The other players will recieve an onRemoteWhisper event for this whisper.
-     *
-     * In effect, this allows players to communicate with each other by sending arbitrary events.
-     *
-     * @param name The name of the event.
-     * @param arg The optional argument to include in the whisper.
-     */
-    function remoteShout(
-        name: string,
-        arg?: any
-    ): RemoteAction;
+    function sendRemoteData(remoteId: string | string[], name: string, arg?: any): RemoteAction | RemoteAction[];
 
     /**
      * Gets the first bot which matches all of the given filters.
@@ -2806,6 +2786,12 @@ declare global {
     const os: {
 
         /**
+         * Sleeps for time in ms.
+         * @param time Time in ms. 1 second is 1000ms.
+         */
+        sleep(time: number): Promise<void>;
+
+        /**
          * Derermines whether the player is in the given dimension.
          * @param dimension The dimension.
          */
@@ -2817,12 +2803,12 @@ declare global {
          *
          * @example
          * // Send the player to the "welcome" dimension.
-         * player.goToDimension("welcome");
+         * os.goToDimension("welcome");
          */
         goToDimension(dimension: string): GoToDimensionAction;
 
         /**
-         * Instructs auxPlayer to open the built-in developer console.
+         * Instructs CasualOS to open the built-in developer console.
          * The dev console provides easy access to error messages and debug logs for formulas and actions.
          */
         openDevConsole(): OpenConsoleAction;
@@ -2961,7 +2947,7 @@ declare global {
          * 
          * @example
          * // Play a cow "moo"
-         * player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+         * os.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
          */
         playSound(url: string): Promise<string>;
 
@@ -2972,7 +2958,7 @@ declare global {
          * 
          * @example
          * // Preload a cow "moo"
-         * player.bufferSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+         * os.bufferSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
          */
         bufferSound(url: string): Promise<void>;
 
@@ -2983,8 +2969,8 @@ declare global {
          *
          * @example
          * // Play and cancel a sound
-         * const id = await player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
-         * player.cancelSound(id);
+         * const id = await os.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+         * os.cancelSound(id);
          */
         cancelSound(soundID: number): Promise<void>;
 
@@ -3026,6 +3012,12 @@ declare global {
          * @param options The options that should be used for the effect.
          */
         openCircleWipe(options?: Partial<OpenCircleWipeOptions>): Promise<void>;
+
+        /**
+         * Logs the given data to the developer console.
+         * @param args The data to log.
+         */
+        log(...args: any[]): void;
 
         /**
          * Shows some HTML to the user.
@@ -3219,7 +3211,7 @@ declare global {
          *
          * @example
          * // Send the player to wikipedia.
-         * player.goToURL("https://wikipedia.org");
+         * os.goToURL("https://wikipedia.org");
          */
         goToURL(url: string): GoToURLAction;
 
@@ -3229,7 +3221,7 @@ declare global {
          *
          * @example
          * // Open wikipedia in a new tab.
-         * player.openURL("https://wikipedia.org");
+         * os.openURL("https://wikipedia.org");
          */
         openURL(url: string): OpenURLAction;
 
@@ -3242,14 +3234,14 @@ declare global {
          *
          * @example
          * // Show an input box for `this` bot's label.
-         * player.showInputForTag(this, "label", {
+         * os.showInputForTag(this, "label", {
          *            title: "Change the label",
          *            type: "text"
          * });
          *
          * @example
          * // Show a color picker for the bot's color.
-         * player.showInputForTag(this, "color", {
+         * os.showInputForTag(this, "color", {
          *            title: "Change the color",
          *            type: "color",
          *            subtype: "advanced"
@@ -3269,7 +3261,7 @@ declare global {
          *
          * @example
          * // Show an input box.
-         * const result = await player.showInput({
+         * const result = await os.showInput({
          *    title: "Change the label",
          *    type: "text"
          * });
@@ -3286,7 +3278,7 @@ declare global {
          *
          * @example
          * // Show a checkout box for 10 cookies
-         * player.checkout({
+         * os.checkout({
          *   productId: '10_cookies',
          *   title: '10 Cookies',
          *   description: '$5.00',
@@ -3760,34 +3752,34 @@ declare global {
         shell(script: string): ShellAction;
     
         /**
-         * Backs up all the AUX stories to a Github Gist.
+         * Backs up all the AUX servers to a Github Gist.
          * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
          */
         backupToGithub(auth: string): BackupToGithubAction;
     
         /**
-         * Backs up all the AUX stories to a zip bot.
+         * Backs up all the AUX servers to a zip bot.
          */
         backupAsDownload(target: SessionSelector): BackupAsDownloadAction;
 
         /**
-         * Gets the number of players that are viewing the current server.
+         * Gets the number of devices that are viewing the current server.
          * @param server The server to get the statistics for. If omitted, then the current server is used.
          */
-        serverPlayerCount(server?: string): Promise<number>;
+        serverRemoteCount(server?: string): Promise<number>;
 
         /**
-         * Gets the total number of players that are connected to the server.
+         * Gets the total number of devices that are connected to the server.
          */
-        totalPlayerCount(): Promise<number>;
+        totalRemoteCount(): Promise<number>;
 
         /**
-         * Gets the list of stories that are on the server.
+         * Gets the list of servers that are on the server.
          */
-        stories(): Promise<string[]>;
+        servers(): Promise<string[]>;
 
         /**
-         * Gets the list of stories that are on the server.
+         * Gets the list of servers that are on the server.
          */
         serverStatuses(): Promise<{
             server: string,
@@ -3795,9 +3787,9 @@ declare global {
         }[]>;
 
         /**
-         * Gets the list of player IDs that are connected to the server.
+         * Gets the list of remote IDs that are connected to the server.
          */
-        players(): Promise<string[]>;
+        remotes(): Promise<string[]>;
     
         /**
          * Loads a file from the server at the given path.

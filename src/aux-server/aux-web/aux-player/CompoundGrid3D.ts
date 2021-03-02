@@ -1,5 +1,5 @@
 import { Grid3D, GridTile } from './Grid3D';
-import { Ray, Vector3 } from 'three';
+import { Ray, Vector3 } from '@casual-simulation/three';
 
 /**
  * Defines a class that represents multiple grids.

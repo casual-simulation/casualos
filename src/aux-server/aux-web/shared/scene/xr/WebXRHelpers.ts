@@ -3,7 +3,7 @@ import {
     MotionController,
 } from '@webxr-input-profiles/motion-controllers';
 import { XRInputSource, XRPose, XRHandedness } from './WebXRTypes';
-import { Object3D } from 'three';
+import { Object3D } from '@casual-simulation/three';
 
 const uri = '/webxr-profiles';
 

@@ -1,4 +1,4 @@
-import { Clock } from 'three';
+import { Clock } from '@casual-simulation/three';
 
 export class Time {
     private _frameCount: number = 0;

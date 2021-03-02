@@ -10,7 +10,7 @@ import {
     getBotTransformer,
 } from '@casual-simulation/aux-common';
 import { calculateScale } from '../SceneUtils';
-import { Group, Object3D } from 'three';
+import { Group, Object3D } from '@casual-simulation/three';
 
 export class TransformerDecorator extends AuxBot3DDecoratorBase {
     private _setup: boolean;

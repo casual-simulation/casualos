@@ -10,7 +10,7 @@ import {
     Mesh,
     MeshBasicMaterial,
     SphereBufferGeometry,
-} from 'three';
+} from '@casual-simulation/three';
 import {
     baseAuxMeshMaterial,
     disposeMesh,

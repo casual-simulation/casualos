@@ -1,6 +1,6 @@
 import { IOperation } from './IOperation';
 import { BaseInteractionManager } from './BaseInteractionManager';
-import { Vector3, Vector2 } from 'three';
+import { Vector3, Vector2 } from '@casual-simulation/three';
 import { BotCalculationContext } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { CameraRig } from '../scene/CameraRigFactory';
@@ -50,7 +50,7 @@ export class TweenCameraToOperation implements IOperation {
         this._instant = duration <= 0;
 
         this._rigControls = this._interaction.cameraRigControllers.find(
-            c => c.rig.name === cameraRig.name
+            (c) => c.rig.name === cameraRig.name
         );
 
         // If rig controls could not be found for the given camera, just exit this operation early.
@@ -87,15 +87,9 @@ export class TweenCameraToOperation implements IOperation {
         if (dist > 0.001) {
             let dir;
             if (this._instant) {
-                dir = this._target
-                    .clone()
-                    .sub(camPos)
-                    .multiplyScalar(1);
+                dir = this._target.clone().sub(camPos).multiplyScalar(1);
             } else {
-                dir = this._target
-                    .clone()
-                    .sub(camPos)
-                    .multiplyScalar(0.1);
+                dir = this._target.clone().sub(camPos).multiplyScalar(0.1);
             }
 
             this._rigControls.controls.cameraFrameOffset.copy(dir);

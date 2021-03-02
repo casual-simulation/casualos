@@ -1,6 +1,6 @@
 import { CompoundGrid3D } from './CompoundGrid3D';
 import { BoundedGrid3D } from './BoundedGrid3D';
-import { Ray, Vector3 } from 'three';
+import { Ray, Vector3 } from '@casual-simulation/three';
 
 describe('CompoundGrid3D', () => {
     describe('getTileFromRay()', () => {

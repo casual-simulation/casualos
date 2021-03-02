@@ -65,7 +65,7 @@ import {
     showInput,
     asyncResult,
     asyncError,
-    getPlayerCount,
+    getRemoteCount,
     stateUpdatedEvent,
     DEFAULT_TAG_MASK_SPACE,
     DNA_TAG_PREFIX,
@@ -73,6 +73,7 @@ import {
     TEMPORARY_BOT_PARTITION_ID,
     openCustomPortal,
     registerBuiltinPortal,
+    isRuntimeBot,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -3273,14 +3274,14 @@ describe('AuxRuntime', () => {
             uuidMock.mockReturnValueOnce('task1');
             runtime.process([
                 runScript(
-                    'server.serverPlayerCount("test").then(result => os.toast(result))'
+                    'server.serverRemoteCount("test").then(result => os.toast(result))'
                 ),
             ]);
 
             await waitAsync();
 
             expect(events).toEqual([
-                [remote(getPlayerCount('test'), undefined, undefined, 'task1')],
+                [remote(getRemoteCount('test'), undefined, undefined, 'task1')],
             ]);
 
             runtime.process([deviceResult(null, 123, 'task1')]);
@@ -3294,14 +3295,14 @@ describe('AuxRuntime', () => {
             uuidMock.mockReturnValueOnce('task1');
             runtime.process([
                 runScript(
-                    'server.serverPlayerCount("test").catch(err => os.toast(err))'
+                    'server.serverRemoteCount("test").catch(err => os.toast(err))'
                 ),
             ]);
 
             await waitAsync();
 
             expect(events).toEqual([
-                [remote(getPlayerCount('test'), undefined, undefined, 'task1')],
+                [remote(getRemoteCount('test'), undefined, undefined, 'task1')],
             ]);
 
             runtime.process([deviceError(null, 'bad', 'task1')]);
@@ -3360,6 +3361,72 @@ describe('AuxRuntime', () => {
             runtime.process(result.actions);
 
             expect(await result.result).toBe(123);
+        });
+
+        describe('onError', () => {
+            it('should emit a onError shout when an error in a script occurs', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@throw new Error("My Error");',
+                        }),
+                        test3: createBot('test3', {
+                            onError: '@tags.error = that;',
+                        }),
+                    })
+                );
+                runtime.process([action('hello')]);
+
+                await waitAsync();
+
+                const error = runtime.currentState['test3'].tags.error;
+
+                expect(error).toBeTruthy();
+                expect(isRuntimeBot(error.bot)).toBe(true);
+                expect(error.tag).toBe('hello');
+                expect(error.error).toEqual(new Error('My Error'));
+            });
+
+            it('should not emit errors that occur inside an onError tag', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            onError: '@throw new Error("My Error");',
+                        }),
+                        test3: createBot('test3', {
+                            calledCount: 0,
+                            onError: '@tags.calledCount += 1;',
+                        }),
+                    })
+                );
+                runtime.process([action('onError')]);
+
+                await waitAsync();
+
+                const bot = runtime.currentState['test3'];
+                expect(bot.tags.calledCount).toBe(1);
+            });
+
+            it('should not emit errors that occur inside an shout called from an onError', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            onError: '@shout("other")',
+                            other: '@throw new Error("My Error")',
+                        }),
+                        test3: createBot('test3', {
+                            calledCount: 0,
+                            onError: '@tags.calledCount += 1;',
+                        }),
+                    })
+                );
+                runtime.process([action('other')]);
+
+                await waitAsync();
+
+                const bot = runtime.currentState['test3'];
+                expect(bot.tags.calledCount).toBe(1);
+            });
         });
 
         describe('register_builtin_portal', () => {
@@ -3877,6 +3944,30 @@ describe('AuxRuntime', () => {
                 jest.runAllTicks();
 
                 expect(events).toEqual([[botRemoved('test1')]]);
+            });
+
+            it('should emit errors that occur inside a shout from timer started from an onError', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            onError:
+                                '@setTimeout(() => { shout("other"); }, 100);',
+                            other: '@throw new Error("My Error")',
+                        }),
+                        test3: createBot('test3', {
+                            calledCount: 0,
+                            onError: '@tags.calledCount += 1;',
+                        }),
+                    })
+                );
+                runtime.process([action('onError')]);
+
+                jest.runAllTicks();
+                jest.advanceTimersByTime(200);
+                jest.runAllTicks();
+
+                const bot = runtime.currentState['test3'];
+                expect(bot.tags.calledCount).toBe(2);
             });
         });
 

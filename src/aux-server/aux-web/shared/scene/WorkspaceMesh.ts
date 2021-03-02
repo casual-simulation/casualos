@@ -1,4 +1,4 @@
-import { Object3D, Vector3, Color, Vector2 } from 'three';
+import { Object3D, Vector3, Color, Vector2 } from '@casual-simulation/three';
 import {
     HexGridMesh,
     HexGrid,

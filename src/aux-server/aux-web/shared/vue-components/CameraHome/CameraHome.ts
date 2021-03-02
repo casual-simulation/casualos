@@ -4,7 +4,7 @@ import { CameraRig } from '../../scene/CameraRigFactory';
 import { Prop } from 'vue-property-decorator';
 import { EventBus } from '../../../shared/EventBus';
 import { IGameView } from '../../../shared/vue-components/IGameView';
-import { Vector3 } from 'three';
+import { Vector3 } from '@casual-simulation/three';
 import { CameraRigControls } from '../../../shared/interaction/CameraRigControls';
 
 @Component({})

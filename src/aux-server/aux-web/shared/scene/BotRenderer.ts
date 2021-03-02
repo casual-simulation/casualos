@@ -10,7 +10,7 @@ import {
     AmbientLight,
     DirectionalLight,
     sRGBEncoding,
-} from 'three';
+} from '@casual-simulation/three';
 import {
     merge,
     BotCalculationContext,

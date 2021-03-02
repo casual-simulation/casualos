@@ -17,7 +17,7 @@ import {
     PortalCameraControlsMode,
     calculatePortalCameraControlsMode,
 } from '@casual-simulation/aux-common';
-import { Color, Texture } from 'three';
+import { Color, Texture } from '@casual-simulation/three';
 import {
     BrowserSimulation,
     watchPortalConfigBot,
@@ -403,19 +403,19 @@ export class PortalConfig implements SubscriptionLike {
         this._playerZoom = calculateNumericalTagValue(
             calc,
             bot,
-            `auxPortalPlayerZoom`,
+            `auxPortalCameraZoom`,
             null
         );
         this._playerRotationX = calculateNumericalTagValue(
             calc,
             bot,
-            `auxPortalPlayerRotationX`,
+            `auxPortalCameraRotationX`,
             null
         );
         this._playerRotationY = calculateNumericalTagValue(
             calc,
             bot,
-            `auxPortalPlayerRotationY`,
+            `auxPortalCameraRotationY`,
             null
         );
         this._raycastMode = calculatePortalPointerDragMode(calc, bot);

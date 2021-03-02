@@ -1,5 +1,9 @@
-import { Group, Mesh, MathUtils as ThreeMath } from 'three';
-import { MeshToonMaterial } from '../../public/MeshToonMaterial';
+import {
+    Group,
+    Mesh,
+    MathUtils as ThreeMath,
+    MeshToonMaterial,
+} from '@casual-simulation/three';
 import {
     BotCalculationContext,
     isUserActive,

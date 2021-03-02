@@ -14,7 +14,7 @@ import {
     hexRing,
 } from './scene/hex';
 import { flatMap } from 'lodash';
-import { Vector2 } from 'three';
+import { Vector2 } from '@casual-simulation/three';
 
 export function nextAvailableWorkspacePosition(calc: BotCalculationContext) {
     const visibleWorkspacePositions = flatMap(

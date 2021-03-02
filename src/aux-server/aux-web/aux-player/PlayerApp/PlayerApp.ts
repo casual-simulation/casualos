@@ -27,6 +27,8 @@ import {
     calculateStringListTagValue,
     asyncError,
     asyncResult,
+    ON_SERVER_JOINED_ACTION_NAME,
+    ON_SERVER_LEAVE_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -769,6 +771,10 @@ export default class PlayerApp extends Vue {
                         if (!info.subscribed) {
                             info.subscribed = true;
                             await this._superAction(
+                                ON_SERVER_JOINED_ACTION_NAME,
+                                onServerSubscribedArg(simulation.id)
+                            );
+                            await this._superAction(
                                 ON_SERVER_SUBSCRIBED_ACTION_NAME,
                                 onServerSubscribedArg(simulation.id)
                             );
@@ -780,6 +786,11 @@ export default class PlayerApp extends Vue {
                                 ) {
                                     continue;
                                 }
+                                await simulation.helper.action(
+                                    ON_SERVER_JOINED_ACTION_NAME,
+                                    null,
+                                    onServerSubscribedArg(info.id)
+                                );
                                 await simulation.helper.action(
                                     ON_SERVER_SUBSCRIBED_ACTION_NAME,
                                     null,
@@ -802,6 +813,10 @@ export default class PlayerApp extends Vue {
                 recordMessage(m);
             }),
             new Subscription(async () => {
+                await this._superAction(
+                    ON_SERVER_LEAVE_ACTION_NAME,
+                    onServerUnsubscribedArg(simulation.id)
+                );
                 await this._superAction(
                     ON_SERVER_UNSUBSCRIBED_ACTION_NAME,
                     onServerUnsubscribedArg(simulation.id)

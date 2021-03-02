@@ -7,7 +7,7 @@ import {
     Vector3,
     DynamicDrawUsage,
     StaticDrawUsage,
-} from 'three';
+} from '@casual-simulation/three';
 
 /**
  * Creates intersecting lines to visualize a point in space.

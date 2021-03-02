@@ -1,4 +1,10 @@
-import { Object3D, Color, Vector3, ArrowHelper, Sphere } from 'three';
+import {
+    Object3D,
+    Color,
+    Vector3,
+    ArrowHelper,
+    Sphere,
+} from '@casual-simulation/three';
 
 import {
     isMinimized,

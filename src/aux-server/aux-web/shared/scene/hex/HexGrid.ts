@@ -1,4 +1,4 @@
-import { Vector2 } from 'three';
+import { Vector2 } from '@casual-simulation/three';
 import { Axial } from './Axial';
 import { hexWidth } from './Hex';
 import { values } from 'lodash';

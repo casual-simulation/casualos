@@ -7,7 +7,7 @@ import {
     Line,
     DynamicDrawUsage,
     StaticDrawUsage,
-} from 'three';
+} from '@casual-simulation/three';
 
 /**
  * Creates a line from the start to end position.

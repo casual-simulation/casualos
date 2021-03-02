@@ -1,5 +1,5 @@
 import { Object3DPool } from './Object3DPool';
-import { Object3D } from 'three';
+import { Object3D } from '@casual-simulation/three';
 
 describe('Object3DPool', () => {
     // Source object for all our object 3d pool tests.

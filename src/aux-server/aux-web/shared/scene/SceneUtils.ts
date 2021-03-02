@@ -33,8 +33,8 @@ import {
     Group,
     LineSegments,
     LineBasicMaterial,
-} from 'three';
-import { MeshToonMaterial } from '../public/MeshToonMaterial';
+    MeshToonMaterial,
+} from '@casual-simulation/three';
 import { flatMap } from 'lodash';
 import {
     BotCalculationContext,

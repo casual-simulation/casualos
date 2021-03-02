@@ -80,7 +80,7 @@ function playerConfig(latestTag) {
                 filename: 'aux-vm-iframe.html',
             }),
             new webpack.ProvidePlugin({
-                THREE: 'three',
+                THREE: '@casual-simulation/three',
             }),
             ...commonPlugins(latestTag),
             new WorkboxPlugin.GenerateSW({
@@ -233,6 +233,10 @@ function commonPlugins(latestTag) {
             PROXY_CORS_REQUESTS: process.env.PROXY_CORS_REQUESTS !== 'false',
         }),
         new webpack.NormalModuleReplacementPlugin(/^esbuild$/, 'esbuild-wasm'),
+        new webpack.NormalModuleReplacementPlugin(
+            /^three$/,
+            '@casual-simulation/three'
+        ),
     ];
 }
 

@@ -6,7 +6,7 @@ import {
     Vector3,
     Vector2,
     sRGBEncoding,
-} from 'three';
+} from '@casual-simulation/three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import {

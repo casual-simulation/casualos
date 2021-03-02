@@ -207,9 +207,9 @@ export interface UpdatedBot {
  * - "local" means that the bot is stored in the local storage partition.
  * - "tempLocal" means that the bot is stored in the temporary partition.
  * - "history" means that the bot represents a version of another space.
- * - "admin" means that the bot is shared across all stories.
- * - "player" means that the bot is temporary and shared with other players.
- * - "otherPlayers" means that the bot is temporary and shared with this player from another player.
+ * - "admin" means that the bot is shared across all servers.
+ * - "tempShared" means that the bot is temporary and shared with other devices.
+ * - "remoteTempShared" means that the bot is temporary and shared with this device from a remote device.
  * - "certified" means that the bot is a certificate.
  */
 export type BotSpace =
@@ -218,8 +218,8 @@ export type BotSpace =
     | 'tempLocal'
     | 'history'
     | 'admin'
-    | 'player'
-    | 'otherPlayers'
+    | 'tempShared'
+    | 'remoteTempShared'
     | 'certified';
 
 /**
@@ -230,7 +230,6 @@ export type PortalType =
     | 'inventory'
     | 'menu'
     | 'sheet'
-    | 'stories'
     | 'meet'
     | string;
 
@@ -336,9 +335,9 @@ export interface BotTags {
     ['portalLocked']?: unknown;
     ['portalGridScale']?: number;
     ['portalSurfaceScale']?: number;
-    ['portalPlayerRotationX']?: number;
-    ['portalPlayerRotationY']?: number;
-    ['portalPlayerZoom']?: number;
+    ['portalCameraRotationX']?: number;
+    ['portalCameraRotationY']?: number;
+    ['portalCameraZoom']?: number;
     ['portalPannable']?: number | null;
     [`portalPannableMinX`]?: number | null;
     [`portalPannableMaxX`]?: number | null;
@@ -826,9 +825,9 @@ export const TEMPORARY_BOT_PARTITION_ID = 'tempLocal';
 export const ADMIN_PARTITION_ID = 'admin';
 
 /**
- * The partition ID for player bots.
+ * The partition ID for temporary shared bots.
  */
-export const PLAYER_PARTITION_ID = 'player';
+export const TEMPORARY_SHARED_PARTITION_ID = 'tempShared';
 
 /**
  * The partition ID for bots that are automatically added to the server.
@@ -836,9 +835,9 @@ export const PLAYER_PARTITION_ID = 'player';
 export const BOOTSTRAP_PARTITION_ID = 'bootstrap';
 
 /**
- * The partition ID for other player bots.
+ * The partition ID for other temp shared bots.
  */
-export const OTHER_PLAYERS_PARTITION_ID = 'otherPlayers';
+export const REMOTE_TEMPORARY_SHARED_PARTITION_ID = 'remoteTempShared';
 
 /**
  * The space that tag masks get placed in by default.
@@ -852,8 +851,8 @@ export const DEFAULT_TAG_MASK_SPACE: BotSpace = 'tempLocal';
 export const TAG_MASK_SPACE_PRIORITIES_REVERSE = [
     'admin',
     'shared',
-    'otherPlayers',
-    'player',
+    'remoteTempShared',
+    'tempShared',
     'local',
     'tempLocal',
 ] as BotSpace[];
@@ -864,8 +863,8 @@ export const TAG_MASK_SPACE_PRIORITIES_REVERSE = [
 export const TAG_MASK_SPACE_PRIORITIES = [
     'tempLocal',
     'local',
-    'player',
-    'otherPlayers',
+    'tempShared',
+    'remoteTempShared',
     'shared',
     'admin',
 ] as BotSpace[];
@@ -1048,6 +1047,7 @@ export const ON_ACTION_ACTION_NAME: string = 'onServerAction';
 /**
  * The name of the event that is triggered when a remote whisper is executed.
  */
+// TODO: Remove this action
 export const ON_REMOTE_WHISPER_ACTION_NAME: string = 'onRemoteWhisper';
 
 /**
@@ -1068,19 +1068,37 @@ export const ON_SERVER_STREAM_LOST_ACTION_NAME: string = 'onServerStreamLost';
 /**
  * The name of the event that is triggered when a channel is loaded.
  */
+// TODO: Remove this action
 export const ON_SERVER_SUBSCRIBED_ACTION_NAME: string = 'onServerSubscribed';
+
+/**
+ * The name of the event that is triggered when a channel is loaded.
+ */
+export const ON_SERVER_JOINED_ACTION_NAME: string = 'onServerJoined';
 
 /**
  * The name of the event that is triggered when a channel is unloaded.
  */
+// TODO: Remove this action
 export const ON_SERVER_UNSUBSCRIBED_ACTION_NAME: string =
     'onServerUnsubscribed';
 
 /**
- * The name of the event that is triggered when portal tag is changed on the player.
+ * The name of the event that is triggered when a channel is unloaded.
  */
+export const ON_SERVER_LEAVE_ACTION_NAME: string = 'onServerLeave';
+
+/**
+ * The name of the event that is triggered when portal tag is changed on the config bot.
+ */
+// TODO: Remove this action
 export const ON_PLAYER_PORTAL_CHANGED_ACTION_NAME: string =
     'onPlayerPortalChanged';
+
+/**
+ * The name of the event that is triggered when portal tag is changed on the config bot.
+ */
+export const ON_PORTAL_CHANGED_ACTION_NAME: string = 'onPortalChanged';
 
 /**
  * The name of the event that is triggered when a script is executed.
@@ -1195,14 +1213,26 @@ export const ON_ANY_FOCUS_EXIT_ACTION_NAME: string = 'onAnyFocusExit';
 /**
  * The name of the event that is triggered when a remote player joins the game.
  */
+// TODO: Remove this action
 export const ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME: string =
     'onRemotePlayerSubscribed';
 
 /**
+ * The name of the event that is triggered when a remote player joins the game.
+ */
+export const ON_REMOTE_JOINED_ACTION_NAME: string = 'onRemoteJoined';
+
+/**
  * The name of the event that is triggered when a remote player leaves the game.
  */
+// TODO: Remove
 export const ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME: string =
     'onRemotePlayerUnsubscribed';
+
+/**
+ * The name of the event that is triggered when a remote player leaves the game.
+ */
+export const ON_REMOTE_LEAVE_ACTION_NAME: string = 'onRemoteLeave';
 
 /**
  * The name of the event that is triggered when a bot is added to the local simulation.
@@ -1243,6 +1273,11 @@ export const ON_SHEET_BOT_ID_CLICK = 'onSheetBotIDClick';
  * The name of the event that is triggered when a Bot is clicked in the sheet.
  */
 export const ON_SHEET_BOT_CLICK = 'onSheetBotClick';
+
+/**
+ * The name of the event that is triggered when a listen tag encounters an unhandled error.
+ */
+export const ON_ERROR = 'onError';
 
 /**
  * The tag used to set the space that the tag portal operates in.
@@ -1408,9 +1443,9 @@ export const KNOWN_TAGS: string[] = [
     'portalRotatable',
     'portalGridScale',
     'portalSurfaceScale',
-    `portalPlayerZoom`,
-    `portalPlayerRotationX`,
-    `portalPlayerRotationY`,
+    `portalCameraZoom`,
+    `portalCameraRotationX`,
+    `portalCameraRotationY`,
     'portalPointerDragMode',
     'portalCameraControls',
     'portalShowFocusPoint',
@@ -1546,9 +1581,11 @@ export const KNOWN_TAGS: string[] = [
     'onPointerUp',
     ON_SERVER_STREAMING_ACTION_NAME,
     ON_SERVER_STREAM_LOST_ACTION_NAME,
-    ON_SERVER_SUBSCRIBED_ACTION_NAME,
-    ON_SERVER_UNSUBSCRIBED_ACTION_NAME,
-    ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
+
+    ON_SERVER_JOINED_ACTION_NAME,
+    ON_SERVER_LEAVE_ACTION_NAME,
+
+    ON_PORTAL_CHANGED_ACTION_NAME,
     'onKeyDown',
     'onKeyUp',
     ON_GRID_CLICK_ACTION_NAME,
@@ -1560,7 +1597,7 @@ export const KNOWN_TAGS: string[] = [
     'onWebhook',
     'onAnyListen',
     'onListen',
-    ON_REMOTE_WHISPER_ACTION_NAME,
+    ON_REMOTE_DATA_ACTION_NAME,
     ON_ACTION_ACTION_NAME,
     ON_RUN_ACTION_NAME,
     ON_CHAT_TYPING_ACTION_NAME,
@@ -1583,8 +1620,8 @@ export const KNOWN_TAGS: string[] = [
     ON_ANY_FOCUS_ENTER_ACTION_NAME,
     ON_ANY_FOCUS_EXIT_ACTION_NAME,
 
-    ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
-    ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
+    ON_REMOTE_JOINED_ACTION_NAME,
+    ON_REMOTE_LEAVE_ACTION_NAME,
 
     ON_BOT_ADDED_ACTION_NAME,
     ON_ANY_BOTS_ADDED_ACTION_NAME,

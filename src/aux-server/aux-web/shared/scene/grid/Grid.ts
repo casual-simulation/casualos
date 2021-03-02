@@ -1,4 +1,4 @@
-import { Vector3 } from 'three';
+import { Vector3 } from '@casual-simulation/three';
 
 /**
  * Calculates the corner points for a tile of the given scale.
@@ -34,7 +34,7 @@ export function calculateGridTileLocalPositions(
 
     return {
         center: localCenter,
-        points: points.map(p => {
+        points: points.map((p) => {
             return new Vector3().copy(p).add(localCenter);
         }),
     };

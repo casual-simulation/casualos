@@ -4,7 +4,7 @@ import {
     calculateGridTilePoints,
     calculateGridTileLocalCenter,
 } from './BoundedGrid3D';
-import { Vector3, Vector2 } from 'three';
+import { Vector3, Vector2 } from '@casual-simulation/three';
 
 describe('BoundedGrid3D', () => {
     const testScales = [
@@ -49,7 +49,7 @@ describe('BoundedGrid3D', () => {
 
     describe('helper functions', () => {
         describe('calculateTileCornerPoints() should return expected local points for the given tile scales:', () => {
-            it.each(testScales)('scale: %d', scale => {
+            it.each(testScales)('scale: %d', (scale) => {
                 let points = calculateTileCornerPoints(scale);
 
                 // Should have 4 points.
