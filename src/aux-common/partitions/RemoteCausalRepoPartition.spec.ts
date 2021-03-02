@@ -935,7 +935,7 @@ describe('RemoteCausalRepoPartition', () => {
                         action(ON_REMOTE_DATA_ACTION_NAME, null, null, {
                             name: 'eventName',
                             that: { abc: 'def' },
-                            playerId: 'info1SessionId',
+                            remoteId: 'info1SessionId',
                         }),
                         action(ON_REMOTE_WHISPER_ACTION_NAME, null, null, {
                             name: 'eventName',
@@ -973,7 +973,7 @@ describe('RemoteCausalRepoPartition', () => {
                         action(ON_REMOTE_DATA_ACTION_NAME, null, null, {
                             name: 'eventName',
                             that: { abc: 'def' },
-                            playerId: 'info1SessionId',
+                            remoteId: 'info1SessionId',
                         }),
                         action(ON_REMOTE_WHISPER_ACTION_NAME, null, null, {
                             name: 'eventName',

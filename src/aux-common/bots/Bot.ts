@@ -1045,6 +1045,7 @@ export const ON_SHOUT_ACTION_NAME: string = 'onListen';
  */
 export const ON_ACTION_ACTION_NAME: string = 'onServerAction';
 
+// TODO: Remove this action
 /**
  * The name of the event that is triggered when a remote whisper is executed.
  */
@@ -1566,6 +1567,7 @@ export const KNOWN_TAGS: string[] = [
     'onAnyListen',
     'onListen',
     ON_REMOTE_WHISPER_ACTION_NAME,
+    ON_REMOTE_DATA_ACTION_NAME,
     ON_ACTION_ACTION_NAME,
     ON_RUN_ACTION_NAME,
     ON_CHAT_TYPING_ACTION_NAME,

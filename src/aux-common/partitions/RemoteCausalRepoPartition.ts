@@ -534,7 +534,7 @@ export class RemoteCausalRepoPartitionImpl
                                             {
                                                 name: remoteAction.eventName,
                                                 that: remoteAction.argument,
-                                                playerId:
+                                                remoteId:
                                                     event.action.device.claims[
                                                         SESSION_ID_CLAIM
                                                     ],
