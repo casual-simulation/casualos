@@ -1214,14 +1214,26 @@ export const ON_ANY_FOCUS_EXIT_ACTION_NAME: string = 'onAnyFocusExit';
 /**
  * The name of the event that is triggered when a remote player joins the game.
  */
+// TODO: Remove this action
 export const ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME: string =
     'onRemotePlayerSubscribed';
 
 /**
+ * The name of the event that is triggered when a remote player joins the game.
+ */
+export const ON_REMOTE_JOINED_ACTION_NAME: string = 'onRemoteJoined';
+
+/**
  * The name of the event that is triggered when a remote player leaves the game.
  */
+// TODO: Remove
 export const ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME: string =
     'onRemotePlayerUnsubscribed';
+
+/**
+ * The name of the event that is triggered when a remote player leaves the game.
+ */
+export const ON_REMOTE_LEAVE_ACTION_NAME: string = 'onRemoteLeave';
 
 /**
  * The name of the event that is triggered when a bot is added to the local simulation.
@@ -1609,8 +1621,8 @@ export const KNOWN_TAGS: string[] = [
     ON_ANY_FOCUS_ENTER_ACTION_NAME,
     ON_ANY_FOCUS_EXIT_ACTION_NAME,
 
-    ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
-    ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
+    ON_REMOTE_JOINED_ACTION_NAME,
+    ON_REMOTE_LEAVE_ACTION_NAME,
 
     ON_BOT_ADDED_ACTION_NAME,
     ON_ANY_BOTS_ADDED_ACTION_NAME,

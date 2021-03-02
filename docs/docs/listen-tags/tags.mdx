@@ -1065,58 +1065,46 @@ if (that.name === "hello") {
 }
 ```
 
-### `@onRemotePlayerSubscribed`
+### `@onRemoteJoined`
 
-A shout that is run on every other player when a player joins the current server.
+A shout that is run on every other remote device when it joins the current server.
 
-Since this shout is run on every player, you should be careful about performing duplicate actions.
-When in doubt, elect a player to perform all actions that should only be executed once.
+Since this shout is run on every device, you should be careful about performing duplicate actions.
+When in doubt, elect a remote to perform all actions that should only be executed once.
 See example 2 below.
 
 #### Arguments:
 ```typescript
 let that: {
     /**
-     * The ID of the player that joined the server.
+     * The ID of the remote that joined the server.
      */
-    playerId: string
+    remoteId: string
 };
 ```
 
 #### Examples:
 
-1. Show a toast when a player joins.
+1. Show a toast when a remote joins.
 ```typescript
-player.toast("Player joined: " + that.playerId);
+os.toast("Remote joined: " + that.remoteId);
 ```
 
-2. Create a bot when a player joins.
-```typescript
-// Check if the current player is the "server" player.
-// This will ensure that only one bot is created.
-if (getID(player.getBot()) === 'server') {
-    create({
-        playerLog: true,
-        label: 'Player Joined: ' + that.playerId
-    });
-}
-```
+### `@onRemoteLeave`
 
-### `@onRemotePlayerUnsubscribed`
+A shout that is run on every other remote device when it leaves the current server.
 
-A shout that is run on every other player when a player leaves the current server.
-
-Since this shout is run on every player, you should be careful about performing duplicate actions.
-When in doubt, elect a player to perform all actions that should only be executed once.
+Since this shout is run on every device, you should be careful about performing duplicate actions.
+When in doubt, elect a remote to perform all actions that should only be executed once.
 See example 2 below.
 
 #### Arguments:
 ```typescript
 let that: {
     /**
-     * The ID of the player that left the server.
+     * The ID of the remote that left the server.
      */
-    playerId: string
+    remoteId: string
 };
 ```
 
@@ -1124,19 +1112,7 @@ let that: {
 
 1. Show a toast when a player leaves.
 ```typescript
-player.toast("Player joined: " + that.playerId);
-```
-
-2. Create a bot when a player leaves.
-```typescript
-// Check if the current player is the "server" player.
-// This will ensure that only one bot is created.
-if (getID(player.getBot()) === 'server') {
-    create({
-        playerLog: true,
-        label: 'Player Left: ' + that.playerId
-    });
-}
+os.toast("Remote joined: " + that.remoteId);
 ```
 
 ### `@onAnyBotsAdded`

@@ -33,6 +33,8 @@ import {
     ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
     ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
     StateUpdatedEvent,
+    ON_REMOTE_JOINED_ACTION_NAME,
+    ON_REMOTE_LEAVE_ACTION_NAME,
 } from '../bots';
 import { OtherPlayersRepoPartitionConfig } from './AuxPartitionConfig';
 import { bot, tag, value, deleteOp, tagMask } from '../aux-format-2';
@@ -987,6 +989,9 @@ describe('OtherPlayersPartition', () => {
                 await waitAsync();
 
                 expect(events).toEqual([
+                    action(ON_REMOTE_JOINED_ACTION_NAME, null, null, {
+                        remoteId: 'device1SessionId',
+                    }),
                     action(
                         ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
                         null,
@@ -1030,6 +1035,9 @@ describe('OtherPlayersPartition', () => {
                 await waitAsync();
 
                 expect(events).toEqual([
+                    action(ON_REMOTE_JOINED_ACTION_NAME, null, null, {
+                        remoteId: 'device1SessionId',
+                    }),
                     action(
                         ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
                         null,
@@ -1038,6 +1046,9 @@ describe('OtherPlayersPartition', () => {
                             playerId: 'device1SessionId',
                         }
                     ),
+                    action(ON_REMOTE_LEAVE_ACTION_NAME, null, null, {
+                        remoteId: 'device1SessionId',
+                    }),
                     action(
                         ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
                         null,

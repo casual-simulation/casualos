@@ -45,6 +45,8 @@ import {
     PrecalculatedBotsState,
     isBot,
     PartialBotsState,
+    ON_REMOTE_JOINED_ACTION_NAME,
+    ON_REMOTE_LEAVE_ACTION_NAME,
 } from '../bots';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { skip, startWith } from 'rxjs/operators';
@@ -307,6 +309,9 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
             this._devices.set(device.claims[SESSION_ID_CLAIM], connected);
 
             this._onEvents.next([
+                action(ON_REMOTE_JOINED_ACTION_NAME, null, null, {
+                    remoteId: device.claims[SESSION_ID_CLAIM],
+                }),
                 action(ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME, null, null, {
                     playerId: device.claims[SESSION_ID_CLAIM],
                 }),
@@ -321,6 +326,9 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
             if (connected.connectionCount <= 0) {
                 this._devices.delete(device.claims[SESSION_ID_CLAIM]);
                 this._onEvents.next([
+                    action(ON_REMOTE_LEAVE_ACTION_NAME, null, null, {
+                        remoteId: device.claims[SESSION_ID_CLAIM],
+                    }),
                     action(
                         ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
                         null,
