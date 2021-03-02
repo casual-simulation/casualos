@@ -4,11 +4,26 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   `onRemoteData` now uses `that.remoteId` instead of `that.playerId`.
+
 ### :rocket: Improvements
 
 -   Added the `@onError` listen tag.
     -   It is a shout and is triggered when an unhandled error occurs in a listen tag.
 -   Improved CasualOS to now include the Bot ID and tag name in internal console logs for unhandled errors.
+-   Added perferred alternatives for the following functions and listen tags:
+    -   `server.serverPlayerCount()` is now `server.serverRemoteCount()`.
+    -   `server.totalPlayerCount()` is now `server.totalRemoteCount()`.
+    -   `server.stories()` is now `server.servers()`.
+    -   `server.players()` is now `server.remotes()`.
+    -   `onServerSubscribed` is now `onServerJoined`.
+    -   `onServerUnsubscribed` is now `onServerLeave`.
+    -   `onPlayerPortalChanged` is now `onPortalChanged`.
+    -   `onRemotePlayerSubscribed` is now `onRemoteJoined`
+    -   `onRemotePlayerUnsubscribed` is now `onRemoteLeave`.
+    -   Additionally, the `that.playerId` has been changed to `that.remoteId` in the new listen tags.
 
 ### :bug: Bug Fixes
 
