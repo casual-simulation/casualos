@@ -1238,6 +1238,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param data The data.
      */
     function getJSON(data: any): string {
+        if (hasValue(data[ORIGINAL_OBJECT])) {
+            return JSON.stringify(data[ORIGINAL_OBJECT]);
+        }
         return JSON.stringify(data);
     }
 

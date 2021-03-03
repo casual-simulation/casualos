@@ -1222,6 +1222,18 @@ describe('AuxLibrary', () => {
             const json = library.api.getJSON(bot1);
             expect(json).toEqual(JSON.stringify(bot1));
         });
+
+        it('should use the original object', () => {
+            const obj = {
+                abc: 'def',
+                [ORIGINAL_OBJECT]: {
+                    something: 'else'
+                }
+            };
+
+            const json = library.api.getJSON(obj);
+            expect(json).toEqual(JSON.stringify(obj[ORIGINAL_OBJECT]));
+        });
     });
 
     describe('getTag()', () => {
