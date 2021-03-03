@@ -1,0 +1,11 @@
+.loading-dialog
+    .md-progress-bar.md-theme-default.md-determinate
+    .md-progress-bar-fill {
+    background-color: rgb(128, 128, 128);
+}
+
+.loading-progress
+    .md-progress-spinner.md-progress-spinner-indeterminate.md-indeterminate.md-theme-default
+    .md-progress-spinner-circle {
+    stroke: rgb(128, 128, 128);
+}
