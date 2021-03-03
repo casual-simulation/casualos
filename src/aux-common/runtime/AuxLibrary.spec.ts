@@ -1227,8 +1227,8 @@ describe('AuxLibrary', () => {
             const obj = {
                 abc: 'def',
                 [ORIGINAL_OBJECT]: {
-                    something: 'else'
-                }
+                    something: 'else',
+                },
             };
 
             const json = library.api.getJSON(obj);
@@ -1397,6 +1397,19 @@ describe('AuxLibrary', () => {
             );
             expect(mod).toEqual({
                 val: 123,
+            });
+        });
+
+        it('should get the original object', () => {
+            const mod = library.api.getMod({
+                abc: true,
+                val: 123,
+                [ORIGINAL_OBJECT]: {
+                    something: 'else',
+                },
+            });
+            expect(mod).toEqual({
+                something: 'else',
             });
         });
     });
