@@ -37,6 +37,10 @@
     float: left;
 }
 
+.loading-dialog .md-progress-bar.md-theme-default.md-determinate {
+    background-color: rgba(128, 128, 128, 0.22);
+}
+
 .loading-error h1 {
     color: rgb(210, 97, 97);
 }

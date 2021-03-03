@@ -957,8 +957,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         let diff: BotTags = {};
 
-        let tagsObj = isBot(bot) ? bot.tags : bot;
-        let botTags = isBot(bot) ? tagsOnBot(bot) : Object.keys(bot);
+        let tagsObj: BotTags;
+        let botTags: string[];
+        if (isBot(bot)) {
+            tagsObj = bot.tags;
+            botTags = tagsOnBot(bot);
+        } else if (hasValue(bot[ORIGINAL_OBJECT])) {
+            tagsObj = bot[ORIGINAL_OBJECT];
+            botTags = Object.keys(tagsObj);
+        } else {
+            tagsObj = bot;
+            botTags = Object.keys(tagsObj);
+        }
+
         for (let botTag of botTags) {
             let add = false;
             if (tags.length > 0) {
@@ -1238,6 +1249,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param data The data.
      */
     function getJSON(data: any): string {
+        if (hasValue(data[ORIGINAL_OBJECT])) {
+            return JSON.stringify(data[ORIGINAL_OBJECT]);
+        }
         return JSON.stringify(data);
     }
 

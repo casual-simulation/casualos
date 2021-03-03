@@ -1,5 +1,19 @@
 # CasualOS Changelog
 
+## V1.4.9
+
+#### Date: 3/3/2021
+
+### :rocket: Improvements
+
+-   Changed the color of the progress spinner and progress bar on the loading dialog to gray.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where hover events could be sent for bots when the mouse was not directly over the game view.
+-   Fixed a couple issues where keyboard events were propagating outside the sheet and IDE portals.
+-   Fixed an issue where local variables in the top scope would not be included in the code editor autocomplete box.
+
 ## V1.4.8
 
 #### Date: 3/3/2021
