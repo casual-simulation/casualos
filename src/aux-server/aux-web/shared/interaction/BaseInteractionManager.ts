@@ -335,13 +335,15 @@ export abstract class BaseInteractionManager {
         }
 
         if (input.currentInputType === InputType.Mouse) {
-            const { gameObject } = this.findHoveredGameObject(
-                inputMethod,
-                (obj) => obj.pointable
-            );
-            if (gameObject) {
-                // Set bot as being hovered on.
-                this._setHoveredBot(gameObject);
+            if (input.isMouseFocusingOnElement(this._game.gameView.gameView)) {
+                const { gameObject } = this.findHoveredGameObject(
+                    inputMethod,
+                    (obj) => obj.pointable
+                );
+                if (gameObject) {
+                    // Set bot as being hovered on.
+                    this._setHoveredBot(gameObject);
+                }
             }
         }
     }
