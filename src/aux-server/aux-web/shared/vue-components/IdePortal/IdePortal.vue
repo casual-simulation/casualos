@@ -1,5 +1,5 @@
 <template>
-    <div v-if="hasPortal" class="ide-portal">
+    <div v-if="hasPortal" class="ide-portal" v-on:keydown.stop v-on:keyup.stop>
         <md-card ref="card" class="info-card maximized">
             <md-card-content>
                 <div class="items-list">
