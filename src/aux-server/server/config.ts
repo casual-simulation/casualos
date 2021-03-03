@@ -39,7 +39,7 @@ export interface Config {
     sandbox: SandboxType;
 
     /**
-     * Whether to let the server instantate server-side runtimes for stories that get loaded.
+     * Whether to let the server instantate server-side runtimes for servers that get loaded.
      */
     executeLoadedStories: boolean;
 

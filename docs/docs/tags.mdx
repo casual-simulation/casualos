@@ -63,26 +63,26 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
 
 <PossibleValuesTable>
   <PossibleValueCode value='shared'>
-    The bot is saved on the AUXPlayer and is shared with everyone else. (default)
+    The bot is saved on the server and is shared with everyone else. (default)
   </PossibleValueCode>
   <PossibleValueCode value='local'>
     The bot is saved on the device it was created from and is not shared with other devices.
   </PossibleValueCode>
   <PossibleValueCode value='tempLocal'>
-    The bot is not saved and is not shared with other sessions.
+    The bot is not saved (it is temporary) and is not shared with other sessions.
     When the current session is closed (by refreshing or closing the tab), the bot is destroyed.
   </PossibleValueCode>
-  <PossibleValueCode value='player'>
-    The bot is not saved and is shared with everyone else.
-    Bots in this space show up in the `otherPlayers` space to other players.
+  <PossibleValueCode value='tempShared'>
+    The bot is not saved (it is temporary) and is shared with everyone else.
+    Bots in this space show up in the `remoteTempShared` space to other devices.
     Only the current session can create, edit, and destroy bots in this space.
     When the current session is closed, the bot is destroyed.
   </PossibleValueCode>
-  <PossibleValueCode value='otherPlayers'>
-    The bot is not saved and is shared with everyone else.
-    Bots appear in this space when another player puts a bot in their `player` space.
-    Only the other player's session can create, edit, and destroy bots in this space.
-    When the other player's session is closed, the bot is destroyed.
+  <PossibleValueCode value='remoteTempShared'>
+    The bot is not saved (it is temporary) and is shared with everyone else.
+    Bots appear in this space when another remote puts a bot in their `tempShared` space.
+    Only the other remote's session can create, edit, and destroy bots in this space.
+    When the other remote's session is closed, the bot is destroyed.
   </PossibleValueCode>
   <PossibleValueCode value='history'>
     The bot represents a mark (save point).
@@ -91,7 +91,7 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
     Additionally, the history space is read-only. This means that bots cannot be added or removed from it and they also cannot be edited.
   </PossibleValueCode>
   <PossibleValueCode value='admin'>
-    The bot is saved on the AUXPlayer and is shared across all stories.
+    The bot is saved on the server and is shared across all servers.
     Admin space is initially locked whenever a new session starts. While locked, it is impossible to create, update, or destroy bots in the admin space.
     You must use the <ActionLink action='adminSpace.unlock(password)'/> function to unlock it.
   </PossibleValueCode>
@@ -1180,7 +1180,7 @@ Whether the player will be able to rotate the camera inside the inventory in thi
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `portalPlayerRotationX`
+### `portalCameraRotationX`
 <Badges>
     <PagePortalBadge/>
     <InventoryPortalBadge/>
@@ -1195,7 +1195,7 @@ The X rotation that the camera starts at in the portal.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `portalPlayerRotationY`
+### `portalCameraRotationY`
 <Badges>
     <PagePortalBadge/>
     <InventoryPortalBadge/>
@@ -1258,7 +1258,7 @@ The maximum value that the camera can zoom to in the portal.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `portalPlayerZoom`
+### `portalCameraZoom`
 <Badges>
     <PagePortalBadge/>
     <InventoryPortalBadge/>
@@ -1967,34 +1967,6 @@ You can use this tag as a way to find previous marks from a mark.
 </Badges>
 
 The time that the mark was created.
-
-## Error Tags
-
-Error tags are tags that are automatically appied to bots in the `error` space.
-
-### `error`
-
-Whether the bot is in the `error` dimension.
-
-### `errorName`
-
-The name of the error that occurred.
-
-### `errorMessage`
-
-The error message containing more information about what went wrong.
-
-### `errorStack`
-
-The [stack trace](https://en.wikipedia.org/wiki/Stack_trace) that indicates where the error occurred.
-
-### `errorBot`
-
-The bot that the error occurred in.
-
-### `errorTag`
-
-The tag that the error occurred in.
 
 ## Config bot Tags
 

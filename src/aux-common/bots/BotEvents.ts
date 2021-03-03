@@ -95,7 +95,7 @@ export type ExtraActions =
     | RequestFullscreenAction
     | ExitFullscreenAction
     | LocalFormAnimationAction
-    | GetPlayerCountAction;
+    | GetRemoteCountAction;
 
 /**
  * Defines a set of possible async action types.
@@ -989,21 +989,21 @@ export interface SaveFileOptions {
 /**
  * Defines an event that is used to get the player count.
  */
-export interface GetPlayerCountAction extends Action {
-    type: 'get_player_count';
+export interface GetRemoteCountAction extends Action {
+    type: 'get_remote_count';
 
     /**
-     * The server that the player count should be retrieved for.
-     * If omitted, then the total player count will be returned.
+     * The server that the device count should be retrieved for.
+     * If omitted, then the total device count will be returned.
      */
     server?: string;
 }
 
 /**
- * Defines an event that is used to get the list of stories on the server.
+ * Defines an event that is used to get the list of servers on the server.
  */
-export interface GetStoriesAction extends Action {
-    type: 'get_stories';
+export interface GetServersAction extends Action {
+    type: 'get_servers';
 
     /**
      * Whether to get the server statuses.
@@ -1012,10 +1012,10 @@ export interface GetStoriesAction extends Action {
 }
 
 /**
- * Defines an event that is used to get the list of players on the server.
+ * Defines an event that is used to get the list of remote devices on the server.
  */
-export interface GetPlayersAction extends Action {
-    type: 'get_players';
+export interface GetRemotesAction extends Action {
+    type: 'get_remotes';
 }
 
 /**
@@ -3135,47 +3135,47 @@ export function saveFile(
 }
 
 /**
- * Creates a new GetPlayerCountAction.
- * @param server The server that the player count should be retrieved for.
+ * Creates a new GetRemoteCountAction.
+ * @param server The server that the device count should be retrieved for.
  */
-export function getPlayerCount(server?: string): GetPlayerCountAction {
+export function getRemoteCount(server?: string): GetRemoteCountAction {
     if (hasValue(server)) {
         return {
-            type: 'get_player_count',
+            type: 'get_remote_count',
             server,
         };
     } else {
         return {
-            type: 'get_player_count',
+            type: 'get_remote_count',
         };
     }
 }
 
 /**
- * Creates a new GetStoriesAction.
+ * Creates a new GetServersAction.
  */
-export function getStories(): GetStoriesAction {
+export function getServers(): GetServersAction {
     return {
-        type: 'get_stories',
+        type: 'get_servers',
     };
 }
 
 /**
- * Creates a new GetStoriesAction that includes statuses.
+ * Creates a new GetServersAction that includes statuses.
  */
-export function getServerStatuses(): GetStoriesAction {
+export function getServerStatuses(): GetServersAction {
     return {
-        type: 'get_stories',
+        type: 'get_servers',
         includeStatuses: true,
     };
 }
 
 /**
- * Creates a new GetPlayersAction.
+ * Creates a new GetRemotesAction.
  */
-export function getPlayers(): GetPlayersAction {
+export function getRemotes(): GetRemotesAction {
     return {
-        type: 'get_players',
+        type: 'get_remotes',
     };
 }
 

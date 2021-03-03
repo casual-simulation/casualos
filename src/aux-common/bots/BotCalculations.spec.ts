@@ -1384,7 +1384,7 @@ describe('BotCalculations', () => {
                         tag: 'again',
                     },
                     masks: {
-                        player: {
+                        tempShared: {
                             tag4: 1,
                         },
                     },
@@ -1408,7 +1408,7 @@ describe('BotCalculations', () => {
                 { tag: 'other', space: null },
                 { tag: 'tag2', space: 'tempLocal' },
                 { tag: 'tag3', space: 'shared' },
-                { tag: 'tag4', space: 'player' },
+                { tag: 'tag4', space: 'tempShared' },
             ]);
         });
 

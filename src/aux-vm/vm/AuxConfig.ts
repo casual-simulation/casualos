@@ -52,6 +52,12 @@ export interface AuxConfigParameters {
      * The origin that the VM iframe should be loaded from.
      */
     vmOrigin?: string;
+
+    /**
+     * The list of portal bots that should be automatically created
+     * before the sync event is triggered.
+     */
+    builtinPortals?: string[];
 }
 
 export function buildVersionNumber(config: AuxConfigParameters) {

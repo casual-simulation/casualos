@@ -15,8 +15,8 @@ import {
     AuxPartitionConfig,
     ADMIN_PARTITION_ID,
     ADMIN_BRANCH_NAME,
-    PLAYER_PARTITION_ID,
-    OTHER_PLAYERS_PARTITION_ID,
+    TEMPORARY_SHARED_PARTITION_ID,
+    REMOTE_TEMPORARY_SHARED_PARTITION_ID,
 } from '@casual-simulation/aux-common';
 
 import {
@@ -112,14 +112,14 @@ export class DenoSimulationImpl
                     private: true,
                     initialState: {},
                 },
-                [PLAYER_PARTITION_ID]: {
+                [TEMPORARY_SHARED_PARTITION_ID]: {
                     type: 'remote_causal_repo',
                     branch: `${parsedId.channel}-player-${user.id}`,
                     host: host,
                     temporary: true,
                     remoteEvents: false,
                 },
-                [OTHER_PLAYERS_PARTITION_ID]: {
+                [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
                     type: 'other_players_repo',
                     branch: parsedId.channel,
                     host: host,

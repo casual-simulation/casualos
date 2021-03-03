@@ -52,10 +52,10 @@ import {
     unlockSpace,
     asyncResult,
     asyncError,
-    getPlayerCount,
-    getStories,
+    getRemoteCount,
+    getServers,
     BotActions,
-    getPlayers,
+    getRemotes,
     action,
     ON_REMOTE_WHISPER_ACTION_NAME,
     getServerStatuses,
@@ -629,7 +629,7 @@ describe('RemoteCausalRepoPartition', () => {
                 });
             });
 
-            describe('get_player_count', () => {
+            describe('get_remote_count', () => {
                 it(`should send a ${DEVICE_COUNT} event to the server`, async () => {
                     setupPartition({
                         type: 'remote_causal_repo',
@@ -638,7 +638,7 @@ describe('RemoteCausalRepoPartition', () => {
                     });
 
                     await partition.sendRemoteEvents([
-                        remote(getPlayerCount('testBranch')),
+                        remote(getRemoteCount('testBranch')),
                     ]);
 
                     expect(connection.sentMessages).toEqual([
@@ -661,7 +661,7 @@ describe('RemoteCausalRepoPartition', () => {
 
                     await partition.sendRemoteEvents([
                         remote(
-                            getPlayerCount('testBranch'),
+                            getRemoteCount('testBranch'),
                             undefined,
                             undefined,
                             'task1'
@@ -684,7 +684,7 @@ describe('RemoteCausalRepoPartition', () => {
                 });
             });
 
-            describe('get_stories', () => {
+            describe('get_servers', () => {
                 it(`should send a ${BRANCHES} event to the server`, async () => {
                     setupPartition({
                         type: 'remote_causal_repo',
@@ -693,7 +693,7 @@ describe('RemoteCausalRepoPartition', () => {
                     });
 
                     await partition.sendRemoteEvents([
-                        remote(getStories(), undefined, undefined, 'task1'),
+                        remote(getServers(), undefined, undefined, 'task1'),
                     ]);
 
                     expect(connection.sentMessages).toEqual([
@@ -739,7 +739,7 @@ describe('RemoteCausalRepoPartition', () => {
                     connection.events.set(BRANCHES, branches);
 
                     await partition.sendRemoteEvents([
-                        remote(getStories(), undefined, undefined, 'task1'),
+                        remote(getServers(), undefined, undefined, 'task1'),
                     ]);
 
                     await waitAsync();
@@ -769,7 +769,7 @@ describe('RemoteCausalRepoPartition', () => {
                     connection.events.set(BRANCHES, branches);
 
                     await partition.sendRemoteEvents([
-                        remote(getStories(), undefined, undefined, 'task1'),
+                        remote(getServers(), undefined, undefined, 'task1'),
                     ]);
 
                     await waitAsync();
@@ -850,8 +850,8 @@ describe('RemoteCausalRepoPartition', () => {
                 });
             });
 
-            describe('get_players', () => {
-                it('should not send a get_players event to the server', async () => {
+            describe('get_remotes', () => {
+                it('should not send a get_remotes event to the server', async () => {
                     setupPartition({
                         type: 'remote_causal_repo',
                         branch: 'testBranch',
@@ -860,7 +860,7 @@ describe('RemoteCausalRepoPartition', () => {
                     partition.connect();
 
                     await partition.sendRemoteEvents([
-                        remote(getPlayers(), undefined, undefined, 'task1'),
+                        remote(getRemotes(), undefined, undefined, 'task1'),
                     ]);
 
                     await waitAsync();
@@ -870,7 +870,7 @@ describe('RemoteCausalRepoPartition', () => {
                         data: {
                             branch: 'testBranch',
                             action: remote(
-                                getPlayers(),
+                                getRemotes(),
                                 undefined,
                                 undefined,
                                 'task1'
@@ -935,7 +935,7 @@ describe('RemoteCausalRepoPartition', () => {
                         action(ON_REMOTE_DATA_ACTION_NAME, null, null, {
                             name: 'eventName',
                             that: { abc: 'def' },
-                            playerId: 'info1SessionId',
+                            remoteId: 'info1SessionId',
                         }),
                         action(ON_REMOTE_WHISPER_ACTION_NAME, null, null, {
                             name: 'eventName',
@@ -973,7 +973,7 @@ describe('RemoteCausalRepoPartition', () => {
                         action(ON_REMOTE_DATA_ACTION_NAME, null, null, {
                             name: 'eventName',
                             that: { abc: 'def' },
-                            playerId: 'info1SessionId',
+                            remoteId: 'info1SessionId',
                         }),
                         action(ON_REMOTE_WHISPER_ACTION_NAME, null, null, {
                             name: 'eventName',

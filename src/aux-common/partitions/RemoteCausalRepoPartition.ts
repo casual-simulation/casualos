@@ -45,8 +45,8 @@ import {
     loadSpace,
     asyncError,
     asyncResult,
-    GetPlayerCountAction,
-    GetStoriesAction,
+    GetRemoteCountAction,
+    GetServersAction,
     action,
     ShoutAction,
     ON_REMOTE_WHISPER_ACTION_NAME,
@@ -252,8 +252,8 @@ export class RemoteCausalRepoPartitionImpl
                             event.taskId
                         ),
                     ]);
-                } else if (event.event.type === 'get_player_count') {
-                    const action = <GetPlayerCountAction>event.event;
+                } else if (event.event.type === 'get_remote_count') {
+                    const action = <GetRemoteCountAction>event.event;
                     this._client.deviceCount(action.server).subscribe(
                         (count) => {
                             this._onEvents.next([
@@ -266,8 +266,8 @@ export class RemoteCausalRepoPartitionImpl
                             ]);
                         }
                     );
-                } else if (event.event.type === 'get_stories') {
-                    const action = <GetStoriesAction>event.event;
+                } else if (event.event.type === 'get_servers') {
+                    const action = <GetServersAction>event.event;
                     if (action.includeStatuses) {
                         this._client.branchesStatus().subscribe(
                             (e) => {
@@ -311,8 +311,8 @@ export class RemoteCausalRepoPartitionImpl
                             }
                         );
                     }
-                } else if (event.event.type === 'get_players') {
-                    // Do nothing for get_players since it will be handled by the OtherPlayersPartition.
+                } else if (event.event.type === 'get_remotes') {
+                    // Do nothing for get_remotes since it will be handled by the OtherPlayersPartition.
                     // TODO: Make this mechanism more extensible so that we don't have to hardcode for each time
                     //       we do this type of logic.
                 } else {
@@ -534,7 +534,7 @@ export class RemoteCausalRepoPartitionImpl
                                             {
                                                 name: remoteAction.eventName,
                                                 that: remoteAction.argument,
-                                                playerId:
+                                                remoteId:
                                                     event.action.device.claims[
                                                         SESSION_ID_CLAIM
                                                     ],

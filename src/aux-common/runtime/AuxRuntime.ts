@@ -47,6 +47,8 @@ import {
     OpenCustomPortalAction,
     createBot,
     openCustomPortal,
+    ON_ERROR,
+    action,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -117,6 +119,7 @@ export class AuxRuntime
     private _forceSignedScripts: boolean;
     private _exemptSpaces: BotSpace[];
     private _batchPending: boolean = false;
+    private _processingErrors: boolean = false;
     private _portalBots: Map<string, string> = new Map();
 
     get forceSignedScripts() {
@@ -880,6 +883,33 @@ export class AuxRuntime
             this._onActions.next(actions);
             this._onErrors.next(errors);
         });
+
+        this._processErrors(errors);
+    }
+
+    private _processErrors(errors: ScriptError[]) {
+        if (this._processingErrors) {
+            return;
+        }
+        try {
+            this._processingErrors = true;
+
+            if (errors.length > 0) {
+                let actions = errors
+                    .filter((e) => e.tag !== ON_ERROR)
+                    .map((e) =>
+                        action(ON_ERROR, undefined, undefined, {
+                            bot: e.bot,
+                            tag: e.tag,
+                            error: e.error,
+                        })
+                    );
+
+                this.process(actions);
+            }
+        } finally {
+            this._processingErrors = false;
+        }
     }
 
     private _batchScriptResults<T>(

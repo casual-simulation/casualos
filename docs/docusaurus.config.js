@@ -11,8 +11,8 @@ module.exports = {
       theme: require('prism-react-renderer/themes/vsDark')
     },
     algolia: {
-      apiKey: 'cb27142d55e709001f05b814fd2b51be',
-      indexName: 'casualsimulation',
+      apiKey: '0dbc937f9ffe92dff4782c5c40f15992',
+      indexName: 'casualos',
       algoliaOptions: {}
     },
     navbar: {

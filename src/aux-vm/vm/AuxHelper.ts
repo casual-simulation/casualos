@@ -33,6 +33,7 @@ import {
     botRemoved,
     BotTagMasks,
     isBot,
+    RanOutOfEnergyError,
 } from '@casual-simulation/aux-common';
 import {
     RemoteAction,
@@ -89,7 +90,14 @@ export class AuxHelper extends BaseHelper<Bot> {
             .pipe(
                 tap((errors) => {
                     for (let error of errors) {
-                        console.error(error.error);
+                        if (error instanceof RanOutOfEnergyError) {
+                            console.error(error);
+                        } else {
+                            console.error(
+                                `An error occurred in ${error.bot.id}.${error.tag}:`,
+                                error.error
+                            );
+                        }
                     }
                 })
             )

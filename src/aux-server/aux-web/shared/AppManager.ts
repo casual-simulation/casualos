@@ -8,7 +8,10 @@ import {
     ProgressMessage,
     remapProgressPercent,
 } from '@casual-simulation/causal-trees';
-import { normalizeAUXBotURL } from '@casual-simulation/aux-common';
+import {
+    KNOWN_PORTALS,
+    normalizeAUXBotURL,
+} from '@casual-simulation/aux-common';
 import Dexie from 'dexie';
 import { v4 as uuid } from 'uuid';
 import { WebConfig } from '../../shared/WebConfig';
@@ -123,6 +126,7 @@ export class AppManager {
                 .causalRepoConnectionProtocol,
             causalRepoConnectionUrl: this._config.causalRepoConnectionUrl,
             vmOrigin: this._config.vmOrigin,
+            builtinPortals: KNOWN_PORTALS,
         };
     }
 

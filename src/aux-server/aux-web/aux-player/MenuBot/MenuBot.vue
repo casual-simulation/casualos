@@ -42,7 +42,12 @@
     >
         <div
             class="menu-bot-content"
-            :style="{ 'text-align': labelAlign, color: labelColor, fill: labelColor }"
+            :style="{
+                'text-align': labelAlign,
+                color: labelColor,
+                fill: labelColor,
+                whiteSpace: whiteSpace,
+            }"
         >
             <div class="menu-bot-text" v-show="label">
                 <span class="menu-bot-icon" v-if="hasIcon">

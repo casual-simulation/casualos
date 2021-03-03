@@ -8,8 +8,8 @@ import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 import { AuxConfig } from '@casual-simulation/aux-vm/vm';
 import {
     CausalRepoClientPartitionConfig,
-    PLAYER_PARTITION_ID,
-    OTHER_PLAYERS_PARTITION_ID,
+    TEMPORARY_SHARED_PARTITION_ID,
+    REMOTE_TEMPORARY_SHARED_PARTITION_ID,
     TEMPORARY_BOT_PARTITION_ID,
 } from '@casual-simulation/aux-common';
 
@@ -34,20 +34,20 @@ export function nodeSimulationForBranch(
                 private: true,
                 initialState: {},
             },
-            [PLAYER_PARTITION_ID]: {
+            [TEMPORARY_SHARED_PARTITION_ID]: {
                 type: 'causal_repo_client',
                 branch: `${branch}-player-${user.id}`,
                 client: client,
                 temporary: true,
                 remoteEvents: false,
             },
-            [OTHER_PLAYERS_PARTITION_ID]: {
+            [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
                 type: 'other_players_client',
                 branch: branch,
                 client: client,
             },
         },
-        cfg => new AuxVMNode(new RemoteAuxChannel(user, cfg, {}))
+        (cfg) => new AuxVMNode(new RemoteAuxChannel(user, cfg, {}))
     );
 }
 
@@ -60,7 +60,7 @@ export function nodeSimulationForLocalRepo(user: AuxUser, id: string) {
                 type: 'causal_repo',
             },
         },
-        cfg => new AuxVMNode(new RemoteAuxChannel(user, cfg, {}))
+        (cfg) => new AuxVMNode(new RemoteAuxChannel(user, cfg, {}))
     );
 }
 
@@ -73,6 +73,6 @@ export function nodeSimulationWithConfig(
         id,
         config.config,
         config.partitions,
-        cfg => new AuxVMNode(new RemoteAuxChannel(user, cfg, {}))
+        (cfg) => new AuxVMNode(new RemoteAuxChannel(user, cfg, {}))
     );
 }

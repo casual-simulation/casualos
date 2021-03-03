@@ -413,9 +413,24 @@ let mod = getMod(bot, "color", "label");
 let mod = getMod(bot, /^on/g);
 ```
 
-### `webhook(options)`
+### `uuid()`
 
-Sends a webhook using the given options.
+Creates a new UUID. Useful for generating a random identifier that is guaranteed to be unique.
+
+#### Examples:
+
+1. Generate a new UUID and toast it:
+```typescript
+const id = uuid();
+
+os.toast(id);
+```
+
+## Web Actions
+
+### `web.hook(options)`
+
+Sends a HTTP request using the given options.
 
 Returns a Promise that resolves with the following properties:
 
@@ -464,9 +479,9 @@ let options: {
 
 #### Examples:
 
-1. Send a HTTP GET request to `https://auxplayer.com` and toast the result.
+1. Send a HTTP GET request to `https://example.com` and toast the result.
 ```typescript
-const response = await webhook({
+const response = await web.hook({
     method: 'GET',
     url: 'https://example.com',
 });
@@ -476,7 +491,7 @@ os.toast(response);
 
 2. Send a HTTP PUT request to `https://example.com` with some data.
 ```typescript
-webhook({
+web.hook({
     method: 'PUT',
     url: 'https://example.com',
     data: {
@@ -485,9 +500,52 @@ webhook({
 });
 ```
 
-### `webhook.post(url, data?, options?)`
+### `web.get(url, options?)`
 
-Sends a HTTP POST request using the given options.
+Sends a HTTP GET request for the given URL using the given options.
+
+Returns a promise that resolves with the following properties:
+
+```typescript
+{
+    data: any,
+    status: number,
+    statusText: string,
+    headers: any
+}
+```
+
+The **first parameter** is the URL that the request should be sent to.
+
+The **second parameter** is optional and is an object with the following properties:
+
+```typescript
+let options: {
+    /**
+     * The headers to include in the request.
+     */
+    headers?: {
+        [key: string]: string;
+    };
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    responseShout?: string;
+};
+```
+
+#### Examples:
+
+1. Send a HTTP GET request for `https://example.com` and toast the result.
+```typescript
+const response = await web.get('https://example.com');
+os.toast(response);
+```
+
+### `web.post(url, data?, options?)`
+
+Sends a HTTP POST request to the URL with the given data and using the given options.
 
 Returns a Promise that resolves with the following properties:
 
@@ -526,24 +584,11 @@ let options: {
 
 1. Send a HTTP POST request to `https://example.com` and toast the result.
 ```typescript
-const response = await webhook.post('https://example.com', {
+const response = await web.post('https://example.com', {
     some: 'data'
 });
 
 os.toast(response);
-```
-
-### `uuid()`
-
-Creates a new UUID. Useful for generating a random identifier that is guaranteed to be unique.
-
-#### Examples:
-
-1. Generate a new UUID and toast it:
-```typescript
-const id = uuid();
-
-os.toast(id);
 ```
 
 ## Utility Actions
@@ -591,7 +636,7 @@ let options: {
      * Additionally, if the specified space is the same as the space the bot lives in
      * then the bot will be edited directly.
      */
-    tagMaskSpace?: 'tempLocal' | 'local' | 'player' | 'shared' | false;
+    tagMaskSpace?: 'tempLocal' | 'local' | 'tempShared' | 'shared' | false;
 
     /**
      * The options for easing.
@@ -683,13 +728,13 @@ await animateTag(bot, "homeX", {
 });
 ```
 
-5. Animate a tag in `player` space.
+5. Animate a tag in `tempShared` space.
 ```typescript
 await animateTag(bot, "homeX", {
     fromValue: 0,
     toValue: 5,
     duration: 2,
-    tagMaskSpace: 'player'
+    tagMaskSpace: 'tempShared'
 });
 ```
 
@@ -705,7 +750,7 @@ animateTag(bot, "homeX", {
     os.toast("Animation Canceled!");
 });
 
-await sleep(500);
+await os.sleep(500);
 
 animateTag(bot, "homeX", null);
 ```
@@ -928,23 +973,6 @@ deleteTagText(bot, "myTag", tags.myTag.length - 2, 2);
 2. Delete the first 3 characters from a tag mask in the `local` space.
 ```typescript
 deleteTagText(bot, "myTag", 0, 3, "local");
-```
-
-### `sleep(time)`
-
-Waits the amount of time provided, in [miliseconds](https://en.wikipedia.org/wiki/Millisecond).
-
-Returns a promise that resolves when the time has been waited.
-
-The **first parameter** is time in ms to wait. 1 second is 1000ms.
-
-#### Examples:
-
-1. Wait 2 seconds before proceeding.
-```typescript
-os.toast("Stop!");
-await sleep(2000);
-os.toast("Hammer Time!");
 ```
 
 ## Bot Filters
@@ -1193,7 +1221,7 @@ whisper(this, "setColor", "red");
 ### `superShout(name, arg?)`
 
 
-Sends a shout to all of the other stories that are loaded.
+Sends a shout to all of the other servers that are loaded.
 
 The **first parameter** is the name of the shout. e.g. Using `onClick` for the name will trigger all the <TagLink tag='@onClick'/> listeners.
 
@@ -1201,15 +1229,14 @@ The **second parameter** is the optional `that` argument to include with the sho
 
 #### Examples:
 
-1. Send a `hello` super shout to all the loaded stories.
+1. Send a `hello` super shout to all the loaded servers.
 ```typescript
 superShout("hello");
 ```
 
 ### `remote(action, target?)`
 
-
-Sends the given action to another player.
+Sends the given action to another remote.
 
 In CasualOS, all actions are messages which are placed in a queue and processed one at at time.
 
@@ -1223,31 +1250,31 @@ If you want to perform the action, you can use <ActionLink action='action.perfor
 
 The **first parameter** is the action to send.
 
-The **second parameter** is optional and is a object specifing which player to send the action to. If not specified, then the action is sent to the server player.
-If specified, then the action is sent to all players that match the given values. If given a string, then the action is sent to the player with the matching ID.
+The **second parameter** is optional and is a object specifing which remote to send the action to. If not specified, then the action is sent to the server.
+If specified, then the action is sent to all remotes that match the given values. If given a string, then the action is sent to the remote with the matching ID.
 
 #### Examples:
 
-1. Send a toast message to another player.
+1. Send a toast message to another remote.
 ```typescript
-// TODO: Get the bot ID of the other player.
-const otherPlayerBotId = 'otherPlayerBotId';
+// TODO: Get the bot ID of the other remote.
+const otherRemoteId = 'otherRemoteId';
 
 // Create a toast action
 const toastAction = os.toast('My message!');
 
-// Send the action to the other player
+// Send the action to the other remote
 // The toastAction will not be performed locally because
-// it is being sent to another player.
-remote(toastAction, otherPlayerBotId);
+// it is being sent to another remote.
+remote(toastAction, otherRemoteId);
 ```
 
-### `sendRemoteData(playerId, name, arg?)`
+### `sendRemoteData(remoteId, name, arg?)`
 
-Sends a <TagLink tag='@onRemoteData'/> shout to the player with the given ID or players if given a list of IDs.
-This is useful for sending arbitrary messages to specific players.
+Sends a <TagLink tag='@onRemoteData'/> shout to the remote with the given ID or remotes if given a list of IDs.
+This is useful for sending arbitrary messages to specific remotes.
 
-The **first parameter** is the player ID or list of player IDs that the shout should be sent to.
+The **first parameter** is the remote ID or list of remote IDs that the shout should be sent to.
 
 The **second parameter** is the name of the event that is being sent. This is useful for telling the difference between different messages.
 
@@ -1255,97 +1282,24 @@ The **third parameter** is optional and is the `that` argument to send with the 
 
 #### Examples:
 
-1. Send a "custom" message to another player.
+1. Send a "custom" message to another remote.
 ```typescript
-const otherPlayerBotId = "otherPlayerBotId";
+const otherRemoteId = "otherRemoteId";
 
-// The other player will receive a @onRemoteData with 
+// The other remote will receive a @onRemoteData with 
 // that.name === "custom" and that.that === "Hello"
-sendRemoteData(otherPlayerBotId, "custom", "Hello");
+sendRemoteData(otherRemoteId, "custom", "Hello");
 ```
 
-2. Send a message to all other players.
+2. Send a message to all other remotes.
 ```typescript
-const players = await server.players();
-const playerId = getID(configBot);
-const otherPlayers = players.filter(id => id !== playerId);
+const remotes = await server.remotes();
+const remoteId = getID(configBot);
+const otherRemotes = remotes.filter(id => id !== remoteId);
 
-// All other players will receive a @onRemoteData with
+// All other remotes will receive a @onRemoteData with
 // that.name === "custom" and that.that === "Hello"
-sendRemoteData(otherPlayers, "custom", "Hello");
-```
-
-### `remoteWhisper(playerId, name, arg?)`
-
-NOTICE: This method is deprecated in favor of <ActionLink action='sendRemoteData(playerId, name, arg?)'/>.
-
-Sends a <TagLink tag='@onRemoteWhisper'/> shout to the player with the given ID or players if given a list of IDs.
-This is useful for sending arbitrary messages to specific players.
-
-The **first parameter** is the player ID or list of player IDs that the shout should be sent to.
-
-The **second parameter** is the name of the event that is being sent. This is useful for telling the difference between different messages.
-
-The **third parameter** is optional and is the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
-
-#### Examples:
-
-1. Send a "custom" message to another player.
-```typescript
-const otherPlayerBotId = "otherPlayerBotId";
-
-// The other player will receive a @onRemoteWhisper with 
-// that.name === "custom" and that.that === "Hello"
-remoteWhisper(otherPlayerBotId, "custom", "Hello");
-```
-
-2. Send a message to all other players.
-```typescript
-const players = await server.players();
-const playerId = getID(configBot);
-const otherPlayers = players.filter(id => id !== playerId);
-
-// All other players will receive a @onRemoteWhisper with
-// that.name === "custom" and that.that === "Hello"
-remoteWhisper(otherPlayers, "custom", "Hello");
-```
-
-### `remoteShout(name, arg?)`
-
-NOTICE: This method is deprecated in favor of <ActionLink action='sendRemoteData(playerId, name, arg?)'/>.
-
-Sends a <TagLink tag='@onRemoteWhisper'/> shout to all the players in the current server.
-The listener will be triggered on all players connected to the server, including the local player.
-
-The **first parameter** is the name of the message that is being sent. This is useful for telling the difference between different messages.
-
-The **second parameter** is optional and is the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
-
-#### Examples:
-
-1. Send a message to all players.
-```typescript
-// All players will receive a @onRemoteWhisper with
-// that.name === "custom" and that.that === "Hello"
-remoteShout("custom", "Hello");
-```
-
-### `action.perform(action)`
-
-
-Queues the given action to be performed at a later time.
-
-The **first parameter** is the action that should be performed.
-
-#### Examples:
-
-1. Perform a toast message by manually queuing it.
-```typescript
-action.perform({
-    type: 'show_toast',
-    message: 'My toast message!',
-    duration: 2000 // 2 seconds in miliseconds
-});
+sendRemoteData(otherRemotes, "custom", "Hello");
 ```
 
 ### `action.reject(action)`
@@ -1364,6 +1318,37 @@ action.reject(toastAction);
 ```
 
 ## OS Actions
+
+
+### `os.sleep(time)`
+
+Waits the amount of time provided, in [miliseconds](https://en.wikipedia.org/wiki/Millisecond).
+
+Returns a promise that resolves when the time has been waited.
+
+The **first parameter** is time in ms to wait. 1 second is 1000ms.
+
+#### Examples:
+
+1. Wait 2 seconds before proceeding.
+```typescript
+os.toast("Stop!");
+await os.sleep(2000);
+os.toast("Hammer Time!");
+```
+
+### `os.log(...args)`
+
+Logs the given data to the developer console.
+
+**Every parameter** is the data that should be logged.
+
+#### Examples:
+
+1. Log "Hello, World!" to the browser developer console.
+```typescript
+os.log("Hello, World!");
+```
 
 ### `os.checkout(options)`
 
@@ -1491,7 +1476,7 @@ os.replaceDragBot({
 ### `os.showChat(placeholder?)`
 
 
-Shows the "chat bar" at the top of the screen in auxPlayer, optionally using the given text as the placeholder.
+Shows the "chat bar" at the top of the screen in CasualOS, optionally using the given text as the placeholder.
 Typing in the chat bar will send <TagLink tag="@onChatTyping"/> shouts and pressing Enter will send a <TagLink tag="@onChat"/> shout and clear the chat bar.
 
 The **first parameter** is the text that the chat bar should show as the placeholder.
@@ -1511,7 +1496,7 @@ os.showChat("hello");
 ### `os.showChat(options)`
 
 
-Shows the "chat bar" at the top of the screen in auxPlayer, using the given options.
+Shows the "chat bar" at the top of the screen in CasualOS, using the given options.
 Typing in the chat bar will send <TagLink tag="@onChatTyping"/> shouts and pressing Enter will send a <TagLink tag="@onChat"/> shout and clear the chat bar.
 
 The **first parameter** is an object with the options that the chat bar should use.
@@ -1555,7 +1540,7 @@ os.showChat({
 ### `os.hideChat()`
 
 
-Hides the "chat bar" at the top of the screen in auxPlayer.
+Hides the "chat bar" at the top of the screen in CasualOS.
 
 #### Examples:
 
@@ -1667,7 +1652,7 @@ os.toast("Revealed!");
 2. Hide the page portal and show it after an additional second.
 ```typescript
 await os.closeCircleWipe();
-await sleep(1000);
+await os.sleep(1000);
 await os.openCircleWipe();
 ```
 
@@ -1719,7 +1704,7 @@ os.toast("Hidden!");
 2. Hide the page portal and show it after an additional second.
 ```typescript
 await os.closeCircleWipe();
-await sleep(1000);
+await os.sleep(1000);
 await os.openCircleWipe();
 ```
 
@@ -2181,7 +2166,7 @@ os.showUploadAuxFile();
 
 Loads the given univese into the current browser tab. When the server is loaded, the <TagLink tag='@onServerSubscribed'/> shout will be triggered.
 
-Note that separate stories cannot interact directly. They must instead interact via super shouts.
+Note that separate servers cannot interact directly. They must instead interact via super shouts.
 
 The **first parameter** is the name of the server to load.
 
@@ -2431,7 +2416,7 @@ Gets the config bot (formerly known as the player bot). This is the bot that rep
 
 #### Examples:
 
-1. Get the player bot and set a username on it.
+1. Get the config bot and set a username on it.
 ```typescript
 configBot.tags.username = "bob";
 ```
@@ -2698,7 +2683,7 @@ os.toast(state);
 
 
 Loads the given dimension into the <TagLink tag='pagePortal'/> portal.
-Triggers the <TagLink tag='@onPlayerPortalChanged'/> shout.
+Triggers the <TagLink tag='@onPortalChanged'/> shout for the `pagePortal`.
 
 The **first parameter** is the dimension that should be loaded.
 
@@ -2864,7 +2849,7 @@ os.importAUX(`{
 ### `os.version()`
 
 
-Gets information about the version of auxPlayer.
+Gets information about the version of CasualOS.
 
 The returned value is an object with the following properties:
 
@@ -2939,7 +2924,7 @@ os.exitFullscreenMode();
 ### `server.backupToGithub(auth)`
 
 
-Saves all the stories to GitHub as a private Gist using the given authentication token.
+Saves all the servers to GitHub as a private Gist using the given authentication token.
 
 Just like <ActionLink action='server.shell(script)'/>, you need 
 
@@ -2953,7 +2938,7 @@ See https://help.github.com/en/articles/creating-a-personal-access-token-for-the
 
 #### Examples:
 
-1. Backup all the stories to a Github Gist.
+1. Backup all the servers to a Github Gist.
 ```typescript
 server.backupToGithub('your auth token');
 ```
@@ -2961,7 +2946,7 @@ server.backupToGithub('your auth token');
 ### `server.backupAsDownload(target)`
 
 
-Saves all the stories to a zip file and downloads it to the session matching the given target.
+Saves all the servers to a zip file and downloads it to the session matching the given target.
 
 The **first parameter** is an object that indicates which session the zip file should be downloaded to.
 
@@ -4233,89 +4218,89 @@ await server.saveFile('/2/book.txt', 'My memoirs', {
 os.toast("File Saved!");
 ```
 
-### `server.serverPlayerCount(server?)`
+### `server.serverRemoteCount(server?)`
 
-Gets the number of players that are viewing the current server.
-Optionally takes a parameter which is the server that the number of players should be retrieved for. If omitted, then the current server will be checked.
-Returns a promise that resolves with the number of active players.
+Gets the number of remotes that are viewing the current server.
+Optionally takes a parameter which is the server that the number of remotes should be retrieved for. If omitted, then the current server will be checked.
+Returns a promise that resolves with the number of active remotes.
 
-The **first parameter** is optional and is the name of the server that the number of players should be retrieved for.
+The **first parameter** is optional and is the name of the server that the number of remotes should be retrieved for.
 If not specified, then the current server <ActionLink action="os.getCurrentServer()">current server</ActionLink> will be used.
 
 #### Examples
 
-1. Get the number of players in the current server.
+1. Get the number of remotes in the current server.
 ```typescript
-const numberOfPlayers = await server.serverPlayerCount();
+const numberOfRemotes = await server.serverRemoteCount();
 
-os.toast("Number of Players: " + numberOfPlayers);
+os.toast("Number of Remotes: " + numberOfRemotes);
 ```
 
-2. Get the number of players in the `test` server.
+2. Get the number of remotes in the `test` server.
 ```typescript
-const numberOfPlayers = await server.serverPlayerCount('test');
+const numberOfRemotes = await server.serverRemoteCount('test');
 
-os.toast("Number of Players: " + numberOfPlayers);
+os.toast("Number of Remotes: " + numberOfRemotes);
 ```
 
-### `server.totalPlayerCount()`
+### `server.totalRemoteCount()`
 
-Gets the number of players that are connected to the server.
-Returns a promise that resolves with the number of active players.
+Gets the number of devices that are connected to the server.
+Returns a promise that resolves with the number of active devices.
 
 #### Examples
 
-1. Get the number of players on the server.
+1. Get the number of devices on the server.
 ```typescript
-const numberOfPlayers = await server.totalPlayerCount();
+const numberOfDevices = await server.totalRemoteCount();
 
-os.toast("Number of Players: " + numberOfPlayers);
+os.toast("Number of Devices: " + numberOfDevices);
 ```
 
-### `server.stories()`
+### `server.servers()`
 
-Gets the list of stories that are stored on the server.
+Gets the list of servers that are stored on the server.
 Returns a promise that resolves with the list of server names.
 
 #### Examples
 
-1. Get the list of stories on the server.
+1. Get the list of servers on the server.
 ```typescript
-const stories = await server.stories();
+const servers = await server.servers();
 
-os.toast("Stories " + stories.join(','));
+os.toast("Servers " + servers.join(','));
 ```
 
 ### `server.serverStatuses()`
 
-Gets the list of stories that are stored on the server along with the last time that they were updated.
-Returns a promise that resolves with the list of stories.
+Gets the list of servers that are stored on the server along with the last time that they were updated.
+Returns a promise that resolves with the list of servers.
 
 The resolved list is sorted by the most recently updated first and the least recently updated last.
 
 #### Examples
 
-1. Get the list of stories on the server along with their status.
+1. Get the list of servers on the server along with their status.
 ```typescript
-const stories = await server.serverStatuses();
+const servers = await server.serverStatuses();
 
-os.toast("Stories " + getJSON(stories));
+os.toast("Stories " + getJSON(servers));
 ```
 
-### `server.players()`
+### `server.remotes()`
 
-Gets the list of player IDs that are connected to the current server.
-Returns a promise that resolves with the list of player IDs.
+Gets the list of remote IDs that are connected to the current server.
+Returns a promise that resolves with the list of remote IDs.
 
-The resolved list will always have at least one value that represents the current player.
+The resolved list will always have at least one value that represents the current remote.
 
 #### Examples
 
-1. Get the list of player IDs.
+1. Get the list of remote IDs.
 ```typescript
-const players = await server.players();
+const remotes = await server.remotes();
 
-os.toast("Players " + players.join(','));
+os.toast("Remotes " + remotes.join(','));
 ```
 
 ## Math Actions
@@ -5495,7 +5480,7 @@ let points = [
 for(let point of points) {
     let pos = experiment.getAnchorPointPosition(bot, os.getCurrentDimension(), point);
     create({
-        space: 'player',
+        space: 'tempShared',
         color: 'green',
         [os.getCurrentDimension()]: true,
         [os.getCurrentDimension() + "X"]: pos.x,
