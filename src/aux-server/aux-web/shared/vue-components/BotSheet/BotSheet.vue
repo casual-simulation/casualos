@@ -1,5 +1,5 @@
 <template>
-    <div v-if="hasPortal" class="bot-sheet">
+    <div v-if="hasPortal" class="bot-sheet" v-on:keydown.stop v-on:keyup.stop>
         <md-card ref="card" class="info-card maximized">
             <md-card-content>
                 <bot-table
