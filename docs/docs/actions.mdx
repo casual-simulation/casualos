@@ -3859,10 +3859,10 @@ await server.serialConnect("/dev/rfcomm0", {
 
 ### `server.serialStream()`
 
-Parses and returns the serial stream to the event tag <TagLink tag='@onStreamData'/>.
+Parses and returns the serial stream to the event tag <TagLink tag='@onSerialData'/>.
 The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
-Shouts data to the <TagLink tag='@onStreamData'/> event tag.
+Shouts data to the <TagLink tag='@onSerialData'/> event tag.
 
 #### Examples:
 
@@ -3875,7 +3875,7 @@ await server.serialConnect("/dev/rfcomm0", {
 server.serialStream();
 ```
 
-2. In the second tag, see the data update. This must be an <TagLink tag='@onStreamData'/> event tag.
+2. In the second tag, see the data update. This must be an <TagLink tag='@onSerialData'/> event tag.
 ```typescript
 tags.data=that;
 ```

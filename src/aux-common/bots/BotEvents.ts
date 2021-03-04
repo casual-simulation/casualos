@@ -1843,7 +1843,7 @@ export interface SerialConnectAction extends AsyncAction {
     options?: object;
 }
 /**
- * Parses and returns the serial stream to the event tag 'onStreamData'.
+ * Parses and returns the serial stream to the event tag 'onSerialData'.
  */
 export interface SerialStreamAction extends AsyncAction {
     type: 'serial_stream';
@@ -4008,7 +4008,7 @@ export function serialConnectPin(
 }
 
 /**
- * Parses and returns the serial stream to the event tag 'onStreamData'.
+ * Parses and returns the serial stream to the event tag 'onSerialData'.
  * @param taskId The ID of the async task.
  */
 export function serialStreamPin(

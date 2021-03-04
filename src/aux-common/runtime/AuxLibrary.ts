@@ -2697,7 +2697,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Parses and returns the serial stream to the event tag 'onStreamData'.
+     * Parses and returns the serial stream to the event tag 'onSerialData'.
      */
     function serialStream() {
         const task = context.createTask(true, true);
