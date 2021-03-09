@@ -668,6 +668,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 getCameraPosition,
                 getCameraRotation,
+                getFocusPoint,
                 getPointerPosition,
                 getPointerRotation,
                 getPointerDirection,
@@ -5038,6 +5039,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             x: bot.tags[`cameraRotationX`],
             y: bot.tags[`cameraRotationY`],
             z: bot.tags[`cameraRotationZ`],
+        };
+    }
+
+    /**
+     * Gets the 3D point that the player's camera is focusing on.
+     * @param portal The portal that the camera focus point should be retrieved for.
+     */
+    function getFocusPoint(
+        portal: 'page' | 'inventory' = 'page'
+    ): { x: number; y: number; z: number } {
+        const bot = (<any>globalThis)[`${portal}PortalBot`];
+        if (!bot) {
+            return {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            };
+        }
+
+        return {
+            x: bot.tags[`cameraFocusX`],
+            y: bot.tags[`cameraFocusY`],
+            z: bot.tags[`cameraFocusZ`],
         };
     }
 

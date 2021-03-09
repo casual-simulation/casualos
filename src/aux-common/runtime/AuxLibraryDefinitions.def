@@ -2891,25 +2891,31 @@ declare global {
          * Gets the 3D position of the player's camera.
          * @param portal The portal that the camera position should be retrieved for.
          */
-        getCameraPosition(portal?: 'page' | 'inventory'): {x: number, y: number, z: number};
+        getCameraPosition(portal?: 'page' | 'inventory'): Point3D;
 
         /**
          * Gets the 3D rotation of the player's camera.
          * @param portal The portal that the camera rotation should be retrieved for.
          */
-        getCameraRotation(portal?: 'page' | 'inventory'): {x: number, y: number, z: number};
+        getCameraRotation(portal?: 'page' | 'inventory'): Point3D;
+
+        /**
+         * Gets the 3D point that the player's camera is focusing on.
+         * @param portal The portal that the camera focus point should be retrieved for.
+         */
+        getFocusPoint(portal?: 'page' | 'inventory'): Point3D;
 
         /**
          * Gets the 3D position of the player's pointer.
          * @param pointer The position of the pointer to retrieve.
          */
-        getPointerPosition(pointer?: 'mouse' | 'left' | 'right'): {x: number, y: number, z: number}
+        getPointerPosition(pointer?: 'mouse' | 'left' | 'right'): Point3D;
 
         /**
          * Gets the 3D rotation of the player's pointer.
          * @param pointer The rotation of the pointer to retrieve.
          */
-        getPointerRotation(pointer?: 'mouse' | 'left' | 'right'): {x: number, y: number, z: number};
+        getPointerRotation(pointer?: 'mouse' | 'left' | 'right'): Point3D;
 
         /**
          * Gets the 3D direction that the given pointer is pointing in.

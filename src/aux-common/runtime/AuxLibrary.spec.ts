@@ -8702,6 +8702,82 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('os.getFocusPoint()', () => {
+        let pagePortal: RuntimeBot;
+        let inventoryPortal: RuntimeBot;
+
+        beforeEach(() => {
+            pagePortal = createDummyRuntimeBot(
+                'pagePortal',
+                {
+                    cameraFocusX: 1,
+                    cameraFocusY: 2,
+                    cameraFocusZ: 3,
+                },
+                'tempLocal'
+            );
+            inventoryPortal = createDummyRuntimeBot(
+                'inventoryPortal',
+                {
+                    cameraFocusX: 4,
+                    cameraFocusY: 5,
+                    cameraFocusZ: 6,
+                },
+                'tempLocal'
+            );
+            addToContext(context, pagePortal, inventoryPortal);
+
+            (<any>globalThis).pagePortalBot = pagePortal;
+            (<any>globalThis).inventoryPortalBot = inventoryPortal;
+        });
+
+        afterEach(() => {
+            delete (<any>globalThis).pagePortalBot;
+            delete (<any>globalThis).inventoryPortalBot;
+        });
+
+        it('should return NaN for x, y, and z if the page portal bot is null', () => {
+            delete (<any>globalThis).pagePortalBot;
+            const result = library.api.os.getFocusPoint();
+
+            expect(result).toEqual({
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            });
+        });
+
+        it('should return the x, y, and z of the player camera for the page portal', () => {
+            const result = library.api.os.getFocusPoint();
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+
+        it('should be able to get the inventory camera rotation', () => {
+            const result = library.api.os.getFocusPoint('inventory');
+
+            expect(result).toEqual({
+                x: 4,
+                y: 5,
+                z: 6,
+            });
+        });
+
+        it('should be able to get the page camera rotation', () => {
+            const result = library.api.os.getFocusPoint('page');
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+    });
+
     describe('os.getPointerPosition()', () => {
         let player: RuntimeBot;
 

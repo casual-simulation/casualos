@@ -2621,6 +2621,36 @@ const rotation = os.getCameraRotation("page");
 const rotation = os.getCameraRotation("inventory");
 ```
 
+### `os.getFocusPoint(portal?)`
+
+Gets the 3D position that the player's camera is focusing on in the given portal.
+
+This is the same point that is highlighted when <TagLink tag='portalShowFocusPoint'/> is enabled for a portal.
+
+The **first parameter** is optional and is the portal that the camera focus point should be retrieved for.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='page'>
+    The camera focus point in the page portal. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='inventory'>
+    The camera focus point in the inventory portal.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Get the focus point of the player in the page portal.
+```typescript
+const focusPoint = os.getFocusPoint("page");
+```
+
+2. Get the focus point of the player in the inventory portal.
+```typescript
+const focusPoint = os.getFocusPoint("inventory");
+```
+
 ### `os.getPointerPosition(pointer?)`
 
 Gets the position that the given pointer is at.
