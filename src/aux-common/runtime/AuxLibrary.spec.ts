@@ -1414,6 +1414,56 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('getBotPosition()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should return the position of the bot in the given dimension', () => {
+            bot1.tags.homeX = 5;
+            bot1.tags.homeY = 1;
+            bot1.tags.homeZ = 9;
+            const position = library.api.getBotPosition(bot1, 'home');
+
+            expect(position).toEqual({
+                x: 5,
+                y: 1,
+                z: 9,
+            });
+        });
+
+        it('should support bot IDs', () => {
+            bot1.tags.homeX = 5;
+            bot1.tags.homeY = 1;
+            bot1.tags.homeZ = 9;
+            const position = library.api.getBotPosition(bot1.id, 'home');
+
+            expect(position).toEqual({
+                x: 5,
+                y: 1,
+                z: 9,
+            });
+        });
+
+        it('should throw an error if given null', () => {
+            expect(() => {
+                library.api.getBotPosition(null, 'home');
+            }).toThrow();
+        });
+
+        it('should throw an error if given a missing bot ID', () => {
+            expect(() => {
+                library.api.getBotPosition('missing', 'home');
+            }).toThrow();
+        });
+    });
+
     describe('actions', () => {
         let bot1: RuntimeBot;
         let bot2: RuntimeBot;
