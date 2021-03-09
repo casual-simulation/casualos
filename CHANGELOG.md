@@ -1,5 +1,16 @@
 # CasualOS Changelog
 
+## V1.4.10
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved `animateTag()` to support animating multiple tags at once by accepting an object for the `fromValue` and `toValue` options properties.
+    -   Instead of calling `animateTag(bot, tag, options)`, omit the `tag` argument and call `animateTag(bot, options)`. This will indicate that you want to animate multiple tags at once over the same duration.
+    -   The animations that get triggered are grouped together, so cancelling one will cancel them all.
+-   Improved `clearAnimations()` to support accepting a list of tags to cancel.
+
 ## V1.4.9
 
 #### Date: 3/3/2021
