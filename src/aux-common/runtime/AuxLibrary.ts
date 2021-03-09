@@ -781,6 +781,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getForwardDirection,
                 intersectPlane,
                 getAnchorPointOffset,
+                addVectors,
+                subtractVectors,
+                negateVector,
             },
 
             crypto: {
@@ -3847,6 +3850,80 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             y: -offset.y,
             z: offset.z,
         };
+    }
+
+    /**
+     * Adds the given vectors together and returns the result.
+     * @param vectors The vectors that should be added together.
+     */
+    function addVectors<T>(...vectors: T[]): T {
+        if (vectors.length <= 0) {
+            return {} as T;
+        }
+        let result = {} as any;
+
+        for (let i = 0; i < vectors.length; i++) {
+            const v = vectors[i] as any;
+            if (!hasValue(v)) {
+                continue;
+            }
+            const keys = Object.keys(v);
+            for (let key of keys) {
+                if (key in result) {
+                    result[key] += v[key];
+                } else {
+                    result[key] = v[key];
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Subtracts the given vectors from each other and returns the result.
+     * @param vectors The vectors that should be subtracted from each other.
+     */
+    function subtractVectors<T>(...vectors: T[]): T {
+        if (vectors.length <= 0) {
+            return {} as T;
+        }
+        let result = {} as any;
+
+        for (let i = 0; i < vectors.length; i++) {
+            const v = vectors[i] as any;
+            if (!hasValue(v)) {
+                continue;
+            }
+            const keys = Object.keys(v);
+            for (let key of keys) {
+                if (key in result) {
+                    result[key] -= v[key];
+                } else {
+                    result[key] = v[key];
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Subtracts the given vectors from each other and returns the result.
+     * @param vectors The vectors that should be subtracted from each other.
+     */
+    function negateVector<T>(vector: T): T {
+        if (!hasValue(vector)) {
+            return vector;
+        }
+        let result = {} as any;
+
+        const keys = Object.keys(vector);
+        for (let key of keys) {
+            result[key] = -(vector as any)[key];
+        }
+
+        return result;
     }
 
     /**

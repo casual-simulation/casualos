@@ -3983,6 +3983,18 @@ declare global {
          * @param anchorPoint The anchor point to get the offset for.
          */
         getAnchorPointOffset(anchorPoint: BotAnchorPoint): Point3D;
+
+        /**
+         * Adds the given vectors together and returns the result.
+         * @param vectors The vectors that should be added together.
+         */
+        addVectors<T>(...vectors: T[]): T;
+
+        /**
+         * Subtracts the given vectors from each other and returns the result.
+         * @param vectors The vectors that should be subtracted from each other.
+         */
+        subtractVectors<T>(...vectors: T[]): T;
     };
 
     // @ts-ignore: Ignore redeclaration

@@ -9069,6 +9069,134 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('math.addVectors()', () => {
+        const cases = [
+            [
+                'zeroes',
+                { x: 0, y: 0, z: 0 },
+                { x: 0, y: 0, z: 0 },
+                { x: 0, y: 0, z: 0 },
+            ] as const,
+            [
+                'numbers',
+                { x: 1, y: 2, z: 3 },
+                { x: 4, y: 5, z: 6 },
+                { x: 5, y: 7, z: 9 },
+            ] as const,
+            [
+                'strings',
+                { x: 'a', y: 'b', z: 'c' },
+                { x: 'd', y: 'e', z: 'f' },
+                { x: 'ad', y: 'be', z: 'cf' },
+            ] as const,
+
+            [
+                'negative numbers',
+                { x: -1, y: -2, z: -3 },
+                { x: 4, y: 5, z: 6 },
+                { x: 3, y: 3, z: 3 },
+            ] as const,
+
+            [
+                'objects with separate properties',
+                { x: -1, y: -2, z: -3 },
+                { a: 4, b: 5, c: 6 },
+                { x: -1, y: -2, z: -3, a: 4, b: 5, c: 6 },
+            ] as const,
+
+            ['empty objects', {}, {}, {}] as const,
+
+            ['null objects', null as any, null as any, {}] as const,
+        ];
+
+        it.each(cases)(
+            'should add %s together',
+            (desc, first, second, expected) => {
+                expect(
+                    library.api.math.addVectors(first, second as any)
+                ).toEqual(expected);
+            }
+        );
+    });
+
+    describe('math.subtractVectors()', () => {
+        const cases = [
+            [
+                'zeroes',
+                { x: 0, y: 0, z: 0 },
+                { x: 0, y: 0, z: 0 },
+                { x: 0, y: 0, z: 0 },
+            ] as const,
+            [
+                'numbers',
+                { x: 1, y: 2, z: 3 },
+                { x: 4, y: 5, z: 6 },
+                { x: -3, y: -3, z: -3 },
+            ] as const,
+            [
+                'strings',
+                { x: 'a', y: 'b', z: 'c' },
+                { x: 'd', y: 'e', z: 'f' },
+                { x: NaN, y: NaN, z: NaN },
+            ] as const,
+
+            [
+                'negative numbers',
+                { x: -1, y: -2, z: -3 },
+                { x: 4, y: 5, z: 6 },
+                { x: -5, y: -7, z: -9 },
+            ] as const,
+
+            [
+                'objects with separate properties',
+                { x: -1, y: -2, z: -3 },
+                { a: 4, b: 5, c: 6 },
+                { x: -1, y: -2, z: -3, a: 4, b: 5, c: 6 },
+            ] as const,
+
+            ['empty objects', {}, {}, {}] as const,
+
+            ['null objects', null as any, null as any, {}] as const,
+        ];
+
+        it.each(cases)(
+            'should subtract %s from each other',
+            (desc, first, second, expected) => {
+                expect(
+                    library.api.math.subtractVectors(first, second as any)
+                ).toEqual(expected);
+            }
+        );
+    });
+
+    describe('math.negateVector()', () => {
+        const cases = [
+            ['zeroes', { x: 0, y: 0, z: 0 }, { x: -0, y: -0, z: -0 }] as const,
+
+            ['numbers', { x: 1, y: 2, z: 3 }, { x: -1, y: -2, z: -3 }] as const,
+
+            [
+                'strings',
+                { x: 'a', y: 'b', z: 'c' },
+                { x: NaN, y: NaN, z: NaN },
+            ] as const,
+
+            [
+                'negative numbers',
+                { x: -1, y: -2, z: -3 },
+                { x: 1, y: 2, z: 3 },
+            ] as const,
+
+            ['empty objects', {}, {}] as const,
+
+            ['null objects', null as any, null as any] as const,
+        ];
+
+        it.each(cases)('should negate %s', (desc, first, expected) => {
+            expect(library.api.math.negateVector(first)).toEqual(expected);
+        });
+    });
+
     describe('crypto.sha256()', () => {
         const cases = [
             [
