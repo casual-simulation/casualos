@@ -4691,6 +4691,44 @@ const result = math.negateVector(
 os.toast(result); // { x: -5, y: -6, z: -7 }
 ```
 
+## Mod Actions
+
+Mod actions are actions that can be used to create mods and transform some mods into other mods.
+
+### `mod.cameraPositionOffset(position)`
+
+Creates a mod that sets the <TagLink tag='cameraPositionOffsetX'>cameraPositionOffset</TagLink> tags to the given 3D position.
+
+The **first parameter** is the 3D position that should be made into a mod.
+
+#### Examples:
+
+1. Get a mod that sets the camera position offset.
+```typescript
+let mod = mod.cameraPositionOffset({
+    x: 4,
+    y: 5,
+    z: 6
+});
+```
+
+### `mod.cameraRotationOffset(rotation)`
+
+Creates a mod that sets the <TagLink tag='cameraRotationOffsetX'>cameraRotationOffset</TagLink> tags to the given 3D position.
+
+The **first parameter** is the 3D rotation that should be made into a mod.
+
+#### Examples:
+
+1. Get a mod that sets the camera rotation offset.
+```typescript
+let mod = mod.cameraRotationOffset({
+    x: 4,
+    y: 5,
+    z: 6
+});
+```
+
 ## Crypto Actions
 
 ### `crypto.sha256(...data)`
