@@ -4603,6 +4603,79 @@ const offset = math.getAnchorPointOffset("bottom");
 os.toast(offset);
 ```
 
+### `math.addVectors(...vectors)`
+
+Mathematically adds the given vectors to each other and returns the sum result.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+**Each parameter** is an object that contains the numerical properties that should be added together.
+
+#### Examples:
+
+1. Add two 3D points together.
+```typescript
+const result = math.addVectors(
+    { x: 1, y: 2, z: 3 },
+    { x: 5, y: 6, z: 7 }
+);
+
+os.toast(result); // { x: 6, y: 8, z: 10 }
+```
+
+2. Add arbitrary numbers together.
+```typescript
+const result = math.addVectors(
+    { salary: 1000, tax: 50 },
+    { salary: 5000, tax: 250 },
+    { salary: 750, tax: 37.5 },
+);
+
+os.toast(result); // { salary: 6750, tax: 337.5 }
+```
+
+### `math.subtractVectors(...vectors)`
+
+Mathematically subtracts the given vectors from each other and returns the result.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+**Each parameter** is an object that contains the numerical properties that should be added together.
+
+#### Examples:
+
+1. Subtract two 3D points from each other.
+```typescript
+const result = math.addVectors(
+    { x: 5, y: 6, z: 7 },
+    { x: 1, y: 2, z: 3 },
+);
+
+os.toast(result); // { x: 4, y: 4, z: 4 }
+```
+
+### `math.negateVector(vector)`
+
+Mathematically negates the given vector and returns the result.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+The **first parameter** is the object whose mathematical properties should be negated.
+
+#### Examples:
+
+1. Negate a 3D point.
+```typescript
+const result = math.negateVector(
+    { x: 5, y: 6, z: 7 }
+);
+
+os.toast(result); // { x: -5, y: -6, z: -7 }
+```
+
 ## Crypto Actions
 
 ### `crypto.sha256(...data)`
