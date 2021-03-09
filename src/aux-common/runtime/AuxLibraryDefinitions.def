@@ -2781,6 +2781,16 @@ declare global {
     function getMod(bot: any, ...tags: (string | RegExp)[]): Mod;
 
     /**
+     * Gets the position that the given bot is at in the given dimension.
+     * @param bot The bot or bot ID.
+     * @param dimension The dimension that the bot's position should be retrieved for.
+     */
+     function getBotPosition(
+        bot: Bot | string,
+        dimension: string
+    ): Point3D;
+
+    /**
      * Applies the given diff to the given bot.
      * @param bot The bot.
      * @param diff The diff to apply.

@@ -413,6 +413,21 @@ let mod = getMod(bot, "color", "label");
 let mod = getMod(bot, /^on/g);
 ```
 
+### `getBotPosition(bot, dimension)`
+
+Gets the 3D position of the given bot in the given dimension.
+
+The **first parameter** is the bot or bot ID whose position should be retrieved.
+
+The **second parameter** is the dimension that the position should be retrieved for.
+
+#### Examples:
+
+1. Get the position of this bot in the `home` dimension.
+```typescript
+let position = getBotPosition(thisBot, "home");
+```
+
 ### `uuid()`
 
 Creates a new UUID. Useful for generating a random identifier that is guaranteed to be unique.
