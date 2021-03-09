@@ -3280,33 +3280,102 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         bot: RuntimeBot | (RuntimeBot | string)[] | string,
         tag: string,
         options: AnimateTagFunctionOptions
+    ): Promise<void>;
+
+    /**
+     * Animates the given tags. Returns a promise when the animation is finished.
+     * @param bot The bot or list of bots that should be animated.
+     * @param options The options for the animation. fromValue should be an object which contains the starting tag values and toValue should be an object that contains the ending tag values.
+     */
+    function animateTag(
+        bot: RuntimeBot | (RuntimeBot | string)[] | string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void>;
+    /**
+     * Animates the given tag. Returns a promise when the animation is finished.
+     * @param bot The bot or list of bots that should be animated.
+     * @param tag The tag that should be animated.
+     * @param options The options for the animation.
+     */
+    function animateTag(
+        bot: RuntimeBot | (RuntimeBot | string)[] | string,
+        tagOrOptions: string | AnimateTagFunctionOptions,
+        options?: AnimateTagFunctionOptions
     ): Promise<void> {
         if (Array.isArray(bot)) {
             const bots = bot
                 .map((b) => (typeof b === 'string' ? getBot('id', b) : b))
                 .filter((b) => !!b);
 
-            const promises = bots.map((b) => animateBotTag(b, tag, options));
+            const promises = bots.map((b) =>
+                animateBotTag(b, tagOrOptions, options)
+            );
 
             const allPromises = Promise.all(promises);
             return <Promise<void>>(<any>allPromises);
         } else if (typeof bot === 'string') {
             const finalBot = getBot('id', bot);
             if (finalBot) {
-                return animateBotTag(finalBot, tag, options);
+                return animateBotTag(finalBot, tagOrOptions, options);
             } else {
                 return Promise.resolve();
             }
         } else {
-            return animateBotTag(bot, tag, options);
+            return animateBotTag(bot, tagOrOptions, options);
         }
     }
 
     function animateBotTag(
         bot: RuntimeBot,
-        tag: string,
+        tagOrOptions: string | AnimateTagFunctionOptions,
         options: AnimateTagFunctionOptions
     ): Promise<void> {
+        if (typeof tagOrOptions === 'string') {
+            return animateSingleTag(bot, tagOrOptions, options);
+        } else {
+            return animateMultipleTags(bot, tagOrOptions);
+        }
+    }
+
+    async function animateMultipleTags(
+        bot: RuntimeBot,
+        options: AnimateTagFunctionOptions
+    ) {
+        if (typeof options.fromValue !== 'object') {
+            throw new Error(
+                'You must provide an object as fromValue when not specifying a tag.'
+            );
+        }
+        if (typeof options.toValue !== 'object') {
+            throw new Error(
+                'You must provide an object as toValue when not specifying a tag.'
+            );
+        }
+
+        const keys = Object.keys(options.fromValue);
+        const groupId = uuid();
+        await Promise.all(
+            keys.map((k) =>
+                animateSingleTag(
+                    bot,
+                    k,
+                    {
+                        ...options,
+                        fromValue: options.fromValue[k],
+                        toValue: options.toValue[k],
+                    },
+                    groupId
+                )
+            )
+        );
+    }
+
+    function animateSingleTag(
+        bot: RuntimeBot,
+        tag: string,
+        options: AnimateTagFunctionOptions,
+        groupId?: string
+    ) {
         if (!options) {
             clearAnimations(bot, tag);
             return Promise.resolve();
@@ -3360,6 +3429,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 type: 'animation',
                 timerId: tween.getId(),
                 tag: tag,
+                groupId,
                 cancel: () => {
                     tween.stop();
                     reject(new Error('The animation was canceled.'));
@@ -3371,11 +3441,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Cancels the animations that are running on the given bot(s).
      * @param bot The bot or list of bots that should cancel their animations.
-     * @param tag The tag that the animations should be canceld for. If omitted then all tags will be canceled.
+     * @param tag The tag or list of tags that the animations should be canceld for. If omitted then all tags will be canceled.
      */
     function clearAnimations(
         bot: RuntimeBot | (RuntimeBot | string)[] | string,
-        tag?: string
+        tag?: string | string[]
     ) {
         const bots = Array.isArray(bot)
             ? bot
@@ -3385,11 +3455,47 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             ? getBots('id', bot)
             : [bot];
 
+        let tags = (!hasValue(tag)
+            ? null
+            : Array.isArray(tag)
+            ? tag
+            : [tag]) as string[];
+
+        let groups = [] as string[];
         for (let bot of bots) {
             const timers = context.getBotTimers(bot.id);
             for (let timer of timers) {
                 if (timer.type === 'animation' && timer.cancel) {
-                    if (!hasValue(tag) || timer.tag === tag) {
+                    if (!hasValue(tag) || tags.indexOf(timer.tag) >= 0) {
+                        if (hasValue(timer.groupId)) {
+                            groups.push(timer.groupId);
+                        }
+                        timer.cancel();
+                        context.removeBotTimer(
+                            bot.id,
+                            timer.type,
+                            timer.timerId
+                        );
+                    }
+                }
+            }
+        }
+
+        clearGroupAnimations(bots, groups);
+    }
+
+    function clearGroupAnimations(bots: RuntimeBot[], groups: string[]) {
+        if (groups.length <= 0) {
+            return;
+        }
+        for (let bot of bots) {
+            const timers = context.getBotTimers(bot.id);
+            for (let timer of timers) {
+                if (timer.type === 'animation' && timer.cancel) {
+                    if (
+                        hasValue(timer.groupId) &&
+                        groups.indexOf(timer.groupId) >= 0
+                    ) {
                         timer.cancel();
                         context.removeBotTimer(
                             bot.id,

@@ -4623,6 +4623,42 @@ describe('AuxLibrary', () => {
                 expect(bot1.raw.abc).toEqual(0);
             });
 
+            it('should remove # symbols from tag names', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, '#abc', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(10);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: 10,
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
             it('should use tempLocal space by default', async () => {
                 bot1.tags.abc = 0;
                 const promise = library.api.animateTag(bot1, 'abc', {
@@ -4876,6 +4912,54 @@ describe('AuxLibrary', () => {
                 expect(bot2.masks.abc).toBeUndefined();
                 expect(bot2.raw.abc).toEqual(0);
             });
+
+            it('should support animating multiple tags at once', async () => {
+                bot1.tags.abc = 0;
+                bot1.tags.def = 1;
+                const promise = library.api.animateTag(bot1, {
+                    fromValue: {
+                        abc: 0,
+                        def: 1,
+                    },
+                    toValue: {
+                        abc: 10,
+                        def: 11,
+                    },
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                for (let i = 0; i < 5; i++) {
+                    await Promise.resolve();
+                }
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(10);
+                expect(bot1.masks.def).toEqual(11);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: 10,
+                        def: 11,
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+                expect(bot1.raw.def).toEqual(1);
+            });
         });
 
         describe('clearAnimations()', () => {
@@ -5042,6 +5126,108 @@ describe('AuxLibrary', () => {
                 expect(bot1.masks.abc).toBeUndefined();
                 expect(bot1.masks.other).toEqual(10);
                 expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should stop animations for the specified tag', async () => {
+                bot1.tags.abc = 0;
+                bot1.tags.other = 0;
+                const promise1 = library.api.animateTag(bot1, 'abc', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+                const promise2 = library.api.animateTag(bot1, 'other', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let errored1 = false;
+                let errored2 = false;
+
+                promise1.catch(() => {
+                    errored1 = true;
+                });
+                promise2.catch(() => {
+                    errored2 = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                library.api.clearAnimations(bot1, ['abc', 'other']);
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+                await Promise.resolve();
+
+                expect(errored1).toBe(true);
+                expect(errored2).toBe(true);
+                expect(bot1.masks.abc).toBeUndefined();
+                expect(bot1.masks.other).toBeUndefined();
+                expect(bot1.raw.abc).toEqual(0);
+                expect(bot1.raw.other).toEqual(0);
+            });
+
+            it('should cancel all animations in a group if one of them is canceled', async () => {
+                bot1.tags.abc = 0;
+                bot1.tags.def = 0;
+                bot1.tags.ghi = 0;
+                uuidMock.mockReturnValueOnce('group1');
+                const promise1 = library.api.animateTag(bot1, {
+                    fromValue: {
+                        abc: 0,
+                        def: 0,
+                        ghi: 0,
+                    },
+                    toValue: {
+                        abc: 10,
+                        def: 10,
+                        ghi: 10,
+                    },
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let errored = false;
+
+                promise1.catch(() => {
+                    errored = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                library.api.clearAnimations(bot1, 'abc');
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                for (let i = 0; i < 5; i++) {
+                    await Promise.resolve();
+                }
+
+                expect(errored).toBe(true);
+                expect(bot1.masks.abc).toBeUndefined();
+                expect(bot1.masks.def).toBeUndefined();
+                expect(bot1.masks.ghi).toBeUndefined();
+                expect(bot1.raw.abc).toEqual(0);
+                expect(bot1.raw.def).toEqual(0);
+                expect(bot1.raw.ghi).toEqual(0);
             });
         });
 

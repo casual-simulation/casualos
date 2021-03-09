@@ -2390,11 +2390,25 @@ declare global {
      * @param tag The tag that should be animated.
      * @param options The options for the animation. If given null, then any running animations for the given tag will be canceled.
      */
-    function animateTag(
-        bot: Bot | (Bot | string)[] | string,
-        tag: string,
-        options: AnimateTagFunctionOptions
-    ): Promise<void[]>;
+     function animateTag(bot: Bot | (Bot | string)[] | string, tag: string, options: AnimateTagFunctionOptions): Promise<void>;
+
+     /**
+      * Animates the given tags. Returns a promise when the animation is finished.
+      * @param bot The bot or list of bots that should be animated.
+      * @param options The options for the animation. fromValue should be an object which contains the starting tag values and toValue should be an object that contains the ending tag values.
+      */
+      function animateTag(bot: Bot | (Bot | string)[] | string, options: AnimateTagFunctionOptions): Promise<void>;
+     /**
+      * Animates the given tag. Returns a promise when the animation is finished.
+      * @param bot The bot or list of bots that should be animated.
+      * @param tag The tag that should be animated.
+      * @param options The options for the animation.
+      */
+     function animateTag(
+         bot: Bot | (Bot | string)[] | string,
+         tagOrOptions: string | AnimateTagFunctionOptions,
+         options?: AnimateTagFunctionOptions
+     ): Promise<void>;
 
     /**
      * Cancels the animations that are running on the given bot(s).
