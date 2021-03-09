@@ -787,6 +787,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 negateVector,
             },
 
+            mod: {
+                cameraPositionOffset,
+                cameraRotationOffset,
+            },
+
             crypto: {
                 sha256,
                 sha512,
@@ -3943,6 +3948,52 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const keys = Object.keys(vector);
         for (let key of keys) {
             result[key] = -(vector as any)[key];
+        }
+
+        return result;
+    }
+
+    /**
+     * Converts the given 3D point into a mod that sets the cameraPositionOffset tags.
+     * @param point The mod that represents the 3D point.
+     */
+    function cameraPositionOffset(point: {
+        x?: number;
+        y?: number;
+        z?: number;
+    }) {
+        let result = {} as any;
+        if ('x' in point) {
+            result.cameraPositionOffsetX = point.x;
+        }
+        if ('y' in point) {
+            result.cameraPositionOffsetY = point.y;
+        }
+        if ('z' in point) {
+            result.cameraPositionOffsetZ = point.z;
+        }
+
+        return result;
+    }
+
+    /**
+     * Converts the given 3D rotation into a mod that sets the cameraRotationOffset tags.
+     * @param rotation The mod that represents the 3D rotation.
+     */
+    function cameraRotationOffset(rotation: {
+        x?: number;
+        y?: number;
+        z?: number;
+    }) {
+        let result = {} as any;
+        if ('x' in rotation) {
+            result.cameraRotationOffsetX = rotation.x;
+        }
+        if ('y' in rotation) {
+            result.cameraRotationOffsetY = rotation.y;
+        }
+        if ('z' in rotation) {
+            result.cameraRotationOffsetZ = rotation.z;
         }
 
         return result;

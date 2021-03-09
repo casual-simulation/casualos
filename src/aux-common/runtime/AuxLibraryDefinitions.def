@@ -4007,6 +4007,31 @@ declare global {
         subtractVectors<T>(...vectors: T[]): T;
     };
 
+    /**
+     * Defines a set of functions that are used to create and transform mods.
+     */
+    const mod: {
+        /**
+         * Converts the given 3D point into a mod that sets the cameraPositionOffset tags.
+         * @param point The mod that represents the 3D point.
+         */
+        cameraPositionOffset(point: Partial<Point3D>): {
+            cameraPositionOffsetX: number,
+            cameraPositionOffsetY: number,
+            cameraPositionOffsetZ: number,
+        };
+
+        /**
+         * Converts the given 3D rotation into a mod that sets the cameraRotationOffset tags.
+         * @param rotation The mod that represents the 3D rotation.
+         */
+        cameraRotationOffset(rotation: Partial<Point3D>): {
+            cameraRotationOffsetX: number,
+            cameraRotationOffsetY: number,
+            cameraRotationOffsetZ: number,
+        };
+    };
+
     // @ts-ignore: Ignore redeclaration
     const crypto: {
         /**

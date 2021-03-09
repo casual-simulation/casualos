@@ -9247,6 +9247,73 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('mod.cameraPositionOffset()', () => {
+        it('should return a camera position offset mod for the given x,y,z mod', () => {
+            expect(
+                library.api.mod.cameraPositionOffset({
+                    x: 1,
+                    y: 2,
+                    z: 3,
+                })
+            ).toEqual({
+                cameraPositionOffsetX: 1,
+                cameraPositionOffsetY: 2,
+                cameraPositionOffsetZ: 3,
+            });
+        });
+        const cases = [
+            ['x', { y: 2, z: 3 }, 'cameraPositionOffsetX'] as const,
+            ['y', { x: 2, z: 3 }, 'cameraPositionOffsetY'] as const,
+            ['z', { x: 2, y: 3 }, 'cameraPositionOffsetZ'] as const,
+        ];
+
+        it.each(cases)(
+            'should exclude %s if not included in the point',
+            (desc, point, tag) => {
+                const result = library.api.mod.cameraPositionOffset(point);
+                expect(tag in result).toBe(false);
+            }
+        );
+
+        it('should return an empty object if given an empty object', () => {
+            expect(library.api.mod.cameraPositionOffset({})).toEqual({});
+        });
+    });
+
+    describe('mod.cameraRotationOffset()', () => {
+        it('should return a camera rotation offset mod for the given x,y,z mod', () => {
+            expect(
+                library.api.mod.cameraRotationOffset({
+                    x: 1,
+                    y: 2,
+                    z: 3,
+                })
+            ).toEqual({
+                cameraRotationOffsetX: 1,
+                cameraRotationOffsetY: 2,
+                cameraRotationOffsetZ: 3,
+            });
+        });
+
+        const cases = [
+            ['x', { y: 2, z: 3 }, 'cameraRotationOffsetX'] as const,
+            ['y', { x: 2, z: 3 }, 'cameraRotationOffsetY'] as const,
+            ['z', { x: 2, y: 3 }, 'cameraRotationOffsetZ'] as const,
+        ];
+
+        it.each(cases)(
+            'should exclude %s if not included in the point',
+            (desc, point, tag) => {
+                const result = library.api.mod.cameraRotationOffset(point);
+                expect(tag in result).toBe(false);
+            }
+        );
+
+        it('should return an empty object if given an empty object', () => {
+            expect(library.api.mod.cameraRotationOffset({})).toEqual({});
+        });
+    });
+
     describe('crypto.sha256()', () => {
         const cases = [
             [
