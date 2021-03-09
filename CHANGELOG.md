@@ -15,6 +15,9 @@
     -   `math.addVectors(...vectors)` - Adds the given vectors together and returns the result.
     -   `math.subtractVectors(...vectors)` - Subtracts the given vectors and returns the result.
     -   `math.negateVector(vector)` - Mathematically negates the given vector and returns the result.
+-   Added the `os.getFocusPoint(portal?)` function to get the focus point that the camera is looking at.
+    -   This value is the same as the one highlighted by the `#portalShowFocusPoint` tag.
+    -   It is also backed up by `cameraFocusX`, `cameraFocusY`, `cameraFocusZ` tags on the portal bot.
 
 ## V1.4.9
 
