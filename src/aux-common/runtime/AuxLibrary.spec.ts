@@ -1414,6 +1414,56 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('getBotPosition()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should return the position of the bot in the given dimension', () => {
+            bot1.tags.homeX = 5;
+            bot1.tags.homeY = 1;
+            bot1.tags.homeZ = 9;
+            const position = library.api.getBotPosition(bot1, 'home');
+
+            expect(position).toEqual({
+                x: 5,
+                y: 1,
+                z: 9,
+            });
+        });
+
+        it('should support bot IDs', () => {
+            bot1.tags.homeX = 5;
+            bot1.tags.homeY = 1;
+            bot1.tags.homeZ = 9;
+            const position = library.api.getBotPosition(bot1.id, 'home');
+
+            expect(position).toEqual({
+                x: 5,
+                y: 1,
+                z: 9,
+            });
+        });
+
+        it('should throw an error if given null', () => {
+            expect(() => {
+                library.api.getBotPosition(null, 'home');
+            }).toThrow();
+        });
+
+        it('should throw an error if given a missing bot ID', () => {
+            expect(() => {
+                library.api.getBotPosition('missing', 'home');
+            }).toThrow();
+        });
+    });
+
     describe('actions', () => {
         let bot1: RuntimeBot;
         let bot2: RuntimeBot;
@@ -4623,6 +4673,42 @@ describe('AuxLibrary', () => {
                 expect(bot1.raw.abc).toEqual(0);
             });
 
+            it('should remove # symbols from tag names', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, '#abc', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(10);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: 10,
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
             it('should use tempLocal space by default', async () => {
                 bot1.tags.abc = 0;
                 const promise = library.api.animateTag(bot1, 'abc', {
@@ -4876,6 +4962,54 @@ describe('AuxLibrary', () => {
                 expect(bot2.masks.abc).toBeUndefined();
                 expect(bot2.raw.abc).toEqual(0);
             });
+
+            it('should support animating multiple tags at once', async () => {
+                bot1.tags.abc = 0;
+                bot1.tags.def = 1;
+                const promise = library.api.animateTag(bot1, {
+                    fromValue: {
+                        abc: 0,
+                        def: 1,
+                    },
+                    toValue: {
+                        abc: 10,
+                        def: 11,
+                    },
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                for (let i = 0; i < 5; i++) {
+                    await Promise.resolve();
+                }
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(10);
+                expect(bot1.masks.def).toEqual(11);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: 10,
+                        def: 11,
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+                expect(bot1.raw.def).toEqual(1);
+            });
         });
 
         describe('clearAnimations()', () => {
@@ -5042,6 +5176,108 @@ describe('AuxLibrary', () => {
                 expect(bot1.masks.abc).toBeUndefined();
                 expect(bot1.masks.other).toEqual(10);
                 expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should stop animations for the specified tag', async () => {
+                bot1.tags.abc = 0;
+                bot1.tags.other = 0;
+                const promise1 = library.api.animateTag(bot1, 'abc', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+                const promise2 = library.api.animateTag(bot1, 'other', {
+                    fromValue: 0,
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let errored1 = false;
+                let errored2 = false;
+
+                promise1.catch(() => {
+                    errored1 = true;
+                });
+                promise2.catch(() => {
+                    errored2 = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                library.api.clearAnimations(bot1, ['abc', 'other']);
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+                await Promise.resolve();
+
+                expect(errored1).toBe(true);
+                expect(errored2).toBe(true);
+                expect(bot1.masks.abc).toBeUndefined();
+                expect(bot1.masks.other).toBeUndefined();
+                expect(bot1.raw.abc).toEqual(0);
+                expect(bot1.raw.other).toEqual(0);
+            });
+
+            it('should cancel all animations in a group if one of them is canceled', async () => {
+                bot1.tags.abc = 0;
+                bot1.tags.def = 0;
+                bot1.tags.ghi = 0;
+                uuidMock.mockReturnValueOnce('group1');
+                const promise1 = library.api.animateTag(bot1, {
+                    fromValue: {
+                        abc: 0,
+                        def: 0,
+                        ghi: 0,
+                    },
+                    toValue: {
+                        abc: 10,
+                        def: 10,
+                        ghi: 10,
+                    },
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let errored = false;
+
+                promise1.catch(() => {
+                    errored = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                library.api.clearAnimations(bot1, 'abc');
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                for (let i = 0; i < 5; i++) {
+                    await Promise.resolve();
+                }
+
+                expect(errored).toBe(true);
+                expect(bot1.masks.abc).toBeUndefined();
+                expect(bot1.masks.def).toBeUndefined();
+                expect(bot1.masks.ghi).toBeUndefined();
+                expect(bot1.raw.abc).toEqual(0);
+                expect(bot1.raw.def).toEqual(0);
+                expect(bot1.raw.ghi).toEqual(0);
             });
         });
 
@@ -8466,6 +8702,82 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('os.getFocusPoint()', () => {
+        let pagePortal: RuntimeBot;
+        let inventoryPortal: RuntimeBot;
+
+        beforeEach(() => {
+            pagePortal = createDummyRuntimeBot(
+                'pagePortal',
+                {
+                    cameraFocusX: 1,
+                    cameraFocusY: 2,
+                    cameraFocusZ: 3,
+                },
+                'tempLocal'
+            );
+            inventoryPortal = createDummyRuntimeBot(
+                'inventoryPortal',
+                {
+                    cameraFocusX: 4,
+                    cameraFocusY: 5,
+                    cameraFocusZ: 6,
+                },
+                'tempLocal'
+            );
+            addToContext(context, pagePortal, inventoryPortal);
+
+            (<any>globalThis).pagePortalBot = pagePortal;
+            (<any>globalThis).inventoryPortalBot = inventoryPortal;
+        });
+
+        afterEach(() => {
+            delete (<any>globalThis).pagePortalBot;
+            delete (<any>globalThis).inventoryPortalBot;
+        });
+
+        it('should return NaN for x, y, and z if the page portal bot is null', () => {
+            delete (<any>globalThis).pagePortalBot;
+            const result = library.api.os.getFocusPoint();
+
+            expect(result).toEqual({
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            });
+        });
+
+        it('should return the x, y, and z of the player camera for the page portal', () => {
+            const result = library.api.os.getFocusPoint();
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+
+        it('should be able to get the inventory camera rotation', () => {
+            const result = library.api.os.getFocusPoint('inventory');
+
+            expect(result).toEqual({
+                x: 4,
+                y: 5,
+                z: 6,
+            });
+        });
+
+        it('should be able to get the page camera rotation', () => {
+            const result = library.api.os.getFocusPoint('page');
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+    });
+
     describe('os.getPointerPosition()', () => {
         let player: RuntimeBot;
 
@@ -8880,6 +9192,201 @@ describe('AuxLibrary', () => {
             expect(library.api.math.getAnchorPointOffset(mode)).toEqual(
                 expected
             );
+        });
+    });
+
+    describe('math.addVectors()', () => {
+        const cases = [
+            [
+                'zeroes',
+                { x: 0, y: 0, z: 0 },
+                { x: 0, y: 0, z: 0 },
+                { x: 0, y: 0, z: 0 },
+            ] as const,
+            [
+                'numbers',
+                { x: 1, y: 2, z: 3 },
+                { x: 4, y: 5, z: 6 },
+                { x: 5, y: 7, z: 9 },
+            ] as const,
+            [
+                'strings',
+                { x: 'a', y: 'b', z: 'c' },
+                { x: 'd', y: 'e', z: 'f' },
+                { x: 'ad', y: 'be', z: 'cf' },
+            ] as const,
+
+            [
+                'negative numbers',
+                { x: -1, y: -2, z: -3 },
+                { x: 4, y: 5, z: 6 },
+                { x: 3, y: 3, z: 3 },
+            ] as const,
+
+            [
+                'objects with separate properties',
+                { x: -1, y: -2, z: -3 },
+                { a: 4, b: 5, c: 6 },
+                { x: -1, y: -2, z: -3, a: 4, b: 5, c: 6 },
+            ] as const,
+
+            ['empty objects', {}, {}, {}] as const,
+
+            ['null objects', null as any, null as any, {}] as const,
+        ];
+
+        it.each(cases)(
+            'should add %s together',
+            (desc, first, second, expected) => {
+                expect(
+                    library.api.math.addVectors(first, second as any)
+                ).toEqual(expected);
+            }
+        );
+    });
+
+    describe('math.subtractVectors()', () => {
+        const cases = [
+            [
+                'zeroes',
+                { x: 0, y: 0, z: 0 },
+                { x: 0, y: 0, z: 0 },
+                { x: 0, y: 0, z: 0 },
+            ] as const,
+            [
+                'numbers',
+                { x: 1, y: 2, z: 3 },
+                { x: 4, y: 5, z: 6 },
+                { x: -3, y: -3, z: -3 },
+            ] as const,
+            [
+                'strings',
+                { x: 'a', y: 'b', z: 'c' },
+                { x: 'd', y: 'e', z: 'f' },
+                { x: NaN, y: NaN, z: NaN },
+            ] as const,
+
+            [
+                'negative numbers',
+                { x: -1, y: -2, z: -3 },
+                { x: 4, y: 5, z: 6 },
+                { x: -5, y: -7, z: -9 },
+            ] as const,
+
+            [
+                'objects with separate properties',
+                { x: -1, y: -2, z: -3 },
+                { a: 4, b: 5, c: 6 },
+                { x: -1, y: -2, z: -3, a: 4, b: 5, c: 6 },
+            ] as const,
+
+            ['empty objects', {}, {}, {}] as const,
+
+            ['null objects', null as any, null as any, {}] as const,
+        ];
+
+        it.each(cases)(
+            'should subtract %s from each other',
+            (desc, first, second, expected) => {
+                expect(
+                    library.api.math.subtractVectors(first, second as any)
+                ).toEqual(expected);
+            }
+        );
+    });
+
+    describe('math.negateVector()', () => {
+        const cases = [
+            ['zeroes', { x: 0, y: 0, z: 0 }, { x: -0, y: -0, z: -0 }] as const,
+
+            ['numbers', { x: 1, y: 2, z: 3 }, { x: -1, y: -2, z: -3 }] as const,
+
+            [
+                'strings',
+                { x: 'a', y: 'b', z: 'c' },
+                { x: NaN, y: NaN, z: NaN },
+            ] as const,
+
+            [
+                'negative numbers',
+                { x: -1, y: -2, z: -3 },
+                { x: 1, y: 2, z: 3 },
+            ] as const,
+
+            ['empty objects', {}, {}] as const,
+
+            ['null objects', null as any, null as any] as const,
+        ];
+
+        it.each(cases)('should negate %s', (desc, first, expected) => {
+            expect(library.api.math.negateVector(first)).toEqual(expected);
+        });
+    });
+
+    describe('mod.cameraPositionOffset()', () => {
+        it('should return a camera position offset mod for the given x,y,z mod', () => {
+            expect(
+                library.api.mod.cameraPositionOffset({
+                    x: 1,
+                    y: 2,
+                    z: 3,
+                })
+            ).toEqual({
+                cameraPositionOffsetX: 1,
+                cameraPositionOffsetY: 2,
+                cameraPositionOffsetZ: 3,
+            });
+        });
+        const cases = [
+            ['x', { y: 2, z: 3 }, 'cameraPositionOffsetX'] as const,
+            ['y', { x: 2, z: 3 }, 'cameraPositionOffsetY'] as const,
+            ['z', { x: 2, y: 3 }, 'cameraPositionOffsetZ'] as const,
+        ];
+
+        it.each(cases)(
+            'should exclude %s if not included in the point',
+            (desc, point, tag) => {
+                const result = library.api.mod.cameraPositionOffset(point);
+                expect(tag in result).toBe(false);
+            }
+        );
+
+        it('should return an empty object if given an empty object', () => {
+            expect(library.api.mod.cameraPositionOffset({})).toEqual({});
+        });
+    });
+
+    describe('mod.cameraRotationOffset()', () => {
+        it('should return a camera rotation offset mod for the given x,y,z mod', () => {
+            expect(
+                library.api.mod.cameraRotationOffset({
+                    x: 1,
+                    y: 2,
+                    z: 3,
+                })
+            ).toEqual({
+                cameraRotationOffsetX: 1,
+                cameraRotationOffsetY: 2,
+                cameraRotationOffsetZ: 3,
+            });
+        });
+
+        const cases = [
+            ['x', { y: 2, z: 3 }, 'cameraRotationOffsetX'] as const,
+            ['y', { x: 2, z: 3 }, 'cameraRotationOffsetY'] as const,
+            ['z', { x: 2, y: 3 }, 'cameraRotationOffsetZ'] as const,
+        ];
+
+        it.each(cases)(
+            'should exclude %s if not included in the point',
+            (desc, point, tag) => {
+                const result = library.api.mod.cameraRotationOffset(point);
+                expect(tag in result).toBe(false);
+            }
+        );
+
+        it('should return an empty object if given an empty object', () => {
+            expect(library.api.mod.cameraRotationOffset({})).toEqual({});
         });
     });
 

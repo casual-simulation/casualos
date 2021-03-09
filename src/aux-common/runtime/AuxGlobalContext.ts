@@ -279,6 +279,11 @@ export interface AnimationTimer {
     tag: string;
 
     /**
+     * The group ID that the timer exists in.
+     */
+    groupId?: string;
+
+    /**
      * A function used to cancel the timer.
      */
     cancel: () => void;

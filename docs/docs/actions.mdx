@@ -413,6 +413,21 @@ let mod = getMod(bot, "color", "label");
 let mod = getMod(bot, /^on/g);
 ```
 
+### `getBotPosition(bot, dimension)`
+
+Gets the 3D position of the given bot in the given dimension.
+
+The **first parameter** is the bot or bot ID whose position should be retrieved.
+
+The **second parameter** is the dimension that the position should be retrieved for.
+
+#### Examples:
+
+1. Get the position of this bot in the `home` dimension.
+```typescript
+let position = getBotPosition(thisBot, "home");
+```
+
 ### `uuid()`
 
 Creates a new UUID. Useful for generating a random identifier that is guaranteed to be unique.
@@ -755,6 +770,130 @@ await os.sleep(500);
 animateTag(bot, "homeX", null);
 ```
 
+### `animateTag(bot, options)`
+
+Animates multiple tags on the given bot based on the specified parameters.
+
+This works similarly to <ActionLink action='animateTag(bot, tag, options)'/> but instead of providing a tag name, you instead provide an object for the `fromValue` and `toValue` options which contains the tags that should be animated.
+
+Returns a promise that resolves when the animation is finished and throws an error when the animation is canceled.
+This is useful for gradually changing a set of tags on a bot over time. For example, moving a bot from point A to point B without teleporting it.
+
+Unlike calling <ActionLink action='animateTag(bot, tag, options)'/> multiple times, animations started with this function are grouped together.
+This means that canceling one animation in the group will also cancel the others.
+
+This function is fully integrated with tag masks.
+This lets you animate tag values in the `tempLocal`, `local`, `player`, and `shared` spaces.
+
+The **first parameter** is the bot or list of bots that the tag should be animated on.
+
+The **second parameter** are the options that should be used to animate the tag.
+It should be an object with the following properties:
+
+```typescript
+let options: {
+
+    /**
+     * The tags values that the animation should start at.
+     * Each property should be the name of a tag that should be animated.
+     * The values should be the starting values for the tags.
+     */
+    fromValue: object;
+
+    /**
+     * The tag values that the animation should end at.
+     * Each property should be the name of a tag that should be animated.
+     * The values should be the starting values for the tags.
+     */
+    toValue: object;
+
+    /**
+     * The number of seconds that the animation should take to complete.
+     */
+    duration: number;
+
+    /**
+     * The space that the tag should be animated in.
+     * If not specified, then "tempLocal" will be used.
+     * If set to false, then the bot will be edited instead of using tag masks.
+     * Additionally, if the specified space is the same as the space the bot lives in
+     * then the bot will be edited directly.
+     */
+    tagMaskSpace?: 'tempLocal' | 'local' | 'tempShared' | 'shared' | false;
+
+    /**
+     * The options for easing.
+     * Can be an "easing type" or an object that specifies the type and mode.
+     * If an easing type is specified, then "inout" mode is used.
+     * If omitted, then "linear" "inout" is used.
+     */
+    easing?: 'linear'
+            | 'quadratic'
+            | 'cubic'
+            | 'quartic'
+            | 'quintic'
+            | 'sinusoidal'
+            | 'exponential'
+            | 'circular'
+            | 'elastic' 
+            | {
+        /**
+         * The type of easing.
+        */
+        type: 'linear'
+            | 'quadratic'
+            | 'cubic'
+            | 'quartic'
+            | 'quintic'
+            | 'sinusoidal'
+            | 'exponential'
+            | 'circular'
+            | 'elastic';
+
+        /**
+         * Whether to apply the easing at the
+         * start (in), end (out), or start and end (inout) of the tween.
+         */
+        mode: 'in' | 'out' | 'inout';
+    }
+};
+```
+
+#### Examples:
+
+1. Animate the `#homeX` and`#homeY` tags from 0 to 1 over 5 seconds.
+```typescript
+await animateTag(bot, {
+    fromValue: {
+        homeX: 0,
+        homeY: 0,
+    },
+    toValue: {
+        homeX: 1,
+        homeY: 1
+    },
+    duration: 5
+});
+
+os.toast("Animation finished!");
+```
+
+2. Animate tags in `tempShared` space.
+```typescript
+await animateTag(bot, {
+    fromValue: {
+        homeX: 0,
+        homeY: 0,
+    },
+    toValue: {
+        homeX: 5,
+        homeY: 5
+    },
+    duration: 2,
+    tagMaskSpace: 'tempShared'
+});
+```
+
 ### `clearAnimations(bot, tag?)`
 
 Cancels the animations that are running on the given bot(s).
@@ -762,7 +901,7 @@ If a tag is specified then only animations for the given tag will be canceled.
 
 The **first parameter** is the bot or list of bots that should cancel their animations.
 
-The **second parameter** is optional and is the tag that the animations should be canceled for.
+The **second parameter** is optional and is the tag or list of tags that the animations should be canceled for.
 
 #### Examples:
 
@@ -2480,6 +2619,36 @@ const rotation = os.getCameraRotation("page");
 2. Get the rotation of the player in the inventory portal.
 ```typescript
 const rotation = os.getCameraRotation("inventory");
+```
+
+### `os.getFocusPoint(portal?)`
+
+Gets the 3D position that the player's camera is focusing on in the given portal.
+
+This is the same point that is highlighted when <TagLink tag='portalShowFocusPoint'/> is enabled for a portal.
+
+The **first parameter** is optional and is the portal that the camera focus point should be retrieved for.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='page'>
+    The camera focus point in the page portal. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='inventory'>
+    The camera focus point in the inventory portal.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Get the focus point of the player in the page portal.
+```typescript
+const focusPoint = os.getFocusPoint("page");
+```
+
+2. Get the focus point of the player in the inventory portal.
+```typescript
+const focusPoint = os.getFocusPoint("inventory");
 ```
 
 ### `os.getPointerPosition(pointer?)`
@@ -4477,6 +4646,117 @@ The **first parameter** is the anchor point that should be calculated. Can be an
 ```typescript
 const offset = math.getAnchorPointOffset("bottom");
 os.toast(offset);
+```
+
+### `math.addVectors(...vectors)`
+
+Mathematically adds the given vectors to each other and returns the sum result.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+**Each parameter** is an object that contains the numerical properties that should be added together.
+
+#### Examples:
+
+1. Add two 3D points together.
+```typescript
+const result = math.addVectors(
+    { x: 1, y: 2, z: 3 },
+    { x: 5, y: 6, z: 7 }
+);
+
+os.toast(result); // { x: 6, y: 8, z: 10 }
+```
+
+2. Add arbitrary numbers together.
+```typescript
+const result = math.addVectors(
+    { salary: 1000, tax: 50 },
+    { salary: 5000, tax: 250 },
+    { salary: 750, tax: 37.5 },
+);
+
+os.toast(result); // { salary: 6750, tax: 337.5 }
+```
+
+### `math.subtractVectors(...vectors)`
+
+Mathematically subtracts the given vectors from each other and returns the result.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+**Each parameter** is an object that contains the numerical properties that should be added together.
+
+#### Examples:
+
+1. Subtract two 3D points from each other.
+```typescript
+const result = math.addVectors(
+    { x: 5, y: 6, z: 7 },
+    { x: 1, y: 2, z: 3 },
+);
+
+os.toast(result); // { x: 4, y: 4, z: 4 }
+```
+
+### `math.negateVector(vector)`
+
+Mathematically negates the given vector and returns the result.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+The **first parameter** is the object whose mathematical properties should be negated.
+
+#### Examples:
+
+1. Negate a 3D point.
+```typescript
+const result = math.negateVector(
+    { x: 5, y: 6, z: 7 }
+);
+
+os.toast(result); // { x: -5, y: -6, z: -7 }
+```
+
+## Mod Actions
+
+Mod actions are actions that can be used to create mods and transform some mods into other mods.
+
+### `mod.cameraPositionOffset(position)`
+
+Creates a mod that sets the <TagLink tag='cameraPositionOffsetX'>cameraPositionOffset</TagLink> tags to the given 3D position.
+
+The **first parameter** is the 3D position that should be made into a mod.
+
+#### Examples:
+
+1. Get a mod that sets the camera position offset.
+```typescript
+let mod = mod.cameraPositionOffset({
+    x: 4,
+    y: 5,
+    z: 6
+});
+```
+
+### `mod.cameraRotationOffset(rotation)`
+
+Creates a mod that sets the <TagLink tag='cameraRotationOffsetX'>cameraRotationOffset</TagLink> tags to the given 3D position.
+
+The **first parameter** is the 3D rotation that should be made into a mod.
+
+#### Examples:
+
+1. Get a mod that sets the camera rotation offset.
+```typescript
+let mod = mod.cameraRotationOffset({
+    x: 4,
+    y: 5,
+    z: 6
+});
 ```
 
 ## Crypto Actions

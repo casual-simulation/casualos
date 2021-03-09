@@ -2390,11 +2390,25 @@ declare global {
      * @param tag The tag that should be animated.
      * @param options The options for the animation. If given null, then any running animations for the given tag will be canceled.
      */
-    function animateTag(
-        bot: Bot | (Bot | string)[] | string,
-        tag: string,
-        options: AnimateTagFunctionOptions
-    ): Promise<void[]>;
+     function animateTag(bot: Bot | (Bot | string)[] | string, tag: string, options: AnimateTagFunctionOptions): Promise<void>;
+
+     /**
+      * Animates the given tags. Returns a promise when the animation is finished.
+      * @param bot The bot or list of bots that should be animated.
+      * @param options The options for the animation. fromValue should be an object which contains the starting tag values and toValue should be an object that contains the ending tag values.
+      */
+      function animateTag(bot: Bot | (Bot | string)[] | string, options: AnimateTagFunctionOptions): Promise<void>;
+     /**
+      * Animates the given tag. Returns a promise when the animation is finished.
+      * @param bot The bot or list of bots that should be animated.
+      * @param tag The tag that should be animated.
+      * @param options The options for the animation.
+      */
+     function animateTag(
+         bot: Bot | (Bot | string)[] | string,
+         tagOrOptions: string | AnimateTagFunctionOptions,
+         options?: AnimateTagFunctionOptions
+     ): Promise<void>;
 
     /**
      * Cancels the animations that are running on the given bot(s).
@@ -2767,6 +2781,16 @@ declare global {
     function getMod(bot: any, ...tags: (string | RegExp)[]): Mod;
 
     /**
+     * Gets the position that the given bot is at in the given dimension.
+     * @param bot The bot or bot ID.
+     * @param dimension The dimension that the bot's position should be retrieved for.
+     */
+     function getBotPosition(
+        bot: Bot | string,
+        dimension: string
+    ): Point3D;
+
+    /**
      * Applies the given diff to the given bot.
      * @param bot The bot.
      * @param diff The diff to apply.
@@ -2867,25 +2891,31 @@ declare global {
          * Gets the 3D position of the player's camera.
          * @param portal The portal that the camera position should be retrieved for.
          */
-        getCameraPosition(portal?: 'page' | 'inventory'): {x: number, y: number, z: number};
+        getCameraPosition(portal?: 'page' | 'inventory'): Point3D;
 
         /**
          * Gets the 3D rotation of the player's camera.
          * @param portal The portal that the camera rotation should be retrieved for.
          */
-        getCameraRotation(portal?: 'page' | 'inventory'): {x: number, y: number, z: number};
+        getCameraRotation(portal?: 'page' | 'inventory'): Point3D;
+
+        /**
+         * Gets the 3D point that the player's camera is focusing on.
+         * @param portal The portal that the camera focus point should be retrieved for.
+         */
+        getFocusPoint(portal?: 'page' | 'inventory'): Point3D;
 
         /**
          * Gets the 3D position of the player's pointer.
          * @param pointer The position of the pointer to retrieve.
          */
-        getPointerPosition(pointer?: 'mouse' | 'left' | 'right'): {x: number, y: number, z: number}
+        getPointerPosition(pointer?: 'mouse' | 'left' | 'right'): Point3D;
 
         /**
          * Gets the 3D rotation of the player's pointer.
          * @param pointer The rotation of the pointer to retrieve.
          */
-        getPointerRotation(pointer?: 'mouse' | 'left' | 'right'): {x: number, y: number, z: number};
+        getPointerRotation(pointer?: 'mouse' | 'left' | 'right'): Point3D;
 
         /**
          * Gets the 3D direction that the given pointer is pointing in.
@@ -3969,6 +3999,43 @@ declare global {
          * @param anchorPoint The anchor point to get the offset for.
          */
         getAnchorPointOffset(anchorPoint: BotAnchorPoint): Point3D;
+
+        /**
+         * Adds the given vectors together and returns the result.
+         * @param vectors The vectors that should be added together.
+         */
+        addVectors<T>(...vectors: T[]): T;
+
+        /**
+         * Subtracts the given vectors from each other and returns the result.
+         * @param vectors The vectors that should be subtracted from each other.
+         */
+        subtractVectors<T>(...vectors: T[]): T;
+    };
+
+    /**
+     * Defines a set of functions that are used to create and transform mods.
+     */
+    const mod: {
+        /**
+         * Converts the given 3D point into a mod that sets the cameraPositionOffset tags.
+         * @param point The mod that represents the 3D point.
+         */
+        cameraPositionOffset(point: Partial<Point3D>): {
+            cameraPositionOffsetX: number,
+            cameraPositionOffsetY: number,
+            cameraPositionOffsetZ: number,
+        };
+
+        /**
+         * Converts the given 3D rotation into a mod that sets the cameraRotationOffset tags.
+         * @param rotation The mod that represents the 3D rotation.
+         */
+        cameraRotationOffset(rotation: Partial<Point3D>): {
+            cameraRotationOffsetX: number,
+            cameraRotationOffsetY: number,
+            cameraRotationOffsetZ: number,
+        };
     };
 
     // @ts-ignore: Ignore redeclaration

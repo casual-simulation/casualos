@@ -540,6 +540,9 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
         for (let sim of this._game.getSimulations()) {
             const rig = sim.getMainCameraRig();
+            const controls = this.cameraRigControllers.find(
+                (c) => c.rig === rig
+            );
             const cameraWorld = new Vector3();
             cameraWorld.setFromMatrixPosition(rig.mainCamera.matrixWorld);
             const cameraRotation = new Euler();
@@ -553,6 +556,12 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 [`cameraRotationX`]: cameraRotation.x,
                 [`cameraRotationY`]: cameraRotation.z,
                 [`cameraRotationZ`]: cameraRotation.y,
+                [`cameraFocusX`]:
+                    (controls?.controls.target.x ?? 0) * inverseScale,
+                [`cameraFocusY`]:
+                    -(controls?.controls.target.z ?? 0) * inverseScale,
+                [`cameraFocusZ`]:
+                    (controls?.controls.target.y ?? 0) * inverseScale,
             };
 
             for (let i = 0; i < draggableGroups.length; i++) {

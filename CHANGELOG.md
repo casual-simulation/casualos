@@ -1,5 +1,24 @@
 # CasualOS Changelog
 
+## V1.4.10
+
+#### Date: 3/9/2021
+
+### :rocket: Improvements
+
+-   Improved `animateTag()` to support animating multiple tags at once by accepting an object for the `fromValue` and `toValue` options properties.
+    -   Instead of calling `animateTag(bot, tag, options)`, omit the `tag` argument and call `animateTag(bot, options)`. This will indicate that you want to animate multiple tags at once over the same duration.
+    -   The animations that get triggered are grouped together, so cancelling one will cancel them all.
+-   Improved `clearAnimations()` to support accepting a list of tags to cancel.
+-   Added several 3D math functions:
+    -   `getBotPosition(bot, dimension)` - Gets the 3D position of a bot in the given dimension.
+    -   `math.addVectors(...vectors)` - Adds the given vectors together and returns the result.
+    -   `math.subtractVectors(...vectors)` - Subtracts the given vectors and returns the result.
+    -   `math.negateVector(vector)` - Mathematically negates the given vector and returns the result.
+-   Added the `os.getFocusPoint(portal?)` function to get the focus point that the camera is looking at.
+    -   This value is the same as the one highlighted by the `#portalShowFocusPoint` tag.
+    -   It is also backed up by `cameraFocusX`, `cameraFocusY`, `cameraFocusZ` tags on the portal bot.
+
 ## V1.4.9
 
 #### Date: 3/3/2021

@@ -157,7 +157,7 @@ import {
     BotAnchorPoint,
     calculateAnchorPoint,
     calculateAnchorPointOffset,
-    getBotPosition,
+    getBotPosition as calcGetBotPosition,
     RuntimeBot,
     isRuntimeBot,
     SET_TAG_MASK_SYMBOL,
@@ -557,6 +557,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getBot,
             getBotTagValues,
             getMod,
+            getBotPosition,
             getID,
             getJSON,
 
@@ -667,6 +668,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 getCameraPosition,
                 getCameraRotation,
+                getFocusPoint,
                 getPointerPosition,
                 getPointerRotation,
                 getPointerDirection,
@@ -781,6 +783,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getForwardDirection,
                 intersectPlane,
                 getAnchorPointOffset,
+                addVectors,
+                subtractVectors,
+                negateVector,
+            },
+
+            mod: {
+                cameraPositionOffset,
+                cameraRotationOffset,
             },
 
             crypto: {
@@ -996,6 +1006,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return diff;
+    }
+
+    /**
+     * Gets the position that the given bot is at in the given dimension.
+     * @param bot The bot or bot ID.
+     * @param dimension The dimension that the bot's position should be retrieved for.
+     */
+    function getBotPosition(
+        bot: RuntimeBot | string,
+        dimension: string
+    ): { x: number; y: number; z: number } {
+        if (!bot) {
+            throw new Error('The given bot must not be null.');
+        }
+        const finalBot = typeof bot === 'string' ? context.state[bot] : bot;
+        if (!finalBot) {
+            throw new Error(
+                `Could not find the bot with the given ID (${bot}).`
+            );
+        }
+        return calcGetBotPosition(null, finalBot, dimension);
     }
 
     /**
@@ -3280,33 +3311,102 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         bot: RuntimeBot | (RuntimeBot | string)[] | string,
         tag: string,
         options: AnimateTagFunctionOptions
+    ): Promise<void>;
+
+    /**
+     * Animates the given tags. Returns a promise when the animation is finished.
+     * @param bot The bot or list of bots that should be animated.
+     * @param options The options for the animation. fromValue should be an object which contains the starting tag values and toValue should be an object that contains the ending tag values.
+     */
+    function animateTag(
+        bot: RuntimeBot | (RuntimeBot | string)[] | string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void>;
+    /**
+     * Animates the given tag. Returns a promise when the animation is finished.
+     * @param bot The bot or list of bots that should be animated.
+     * @param tag The tag that should be animated.
+     * @param options The options for the animation.
+     */
+    function animateTag(
+        bot: RuntimeBot | (RuntimeBot | string)[] | string,
+        tagOrOptions: string | AnimateTagFunctionOptions,
+        options?: AnimateTagFunctionOptions
     ): Promise<void> {
         if (Array.isArray(bot)) {
             const bots = bot
                 .map((b) => (typeof b === 'string' ? getBot('id', b) : b))
                 .filter((b) => !!b);
 
-            const promises = bots.map((b) => animateBotTag(b, tag, options));
+            const promises = bots.map((b) =>
+                animateBotTag(b, tagOrOptions, options)
+            );
 
             const allPromises = Promise.all(promises);
             return <Promise<void>>(<any>allPromises);
         } else if (typeof bot === 'string') {
             const finalBot = getBot('id', bot);
             if (finalBot) {
-                return animateBotTag(finalBot, tag, options);
+                return animateBotTag(finalBot, tagOrOptions, options);
             } else {
                 return Promise.resolve();
             }
         } else {
-            return animateBotTag(bot, tag, options);
+            return animateBotTag(bot, tagOrOptions, options);
         }
     }
 
     function animateBotTag(
         bot: RuntimeBot,
-        tag: string,
+        tagOrOptions: string | AnimateTagFunctionOptions,
         options: AnimateTagFunctionOptions
     ): Promise<void> {
+        if (typeof tagOrOptions === 'string') {
+            return animateSingleTag(bot, tagOrOptions, options);
+        } else {
+            return animateMultipleTags(bot, tagOrOptions);
+        }
+    }
+
+    async function animateMultipleTags(
+        bot: RuntimeBot,
+        options: AnimateTagFunctionOptions
+    ) {
+        if (typeof options.fromValue !== 'object') {
+            throw new Error(
+                'You must provide an object as fromValue when not specifying a tag.'
+            );
+        }
+        if (typeof options.toValue !== 'object') {
+            throw new Error(
+                'You must provide an object as toValue when not specifying a tag.'
+            );
+        }
+
+        const keys = Object.keys(options.fromValue);
+        const groupId = uuid();
+        await Promise.all(
+            keys.map((k) =>
+                animateSingleTag(
+                    bot,
+                    k,
+                    {
+                        ...options,
+                        fromValue: options.fromValue[k],
+                        toValue: options.toValue[k],
+                    },
+                    groupId
+                )
+            )
+        );
+    }
+
+    function animateSingleTag(
+        bot: RuntimeBot,
+        tag: string,
+        options: AnimateTagFunctionOptions,
+        groupId?: string
+    ) {
         if (!options) {
             clearAnimations(bot, tag);
             return Promise.resolve();
@@ -3360,6 +3460,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 type: 'animation',
                 timerId: tween.getId(),
                 tag: tag,
+                groupId,
                 cancel: () => {
                     tween.stop();
                     reject(new Error('The animation was canceled.'));
@@ -3371,11 +3472,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Cancels the animations that are running on the given bot(s).
      * @param bot The bot or list of bots that should cancel their animations.
-     * @param tag The tag that the animations should be canceld for. If omitted then all tags will be canceled.
+     * @param tag The tag or list of tags that the animations should be canceld for. If omitted then all tags will be canceled.
      */
     function clearAnimations(
         bot: RuntimeBot | (RuntimeBot | string)[] | string,
-        tag?: string
+        tag?: string | string[]
     ) {
         const bots = Array.isArray(bot)
             ? bot
@@ -3385,11 +3486,47 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             ? getBots('id', bot)
             : [bot];
 
+        let tags = (!hasValue(tag)
+            ? null
+            : Array.isArray(tag)
+            ? tag
+            : [tag]) as string[];
+
+        let groups = [] as string[];
         for (let bot of bots) {
             const timers = context.getBotTimers(bot.id);
             for (let timer of timers) {
                 if (timer.type === 'animation' && timer.cancel) {
-                    if (!hasValue(tag) || timer.tag === tag) {
+                    if (!hasValue(tag) || tags.indexOf(timer.tag) >= 0) {
+                        if (hasValue(timer.groupId)) {
+                            groups.push(timer.groupId);
+                        }
+                        timer.cancel();
+                        context.removeBotTimer(
+                            bot.id,
+                            timer.type,
+                            timer.timerId
+                        );
+                    }
+                }
+            }
+        }
+
+        clearGroupAnimations(bots, groups);
+    }
+
+    function clearGroupAnimations(bots: RuntimeBot[], groups: string[]) {
+        if (groups.length <= 0) {
+            return;
+        }
+        for (let bot of bots) {
+            const timers = context.getBotTimers(bot.id);
+            for (let timer of timers) {
+                if (timer.type === 'animation' && timer.cancel) {
+                    if (
+                        hasValue(timer.groupId) &&
+                        groups.indexOf(timer.groupId) >= 0
+                    ) {
                         timer.cancel();
                         context.removeBotTimer(
                             bot.id,
@@ -3562,7 +3699,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ): { x: number; y: number; z: number } {
         const offset = getAnchorPointOffset(anchorPoint);
         const scale = getBotScale(null, bot, 1);
-        const position = getBotPosition(null, bot, dimension);
+        const position = calcGetBotPosition(null, bot, dimension);
 
         return {
             x: position.x + offset.x * scale.x,
@@ -3741,6 +3878,126 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             y: -offset.y,
             z: offset.z,
         };
+    }
+
+    /**
+     * Adds the given vectors together and returns the result.
+     * @param vectors The vectors that should be added together.
+     */
+    function addVectors<T>(...vectors: T[]): T {
+        if (vectors.length <= 0) {
+            return {} as T;
+        }
+        let result = {} as any;
+
+        for (let i = 0; i < vectors.length; i++) {
+            const v = vectors[i] as any;
+            if (!hasValue(v)) {
+                continue;
+            }
+            const keys = Object.keys(v);
+            for (let key of keys) {
+                if (key in result) {
+                    result[key] += v[key];
+                } else {
+                    result[key] = v[key];
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Subtracts the given vectors from each other and returns the result.
+     * @param vectors The vectors that should be subtracted from each other.
+     */
+    function subtractVectors<T>(...vectors: T[]): T {
+        if (vectors.length <= 0) {
+            return {} as T;
+        }
+        let result = {} as any;
+
+        for (let i = 0; i < vectors.length; i++) {
+            const v = vectors[i] as any;
+            if (!hasValue(v)) {
+                continue;
+            }
+            const keys = Object.keys(v);
+            for (let key of keys) {
+                if (key in result) {
+                    result[key] -= v[key];
+                } else {
+                    result[key] = v[key];
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Subtracts the given vectors from each other and returns the result.
+     * @param vectors The vectors that should be subtracted from each other.
+     */
+    function negateVector<T>(vector: T): T {
+        if (!hasValue(vector)) {
+            return vector;
+        }
+        let result = {} as any;
+
+        const keys = Object.keys(vector);
+        for (let key of keys) {
+            result[key] = -(vector as any)[key];
+        }
+
+        return result;
+    }
+
+    /**
+     * Converts the given 3D point into a mod that sets the cameraPositionOffset tags.
+     * @param point The mod that represents the 3D point.
+     */
+    function cameraPositionOffset(point: {
+        x?: number;
+        y?: number;
+        z?: number;
+    }) {
+        let result = {} as any;
+        if ('x' in point) {
+            result.cameraPositionOffsetX = point.x;
+        }
+        if ('y' in point) {
+            result.cameraPositionOffsetY = point.y;
+        }
+        if ('z' in point) {
+            result.cameraPositionOffsetZ = point.z;
+        }
+
+        return result;
+    }
+
+    /**
+     * Converts the given 3D rotation into a mod that sets the cameraRotationOffset tags.
+     * @param rotation The mod that represents the 3D rotation.
+     */
+    function cameraRotationOffset(rotation: {
+        x?: number;
+        y?: number;
+        z?: number;
+    }) {
+        let result = {} as any;
+        if ('x' in rotation) {
+            result.cameraRotationOffsetX = rotation.x;
+        }
+        if ('y' in rotation) {
+            result.cameraRotationOffsetY = rotation.y;
+        }
+        if ('z' in rotation) {
+            result.cameraRotationOffsetZ = rotation.z;
+        }
+
+        return result;
     }
 
     /**
@@ -4782,6 +5039,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             x: bot.tags[`cameraRotationX`],
             y: bot.tags[`cameraRotationY`],
             z: bot.tags[`cameraRotationZ`],
+        };
+    }
+
+    /**
+     * Gets the 3D point that the player's camera is focusing on.
+     * @param portal The portal that the camera focus point should be retrieved for.
+     */
+    function getFocusPoint(
+        portal: 'page' | 'inventory' = 'page'
+    ): { x: number; y: number; z: number } {
+        const bot = (<any>globalThis)[`${portal}PortalBot`];
+        if (!bot) {
+            return {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            };
+        }
+
+        return {
+            x: bot.tags[`cameraFocusX`],
+            y: bot.tags[`cameraFocusY`],
+            z: bot.tags[`cameraFocusZ`],
         };
     }
 
