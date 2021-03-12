@@ -136,6 +136,31 @@ aux-ns:📖bot1.main?auxmodule:1:15: error: Unterminated string literal",
 }
 `;
 
+exports[`ESBuildPortalBundler bundleTag() library emoji should use tag masks to create the bundle 1`] = `
+Object {
+  "externals": Object {},
+  "libraries": Object {},
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+    "bot2": Set {
+      "main",
+    },
+  },
+  "source": "(() => {
+  // aux-ns:📖bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:📖bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
+  "tag": "main",
+  "warnings": Array [],
+}
+`;
+
 exports[`ESBuildPortalBundler bundleTag() multiple emoji imports should report errors that occur while fetching data 1`] = `
 "Error: Build failed with 1 error:
 aux-ns:🙂bot1.main?auxmodule:1:20: error: [casualos] Error: Get failed."
@@ -177,6 +202,31 @@ aux-ns:🙂bot1.main?auxmodule:1:15: error: Unterminated string literal",
       "main",
     },
   },
+  "tag": "main",
+  "warnings": Array [],
+}
+`;
+
+exports[`ESBuildPortalBundler bundleTag() multiple emoji should use tag masks to create the bundle 1`] = `
+Object {
+  "externals": Object {},
+  "libraries": Object {},
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+    "bot2": Set {
+      "main",
+    },
+  },
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:📖bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
   "tag": "main",
   "warnings": Array [],
 }
@@ -293,6 +343,31 @@ aux-ns:🙂bot1.main?auxmodule:1:15: error: Unterminated string literal",
       "main",
     },
   },
+  "tag": "main",
+  "warnings": Array [],
+}
+`;
+
+exports[`ESBuildPortalBundler bundleTag() smile emoji should use tag masks to create the bundle 1`] = `
+Object {
+  "externals": Object {},
+  "libraries": Object {},
+  "modules": Object {
+    "bot1": Set {
+      "main",
+    },
+    "bot2": Set {
+      "main",
+    },
+  },
+  "source": "(() => {
+  // aux-ns:🙂bot1.main?auxmodule
+  console.log(\\"abc\\");
+
+  // aux-ns:🙂bot2.main?auxmodule
+  console.log(\\"def\\");
+})();
+",
   "tag": "main",
   "warnings": Array [],
 }

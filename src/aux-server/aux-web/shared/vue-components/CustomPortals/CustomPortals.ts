@@ -141,7 +141,7 @@ export default class CustomPortals extends Vue {
                 source: portal.source,
                 error: portal.error,
                 ports: portal.ports,
-                style: {},
+                style: portal.style ?? {},
             });
         }
     }
@@ -158,6 +158,8 @@ export default class CustomPortals extends Vue {
             portal.style = update.portal.style;
             portal.error = update.portal.error;
             portal.ports = update.portal.ports;
+        } else {
+            this._onPortalDiscovered(sim, update.portal);
         }
     }
 }
