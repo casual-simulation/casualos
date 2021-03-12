@@ -4011,6 +4011,13 @@ declare global {
          * @param vectors The vectors that should be subtracted from each other.
          */
         subtractVectors<T>(...vectors: T[]): T;
+
+        /**
+         * Negates the given vector and returns the result.
+         * @param vector The vector that should be negated.
+         */
+        negateVector<T>(vector: T): T;
+
     };
 
     /**
