@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.4.11
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `@onServerJoined` event could be sent before all data was loaded.
+    -   This could happen if one player was changing data while another player was joining the server.
+
 ## V1.4.10
 
 #### Date: 3/9/2021
