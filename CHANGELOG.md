@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the `math.scaleVector(vector, scale)` function to make multiplying vectors by scalar values easy.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the `@onServerJoined` event could be sent before all data was loaded.
