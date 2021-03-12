@@ -8,6 +8,8 @@
 
 -   Fixed an issue where the `@onServerJoined` event could be sent before all data was loaded.
     -   This could happen if one player was changing data while another player was joining the server.
+-   Fixed an issue where custom portals would not open if the portal tags were not defined when the portal is opened.
+-   Fixed an issue where custom portals would always have default styling for their first load.
 
 ## V1.4.10
 
