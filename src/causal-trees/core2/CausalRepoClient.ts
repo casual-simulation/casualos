@@ -7,6 +7,7 @@ import {
     tap,
     finalize,
     first,
+    scan,
 } from 'rxjs/operators';
 import { merge, Observable, never, of } from 'rxjs';
 import {
@@ -77,6 +78,7 @@ import {
     RemoteActions,
 } from '../core/Event';
 import { DeviceInfo, SESSION_ID_CLAIM } from '../core/DeviceInfo';
+import { flatMap as lodashFlatMap, sortBy } from 'lodash';
 
 /**
  * Defines a client for a causal repo.
@@ -161,6 +163,83 @@ export class CausalRepoClient {
                 merge(
                     this._client.event<AddAtomsEvent>(ADD_ATOMS).pipe(
                         filter((event) => event.branch === name),
+                        scan(
+                            (acc, event) => {
+                                // This is the first event
+                                if (acc[0] === null) {
+                                    // first event is initial event,
+                                    // skip to processing events
+                                    if (event.initial) {
+                                        return ['event', event] as [
+                                            'event',
+                                            AddAtomsEvent
+                                        ];
+                                    } else {
+                                        // first event is not initial.
+                                        // store it for later.
+                                        return ['waiting', [event]] as [
+                                            'waiting',
+                                            AddAtomsEvent[]
+                                        ];
+                                    }
+                                } else if (acc[0] === 'waiting') {
+                                    // This event is happening while we are waiting for the initial event.
+                                    const events = acc[1] as AddAtomsEvent[];
+                                    if (event.initial) {
+                                        // current event is initial event,
+                                        // merge events.
+                                        const allEvents = events;
+                                        const allNewAtoms = lodashFlatMap(
+                                            allEvents,
+                                            (e) => e.atoms ?? []
+                                        );
+                                        const sortedNewAtoms = sortBy(
+                                            allNewAtoms,
+                                            (a) => a.id.timestamp
+                                        );
+                                        const allRemovedAtoms = lodashFlatMap(
+                                            allEvents,
+                                            (e) => e.removedAtoms ?? []
+                                        );
+
+                                        return [
+                                            'event',
+                                            {
+                                                branch: event.branch,
+                                                atoms: [
+                                                    ...(event.atoms ?? []),
+                                                    ...sortedNewAtoms,
+                                                ],
+                                                removedAtoms: [
+                                                    ...(event.removedAtoms ??
+                                                        []),
+                                                    ...allRemovedAtoms,
+                                                ],
+                                            } as AddAtomsEvent,
+                                        ] as ['event', AddAtomsEvent];
+                                    } else {
+                                        // current event is not initial,
+                                        // store event
+                                        return [
+                                            'waiting',
+                                            [...events, event],
+                                        ] as ['waiting', AddAtomsEvent[]];
+                                    }
+                                } else {
+                                    // This event is happening after we have got the initial event
+                                    return ['event', event] as [
+                                        'event',
+                                        AddAtomsEvent
+                                    ];
+                                }
+                            },
+                            [null] as
+                                | [null]
+                                | ['waiting', AddAtomsEvent[]]
+                                | ['event', AddAtomsEvent]
+                        ),
+                        filter(([type, event]) => type === 'event'),
+                        map(([type, event]) => event as AddAtomsEvent),
                         map(
                             (e) =>
                                 ({

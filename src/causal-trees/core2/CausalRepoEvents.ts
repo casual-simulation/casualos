@@ -242,6 +242,13 @@ export interface AddAtomsEvent {
      * The list of atom hashes that were removed.
      */
     removedAtoms?: string[];
+
+    /**
+     * Whether this message should be treated as the first message
+     * after a watch_branch event.
+     * This flag MUST be included on the first message as large apiary messages may appear out of order.
+     */
+    initial?: boolean;
 }
 
 /**

@@ -391,6 +391,7 @@ describe('OtherPlayersPartition', () => {
                 addAtoms.next({
                     branch: 'testBranch-player-device1SessionId',
                     atoms: [bot1, tag1, value1],
+                    initial: true,
                 });
 
                 await waitAsync();
@@ -448,6 +449,7 @@ describe('OtherPlayersPartition', () => {
                 addAtoms.next({
                     branch: 'testBranch-player-device1SessionId',
                     atoms: [bot1, tag1, value1],
+                    initial: true,
                 });
 
                 await waitAsync();
@@ -511,6 +513,7 @@ describe('OtherPlayersPartition', () => {
                 addAtoms.next({
                     branch: 'testBranch-player-device1SessionId',
                     atoms: [bot1, tag1, value1],
+                    initial: true,
                 });
 
                 await waitAsync();
@@ -593,6 +596,7 @@ describe('OtherPlayersPartition', () => {
                 addAtoms.next({
                     branch: 'testBranch-player-device1SessionId',
                     atoms: [tag1, value1],
+                    initial: true,
                 });
 
                 await waitAsync();
@@ -710,6 +714,7 @@ describe('OtherPlayersPartition', () => {
                 addAtoms.next({
                     branch: 'testBranch-player-device1SessionId',
                     atoms: [bot1, tag1, value1],
+                    initial: true,
                 });
 
                 await waitAsync();
@@ -772,6 +777,7 @@ describe('OtherPlayersPartition', () => {
                 addAtoms.next({
                     branch: 'testBranch-player-device1SessionId',
                     atoms: [tag1, value1],
+                    initial: true,
                 });
 
                 await waitAsync();
@@ -920,6 +926,7 @@ describe('OtherPlayersPartition', () => {
                 addAtoms.next({
                     branch: 'testBranch-player-device1SessionId',
                     atoms: [bot1, tag1, value1],
+                    initial: true,
                 });
 
                 await waitAsync();

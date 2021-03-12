@@ -124,6 +124,7 @@ describe('CausalRepoClient', () => {
             addAtoms.next({
                 branch: 'abc',
                 atoms: [a1, a2],
+                initial: true,
             });
 
             addAtoms.next({
@@ -134,6 +135,104 @@ describe('CausalRepoClient', () => {
             await waitAsync();
 
             expect(atoms).toEqual([a1, a2]);
+        });
+
+        it('should buffer add atoms events until the intial event', async () => {
+            const addAtoms = new Subject<AddAtomsEvent>();
+            connection.events.set(ADD_ATOMS, addAtoms);
+
+            let atoms = [] as Atom<any>[];
+            connection.connect();
+            client
+                .watchBranch('abc')
+                .pipe(
+                    filter(isClientAtoms),
+                    map((e) => e.atoms)
+                )
+                .subscribe((a) => atoms.push(...a));
+
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), null, {});
+            const a4 = atom(atomId('a', 4), a1, {});
+            const a5 = atom(atomId('a', 5), null, {});
+            const a6 = atom(atomId('a', 6), a1, {});
+
+            addAtoms.next({
+                branch: 'abc',
+                atoms: [a5, a6],
+            });
+
+            addAtoms.next({
+                branch: 'abc',
+                atoms: [a3, a4],
+            });
+
+            await waitAsync();
+            expect(atoms).toEqual([]);
+
+            addAtoms.next({
+                branch: 'abc',
+                atoms: [a1, a2],
+                initial: true,
+            });
+
+            await waitAsync();
+
+            expect(atoms).toEqual([a1, a2, a3, a4, a5, a6]);
+        });
+
+        it('should include removed atoms with the initial atoms', async () => {
+            const addAtoms = new Subject<AddAtomsEvent>();
+            connection.events.set(ADD_ATOMS, addAtoms);
+
+            let atoms = [] as Atom<any>[];
+            let removed = [] as string[];
+            connection.connect();
+            client
+                .watchBranch('abc')
+                .pipe(filter(isClientAtoms))
+                .subscribe((a) => {
+                    atoms.push(...a.atoms);
+                    removed.push(...a.removedAtoms);
+                });
+
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), null, {});
+            const a4 = atom(atomId('a', 4), a1, {});
+            const a5 = atom(atomId('a', 5), null, {});
+            const a6 = atom(atomId('a', 6), a1, {});
+
+            addAtoms.next({
+                branch: 'abc',
+                atoms: [a5, a6],
+                removedAtoms: [a3.hash],
+            });
+
+            addAtoms.next({
+                branch: 'abc',
+                atoms: [a3, a4],
+                removedAtoms: [a2.hash],
+            });
+
+            await waitAsync();
+            expect(atoms).toEqual([]);
+
+            addAtoms.next({
+                branch: 'abc',
+                atoms: [a1, a2],
+                initial: true,
+            });
+
+            await waitAsync();
+
+            expect(atoms).toEqual([a1, a2, a3, a4, a5, a6]);
+            expect(removed).toEqual([a3.hash, a2.hash]);
         });
 
         it('should return an observable of removed atoms for the branch', async () => {
@@ -160,6 +259,7 @@ describe('CausalRepoClient', () => {
             removeAtoms.next({
                 branch: 'abc',
                 removedAtoms: [a1.hash, a2.hash],
+                initial: true,
             });
 
             removeAtoms.next({
@@ -425,6 +525,7 @@ describe('CausalRepoClient', () => {
             addAtoms.next({
                 branch: 'abc',
                 atoms: [],
+                initial: true,
             });
 
             await waitAsync();

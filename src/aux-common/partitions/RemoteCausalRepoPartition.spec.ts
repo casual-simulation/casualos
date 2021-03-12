@@ -88,6 +88,7 @@ describe('RemoteCausalRepoPartition', () => {
         const addAtoms = new BehaviorSubject<AddAtomsEvent>({
             branch: 'testBranch',
             atoms: [atom(atomId('a', 1), null, {})],
+            initial: true,
         });
         connection.events.set(ADD_ATOMS, addAtoms);
 
@@ -205,6 +206,7 @@ describe('RemoteCausalRepoPartition', () => {
             addAtoms.next({
                 branch: 'testBranch',
                 atoms: [bot1, tag1, value1],
+                initial: true,
             });
 
             await waitAsync();
@@ -291,6 +293,7 @@ describe('RemoteCausalRepoPartition', () => {
             addAtoms.next({
                 branch: 'testBranch',
                 atoms: [c1],
+                initial: true,
             });
 
             await waitAsync();
@@ -332,6 +335,7 @@ describe('RemoteCausalRepoPartition', () => {
             addAtoms.next({
                 branch: 'testBranch',
                 atoms: [c1],
+                initial: true,
             });
 
             await waitAsync();
@@ -1010,6 +1014,7 @@ describe('RemoteCausalRepoPartition', () => {
                 addAtoms.next({
                     branch: 'testBranch',
                     removedAtoms: [newBotAtom.hash],
+                    initial: true,
                 });
 
                 await waitAsync();
@@ -1068,6 +1073,7 @@ describe('RemoteCausalRepoPartition', () => {
                 addAtoms.next({
                     branch: 'testBranch',
                     atoms: [bot1, tag1, value1],
+                    initial: true,
                 });
                 await waitAsync();
 
@@ -1089,6 +1095,7 @@ describe('RemoteCausalRepoPartition', () => {
                 addAtoms.next({
                     branch: 'testBranch',
                     atoms: [bot1, tag1, value1, value2],
+                    initial: true,
                 });
                 await waitAsync();
 
@@ -1122,6 +1129,7 @@ describe('RemoteCausalRepoPartition', () => {
                 addAtoms.next({
                     branch: 'testBranch',
                     atoms: [bot1, tag1, value1, bot2, tag2, value2],
+                    initial: true,
                 });
                 await waitAsync();
 
