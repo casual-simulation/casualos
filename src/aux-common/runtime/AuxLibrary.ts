@@ -786,6 +786,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 addVectors,
                 subtractVectors,
                 negateVector,
+                scaleVector,
             },
 
             mod: {
@@ -3937,8 +3938,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Subtracts the given vectors from each other and returns the result.
-     * @param vectors The vectors that should be subtracted from each other.
+     * Negates the given vector and returns the result.
+     * @param vector The vector that should be negated.
      */
     function negateVector<T>(vector: T): T {
         if (!hasValue(vector)) {
@@ -3949,6 +3950,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const keys = Object.keys(vector);
         for (let key of keys) {
             result[key] = -(vector as any)[key];
+        }
+
+        return result;
+    }
+
+    /**
+     * Multiplies each component of the given vector by the given scale and returns the result.
+     * @param vector The vector that should be scaled.
+     * @param scale The number that the vector should be multiplied by.
+     */
+    function scaleVector<T>(vector: T, scale: number): T {
+        if (!hasValue(vector)) {
+            return vector;
+        }
+        let result = {} as any;
+
+        const keys = Object.keys(vector);
+        for (let key of keys) {
+            result[key] = (vector as any)[key] * scale;
         }
 
         return result;

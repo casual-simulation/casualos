@@ -4018,6 +4018,12 @@ declare global {
          */
         negateVector<T>(vector: T): T;
 
+        /**
+         * Multiplies each component of the given vector by the given scale and returns the result.
+         * @param vector The vector that should be scaled.
+         * @param scale The number that the vector should be multiplied by.
+         */
+        scaleVector<T>(vector: T, scale: number): T;
     };
 
     /**
