@@ -4721,6 +4721,27 @@ const result = math.negateVector(
 os.toast(result); // { x: -5, y: -6, z: -7 }
 ```
 
+### `math.scaleVector(vector, scale)`
+
+Multiplies each property of the given vector by the given scale and returns the result.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+The **first parameter** is the object whose mathematical properties should be scaled.
+
+#### Examples:
+
+1. Scale a 3D point by 5.
+```typescript
+const result = math.scaleVector(
+    { x: 5, y: 6, z: 7 },
+    5
+);
+
+os.toast(result); // { x: 25, y: 30, z: 35 }
+```
+
 ## Mod Actions
 
 Mod actions are actions that can be used to create mods and transform some mods into other mods.

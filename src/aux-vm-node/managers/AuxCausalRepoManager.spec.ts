@@ -161,12 +161,14 @@ describe('AuxCausalRepoManager', () => {
         addAtoms.next({
             branch: 'abc',
             atoms: [],
+            initial: true,
         });
         await waitAsync();
 
         addAtoms.next({
             branch: 'abc-player-server',
             atoms: [],
+            initial: true,
         });
         await waitAsync();
 
@@ -271,12 +273,14 @@ describe('AuxCausalRepoManager', () => {
         addAtoms.next({
             branch: 'abc',
             atoms: [],
+            initial: true,
         });
         await waitAsync();
 
         addAtoms.next({
             branch: 'abc-player-server',
             atoms: [],
+            initial: true,
         });
         await waitAsync();
 
@@ -342,12 +346,14 @@ describe('AuxCausalRepoManager', () => {
         addAtoms.next({
             branch: 'abc',
             atoms: [],
+            initial: true,
         });
         await waitAsync();
 
         addAtoms.next({
             branch: 'abc-player-server',
             atoms: [],
+            initial: true,
         });
         await waitAsync();
 
@@ -402,12 +408,14 @@ describe('AuxCausalRepoManager', () => {
         addAtoms.next({
             branch: 'abc',
             atoms: [],
+            initial: true,
         });
         await waitAsync();
 
         addAtoms.next({
             branch: 'abc-player-server',
             atoms: [],
+            initial: true,
         });
         await waitAsync();
 
@@ -448,12 +456,14 @@ describe('AuxCausalRepoManager', () => {
         addAtoms.next({
             branch: 'abc',
             atoms: [],
+            initial: true,
         });
         await waitAsync();
 
         addAtoms.next({
             branch: 'abc-player-server',
             atoms: [],
+            initial: true,
         });
         await waitAsync();
 

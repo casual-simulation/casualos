@@ -138,6 +138,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2],
+                        initial: true,
                     },
                 },
             ]);
@@ -165,6 +166,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'doesNotExist',
                         atoms: [],
+                        initial: true,
                     },
                 },
             ]);
@@ -214,6 +216,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2],
+                        initial: true,
                     },
                 },
             ]);
@@ -224,6 +227,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2],
+                        initial: true,
                     },
                 },
             ]);
@@ -271,6 +275,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2, a3],
+                        initial: true,
                     },
                 },
             ]);
@@ -392,6 +397,7 @@ describe('CausalRepoServer', () => {
                         data: {
                             branch: 'testBranch',
                             atoms: [],
+                            initial: true,
                         },
                     },
                 ]);
@@ -444,6 +450,7 @@ describe('CausalRepoServer', () => {
                         data: {
                             branch: 'testBranch',
                             atoms: [a1],
+                            initial: true,
                         },
                     },
                 ]);
@@ -551,6 +558,7 @@ describe('CausalRepoServer', () => {
                         data: {
                             branch: 'persistentBranch',
                             atoms: [],
+                            initial: true,
                         },
                     },
                     {
@@ -558,6 +566,7 @@ describe('CausalRepoServer', () => {
                         data: {
                             branch: 'tempBranch',
                             atoms: [],
+                            initial: true,
                         },
                     },
                     {
@@ -752,6 +761,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2],
+                        initial: true,
                     },
                 },
                 {
@@ -1352,6 +1362,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2, a3],
+                        initial: true,
                     },
                 },
             ]);
@@ -1416,6 +1427,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1],
+                        initial: true,
                     },
                 },
             ]);
@@ -1480,6 +1492,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2],
+                        initial: true,
                     },
                 },
                 {
@@ -1497,6 +1510,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2],
+                        initial: true,
                     },
                 },
                 {
@@ -1557,6 +1571,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2],
+                        initial: true,
                     },
                 },
 
@@ -1716,6 +1731,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2, a3],
+                        initial: true,
                     },
                 },
             ]);
@@ -1726,6 +1742,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2, a3],
+                        initial: true,
                     },
                 },
             ]);
@@ -1842,6 +1859,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2],
+                        initial: true,
                     },
                 },
             ]);
@@ -1909,6 +1927,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2, a3],
+                        initial: true,
                     },
                 },
             ]);
@@ -1974,6 +1993,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2, a3],
+                        initial: true,
                     },
                 },
                 {
@@ -1991,6 +2011,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2, a3],
+                        initial: true,
                     },
                 },
                 {
@@ -2052,6 +2073,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2, a3],
+                        initial: true,
                     },
                 },
 
@@ -2126,6 +2148,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2],
+                        initial: true,
                     },
                 },
             ]);
@@ -2136,6 +2159,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2],
+                        initial: true,
                     },
                 },
             ]);
@@ -2358,6 +2382,7 @@ describe('CausalRepoServer', () => {
                         data: {
                             branch: '@testBranch',
                             atoms: [],
+                            initial: true,
                         },
                     },
                     {
@@ -2375,6 +2400,7 @@ describe('CausalRepoServer', () => {
                         data: {
                             branch: '@testBranch',
                             atoms: [],
+                            initial: true,
                         },
                     },
                     {
@@ -2808,6 +2834,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2, a3, a4, a5, a6],
+                        initial: true,
                     },
                 },
             ]);
@@ -3030,6 +3057,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2, a4, a5],
+                        initial: true,
                     },
                 },
                 {
@@ -3126,6 +3154,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2, a3],
+                        initial: true,
                     },
                 },
             ]);
@@ -3356,6 +3385,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2, a4, a5],
+                        initial: true,
                     },
                 },
                 {
@@ -3464,6 +3494,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2, a3],
+                        initial: true,
                     },
                 },
             ]);
@@ -3521,6 +3552,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [],
+                        initial: true,
                     },
                 },
             ]);
@@ -3530,6 +3562,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [],
+                        initial: true,
                     },
                 },
                 {
@@ -3592,6 +3625,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [],
+                        initial: true,
                     },
                 },
                 {
@@ -3610,6 +3644,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [],
+                        initial: true,
                     },
                 },
             ]);
@@ -3668,6 +3703,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [],
+                        initial: true,
                     },
                 },
                 {
@@ -3686,6 +3722,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [],
+                        initial: true,
                     },
                 },
                 {
@@ -3752,6 +3789,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [],
+                        initial: true,
                     },
                 },
             ]);
@@ -3761,6 +3799,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [],
+                        initial: true,
                     },
                 },
                 {
@@ -3828,6 +3867,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [],
+                        initial: true,
                     },
                 },
             ]);
@@ -3837,6 +3877,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [],
+                        initial: true,
                     },
                 },
                 {
@@ -3898,6 +3939,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [],
+                        initial: true,
                     },
                 },
             ]);
@@ -3907,6 +3949,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [],
+                        initial: true,
                     },
                 },
                 {

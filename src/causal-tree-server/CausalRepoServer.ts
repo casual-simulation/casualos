@@ -191,6 +191,7 @@ export class CausalRepoServer {
                         conn.send(ADD_ATOMS, {
                             branch: branch,
                             atoms: atoms,
+                            initial: true,
                         });
                     },
                     [GET_BRANCH]: async (branch) => {

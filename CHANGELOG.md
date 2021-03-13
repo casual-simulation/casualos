@@ -1,5 +1,20 @@
 # CasualOS Changelog
 
+## V1.4.11
+
+#### Date: 3/12/2021
+
+### :rocket: Improvements
+
+-   Added the `math.scaleVector(vector, scale)` function to make multiplying vectors by scalar values easy.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `@onServerJoined` event could be sent before all data was loaded.
+    -   This could happen if one player was changing data while another player was joining the server.
+-   Fixed an issue where custom portals would not open if the portal tags were not defined when the portal is opened.
+-   Fixed an issue where custom portals would always have default styling for their first load.
+
 ## V1.4.10
 
 #### Date: 3/9/2021

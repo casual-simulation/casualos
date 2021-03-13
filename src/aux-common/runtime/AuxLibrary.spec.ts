@@ -9323,6 +9323,39 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('math.scaleVector()', () => {
+        const cases = [
+            ['zeroes', { x: 0, y: 0, z: 0 }, 5, { x: 0, y: 0, z: 0 }] as const,
+            ['numbers', { x: 1, y: 2, z: 3 }, 2, { x: 2, y: 4, z: 6 }] as const,
+            [
+                'negative numbers',
+                { x: -1, y: -2, z: -3 },
+                3,
+                { x: -3, y: -6, z: -9 },
+            ] as const,
+
+            [
+                'objects with separate properties',
+                { a: 4, b: 5, c: 6 },
+                2,
+                { a: 8, b: 10, c: 12 },
+            ] as const,
+
+            ['empty objects', {}, 11, {}] as const,
+
+            ['null objects', null as any, 3, null as any] as const,
+        ];
+
+        it.each(cases)(
+            'should subtract %s from each other',
+            (desc, first, second, expected) => {
+                expect(
+                    library.api.math.scaleVector(first, second as any)
+                ).toEqual(expected);
+            }
+        );
+    });
+
     describe('mod.cameraPositionOffset()', () => {
         it('should return a camera position offset mod for the given x,y,z mod', () => {
             expect(
