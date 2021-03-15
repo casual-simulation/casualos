@@ -1070,8 +1070,9 @@ export class PlayerGame extends Game {
                 }
                 this.mainFocusPoint.visible = true;
                 // TODO: Support focus point in VR
-                let target: Vector3 = mainControls.controls.target;
-                this.mainFocusPoint.position.copy(target);
+                let targetWorld: Vector3 = mainControls.controls.target.clone();
+                mainControls.rig.cameraParent.localToWorld(targetWorld);
+                this.mainFocusPoint.position.copy(targetWorld);
                 this.mainFocusPoint.updateMatrixWorld(true);
             } else {
                 if (this.mainFocusPoint) {

@@ -572,6 +572,14 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             cameraRotation.setFromRotationMatrix(rig.mainCamera.matrixWorld);
             const [portal, gridScale, inverseScale] = portalInfoForSim(sim);
 
+            let focusWorld: Vector3;
+            if (controls) {
+                focusWorld = controls.controls.target.clone();
+                rig.cameraParent.localToWorld(focusWorld);
+            } else {
+                focusWorld = new Vector3();
+            }
+
             let update = {
                 [`cameraPositionX`]: cameraWorld.x * inverseScale,
                 [`cameraPositionY`]: -cameraWorld.z * inverseScale,
@@ -579,12 +587,9 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 [`cameraRotationX`]: cameraRotation.x,
                 [`cameraRotationY`]: cameraRotation.z,
                 [`cameraRotationZ`]: cameraRotation.y,
-                [`cameraFocusX`]:
-                    (controls?.controls.target.x ?? 0) * inverseScale,
-                [`cameraFocusY`]:
-                    -(controls?.controls.target.z ?? 0) * inverseScale,
-                [`cameraFocusZ`]:
-                    (controls?.controls.target.y ?? 0) * inverseScale,
+                [`cameraFocusX`]: (focusWorld.x ?? 0) * inverseScale,
+                [`cameraFocusY`]: -(focusWorld.z ?? 0) * inverseScale,
+                [`cameraFocusZ`]: (focusWorld.y ?? 0) * inverseScale,
                 [`cameraZoom`]: controls?.controls.currentZoom ?? 0,
             };
 
