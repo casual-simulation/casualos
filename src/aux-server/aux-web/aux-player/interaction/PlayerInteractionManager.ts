@@ -446,6 +446,12 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 `cameraRotationOffsetY`,
                 0
             );
+            const offsetZoom = calculateNumericalTagValue(
+                null,
+                portalBot,
+                `cameraZoomOffset`,
+                0
+            );
 
             const transformer = getBotTransformer(null, portalBot);
             let hasParent = false;
@@ -489,6 +495,23 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     targetZRot
                 );
                 rig.cameraParent.updateMatrixWorld();
+            }
+
+            if (offsetZoom !== 0 && !isNaN(offsetZoom)) {
+                const controls = this.cameraRigControllers.find(
+                    (c) => c.rig === rig
+                );
+
+                const delta = offsetZoom - controls.controls.zoomOffset;
+
+                if (Math.abs(delta) >= 0.01) {
+                    controls.controls.zoomOffset = offsetZoom;
+                    if (offsetZoom > 0) {
+                        controls.controls.dollyInAmount(delta, false);
+                    } else {
+                        controls.controls.dollyOutAmount(delta, false);
+                    }
+                }
             }
         }
     }
@@ -562,6 +585,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     -(controls?.controls.target.z ?? 0) * inverseScale,
                 [`cameraFocusZ`]:
                     (controls?.controls.target.y ?? 0) * inverseScale,
+                [`cameraZoom`]: controls?.controls.currentZoom ?? 0,
             };
 
             for (let i = 0; i < draggableGroups.length; i++) {

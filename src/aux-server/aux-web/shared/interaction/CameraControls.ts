@@ -73,6 +73,8 @@ export class CameraControls {
     // Set to false to disable use of the keys
     public enableKeys: boolean = true;
 
+    public zoomOffset: number = 0;
+
     // for reset
     public target0: Vector3;
     public position0: Vector3;
@@ -160,6 +162,14 @@ export class CameraControls {
 
     get panValue() {
         return this.panOffset;
+    }
+
+    get currentZoom() {
+        if (this._camera instanceof PerspectiveCamera) {
+            return this.scale;
+        } else {
+            return this._camera.zoom;
+        }
     }
 
     constructor(
@@ -367,7 +377,7 @@ export class CameraControls {
         this.panOffset.set(0, 0, 0);
     }
 
-    public dollyIn(dollyScale: number) {
+    public dollyIn(dollyScale: number, pan: boolean = true) {
         if (this._camera instanceof PerspectiveCamera) {
             this.scale /= dollyScale;
         } else {
@@ -384,10 +394,49 @@ export class CameraControls {
                 );
             }
 
-            this._dollyPan(currentZoom);
+            if (pan) {
+                this._dollyPan(currentZoom);
+            }
 
             this._camera.updateProjectionMatrix();
             this.zoomChanged = true;
+        }
+    }
+
+    public dollyInAmount(dollyAmount: number, pan: boolean = true) {
+        if (this._camera instanceof PerspectiveCamera) {
+            // targetScale = scale * dollyScale;
+            // tagetScale = scale + offset;
+            // scale * dollyScale = scale + offset
+            // dollyScale = (1 + offset/scale)
+            return this.dollyIn(1 + dollyAmount / this.scale, pan);
+        } else {
+            // targetScale = scale * dollyScale;
+            // tagetScale = scale + offset;
+            // scale * dollyScale = scale + offset
+            // dollyScale = (1 + offset/scale)
+            return this.dollyIn(1 + dollyAmount / this._camera.zoom, pan);
+        }
+    }
+
+    public dollyOutAmount(dollyAmount: number, pan: boolean = true) {
+        if (this._camera instanceof PerspectiveCamera) {
+            // targetScale = scale / dollyScale;
+            // tagetScale = scale + offset;
+            // (scale / dollyScale) = scale + offset
+            // 1/dollyScale = scale/scale + offset/scale
+            // dollyScale = 1 / (1 + offset/scale)
+            return this.dollyOut(1 / (1 + dollyAmount / this.scale), pan);
+        } else {
+            // targetScale = scale / dollyScale;
+            // tagetScale = scale + offset;
+            // (scale / dollyScale) = scale + offset
+            // 1/dollyScale = scale/scale + offset/scale
+            // dollyScale = 1 / (1 + offset/scale)
+            return this.dollyOut(
+                1 / (1 + dollyAmount / this._camera.zoom),
+                pan
+            );
         }
     }
 
@@ -415,7 +464,7 @@ export class CameraControls {
         }
     }
 
-    public dollyOut(dollyScale: number) {
+    public dollyOut(dollyScale: number, pan: boolean = true) {
         if (this._camera instanceof PerspectiveCamera) {
             this.scale *= dollyScale;
         } else {
@@ -432,7 +481,9 @@ export class CameraControls {
                 );
             }
 
-            this._dollyPan(currentZoom);
+            if (pan) {
+                this._dollyPan(currentZoom);
+            }
 
             this._camera.updateProjectionMatrix();
             this.zoomChanged = true;
