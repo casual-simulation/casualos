@@ -4673,6 +4673,23 @@ describe('AuxLibrary', () => {
                 expect(bot1.raw.abc).toEqual(0);
             });
 
+            it('should require the duration to be specified', async () => {
+                bot1.tags.abc = 0;
+
+                expect(() => {
+                    library.api.animateTag(bot1, 'abc', {
+                        fromValue: 0,
+                        toValue: 10,
+                        easing: {
+                            type: 'quadratic',
+                            mode: 'inout',
+                        },
+                        duration: null,
+                        tagMaskSpace: 'tempLocal',
+                    });
+                }).toThrow();
+            });
+
             it('should remove # symbols from tag names', async () => {
                 bot1.tags.abc = 0;
                 const promise = library.api.animateTag(bot1, '#abc', {
@@ -5009,6 +5026,27 @@ describe('AuxLibrary', () => {
                 });
                 expect(bot1.raw.abc).toEqual(0);
                 expect(bot1.raw.def).toEqual(1);
+            });
+
+            it('should require the duration to be specified when animating multiple tags at once', async () => {
+                bot1.tags.abc = 0;
+
+                await expect(async () => {
+                    await library.api.animateTag(bot1, {
+                        fromValue: {
+                            abc: 1,
+                        },
+                        toValue: {
+                            abc: 4,
+                        },
+                        easing: {
+                            type: 'quadratic',
+                            mode: 'inout',
+                        },
+                        duration: null,
+                        tagMaskSpace: 'tempLocal',
+                    });
+                }).rejects.toThrow();
             });
         });
 

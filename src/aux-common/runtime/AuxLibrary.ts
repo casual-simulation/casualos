@@ -3383,6 +3383,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 'You must provide an object as toValue when not specifying a tag.'
             );
         }
+        if (typeof options.duration !== 'number') {
+            throw new Error('You must provide a duration.');
+        }
 
         const keys = Object.keys(options.fromValue);
         const groupId = uuid();
@@ -3411,6 +3414,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (!options) {
             clearAnimations(bot, tag);
             return Promise.resolve();
+        }
+        if (typeof options.duration !== 'number') {
+            throw new Error('You must provide a duration.');
         }
 
         return new Promise<void>((resolve, reject) => {
