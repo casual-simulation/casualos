@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.4.12
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `cameraZoom` and `cameraZoomOffset` tags.
+
 ## V1.4.11
 
 #### Date: 3/12/2021
