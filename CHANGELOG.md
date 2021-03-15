@@ -8,6 +8,12 @@
 
 -   Added the `cameraZoom` and `cameraZoomOffset` tags.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where camera offsets would not be taken into account when calculating the camera focus point.
+    -   This fixes issues with the focus point becoming more and more wrong as offsets are applied to the camera.
+    -   However, any calculations which try to calculate a camera position offset from the focus point must now subtract the current offset from the focus point to get the correct result. The example auxCode (`cameraMovementExample`) has been updated to reflect this change (version 2 and later).
+
 ## V1.4.11
 
 #### Date: 3/12/2021
