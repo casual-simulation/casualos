@@ -1021,9 +1021,9 @@ export class PlayerGame extends Game {
                     this.inventoryScene.add(this.inventoryFocusPoint);
                 }
                 this.inventoryFocusPoint.visible = true;
-                this.inventoryFocusPoint.position.copy(
-                    this.invController.controls.target
-                );
+                let targetWorld: Vector3 = this.invController.controls.target.clone();
+                this.invController.rig.cameraParent.localToWorld(targetWorld);
+                this.inventoryFocusPoint.position.copy(targetWorld);
                 this.inventoryFocusPoint.updateMatrixWorld(true);
             } else {
                 if (this.inventoryFocusPoint) {
