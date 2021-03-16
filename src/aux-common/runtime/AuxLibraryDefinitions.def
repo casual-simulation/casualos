@@ -3657,7 +3657,9 @@ declare global {
         
         /**
          * Establish the connection to the bluetooth serial device
-         * @param path The device path. Example: /dev/rfcomm0
+         * @param device The device path. Example: /dev/rfcomm0
+         * @param mac The device MAC address. Example: AA:BB:CC:DD:EE
+         * @param channel The device channel. Example: 1
          * @param options 
          * {boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
          * 
@@ -3689,7 +3691,7 @@ declare global {
          * 
          * {number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
          */
-        serialConnect(path: string, options?: object, cb?: any): Promise<void>;
+        serialConnect(device: string, mac: string, channel: number, options?: object, cb?: any): Promise<void>;
         
         /**
          * Parses and returns the serial stream to the event tag 'onSerialData'.
@@ -3727,9 +3729,10 @@ declare global {
         /**
          * Closes an open connection. 
          * @param cb
+         * @param device The device path. Example: /dev/rfcomm0
          * @param taskId The ID of the async task.
          */
-        serialClose(cb?: any): Promise<void>;
+        serialClose(device: string, cb?: any): Promise<void>;
         
         /**
          * Flush discards data that has been received but not read, or written but not transmitted by the operating system. 

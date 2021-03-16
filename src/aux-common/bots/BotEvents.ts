@@ -1807,7 +1807,17 @@ export interface SerialConnectAction extends AsyncAction {
     /**
      * The device path. Example: /dev/rfcomm0
      */
-    path: string;
+    device: string;
+
+    /**
+     * The device MAC address. Example: AA:BB:CC:DD:EE
+     */
+    mac: string;
+
+    /**
+     * The device channel. Example: 1
+     */
+    channel: number;
 
     /**
      * {boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
@@ -1907,6 +1917,11 @@ export interface SerialReadAction extends AsyncAction {
  */
 export interface SerialCloseAction extends AsyncAction {
     type: 'serial_close';
+
+    /**
+     * The device path. Example: /dev/rfcomm0
+     */
+     device: string;
 
     /**
      *
@@ -3993,13 +4008,17 @@ export function rpioSPIEndPin(
  * @param taskId The ID of the async task.
  */
 export function serialConnectPin(
-    path: string,
+    device: string,
+    mac: string,
+    channel: number,
     options?: object,
     taskId?: string | number,
     playerId?: string
 ): SerialConnectAction {
     return {
-        path,
+        device,
+        mac,
+        channel,
         options,
         type: 'serial_connect',
         taskId,
@@ -4103,14 +4122,17 @@ export function serialReadPin(
 /**
  * Closes an open connection.
  * @param cb
+ * @param device The device path. Example: /dev/rfcomm0
  * @param taskId The ID of the async task.
  */
 export function serialClosePin(
+    device: string,
     cb?: any,
     taskId?: string | number,
     playerId?: string
 ): SerialCloseAction {
     return {
+        device,
         cb,
         type: 'serial_close',
         taskId,

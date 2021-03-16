@@ -86,14 +86,12 @@ export class SerialModule implements AuxModule2 {
 
     _serialConnect(simulation: Simulation, event: SerialConnectAction) {
         try {
-            // TODO: Pass the device name through the webhook?
-
             // Complete the bluetooth connection before opening it up
             execSync(
-                'curl -X POST -H "Content-Type: text/plain" --data "connect" $(ip route show | awk \'/default/ {print $3}\'):8090/post'
+                'curl -H "Content-Type: application/json" -X POST -d \'{"command":"connect","device":' + event.device + ', "mac":' + event.mac + ', "channel":' + event.channel + '}\' $(ip route show | awk \'/default/ {print $3}\'):8090/post'
             );
 
-            const port = new SerialPort(event.path, event.options);
+            const port = new SerialPort(event.device, event.options);
             btSerial.set('Connection01', port);
 
             port.on('open', () => {
@@ -274,7 +272,7 @@ export class SerialModule implements AuxModule2 {
         try {
             // Send a command to kill the rfcomm process
             execSync(
-                'curl -X POST -H "Content-Type: text/plain" --data "disconnect" $(ip route show | awk \'/default/ {print $3}\'):8090/post'
+                'curl -H "Content-Type: application/json" -X POST -d \'{"command":"disconnect","device":' + event.device + '}\' $(ip route show | awk \'/default/ {print $3}\'):8090/post'
             );
 
             const port = btSerial.get('Connection01');

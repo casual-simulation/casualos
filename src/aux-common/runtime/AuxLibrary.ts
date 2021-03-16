@@ -2653,7 +2653,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Establish the connection to the bluetooth serial device
-     * @param path The device path. Example: /dev/rfcomm0
+     * @param device The device path. Example: /dev/rfcomm0
+     * @param mac The device MAC address. Example: AA:BB:CC:DD:EE
+     * @param channel The device channel. Example: 1
      * @param options
      * {boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
      *
@@ -2685,10 +2687,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * {number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
      */
-    function serialConnect(path: string, options?: object, cb?: any) {
+    function serialConnect(device: string, mac: string, channel: number, options?: object, cb?: any) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialConnectPin(path, options, cb),
+            serialConnectPin(device, mac, channel, options, cb),
             undefined,
             undefined,
             task.taskId
@@ -2777,12 +2779,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Closes an open connection.
      * @param cb
+     * @param device The device path. Example: /dev/rfcomm0
      * @param taskId The ID of the async task.
      */
-    function serialClose(cb?: any) {
+    function serialClose(device: string, cb?: any) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialClosePin(cb),
+            serialClosePin(device, cb),
             undefined,
             undefined,
             task.taskId
