@@ -3599,10 +3599,12 @@ describe('AuxLibrary', () => {
                 uuidMock.mockReturnValueOnce('task1');
                 const action: any = library.api.server.serialConnect(
                     '/dev/ttyS0',
+                    'AA:BB:CC:DD:EE',
+                    1,
                     { baudRate: 9600 }
                 );
                 const expected = remote(
-                    serialConnectPin('/dev/ttyS0', { baudRate: 9600 }),
+                    serialConnectPin('/dev/ttyS0','AA:BB:CC:DD:EE', 1, { baudRate: 9600 }),
                     undefined,
                     undefined,
                     'task1'
@@ -3613,9 +3615,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialConnect('/dev/ttyS0', {
-                    baudRate: 9600,
-                });
+                library.api.server.serialConnect('/dev/ttyS0','AA:BB:CC:DD:EE', 1, { baudRate: 9600 });
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -3745,9 +3745,9 @@ describe('AuxLibrary', () => {
         describe('server.serialClose()', () => {
             it('should send a SerialCloseAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialClose();
+                const action: any = library.api.server.serialClose("/dev/rfcomm0");
                 const expected = remote(
-                    serialClosePin(),
+                    serialClosePin("/dev/rfcomm0"),
                     undefined,
                     undefined,
                     'task1'
@@ -3758,7 +3758,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialClose();
+                library.api.server.serialClose("/dev/rfcomm0");
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
