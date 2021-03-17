@@ -7,3 +7,4 @@ lib/*.d.ts
 docs
 
 !lib/
+package-lock.json
