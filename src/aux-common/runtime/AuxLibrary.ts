@@ -207,6 +207,8 @@ import {
     AnimateToOptions,
     animateToPosition,
     AsyncAction,
+    beginAudioRecording as calcBeginAudioRecording,
+    endAudioRecording as calcEndAudioRecording,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -780,6 +782,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 localPositionTween,
                 localRotationTween,
                 getAnchorPointPosition,
+                beginAudioRecording,
+                endAudioRecording,
             },
 
             math: {
@@ -3759,6 +3763,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             y: position.y + offset.y * scale.y,
             z: position.z + offset.z * scale.z,
         };
+    }
+
+    /**
+     * Starts a new audio recording.
+     */
+    function beginAudioRecording(): Promise<void> {
+        const task = context.createTask();
+        const action = calcBeginAudioRecording(task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Finishes an audio recording.
+     * Returns a promise that resolves with the recorded blob.
+     */
+    function endAudioRecording(): Promise<Blob> {
+        const task = context.createTask();
+        const action = calcEndAudioRecording(task.taskId);
+        return addAsyncAction(task, action);
     }
 
     /**

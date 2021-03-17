@@ -141,6 +141,8 @@ import {
     buildBundle,
     circleWipe,
     animateToPosition,
+    beginAudioRecording,
+    endAudioRecording,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -5892,6 +5894,24 @@ describe('AuxLibrary', () => {
                     });
                 }
             );
+        });
+
+        describe('experiment.beginAudioRecording()', () => {
+            it('should emit a BeginAudioRecordingAction', () => {
+                const action: any = library.api.experiment.beginAudioRecording();
+                const expected = beginAudioRecording(context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('experiment.endAudioRecording()', () => {
+            it('should emit a EndAudioRecordingAction', () => {
+                const action: any = library.api.experiment.endAudioRecording();
+                const expected = endAudioRecording(context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
         });
     });
 

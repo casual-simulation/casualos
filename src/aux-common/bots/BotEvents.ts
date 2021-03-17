@@ -183,7 +183,9 @@ export type AsyncActions =
     | ShowUploadFilesAction
     | OpenCircleWipeAction
     | AnimateToBotAction
-    | AnimateToPositionAction;
+    | AnimateToPositionAction
+    | BeginAudioRecordingAction
+    | EndAudioRecordingAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2496,6 +2498,20 @@ export interface OpenCircleWipeOptions {
     color: string;
 }
 
+/**
+ * An event that is used to start audio recording.
+ */
+export interface BeginAudioRecordingAction extends AsyncAction {
+    type: 'begin_audio_recording';
+}
+
+/**
+ * An event that is used to finish audio recording.
+ */
+export interface EndAudioRecordingAction extends AsyncAction {
+    type: 'end_audio_recording';
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -4805,6 +4821,32 @@ export function revokeCertificate(
         signingBotId,
         signingPassword,
         certificateBotId,
+        taskId,
+    };
+}
+
+/**
+ * Creates a BeginAudioRecordingAction.
+ * @param taskId The task ID.
+ */
+export function beginAudioRecording(
+    taskId?: string | number
+): BeginAudioRecordingAction {
+    return {
+        type: 'begin_audio_recording',
+        taskId,
+    };
+}
+
+/**
+ * Creates a EndAudioRecordingAction.
+ * @param taskId The task ID.
+ */
+export function endAudioRecording(
+    taskId?: string | number
+): EndAudioRecordingAction {
+    return {
+        type: 'end_audio_recording',
         taskId,
     };
 }

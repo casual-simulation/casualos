@@ -4328,6 +4328,17 @@ declare global {
             dimension: string,
             anchorPoint: BotAnchorPoint
         ): {x: number, y: number, z: number};
+
+        /**
+         * Starts a new audio recording.
+         */
+        beginAudioRecording(): Promise<void>;
+
+        /**
+         * Finishes an audio recording.
+         * Returns a promise that resolves with the recorded blob.
+         */
+        endAudioRecording(): Promise<Blob>;
     };
 
     /**
