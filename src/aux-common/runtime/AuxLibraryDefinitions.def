@@ -3088,37 +3088,6 @@ declare global {
         hideHtml(): HideHtmlAction;
 
         /**
-         * Animates the user's camera to view the given bot.
-         * @param bot The bot to view.
-         * @param zoomValue The zoom value to use. If omitted then the current zoom will be preserved.
-         * @param rotX The X rotation in degrees. If omitted then the current rotation will be preserved.
-         * @param rotY The Y rotation in degrees. If omitted then the current rotation will be preserved.
-         * @param duration The number of seconds that the animation should take to finish. Defaults to 1.
-         */
-        tweenTo(
-            bot: Bot | string,
-            zoomValue?: number,
-            rotX?: number,
-            rotY?: number,
-            duration?: number
-        ): AnimateToBotAction;
-
-        /**
-         * Instantly moves the user's camera to view the given bot.
-         * @param bot The bot to view.
-         * @param zoomValue The zoom value to use.
-         * @param rotX The X rotation in degrees. If omitted then the current rotation will be preserved.
-         * @param rotY The Y rotation in degrees. If omitted then the current rotation will be preserved.
-         * @param duration The number of seconds that the animation should take to finish. Defaults to 1.
-         */
-        moveTo(
-            bot: Bot | string,
-            zoomValue?: number,
-            rotX?: number,
-            rotY?: number
-        ): AnimateToBotAction;
-
-        /**
          * Moves the camera to view the given bot.
          * Returns a promise that resolves when the bot is focused.
          * @param botOrPosition The bot, bot ID, or position to view.

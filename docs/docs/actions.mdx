@@ -1990,56 +1990,6 @@ await os.focusOn({
 });
 ```
 
-### `os.tweenTo(bot, zoomValue?, rotX?, rotY?, duration?)`
-
-
-Smoothly moves the player's view to center on the given bot. Optionally accepts target values for the zoom, rotation X, and rotation Y.
-Additionally, a duration can be specified for the length of the tween. If the target bot is in the page portal, then the page portal view will be moved. 
-If the bot is in the inventory portal, then the inventory portal view will be moved. If the target bot is not in either portal, then nothing happens.
-
-The **first parameter** is the bot or bot ID that the player's view should be moved to.
-
-The **second parameter** is optional and is the zoom value that the camera should be transitioned to. Possible values are between `0` and `80`. `1` is the default.
-If no value is specified, then the zoom will remain at its current value.
-
-The **third parameter** is optional and is the X rotation value that the camera should be transitioned to. Units are in degrees. See <TagLink tag='portalCameraRotationX'/> for more info.
-
-The **fourth parameter** is optional and is the Y rotation value that the camera should be transitioned to. Units are in degrees. See <TagLink tag='portalCameraRotationY'/> for more info.
-
-The **fifth parameter** is optional and is the amount of time in seconds that the transition should take to finish.
-
-#### Examples:
-
-1. Transition the player's view to show a bot named bob.
-```typescript
-os.tweenTo(getBot("#name", "bob"))
-```
-
-### `os.moveTo(bot, zoomValue?, rotX?, rotY?)`
-
-
-Instantly moves the player's view to center on the given bot. Optionally accepts target values for the zoom, rotation X, and rotation Y.
-If the target bot is in the page portal, then the page portal view will be moved. If the bot is in the inventory portal, then the inventory portal view will be moved.
-If the target bot is not in either portal, then nothing happens.
-
-The **first parameter** is the bot or bot ID that the player's view should be moved to.
-
-The **second parameter** is optional and is the zoom value that the camera should be transitioned to. Possible values are between `0` and `Infinity`. `1` is the default.
-If no value is specified, then the zoom will remain at its current value.
-
-The **third parameter** is optional and is the X rotation value that the camera should be transitioned to.
-If no value is specified, then the X rotation will remain at its current value. Units are in degrees. See <TagLink tag='portalCameraRotationX'/> for more info.
-
-The **fourth parameter** is optional and is the Y rotation value that the camera should be transitioned to.
-If no value is specified, then the Y rotation will remain at its current value. Units are in degrees. See <TagLink tag='portalCameraRotationY'/> for more info.
-
-#### Examples:
-
-1. Move the player's view to show a bot named bob.
-```typescript
-os.moveTo(getBot("#name", "bob"))
-```
-
 ### `os.openQRCodeScanner(camera?)`
 
 
