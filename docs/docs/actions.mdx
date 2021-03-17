@@ -5852,6 +5852,37 @@ for(let point of points) {
 }
 ```
 
+### `experiment.beginAudioRecording()`
+
+Starts a new audio recording. Returns a promise that resolves when recording has started.
+The returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.
+
+#### Examples:
+
+1. Record some audio for 10 seconds and download the file.
+```typescript
+await experiment.beginAudioRecording();
+await os.sleep(10000);
+const data = await experiment.endAudioRecording();
+
+os.download(data);
+```
+
+### `experiment.endAudioRecording()`
+
+Stops the audio recording that is in progress. Returns a promise that resolves with the recorded data.
+
+#### Examples:
+
+1. Record some audio for 10 seconds and download the file.
+```typescript
+await experiment.beginAudioRecording();
+await os.sleep(10000);
+const data = await experiment.endAudioRecording();
+
+os.download(data);
+```
+
 ### `perf.getStats()`
 
 Gets an object that contains statistics about the performance of the server.
