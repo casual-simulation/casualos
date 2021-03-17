@@ -4,9 +4,21 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Changed the `#portalCameraRotationX` and `#portalCameraRotationY` tags to use radians instead of degrees.
+
 ### :rocket: Improvements
 
 -   Added the `cameraZoom` and `cameraZoomOffset` tags.
+-   Added the `os.focusOn(botOrPosition, options?)` function.
+    -   Works similarly to `os.tweenTo()` and `os.moveTo()` except that it takes an options object instead of a bunch of parameters.
+    -   Notable improvements includes that it can accept a position instead of a bot, it supports different easing types, and it will return a promise which completes when the camera movement is finished.
+    -   Additionally the rotation values are in radians instead of degrees.
+-   `os.focusOn()` and `os.tweenTo()` now use quadratic easing by default.
+    -   Additionally `os.focusOn()` supports specifying the easing type just like `animateTag()`.
+-   `os.tweenTo()` and `os.moveTo()` are now deprecated and should no longer be used. They will be removed in a future release of CasualOS.
+    -   To encourage migration, they have been removed from the documentation and autocomplete.
 
 ### :bug: Bug Fixes
 
