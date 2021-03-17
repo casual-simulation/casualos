@@ -45,7 +45,7 @@
         "@casual-simulation/causal-trees": "^1.4.11",
         "@casual-simulation/crypto": "^1.4.4",
         "@casual-simulation/crypto-browser": "^1.4.4",
-        "axios": "^0.18.1",
+        "axios": "^0.21.1",
         "rxjs": "^6.5.2"
     }
 }

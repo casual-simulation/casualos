@@ -168,7 +168,6 @@ declare type ExtraActions =
     | ShowToastAction
     | ShowHtmlAction
     | HideHtmlAction
-    | TweenToAction
     | OpenQRCodeScannerAction
     | OpenBarcodeScannerAction
     | ShowQRCodeAction
@@ -230,7 +229,9 @@ declare type AsyncActions =
     | PlaySoundAction
     | CancelSoundAction
     | OpenCustomPortalAction
-    | RegisterPrefixAction;
+    | RegisterPrefixAction
+    | AnimateToBotAction
+    | AnimateToPositionAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -669,35 +670,61 @@ declare interface HideHtmlAction extends Action {
     type: 'show_html';
     visible: false;
 }
-
 /**
- * An event that is used to tween the camera to the given bot's location.
+ * Options for the os.tweenTo(), os.moveTo(), and os.focusOn() actions.
  */
-declare interface TweenToAction extends Action {
-    type: 'tween_to';
-
-    /**
-     * The ID of the bot to tween to.
-     */
-    botId: string;
-
+ export interface AnimateToOptions {
     /*
      * The zoom value to use.
      */
-    zoomValue: number;
+    zoom?: number;
 
     /*
-     * The rotation spherical value to use.
+     * The rotation value to use in radians. These are the polar coordinates that determine where the camera should orbit around the target point.
      */
-    rotationValue: {
+    rotation?: {
         x: number;
         y: number;
     };
 
     /**
-     * The duration that the tween should take.
+     * The duration in seconds that the animation should take.
+     * Defaults to 1.
      */
-    duration: number | null;
+    duration?: number;
+
+    /**
+     * The type of easing to use.
+     * If not specified then "quadratic" "inout" will be used.
+     */
+     easing?: EaseType | Easing;
+}
+
+/**
+ * An event that is used to tween the camera to the given bot's location.
+ */
+export interface AnimateToBotAction extends AsyncAction, AnimateToOptions {
+    type: 'animate_to_bot';
+
+    /**
+     * The ID of the bot to tween to.
+     */
+    botId: string;
+}
+
+/**
+ * An event that is used to animate the camera to the given bot's location.
+ */
+ export interface AnimateToPositionAction extends AsyncAction, AnimateToOptions {
+    type: 'animate_to_position';
+
+    /**
+     * The position to animate to.
+     */
+    position: {
+        x: number;
+        y: number;
+    };
 }
 
 /**
@@ -3061,31 +3088,15 @@ declare global {
         hideHtml(): HideHtmlAction;
 
         /**
-         * Tweens the user's camera to view the given bot.
-         * @param bot The bot to view.
-         * @param zoomValue The zoom value to use.
+         * Moves the camera to view the given bot.
+         * Returns a promise that resolves when the bot is focused.
+         * @param botOrPosition The bot, bot ID, or position to view.
+         * @param options The options to use for moving the camera.
          */
-        tweenTo(
-            bot: Bot | string,
-            zoomValue?: number,
-            rotX?: number,
-            rotY?: number,
-            duration?: number
-        ): TweenToAction;
-
-        /**
-         * Instantly moves the user's camera to view the given bot.
-         * @param bot The bot to view.
-         * @param zoomValue The zoom value to use.
-         * @param rotX The X rotation.
-         * @param rotY The Y rotation.
-         */
-        moveTo(
-            bot: Bot | string,
-            zoomValue?: number,
-            rotX?: number,
-            rotY?: number
-        ): TweenToAction;
+        focusOn(
+            botOrPosition: Bot | string | { x: number, y: number },
+            options: AnimateToOptions
+        ): Promise<void>;
 
         /**
          * Opens the QR Code Scanner.
@@ -4317,6 +4328,17 @@ declare global {
             dimension: string,
             anchorPoint: BotAnchorPoint
         ): {x: number, y: number, z: number};
+
+        /**
+         * Starts a new audio recording.
+         */
+        beginAudioRecording(): Promise<void>;
+
+        /**
+         * Finishes an audio recording.
+         * Returns a promise that resolves with the recorded blob.
+         */
+        endAudioRecording(): Promise<Blob>;
     };
 
     /**

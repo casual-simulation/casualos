@@ -180,7 +180,7 @@ import {
     ShowHtmlAction,
     HideHtmlAction,
     SetClipboardAction,
-    TweenToAction,
+    AnimateToBotAction,
     ShowChatBarAction,
     EnableARAction,
     EnableVRAction,
@@ -204,6 +204,11 @@ import {
     ShowUploadFilesAction,
     ApplyStateAction,
     RejectAction,
+    AnimateToOptions,
+    animateToPosition,
+    AsyncAction,
+    beginAudioRecording as calcBeginAudioRecording,
+    endAudioRecording as calcEndAudioRecording,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -230,7 +235,13 @@ import {
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, del, insert, preserve } from '../aux-format-2';
-import { Euler, Vector3, Plane, Ray } from '@casual-simulation/three';
+import {
+    Euler,
+    Vector3,
+    Plane,
+    Ray,
+    RGBA_ASTC_10x10_Format,
+} from '@casual-simulation/three';
 import mime from 'mime';
 import TWEEN from '@tweenjs/tween.js';
 import './PerformanceNowPolyfill';
@@ -616,6 +627,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 setClipboard,
                 tweenTo,
                 moveTo,
+                focusOn,
                 showChat,
                 hideChat,
                 run,
@@ -770,6 +782,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 localPositionTween,
                 localRotationTween,
                 getAnchorPointPosition,
+                beginAudioRecording,
+                endAudioRecording,
             },
 
             math: {
@@ -1357,6 +1371,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Tweens the user's camera to view the given bot.
      * @param bot The bot to view.
      * @param zoomValue The zoom value to use.
+     * @param rotX The value to use for the X rotation. Units in degrees.
+     * @param rotY The value to use for the Y rotation. Units in degrees.
      */
     function tweenTo(
         bot: Bot | string,
@@ -1364,9 +1380,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         rotX?: number,
         rotY?: number,
         duration?: number
-    ): TweenToAction {
+    ): AnimateToBotAction {
         return addAction(
-            calcTweenTo(getID(bot), zoomValue, rotX, rotY, duration)
+            calcTweenTo(getID(bot), {
+                zoom: zoomValue,
+                rotation:
+                    hasValue(rotX) || hasValue(rotY)
+                        ? {
+                              x: hasValue(rotX) ? rotX * (Math.PI / 180) : null,
+                              y: hasValue(rotY) ? rotY * (Math.PI / 180) : null,
+                          }
+                        : undefined,
+                duration,
+            })
         );
     }
 
@@ -1382,8 +1408,42 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         zoomValue?: number,
         rotX?: number,
         rotY?: number
-    ): TweenToAction {
+    ): AnimateToBotAction {
         return tweenTo(bot, zoomValue, rotX, rotY, 0);
+    }
+
+    /**
+     * Moves the camera to view the given bot.
+     * Returns a promise that resolves when the bot is focused.
+     * @param botOrPosition The bot, bot ID, or position to view.
+     * @param options The options to use for moving the camera.
+     */
+    function focusOn(
+        botOrPosition: Bot | string | { x: number; y: number },
+        options: AnimateToOptions = {}
+    ): Promise<void> {
+        const task = context.createTask();
+        const finalOptions: AnimateToOptions = {
+            duration: 1,
+            easing: 'quadratic',
+            ...(options ?? {}),
+        };
+        let action: AsyncActions;
+        if (typeof botOrPosition === 'string' || isBot(botOrPosition)) {
+            action = calcTweenTo(
+                getID(botOrPosition),
+                finalOptions,
+                task.taskId
+            );
+        } else {
+            action = animateToPosition(
+                botOrPosition,
+                finalOptions,
+                task.taskId
+            );
+        }
+
+        return addAsyncAction(task, action);
     }
 
     /**
@@ -3383,6 +3443,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 'You must provide an object as toValue when not specifying a tag.'
             );
         }
+        if (typeof options.duration !== 'number') {
+            throw new Error('You must provide a duration.');
+        }
 
         const keys = Object.keys(options.fromValue);
         const groupId = uuid();
@@ -3412,6 +3475,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             clearAnimations(bot, tag);
             return Promise.resolve();
         }
+        if (typeof options.duration !== 'number') {
+            throw new Error('You must provide a duration.');
+        }
 
         return new Promise<void>((resolve, reject) => {
             let valueHolder = {
@@ -3419,23 +3485,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     ? options.fromValue
                     : bot.tags[tag],
             };
-            const easing: Easing = hasValue(options.easing)
-                ? typeof options.easing === 'string'
-                    ? {
-                          mode: 'inout',
-                          type: options.easing,
-                      }
-                    : options.easing
-                : {
-                      mode: 'inout',
-                      type: 'linear',
-                  };
+            const easing = getEasing(options.easing);
             const tween = new TWEEN.Tween<any>(valueHolder)
                 .to({
                     [tag]: options.toValue,
                 })
                 .duration(options.duration * 1000)
-                .easing(getEasing(easing))
+                .easing(easing)
                 .onUpdate(() => {
                     if (
                         options.tagMaskSpace === false ||
@@ -3707,6 +3763,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             y: position.y + offset.y * scale.y,
             z: position.z + offset.z * scale.z,
         };
+    }
+
+    /**
+     * Starts a new audio recording.
+     */
+    function beginAudioRecording(): Promise<void> {
+        const task = context.createTask();
+        const action = calcBeginAudioRecording(task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Finishes an audio recording.
+     * Returns a promise that resolves with the recorded blob.
+     */
+    function endAudioRecording(): Promise<Blob> {
+        const task = context.createTask();
+        const action = calcEndAudioRecording(task.taskId);
+        return addAsyncAction(task, action);
     }
 
     /**

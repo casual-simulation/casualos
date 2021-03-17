@@ -55,7 +55,7 @@ import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugO
 import { CompoundGrid3D } from '../CompoundGrid3D';
 import { Grid3D } from '../Grid3D';
 
-export class PlayerSimulation3D extends Simulation3D {
+export abstract class PlayerSimulation3D extends Simulation3D {
     /**
      * The map of portal tags to their related groups.
      */

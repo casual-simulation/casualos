@@ -9607,7 +9607,7 @@ describe('original action tests', () => {
     });
 
     describe('os.tweenTo()', () => {
-        it('should emit a TweenToAction', () => {
+        it('should emit a AnimateToBotAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -9660,13 +9660,15 @@ describe('original action tests', () => {
             const result = calculateActionResults(state, botAction);
 
             expect(result.actions).toEqual([
-                tweenTo('test', undefined, undefined, undefined, 10),
+                tweenTo('test', {
+                    duration: 10,
+                }),
             ]);
         });
     });
 
     describe('os.moveTo()', () => {
-        it('should emit a TweenToAction with the duration set to 0', () => {
+        it('should emit a AnimateToBotAction with the duration set to 0', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -9682,13 +9684,9 @@ describe('original action tests', () => {
             const result = calculateActionResults(state, botAction);
 
             expect(result.actions).toEqual([
-                {
-                    type: 'tween_to',
-                    botId: 'test',
-                    zoomValue: null,
-                    rotationValue: null,
+                tweenTo('test', {
                     duration: 0,
-                },
+                }),
             ]);
         });
     });

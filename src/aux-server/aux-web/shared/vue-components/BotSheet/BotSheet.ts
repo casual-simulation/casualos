@@ -126,7 +126,7 @@ export default class BotSheet extends Vue {
         if (result.results.length <= 0) {
             this.exitSheet();
             this._simulation.helper.transaction(
-                tweenTo(bot.id, undefined, undefined, undefined, 0)
+                tweenTo(bot.id, { duration: 0 })
             );
         }
     }

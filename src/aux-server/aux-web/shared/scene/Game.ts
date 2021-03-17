@@ -13,6 +13,8 @@ import {
     Bot,
     DEFAULT_SCENE_BACKGROUND_COLOR,
     hasValue,
+    AnimateToBotAction,
+    AnimateToOptions,
 } from '@casual-simulation/aux-common';
 import {
     CameraRig,
@@ -38,6 +40,7 @@ import { EventBus } from '../EventBus';
 import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { AuxBot3D } from './AuxBot3D';
+import { Simulation } from '@casual-simulation/aux-vm';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -294,33 +297,28 @@ export abstract class Game implements AuxBotVisualizerFinder {
             (c) => c.rig.name === cameraRig.name
         );
 
-        if (cameraRig.name != 'main') {
-            controls.controls.resetRot = true;
-            controls.controls.update();
-        }
+        // if (cameraRig.name != 'main') {
+        //     controls.controls.resetRot = true;
+        //     controls.controls.update();
+        // }
 
-        this.tweenCameraToPosition(cameraRig, new Vector3(0, 0, 0));
+        this.tweenCameraToPosition(
+            cameraRig,
+            new Vector3(0, 0, 0),
+            { duration: 1, easing: 'quadratic' },
+            null,
+            null
+        );
     }
 
     /**
      * Tweens the camera to view the bot.
      * @param cameraRig The camera rig to tween.
-     * @param botId The ID of the bot to view.
-     * @param zoomValue The zoom value to use.
-     * @param duration The time that the tween should last.
+     * @param action The action to use for tweening.
      */
-    tweenCameraToBot(
-        cameraRig: CameraRig,
-        botId: string,
-        zoomValue?: number,
-        rotationValue?: Vector2,
-        duration?: number
-    ) {
+    tweenCameraToBot(cameraRig: CameraRig, action: AnimateToBotAction) {
         // find the bot with the given ID
-        const sims = this.getSimulations();
-        const bots = flatMap(sims, (s) => s.bots);
-        console.log(this.constructor.name, 'tweenCameraToBot all bots:', bots);
-        const matches = this.findBotsById(botId);
+        const matches = this.findBotsById(action.botId);
         console.log(
             this.constructor.name,
             'tweenCameraToBot matching bots:',
@@ -335,9 +333,9 @@ export abstract class Game implements AuxBotVisualizerFinder {
                 this.tweenCameraToPosition(
                     cameraRig,
                     targetPosition,
-                    zoomValue,
-                    rotationValue,
-                    duration
+                    action,
+                    bot.dimensionGroup.simulation3D.simulation,
+                    action.taskId
                 );
             }
         }
@@ -352,19 +350,21 @@ export abstract class Game implements AuxBotVisualizerFinder {
     tweenCameraToPosition(
         cameraRig: CameraRig,
         position: Vector3,
-        zoomValue?: number,
-        rotationValue?: Vector2,
-        duration?: number
+        options: AnimateToOptions,
+        simulation: Simulation,
+        taskId: string | number
     ) {
         this.interaction.addOperation(
             new TweenCameraToOperation(
                 cameraRig,
+                this.time,
                 this.interaction,
                 position,
-                zoomValue,
-                rotationValue,
-                duration
-            )
+                options,
+                simulation,
+                taskId
+            ),
+            false
         );
     }
 
@@ -383,12 +383,14 @@ export abstract class Game implements AuxBotVisualizerFinder {
         this.interaction.addOperation(
             new TweenCameraToOperation(
                 cameraRig,
+                this.time,
                 this.interaction,
                 position,
-                zoomValue,
-                rotationValue,
-                0
-            )
+                { zoom: zoomValue, rotation: rotationValue, duration: 0 },
+                null,
+                null
+            ),
+            false
         );
     }
 

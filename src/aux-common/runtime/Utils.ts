@@ -1,8 +1,8 @@
 import { RealtimeEditMode } from './RuntimeBot';
-import { isBot, isRuntimeBot } from '../bots/BotCalculations';
+import { hasValue, isBot, isRuntimeBot } from '../bots/BotCalculations';
 import { AuxPartitionRealtimeStrategy } from '../partitions/AuxPartition';
 import { forOwn } from 'lodash';
-import { Easing, EaseMode } from '../bots';
+import { Easing, EaseMode, EaseType } from '../bots';
 import TWEEN, { Easing as TweenEasing } from '@tweenjs/tween.js';
 
 /**
@@ -89,7 +89,22 @@ export class DeepObjectError extends Error {
     }
 }
 
-export function getEasing(easing: Easing): any {
+export function getEasing(easing: Easing | EaseType) {
+    const value = hasValue(easing)
+        ? typeof easing === 'string'
+            ? {
+                  mode: 'inout',
+                  type: easing,
+              }
+            : easing
+        : {
+              mode: 'inout',
+              type: 'linear',
+          };
+    return getTweenEasing(value as Easing);
+}
+
+export function getTweenEasing(easing: Easing): any {
     switch (easing.type) {
         case 'linear':
         default:

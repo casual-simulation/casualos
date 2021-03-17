@@ -585,7 +585,7 @@ export default class BotTable extends Vue {
     async selectBot(bot: Bot) {
         this.exitSheet();
         this.getBotManager().helper.transaction(
-            tweenTo(bot.id, undefined, undefined, undefined, 0)
+            tweenTo(bot.id, { duration: 0 })
         );
     }
 

@@ -140,6 +140,9 @@ import {
     registerPrefix,
     buildBundle,
     circleWipe,
+    animateToPosition,
+    beginAudioRecording,
+    endAudioRecording,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1563,7 +1566,7 @@ describe('AuxLibrary', () => {
         });
 
         describe('os.tweenTo()', () => {
-            it('should emit a TweenToAction', () => {
+            it('should emit a AnimateToBotAction', () => {
                 const action = library.api.os.tweenTo('test');
                 expect(action).toEqual(tweenTo('test'));
                 expect(context.actions).toEqual([tweenTo('test')]);
@@ -1583,34 +1586,113 @@ describe('AuxLibrary', () => {
                     undefined,
                     10
                 );
-                expect(action).toEqual(
-                    tweenTo('test', undefined, undefined, undefined, 10)
-                );
+                expect(action).toEqual(tweenTo('test', { duration: 10 }));
                 expect(context.actions).toEqual([
-                    tweenTo('test', undefined, undefined, undefined, 10),
+                    tweenTo('test', { duration: 10 }),
                 ]);
+            });
+
+            it('should convert the rotation values to radians', () => {
+                const action = library.api.os.tweenTo(
+                    'test',
+                    undefined,
+                    60,
+                    180,
+                    10
+                );
+                const expected = tweenTo('test', {
+                    duration: 10,
+                    rotation: {
+                        x: Math.PI / 3,
+                        y: Math.PI,
+                    },
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
         describe('os.moveTo()', () => {
-            it('should emit a TweenToAction with the duration set to 0', () => {
+            it('should emit a AnimateToBotAction with the duration set to 0', () => {
                 const action = library.api.os.moveTo('test');
-                expect(action).toEqual({
-                    type: 'tween_to',
-                    botId: 'test',
-                    zoomValue: null,
-                    rotationValue: null,
-                    duration: 0,
-                });
+                expect(action).toEqual(tweenTo('test', { duration: 0 }));
                 expect(context.actions).toEqual([
-                    {
-                        type: 'tween_to',
-                        botId: 'test',
-                        zoomValue: null,
-                        rotationValue: null,
-                        duration: 0,
-                    },
+                    tweenTo('test', { duration: 0 }),
                 ]);
+            });
+        });
+
+        describe('os.focusOn()', () => {
+            it('should emit a AnimateToBotAction', () => {
+                const action: any = library.api.os.focusOn('test');
+                const expected = tweenTo(
+                    'test',
+                    {
+                        duration: 1,
+                        easing: 'quadratic',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should handle bots', () => {
+                const action: any = library.api.os.focusOn(bot1);
+                const expected = tweenTo(
+                    bot1.id,
+                    {
+                        duration: 1,
+                        easing: 'quadratic',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support specifying custom options', () => {
+                const action: any = library.api.os.focusOn('test', {
+                    duration: 10,
+                    rotation: {
+                        x: 5,
+                        y: 6,
+                    },
+                    zoom: 9,
+                    easing: 'linear',
+                });
+                const expected = tweenTo(
+                    'test',
+                    {
+                        duration: 10,
+                        rotation: {
+                            x: 5,
+                            y: 6,
+                        },
+                        zoom: 9,
+                        easing: 'linear',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a AnimateToPositionAction if given a position', () => {
+                const action: any = library.api.os.focusOn({
+                    x: 20,
+                    y: 10,
+                });
+                const expected = animateToPosition(
+                    { x: 20, y: 10 },
+                    {
+                        duration: 1,
+                        easing: 'quadratic',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
@@ -4673,6 +4755,23 @@ describe('AuxLibrary', () => {
                 expect(bot1.raw.abc).toEqual(0);
             });
 
+            it('should require the duration to be specified', async () => {
+                bot1.tags.abc = 0;
+
+                expect(() => {
+                    library.api.animateTag(bot1, 'abc', {
+                        fromValue: 0,
+                        toValue: 10,
+                        easing: {
+                            type: 'quadratic',
+                            mode: 'inout',
+                        },
+                        duration: null,
+                        tagMaskSpace: 'tempLocal',
+                    });
+                }).toThrow();
+            });
+
             it('should remove # symbols from tag names', async () => {
                 bot1.tags.abc = 0;
                 const promise = library.api.animateTag(bot1, '#abc', {
@@ -5009,6 +5108,27 @@ describe('AuxLibrary', () => {
                 });
                 expect(bot1.raw.abc).toEqual(0);
                 expect(bot1.raw.def).toEqual(1);
+            });
+
+            it('should require the duration to be specified when animating multiple tags at once', async () => {
+                bot1.tags.abc = 0;
+
+                await expect(async () => {
+                    await library.api.animateTag(bot1, {
+                        fromValue: {
+                            abc: 1,
+                        },
+                        toValue: {
+                            abc: 4,
+                        },
+                        easing: {
+                            type: 'quadratic',
+                            mode: 'inout',
+                        },
+                        duration: null,
+                        tagMaskSpace: 'tempLocal',
+                    });
+                }).rejects.toThrow();
             });
         });
 
@@ -5774,6 +5894,24 @@ describe('AuxLibrary', () => {
                     });
                 }
             );
+        });
+
+        describe('experiment.beginAudioRecording()', () => {
+            it('should emit a BeginAudioRecordingAction', () => {
+                const action: any = library.api.experiment.beginAudioRecording();
+                const expected = beginAudioRecording(context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('experiment.endAudioRecording()', () => {
+            it('should emit a EndAudioRecordingAction', () => {
+                const action: any = library.api.experiment.endAudioRecording();
+                const expected = endAudioRecording(context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
         });
     });
 

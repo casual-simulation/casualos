@@ -40,6 +40,10 @@ export class InventorySimulation3D extends PlayerSimulation3D {
      */
     inventoryDimension: string;
 
+    getDefaultGridScale(): number {
+        return this.inventoryConfig.gridScale;
+    }
+
     get inventoryConfig() {
         return <InventoryPortalConfig>this.getPortalConfig('inventoryPortal');
     }

@@ -1391,6 +1391,9 @@ export const KNOWN_TAGS: string[] = [
     'cameraFocusY',
     'cameraFocusZ',
 
+    'cameraZoom',
+    'cameraZoomOffset',
+
     'pixelWidth',
     'pixelHeight',
     'pageTitle',

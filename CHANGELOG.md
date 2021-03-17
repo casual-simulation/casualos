@@ -1,5 +1,33 @@
 # CasualOS Changelog
 
+## V1.5.0
+
+#### Date: 3/17/2021
+
+### :boom: Breaking Changes
+
+-   Changed the `#portalCameraRotationX` and `#portalCameraRotationY` tags to use radians instead of degrees.
+
+### :rocket: Improvements
+
+-   Added the `cameraZoom` and `cameraZoomOffset` tags.
+-   Added the `os.focusOn(botOrPosition, options?)` function.
+    -   Works similarly to `os.tweenTo()` and `os.moveTo()` except that it takes an options object instead of a bunch of parameters.
+    -   Notable improvements includes that it can accept a position instead of a bot, it supports different easing types, and it will return a promise which completes when the camera movement is finished.
+    -   Additionally the rotation values are in radians instead of degrees.
+-   `os.focusOn()` and `os.tweenTo()` now use quadratic easing by default.
+    -   Additionally `os.focusOn()` supports specifying the easing type just like `animateTag()`.
+-   `os.tweenTo()` and `os.moveTo()` are now deprecated and should no longer be used. They will be removed in a future release of CasualOS.
+    -   To encourage migration, they have been removed from the documentation and autocomplete.
+-   Added the `experiment.beginAudioRecording()` and `experiment.endAudioRecording()` functions to experiment with audio recording.
+    -   See the documentation for more information.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where camera offsets would not be taken into account when calculating the camera focus point.
+    -   This fixes issues with the focus point becoming more and more wrong as offsets are applied to the camera.
+    -   However, any calculations which try to calculate a camera position offset from the focus point must now subtract the current offset from the focus point to get the correct result. The example auxCode (`cameraMovementExample`) has been updated to reflect this change (version 2 and later).
+
 ## V1.4.11
 
 #### Date: 3/12/2021

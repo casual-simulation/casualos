@@ -65,6 +65,7 @@ import MeetPortal from '../../shared/vue-components/MeetPortal/MeetPortal';
 import TagPortal from '../../shared/vue-components/TagPortal/TagPortal';
 import CustomPortals from '../../shared/vue-components/CustomPortals/CustomPortals';
 import IdePortal from '../../shared/vue-components/IdePortal/IdePortal';
+import { AudioRecorder, AudioRecording } from '../../shared/AudioRecorder';
 
 @Component({
     components: {
@@ -200,6 +201,8 @@ export default class PlayerApp extends Vue {
 
     private _subs: SubscriptionLike[] = [];
     private _simulationSubs: Map<Simulation, SubscriptionLike[]> = new Map();
+    private _audioRecorder: AudioRecorder;
+    private _currentRecording: AudioRecording;
 
     get version() {
         return appManager.version.latestTaggedVersion;
@@ -296,6 +299,7 @@ export default class PlayerApp extends Vue {
         this._subs = [];
         this._simulationSubs = new Map();
         this.camera = null;
+        this._audioRecorder = new AudioRecorder();
         this._subs.push(
             appManager.updateAvailableObservable.subscribe(
                 (updateAvailable) => {
@@ -727,6 +731,44 @@ export default class PlayerApp extends Vue {
                                 "This device doesn't support sharing"
                             )
                         );
+                    }
+                } else if (e.type === 'begin_audio_recording') {
+                    if (this._currentRecording) {
+                        simulation.helper.transaction(
+                            asyncError(
+                                e.taskId,
+                                'A recording is already happening.'
+                            )
+                        );
+                    } else {
+                        try {
+                            this._currentRecording = await this._audioRecorder.start();
+                            simulation.helper.transaction(
+                                asyncResult(e.taskId, null)
+                            );
+                        } catch (err) {
+                            simulation.helper.transaction(
+                                asyncError(e.taskId, err.toString())
+                            );
+                        }
+                    }
+                } else if (e.type === 'end_audio_recording') {
+                    if (!this._currentRecording) {
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, 'No recording was started.')
+                        );
+                    } else {
+                        try {
+                            const blob = await this._currentRecording.stop();
+                            this._currentRecording = null;
+                            simulation.helper.transaction(
+                                asyncResult(e.taskId, blob)
+                            );
+                        } catch (err) {
+                            simulation.helper.transaction(
+                                asyncError(e.taskId, err.toString())
+                            );
+                        }
                     }
                 }
             }),

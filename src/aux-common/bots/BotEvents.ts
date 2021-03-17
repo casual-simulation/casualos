@@ -57,7 +57,6 @@ export type ExtraActions =
     | ShowToastAction
     | ShowHtmlAction
     | HideHtmlAction
-    | TweenToAction
     | OpenQRCodeScannerAction
     | OpenBarcodeScannerAction
     | ShowQRCodeAction
@@ -182,7 +181,11 @@ export type AsyncActions =
     | LocalPositionTweenAction
     | LocalRotationTweenAction
     | ShowUploadFilesAction
-    | OpenCircleWipeAction;
+    | OpenCircleWipeAction
+    | AnimateToBotAction
+    | AnimateToPositionAction
+    | BeginAudioRecordingAction
+    | EndAudioRecordingAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -639,33 +642,59 @@ export interface HideHtmlAction extends Action {
 }
 
 /**
- * An event that is used to tween the camera to the given bot's location.
+ * Options for the os.tweenTo(), os.moveTo(), and os.focusOn() actions.
  */
-export interface TweenToAction extends Action {
-    type: 'tween_to';
-
-    /**
-     * The ID of the bot to tween to.
-     */
-    botId: string;
-
+export interface AnimateToOptions {
     /*
      * The zoom value to use.
      */
-    zoomValue: number;
+    zoom?: number;
 
     /*
-     * The rotation spherical value to use.
+     * The rotation value to use. These are the spherical coordinates that determine where the camera should orbit around the target point.
      */
-    rotationValue: {
+    rotation?: {
         x: number;
         y: number;
     };
 
     /**
-     * The duration that the tween should take.
+     * The duration in seconds that the tween should take.
      */
-    duration: number | null;
+    duration?: number;
+
+    /**
+     * The type of easing to use.
+     * If not specified then "linear" "inout" will be used.
+     */
+    easing?: EaseType | Easing;
+}
+
+/**
+ * An event that is used to animate the camera to the given bot's location.
+ */
+export interface AnimateToBotAction extends AsyncAction, AnimateToOptions {
+    type: 'animate_to_bot';
+
+    /**
+     * The ID of the bot to tween to.
+     */
+    botId: string;
+}
+
+/**
+ * An event that is used to animate the camera to the given bot's location.
+ */
+export interface AnimateToPositionAction extends AsyncAction, AnimateToOptions {
+    type: 'animate_to_position';
+
+    /**
+     * The position to animate to.
+     */
+    position: {
+        x: number;
+        y: number;
+    };
 }
 
 /**
@@ -2469,6 +2498,20 @@ export interface OpenCircleWipeOptions {
     color: string;
 }
 
+/**
+ * An event that is used to start audio recording.
+ */
+export interface BeginAudioRecordingAction extends AsyncAction {
+    type: 'begin_audio_recording';
+}
+
+/**
+ * An event that is used to finish audio recording.
+ */
+export interface EndAudioRecordingAction extends AsyncAction {
+    type: 'end_audio_recording';
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -2625,7 +2668,7 @@ export function hideHtml(): HideHtmlAction {
 }
 
 /**
- * Creates a new TweenToAction.
+ * Creates a new AnimateToBotAction.
  * @param botId The ID of the bot to tween to.
  * @param zoomValue The zoom value to use.
  * @param rotX The X rotation value.
@@ -2634,45 +2677,34 @@ export function hideHtml(): HideHtmlAction {
  */
 export function tweenTo(
     botId: string,
-    zoomValue: number = null,
-    rotX: number = null,
-    rotY: number = null,
-    duration: number = null
-): TweenToAction {
-    if (rotY != null && rotX != null && rotY > 0 && rotX === 0) {
-        rotX = 1;
-    }
+    options: AnimateToOptions = {},
+    taskId?: string | number
+): AnimateToBotAction {
+    return {
+        type: 'animate_to_bot',
+        botId: botId,
+        taskId,
+        ...options,
+    };
+}
 
-    if (hasValue(zoomValue)) {
-        zoomValue = clamp(zoomValue, 0, 80);
-    }
-    if (hasValue(rotY)) {
-        rotY = clamp(rotY, -180, 180);
-    }
-    if (hasValue(rotX)) {
-        rotX = clamp(rotX, 1, 90);
-    }
-
-    if (!hasValue(rotX) || !hasValue(rotY)) {
-        return {
-            type: 'tween_to',
-            botId: botId,
-            zoomValue: zoomValue,
-            rotationValue: null,
-            duration: duration,
-        };
-    } else {
-        return {
-            type: 'tween_to',
-            botId: botId,
-            zoomValue: zoomValue,
-            rotationValue: {
-                x: rotX / 180,
-                y: rotY / 180,
-            },
-            duration: duration,
-        };
-    }
+/**
+ * Creates a new AnimateToPositionAction.
+ * @param position The position that the camera should move to.
+ * @param options The options to use.
+ * @param taskId The ID of the task.
+ */
+export function animateToPosition(
+    position: { x: number; y: number },
+    options: AnimateToOptions = {},
+    taskId?: string | number
+): AnimateToPositionAction {
+    return {
+        type: 'animate_to_position',
+        position,
+        taskId,
+        ...options,
+    };
 }
 
 /**
@@ -4789,6 +4821,32 @@ export function revokeCertificate(
         signingBotId,
         signingPassword,
         certificateBotId,
+        taskId,
+    };
+}
+
+/**
+ * Creates a BeginAudioRecordingAction.
+ * @param taskId The task ID.
+ */
+export function beginAudioRecording(
+    taskId?: string | number
+): BeginAudioRecordingAction {
+    return {
+        type: 'begin_audio_recording',
+        taskId,
+    };
+}
+
+/**
+ * Creates a EndAudioRecordingAction.
+ * @param taskId The task ID.
+ */
+export function endAudioRecording(
+    taskId?: string | number
+): EndAudioRecordingAction {
+    return {
+        type: 'end_audio_recording',
         taskId,
     };
 }

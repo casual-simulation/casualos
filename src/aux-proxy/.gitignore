@@ -1,3 +1,4 @@
 !gulpfile.js
 !typings/**/*
 docs
+package-lock.json

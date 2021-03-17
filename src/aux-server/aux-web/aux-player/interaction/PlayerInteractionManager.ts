@@ -446,6 +446,12 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 `cameraRotationOffsetY`,
                 0
             );
+            const offsetZoom = calculateNumericalTagValue(
+                null,
+                portalBot,
+                `cameraZoomOffset`,
+                0
+            );
 
             const transformer = getBotTransformer(null, portalBot);
             let hasParent = false;
@@ -489,6 +495,23 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     targetZRot
                 );
                 rig.cameraParent.updateMatrixWorld();
+            }
+
+            if (offsetZoom !== 0 && !isNaN(offsetZoom)) {
+                const controls = this.cameraRigControllers.find(
+                    (c) => c.rig === rig
+                );
+
+                const delta = offsetZoom - controls.controls.zoomOffset;
+
+                if (Math.abs(delta) >= 0.01) {
+                    controls.controls.zoomOffset = offsetZoom;
+                    if (offsetZoom > 0) {
+                        controls.controls.dollyInAmount(delta, false);
+                    } else {
+                        controls.controls.dollyOutAmount(delta, false);
+                    }
+                }
             }
         }
     }
@@ -549,6 +572,14 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             cameraRotation.setFromRotationMatrix(rig.mainCamera.matrixWorld);
             const [portal, gridScale, inverseScale] = portalInfoForSim(sim);
 
+            let focusWorld: Vector3;
+            if (controls) {
+                focusWorld = controls.controls.target.clone();
+                rig.cameraParent.localToWorld(focusWorld);
+            } else {
+                focusWorld = new Vector3();
+            }
+
             let update = {
                 [`cameraPositionX`]: cameraWorld.x * inverseScale,
                 [`cameraPositionY`]: -cameraWorld.z * inverseScale,
@@ -556,12 +587,10 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 [`cameraRotationX`]: cameraRotation.x,
                 [`cameraRotationY`]: cameraRotation.z,
                 [`cameraRotationZ`]: cameraRotation.y,
-                [`cameraFocusX`]:
-                    (controls?.controls.target.x ?? 0) * inverseScale,
-                [`cameraFocusY`]:
-                    -(controls?.controls.target.z ?? 0) * inverseScale,
-                [`cameraFocusZ`]:
-                    (controls?.controls.target.y ?? 0) * inverseScale,
+                [`cameraFocusX`]: (focusWorld.x ?? 0) * inverseScale,
+                [`cameraFocusY`]: -(focusWorld.z ?? 0) * inverseScale,
+                [`cameraFocusZ`]: (focusWorld.y ?? 0) * inverseScale,
+                [`cameraZoom`]: controls?.controls.currentZoom ?? 0,
             };
 
             for (let i = 0; i < draggableGroups.length; i++) {

@@ -62,6 +62,7 @@ import {
 } from '@casual-simulation/aux-vm';
 import { GameAudio } from '../../shared/scene/GameAudio';
 import TWEEN from '@tweenjs/tween.js';
+import { MathUtils as ThreeMath } from '@casual-simulation/three';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -935,27 +936,9 @@ export class PlayerGame extends Game {
             this.defaultRotationX === null &&
             this.defaultRotationY === null
         ) {
-            let zoomNum = this.getPlayerZoom();
-            if (zoomNum != null) {
-                zoomNum = clamp(zoomNum, 0, 80);
-            }
-
-            let rotX = this.getPlayerRotationX();
-            let rotY = this.getPlayerRotationY();
-
-            if (rotX != null) {
-                rotX = clamp(rotX, 1, 90);
-                rotX = rotX / 180;
-            } else {
-                rotX = 0.0091;
-            }
-
-            if (rotY != null) {
-                rotY = clamp(rotY, -180, 180);
-                rotY = rotY / 180;
-            } else {
-                rotY = 0.0091;
-            }
+            const zoomNum = this.getPlayerZoom();
+            const rotX = this.getPlayerRotationX();
+            const rotY = this.getPlayerRotationY();
 
             if (
                 (zoomNum != undefined && zoomNum != this.defaultZoom) ||
@@ -967,6 +950,8 @@ export class PlayerGame extends Game {
                         this.mainCameraRig,
                         new Vector3(0, 0, 0),
                         zoomNum,
+
+                        // The player rotation X and Y values
                         new Vector2(rotX, rotY)
                     );
                 } else {
@@ -1021,9 +1006,9 @@ export class PlayerGame extends Game {
                     this.inventoryScene.add(this.inventoryFocusPoint);
                 }
                 this.inventoryFocusPoint.visible = true;
-                this.inventoryFocusPoint.position.copy(
-                    this.invController.controls.target
-                );
+                let targetWorld: Vector3 = this.invController.controls.target.clone();
+                this.invController.rig.cameraParent.localToWorld(targetWorld);
+                this.inventoryFocusPoint.position.copy(targetWorld);
                 this.inventoryFocusPoint.updateMatrixWorld(true);
             } else {
                 if (this.inventoryFocusPoint) {
@@ -1070,8 +1055,9 @@ export class PlayerGame extends Game {
                 }
                 this.mainFocusPoint.visible = true;
                 // TODO: Support focus point in VR
-                let target: Vector3 = mainControls.controls.target;
-                this.mainFocusPoint.position.copy(target);
+                let targetWorld: Vector3 = mainControls.controls.target.clone();
+                mainControls.rig.cameraParent.localToWorld(targetWorld);
+                this.mainFocusPoint.position.copy(targetWorld);
                 this.mainFocusPoint.updateMatrixWorld(true);
             } else {
                 if (this.mainFocusPoint) {
