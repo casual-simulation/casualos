@@ -71,7 +71,7 @@
         "@webxr-input-profiles/motion-controllers": "1.0.0",
         "acorn": "^8.0.1",
         "astring": "1.6.2",
-        "axios": "^0.18.1",
+        "axios": "^0.21.1",
         "bcryptjs": "2.4.3",
         "buffer": "6.0.3",
         "cassandra-driver": "4.5.1",
