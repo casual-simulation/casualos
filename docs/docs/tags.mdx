@@ -1187,12 +1187,22 @@ Whether the player will be able to rotate the camera inside the inventory in thi
     <InventoryPortalBadge/>
 </Badges>
 
-The X rotation that the camera starts at in the portal.
+The up and down rotation that the camera starts at in the portal. Unit is in radians.
+
+Because the page and inventory portals use [polar coordinates](https://en.wikipedia.org/wiki/Polar_coordinate_system) to orbit around the focus point, we only need two numbers to specify where the camera should be pointing.
+Polar coordinates work by specifying two angles (X and Y - also known as "phi" and "theta") which position the camera around its focus point.
+Therefore, these rotation values actually cause the camera to turn around the focus point and not simply turn the camera itself.
+
+The X angle (phi) is used to rotate the camera up and down. Mathematically, a value of 0 means the camera is facing directly down and a value of `π / 2` means the camera is perfectly parallel with the ground.
+For usability reasons, CasualOS limits this value to between 0 and 58 degrees (`~1.01229` radians).
+
+The Y angle (theta) is used to rotate the camera left and right. Mathematically, a value of 0 means the camera is facing the front face of bots and a value of `π / 2` means the camera is facing the left face of the bots.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
-    The initial X rotation value.
+    The X rotation value that should be used for the initial camera rotation.
+    Units are in radians.
   </PossibleValue>
 </PossibleValuesTable>
 
@@ -1203,12 +1213,22 @@ The X rotation that the camera starts at in the portal.
     <InventoryPortalBadge/>
 </Badges>
 
-The Y rotation that the camera starts at in the portal.
+The left and right rotation that the camera starts at in the portal. Unit is in radians.
+
+Because the page and inventory portals use [polar coordinates](https://en.wikipedia.org/wiki/Polar_coordinate_system) to orbit around the focus point, we only need two numbers to specify where the camera should be pointing.
+Polar coordinates work by specifying two angles (X and Y - also known as "phi" and "theta") which position the camera around its focus point.
+Therefore, these rotation values actually cause the camera to turn around the focus point and not simply turn the camera itself.
+
+The X angle (phi) is used to rotate the camera up and down. Mathematically, a value of 0 means the camera is facing directly down and a value of `π / 2` means the camera is perfectly parallel with the ground.
+For usability reasons, CasualOS limits this value to between 0 and 58 degrees (`~1.01229` radians).
+
+The Y angle (theta) is used to rotate the camera left and right. Mathematically, a value of 0 means the camera is facing the front face of bots and a value of `π / 2` means the camera is facing the left face of the bots.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
-    The initial Y rotation value.
+    The Y rotation value that should be used for the initial camera rotation.
+    Units are in radians.
   </PossibleValue>
 </PossibleValuesTable>
 

@@ -1883,6 +1883,113 @@ os.toast("Hello!");
 os.toast("this is the code", 5);
 ```
 
+### `os.focusOn(botOrPosition, options?)`
+
+Animates the camera such that the portal focus point is placed on the given bot or position.
+Returns a promise which resolves when the animation finishes and rejects if the user takes control of the camera during the animation.
+
+The **first parameter** is the bot, bot ID, or position that the player's view should be moved to.
+
+The **second parameter** is optional and can be used to specify additional details about how the camera should be animated.
+It should be an object with the following properties:
+
+```typescript
+let options: {
+    /*
+    * The zoom value to use.
+    * Possible values are between `0` and `80`. `1` is the default.
+    * If no value is specified, then the zoom will remain at its current value.
+    */
+    zoom?: number;
+
+    /*
+     * The rotation value to use in radians.
+     * These are the polar coordinates that determine where
+     * the camera should orbit around the target point.
+     */
+    rotation?: {
+        x: number;
+        y: number;
+    };
+
+    /**
+     * The duration in seconds that the animation should take.
+     * Defaults to 1.
+     */
+    duration?: number;
+
+    /**
+     * The options for easing.
+     * Can be an "easing type" or an object that specifies the type and mode.
+     * If an easing type is specified, then "inout" mode is used.
+     * If omitted, then "quadratic" "inout" is used.
+     */
+    easing?: 'linear'
+            | 'quadratic'
+            | 'cubic'
+            | 'quartic'
+            | 'quintic'
+            | 'sinusoidal'
+            | 'exponential'
+            | 'circular'
+            | 'elastic' 
+            | {
+        /**
+         * The type of easing.
+        */
+        type: 'linear'
+            | 'quadratic'
+            | 'cubic'
+            | 'quartic'
+            | 'quintic'
+            | 'sinusoidal'
+            | 'exponential'
+            | 'circular'
+            | 'elastic';
+
+        /**
+         * Whether to apply the easing at the
+         * start (in), end (out), or start and end (inout) of the tween.
+         */
+        mode: 'in' | 'out' | 'inout';
+    }
+}
+```
+
+See <TagLink tag='portalCameraRotationX'/> for more information on polar coordinates.
+
+#### Examples:
+
+1. Move the player's view to show a bot named bob.
+```typescript
+await os.focusOn(getBot("#name", "bob"));
+```
+
+2. Move the player's view to show this bot from the top.
+```typescript
+await os.focusOn(thisBot, {
+    rotation: {
+        x: 0,
+        y: 0
+    }
+});
+```
+
+3. Move the player's view to show this bot with a particular zoom value.
+```typescript
+await os.focusOn(thisBot, {
+    zoom: 15
+});
+```
+
+4. Move the player's view to a specific position.
+```typescript
+await os.focusOn({
+    x: 15,
+    y: 9.5
+});
+```
+
 ### `os.tweenTo(bot, zoomValue?, rotX?, rotY?, duration?)`
 
 
@@ -1892,12 +1999,12 @@ If the bot is in the inventory portal, then the inventory portal view will be mo
 
 The **first parameter** is the bot or bot ID that the player's view should be moved to.
 
-The **second parameter** is optional and is the zoom value that the camera should be transitioned to. Possible values are between `0` and `Infinity`. `1` is the default.
+The **second parameter** is optional and is the zoom value that the camera should be transitioned to. Possible values are between `0` and `80`. `1` is the default.
 If no value is specified, then the zoom will remain at its current value.
 
-The **third parameter** is optional and is the X rotation value that the camera should be transitioned to.
+The **third parameter** is optional and is the X rotation value that the camera should be transitioned to. Units are in degrees. See <TagLink tag='portalCameraRotationX'/> for more info.
 
-The **fourth parameter** is optional and is the Y rotation value that the camera should be transitioned to.
+The **fourth parameter** is optional and is the Y rotation value that the camera should be transitioned to. Units are in degrees. See <TagLink tag='portalCameraRotationY'/> for more info.
 
 The **fifth parameter** is optional and is the amount of time in seconds that the transition should take to finish.
 
@@ -1921,10 +2028,10 @@ The **second parameter** is optional and is the zoom value that the camera shoul
 If no value is specified, then the zoom will remain at its current value.
 
 The **third parameter** is optional and is the X rotation value that the camera should be transitioned to.
-If no value is specified, then the X rotation will remain at its current value.
+If no value is specified, then the X rotation will remain at its current value. Units are in degrees. See <TagLink tag='portalCameraRotationX'/> for more info.
 
 The **fourth parameter** is optional and is the Y rotation value that the camera should be transitioned to.
-If no value is specified, then the Y rotation will remain at its current value.
+If no value is specified, then the Y rotation will remain at its current value. Units are in degrees. See <TagLink tag='portalCameraRotationY'/> for more info.
 
 #### Examples:
 
