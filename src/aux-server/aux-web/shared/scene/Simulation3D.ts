@@ -205,15 +205,7 @@ export abstract class Simulation3D
                             if (foundBotIn3D) {
                                 this.game.tweenCameraToBot(
                                     this.getMainCameraRig(),
-                                    e.botId,
-                                    e.zoomValue,
-                                    e.rotationValue
-                                        ? new Vector2(
-                                              e.rotationValue.x,
-                                              e.rotationValue.y
-                                          )
-                                        : undefined,
-                                    e.duration
+                                    e
                                 );
                             }
                         }

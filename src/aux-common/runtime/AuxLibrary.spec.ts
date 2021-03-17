@@ -1583,11 +1583,9 @@ describe('AuxLibrary', () => {
                     undefined,
                     10
                 );
-                expect(action).toEqual(
-                    tweenTo('test', undefined, undefined, undefined, 10)
-                );
+                expect(action).toEqual(tweenTo('test', { duration: 10 }));
                 expect(context.actions).toEqual([
-                    tweenTo('test', undefined, undefined, undefined, 10),
+                    tweenTo('test', { duration: 10 }),
                 ]);
             });
         });
@@ -1595,22 +1593,67 @@ describe('AuxLibrary', () => {
         describe('os.moveTo()', () => {
             it('should emit a TweenToAction with the duration set to 0', () => {
                 const action = library.api.os.moveTo('test');
-                expect(action).toEqual({
-                    type: 'tween_to',
-                    botId: 'test',
-                    zoomValue: null,
-                    rotationValue: null,
-                    duration: 0,
-                });
+                expect(action).toEqual(tweenTo('test', { duration: 0 }));
                 expect(context.actions).toEqual([
-                    {
-                        type: 'tween_to',
-                        botId: 'test',
-                        zoomValue: null,
-                        rotationValue: null,
-                        duration: 0,
-                    },
+                    tweenTo('test', { duration: 0 }),
                 ]);
+            });
+        });
+
+        describe('os.focusOn()', () => {
+            it('should emit a TweenToAction', () => {
+                const action: any = library.api.os.focusOn('test');
+                const expected = tweenTo(
+                    'test',
+                    {
+                        duration: 1,
+                        easing: 'quadratic',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should handle bots', () => {
+                const action: any = library.api.os.focusOn(bot1);
+                const expected = tweenTo(
+                    bot1.id,
+                    {
+                        duration: 1,
+                        easing: 'quadratic',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support specifying custom options', () => {
+                const action: any = library.api.os.focusOn('test', {
+                    duration: 10,
+                    rotation: {
+                        x: 5,
+                        y: 6,
+                    },
+                    zoom: 9,
+                    easing: 'linear',
+                });
+                const expected = tweenTo(
+                    'test',
+                    {
+                        duration: 10,
+                        rotation: {
+                            x: 5,
+                            y: 6,
+                        },
+                        zoom: 9,
+                        easing: 'linear',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

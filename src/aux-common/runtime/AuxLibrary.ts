@@ -204,6 +204,7 @@ import {
     ShowUploadFilesAction,
     ApplyStateAction,
     RejectAction,
+    TweenToOptions,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -230,7 +231,13 @@ import {
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, del, insert, preserve } from '../aux-format-2';
-import { Euler, Vector3, Plane, Ray } from '@casual-simulation/three';
+import {
+    Euler,
+    Vector3,
+    Plane,
+    Ray,
+    RGBA_ASTC_10x10_Format,
+} from '@casual-simulation/three';
 import mime from 'mime';
 import TWEEN from '@tweenjs/tween.js';
 import './PerformanceNowPolyfill';
@@ -616,6 +623,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 setClipboard,
                 tweenTo,
                 moveTo,
+                focusOn,
                 showChat,
                 hideChat,
                 run,
@@ -1366,7 +1374,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         duration?: number
     ): TweenToAction {
         return addAction(
-            calcTweenTo(getID(bot), zoomValue, rotX, rotY, duration)
+            calcTweenTo(getID(bot), {
+                zoom: zoomValue,
+                rotation:
+                    hasValue(rotX) || hasValue(rotY)
+                        ? {
+                              x: rotX,
+                              y: rotY,
+                          }
+                        : undefined,
+                duration,
+            })
         );
     }
 
@@ -1384,6 +1402,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         rotY?: number
     ): TweenToAction {
         return tweenTo(bot, zoomValue, rotX, rotY, 0);
+    }
+
+    /**
+     * Moves the camera to view the given bot.
+     * Returns a promise that resolves when the bot is focused.
+     * @param bot The bot to view.
+     * @param options The options to use for moving the camera.
+     */
+    function focusOn(
+        bot: Bot | string,
+        options: TweenToOptions = {}
+    ): Promise<void> {
+        const task = context.createTask();
+        const action = calcTweenTo(
+            getID(bot),
+            {
+                duration: 1,
+                easing: 'quadratic',
+                ...(options ?? {}),
+            },
+            task.taskId
+        );
+
+        return addAsyncAction(task, action);
     }
 
     /**
@@ -3425,23 +3467,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     ? options.fromValue
                     : bot.tags[tag],
             };
-            const easing: Easing = hasValue(options.easing)
-                ? typeof options.easing === 'string'
-                    ? {
-                          mode: 'inout',
-                          type: options.easing,
-                      }
-                    : options.easing
-                : {
-                      mode: 'inout',
-                      type: 'linear',
-                  };
+            const easing = getEasing(options.easing);
             const tween = new TWEEN.Tween<any>(valueHolder)
                 .to({
                     [tag]: options.toValue,
                 })
                 .duration(options.duration * 1000)
-                .easing(getEasing(easing))
+                .easing(easing)
                 .onUpdate(() => {
                     if (
                         options.tagMaskSpace === false ||

@@ -57,7 +57,6 @@ export type ExtraActions =
     | ShowToastAction
     | ShowHtmlAction
     | HideHtmlAction
-    | TweenToAction
     | OpenQRCodeScannerAction
     | OpenBarcodeScannerAction
     | ShowQRCodeAction
@@ -182,7 +181,8 @@ export type AsyncActions =
     | LocalPositionTweenAction
     | LocalRotationTweenAction
     | ShowUploadFilesAction
-    | OpenCircleWipeAction;
+    | OpenCircleWipeAction
+    | TweenToAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -639,33 +639,44 @@ export interface HideHtmlAction extends Action {
 }
 
 /**
+ * Options for the os.tweenTo(), os.moveTo(), and os.focusOn() actions.
+ */
+export interface TweenToOptions {
+    /*
+     * The zoom value to use.
+     */
+    zoom?: number;
+
+    /*
+     * The rotation value to use. These are the spherical coordinates that determine where the camera should orbit around the target point.
+     */
+    rotation?: {
+        x: number;
+        y: number;
+    };
+
+    /**
+     * The duration in seconds that the tween should take.
+     */
+    duration?: number;
+
+    /**
+     * The type of easing to use.
+     * If not specified then "linear" "inout" will be used.
+     */
+    easing?: EaseType | Easing;
+}
+
+/**
  * An event that is used to tween the camera to the given bot's location.
  */
-export interface TweenToAction extends Action {
+export interface TweenToAction extends AsyncAction, TweenToOptions {
     type: 'tween_to';
 
     /**
      * The ID of the bot to tween to.
      */
     botId: string;
-
-    /*
-     * The zoom value to use.
-     */
-    zoomValue: number;
-
-    /*
-     * The rotation spherical value to use.
-     */
-    rotationValue: {
-        x: number;
-        y: number;
-    };
-
-    /**
-     * The duration that the tween should take.
-     */
-    duration: number | null;
 }
 
 /**
@@ -2634,45 +2645,15 @@ export function hideHtml(): HideHtmlAction {
  */
 export function tweenTo(
     botId: string,
-    zoomValue: number = null,
-    rotX: number = null,
-    rotY: number = null,
-    duration: number = null
+    options: TweenToOptions = {},
+    taskId?: string | number
 ): TweenToAction {
-    if (rotY != null && rotX != null && rotY > 0 && rotX === 0) {
-        rotX = 1;
-    }
-
-    if (hasValue(zoomValue)) {
-        zoomValue = clamp(zoomValue, 0, 80);
-    }
-    if (hasValue(rotY)) {
-        rotY = clamp(rotY, -180, 180);
-    }
-    if (hasValue(rotX)) {
-        rotX = clamp(rotX, 1, 90);
-    }
-
-    if (!hasValue(rotX) || !hasValue(rotY)) {
-        return {
-            type: 'tween_to',
-            botId: botId,
-            zoomValue: zoomValue,
-            rotationValue: null,
-            duration: duration,
-        };
-    } else {
-        return {
-            type: 'tween_to',
-            botId: botId,
-            zoomValue: zoomValue,
-            rotationValue: {
-                x: rotX / 180,
-                y: rotY / 180,
-            },
-            duration: duration,
-        };
-    }
+    return {
+        type: 'tween_to',
+        botId: botId,
+        taskId,
+        ...options,
+    };
 }
 
 /**

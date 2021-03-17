@@ -9660,7 +9660,9 @@ describe('original action tests', () => {
             const result = calculateActionResults(state, botAction);
 
             expect(result.actions).toEqual([
-                tweenTo('test', undefined, undefined, undefined, 10),
+                tweenTo('test', {
+                    duration: 10,
+                }),
             ]);
         });
     });
@@ -9682,13 +9684,9 @@ describe('original action tests', () => {
             const result = calculateActionResults(state, botAction);
 
             expect(result.actions).toEqual([
-                {
-                    type: 'tween_to',
-                    botId: 'test',
-                    zoomValue: null,
-                    rotationValue: null,
+                tweenTo('test', {
                     duration: 0,
-                },
+                }),
             ]);
         });
     });
