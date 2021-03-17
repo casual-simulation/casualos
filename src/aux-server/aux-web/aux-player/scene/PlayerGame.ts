@@ -62,6 +62,7 @@ import {
 } from '@casual-simulation/aux-vm';
 import { GameAudio } from '../../shared/scene/GameAudio';
 import TWEEN from '@tweenjs/tween.js';
+import { MathUtils as ThreeMath } from '@casual-simulation/three';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -946,15 +947,11 @@ export class PlayerGame extends Game {
             if (rotX != null) {
                 rotX = clamp(rotX, 1, 90);
                 rotX = rotX / 180;
-            } else {
-                rotX = 0.0091;
             }
 
             if (rotY != null) {
                 rotY = clamp(rotY, -180, 180);
                 rotY = rotY / 180;
-            } else {
-                rotY = 0.0091;
             }
 
             if (
@@ -967,7 +964,9 @@ export class PlayerGame extends Game {
                         this.mainCameraRig,
                         new Vector3(0, 0, 0),
                         zoomNum,
-                        new Vector2(rotX, rotY)
+
+                        // The player rotation X and Y values 
+                        new Vector2(ThreeMath.degToRad(rotX), ThreeMath.degToRad(rotY))
                     );
                 } else {
                     this.setCameraToPosition(

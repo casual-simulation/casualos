@@ -297,10 +297,10 @@ export abstract class Game implements AuxBotVisualizerFinder {
             (c) => c.rig.name === cameraRig.name
         );
 
-        if (cameraRig.name != 'main') {
-            controls.controls.resetRot = true;
-            controls.controls.update();
-        }
+        // if (cameraRig.name != 'main') {
+        //     controls.controls.resetRot = true;
+        //     controls.controls.update();
+        // }
 
         this.tweenCameraToPosition(
             cameraRig,
@@ -364,7 +364,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
                 simulation,
                 taskId
             ),
-            true
+            false
         );
     }
 
@@ -390,7 +390,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
                 null,
                 null
             ),
-            true
+            false
         );
     }
 

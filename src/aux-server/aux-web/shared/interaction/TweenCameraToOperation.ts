@@ -14,7 +14,6 @@ import { CameraRig } from '../scene/CameraRigFactory';
 import { CameraRigControls } from './CameraRigControls';
 import TWEEN, { Tween } from '@tweenjs/tween.js';
 import { Time } from '../scene/Time';
-import { thresholdFreedmanDiaconis } from 'd3-array';
 
 /**
  * Class that is able to tween the main camera to a given location.
@@ -26,12 +25,14 @@ export class TweenCameraToOperation implements IOperation {
     private _cameraTarget: Vector3;
     private _finished: boolean;
     private _zoomValue: number;
-    private _rotValue: Vector2;
+    private _rotValue: { x: number, y: number };
     private _duration: number;
     private _instant: boolean;
     private _taskId: string | number;
     private _simulation: Simulation;
-    private _tween: any;
+    private _positionTween: any;
+    private _rotationTween: any;
+    private _zoomTween: any;
     private _canceled: boolean;
 
     get simulation(): Simulation {
@@ -61,7 +62,7 @@ export class TweenCameraToOperation implements IOperation {
         this._finished = false;
         this._zoomValue = options.zoom;
         this._rotValue = hasValue(options.rotation)
-            ? new Vector2(options.rotation.x, options.rotation.y)
+            ? { x: normalizeAngle(options.rotation.x), y: normalizeAngle(options.rotation.y) }
             : null;
         this._duration = options.duration ?? 1;
         this._target = target;
@@ -84,49 +85,83 @@ export class TweenCameraToOperation implements IOperation {
             return;
         }
 
-        const controlsTarget = this._rigControls.controls.target;
-        const controlsTargetToTweenTarget = this._target
-            .clone()
-            .sub(controlsTarget);
-        const cameraToControlsTarget = this._rigControls.rig.mainCamera.position
-            .clone()
-            .sub(controlsTarget);
-        const finalPosition = controlsTarget
-            .clone()
-            .add(controlsTargetToTweenTarget)
-            .add(cameraToControlsTarget);
-        let intermediateTarget = this._target.clone();
-        this._cameraTarget = finalPosition;
+        const controlsTarget = this._rigControls.controls.target.clone();
+        // const controlsTargetToTweenTarget = this._target
+        //     .clone()
+        //     .sub(controlsTarget);
+        // const cameraToControlsTarget = this._rigControls.rig.mainCamera.position
+        //     .clone()
+        //     .sub(controlsTarget);
+        // const finalPosition = controlsTarget
+        //     .clone()
+        //     .add(controlsTargetToTweenTarget)
+        //     .add(cameraToControlsTarget);
+        // let intermediateTarget = this._target.clone();
+        // this._cameraTarget = finalPosition;
 
         const easing = getEasing(options.easing);
-        const cameraPosition = this._rigControls.rig.mainCamera.position.clone();
-        this._tween = new TWEEN.Tween<any>(cameraPosition)
-            .to(<any>this._cameraTarget)
-            .duration(this._duration * 1000)
+        const tweenDuration = this._duration * 1000;
+        this._positionTween = new TWEEN.Tween<any>(controlsTarget)
+            .to(<any>this._target)
+            .duration(tweenDuration)
             .easing(easing)
             .onUpdate(() => {
-                this._rigControls.rig.mainCamera.position.copy(cameraPosition);
-                this._rigControls.rig.cameraParent.worldToLocal(
-                    this._rigControls.rig.mainCamera.position
-                );
-                this._rigControls.rig.mainCamera.updateMatrixWorld();
-
-                intermediateTarget.copy(cameraPosition);
-                intermediateTarget.sub(cameraToControlsTarget);
-                this._rigControls.controls.target.copy(intermediateTarget);
+                this._rigControls.controls.target.copy(controlsTarget);
             })
             .onComplete(() => {
-                this._rigControls.rig.mainCamera.position.copy(cameraPosition);
-                this._rigControls.rig.cameraParent.worldToLocal(
-                    this._rigControls.rig.mainCamera.position
-                );
-                this._rigControls.rig.mainCamera.updateMatrixWorld();
                 this._rigControls.controls.target.copy(this._target);
                 this._finished = true;
             });
 
+        if (this._rotValue) {
+            const currentRotation = this._rigControls.controls.getRotation();
+            const normalizedRotation = {
+                x: normalizeAngle(currentRotation.x),
+                y: normalizeAngle(currentRotation.y),
+            };
+
+            const xDelta = normalizedRotation.x - this._rotValue.x;
+            const yDelta = normalizedRotation.y - this._rotValue.y;
+
+            if (Math.abs(xDelta) > Math.PI) {
+                this._rotValue.x += Math.sign(xDelta) * Math.PI * 2;
+            }
+            if (Math.abs(yDelta) > Math.PI) {
+                this._rotValue.y += Math.sign(yDelta) * Math.PI * 2;
+            }
+
+            this._rotationTween = new TWEEN.Tween<any>(normalizedRotation)
+                .to(<any>this._rotValue)
+                .duration(tweenDuration)
+                .easing(easing)
+                .onUpdate(() => {
+                    this._rigControls.controls.setRotation(normalizedRotation);
+                })
+                .onComplete(() => {
+                    this._rigControls.controls.setRotation(normalizedRotation);
+                    this._finished = true;
+                });
+        }
+
+        if (hasValue(this._zoomValue)) {
+            const currentZoom = { zoom: this._rigControls.controls.currentZoom };
+            this._zoomTween = new TWEEN.Tween<any>(currentZoom)
+                .to(<any>{ zoom: this._zoomValue })
+                .duration(tweenDuration)
+                .easing(easing)
+                .onUpdate(() => {
+                    this._rigControls.controls.dollySet(currentZoom.zoom, true);
+                })
+                .onComplete(() => {
+                    this._rigControls.controls.dollySet(currentZoom.zoom, true);
+                    this._finished = true;
+                });
+        }
+
         const currentTime = time.timeSinceStart * 1000;
-        this._tween.start(currentTime);
+        this._positionTween.start(currentTime);
+        this._rotationTween?.start(currentTime);
+        this._zoomTween?.start(currentTime);
     }
 
     update(calc: BotCalculationContext): void {
@@ -189,9 +224,17 @@ export class TweenCameraToOperation implements IOperation {
     }
 
     dispose(): void {
-        if (this._tween) {
-            this._tween.stop();
-            this._tween = null;
+        if (this._positionTween) {
+            this._positionTween.stop();
+            this._positionTween = null;
+        }
+        if (this._rotationTween) {
+            this._rotationTween.stop();
+            this._rotationTween = null;
+        }
+        if (this._zoomTween) {
+            this._zoomTween.stop();
+            this._zoomTween = null;
         }
         if (hasValue(this._simulation) && hasValue(this._taskId)) {
             if (this._canceled) {
@@ -208,4 +251,15 @@ export class TweenCameraToOperation implements IOperation {
             }
         }
     }
+}
+
+export function normalizeAngle(angle: number) {
+    const pi_sqr = Math.PI * 2;
+    while(angle < 0) {
+        angle += pi_sqr;
+    }
+    while(angle > pi_sqr) {
+        angle -= pi_sqr;
+    }
+    return angle;
 }

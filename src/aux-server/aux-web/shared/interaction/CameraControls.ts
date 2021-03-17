@@ -14,7 +14,11 @@ import { InputType, MouseButtonId, Input } from '../../shared/scene/Input';
 import { lerp, normalize } from '@casual-simulation/aux-common';
 import { Viewport } from '../scene/Viewport';
 import { Game } from '../scene/Game';
-import { cameraForwardRay } from '../scene/SceneUtils';
+import {
+    cameraForwardRay,
+    objectWorldDirectionRay,
+    objectWorldForwardRay,
+} from '../scene/SceneUtils';
 
 export class CameraControls {
     // "target" sets the location of focus, where the object orbits around
@@ -112,8 +116,7 @@ export class CameraControls {
     private mouseRotateEnd = new Vector2();
     private mouseRotateDelta = new Vector2();
 
-    resetRot: boolean = false;
-    setRot: boolean = false;
+    private _setRot: boolean = false;
     setRotValues: Vector2;
     tweenNum = 1;
 
@@ -377,22 +380,20 @@ export class CameraControls {
         this.panOffset.set(0, 0, 0);
     }
 
+    public clampZoom(zoom: number): number {
+        if (this.viewport.name != 'inventory') {
+            return Math.max(this.minZoom, Math.min(this.maxZoom, zoom));
+        } else {
+            return Math.max(0.01, Math.min(191, zoom));
+        }
+    }
+
     public dollyIn(dollyScale: number, pan: boolean = true) {
         if (this._camera instanceof PerspectiveCamera) {
             this.scale /= dollyScale;
         } else {
             const currentZoom = this._camera.zoom;
-            if (this.viewport.name != 'inventory') {
-                this._camera.zoom = Math.max(
-                    this.minZoom,
-                    Math.min(this.maxZoom, this._camera.zoom * dollyScale)
-                );
-            } else {
-                this._camera.zoom = Math.max(
-                    0.01,
-                    Math.min(191, this._camera.zoom * dollyScale)
-                );
-            }
+            this._camera.zoom = this.clampZoom(this._camera.zoom * dollyScale);
 
             if (pan) {
                 this._dollyPan(currentZoom);
@@ -469,17 +470,7 @@ export class CameraControls {
             this.scale *= dollyScale;
         } else {
             const currentZoom = this._camera.zoom;
-            if (this.viewport.name != 'inventory') {
-                this._camera.zoom = Math.max(
-                    this.minZoom,
-                    Math.min(this.maxZoom, this._camera.zoom / dollyScale)
-                );
-            } else {
-                this._camera.zoom = Math.max(
-                    0.01,
-                    Math.min(191, this._camera.zoom / dollyScale)
-                );
-            }
+            this._camera.zoom = this.clampZoom(this._camera.zoom / dollyScale);
 
             if (pan) {
                 this._dollyPan(currentZoom);
@@ -679,7 +670,7 @@ export class CameraControls {
         if (input.getTouchCount() === 1) {
             if (input.getTouchDown(0) && this.enablePan) {
                 this.zooming = false;
-                this.setRot = false;
+                this._setRot = false;
                 // Pan start.
                 this.panStart.copy(input.getTouchClientPos(0));
                 this.state = STATE.PAN;
@@ -687,7 +678,7 @@ export class CameraControls {
         } else if (input.getTouchCount() === 2) {
             if (input.getTouchDown(1)) {
                 this.zooming = false;
-                this.setRot = false;
+                this._setRot = false;
                 if (this.enableZoom) {
                     // Dolly start.
                     const pagePosA = input.getTouchPagePos(0);
@@ -712,7 +703,7 @@ export class CameraControls {
                 }
             } else if (input.getTouchUp(0) || input.getTouchUp(1)) {
                 this.zooming = false;
-                this.setRot = false;
+                this._setRot = false;
                 // Releasing one of the two fingers.
                 // Get ready to starting panning with the currently pressed finger.
                 let panFingerIndex = input.getTouchUp(0) ? 1 : 0;
@@ -812,7 +803,7 @@ export class CameraControls {
 
         if (input.getMouseButtonDown(MouseButtonId.Left) && this.enablePan) {
             this.zooming = false;
-            this.setRot = false;
+            this._setRot = false;
             // Pan start.
             this.panStart.copy(input.getMouseClientPos());
             this.state = STATE.PAN;
@@ -821,7 +812,7 @@ export class CameraControls {
             this.enableZoom
         ) {
             this.zooming = false;
-            this.setRot = false;
+            this._setRot = false;
             // Dolly start.
             this.dollyStart.copy(input.getMouseClientPos());
             this.dollyBegin.copy(this.dollyStart);
@@ -832,7 +823,7 @@ export class CameraControls {
             this.state = STATE.DOLLY;
         } else if (input.getWheelMoved() && this.enableZoom) {
             this.zooming = false;
-            this.setRot = false;
+            this._setRot = false;
             // Pinch dolly start.
             this.state = STATE.PINCH_DOLLY;
         } else if (
@@ -840,7 +831,7 @@ export class CameraControls {
             this.enableRotate
         ) {
             this.zooming = false;
-            this.setRot = false;
+            this._setRot = false;
             // Rotate start.
             this.mouseRotateStart.copy(input.getMouseClientPos());
             this.state = STATE.ROTATE;
@@ -859,30 +850,16 @@ export class CameraControls {
         }
     }
 
-    resetRotation() {
-        this.spherical.phi = 0;
-        this.spherical.theta = 0;
-        this.resetRot = false;
+    public getRotation(): { x: number; y: number } {
+        const x = this.spherical.phi;
+        const y = this.spherical.theta;
+
+        return { x, y };
     }
 
-    setRotation() {
-        if (this.tweenNum > 1) {
-            this.tweenNum = 1;
-        }
-
-        let phi = 0;
-        if (this.setRotValues.x != 0.0091) {
-            phi = this.setRotValues.x * Math.PI;
-        } else {
-            phi = this.spherical.phi;
-        }
-
-        let theta = 0;
-        if (this.setRotValues.y != 0.0091) {
-            theta = this.setRotValues.y * Math.PI;
-        } else {
-            theta = this.spherical.theta;
-        }
+    public setRotation(rotation: { x: number; y: number }) {
+        let phi = rotation.x;
+        let theta = rotation.y;
 
         // clamp theta and phi to exiting limits
         theta = Math.max(
@@ -892,12 +869,12 @@ export class CameraControls {
 
         phi = Math.max(this.minPolarAngle, Math.min(this.maxPolarAngle, phi));
 
-        this.spherical.phi = lerp(this.spherical.phi, phi, this.tweenNum);
-        this.spherical.theta = lerp(this.spherical.theta, theta, this.tweenNum);
-
-        if (this.tweenNum >= 1) {
-            this.setRot = false;
-        }
+        // Prevent phi from being exactly 0.
+        // This is because the lookAt function in three.js
+        // has issues when the look direction matches the world up direction.
+        this.spherical.phi = phi === 0 ? Number.EPSILON : phi;
+        this.spherical.theta = theta;
+        this._setRot = true;
     }
 
     private updateCamera() {
@@ -936,76 +913,74 @@ export class CameraControls {
         // rotate offset to "y-axis-is-up" space
         offset.applyQuaternion(quat);
 
-        // angle from z-axis around y-axis
-        this.spherical.setFromVector3(offset);
+        if (!this._setRot) {
+            // angle from z-axis around y-axis
+            this.spherical.setFromVector3(offset);
 
-        if (this.autoRotate && this.state === STATE.NONE) {
-            this.rotateLeft(this.getAutoRotationAngle());
-        }
+            if (this.autoRotate && this.state === STATE.NONE) {
+                this.rotateLeft(this.getAutoRotationAngle());
+            }
 
-        this.spherical.theta += this.sphericalDelta.theta;
-        this.spherical.phi += this.sphericalDelta.phi;
+            this.spherical.theta += this.sphericalDelta.theta;
+            this.spherical.phi += this.sphericalDelta.phi;
 
-        // restrict theta to be between desired limits
-        this.spherical.theta = Math.max(
-            this.minAzimuthAngle,
-            Math.min(this.maxAzimuthAngle, this.spherical.theta)
-        );
+            // restrict theta to be between desired limits
+            this.spherical.theta = Math.max(
+                this.minAzimuthAngle,
+                Math.min(this.maxAzimuthAngle, this.spherical.theta)
+            );
 
-        // restrict phi to be between desired limits
-        this.spherical.phi = Math.max(
-            this.minPolarAngle,
-            Math.min(this.maxPolarAngle, this.spherical.phi)
-        );
+            // restrict phi to be between desired limits
+            this.spherical.phi = Math.max(
+                this.minPolarAngle,
+                Math.min(this.maxPolarAngle, this.spherical.phi)
+            );
 
-        this.spherical.makeSafe();
+            this.spherical.makeSafe();
 
-        if (this._camera instanceof PerspectiveCamera) {
-            if (this.zooming && this.spherical.radius != this.zoomSetValue) {
-                this.sphereRadiusSetter = lerp(
-                    this.spherical.radius,
-                    this.zoomSetValue,
-                    0.1
-                );
+            if (this._camera instanceof PerspectiveCamera) {
+                if (
+                    this.zooming &&
+                    this.spherical.radius != this.zoomSetValue
+                ) {
+                    this.sphereRadiusSetter = lerp(
+                        this.spherical.radius,
+                        this.zoomSetValue,
+                        0.1
+                    );
 
-                if (this.tweenNum >= 1) {
+                    if (this.tweenNum >= 1) {
+                        this.zooming = false;
+                    }
+
+                    this.spherical.radius = this.sphereRadiusSetter;
+                } else {
                     this.zooming = false;
+                    this.spherical.radius = this.sphereRadiusSetter;
                 }
+            }
 
-                this.spherical.radius = this.sphereRadiusSetter;
-            } else {
-                this.zooming = false;
-                this.spherical.radius = this.sphereRadiusSetter;
+            this.spherical.radius *= this.scale;
+
+            if (this._camera instanceof PerspectiveCamera) {
+                this.sphereRadiusSetter = this.spherical.radius;
+            }
+
+            // restrict radius to be between desired limits
+            this.spherical.radius = Math.max(
+                this.minDistance,
+                Math.min(this.maxDistance, this.spherical.radius)
+            );
+
+            // move target to panned location
+            this.target.add(this.panOffset);
+            this.target.add(this.cameraFrameOffset);
+            if (this.cameraFrameOffset.length() > 0) {
+                this.currentDistX = this.target.x;
+                this.currentDistY = this.target.y;
             }
         }
-
-        this.spherical.radius *= this.scale;
-
-        if (this._camera instanceof PerspectiveCamera) {
-            this.sphereRadiusSetter = this.spherical.radius;
-        }
-
-        // restrict radius to be between desired limits
-        this.spherical.radius = Math.max(
-            this.minDistance,
-            Math.min(this.maxDistance, this.spherical.radius)
-        );
-
-        // move target to panned location
-        this.target.add(this.panOffset);
-        this.target.add(this.cameraFrameOffset);
-        if (this.cameraFrameOffset.length() > 0) {
-            this.currentDistX = this.target.x;
-            this.currentDistY = this.target.y;
-        }
-
-        if (this.resetRot === true) {
-            this.resetRotation();
-        }
-
-        if (this.setRot === true) {
-            this.setRotation();
-        }
+        this._setRot = false;
 
         if (this.tweenNum < 1) {
             this.tweenNum += 0.02;
