@@ -936,23 +936,9 @@ export class PlayerGame extends Game {
             this.defaultRotationX === null &&
             this.defaultRotationY === null
         ) {
-            let zoomNum = this.getPlayerZoom();
-            if (zoomNum != null) {
-                zoomNum = clamp(zoomNum, 0, 80);
-            }
-
-            let rotX = this.getPlayerRotationX();
-            let rotY = this.getPlayerRotationY();
-
-            if (rotX != null) {
-                rotX = clamp(rotX, 1, 90);
-                rotX = rotX / 180;
-            }
-
-            if (rotY != null) {
-                rotY = clamp(rotY, -180, 180);
-                rotY = rotY / 180;
-            }
+            const zoomNum = this.getPlayerZoom();
+            const rotX = this.getPlayerRotationX();
+            const rotY = this.getPlayerRotationY();
 
             if (
                 (zoomNum != undefined && zoomNum != this.defaultZoom) ||
