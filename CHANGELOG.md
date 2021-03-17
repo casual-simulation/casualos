@@ -19,6 +19,8 @@
     -   Additionally `os.focusOn()` supports specifying the easing type just like `animateTag()`.
 -   `os.tweenTo()` and `os.moveTo()` are now deprecated and should no longer be used. They will be removed in a future release of CasualOS.
     -   To encourage migration, they have been removed from the documentation and autocomplete.
+-   Added the `experiment.beginAudioRecording()` and `experiment.endAudioRecording()` functions to experiment with audio recording.
+    -   See the documentation for more information.
 
 ### :bug: Bug Fixes
 
