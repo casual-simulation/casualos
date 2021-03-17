@@ -140,6 +140,7 @@ import {
     registerPrefix,
     buildBundle,
     circleWipe,
+    animateToPosition,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1563,7 +1564,7 @@ describe('AuxLibrary', () => {
         });
 
         describe('os.tweenTo()', () => {
-            it('should emit a TweenToAction', () => {
+            it('should emit a AnimateToBotAction', () => {
                 const action = library.api.os.tweenTo('test');
                 expect(action).toEqual(tweenTo('test'));
                 expect(context.actions).toEqual([tweenTo('test')]);
@@ -1588,10 +1589,29 @@ describe('AuxLibrary', () => {
                     tweenTo('test', { duration: 10 }),
                 ]);
             });
+
+            it('should convert the rotation values to radians', () => {
+                const action = library.api.os.tweenTo(
+                    'test',
+                    undefined,
+                    60,
+                    180,
+                    10
+                );
+                const expected = tweenTo('test', {
+                    duration: 10,
+                    rotation: {
+                        x: Math.PI / 3,
+                        y: Math.PI,
+                    },
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
         });
 
         describe('os.moveTo()', () => {
-            it('should emit a TweenToAction with the duration set to 0', () => {
+            it('should emit a AnimateToBotAction with the duration set to 0', () => {
                 const action = library.api.os.moveTo('test');
                 expect(action).toEqual(tweenTo('test', { duration: 0 }));
                 expect(context.actions).toEqual([
@@ -1601,7 +1621,7 @@ describe('AuxLibrary', () => {
         });
 
         describe('os.focusOn()', () => {
-            it('should emit a TweenToAction', () => {
+            it('should emit a AnimateToBotAction', () => {
                 const action: any = library.api.os.focusOn('test');
                 const expected = tweenTo(
                     'test',
@@ -1649,6 +1669,23 @@ describe('AuxLibrary', () => {
                         },
                         zoom: 9,
                         easing: 'linear',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a AnimateToPositionAction if given a position', () => {
+                const action: any = library.api.os.focusOn({
+                    x: 20,
+                    y: 10,
+                });
+                const expected = animateToPosition(
+                    { x: 20, y: 10 },
+                    {
+                        duration: 1,
+                        easing: 'quadratic',
                     },
                     context.tasks.size
                 );

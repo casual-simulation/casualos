@@ -99,6 +99,10 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         return this._game.getMainCameraRig();
     }
 
+    getDefaultGridScale(): number {
+        return this.pageConfig.gridScale;
+    }
+
     get pageConfig() {
         return this.getPortalConfig('pagePortal');
     }

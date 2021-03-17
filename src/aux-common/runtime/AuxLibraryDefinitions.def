@@ -230,7 +230,8 @@ declare type AsyncActions =
     | CancelSoundAction
     | OpenCustomPortalAction
     | RegisterPrefixAction
-    | TweenToAction;
+    | AnimateToBotAction
+    | AnimateToPositionAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -672,14 +673,14 @@ declare interface HideHtmlAction extends Action {
 /**
  * Options for the os.tweenTo(), os.moveTo(), and os.focusOn() actions.
  */
- export interface TweenToOptions {
+ export interface AnimateToOptions {
     /*
      * The zoom value to use.
      */
     zoom?: number;
 
     /*
-     * The rotation value to use. These are the spherical coordinates that determine where the camera should orbit around the target point.
+     * The rotation value to use in radians. These are the polar coordinates that determine where the camera should orbit around the target point.
      */
     rotation?: {
         x: number;
@@ -687,13 +688,14 @@ declare interface HideHtmlAction extends Action {
     };
 
     /**
-     * The duration in seconds that the tween should take.
+     * The duration in seconds that the animation should take.
+     * Defaults to 1.
      */
     duration?: number;
 
     /**
      * The type of easing to use.
-     * If not specified then "linear" "inout" will be used.
+     * If not specified then "quadratic" "inout" will be used.
      */
      easing?: EaseType | Easing;
 }
@@ -701,13 +703,28 @@ declare interface HideHtmlAction extends Action {
 /**
  * An event that is used to tween the camera to the given bot's location.
  */
-export interface TweenToAction extends AsyncAction, TweenToOptions {
-    type: 'tween_to';
+export interface AnimateToBotAction extends AsyncAction, AnimateToOptions {
+    type: 'animate_to_bot';
 
     /**
      * The ID of the bot to tween to.
      */
     botId: string;
+}
+
+/**
+ * An event that is used to animate the camera to the given bot's location.
+ */
+ export interface AnimateToPositionAction extends AsyncAction, AnimateToOptions {
+    type: 'animate_to_position';
+
+    /**
+     * The position to animate to.
+     */
+    position: {
+        x: number;
+        y: number;
+    };
 }
 
 /**
@@ -3071,9 +3088,12 @@ declare global {
         hideHtml(): HideHtmlAction;
 
         /**
-         * Tweens the user's camera to view the given bot.
+         * Animates the user's camera to view the given bot.
          * @param bot The bot to view.
-         * @param zoomValue The zoom value to use.
+         * @param zoomValue The zoom value to use. If omitted then the current zoom will be preserved.
+         * @param rotX The X rotation in degrees. If omitted then the current rotation will be preserved.
+         * @param rotY The Y rotation in degrees. If omitted then the current rotation will be preserved.
+         * @param duration The number of seconds that the animation should take to finish. Defaults to 1.
          */
         tweenTo(
             bot: Bot | string,
@@ -3081,29 +3101,33 @@ declare global {
             rotX?: number,
             rotY?: number,
             duration?: number
-        ): TweenToAction;
+        ): AnimateToBotAction;
 
         /**
          * Instantly moves the user's camera to view the given bot.
          * @param bot The bot to view.
          * @param zoomValue The zoom value to use.
-         * @param rotX The X rotation.
-         * @param rotY The Y rotation.
+         * @param rotX The X rotation in degrees. If omitted then the current rotation will be preserved.
+         * @param rotY The Y rotation in degrees. If omitted then the current rotation will be preserved.
+         * @param duration The number of seconds that the animation should take to finish. Defaults to 1.
          */
         moveTo(
             bot: Bot | string,
             zoomValue?: number,
             rotX?: number,
             rotY?: number
-        ): TweenToAction;
+        ): AnimateToBotAction;
 
         /**
          * Moves the camera to view the given bot.
          * Returns a promise that resolves when the bot is focused.
-         * @param bot The bot to view.
+         * @param botOrPosition The bot, bot ID, or position to view.
          * @param options The options to use for moving the camera.
          */
-        focusOn(bot: Bot | string, options?: TweenToOptions): Promise<void>;
+        focusOn(
+            botOrPosition: Bot | string | { x: number, y: number },
+            options: AnimateToOptions
+        ): Promise<void>;
 
         /**
          * Opens the QR Code Scanner.

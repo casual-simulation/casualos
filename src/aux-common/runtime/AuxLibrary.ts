@@ -180,7 +180,7 @@ import {
     ShowHtmlAction,
     HideHtmlAction,
     SetClipboardAction,
-    TweenToAction,
+    AnimateToBotAction,
     ShowChatBarAction,
     EnableARAction,
     EnableVRAction,
@@ -204,7 +204,9 @@ import {
     ShowUploadFilesAction,
     ApplyStateAction,
     RejectAction,
-    TweenToOptions,
+    AnimateToOptions,
+    animateToPosition,
+    AsyncAction,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -1365,6 +1367,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Tweens the user's camera to view the given bot.
      * @param bot The bot to view.
      * @param zoomValue The zoom value to use.
+     * @param rotX The value to use for the X rotation. Units in degrees.
+     * @param rotY The value to use for the Y rotation. Units in degrees.
      */
     function tweenTo(
         bot: Bot | string,
@@ -1372,15 +1376,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         rotX?: number,
         rotY?: number,
         duration?: number
-    ): TweenToAction {
+    ): AnimateToBotAction {
         return addAction(
             calcTweenTo(getID(bot), {
                 zoom: zoomValue,
                 rotation:
                     hasValue(rotX) || hasValue(rotY)
                         ? {
-                              x: rotX,
-                              y: rotY,
+                              x: hasValue(rotX) ? rotX * (Math.PI / 180) : null,
+                              y: hasValue(rotY) ? rotY * (Math.PI / 180) : null,
                           }
                         : undefined,
                 duration,
@@ -1400,30 +1404,40 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         zoomValue?: number,
         rotX?: number,
         rotY?: number
-    ): TweenToAction {
+    ): AnimateToBotAction {
         return tweenTo(bot, zoomValue, rotX, rotY, 0);
     }
 
     /**
      * Moves the camera to view the given bot.
      * Returns a promise that resolves when the bot is focused.
-     * @param bot The bot to view.
+     * @param botOrPosition The bot, bot ID, or position to view.
      * @param options The options to use for moving the camera.
      */
     function focusOn(
-        bot: Bot | string,
-        options: TweenToOptions = {}
+        botOrPosition: Bot | string | { x: number; y: number },
+        options: AnimateToOptions = {}
     ): Promise<void> {
         const task = context.createTask();
-        const action = calcTweenTo(
-            getID(bot),
-            {
-                duration: 1,
-                easing: 'quadratic',
-                ...(options ?? {}),
-            },
-            task.taskId
-        );
+        const finalOptions: AnimateToOptions = {
+            duration: 1,
+            easing: 'quadratic',
+            ...(options ?? {}),
+        };
+        let action: AsyncActions;
+        if (typeof botOrPosition === 'string' || isBot(botOrPosition)) {
+            action = calcTweenTo(
+                getID(botOrPosition),
+                finalOptions,
+                task.taskId
+            );
+        } else {
+            action = animateToPosition(
+                botOrPosition,
+                finalOptions,
+                task.taskId
+            );
+        }
 
         return addAsyncAction(task, action);
     }

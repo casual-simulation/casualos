@@ -7,7 +7,7 @@ import {
     BotCalculationContext,
     getEasing,
     hasValue,
-    TweenToOptions,
+    AnimateToOptions,
 } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { CameraRig } from '../scene/CameraRigFactory';
@@ -25,7 +25,7 @@ export class TweenCameraToOperation implements IOperation {
     private _cameraTarget: Vector3;
     private _finished: boolean;
     private _zoomValue: number;
-    private _rotValue: { x: number, y: number };
+    private _rotValue: { x: number; y: number };
     private _duration: number;
     private _instant: boolean;
     private _taskId: string | number;
@@ -54,7 +54,7 @@ export class TweenCameraToOperation implements IOperation {
         time: Time,
         interaction: BaseInteractionManager,
         target: Vector3,
-        options: TweenToOptions,
+        options: AnimateToOptions,
         simulation: Simulation,
         taskId: string | number
     ) {
@@ -62,7 +62,10 @@ export class TweenCameraToOperation implements IOperation {
         this._finished = false;
         this._zoomValue = options.zoom;
         this._rotValue = hasValue(options.rotation)
-            ? { x: normalizeAngle(options.rotation.x), y: normalizeAngle(options.rotation.y) }
+            ? {
+                  x: normalizeAngle(options.rotation.x),
+                  y: normalizeAngle(options.rotation.y),
+              }
             : null;
         this._duration = options.duration ?? 1;
         this._target = target;
@@ -120,6 +123,13 @@ export class TweenCameraToOperation implements IOperation {
                 y: normalizeAngle(currentRotation.y),
             };
 
+            if (!hasValue(this._rotValue.x)) {
+                this._rotValue.x = normalizedRotation.x;
+            }
+            if (!hasValue(this._rotValue.y)) {
+                this._rotValue.y = normalizedRotation.y;
+            }
+
             const xDelta = normalizedRotation.x - this._rotValue.x;
             const yDelta = normalizedRotation.y - this._rotValue.y;
 
@@ -144,7 +154,9 @@ export class TweenCameraToOperation implements IOperation {
         }
 
         if (hasValue(this._zoomValue)) {
-            const currentZoom = { zoom: this._rigControls.controls.currentZoom };
+            const currentZoom = {
+                zoom: this._rigControls.controls.currentZoom,
+            };
             this._zoomTween = new TWEEN.Tween<any>(currentZoom)
                 .to(<any>{ zoom: this._zoomValue })
                 .duration(tweenDuration)
@@ -171,52 +183,6 @@ export class TweenCameraToOperation implements IOperation {
         }
 
         if (this._finished) return;
-
-        // const camPos = this._rigControls.rig.mainCamera.position.clone();
-        // const dist = camPos.distanceToSquared(this._target);
-
-        // if (dist > 0.001) {
-        //     let dir;
-        //     if (this._instant) {
-        //         dir = this._target.clone().sub(camPos).multiplyScalar(1);
-        //     } else {
-        //         dir = this._target.clone().sub(camPos).multiplyScalar(0.1);
-        //     }
-
-        //     this._rigControls.controls.cameraFrameOffset.copy(dir);
-        // } else {
-        //     // This tween operation is finished.
-        //     this._finished = true;
-
-        //     // Set camera offset value so that camera snaps to final target destination.
-        //     const dir = this._target.clone().sub(camPos);
-        //     this._rigControls.controls.cameraFrameOffset.copy(dir);
-
-        //     if (this._rotValue != null) {
-        //         this._rigControls.controls.setRotValues = this._rotValue;
-        //         this._rotValue = null;
-        //         if (this._instant) {
-        //             this._rigControls.controls.tweenNum = 0.99;
-        //         } else {
-        //             this._rigControls.controls.tweenNum = 0.1;
-        //         }
-        //         this._rigControls.controls.setRot = true;
-        //     }
-
-        //     if (
-        //         this._zoomValue !== null &&
-        //         this._zoomValue !== undefined &&
-        //         this._zoomValue >= 0
-        //     ) {
-        //         if (this._instant) {
-        //             this._rigControls.controls.dollySet(this._zoomValue, true);
-        //         } else {
-        //             this._rigControls.controls.dollySet(this._zoomValue);
-        //         }
-        //     }
-
-        //     this._zoomValue = null;
-        // }
     }
 
     isFinished(): boolean {
@@ -255,10 +221,10 @@ export class TweenCameraToOperation implements IOperation {
 
 export function normalizeAngle(angle: number) {
     const pi_sqr = Math.PI * 2;
-    while(angle < 0) {
+    while (angle < 0) {
         angle += pi_sqr;
     }
-    while(angle > pi_sqr) {
+    while (angle > pi_sqr) {
         angle -= pi_sqr;
     }
     return angle;

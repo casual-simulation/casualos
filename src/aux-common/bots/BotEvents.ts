@@ -182,7 +182,8 @@ export type AsyncActions =
     | LocalRotationTweenAction
     | ShowUploadFilesAction
     | OpenCircleWipeAction
-    | TweenToAction;
+    | AnimateToBotAction
+    | AnimateToPositionAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -641,7 +642,7 @@ export interface HideHtmlAction extends Action {
 /**
  * Options for the os.tweenTo(), os.moveTo(), and os.focusOn() actions.
  */
-export interface TweenToOptions {
+export interface AnimateToOptions {
     /*
      * The zoom value to use.
      */
@@ -668,15 +669,30 @@ export interface TweenToOptions {
 }
 
 /**
- * An event that is used to tween the camera to the given bot's location.
+ * An event that is used to animate the camera to the given bot's location.
  */
-export interface TweenToAction extends AsyncAction, TweenToOptions {
-    type: 'tween_to';
+export interface AnimateToBotAction extends AsyncAction, AnimateToOptions {
+    type: 'animate_to_bot';
 
     /**
      * The ID of the bot to tween to.
      */
     botId: string;
+}
+
+/**
+ * An event that is used to animate the camera to the given bot's location.
+ */
+export interface AnimateToPositionAction extends AsyncAction, AnimateToOptions {
+    type: 'animate_to_position';
+
+    /**
+     * The position to animate to.
+     */
+    position: {
+        x: number;
+        y: number;
+    };
 }
 
 /**
@@ -2636,7 +2652,7 @@ export function hideHtml(): HideHtmlAction {
 }
 
 /**
- * Creates a new TweenToAction.
+ * Creates a new AnimateToBotAction.
  * @param botId The ID of the bot to tween to.
  * @param zoomValue The zoom value to use.
  * @param rotX The X rotation value.
@@ -2645,12 +2661,31 @@ export function hideHtml(): HideHtmlAction {
  */
 export function tweenTo(
     botId: string,
-    options: TweenToOptions = {},
+    options: AnimateToOptions = {},
     taskId?: string | number
-): TweenToAction {
+): AnimateToBotAction {
     return {
-        type: 'tween_to',
+        type: 'animate_to_bot',
         botId: botId,
+        taskId,
+        ...options,
+    };
+}
+
+/**
+ * Creates a new AnimateToPositionAction.
+ * @param position The position that the camera should move to.
+ * @param options The options to use.
+ * @param taskId The ID of the task.
+ */
+export function animateToPosition(
+    position: { x: number; y: number },
+    options: AnimateToOptions = {},
+    taskId?: string | number
+): AnimateToPositionAction {
+    return {
+        type: 'animate_to_position',
+        position,
         taskId,
         ...options,
     };

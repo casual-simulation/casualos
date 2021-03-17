@@ -4,6 +4,7 @@ import {
     Color,
     Vector2,
     Scene,
+    Vector3,
 } from '@casual-simulation/three';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
@@ -199,7 +200,7 @@ export abstract class Simulation3D
             this.simulation.localEvents
                 .pipe(
                     tap((e) => {
-                        if (e.type === 'tween_to') {
+                        if (e.type === 'animate_to_bot') {
                             const foundBotIn3D =
                                 this.findBotsById(e.botId).length > 0;
                             if (foundBotIn3D) {
@@ -208,6 +209,21 @@ export abstract class Simulation3D
                                     e
                                 );
                             }
+                        } else if (e.type === 'animate_to_position') {
+                            const gridScale = this.getDefaultGridScale();
+                            const convertedPosition = new Vector3(
+                                e.position.x * gridScale,
+                                0,
+                                e.position.y * -gridScale
+                            );
+
+                            this._game.tweenCameraToPosition(
+                                this.getMainCameraRig(),
+                                convertedPosition,
+                                e,
+                                this.simulation,
+                                e.taskId
+                            );
                         }
                     })
                 )
@@ -818,6 +834,11 @@ export abstract class Simulation3D
      * @param bot The bot.
      */
     abstract getGridScale(bot: AuxBot3D): number;
+
+    /**
+     * Gets the default grid scale that should be used for converting units.
+     */
+    abstract getDefaultGridScale(): number;
 
     unsubscribe(): void {
         this._subs.forEach((s) => s.unsubscribe());

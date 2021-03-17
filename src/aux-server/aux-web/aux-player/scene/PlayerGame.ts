@@ -965,8 +965,8 @@ export class PlayerGame extends Game {
                         new Vector3(0, 0, 0),
                         zoomNum,
 
-                        // The player rotation X and Y values 
-                        new Vector2(ThreeMath.degToRad(rotX), ThreeMath.degToRad(rotY))
+                        // The player rotation X and Y values
+                        new Vector2(rotX, rotY)
                     );
                 } else {
                     this.setCameraToPosition(
