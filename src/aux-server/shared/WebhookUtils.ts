@@ -19,7 +19,7 @@ export async function sendWebhook(
     const { responseShout, ...axiosOptions } = event.options;
 
     try {
-        const response = await axios(axiosOptions);
+        const response = await axios(axiosOptions as any);
         const { request, config, ...responseData } = response;
         let actions: BotAction[] = [asyncResult(event.taskId, responseData)];
         if (responseShout) {
