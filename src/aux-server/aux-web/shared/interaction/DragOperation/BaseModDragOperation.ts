@@ -8,10 +8,8 @@ import {
     BotAction,
     BotCalculationContext,
     objectsAtDimensionGridPosition,
-    isBotStackable,
     getBotIndex,
     botRemoved,
-    isMergeable,
     DROP_ACTION_NAME,
     DROP_ANY_ACTION_NAME,
     MOD_DROP_ACTION_NAME,
@@ -43,7 +41,6 @@ export abstract class BaseModDragOperation implements IOperation {
     protected _finished: boolean;
     protected _lastScreenPos: Vector2;
     protected _lastGridPos: Vector2;
-    protected _lastIndex: number;
     protected _lastVRControllerPose: Object3D;
     protected _merge: boolean;
     protected _other: Bot;
@@ -108,7 +105,6 @@ export abstract class BaseModDragOperation implements IOperation {
         this._mod = mod;
         this._previousDimension = null;
         this._lastGridPos = null;
-        this._lastIndex = null;
         this._controller =
             inputMethod.type === 'controller' ? inputMethod.controller : null;
         this._fromCoord = fromCoord;
@@ -232,30 +228,23 @@ export abstract class BaseModDragOperation implements IOperation {
 
     protected async _updateModPosition(
         calc: BotCalculationContext,
-        gridPosition: Vector2,
-        index: number
+        gridPosition: Vector2
     ) {
         if (!this._dimension) {
             return;
         }
 
-        if (
-            this._lastGridPos &&
-            this._lastGridPos.equals(gridPosition) &&
-            this._lastIndex === index
-        ) {
+        if (this._lastGridPos && this._lastGridPos.equals(gridPosition)) {
             return;
         }
 
         this._toCoord = gridPosition;
         this._lastGridPos = gridPosition.clone();
-        this._lastIndex = index;
 
         let tags = {
             [this._dimension]: true,
             [`${this._dimension}X`]: gridPosition.x,
             [`${this._dimension}Y`]: gridPosition.y,
-            [`${this._dimension}SortOrder`]: index,
         };
 
         if (this._previousDimension) {

@@ -4,13 +4,11 @@ import {
     getBotShape,
     calculateBotValue,
     filterBotsBySelection,
-    isMergeable,
     isSimulation,
     isDestroyable,
     isEditable,
     duplicateBot,
     isBotMovable,
-    isBotStackable,
     getUserMenuId,
     getBotsInMenu,
     addBotToMenu,
@@ -43,7 +41,6 @@ import {
     getBotPosition,
     getBotRotation,
     botDimensionSortOrder,
-    getBotPositioningMode,
     getPortalConfigBotID,
     getBotSubShape,
     getBotOrientationMode,
@@ -482,30 +479,6 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('isMergeable()', () => {
-        it('should return true if the bot is stackable', () => {
-            const bot1 = createBot(undefined, { positioningMode: 'stack' });
-            const update1 = isMergeable(
-                createPrecalculatedContext([bot1]),
-                bot1
-            );
-
-            expect(update1).toBe(true);
-        });
-
-        it('should return true if the bot is not stackable', () => {
-            const bot1 = createBot(undefined, {
-                positioningMode: 'absolute',
-            });
-            const update1 = isMergeable(
-                createPrecalculatedContext([bot1]),
-                bot1
-            );
-
-            expect(update1).toBe(true);
-        });
-    });
-
     describe('isUserActive()', () => {
         const tags = ['auxPlayerActive', 'playerActive'];
 
@@ -765,78 +738,6 @@ export function botCalculationContextTests(
             });
             const context = createPrecalculatedContext([bot]);
             expect(isBotMovable(context, bot)).toBe(true);
-        });
-    });
-
-    describe('isBotStackable()', () => {
-        it('should return true when positioningMode is stackable', () => {
-            let bot = createBot('test', {});
-            const context = createPrecalculatedContext([bot]);
-            expect(isBotStackable(context, bot)).toBe(true);
-        });
-
-        it('should return false when positioningMode is absolute', () => {
-            let bot = createBot('test', {
-                positioningMode: 'absolute',
-            });
-            const context = createPrecalculatedContext([bot]);
-            expect(isBotStackable(context, bot)).toBe(false);
-        });
-
-        it('should return true when positioningMode has any other value', () => {
-            let bot = createBot('test', {
-                positioningMode: 'anything',
-            });
-            const context = createPrecalculatedContext([bot]);
-            expect(isBotStackable(context, bot)).toBe(true);
-        });
-    });
-
-    describe('getBotPositioningMode()', () => {
-        it('should return stack when positioningMode is not set', () => {
-            const bot1 = createBot('bot1', {});
-            const result = getBotPositioningMode(
-                createPrecalculatedContext([bot1]),
-                bot1
-            );
-
-            expect(result).toBe('stack');
-        });
-
-        it('should return absolute when positioningMode is set to it', () => {
-            const bot1 = createBot('bot1', {
-                positioningMode: 'absolute',
-            });
-            const result = getBotPositioningMode(
-                createPrecalculatedContext([bot1]),
-                bot1
-            );
-
-            expect(result).toBe('absolute');
-        });
-
-        it('should return stack when positioningMode is set to it', () => {
-            const bot1 = createBot('bot1', {
-                positioningMode: 'stack',
-            });
-            const result = getBotPositioningMode(
-                createPrecalculatedContext([bot1]),
-                bot1
-            );
-
-            expect(result).toBe('stack');
-        });
-
-        it('should return stack when positioningMode is set to a random value', () => {
-            const bot1 = createBot('bot1', {
-                positioningMode: <any>'abc',
-            });
-            const result = getBotPositioningMode(
-                createPrecalculatedContext([bot1]),
-                bot1
-            );
-
-            expect(result).toBe('stack');
         });
     });
 

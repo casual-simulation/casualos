@@ -5,7 +5,7 @@ import {
     botAdded,
     BotAction,
     BotTags,
-    calculateBotDragStackPosition,
+    getDropBotFromGridPosition,
     objectsAtDimensionGridPosition,
 } from '@casual-simulation/aux-common/bots';
 import {
@@ -115,7 +115,6 @@ export class PlayerModDragOperation extends BaseModDragOperation {
                     gameObject.bot,
                     nextContext
                 );
-                const botIndex = getBotIndex(calc, gameObject.bot, nextContext);
                 const coord = (this._toCoord = new Vector2(
                     botPosition.x,
                     botPosition.y
@@ -127,7 +126,7 @@ export class PlayerModDragOperation extends BaseModDragOperation {
                 // they have to override onModDrop.
                 this._merge = true;
                 this._sendDropEnterExitEvents(this._merge ? this._other : null);
-                this._updateModPosition(calc, coord, botIndex + 1);
+                this._updateModPosition(calc, coord);
             } else {
                 this._dragOnGrid(calc, gridTile);
             }
@@ -140,22 +139,16 @@ export class PlayerModDragOperation extends BaseModDragOperation {
         const nextContext = [...this.dimensionGroup.dimensions.values()][0];
         this._updateCurrentDimension(nextContext);
         this._toCoord = gridTile.tileCoordinate;
-        const result = calculateBotDragStackPosition(
+        const result = getDropBotFromGridPosition(
             calc,
             this._dimension,
             gridTile.tileCoordinate,
             this._mod
         );
         this._other = result.other;
-        this._merge = result.merge;
+        this._merge = true;
         this._sendDropEnterExitEvents(this._merge ? this._other : null);
-        if (result.merge || result.index === 0) {
-            this._updateModPosition(
-                calc,
-                gridTile.tileCoordinate,
-                result.index
-            );
-        }
+        this._updateModPosition(calc, gridTile.tileCoordinate);
     }
 
     private _updateCurrentDimension(nextContext: string) {

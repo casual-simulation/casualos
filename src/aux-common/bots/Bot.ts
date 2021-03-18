@@ -269,7 +269,6 @@ export interface BotTags {
     ['color']?: unknown;
     ['draggable']?: unknown;
     ['draggableMode']?: unknown;
-    ['positioningMode']?: unknown;
     ['destroyable']?: unknown;
     ['editable']?: unknown;
     ['strokeColor']?: unknown;
@@ -1509,7 +1508,6 @@ export const KNOWN_TAGS: string[] = [
     'color',
     'creator',
     'draggable',
-    'positioningMode',
     'destroyable',
     'editable',
     'strokeColor',

@@ -14,10 +14,8 @@ import {
     BotAction,
     BotCalculationContext,
     objectsAtDimensionGridPosition,
-    isBotStackable,
     getBotIndex,
     botRemoved,
-    isMergeable,
     DROP_ACTION_NAME,
     DROP_ANY_ACTION_NAME,
     MOD_DROP_ACTION_NAME,
@@ -57,7 +55,6 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected _finished: boolean;
     protected _lastScreenPos: Vector2;
     protected _lastGridPos: Vector2;
-    protected _lastIndex: number;
     protected _lastVRControllerPose: Object3D;
     protected _other: Bot;
     protected _dimension: string;
@@ -114,7 +111,6 @@ export abstract class BaseBotDragOperation implements IOperation {
         this._originalDimension = this._dimension = dimension;
         this._previousDimension = null;
         this._lastGridPos = null;
-        this._lastIndex = null;
         this._inDimension = true;
         this._inputMethod = inputMethod;
         this._controller =
@@ -292,8 +288,6 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected async _updateBotsPositions(
         bots: Bot[],
         gridPosition: Vector2 | Vector3,
-        index: number,
-        calc: BotCalculationContext,
         rotation?: Euler
     ) {
         if (!this._dimension) {
@@ -302,17 +296,11 @@ export abstract class BaseBotDragOperation implements IOperation {
         this._inDimension = true;
 
         if (gridPosition instanceof Vector2) {
-            await this._updateBotsGridPositions(
-                bots,
-                gridPosition,
-                index,
-                calc
-            );
+            await this._updateBotsGridPositions(bots, gridPosition);
         } else {
             await this._updateBotsAbsolutePositions(
                 bots,
                 gridPosition,
-                calc,
                 rotation
             );
         }
@@ -321,11 +309,9 @@ export abstract class BaseBotDragOperation implements IOperation {
     private async _updateBotsAbsolutePositions(
         bots: Bot[],
         position: Vector3,
-        calc: BotCalculationContext,
         rotation: Euler
     ) {
         this._lastGridPos = null;
-        this._lastIndex = 0;
 
         let events: BotAction[] = [];
         for (let i = 0; i < bots.length; i++) {
@@ -336,7 +322,6 @@ export abstract class BaseBotDragOperation implements IOperation {
                     [`${this._dimension}X`]: position.x,
                     [`${this._dimension}Y`]: position.y,
                     [`${this._dimension}Z`]: position.z,
-                    [`${this._dimension}SortOrder`]: 0,
                 },
             };
             if (rotation) {
@@ -359,47 +344,26 @@ export abstract class BaseBotDragOperation implements IOperation {
 
     protected async _updateBotsGridPositions(
         bots: Bot[],
-        gridPosition: Vector2,
-        index: number,
-        calc: BotCalculationContext
+        gridPosition: Vector2
     ) {
-        if (
-            this._lastGridPos &&
-            this._lastGridPos.equals(gridPosition) &&
-            this._lastIndex === index
-        ) {
+        if (this._lastGridPos && this._lastGridPos.equals(gridPosition)) {
             return;
         }
 
         this._toCoord = gridPosition;
         this._lastGridPos = gridPosition.clone();
-        this._lastIndex = index;
 
         let events: BotAction[] = [];
         for (let i = 0; i < bots.length; i++) {
             let tags;
 
-            if (!isBotStackable(calc, bots[i])) {
-                tags = {
-                    tags: {
-                        [this._dimension]: true,
-                        [`${this._dimension}X`]: gridPosition.x,
-                        [`${this._dimension}Y`]: gridPosition.y,
-                        [`${this._dimension}Z`]: null,
-                        [`${this._dimension}SortOrder`]: 0,
-                    },
-                };
-            } else {
-                tags = {
-                    tags: {
-                        [this._dimension]: true,
-                        [`${this._dimension}X`]: gridPosition.x,
-                        [`${this._dimension}Y`]: gridPosition.y,
-                        [`${this._dimension}Z`]: null,
-                        [`${this._dimension}SortOrder`]: index + i,
-                    },
-                };
-            }
+            tags = {
+                tags: {
+                    [this._dimension]: true,
+                    [`${this._dimension}X`]: gridPosition.x,
+                    [`${this._dimension}Y`]: gridPosition.y,
+                },
+            };
             if (this._previousDimension) {
                 tags.tags[this._previousDimension] = null;
             }

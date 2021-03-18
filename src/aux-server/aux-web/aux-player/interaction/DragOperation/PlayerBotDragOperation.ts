@@ -4,10 +4,9 @@ import {
     BotCalculationContext,
     BotDragMode,
     objectsAtDimensionGridPosition,
-    calculateBotDragStackPosition,
+    getDropBotFromGridPosition,
     BotTags,
     BotPositioningMode,
-    getBotPositioningMode,
     getBotPosition,
     getBotIndex,
     calculateStringTagValue,
@@ -160,10 +159,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             return;
         }
 
-        if (
-            this._controller &&
-            this._getBotsPositioningMode(calc) === 'absolute'
-        ) {
+        if (this._controller) {
             // Drag in free space
             this._dragFreeSpace(calc, grid3D, inputRay);
             return;
@@ -226,7 +222,6 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                     gameObject.bot,
                     nextContext
                 );
-                const botIndex = getBotIndex(calc, gameObject.bot, nextContext);
                 const coord = (this._toCoord = new Vector2(
                     botPosition.x + this._gridOffset.x,
                     botPosition.y + this._gridOffset.y
@@ -234,12 +229,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 this._other = gameObject.bot;
                 this._sendDropEnterExitEvents(this._other);
 
-                this._updateBotsPositions(
-                    this._bots,
-                    coord,
-                    botIndex + 1,
-                    calc
-                );
+                this._updateBotsPositions(this._bots, coord);
             } else {
                 this._dragOnGrid(calc, gridTile);
             }
@@ -413,13 +403,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             threeSpaceRotation.z,
             threeSpaceRotation.y
         );
-        this._updateBotsPositions(
-            this._bots,
-            gridPosition,
-            0,
-            calc,
-            auxSpaceRotation
-        );
+        this._updateBotsPositions(this._bots, gridPosition, auxSpaceRotation);
     }
 
     /**
@@ -432,7 +416,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         if (gridTile) {
             this._toCoord = gridTile.tileCoordinate.clone();
             this._toCoord.add(this._gridOffset);
-            const result = calculateBotDragStackPosition(
+            const result = getDropBotFromGridPosition(
                 calc,
                 this._dimension,
                 gridTile.tileCoordinate,
@@ -440,26 +424,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             );
             this._other = result.other;
             this._sendDropEnterExitEvents(this._other);
-            if (result.stackable || result.index === 0) {
-                this._updateBotsPositions(
-                    this._bots,
-                    this._toCoord,
-                    result.index,
-                    calc
-                );
-            } else if (!result.stackable) {
-                this._updateBotsPositions(this._bots, this._toCoord, 0, calc);
-            }
-        }
-    }
-
-    private _getBotsPositioningMode(
-        calc: BotCalculationContext
-    ): BotPositioningMode {
-        if (this._bots.length === 1) {
-            return getBotPositioningMode(calc, this._bots[0]);
-        } else {
-            return 'stack';
+            this._updateBotsPositions(this._bots, this._toCoord);
         }
     }
 
