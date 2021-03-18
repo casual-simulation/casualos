@@ -35,6 +35,8 @@ import {
     onDropArg,
     BotDropToDestination,
     onDragArg,
+    ANY_DROP_ENTER_ACTION_NAME,
+    ANY_DROP_EXIT_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -548,6 +550,11 @@ export abstract class BaseBotDragOperation implements IOperation {
                         bots: this._bots,
                         arg: arg,
                     },
+                    {
+                        eventName: ANY_DROP_EXIT_ACTION_NAME,
+                        bots: null,
+                        arg: arg,
+                    },
                 ])
             );
         }
@@ -564,6 +571,11 @@ export abstract class BaseBotDragOperation implements IOperation {
                     {
                         eventName: DROP_ENTER_ACTION_NAME,
                         bots: this._bots,
+                        arg: arg,
+                    },
+                    {
+                        eventName: ANY_DROP_ENTER_ACTION_NAME,
+                        bots: null,
                         arg: arg,
                     },
                 ])
