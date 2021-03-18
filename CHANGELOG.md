@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.5.2
+
+#### Date: 3/18/2021
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.focusOn()` would not function when using positions because inventory and page portals would fight over control of the animation operation.
+
 ## V1.5.1
 
 #### Date: 3/17/2021

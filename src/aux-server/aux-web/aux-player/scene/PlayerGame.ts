@@ -44,6 +44,7 @@ import {
     isBot,
     DEFAULT_SCENE_BACKGROUND_COLOR,
     getPortalConfigBotID,
+    asyncResult,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -461,6 +462,28 @@ export class PlayerGame extends Game {
                     }
                 } else if (e.type === 'replace_drag_bot') {
                     this.dragBot(playerSim3D, inventorySim3D, e.bot);
+                } else if (e.type === 'animate_to_bot') {
+                    this.tweenCameraToBot(e);
+                } else if (e.type === 'animate_to_position') {
+                    const gridScale = playerSim3D.getDefaultGridScale();
+                    const convertedPosition = new Vector3(
+                        e.position.x * gridScale,
+                        0,
+                        e.position.y * -gridScale
+                    );
+
+                    this.tweenCameraToPosition(
+                        playerSim3D.getMainCameraRig(),
+                        convertedPosition,
+                        e,
+                        sim,
+                        e.taskId
+                    );
+                } else if (e.type === 'cancel_animation') {
+                    this.getInteraction().clearOperationsOfType(
+                        TweenCameraToOperation
+                    );
+                    sim.helper.transaction(asyncResult(e.taskId, null));
                 }
             })
         );
