@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.5.3
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `@onAnyBotDropEnter` and `@onAnyBotDropExit` shouts.
+
 ## V1.5.2
 
 #### Date: 3/18/2021
