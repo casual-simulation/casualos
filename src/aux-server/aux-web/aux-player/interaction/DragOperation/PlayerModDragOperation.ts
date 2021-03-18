@@ -87,49 +87,43 @@ export class PlayerModDragOperation extends BaseModDragOperation {
             return;
         }
 
-        const raycastMode = this._calculateRaycastMode(gridTile);
+        const viewport = (this._inInventory
+            ? this._inventorySimulation3D.getMainCameraRig()
+            : this._simulation3D.getMainCameraRig()
+        ).viewport;
+        const {
+            gameObject,
+            hit,
+        } = this._interaction.findHoveredGameObjectFromRay(
+            inputRay,
+            (obj) => obj.pointable,
+            viewport
+        );
+        if (gameObject instanceof AuxBot3D) {
+            const nextContext = gameObject.dimension;
 
-        if (raycastMode === 'grid') {
-            this._dragOnGrid(calc, gridTile);
-        } else {
-            const viewport = (this._inInventory
-                ? this._inventorySimulation3D.getMainCameraRig()
-                : this._simulation3D.getMainCameraRig()
-            ).viewport;
-            const {
-                gameObject,
-                hit,
-            } = this._interaction.findHoveredGameObjectFromRay(
-                inputRay,
-                (obj) => obj.pointable,
-                viewport
+            this._updateCurrentDimension(nextContext);
+
+            // Drag on the grid
+            const botPosition = getBotPosition(
+                calc,
+                gameObject.bot,
+                nextContext
             );
-            if (gameObject instanceof AuxBot3D) {
-                const nextContext = gameObject.dimension;
+            const coord = (this._toCoord = new Vector2(
+                botPosition.x,
+                botPosition.y
+            ));
+            this._other = gameObject.bot;
 
-                this._updateCurrentDimension(nextContext);
-
-                // Drag on the grid
-                const botPosition = getBotPosition(
-                    calc,
-                    gameObject.bot,
-                    nextContext
-                );
-                const coord = (this._toCoord = new Vector2(
-                    botPosition.x,
-                    botPosition.y
-                ));
-                this._other = gameObject.bot;
-
-                // Bots are always mergable
-                // if they want to prevent merging then
-                // they have to override onModDrop.
-                this._merge = true;
-                this._sendDropEnterExitEvents(this._merge ? this._other : null);
-                this._updateModPosition(calc, coord);
-            } else {
-                this._dragOnGrid(calc, gridTile);
-            }
+            // Bots are always mergable
+            // if they want to prevent merging then
+            // they have to override onModDrop.
+            this._merge = true;
+            this._sendDropEnterExitEvents(this._merge ? this._other : null);
+            this._updateModPosition(calc, coord);
+        } else {
+            this._dragOnGrid(calc, gridTile);
         }
     }
 
@@ -158,17 +152,6 @@ export class PlayerModDragOperation extends BaseModDragOperation {
             this._inInventory =
                 nextContext === this._inventorySimulation3D.inventoryDimension;
         }
-    }
-
-    /**
-     * Calculates the raycast mode for the portal that contains the given grid tile.
-     * @param tile
-     */
-    private _calculateRaycastMode(tile: GridTile) {
-        const config =
-            this._simulation3D.getPortalConfigForGrid(tile.grid) ||
-            this._inventorySimulation3D.getPortalConfigForGrid(tile.grid);
-        return config.raycastMode;
     }
 
     private _calculateNextDimensionGroup(tile: GridTile) {

@@ -45,7 +45,6 @@ import {
     getBotSubShape,
     getBotOrientationMode,
     getBotAnchorPoint,
-    calculatePortalPointerDragMode,
     getAnchorPointOffset,
     isBotPointable,
     isBotFocusable,
@@ -1282,32 +1281,6 @@ export function botCalculationContextTests(
                 right: '0px',
                 top: '0px',
             });
-        });
-    });
-
-    describe('calculatePortalPointerDragMode()', () => {
-        const cases = [['grid'], ['world']];
-        const tagCases = ['auxPortalPointerDragMode', 'portalPointerDragMode'];
-
-        describe.each(tagCases)('%s', (tag: string) => {
-            it.each(cases)('should return %s', (mode: string) => {
-                const bot = createBot('test', {
-                    [tag]: <any>mode,
-                });
-
-                const calc = createPrecalculatedContext([bot]);
-
-                expect(calculatePortalPointerDragMode(calc, bot)).toBe(mode);
-            });
-        });
-
-        it('should default to world', () => {
-            const bot = createBot();
-
-            const calc = createPrecalculatedContext([bot]);
-            const shape = calculatePortalPointerDragMode(calc, bot);
-
-            expect(shape).toBe('world');
         });
     });
 

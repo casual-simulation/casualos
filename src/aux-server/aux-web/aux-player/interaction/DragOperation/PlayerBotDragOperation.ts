@@ -185,54 +185,48 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             return;
         }
 
-        const raycastMode = this._calculateRaycastMode(gridTile);
-
-        if (raycastMode === 'grid') {
-            this._dragOnGrid(calc, gridTile);
-        } else {
-            const viewport = (this._inInventory
-                ? this._inventorySimulation3D.getMainCameraRig()
-                : this._simulation3D.getMainCameraRig()
-            ).viewport;
-            const {
-                gameObject,
-                hit,
-            } = this._interaction.findHoveredGameObjectFromRay(
-                inputRay,
-                (obj) => {
-                    return (
-                        obj.pointable &&
-                        obj instanceof AuxBot3D &&
-                        !this._bots.find((b) => b.id === obj.bot.id)
-                    );
-                },
-                viewport
-            );
-
-            if (gameObject instanceof AuxBot3D) {
-                const nextContext = gameObject.dimension;
-
-                this._updateCurrentDimension(nextContext);
-
-                this._updateGridOffset(calc, gameObject.bot);
-
-                // Drag on the grid
-                const botPosition = getBotPosition(
-                    calc,
-                    gameObject.bot,
-                    nextContext
+        const viewport = (this._inInventory
+            ? this._inventorySimulation3D.getMainCameraRig()
+            : this._simulation3D.getMainCameraRig()
+        ).viewport;
+        const {
+            gameObject,
+            hit,
+        } = this._interaction.findHoveredGameObjectFromRay(
+            inputRay,
+            (obj) => {
+                return (
+                    obj.pointable &&
+                    obj instanceof AuxBot3D &&
+                    !this._bots.find((b) => b.id === obj.bot.id)
                 );
-                const coord = (this._toCoord = new Vector2(
-                    botPosition.x + this._gridOffset.x,
-                    botPosition.y + this._gridOffset.y
-                ));
-                this._other = gameObject.bot;
-                this._sendDropEnterExitEvents(this._other);
+            },
+            viewport
+        );
 
-                this._updateBotsPositions(this._bots, coord);
-            } else {
-                this._dragOnGrid(calc, gridTile);
-            }
+        if (gameObject instanceof AuxBot3D) {
+            const nextContext = gameObject.dimension;
+
+            this._updateCurrentDimension(nextContext);
+
+            this._updateGridOffset(calc, gameObject.bot);
+
+            // Drag on the grid
+            const botPosition = getBotPosition(
+                calc,
+                gameObject.bot,
+                nextContext
+            );
+            const coord = (this._toCoord = new Vector2(
+                botPosition.x + this._gridOffset.x,
+                botPosition.y + this._gridOffset.y
+            ));
+            this._other = gameObject.bot;
+            this._sendDropEnterExitEvents(this._other);
+
+            this._updateBotsPositions(this._bots, coord);
+        } else {
+            this._dragOnGrid(calc, gridTile);
         }
     }
 
@@ -295,17 +289,6 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
     private _canDrag(calc: BotCalculationContext) {
         return isBotMovable(calc, this._bots[0]);
-    }
-
-    /**
-     * Calculates the raycast mode for the portal that contains the given grid tile.
-     * @param tile
-     */
-    private _calculateRaycastMode(tile: GridTile) {
-        const config =
-            this._simulation3D.getPortalConfigForGrid(tile.grid) ||
-            this._inventorySimulation3D.getPortalConfigForGrid(tile.grid);
-        return config.raycastMode;
     }
 
     private _calculateNextDimension(tile: GridTile) {

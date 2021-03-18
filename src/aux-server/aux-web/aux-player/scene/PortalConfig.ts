@@ -10,9 +10,6 @@ import {
     calculateBooleanTagValue,
     calculateNumericalTagValue,
     DEFAULT_PORTAL_ROTATABLE,
-    PortalPointerDragMode,
-    DEFAULT_PORTAL_POINTER_DRAG_MODE,
-    calculatePortalPointerDragMode,
     calculateStringTagValue,
     PortalCameraControlsMode,
     calculatePortalCameraControlsMode,
@@ -50,7 +47,6 @@ export class PortalConfig implements SubscriptionLike {
     private _showFocusPoint: boolean = null;
     private _cameraControlsMode: PortalCameraControlsMode = null;
     private _gridScale: number;
-    private _raycastMode: PortalPointerDragMode = null;
     private _disableCanvasTransparency: boolean = null;
     private _grid3D: BoundedGrid3D;
 
@@ -239,14 +235,6 @@ export class PortalConfig implements SubscriptionLike {
         this._onGridScaleUpdated.next();
     }
 
-    get raycastMode() {
-        if (this._raycastMode != null) {
-            return this._raycastMode;
-        } else {
-            return DEFAULT_PORTAL_POINTER_DRAG_MODE;
-        }
-    }
-
     get disableCanvasTransparency() {
         if (this._disableCanvasTransparency != null) {
             return this._disableCanvasTransparency;
@@ -317,7 +305,6 @@ export class PortalConfig implements SubscriptionLike {
         this._playerZoom = null;
         this._playerRotationX = null;
         this._playerRotationY = null;
-        this._raycastMode = null;
         this._showFocusPoint = null;
         this._cameraControlsMode = null;
         this._disableCanvasTransparency = null;
@@ -418,7 +405,6 @@ export class PortalConfig implements SubscriptionLike {
             `auxPortalCameraRotationY`,
             null
         );
-        this._raycastMode = calculatePortalPointerDragMode(calc, bot);
         this._showFocusPoint = calculateBooleanTagValue(
             calc,
             bot,

@@ -29,8 +29,6 @@ import {
     DEFAULT_ORIENTATION_MODE,
     BotAnchorPoint,
     DEFAULT_ANCHOR_POINT,
-    PortalPointerDragMode,
-    DEFAULT_PORTAL_POINTER_DRAG_MODE,
     BotLOD,
     BotLabelAlignment,
     DEFAULT_LABEL_ALIGNMENT,
@@ -1750,29 +1748,6 @@ export function calculateBotLOD(
         : virtualDistance > maxThreshold
         ? 'max'
         : 'normal';
-}
-
-/**
- * Calculates the portal raycast mode that the given bot has set.
- * @param calc The calculation context.
- * @param bot The portal config bot.
- */
-export function calculatePortalPointerDragMode(
-    calc: BotCalculationContext,
-    bot: Bot
-): PortalPointerDragMode {
-    const mode = <PortalPointerDragMode>(
-        calculateStringTagValue(
-            calc,
-            bot,
-            'auxPortalPointerDragMode',
-            DEFAULT_PORTAL_POINTER_DRAG_MODE
-        )
-    );
-    if (mode === 'grid' || mode === 'world') {
-        return mode;
-    }
-    return DEFAULT_PORTAL_POINTER_DRAG_MODE;
 }
 
 /**
