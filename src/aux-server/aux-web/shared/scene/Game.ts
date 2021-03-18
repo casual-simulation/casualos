@@ -316,7 +316,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
      * @param cameraRig The camera rig to tween.
      * @param action The action to use for tweening.
      */
-    tweenCameraToBot(cameraRig: CameraRig, action: AnimateToBotAction) {
+    tweenCameraToBot(action: AnimateToBotAction) {
         // find the bot with the given ID
         const matches = this.findBotsById(action.botId);
         console.log(
@@ -331,7 +331,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
                 bot.display.getWorldPosition(targetPosition);
 
                 this.tweenCameraToPosition(
-                    cameraRig,
+                    bot.dimensionGroup.simulation3D.getMainCameraRig(),
                     targetPosition,
                     action,
                     bot.dimensionGroup.simulation3D.simulation,

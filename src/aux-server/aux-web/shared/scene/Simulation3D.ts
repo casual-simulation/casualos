@@ -199,44 +199,7 @@ export abstract class Simulation3D
         this.isLoaded = false;
 
         this._subs.push(
-            this.simulation.localEvents
-                .pipe(
-                    tap((e) => {
-                        if (e.type === 'animate_to_bot') {
-                            const foundBotIn3D =
-                                this.findBotsById(e.botId).length > 0;
-                            if (foundBotIn3D) {
-                                this.game.tweenCameraToBot(
-                                    this.getMainCameraRig(),
-                                    e
-                                );
-                            }
-                        } else if (e.type === 'animate_to_position') {
-                            const gridScale = this.getDefaultGridScale();
-                            const convertedPosition = new Vector3(
-                                e.position.x * gridScale,
-                                0,
-                                e.position.y * -gridScale
-                            );
-
-                            this._game.tweenCameraToPosition(
-                                this.getMainCameraRig(),
-                                convertedPosition,
-                                e,
-                                this.simulation,
-                                e.taskId
-                            );
-                        } else if (e.type === 'cancel_animation') {
-                            this._game
-                                .getInteraction()
-                                .clearOperationsOfType(TweenCameraToOperation);
-                            this.simulation.helper.transaction(
-                                asyncResult(e.taskId, null)
-                            );
-                        }
-                    })
-                )
-                .subscribe()
+            this.simulation.localEvents.pipe(tap((e) => {})).subscribe()
         );
 
         this._subs.push(
