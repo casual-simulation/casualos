@@ -16,6 +16,7 @@ import {
     LocalActions,
     PortalCameraControlsMode,
     DEFAULT_PORTAL_CAMERA_CONTROLS_MODE,
+    asyncResult,
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike, Subject, Observable, Subscription } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
@@ -39,6 +40,7 @@ import { DimensionGroup } from './DimensionGroup';
 import { DimensionGroup3D } from './DimensionGroup3D';
 import { AuxBot3D } from './AuxBot3D';
 import { PortalConfig } from 'aux-web/aux-player/scene/PortalConfig';
+import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
 
 /**
  * Defines a class that is able to render a simulation.
@@ -223,6 +225,13 @@ export abstract class Simulation3D
                                 e,
                                 this.simulation,
                                 e.taskId
+                            );
+                        } else if (e.type === 'cancel_animation') {
+                            this._game
+                                .getInteraction()
+                                .clearOperationsOfType(TweenCameraToOperation);
+                            this.simulation.helper.transaction(
+                                asyncResult(e.taskId, null)
                             );
                         }
                     })

@@ -1888,7 +1888,7 @@ os.toast("this is the code", 5);
 Animates the camera such that the portal focus point is placed on the given bot or position.
 Returns a promise which resolves when the animation finishes and rejects if the user takes control of the camera during the animation.
 
-The **first parameter** is the bot, bot ID, or position that the player's view should be moved to.
+The **first parameter** is the bot, bot ID, or position that the player's view should be moved to. If null, then the current focus animation will be canceled.
 
 The **second parameter** is optional and can be used to specify additional details about how the camera should be animated.
 It should be an object with the following properties:

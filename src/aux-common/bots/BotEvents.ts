@@ -185,7 +185,8 @@ export type AsyncActions =
     | AnimateToBotAction
     | AnimateToPositionAction
     | BeginAudioRecordingAction
-    | EndAudioRecordingAction;
+    | EndAudioRecordingAction
+    | CancelAnimationAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -695,6 +696,13 @@ export interface AnimateToPositionAction extends AsyncAction, AnimateToOptions {
         x: number;
         y: number;
     };
+}
+
+/**
+ * An event that is used to cancel the current camera animation.
+ */
+export interface CancelAnimationAction extends AsyncAction {
+    type: 'cancel_animation';
 }
 
 /**
@@ -2704,6 +2712,19 @@ export function animateToPosition(
         position,
         taskId,
         ...options,
+    };
+}
+
+/**
+ * Creates a new CancelAnimationAction.
+ * @param taskId The ID of the task.
+ */
+export function cancelAnimation(
+    taskId?: string | number
+): CancelAnimationAction {
+    return {
+        type: 'cancel_animation',
+        taskId,
     };
 }
 
