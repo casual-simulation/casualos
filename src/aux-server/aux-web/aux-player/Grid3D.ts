@@ -27,7 +27,7 @@ export interface Grid3D {
      * Scales the given position by the tile scale and returns the result.
      * @param position The input position.
      */
-    getGridPosition(position: Vector3): Vector3;
+    getGridPosition(position: { x: number; y: number; z: number }): Vector3;
 }
 
 /**

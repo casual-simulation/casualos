@@ -2526,12 +2526,28 @@ export interface AddDropSnapTargetsAction extends Action {
 }
 
 /**
+ * Defines an interface that represents a snap point.
+ * That is, a point in 3D space with an associated snap distance.
+ */
+export interface SnapPoint {
+    /**
+     * The 3D position for the point.
+     */
+    point: { x: number; y: number; z: number };
+
+    /**
+     * The distance that the snap point should take effect at.
+     */
+    distance: number;
+}
+
+/**
  * The list of possible snap targets.
+ * - "ground" means that the dragged bot should snap to the ground plane. This option is overriden by "grid".
  * - "grid" means that the dragged bot should snap to grid tiles.
  * - "face" means that the dragged bot should snap to other bot faces.
- * - A position means that the dragged bot should snap to the given position when it is close.
  */
-export type SnapTarget = 'grid' | 'face' | { x: number; y: number; z: number };
+export type SnapTarget = 'ground' | 'grid' | 'face' | SnapPoint;
 
 /**
  * An event that is used to start audio recording.

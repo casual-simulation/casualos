@@ -105,10 +105,12 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
      * Scales the given position by the tile scale and returns the result.
      * @param position The input position.
      */
-    getGridPosition(position: Vector3): Vector3 {
-        const result = new Vector3()
-            .copy(position)
-            .divideScalar(this.tileScale);
+    getGridPosition(position: { x: number; y: number; z: number }): Vector3 {
+        const result = new Vector3(
+            position.x,
+            position.y,
+            position.z
+        ).divideScalar(this.tileScale);
         return new Vector3(
             result.x,
             this.useAuxCoordinates ? -result.z : result.z,

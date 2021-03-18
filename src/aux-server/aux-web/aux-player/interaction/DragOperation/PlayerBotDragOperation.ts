@@ -1,4 +1,8 @@
-import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
+import {
+    BaseBotDragOperation,
+    SnapBotsInterface,
+    SnapOptions,
+} from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import {
     Bot,
     BotCalculationContext,
@@ -13,6 +17,7 @@ import {
     getBotTransformer,
     hasValue,
     isBotMovable,
+    SnapPoint,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
@@ -35,7 +40,10 @@ import { PlayerGame } from '../../scene/PlayerGame';
 import { take, drop } from 'lodash';
 import { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
-import { objectForwardRay } from '../../../shared/scene/SceneUtils';
+import {
+    calculateHitFace,
+    objectForwardRay,
+} from '../../../shared/scene/SceneUtils';
 import { DebugObjectManager } from '../../../shared/scene/debugobjectmanager/DebugObjectManager';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { Grid3D, GridTile } from '../../Grid3D';
@@ -89,7 +97,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         fromCoord?: Vector2,
         skipOnDragEvents: boolean = false,
         clickedFace?: string,
-        hit?: Intersection
+        hit?: Intersection,
+        snapInterface?: SnapBotsInterface
     ) {
         super(
             playerPageSimulation3D,
@@ -100,7 +109,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             fromCoord,
             skipOnDragEvents,
             clickedFace,
-            hit
+            hit,
+            snapInterface
         );
 
         this._botsInStack = drop(bots, 1);
@@ -129,7 +139,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._fromCoord,
             true,
             this._clickedFace,
-            this._hit
+            this._hit,
+            this._snapInterface
         );
     }
 
@@ -159,32 +170,66 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             return;
         }
 
-        if (this._controller) {
-            // Drag in free space
-            this._dragFreeSpace(calc, grid3D, inputRay);
-            return;
-        }
-
-        this._dragInGridSpace(calc, grid3D, inputRay);
+        this._dragInSnapSpace(calc, grid3D, inputRay);
     }
 
     /**
-     * Drags the bot(s) in grid space using the raycasting mode configured on the portal.
+     * Drags the bot(s) in "snap" space using the raycasting mode configured on the portal.
      * @param calc
      * @param grid3D
      * @param inputRay
      */
-    private _dragInGridSpace(
+    private _dragInSnapSpace(
         calc: BotCalculationContext,
         grid3D: Grid3D,
         inputRay: Ray
     ) {
-        const gridTile = grid3D.getTileFromRay(inputRay);
+        const { bot: other, hit } = this._raycastOtherBots(inputRay);
+        this._other = other?.bot ?? null;
+        this._updateGridOffset(calc, this._other);
 
-        if (!gridTile) {
+        const botSnapOptions = this.botSnapOptions(this._other?.id);
+        const globalSnapOptions = this.globalSnapOptions();
+
+        // try snapping to bot options first,
+        // then global options
+        if (
+            this._dragWithOptions(
+                calc,
+                grid3D,
+                inputRay,
+                this._other,
+                hit,
+                botSnapOptions
+            )
+        ) {
+            return;
+        } else if (
+            this._dragWithOptions(
+                calc,
+                grid3D,
+                inputRay,
+                this._other,
+                hit,
+                globalSnapOptions
+            )
+        ) {
             return;
         }
 
+        // if we cannot snap to anything,
+        // then fallback to default positioning.
+        if (this._controller) {
+            // free space drag for controllers
+            this._dragFreeSpace(calc, grid3D, inputRay);
+            return;
+        } else {
+            // ground space drag for everything else
+            this._dragInGroundSpace(calc, grid3D, inputRay);
+        }
+    }
+
+    private _raycastOtherBots(inputRay: Ray) {
         const viewport = (this._inInventory
             ? this._inventorySimulation3D.getMainCameraRig()
             : this._simulation3D.getMainCameraRig()
@@ -205,41 +250,149 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         );
 
         if (gameObject instanceof AuxBot3D) {
-            const nextContext = gameObject.dimension;
+            return {
+                bot: gameObject,
+                hit,
+            };
+        }
+
+        return {
+            bot: null,
+            hit: null,
+        };
+    }
+
+    private _dragWithOptions(
+        calc: BotCalculationContext,
+        grid3D: Grid3D,
+        inputRay: Ray,
+        other: Bot,
+        hit: Intersection,
+        options: SnapOptions
+    ): boolean {
+        if (!options) {
+            return false;
+        }
+
+        if (options.snapPoints.length > 0) {
+            if (
+                this._dragWithSnapPoints(
+                    calc,
+                    inputRay,
+                    grid3D,
+                    options.snapPoints
+                )
+            ) {
+                return true;
+            }
+        }
+
+        if (options.snapFace) {
+            if (hit) {
+                const face = calculateHitFace(hit);
+                if (face) {
+                    console.log('snap to face');
+                    // TODO: make sure to update grid offsets too
+                }
+            }
+        }
+
+        if (options.snapGrid) {
+            if (this._dragOnGrid(calc, grid3D, inputRay)) {
+                return true;
+            }
+        }
+
+        if (options.snapGround) {
+            if (this._dragInGroundSpace(calc, grid3D, inputRay)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private _dragInGroundSpace(
+        calc: BotCalculationContext,
+        grid3D: Grid3D,
+        inputRay: Ray
+    ) {
+        const point = grid3D.getPointFromRay(inputRay);
+        const gridTile = grid3D.getTileFromRay(inputRay);
+        if (point && gridTile) {
+            const position = grid3D.getGridPosition(point);
+
+            // Update the next dimension
+            const nextContext = this._calculateNextDimension(gridTile);
 
             this._updateCurrentDimension(nextContext);
 
-            this._updateGridOffset(calc, gameObject.bot);
+            // update the grid offset for the current bot
+            this._updateGridOffset(calc);
 
             // Drag on the grid
-            const botPosition = getBotPosition(
-                calc,
-                gameObject.bot,
-                nextContext
-            );
-            const coord = (this._toCoord = new Vector2(
-                botPosition.x + this._gridOffset.x,
-                botPosition.y + this._gridOffset.y
-            ));
-            this._other = gameObject.bot;
-            this._sendDropEnterExitEvents(this._other);
+            this._toCoord = new Vector2(position.x, position.y).clone();
+            this._toCoord.add(this._gridOffset);
 
-            this._updateBotsPositions(this._bots, coord);
-        } else {
-            this._dragOnGrid(calc, gridTile);
+            this._updateBotsPositions(this._bots, position);
+            return true;
         }
+        return false;
     }
 
-    private _dragOnGrid(calc: BotCalculationContext, gridTile: GridTile) {
-        // Update the next context
-        const nextContext = this._calculateNextDimension(gridTile);
+    private _dragWithSnapPoints(
+        calc: BotCalculationContext,
+        inputRay: Ray,
+        grid3D: Grid3D,
+        snapPoints: SnapOptions['snapPoints']
+    ): boolean {
+        let closestPoint: Vector3 = null;
+        let closestSqrDistance = Infinity;
+        for (let point of snapPoints) {
+            const targetDistance = point.distance * point.distance;
+            const convertedPoint = grid3D.getGridPosition(point.point);
+            const sqrDistance = inputRay.distanceSqToPoint(convertedPoint);
 
-        this._updateCurrentDimension(nextContext);
+            if (sqrDistance > targetDistance) {
+                continue;
+            }
+            if (sqrDistance < closestSqrDistance) {
+                closestPoint = new Vector3(
+                    point.point.x,
+                    point.point.y,
+                    point.point.z
+                );
+                closestSqrDistance = sqrDistance;
+            }
+        }
 
-        this._updateGridOffset(calc);
+        if (closestPoint) {
+            this._updateBotsPositions(this._bots, closestPoint);
+            return true;
+        }
 
-        // Drag on the grid
-        this._dragOnGridTile(calc, gridTile);
+        return false;
+    }
+
+    private _dragOnGrid(
+        calc: BotCalculationContext,
+        grid3D: Grid3D,
+        inputRay: Ray
+    ) {
+        const gridTile = grid3D.getTileFromRay(inputRay);
+        if (gridTile) {
+            // Update the next context
+            const nextContext = this._calculateNextDimension(gridTile);
+
+            this._updateCurrentDimension(nextContext);
+
+            this._updateGridOffset(calc);
+
+            // Drag on the grid
+            this._dragOnGridTile(calc, gridTile);
+            return true;
+        }
+        return false;
     }
 
     private _updateCurrentViewport() {
@@ -406,9 +559,17 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 ...this._bots
             );
             this._other = result.other;
-            this._sendDropEnterExitEvents(this._other);
             this._updateBotsPositions(this._bots, this._toCoord);
         }
+    }
+
+    protected async _updateBotsPositions(
+        bots: Bot[],
+        gridPosition: Vector3 | Vector2,
+        rotation?: Euler
+    ) {
+        this._sendDropEnterExitEvents(this._other);
+        super._updateBotsPositions(bots, gridPosition, rotation);
     }
 
     protected _onDragReleased(calc: BotCalculationContext): void {

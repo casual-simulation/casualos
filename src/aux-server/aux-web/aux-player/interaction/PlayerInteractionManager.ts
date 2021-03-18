@@ -54,6 +54,7 @@ import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
 import { flatMap, isEqual } from 'lodash';
 import { InventoryContextGroup3D } from '../scene/InventoryContextGroup3D';
 import {
+    calculateHitFace,
     isObjectVisible,
     objectForwardRay,
     safeSetParent,
@@ -168,30 +169,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         method: InputMethod
     ): IOperation {
         if (gameObject instanceof AuxBot3D) {
-            let faceValue: string = 'Unknown Face';
-
-            // Based on the normals of the bot the raycast hit, determine side of the cube
-            if (hit.face) {
-                if (hit.face.normal.x != 0) {
-                    if (hit.face.normal.x > 0) {
-                        faceValue = 'left';
-                    } else {
-                        faceValue = 'right';
-                    }
-                } else if (hit.face.normal.y != 0) {
-                    if (hit.face.normal.y > 0) {
-                        faceValue = 'top';
-                    } else {
-                        faceValue = 'bottom';
-                    }
-                } else if (hit.face.normal.z != 0) {
-                    if (hit.face.normal.z > 0) {
-                        faceValue = 'front';
-                    } else {
-                        faceValue = 'back';
-                    }
-                }
-            }
+            let faceValue: string = calculateHitFace(hit) ?? 'Unknown Face';
 
             let botClickOp = new PlayerBotClickOperation(
                 gameObject.dimensionGroup.simulation3D,

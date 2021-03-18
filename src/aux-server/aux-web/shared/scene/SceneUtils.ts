@@ -34,6 +34,7 @@ import {
     LineSegments,
     LineBasicMaterial,
     MeshToonMaterial,
+    Intersection,
 } from '@casual-simulation/three';
 import { flatMap } from 'lodash';
 import {
@@ -744,4 +745,30 @@ export function safeSetParent(obj: Object3D, parent: Object3D): boolean {
     }
     parent.add(obj);
     return true;
+}
+
+export function calculateHitFace(hit: Intersection) {
+    // Based on the normals of the bot the raycast hit, determine side of the cube
+    if (hit.face) {
+        if (hit.face.normal.x != 0) {
+            if (hit.face.normal.x > 0) {
+                return 'left';
+            } else {
+                return 'right';
+            }
+        } else if (hit.face.normal.y != 0) {
+            if (hit.face.normal.y > 0) {
+                return 'top';
+            } else {
+                return 'bottom';
+            }
+        } else if (hit.face.normal.z != 0) {
+            if (hit.face.normal.z > 0) {
+                return 'front';
+            } else {
+                return 'back';
+            }
+        }
+    }
+    return null;
 }
