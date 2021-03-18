@@ -199,10 +199,6 @@ export abstract class Simulation3D
         this.isLoaded = false;
 
         this._subs.push(
-            this.simulation.localEvents.pipe(tap((e) => {})).subscribe()
-        );
-
-        this._subs.push(
             this.simulation.dimensions
                 .watchDimensions(this._getDimensionTags(), (bot) =>
                     this._filterDimensionBot(bot)
