@@ -9,7 +9,6 @@ import { BaseInteractionManager } from '../BaseInteractionManager';
 import {
     Bot,
     BotCalculationContext,
-    isBotMovable,
     getBotPosition,
 } from '@casual-simulation/aux-common';
 import { BaseBotDragOperation } from '../DragOperation/BaseBotDragOperation';
@@ -169,7 +168,6 @@ export abstract class BaseClickOperation implements IOperation {
 
     protected _canDrag(calc: BotCalculationContext): boolean {
         return true;
-        // return isBotMovable(calc, bot);
     }
 
     protected abstract _performClick(calc: BotCalculationContext): void;

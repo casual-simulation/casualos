@@ -5,13 +5,11 @@ import {
     calculateBotValue,
     filterBotsBySelection,
     isMergeable,
-    isPickupable,
     isSimulation,
     isDestroyable,
     isEditable,
     duplicateBot,
     isBotMovable,
-    getBotDragMode,
     isBotStackable,
     getUserMenuId,
     getBotsInMenu,
@@ -508,34 +506,6 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('isPickupable()', () => {
-        const cases = [
-            [true, true] as const,
-            [true, 'move'] as const,
-            [true, 'any'] as const,
-            [false, 'none'] as const,
-            [true, 'drag'] as const,
-            [false, 'moveOnly'] as const,
-            [true, 'clone'] as const,
-            [true, 'pickup'] as const,
-            [true, 'pickupOnly'] as const,
-            [true, false] as const,
-        ];
-
-        it.each(cases)('should return %s if set to %s', (expected, value) => {
-            const bot1 = createBot(undefined, {
-                draggable: true,
-                draggableMode: value,
-            });
-            const update1 = isPickupable(
-                createPrecalculatedContext([bot1]),
-                bot1
-            );
-
-            expect(update1).toBe(expected);
-        });
-    });
-
     describe('isUserActive()', () => {
         const tags = ['auxPlayerActive', 'playerActive'];
 
@@ -795,68 +765,6 @@ export function botCalculationContextTests(
             });
             const context = createPrecalculatedContext([bot]);
             expect(isBotMovable(context, bot)).toBe(true);
-        });
-    });
-
-    describe('getBotDragMode()', () => {
-        const cases = [
-            ['all', 'all'] as const,
-            ['all', 'adfsdfa'] as const,
-            ['all', true] as const,
-            ['none', 'none'] as const,
-            ['all', 0] as const,
-            ['all', 'clone'] as const,
-            ['pickupOnly', 'pickupOnly'] as const,
-            ['moveOnly', 'moveOnly'] as const,
-            ['all', 'diff'] as const,
-            ['all', 'cloneMod'] as const,
-            ['all', false] as const,
-        ];
-
-        it.each(cases)('should return %s for %s', (expected, val) => {
-            const bot1 = createBot('bot1', {
-                draggable: true,
-                draggableMode: val,
-            });
-            const result = getBotDragMode(
-                createPrecalculatedContext([bot1]),
-                bot1
-            );
-
-            expect(result).toBe(expected);
-        });
-
-        it('should return none when draggable is false', () => {
-            const bot1 = createBot('bot1', {
-                draggable: false,
-                draggableMode: 'all',
-            });
-            const result = getBotDragMode(
-                createPrecalculatedContext([bot1]),
-                bot1
-            );
-
-            expect(result).toBe('none');
-        });
-
-        it('should default to all', () => {
-            const bot1 = createBot('bot1', {});
-            const result = getBotDragMode(
-                createPrecalculatedContext([bot1]),
-                bot1
-            );
-
-            expect(result).toBe('all');
-        });
-
-        it('should return the default when given an invalid value', () => {
-            const bot1 = createBot('bot1', { draggable: <any>'test' });
-            const result = getBotDragMode(
-                createPrecalculatedContext([bot1]),
-                bot1
-            );
-
-            expect(result).toBe('all');
         });
     });
 

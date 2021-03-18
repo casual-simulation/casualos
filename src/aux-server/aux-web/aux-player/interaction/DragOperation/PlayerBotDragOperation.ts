@@ -2,7 +2,6 @@ import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/
 import {
     Bot,
     BotCalculationContext,
-    getBotDragMode,
     BotDragMode,
     objectsAtDimensionGridPosition,
     calculateBotDragStackPosition,
@@ -14,6 +13,7 @@ import {
     calculateStringTagValue,
     getBotTransformer,
     hasValue,
+    isBotMovable,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
@@ -154,6 +154,12 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             ? this._inventorySimulation3D.grid3D
             : this._simulation3D.grid3D;
 
+        const canDrag = this._canDrag(calc);
+
+        if (!canDrag) {
+            return;
+        }
+
         if (
             this._controller &&
             this._getBotsPositioningMode(calc) === 'absolute'
@@ -209,14 +215,6 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
             if (gameObject instanceof AuxBot3D) {
                 const nextContext = gameObject.dimension;
-                const canDragIntoDimension = this._canDragInDimension(
-                    calc,
-                    nextContext
-                );
-
-                if (!canDragIntoDimension) {
-                    return;
-                }
 
                 this._updateCurrentDimension(nextContext);
 
@@ -251,15 +249,6 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     private _dragOnGrid(calc: BotCalculationContext, gridTile: GridTile) {
         // Update the next context
         const nextContext = this._calculateNextDimension(gridTile);
-
-        const canDragIntoDimension = this._canDragInDimension(
-            calc,
-            nextContext
-        );
-
-        if (!canDragIntoDimension) {
-            return;
-        }
 
         this._updateCurrentDimension(nextContext);
 
@@ -314,21 +303,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         }
     }
 
-    private _canDragInDimension(
-        calc: BotCalculationContext,
-        nextContext: string
-    ) {
-        const mode = getBotDragMode(calc, this._bots[0]);
-        const changingContexts = this._originalDimension !== nextContext;
-        let canDrag = false;
-
-        if (!changingContexts && this._canDragWithinContext(mode)) {
-            canDrag = true;
-        } else if (changingContexts && this._canDragOutOfContext(mode)) {
-            canDrag = true;
-        }
-
-        return canDrag;
+    private _canDrag(calc: BotCalculationContext) {
+        return isBotMovable(calc, this._bots[0]);
     }
 
     /**
@@ -485,22 +461,6 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         } else {
             return 'stack';
         }
-    }
-
-    protected _canDragWithinContext(mode: BotDragMode): boolean {
-        return this._isDraggable(mode);
-    }
-
-    protected _canDragOutOfContext(mode: BotDragMode): boolean {
-        return this._isPickupable(mode);
-    }
-
-    private _isPickupable(mode: BotDragMode): boolean {
-        return mode === 'all' || mode === 'pickupOnly';
-    }
-
-    private _isDraggable(mode: BotDragMode): boolean {
-        return mode === 'all' || mode === 'moveOnly';
     }
 
     protected _onDragReleased(calc: BotCalculationContext): void {

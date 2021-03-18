@@ -1911,32 +1911,6 @@ export function getDimensionValue(
 }
 
 /**
- * Gets the drag mode for the bot.
- * @param calc The bot calculation context.
- * @param bot The bot to check.
- */
-export function getBotDragMode(
-    calc: BotCalculationContext,
-    bot: Bot
-): BotDragMode {
-    const draggable = calculateBooleanTagValue(calc, bot, 'auxDraggable', true);
-    const val = calculateStringTagValue(calc, bot, 'auxDraggableMode', null);
-    if (!draggable) {
-        return 'none';
-    }
-    if (
-        val === 'all' ||
-        val === 'none' ||
-        val === 'pickupOnly' ||
-        val === 'moveOnly'
-    ) {
-        return val;
-    } else {
-        return 'all';
-    }
-}
-
-/**
  * Gets the ID of the bot that the given bot should be transformed by.
  * @param calc The bot calculation context.
  * @param bot The bot to check.
@@ -2404,18 +2378,6 @@ export function isBotTags(value: any): value is BotTags {
  */
 export function isMergeable(calc: BotCalculationContext, bot: Bot): boolean {
     return true;
-}
-
-/**
- * Determines if the given bot allows for the bot to be place in inventory.
- * @param bot The bot to check.
- */
-export function isPickupable(calc: BotCalculationContext, bot: Bot): boolean {
-    if (!!bot && isBotMovable(calc, bot)) {
-        const mode = getBotDragMode(calc, bot);
-        return mode === 'pickupOnly' || mode === 'all';
-    }
-    return false;
 }
 
 export function simulationIdToString(id: SimulationIdParseSuccess): string {

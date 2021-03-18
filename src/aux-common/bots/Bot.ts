@@ -1509,7 +1509,6 @@ export const KNOWN_TAGS: string[] = [
     'color',
     'creator',
     'draggable',
-    'draggableMode',
     'positioningMode',
     'destroyable',
     'editable',
