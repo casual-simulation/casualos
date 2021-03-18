@@ -143,6 +143,7 @@ import {
     animateToPosition,
     beginAudioRecording,
     endAudioRecording,
+    cancelAnimation,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1693,6 +1694,19 @@ describe('AuxLibrary', () => {
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a CancelAnimationAction if given null', () => {
+                const action: any = library.api.os.focusOn(null);
+                const expected = cancelAnimation(context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw if given undefined', () => {
+                expect(() => {
+                    library.api.os.focusOn(undefined);
+                }).toThrow();
             });
         });
 

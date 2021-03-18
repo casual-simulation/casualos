@@ -354,6 +354,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
         simulation: Simulation,
         taskId: string | number
     ) {
+        this.interaction.clearOperationsOfType(TweenCameraToOperation);
         this.interaction.addOperation(
             new TweenCameraToOperation(
                 cameraRig,
@@ -380,6 +381,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
         zoomValue?: number,
         rotationValue?: Vector2
     ) {
+        this.interaction.clearOperationsOfType(TweenCameraToOperation);
         this.interaction.addOperation(
             new TweenCameraToOperation(
                 cameraRig,

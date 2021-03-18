@@ -203,7 +203,7 @@ export class TweenCameraToOperation implements IOperation {
             this._zoomTween = null;
         }
         if (hasValue(this._simulation) && hasValue(this._taskId)) {
-            if (this._canceled) {
+            if (this._canceled || !this._finished) {
                 this._simulation.helper.transaction(
                     asyncError(
                         this._taskId,

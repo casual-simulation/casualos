@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.5.1
+
+#### Date: 3/17/2021
+
+### :rocket: Improvements
+
+-   Improved `os.focusOn()` to be canceled by `os.goToDimension()` and future calls to `os.focusOn()`.
+    -   Additionally, calling `os.focusOn(null)` will cancel the current focus operation without queuing another one.
+
 ## V1.5.0
 
 #### Date: 3/17/2021

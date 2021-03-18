@@ -63,6 +63,7 @@ import {
 import { GameAudio } from '../../shared/scene/GameAudio';
 import TWEEN from '@tweenjs/tween.js';
 import { MathUtils as ThreeMath } from '@casual-simulation/three';
+import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -571,6 +572,7 @@ export class PlayerGame extends Game {
     }
 
     resetCameras() {
+        this.interaction.clearOperationsOfType(TweenCameraToOperation);
         this.interaction.cameraRigControllers.forEach((controller) => {
             if (controller.rig.name != 'inventory') controller.controls.reset();
         });

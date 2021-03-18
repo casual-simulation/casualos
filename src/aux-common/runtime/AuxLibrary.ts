@@ -209,6 +209,7 @@ import {
     AsyncAction,
     beginAudioRecording as calcBeginAudioRecording,
     endAudioRecording as calcEndAudioRecording,
+    cancelAnimation,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -1415,7 +1416,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Moves the camera to view the given bot.
      * Returns a promise that resolves when the bot is focused.
-     * @param botOrPosition The bot, bot ID, or position to view.
+     * @param botOrPosition The bot, bot ID, or position to view. If null, then any active camera animation will be canceled.
      * @param options The options to use for moving the camera.
      */
     function focusOn(
@@ -1429,7 +1430,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             ...(options ?? {}),
         };
         let action: AsyncActions;
-        if (typeof botOrPosition === 'string' || isBot(botOrPosition)) {
+        if (botOrPosition === null) {
+            action = cancelAnimation(task.taskId);
+        } else if (botOrPosition === undefined) {
+            throw new Error(
+                'Cannot focus on an undefined bot. Maybe a getBot() is returning undefined?'
+            );
+        } else if (typeof botOrPosition === 'string' || isBot(botOrPosition)) {
             action = calcTweenTo(
                 getID(botOrPosition),
                 finalOptions,

@@ -162,6 +162,20 @@ export abstract class BaseInteractionManager {
         }
     }
 
+    /**
+     * Removes and disposes any operations that have the given type.
+     * @param type The class/type of the operations that should be canceled.
+     */
+    clearOperationsOfType(type: any) {
+        this._operations = this._operations.filter((o) => {
+            if (o instanceof type) {
+                o.dispose();
+                return false;
+            }
+            return true;
+        });
+    }
+
     update(): void {
         // const calc = appManager.simulationManager.primary.helper.createContext();
         // Update active operations and dispose of any that are finished.
