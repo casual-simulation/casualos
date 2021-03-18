@@ -87,9 +87,10 @@ export class SerialModule implements AuxModule2 {
     _serialConnect(simulation: Simulation, event: SerialConnectAction) {
         try {
             // Complete the bluetooth connection before opening it up
-            execSync(
-                'curl -H "Content-Type: application/json" -X POST -d \'{"command":"connect","device":' + event.device + ', "mac":' + event.mac + ', "channel":' + event.channel + '}\' $(ip route show | awk \'/default/ {print $3}\'):8090/post'
-            );
+            let jsond = '{"command":"connect","device":"' + event.device + '", "mac":"' + event.mac + '", "channel":"' + event.channel + '"}';
+            let curl_command = 'curl -H "Content-Type: application/json" -X POST -d \'' + jsond + '\' http://192.168.1.18:8090/post';
+
+            execSync(curl_command);
 
             const port = new SerialPort(event.device, event.options);
             btSerial.set('Connection01', port);
