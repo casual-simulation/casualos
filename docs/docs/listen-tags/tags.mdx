@@ -815,6 +815,50 @@ let that: {
 };
 ```
 
+### `@onAnyBotDropEnter`
+
+A shout that is sent whenever a bot is dragged onto another bot.
+
+#### Arguments:
+```typescript
+let that: {
+  dragBot: Bot,
+  to: {
+    bot: Bot,
+    x: number,
+    y: number,
+    dimension: string
+  },
+  from: {
+    x: number,
+    y: number,
+    dimension: string
+  }
+};
+```
+
+### `@onAnyBotDropExit`
+
+A shout that is sent whenever a bot is dragged off of another bot.
+
+#### Arguments:
+```typescript
+let that: {
+  dragBot: Bot,
+  to: {
+    bot: Bot,
+    x: number,
+    y: number,
+    dimension: string
+  },
+  from: {
+    x: number,
+    y: number,
+    dimension: string
+  }
+};
+```
+
 ### `@onAnyListen`
 
 A shout that is sent whenever a whisper or shout is issued.
