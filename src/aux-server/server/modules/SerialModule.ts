@@ -88,7 +88,7 @@ export class SerialModule implements AuxModule2 {
         try {
             // Complete the bluetooth connection before opening it up
             let jsond = '{"command":"connect","device":"' + event.device + '", "mac":"' + event.mac + '", "channel":"' + event.channel + '"}';
-            let curl_command = 'curl -H "Content-Type: application/json" -X POST -d \'' + jsond + '\' http://192.168.1.18:8090/post';
+            let curl_command = 'curl -H "Content-Type: application/json" -X POST -d \'' + jsond + '\' $(ip route show | awk \'/default/ {print $3}\'):8090/post';
 
             execSync(curl_command);
 
@@ -272,9 +272,10 @@ export class SerialModule implements AuxModule2 {
     _serialClose(simulation: Simulation, event: SerialCloseAction) {
         try {
             // Send a command to kill the rfcomm process
-            execSync(
-                'curl -H "Content-Type: application/json" -X POST -d \'{"command":"disconnect","device":' + event.device + '}\' $(ip route show | awk \'/default/ {print $3}\'):8090/post'
-            );
+            let jsond = '{"command":"disconnect","device":"' + event.device + '"}';
+            let curl_command = 'curl -H "Content-Type: application/json" -X POST -d \'' + jsond + '\' $(ip route show | awk \'/default/ {print $3}\'):8090/post';
+
+            execSync(curl_command);
 
             const port = btSerial.get('Connection01');
             port.close(event.cb);
