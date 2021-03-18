@@ -94,7 +94,8 @@ export type ExtraActions =
     | RequestFullscreenAction
     | ExitFullscreenAction
     | LocalFormAnimationAction
-    | GetRemoteCountAction;
+    | GetRemoteCountAction
+    | AddDropSnapTargetsAction;
 
 /**
  * Defines a set of possible async action types.
@@ -2507,6 +2508,32 @@ export interface OpenCircleWipeOptions {
 }
 
 /**
+ * An event that is used to add some snap points for a drag operation.
+ */
+export interface AddDropSnapTargetsAction extends Action {
+    type: 'add_drop_snap_targets';
+
+    /**
+     * The ID of the bot that, when it is a drop target, the snap points should be enabled.
+     * If null, then the targets apply globally during the drag operation.
+     */
+    botId?: string;
+
+    /**
+     * The list of snap targets that should be used.
+     */
+    targets: SnapTarget[];
+}
+
+/**
+ * The list of possible snap targets.
+ * - "grid" means that the dragged bot should snap to grid tiles.
+ * - "face" means that the dragged bot should snap to other bot faces.
+ * - A position means that the dragged bot should snap to the given position when it is close.
+ */
+export type SnapTarget = 'grid' | 'face' | { x: number; y: number; z: number };
+
+/**
  * An event that is used to start audio recording.
  */
 export interface BeginAudioRecordingAction extends AsyncAction {
@@ -4705,6 +4732,22 @@ export function circleWipe(
         open,
         options,
         taskId,
+    };
+}
+
+/**
+ * Creates a AddDropSnapTargetsAction.
+ * @param botId The ID of the bot.
+ * @param targets The list of snap targets to add.
+ */
+export function addDropSnap(
+    botId: string,
+    targets: SnapTarget[]
+): AddDropSnapTargetsAction {
+    return {
+        type: 'add_drop_snap_targets',
+        botId,
+        targets,
     };
 }
 
