@@ -390,11 +390,15 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
             this._updateCurrentDimension(nextContext);
 
+            // update the grid offset for the current bot
+            this._updateGridOffset(calc);
+
+            targetGridPosition.x += this._gridOffset.x;
+            targetGridPosition.y += this._gridOffset.y;
             this._toCoord = new Vector2(
                 targetGridPosition.x,
                 targetGridPosition.y
             ).clone();
-            this._toCoord.add(this._gridOffset);
 
             this._updateBotsPositions(this._bots, targetGridPosition);
             return true;
@@ -421,8 +425,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._updateGridOffset(calc);
 
             // Drag on the grid
+            position.x += this._gridOffset.x;
+            position.y += this._gridOffset.y;
             this._toCoord = new Vector2(position.x, position.y).clone();
-            this._toCoord.add(this._gridOffset);
 
             this._updateBotsPositions(this._bots, position);
             return true;
@@ -470,6 +475,12 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         if (closestPoint) {
             const nextContext = this._calculateNextDimension(grid);
             this._updateCurrentDimension(nextContext);
+            this._updateGridOffset(calc);
+
+            closestPoint.x += this._gridOffset.x;
+            closestPoint.y += this._gridOffset.y;
+            this._toCoord = new Vector2(closestPoint.x, closestPoint.y);
+
             this._updateBotsPositions(this._bots, closestPoint);
             return true;
         }
