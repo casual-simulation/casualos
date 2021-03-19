@@ -147,6 +147,9 @@ export abstract class PlayerSimulation3D extends Simulation3D {
         if (group) {
             return [...group.dimensions.values()][0];
         }
+        if (grid instanceof CompoundGrid3D) {
+            return this.getDimensionForGrid(grid.primaryGrid);
+        }
         return null;
     }
 
