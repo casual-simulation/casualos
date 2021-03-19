@@ -28,6 +28,7 @@ import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
 import { GridTile } from '../../Grid3D';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
+import { SnapBotsInterface } from 'aux-web/shared/interaction/DragOperation/SnapInterface';
 
 /**
  * Mod drag operation handles dragging mods
@@ -62,9 +63,17 @@ export class PlayerModDragOperation extends BaseModDragOperation {
         inventorySimulation3D: InventorySimulation3D,
         interaction: PlayerInteractionManager,
         mod: BotTags,
-        inputMethod: InputMethod
+        inputMethod: InputMethod,
+        snapInterface?: SnapBotsInterface
     ) {
-        super(simulation3D, interaction, mod, inputMethod);
+        super(
+            simulation3D,
+            interaction,
+            mod,
+            inputMethod,
+            undefined,
+            snapInterface
+        );
         this._inventorySimulation3D = inventorySimulation3D;
     }
 
