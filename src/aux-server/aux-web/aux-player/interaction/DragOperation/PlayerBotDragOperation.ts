@@ -14,6 +14,8 @@ import {
     hasValue,
     isBotMovable,
     SnapPoint,
+    getBotScale,
+    getAnchorPointOffset,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
@@ -302,11 +304,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         }
 
         if (options.snapFace) {
-            if (hit) {
-                const face = calculateHitFace(hit);
-                if (face) {
-                    console.log('snap to face');
-                    // TODO: make sure to update grid offsets too
+            if (hit && snapPointTarget) {
+                if (this._dragInFaceSpace(calc, hit, snapPointTarget)) {
+                    return true;
                 }
             }
         }
@@ -323,6 +323,70 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             }
         }
 
+        return false;
+    }
+
+    private _dragInFaceSpace(
+        calc: BotCalculationContext,
+        hit: Intersection,
+        snapPointTarget: AuxBot3D
+    ): boolean {
+        const face = calculateHitFace(hit);
+        if (face) {
+            const hitNormal = hit.face.normal.clone();
+            hitNormal.normalize();
+
+            const botGridPosition = getBotPosition(
+                calc,
+                snapPointTarget.bot,
+                snapPointTarget.dimension
+            );
+            const targetBotScale = getBotScale(calc, snapPointTarget.bot);
+            const targetBotOffset = getAnchorPointOffset(
+                calc,
+                snapPointTarget.bot
+            );
+            const draggedBotScale = getBotScale(calc, this._bot);
+            const draggedBotOffset = getAnchorPointOffset(calc, this._bot);
+            const finalDraggedBotOffset = {
+                x: draggedBotScale.x * draggedBotOffset.x,
+                y: draggedBotScale.y * draggedBotOffset.y,
+                z: draggedBotScale.z * draggedBotOffset.z,
+            };
+            const finalTargetBotOffset = {
+                x: targetBotScale.x * targetBotOffset.x,
+                y: targetBotScale.y * targetBotOffset.y,
+                z: targetBotScale.z * targetBotOffset.z,
+            };
+
+            const targetGridPosition = new Vector3(
+                botGridPosition.x +
+                    hitNormal.x *
+                        (targetBotScale.x * 0.5 +
+                            draggedBotScale.x * 0.5 +
+                            (finalTargetBotOffset.x - finalDraggedBotOffset.x)),
+                botGridPosition.y +
+                    -hitNormal.z *
+                        (targetBotScale.y * 0.5 +
+                            draggedBotScale.y * 0.5 +
+                            (finalTargetBotOffset.y - finalDraggedBotOffset.y)),
+                botGridPosition.z +
+                    hitNormal.y *
+                        (targetBotScale.z * 0.5 +
+                            draggedBotScale.z * 0.5 +
+                            (finalTargetBotOffset.z - finalDraggedBotOffset.z))
+            );
+
+            this._toCoord = new Vector2(
+                targetGridPosition.x,
+                targetGridPosition.y
+            ).clone();
+            this._toCoord.add(this._gridOffset);
+
+            this._updateBotsPositions(this._bots, targetGridPosition);
+
+            return true;
+        }
         return false;
     }
 
