@@ -204,6 +204,13 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 grid3D,
                 inputRay,
                 other,
+
+                // Use the grid that the target bot is on for snap points which are for this bot.
+                // This will put the dragged bot into the correct dimension.
+                !!other
+                    ? this._simulation3D.getGridForBot(other) ?? grid3D
+                    : grid3D,
+
                 hit,
                 botSnapOptions
             )
@@ -214,7 +221,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 calc,
                 grid3D,
                 inputRay,
-                null, // global options should not have a snap point target.
+                other,
+                null, // global options should not have a snap point grid.
                 hit,
                 globalSnapOptions
             )
@@ -272,7 +280,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
      * @param calc
      * @param grid3D
      * @param inputRay
-     * @param snapPointTarget The bot that the snap points are attached to. Setting this will ensure that snap points are evaluated in the same grid space as the given bot.
+     * @param target The bot that is being targeted by the input ray. This is used to handle snapping to bot faces.
+     * @param snapPointGrid The grid that should be used for snap points.
      * @param hit
      * @param options
      * @returns
@@ -281,7 +290,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         calc: BotCalculationContext,
         grid3D: Grid3D,
         inputRay: Ray,
-        snapPointTarget: AuxBot3D,
+        target: AuxBot3D,
+        snapPointGrid: Grid3D,
         hit: Intersection,
         options: SnapOptions
     ): boolean {
@@ -295,7 +305,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                     calc,
                     inputRay,
                     grid3D,
-                    snapPointTarget,
+                    snapPointGrid,
                     options.snapPoints
                 )
             ) {
@@ -304,8 +314,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         }
 
         if (options.snapFace) {
-            if (hit && snapPointTarget) {
-                if (this._dragInFaceSpace(calc, hit, snapPointTarget)) {
+            if (hit && target) {
+                if (this._dragInFaceSpace(calc, hit, target)) {
                     return true;
                 }
             }
@@ -422,12 +432,10 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         calc: BotCalculationContext,
         inputRay: Ray,
         grid3D: Grid3D,
-        snapPointTarget: AuxBot3D,
+        snapPointGrid: Grid3D,
         snapPoints: SnapOptions['snapPoints']
     ): boolean {
-        const grid = !!snapPointTarget
-            ? this._simulation3D.getGridForBot(snapPointTarget) ?? grid3D
-            : grid3D;
+        const grid = snapPointGrid ?? grid3D;
         let closestPoint: Vector3 = null;
         let closestSqrDistance = Infinity;
         let targetPoint = new Vector3();
