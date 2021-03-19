@@ -88,7 +88,8 @@ export class SerialModule implements AuxModule2 {
         try {
             // Complete the bluetooth connection before opening it up
             let jsond = '{"command":"connect","device":"' + event.device + '", "mac":"' + event.mac + '", "channel":"' + event.channel + '"}';
-            let curl_command = 'curl -H "Content-Type: application/json" -X POST -d \'' + jsond + '\' $(ip route show | awk \'/default/ {print $3}\'):8090/post';
+            let ip = execSync('ip route show | awk \'/default/ {print $3}\'').toString().trim();
+            let curl_command = 'curl -H "Content-Type: application/json" -X POST -d \'' + jsond + '\' ' + ip + ':8090/post';
 
             execSync(curl_command);
 
@@ -273,7 +274,8 @@ export class SerialModule implements AuxModule2 {
         try {
             // Send a command to kill the rfcomm process
             let jsond = '{"command":"disconnect","device":"' + event.device + '"}';
-            let curl_command = 'curl -H "Content-Type: application/json" -X POST -d \'' + jsond + '\' $(ip route show | awk \'/default/ {print $3}\'):8090/post';
+            let ip = execSync('ip route show | awk \'/default/ {print $3}\'').toString().trim();
+            let curl_command = 'curl -H "Content-Type: application/json" -X POST -d \'' + jsond + '\' ' + ip + ':8090/post';
 
             execSync(curl_command);
 
