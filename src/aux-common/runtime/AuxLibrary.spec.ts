@@ -2745,17 +2745,23 @@ describe('AuxLibrary', () => {
 
             it('should accept a list of targets', () => {
                 const action = library.api.os.addDropSnap('grid', 'face', {
-                    x: 1,
-                    y: 2,
-                    z: 3,
+                    point: {
+                        x: 1,
+                        y: 2,
+                        z: 3,
+                    },
+                    distance: 1,
                 });
                 const expected = addDropSnap(null, [
                     'grid',
                     'face',
                     {
-                        x: 1,
-                        y: 2,
-                        z: 3,
+                        point: {
+                            x: 1,
+                            y: 2,
+                            z: 3,
+                        },
+                        distance: 1,
                     },
                 ]);
                 expect(action).toEqual(expected);
