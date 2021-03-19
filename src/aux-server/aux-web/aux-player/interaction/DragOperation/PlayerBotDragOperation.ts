@@ -555,13 +555,6 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         if (gridTile) {
             this._toCoord = gridTile.tileCoordinate.clone();
             this._toCoord.add(this._gridOffset);
-            const result = getDropBotFromGridPosition(
-                calc,
-                this._dimension,
-                gridTile.tileCoordinate,
-                ...this._bots
-            );
-            this._other = result.other;
             this._updateBotsPositions(this._bots, this._toCoord);
         }
     }
