@@ -46,41 +46,16 @@ import { Subscription } from 'rxjs';
 import { ControllerData, InputMethod } from '../../../shared/scene/Input';
 import { posesEqual } from '../ClickOperation/ClickOperationUtils';
 import { merge } from 'lodash';
-
-export interface SnapOptions {
-    snapGround: boolean;
-    snapGrid: boolean;
-    snapFace: boolean;
-    snapPoints: SnapPoint[];
-    botId: string;
-}
-
-export interface SnapBotsInterface {
-    /**
-     * Adds snap targets for the given bot.
-     * @param botId The ID of the bot that the targets should be in effect for. If null, then the targets will be used globally.
-     * @param targets The targets.
-     */
-    addSnapTargets(botId: string, targets: SnapTarget[]): void;
-
-    /**
-     * Gets the global snap options.
-     */
-    globalSnapOptions(): SnapOptions;
-
-    /**
-     * Gets the snap options for the given bot.
-     * Returns null if there are no options for the bot.
-     * @param botId The ID of the bot.
-     */
-    botSnapOptions(botId: string): SnapOptions;
-}
+import {
+    SnapBotsHelper,
+    SnapBotsInterface,
+    SnapOptions,
+} from './SnapInterface';
 
 /**
  * Shared class for both BotDragOperation and NewBotDragOperation.
  */
-export abstract class BaseBotDragOperation
-    implements IOperation, SnapBotsInterface {
+export abstract class BaseBotDragOperation implements IOperation {
     protected _simulation3D: Simulation3D;
     protected _interaction: BaseInteractionManager;
     protected _bots: Bot[];
@@ -100,6 +75,7 @@ export abstract class BaseBotDragOperation
     protected _hit: Intersection;
     protected _dragStartFrame: number;
     protected _snapInterface: SnapBotsInterface;
+    protected _createdSnapInterface: boolean;
 
     /**
      * The bot that the onDropEnter event was sent to.
@@ -112,7 +88,6 @@ export abstract class BaseBotDragOperation
     protected _toCoord: Vector2;
     protected _fromCoord: Vector2;
     protected _sub: Subscription;
-    private _snapOptions: Map<string, SnapOptions>;
 
     protected get game() {
         return this._simulation3D.game;
@@ -157,34 +132,26 @@ export abstract class BaseBotDragOperation
         this._dragStartFrame = this.game.getTime().frameCount;
         this._sub = new Subscription();
         this._snapInterface = snapInterface;
+        if (!this._snapInterface) {
+            this._createdSnapInterface = true;
+            this._snapInterface = new SnapBotsHelper();
 
-        if (this._snapInterface) {
-            this.addSnapTargets = this._snapInterface.addSnapTargets.bind(
-                this._snapInterface
+            if (!this._controller) {
+                this._snapInterface.addSnapTargets(null, ['ground']);
+            }
+
+            const sub = this._simulation3D.simulation.localEvents.subscribe(
+                (action) => {
+                    if (action.type === 'add_drop_snap_targets') {
+                        this._snapInterface.addSnapTargets(
+                            action.botId,
+                            action.targets
+                        );
+                    }
+                }
             );
-            this.globalSnapOptions = this._snapInterface.globalSnapOptions.bind(
-                this._snapInterface
-            );
-            this.botSnapOptions = this._snapInterface.botSnapOptions.bind(
-                this._snapInterface
-            );
-        } else {
-            this._snapInterface = this;
+            this._sub.add(sub);
         }
-
-        this._snapOptions = new Map<string, SnapOptions>([
-            [
-                null,
-                {
-                    // snap to the ground by default if we are not using a controller
-                    snapGround: !this._controller,
-                    snapGrid: false,
-                    snapFace: false,
-                    snapPoints: [],
-                    botId: null,
-                },
-            ],
-        ]);
 
         if (this._controller) {
             this._lastVRControllerPose = this._controller.ray.clone();
@@ -202,11 +169,6 @@ export abstract class BaseBotDragOperation
                             sub.unsubscribe();
                         }
                         this._replaceDragBot(action.bot);
-                    } else if (
-                        this._snapInterface == this &&
-                        action.type === 'add_drop_snap_targets'
-                    ) {
-                        this.addSnapTargets(action.botId, action.targets);
                     }
                 }
             );
@@ -216,45 +178,6 @@ export abstract class BaseBotDragOperation
                 this._onDragPromise = null;
             });
         }
-    }
-
-    addSnapTargets(botId: string, targets: SnapTarget[]) {
-        let options = this._snapOptions.get(botId ?? null);
-        if (!options) {
-            options = {
-                snapGround: targets.some((t) => t === 'ground'),
-                snapGrid: targets.some((t) => t === 'grid'),
-                snapFace: targets.some((t) => t === 'face'),
-                snapPoints: targets.filter(
-                    (t) => typeof t === 'object'
-                ) as SnapOptions['snapPoints'],
-                botId: botId,
-            };
-            this._snapOptions.set(botId ?? null, options);
-        } else {
-            for (let target of targets) {
-                if (target === 'ground') {
-                    options.snapGround = true;
-                } else if (target === 'grid') {
-                    options.snapGrid = true;
-                } else if (target === 'face') {
-                    options.snapFace = true;
-                } else {
-                    options.snapPoints.push(target);
-                }
-            }
-        }
-    }
-
-    globalSnapOptions() {
-        return this._snapOptions.get(null);
-    }
-
-    botSnapOptions(botId: string): SnapOptions {
-        if (!botId) {
-            return null;
-        }
-        return this._snapOptions.get(botId) ?? null;
     }
 
     private _sendOnDragEvents(fromCoord: Vector2, bots: Bot[]) {

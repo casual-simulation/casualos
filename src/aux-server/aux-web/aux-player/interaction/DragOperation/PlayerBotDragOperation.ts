@@ -1,8 +1,4 @@
-import {
-    BaseBotDragOperation,
-    SnapBotsInterface,
-    SnapOptions,
-} from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
+import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import {
     Bot,
     BotCalculationContext,
@@ -49,6 +45,10 @@ import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { Grid3D, GridTile } from '../../Grid3D';
 import { BoundedGrid3D } from '../../BoundedGrid3D';
 import { CompoundGrid3D } from '../../CompoundGrid3D';
+import {
+    SnapBotsInterface,
+    SnapOptions,
+} from '../../../shared/interaction/DragOperation/SnapInterface';
 
 export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -150,7 +150,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._inventorySimulation3D,
             this._interaction,
             mod,
-            this._inputMethod
+            this._inputMethod,
+            this._snapInterface
         );
     }
 
@@ -188,8 +189,10 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         this._other = other?.bot ?? null;
         this._updateGridOffset(calc, this._other);
 
-        const botSnapOptions = this.botSnapOptions(this._other?.id);
-        const globalSnapOptions = this.globalSnapOptions();
+        const botSnapOptions = this._snapInterface.botSnapOptions(
+            this._other?.id
+        );
+        const globalSnapOptions = this._snapInterface.globalSnapOptions();
 
         // try snapping to bot options first,
         // then global options
