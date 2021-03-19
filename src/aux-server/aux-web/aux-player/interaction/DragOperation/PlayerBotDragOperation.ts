@@ -386,6 +386,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                             draggedBotScale.z * 0.5 +
                             (finalTargetBotOffset.z - finalDraggedBotOffset.z))
             );
+            const nextContext = snapPointTarget.dimension;
+
+            this._updateCurrentDimension(nextContext);
 
             this._toCoord = new Vector2(
                 targetGridPosition.x,
@@ -394,7 +397,6 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._toCoord.add(this._gridOffset);
 
             this._updateBotsPositions(this._bots, targetGridPosition);
-
             return true;
         }
         return false;
@@ -411,7 +413,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             const position = grid3D.getGridPosition(point);
 
             // Update the next dimension
-            const nextContext = this._calculateNextDimension(gridTile);
+            const nextContext = this._calculateNextDimension(gridTile.grid);
 
             this._updateCurrentDimension(nextContext);
 
@@ -466,6 +468,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         }
 
         if (closestPoint) {
+            const nextContext = this._calculateNextDimension(grid);
+            this._updateCurrentDimension(nextContext);
             this._updateBotsPositions(this._bots, closestPoint);
             return true;
         }
@@ -481,7 +485,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         const gridTile = grid3D.getTileFromRay(inputRay);
         if (gridTile) {
             // Update the next context
-            const nextContext = this._calculateNextDimension(gridTile);
+            const nextContext = this._calculateNextDimension(gridTile.grid);
 
             this._updateCurrentDimension(nextContext);
 
@@ -543,10 +547,10 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         return isBotMovable(calc, this._bots[0]);
     }
 
-    private _calculateNextDimension(tile: GridTile) {
+    private _calculateNextDimension(grid: Grid3D) {
         const dimension =
-            this._simulation3D.getDimensionForGrid(tile.grid) ||
-            this._inventorySimulation3D.getDimensionForGrid(tile.grid);
+            this._simulation3D.getDimensionForGrid(grid) ||
+            this._inventorySimulation3D.getDimensionForGrid(grid);
         return dimension;
     }
 
