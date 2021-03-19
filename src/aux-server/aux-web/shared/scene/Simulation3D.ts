@@ -41,6 +41,7 @@ import { DimensionGroup3D } from './DimensionGroup3D';
 import { AuxBot3D } from './AuxBot3D';
 import { PortalConfig } from 'aux-web/aux-player/scene/PortalConfig';
 import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
+import { Grid3D } from 'aux-web/aux-player/Grid3D';
 
 /**
  * Defines a class that is able to render a simulation.
@@ -796,6 +797,13 @@ export abstract class Simulation3D
      * Gets the camera that is used as the primary rendering camera for this simulation.
      */
     abstract getMainCameraRig(): CameraRig;
+
+    /**
+     * Gets the grid that the given bot is on.
+     * Returns null if the bot is not on a grid.
+     * @param bot The bot.
+     */
+    abstract getGridForBot(bot: AuxBot3D): Grid3D;
 
     /**
      * Gets the grid scale that should be used for the given bot.

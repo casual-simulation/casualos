@@ -69,4 +69,19 @@ export class CompoundGrid3D implements Grid3D {
 
         return grid.getGridPosition(position);
     }
+
+    /**
+     * Scales the given position by the tile scale and returns the result.
+     * @param position The input position.
+     */
+    getWorldPosition(position: { x: number; y: number; z: number }): Vector3 {
+        const grid = this.primaryGrid;
+        if (!grid) {
+            throw new Error(
+                'Cannot scale the position because no primrary grid exists!'
+            );
+        }
+
+        return grid.getWorldPosition(position);
+    }
 }

@@ -118,6 +118,15 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
         );
     }
 
+    getWorldPosition(position: { x: number; y: number; z: number }): Vector3 {
+        const result = new Vector3(
+            position.x,
+            position.z,
+            this.useAuxCoordinates ? -position.y : position.y
+        ).multiplyScalar(this.tileScale);
+        return result;
+    }
+
     /**
      * Retrive the grid tile that contains the given position.
      * @param position The world space position.

@@ -201,7 +201,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 calc,
                 grid3D,
                 inputRay,
-                this._other,
+                other,
                 hit,
                 botSnapOptions
             )
@@ -212,7 +212,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 calc,
                 grid3D,
                 inputRay,
-                this._other,
+                null, // global options should not have a snap point target.
                 hit,
                 globalSnapOptions
             )
@@ -265,11 +265,21 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         };
     }
 
+    /**
+     * Drags the bot(s) based on the given snap options.
+     * @param calc
+     * @param grid3D
+     * @param inputRay
+     * @param snapPointTarget The bot that the snap points are attached to. Setting this will ensure that snap points are evaluated in the same grid space as the given bot.
+     * @param hit
+     * @param options
+     * @returns
+     */
     private _dragWithOptions(
         calc: BotCalculationContext,
         grid3D: Grid3D,
         inputRay: Ray,
-        other: Bot,
+        snapPointTarget: AuxBot3D,
         hit: Intersection,
         options: SnapOptions
     ): boolean {
@@ -283,6 +293,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                     calc,
                     inputRay,
                     grid3D,
+                    snapPointTarget,
                     options.snapPoints
                 )
             ) {
@@ -347,14 +358,27 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         calc: BotCalculationContext,
         inputRay: Ray,
         grid3D: Grid3D,
+        snapPointTarget: AuxBot3D,
         snapPoints: SnapOptions['snapPoints']
     ): boolean {
+        const grid = !!snapPointTarget
+            ? this._simulation3D.getGridForBot(snapPointTarget) ?? grid3D
+            : grid3D;
         let closestPoint: Vector3 = null;
         let closestSqrDistance = Infinity;
+        let targetPoint = new Vector3();
+        let snapPoint = new Vector3();
         for (let point of snapPoints) {
+            snapPoint.set(point.point.x, point.point.y, point.point.z);
             const targetDistance = point.distance * point.distance;
-            const convertedPoint = grid3D.getGridPosition(point.point);
-            const sqrDistance = inputRay.distanceSqToPoint(convertedPoint);
+
+            // use world space for comparing the snap point to the ray
+            const convertedPoint = grid.getWorldPosition(snapPoint);
+            inputRay.closestPointToPoint(convertedPoint, targetPoint);
+
+            // convert back to grid space for comparing distances
+            const closestGridPoint = grid.getGridPosition(targetPoint);
+            const sqrDistance = closestGridPoint.distanceToSquared(snapPoint);
 
             if (sqrDistance > targetDistance) {
                 continue;

@@ -1,3 +1,4 @@
+import { SnapPoint } from '@casual-simulation/aux-common';
 import { Ray, Vector3, Vector2 } from '@casual-simulation/three';
 
 /**
@@ -24,10 +25,20 @@ export interface Grid3D {
     getPointFromRay(ray: Ray): Vector3;
 
     /**
-     * Scales the given position by the tile scale and returns the result.
-     * @param position The input position.
+     * Gets the grid-local position for the given world position.
+     * @param position The world position.
      */
     getGridPosition(position: { x: number; y: number; z: number }): Vector3;
+
+    /**
+     * Gets the world position for the given grid-local position.
+     * @param gridPosition The grid position.
+     */
+    getWorldPosition(gridPosition: {
+        x: number;
+        y: number;
+        z: number;
+    }): Vector3;
 }
 
 /**

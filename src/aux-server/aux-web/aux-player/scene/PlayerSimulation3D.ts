@@ -262,6 +262,12 @@ export abstract class PlayerSimulation3D extends Simulation3D {
         return config ? config.gridScale : calculateGridScale(null, null);
     }
 
+    getGridForBot(bot: AuxBot3D): Grid3D {
+        const portal = bot.dimensionGroup.portalTag;
+        const config = this._portalConfigs.get(portal);
+        return config?.grid3D ?? null;
+    }
+
     private _isUserDimensionGroupEvent(event: BotIndexEvent): boolean {
         return event.tag === 'menuPortal';
     }
