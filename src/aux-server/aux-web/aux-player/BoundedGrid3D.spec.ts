@@ -148,7 +148,7 @@ describe('BoundedGrid3D', () => {
                     let point = tile.corners[i]
                         .clone()
                         .add(dir.clone().multiplyScalar(0.01));
-                    let tileFromPos = grid.getTileFromPosition(point);
+                    let tileFromPos = grid.getTileFromPosition(point, true);
 
                     expect(tileFromPos.tileCoordinate.x).toBe(x);
                     expect(tileFromPos.tileCoordinate.y).toBe(y);
@@ -190,7 +190,7 @@ describe('BoundedGrid3D', () => {
                     let point = tile.corners[i]
                         .clone()
                         .add(dir.clone().multiplyScalar(0.01));
-                    let tileFromPos = grid.getTileFromPosition(point);
+                    let tileFromPos = grid.getTileFromPosition(point, true);
 
                     if (x < minX || x > maxX || y < minY || y > maxY) {
                         expect(tileFromPos).toBe(null);

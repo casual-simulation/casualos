@@ -14,8 +14,9 @@ export interface Grid3D {
      * Calculates the grid tile that intersects with the given ray.
      * Will return null if the ray does not interesect with the grid.
      * @param ray The ray to test.
+     * @param roundToWholeNumber Whether the grid tile X and Y should be rounded to a whole number.
      */
-    getTileFromRay(ray: Ray): GridTile;
+    getTileFromRay(ray: Ray, roundToWholeNumber?: boolean): GridTile;
 
     /**
      * Calculates the point that the given ray intersects the grid.

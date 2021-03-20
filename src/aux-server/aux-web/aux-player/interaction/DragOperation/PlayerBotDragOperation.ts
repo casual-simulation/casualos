@@ -411,11 +411,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         grid3D: Grid3D,
         inputRay: Ray
     ) {
-        const point = grid3D.getPointFromRay(inputRay);
-        const gridTile = grid3D.getTileFromRay(inputRay);
-        if (point && gridTile) {
-            const position = grid3D.getGridPosition(point);
-
+        const gridTile = grid3D.getTileFromRay(inputRay, false);
+        if (gridTile) {
             // Update the next dimension
             const nextContext = this._calculateNextDimension(gridTile.grid);
 
@@ -425,11 +422,12 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._updateGridOffset(calc);
 
             // Drag on the grid
-            position.x += this._gridOffset.x;
-            position.y += this._gridOffset.y;
-            this._toCoord = new Vector2(position.x, position.y).clone();
-
-            this._updateBotsPositions(this._bots, position);
+            this._toCoord = gridTile.tileCoordinate.clone();
+            this._toCoord.add(this._gridOffset);
+            this._updateBotsPositions(
+                this._bots,
+                new Vector3(this._toCoord.x, this._toCoord.y, 0)
+            );
             return true;
         }
         return false;
@@ -666,14 +664,17 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         if (gridTile) {
             this._toCoord = gridTile.tileCoordinate.clone();
             this._toCoord.add(this._gridOffset);
-            this._updateBotsPositions(this._bots, this._toCoord);
+            this._updateBotsPositions(
+                this._bots,
+                new Vector3(this._toCoord.x, this._toCoord.y, 0)
+            );
         }
     }
 
     protected async _updateBotsPositions(
         bots: Bot[],
         gridPosition: Vector3 | Vector2,
-        rotation?: Euler
+        rotation: Euler = new Euler()
     ) {
         this._sendDropEnterExitEvents(this._other);
         super._updateBotsPositions(bots, gridPosition, rotation);

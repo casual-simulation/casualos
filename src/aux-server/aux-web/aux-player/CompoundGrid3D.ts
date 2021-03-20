@@ -35,14 +35,14 @@ export class CompoundGrid3D implements Grid3D {
         return closestPoint;
     }
 
-    getTileFromRay(ray: Ray): GridTile {
+    getTileFromRay(ray: Ray, roundToWholeNumber?: boolean): GridTile {
         let closestTile: GridTile = null;
         let closestDist: number = Infinity;
         for (let grid of this.grids) {
             if (!grid.enabled) {
                 continue;
             }
-            const tile = grid.getTileFromRay(ray);
+            const tile = grid.getTileFromRay(ray, roundToWholeNumber);
             if (tile) {
                 const dist = ray.origin.distanceTo(tile.center);
                 if (dist < closestDist) {
