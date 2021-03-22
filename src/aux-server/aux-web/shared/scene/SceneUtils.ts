@@ -42,8 +42,10 @@ import {
     Bot,
     BotLabelAnchor,
     getBotScale,
+    getBotTransformer,
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
+import { Simulation } from '@casual-simulation/aux-vm';
 
 /**
  * Create copy of material that most meshes in Aux Builder/Player use.
@@ -771,4 +773,33 @@ export function calculateHitFace(hit: Intersection) {
         }
     }
     return null;
+}
+
+/**
+ * Determines if the given bot is a child of the given parent bot.
+ * @param child The child bot.
+ * @param parent The parent bot.
+ */
+export function isBotChildOf(
+    sim: Simulation,
+    child: Bot,
+    parent: Bot
+): boolean {
+    const maxDepth = 1000;
+    let transformer = getBotTransformer(null, child);
+    let index = 0;
+    while (transformer && index < maxDepth) {
+        if (transformer === parent.id) {
+            return true;
+        }
+        const realParent = sim.helper.botsState[transformer];
+        if (realParent) {
+            transformer = getBotTransformer(null, child);
+        } else {
+            transformer = null;
+        }
+        index += 1;
+    }
+
+    return false;
 }

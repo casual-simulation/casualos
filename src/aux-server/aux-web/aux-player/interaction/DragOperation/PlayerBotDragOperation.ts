@@ -40,6 +40,7 @@ import { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
 import {
     calculateHitFace,
+    isBotChildOf,
     objectForwardRay,
 } from '../../../shared/scene/SceneUtils';
 import { DebugObjectManager } from '../../../shared/scene/debugobjectmanager/DebugObjectManager';
@@ -256,7 +257,11 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 return (
                     obj.pointable &&
                     obj instanceof AuxBot3D &&
-                    !this._bots.find((b) => b.id === obj.bot.id)
+                    this._bots.every(
+                        (b) =>
+                            b.id !== obj.bot.id &&
+                            !isBotChildOf(this.simulation, obj.bot, b)
+                    )
                 );
             },
             viewport
