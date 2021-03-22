@@ -482,6 +482,30 @@ let that: {
 };
 ```
 
+### `@onAnyBotPointerDown`
+
+A shout that is sent all bots when the user starts clicking a bot.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onAnyBotPointerUp`
+
+A shout that is sent to all bots when the user stops clicking a bot.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
 ### `@onChat`
 
 A shout that is sent to all bots when the player sends a chat message.

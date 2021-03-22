@@ -986,6 +986,26 @@ export const ON_ANY_POINTER_ENTER: string = 'onAnyBotPointerEnter';
 export const ON_ANY_POINTER_EXIT: string = 'onAnyBotPointerExit';
 
 /**
+ * The name of the event that is triggered when a pointer starts clicking a bot.
+ */
+export const ON_POINTER_DOWN: string = 'onPointerDown';
+
+/**
+ * The name of the event that is triggered when a pointer stops clicking a bot.
+ */
+export const ON_POINTER_UP: string = 'onPointerUp';
+
+/**
+ * The name of the event that is triggered when a pointer starts hovering any bot.
+ */
+export const ON_ANY_POINTER_DOWN: string = 'onAnyBotPointerDown';
+
+/**
+ * The name of the event that is triggered when a pointer stops hovering any bot.
+ */
+export const ON_ANY_POINTER_UP: string = 'onAnyBotPointerUp';
+
+/**
  * The name of the event that is triggered when a QR Code is scanned.
  */
 export const ON_QR_CODE_SCANNED_ACTION_NAME: string = 'onQRCodeScanned';
@@ -1596,8 +1616,10 @@ export const KNOWN_TAGS: string[] = [
     ON_POINTER_EXIT,
     ON_ANY_POINTER_ENTER,
     ON_ANY_POINTER_EXIT,
-    'onPointerDown',
-    'onPointerUp',
+    ON_POINTER_DOWN,
+    ON_POINTER_UP,
+    ON_ANY_POINTER_DOWN,
+    ON_ANY_POINTER_UP,
     ON_SERVER_STREAMING_ACTION_NAME,
     ON_SERVER_STREAM_LOST_ACTION_NAME,
 
