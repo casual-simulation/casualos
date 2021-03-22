@@ -7,6 +7,7 @@
 ### :rocket: Improvements
 
 -   Added the `@onAnyBotDropEnter` and `@onAnyBotDropExit` shouts.
+-   Added the `@onAnyBotPointerDown` and `@onAnyBotPointerUp` shouts.
 
 ## V1.5.2
 
