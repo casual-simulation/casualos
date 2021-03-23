@@ -16,6 +16,8 @@ import {
     SnapPoint,
     getBotScale,
     getAnchorPointOffset,
+    createBot,
+    getBotRotation,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
@@ -79,7 +81,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     protected _botsInStack: Bot[];
 
     protected _hitBot: AuxBot3D;
-    protected _gridOffset: Vector2 = new Vector2(0, 0);
+    protected _gridOffset: Matrix4 = new Matrix4();
+
+    private _faceSnapBot: AuxBot3D;
     private _hasGridOffset: boolean = false;
     private _targetBot: Bot = undefined;
 
@@ -348,49 +352,141 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     ): boolean {
         const face = calculateHitFace(hit);
         if (face) {
+            // Below we do some matrix math to calculate the position that the
+            // bot should be placed at. This works by using one matrix to represent
+            // the position where the bot should be and continually transforming it until we have
+            // the final position.
+
+            // The final position can be found via these steps:
+            // 1. Find the offset that the bot should be placed from the center of the target bot.
+            //    This offset is needed so that we take bot scales into account when positioning the dragged bot.
+            // 2. Create a matrix with the offset from step 1. This is the target matrix.
+            // 3. Create a matrix with the grid scale of the target bot. This is the grid scale matrix.
+            //    We need this so that the offset can be scaled up/down so that the length of 1 grid unit === 1 scale unit
+            // 4. Determine if the grid scale has already been applied to the target bot container object.
+            //    We need this because bots apply the grid scale to their scale containers and not the container object.
+            //    Child bots (via the transformer tag) have the grid scale in their container object
+            //    because their parent already has further up in the chain.
+            //    Normally we would just use the scale container, but we cannot because it has both the bot scale and
+            //    grid scale applied to it at the same time.
+            //    That means we may need to apply the grid scale manually.
+            //    Also note that just because the scale has not been applied to the container object that does not mean
+            //    the grid scale has not been applied to the bot position. The grid scale is always multiplied into the bot position
+            //    separately.
+            // 5. If the grid scale has not been applied to the target bot container, then apply the grid scale matrix.
+            //    (grid scale matrix) * (target matrix)
+            // 6. Invert the grid scale matrix.
+            // 7. If the grid scale has not been applied to the target bot container, then apply the grid scale matrix.
+            //    We need this step because otherwise the rotations from the target bot would be scaled by the grid scale.
+            //    Applying the inverse of the matrix [(grid scale) * (target) * (inverse grid scale)] changes the translation
+            //    but restores everything else in the matrix to its identity.
+            // 8. Apply the target bot matrix to the target matrix
+            //    (target bot matrix) * (target matrix)
+            // 9. Get the matrix of the dimension bot and invert it.
+            //    We need this because we don't want to get the world position of the bot - we only want the dimension local position.
+            //    This is because dimensions themselves can be rotated and in weird orientations. We only need the grid position within the dimension.
+            // 10. Apply the inverted dimension matrix to the target matrix.
+            //     (inverse dimension matrix) * (target matrix)
+            // 11. Apply the grid scale matrix to the target matrix.
+            //     We need this because target bot matrix contains the grid scale applied to its position and we need to remove it so it will be
+            //     an AUX position.
+            // 12. We can now deconstruct the target matrix and convert the rest into AUX coordinates.
+
+            // 1.
             const hitNormal = hit.face.normal.clone();
             hitNormal.normalize();
 
-            const botGridPosition = getBotPosition(
-                calc,
-                snapPointTarget.bot,
-                snapPointTarget.dimension
+            // Calculate the relative offset needed
+            // to adjust for scale differences between the parent space
+            // and the local space. (e.g. if scale is 0.5 then X should be positioned at 0.75 instead of 1)
+            const botScale = getBotScale(calc, this._bots[0], 1);
+            const snapScale = getBotScale(calc, snapPointTarget.bot, 1);
+            const halfBotScale = new Vector3(
+                botScale.x * 0.5,
+                // Don't offset the Z position of bots when placing on the top of a bot.
+                // TODO: Support different anchor points
+                0,
+                botScale.y * 0.5
             );
-            const targetBotScale = getBotScale(calc, snapPointTarget.bot);
-            const targetBotOffset = getAnchorPointOffset(
-                calc,
-                snapPointTarget.bot
-            );
-            const draggedBotScale = getBotScale(calc, this._bot);
-            const draggedBotOffset = getAnchorPointOffset(calc, this._bot);
-            const finalDraggedBotOffset = {
-                x: draggedBotScale.x * draggedBotOffset.x,
-                y: draggedBotScale.y * draggedBotOffset.y,
-                z: draggedBotScale.z * draggedBotOffset.z,
-            };
-            const finalTargetBotOffset = {
-                x: targetBotScale.x * targetBotOffset.x,
-                y: targetBotScale.y * targetBotOffset.y,
-                z: targetBotScale.z * targetBotOffset.z,
-            };
 
-            const targetGridPosition = new Vector3(
-                botGridPosition.x +
-                    hitNormal.x *
-                        (targetBotScale.x * 0.5 +
-                            draggedBotScale.x * 0.5 +
-                            (finalTargetBotOffset.x - finalDraggedBotOffset.x)),
-                botGridPosition.y +
-                    -hitNormal.z *
-                        (targetBotScale.y * 0.5 +
-                            draggedBotScale.y * 0.5 +
-                            (finalTargetBotOffset.y - finalDraggedBotOffset.y)),
-                botGridPosition.z +
-                    hitNormal.y *
-                        (targetBotScale.z * 0.5 +
-                            draggedBotScale.z * 0.5 +
-                            (finalTargetBotOffset.z - finalDraggedBotOffset.z))
+            const halfSnapScale = new Vector3(
+                snapScale.x * 0.5,
+                snapScale.z,
+                snapScale.y * 0.5
             );
+
+            halfBotScale.multiply(hitNormal);
+            halfSnapScale.multiply(hitNormal);
+            hitNormal.addVectors(halfBotScale, halfSnapScale);
+
+            // 2.
+            const targetMatrix = new Matrix4();
+            targetMatrix.makeTranslation(hitNormal.x, hitNormal.y, hitNormal.z);
+
+            // 3.
+            const globalGridScale = snapPointTarget.calculateGridScale();
+            const gridScaleMatrix = new Matrix4();
+            gridScaleMatrix.makeScale(
+                globalGridScale,
+                globalGridScale,
+                globalGridScale
+            );
+
+            // 4.
+            if (snapPointTarget.isOnGrid) {
+                // 5.
+                targetMatrix.premultiply(gridScaleMatrix);
+            }
+
+            // 6.
+            gridScaleMatrix.invert();
+
+            if (snapPointTarget.isOnGrid) {
+                // 7.
+                targetMatrix.multiply(gridScaleMatrix);
+            }
+
+            // 8.
+            const snapPointWorld = snapPointTarget.container.matrixWorld;
+            targetMatrix.premultiply(snapPointWorld);
+
+            // 9.
+            const dimensionMatrix = snapPointTarget.dimensionGroup.matrixWorld
+                .clone()
+                .invert();
+
+            // 10.
+            targetMatrix.premultiply(dimensionMatrix);
+
+            // 11.
+            targetMatrix.premultiply(gridScaleMatrix);
+
+            // 12.
+            const position = new Vector3();
+            const rotation = new Quaternion();
+            const worldScale = new Vector3();
+
+            // TODO: Cleanup so that we don't decompose this matrix
+            // just to make another. We should be able to rotate and mirror the correct parts
+            // of targetMatrix so that it ends up in aux coordinate space.
+            targetMatrix.decompose(position, rotation, worldScale);
+            const euler = new Euler().setFromQuaternion(rotation);
+
+            const auxPosition = new Matrix4().makeTranslation(
+                position.x,
+                -position.z,
+                position.y
+            );
+
+            const auxRotation = new Matrix4().makeRotationFromEuler(
+                new Euler(euler.x, euler.z, euler.y)
+            );
+            const auxScale = new Matrix4().makeScale(
+                worldScale.x,
+                worldScale.z,
+                worldScale.y
+            );
+
             const nextContext = snapPointTarget.dimension;
 
             this._updateCurrentDimension(nextContext);
@@ -398,14 +494,25 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             // update the grid offset for the current bot
             this._updateGridOffset(calc);
 
-            targetGridPosition.x += this._gridOffset.x;
-            targetGridPosition.y += this._gridOffset.y;
-            this._toCoord = new Vector2(
-                targetGridPosition.x,
-                targetGridPosition.y
-            ).clone();
+            const auxMatrix = new Matrix4()
+                .multiply(auxPosition)
+                .multiply(auxRotation)
+                .multiply(auxScale)
+                .premultiply(this._gridOffset);
 
-            this._updateBotsPositions(this._bots, targetGridPosition);
+            const finalPosition = new Vector3();
+            const finalRotation = new Quaternion();
+            const finalScale = new Vector3();
+            auxMatrix.decompose(finalPosition, finalRotation, finalScale);
+
+            this._toCoord = new Vector2(finalPosition.x, finalPosition.y);
+
+            this._updateBotsPositions(
+                this._bots,
+                finalPosition,
+                new Euler().setFromQuaternion(finalRotation)
+            );
+
             return true;
         }
         return false;
@@ -427,12 +534,14 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._updateGridOffset(calc);
 
             // Drag on the grid
-            this._toCoord = gridTile.tileCoordinate.clone();
-            this._toCoord.add(this._gridOffset);
-            this._updateBotsPositions(
-                this._bots,
-                new Vector3(this._toCoord.x, this._toCoord.y, 0)
+            const result = new Vector3(
+                gridTile.tileCoordinate.x,
+                gridTile.tileCoordinate.y,
+                0
             );
+            result.applyMatrix4(this._gridOffset);
+            this._toCoord = new Vector2(result.x, result.y);
+            this._updateBotsPositions(this._bots, result);
             return true;
         }
         return false;
@@ -480,8 +589,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._updateCurrentDimension(nextContext);
             this._updateGridOffset(calc);
 
-            closestPoint.x += this._gridOffset.x;
-            closestPoint.y += this._gridOffset.y;
+            closestPoint.applyMatrix4(this._gridOffset);
             this._toCoord = new Vector2(closestPoint.x, closestPoint.y);
 
             this._updateBotsPositions(this._bots, closestPoint);
@@ -538,14 +646,31 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             return;
         }
         this._targetBot = targetBot;
-        this._gridOffset.set(0, 0);
+        this._gridOffset.identity();
         const transformer = getBotTransformer(calc, this._bots[0]);
         if (hasValue(transformer)) {
             this._hasGridOffset = true;
             let parent = calc.objects.find((bot) => bot.id === transformer);
             while (parent) {
                 const pos = getBotPosition(calc, parent, this._dimension);
-                this._gridOffset.sub(new Vector2(pos.x, pos.y));
+                const scale = getBotScale(calc, parent, 1);
+                const rotation = getBotRotation(calc, parent, this._dimension);
+                const anchorPointOffset = getAnchorPointOffset(calc, parent);
+                let temp = new Matrix4();
+                temp.makeTranslation(
+                    anchorPointOffset.x * 2,
+                    anchorPointOffset.y * 2,
+                    anchorPointOffset.z * 2
+                ).invert();
+                this._gridOffset.multiply(temp);
+                temp.makeScale(scale.x, scale.y, scale.z).invert();
+                this._gridOffset.multiply(temp);
+                temp.makeRotationFromEuler(
+                    new Euler(rotation.x, rotation.y, rotation.z)
+                ).invert();
+                this._gridOffset.multiply(temp);
+                temp.makeTranslation(pos.x, pos.y, pos.z).invert();
+                this._gridOffset.multiply(temp);
 
                 if (parent === targetBot) {
                     break;
@@ -667,12 +792,14 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
      */
     private _dragOnGridTile(calc: BotCalculationContext, gridTile: GridTile) {
         if (gridTile) {
-            this._toCoord = gridTile.tileCoordinate.clone();
-            this._toCoord.add(this._gridOffset);
-            this._updateBotsPositions(
-                this._bots,
-                new Vector3(this._toCoord.x, this._toCoord.y, 0)
+            const result = new Vector3(
+                gridTile.tileCoordinate.x,
+                gridTile.tileCoordinate.y,
+                0
             );
+            result.applyMatrix4(this._gridOffset);
+            this._toCoord = new Vector2(result.x, result.y);
+            this._updateBotsPositions(this._bots, result);
         }
     }
 
