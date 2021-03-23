@@ -416,6 +416,21 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 snapScale.y * 0.5
             );
 
+            let parent = getBotTransformer(calc, snapPointTarget.bot);
+            while (parent) {
+                const parentBot = this._simulation3D.simulation.helper
+                    .botsState[parent];
+                if (parentBot) {
+                    const parentScale = getBotScale(calc, parentBot, 1);
+                    halfSnapScale.x /= parentScale.x;
+                    halfSnapScale.y /= parentScale.y;
+                    halfSnapScale.z /= parentScale.z;
+                    parent = getBotTransformer(calc, parentBot);
+                } else {
+                    parent = null;
+                }
+            }
+
             halfBotScale.multiply(hitNormal);
             halfSnapScale.multiply(hitNormal);
             hitNormal.addVectors(halfBotScale, halfSnapScale);
