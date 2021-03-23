@@ -110,7 +110,7 @@ export class BotRenderer {
 
         this._render();
 
-        const gl = this._renderer.context;
+        const gl = this._renderer.getContext();
         const size = {
             width: gl.drawingBufferWidth,
             height: gl.drawingBufferHeight,

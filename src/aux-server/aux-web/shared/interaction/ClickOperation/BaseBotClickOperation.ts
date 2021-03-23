@@ -43,7 +43,7 @@ export abstract class BaseBotClickOperation extends BaseClickOperation {
     }
 
     protected _canDrag(calc: BotCalculationContext): boolean {
-        return isBotMovable(calc, this._bot);
+        return true; //isBotMovable(calc, this._bot);
     }
 
     protected _baseCreateDragOperation(calc: BotCalculationContext) {

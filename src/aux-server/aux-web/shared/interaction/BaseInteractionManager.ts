@@ -46,7 +46,7 @@ import { Game } from '../scene/Game';
 import { DimensionGroup3D } from '../scene/DimensionGroup3D';
 import { DebugObjectManager } from '../scene/debugobjectmanager/DebugObjectManager';
 import { Viewport } from '../scene/Viewport';
-import { Grid3D } from 'aux-web/aux-player/Grid3D';
+import { Grid3D } from '../scene/Grid3D';
 import { BaseBotDragOperation } from './DragOperation/BaseBotDragOperation';
 import { BaseModDragOperation } from './DragOperation/BaseModDragOperation';
 import { BaseClickOperation } from './ClickOperation/BaseClickOperation';

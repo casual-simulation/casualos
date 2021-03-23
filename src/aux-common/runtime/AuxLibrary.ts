@@ -172,6 +172,7 @@ import {
     RegisterPrefixOptions,
     OpenCircleWipeOptions,
     circleWipe,
+    addDropSnap as calcAddDropSnap,
     SuperShoutAction,
     ShowToastAction,
     ShowJoinCodeAction,
@@ -210,6 +211,8 @@ import {
     beginAudioRecording as calcBeginAudioRecording,
     endAudioRecording as calcEndAudioRecording,
     cancelAnimation,
+    SnapTarget,
+    AddDropSnapTargetsAction,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -676,6 +679,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 share,
                 closeCircleWipe,
                 openCircleWipe,
+                addDropSnap,
+                addBotDropSnap,
                 log,
                 inSheet,
 
@@ -2078,6 +2083,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             task.taskId
         );
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Adds the given list of snap targets to the current drag operation.
+     * @param targets The list of targets to add.
+     */
+    function addDropSnap(...targets: SnapTarget[]): AddDropSnapTargetsAction {
+        return addAction(calcAddDropSnap(null, targets));
+    }
+
+    /**
+     * Adds the given list of snap targets for when the specified bot is being dropped on.
+     * @param bot The bot.
+     * @param targets The targets that should be enabled when the bot is being dropped on.
+     */
+    function addBotDropSnap(
+        bot: RuntimeBot | string,
+        ...targets: SnapTarget[]
+    ): AddDropSnapTargetsAction {
+        return addAction(calcAddDropSnap(getID(bot), targets));
     }
 
     /**

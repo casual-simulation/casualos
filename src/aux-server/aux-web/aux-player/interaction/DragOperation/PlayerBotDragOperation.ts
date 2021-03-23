@@ -2,18 +2,22 @@ import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/
 import {
     Bot,
     BotCalculationContext,
-    getBotDragMode,
     BotDragMode,
     objectsAtDimensionGridPosition,
-    calculateBotDragStackPosition,
+    getDropBotFromGridPosition,
     BotTags,
     BotPositioningMode,
-    getBotPositioningMode,
     getBotPosition,
     getBotIndex,
     calculateStringTagValue,
     getBotTransformer,
     hasValue,
+    isBotMovable,
+    SnapPoint,
+    getBotScale,
+    getAnchorPointOffset,
+    createBot,
+    getBotRotation,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
@@ -36,12 +40,18 @@ import { PlayerGame } from '../../scene/PlayerGame';
 import { take, drop } from 'lodash';
 import { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
-import { objectForwardRay } from '../../../shared/scene/SceneUtils';
-import { DebugObjectManager } from '../../../shared/scene/debugobjectmanager/DebugObjectManager';
+import {
+    calculateHitFace,
+    convertRotationToAuxCoordinates,
+    isBotChildOf,
+    objectForwardRay,
+} from '../../../shared/scene/SceneUtils';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import { Grid3D, GridTile } from '../../Grid3D';
-import { BoundedGrid3D } from '../../BoundedGrid3D';
-import { CompoundGrid3D } from '../../CompoundGrid3D';
+import { Grid3D, GridTile } from '../../../shared/scene/Grid3D';
+import {
+    SnapBotsInterface,
+    SnapOptions,
+} from '../../../shared/interaction/DragOperation/SnapInterface';
 
 export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -69,7 +79,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     protected _botsInStack: Bot[];
 
     protected _hitBot: AuxBot3D;
-    protected _gridOffset: Vector2 = new Vector2(0, 0);
+    protected _gridOffset: Matrix4 = new Matrix4();
+
+    private _faceSnapBot: AuxBot3D;
     private _hasGridOffset: boolean = false;
     private _targetBot: Bot = undefined;
 
@@ -90,7 +102,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         fromCoord?: Vector2,
         skipOnDragEvents: boolean = false,
         clickedFace?: string,
-        hit?: Intersection
+        hit?: Intersection,
+        snapInterface?: SnapBotsInterface
     ) {
         super(
             playerPageSimulation3D,
@@ -101,7 +114,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             fromCoord,
             skipOnDragEvents,
             clickedFace,
-            hit
+            hit,
+            snapInterface
         );
 
         this._botsInStack = drop(bots, 1);
@@ -130,7 +144,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._fromCoord,
             true,
             this._clickedFace,
-            this._hit
+            this._hit,
+            this._snapInterface
         );
     }
 
@@ -140,7 +155,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._inventorySimulation3D,
             this._interaction,
             mod,
-            this._inputMethod
+            this._inputMethod,
+            this._snapInterface
         );
     }
 
@@ -154,119 +170,465 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             ? this._inventorySimulation3D.grid3D
             : this._simulation3D.grid3D;
 
-        if (
-            this._controller &&
-            this._getBotsPositioningMode(calc) === 'absolute'
-        ) {
-            // Drag in free space
-            this._dragFreeSpace(calc, grid3D, inputRay);
+        const canDrag = this._canDrag(calc);
+
+        if (!canDrag) {
             return;
         }
 
-        this._dragInGridSpace(calc, grid3D, inputRay);
+        this._dragInSnapSpace(calc, grid3D, inputRay);
     }
 
     /**
-     * Drags the bot(s) in grid space using the raycasting mode configured on the portal.
+     * Drags the bot(s) in "snap" space using the raycasting mode configured on the portal.
      * @param calc
      * @param grid3D
      * @param inputRay
      */
-    private _dragInGridSpace(
+    private _dragInSnapSpace(
+        calc: BotCalculationContext,
+        grid3D: Grid3D,
+        inputRay: Ray
+    ) {
+        const { bot: other, hit } = this._raycastOtherBots(inputRay);
+        this._other = other?.bot ?? null;
+        this._updateGridOffset(calc, this._other);
+
+        const botSnapOptions = this._snapInterface.botSnapOptions(
+            this._other?.id
+        );
+        const globalSnapOptions = this._snapInterface.globalSnapOptions();
+
+        // try snapping to bot options first,
+        // then global options
+        if (
+            this._dragWithOptions(
+                calc,
+                grid3D,
+                inputRay,
+                other,
+
+                // Use the grid that the target bot is on for snap points which are for this bot.
+                // This will put the dragged bot into the correct dimension.
+                !!other
+                    ? this._simulation3D.getGridForBot(other) ?? grid3D
+                    : grid3D,
+
+                hit,
+                botSnapOptions
+            )
+        ) {
+            return;
+        } else if (
+            this._dragWithOptions(
+                calc,
+                grid3D,
+                inputRay,
+                other,
+                null, // global options should not have a snap point grid.
+                hit,
+                globalSnapOptions
+            )
+        ) {
+            return;
+        }
+
+        // if we cannot snap to anything,
+        // then fallback to default positioning.
+        if (this._controller) {
+            // free space drag for controllers
+            this._dragFreeSpace(calc, grid3D, inputRay);
+            return;
+        } else {
+            // ground space drag for everything else
+            this._dragInGroundSpace(calc, grid3D, inputRay);
+        }
+    }
+
+    private _raycastOtherBots(inputRay: Ray) {
+        const viewport = (this._inInventory
+            ? this._inventorySimulation3D.getMainCameraRig()
+            : this._simulation3D.getMainCameraRig()
+        ).viewport;
+        const {
+            gameObject,
+            hit,
+        } = this._interaction.findHoveredGameObjectFromRay(
+            inputRay,
+            (obj) => {
+                return (
+                    obj.pointable &&
+                    obj instanceof AuxBot3D &&
+                    this._bots.every(
+                        (b) =>
+                            b.id !== obj.bot.id &&
+                            !isBotChildOf(this.simulation, obj.bot, b)
+                    )
+                );
+            },
+            viewport
+        );
+
+        if (gameObject instanceof AuxBot3D) {
+            return {
+                bot: gameObject,
+                hit,
+            };
+        }
+
+        return {
+            bot: null,
+            hit: null,
+        };
+    }
+
+    /**
+     * Drags the bot(s) based on the given snap options.
+     * @param calc
+     * @param grid3D
+     * @param inputRay
+     * @param target The bot that is being targeted by the input ray. This is used to handle snapping to bot faces.
+     * @param snapPointGrid The grid that should be used for snap points.
+     * @param hit
+     * @param options
+     * @returns
+     */
+    private _dragWithOptions(
+        calc: BotCalculationContext,
+        grid3D: Grid3D,
+        inputRay: Ray,
+        target: AuxBot3D,
+        snapPointGrid: Grid3D,
+        hit: Intersection,
+        options: SnapOptions
+    ): boolean {
+        if (!options) {
+            return false;
+        }
+
+        if (options.snapPoints.length > 0) {
+            if (
+                this._dragWithSnapPoints(
+                    calc,
+                    inputRay,
+                    grid3D,
+                    snapPointGrid,
+                    options.snapPoints
+                )
+            ) {
+                return true;
+            }
+        }
+
+        if (options.snapFace) {
+            if (hit && target) {
+                if (this._dragInFaceSpace(calc, hit, target)) {
+                    return true;
+                }
+            }
+        }
+
+        if (options.snapGrid) {
+            if (this._dragOnGrid(calc, grid3D, inputRay)) {
+                return true;
+            }
+        }
+
+        if (options.snapGround) {
+            if (this._dragInGroundSpace(calc, grid3D, inputRay)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private _dragInFaceSpace(
+        calc: BotCalculationContext,
+        hit: Intersection,
+        snapPointTarget: AuxBot3D
+    ): boolean {
+        const face = calculateHitFace(hit);
+        if (face) {
+            // Below we do some matrix math to calculate the position that the
+            // bot should be placed at. This works by using one matrix to represent
+            // the position where the bot should be and continually transforming it until we have
+            // the final position.
+
+            // The final position can be found via these steps:
+            // 1. Find the offset that the bot should be placed from the center of the target bot.
+            //    This offset is needed so that we take bot scales into account when positioning the dragged bot.
+            // 2. Create a matrix with the offset from step 1. This is the target matrix.
+            // 3. Create a matrix with the grid scale of the target bot. This is the grid scale matrix.
+            //    We need this so that the offset can be scaled up/down so that the length of 1 grid unit === 1 scale unit
+            // 4. Determine if the grid scale has already been applied to the target bot container object.
+            //    We need this because bots apply the grid scale to their scale containers and not the container object.
+            //    Child bots (via the transformer tag) have the grid scale in their container object
+            //    because their parent already has further up in the chain.
+            //    Normally we would just use the scale container, but we cannot because it has both the bot scale and
+            //    grid scale applied to it at the same time.
+            //    That means we may need to apply the grid scale manually.
+            //    Also note that just because the scale has not been applied to the container object that does not mean
+            //    the grid scale has not been applied to the bot position. The grid scale is always multiplied into the bot position
+            //    separately.
+            // 5. If the grid scale has not been applied to the target bot container, then apply the grid scale matrix.
+            //    (grid scale matrix) * (target matrix)
+            // 6. Invert the grid scale matrix.
+            // 7. If the grid scale has not been applied to the target bot container, then apply the grid scale matrix.
+            //    We need this step because otherwise the rotations from the target bot would be scaled by the grid scale.
+            //    Applying the inverse of the matrix [(grid scale) * (target) * (inverse grid scale)] changes the translation
+            //    but restores everything else in the matrix to its identity.
+            // 8. Apply the target bot matrix to the target matrix
+            //    (target bot matrix) * (target matrix)
+            // 9. Get the matrix of the dimension bot and invert it.
+            //    We need this because we don't want to get the world position of the bot - we only want the dimension local position.
+            //    This is because dimensions themselves can be rotated and in weird orientations. We only need the grid position within the dimension.
+            // 10. Apply the inverted dimension matrix to the target matrix.
+            //     (inverse dimension matrix) * (target matrix)
+            // 11. Apply the grid scale matrix to the target matrix.
+            //     We need this because target bot matrix contains the grid scale applied to its position and we need to remove it so it will be
+            //     an AUX position.
+            // 12. We can now deconstruct the target matrix and convert the rest into AUX coordinates.
+
+            // 1.
+            const hitNormal = hit.face.normal.clone();
+            hitNormal.normalize();
+
+            // Calculate the relative offset needed
+            // to adjust for scale differences between the parent space
+            // and the local space. (e.g. if scale is 0.5 then X should be positioned at 0.75 instead of 1)
+            const botScale = getBotScale(calc, this._bots[0], 1);
+            const snapScale = getBotScale(calc, snapPointTarget.bot, 1);
+            const halfBotScale = new Vector3(
+                botScale.x * 0.5,
+                // Don't offset the Z position of bots when placing on the top of a bot.
+                // TODO: Support different anchor points
+                0,
+                botScale.y * 0.5
+            );
+
+            const halfSnapScale = new Vector3(
+                snapScale.x * 0.5,
+                snapScale.z,
+                snapScale.y * 0.5
+            );
+
+            let parent = getBotTransformer(calc, snapPointTarget.bot);
+            while (parent) {
+                const parentBot = this._simulation3D.simulation.helper
+                    .botsState[parent];
+                if (parentBot) {
+                    const parentScale = getBotScale(calc, parentBot, 1);
+                    halfSnapScale.x /= parentScale.x;
+                    halfSnapScale.y /= parentScale.y;
+                    halfSnapScale.z /= parentScale.z;
+                    parent = getBotTransformer(calc, parentBot);
+                } else {
+                    parent = null;
+                }
+            }
+
+            halfBotScale.multiply(hitNormal);
+            halfSnapScale.multiply(hitNormal);
+            hitNormal.addVectors(halfBotScale, halfSnapScale);
+
+            // 2.
+            const targetMatrix = new Matrix4();
+            targetMatrix.makeTranslation(hitNormal.x, hitNormal.y, hitNormal.z);
+
+            // 3.
+            const globalGridScale = snapPointTarget.calculateGridScale();
+            const gridScaleMatrix = new Matrix4();
+            gridScaleMatrix.makeScale(
+                globalGridScale,
+                globalGridScale,
+                globalGridScale
+            );
+
+            // 4.
+            if (snapPointTarget.isOnGrid) {
+                // 5.
+                targetMatrix.premultiply(gridScaleMatrix);
+            }
+
+            // 6.
+            gridScaleMatrix.invert();
+
+            if (snapPointTarget.isOnGrid) {
+                // 7.
+                targetMatrix.multiply(gridScaleMatrix);
+            }
+
+            // 8.
+            const snapPointWorld = snapPointTarget.container.matrixWorld.clone();
+            targetMatrix.premultiply(snapPointWorld);
+
+            // 9.
+            const dimensionMatrix = snapPointTarget.dimensionGroup.matrixWorld
+                .clone()
+                .invert();
+
+            // 10.
+            targetMatrix.premultiply(dimensionMatrix);
+
+            // 11.
+            targetMatrix.premultiply(gridScaleMatrix);
+
+            // 12.
+            const position = new Vector3();
+            const rotation = new Quaternion();
+            const worldScale = new Vector3();
+
+            targetMatrix.decompose(position, rotation, worldScale);
+
+            const auxPosition = new Matrix4().makeTranslation(
+                position.x,
+                -position.z,
+                position.y
+            );
+
+            const auxRotation = new Matrix4().makeRotationFromQuaternion(
+                rotation
+            );
+            convertRotationToAuxCoordinates(auxRotation);
+
+            const auxScale = new Matrix4().makeScale(
+                worldScale.x,
+                worldScale.z,
+                worldScale.y
+            );
+
+            const nextContext = snapPointTarget.dimension;
+
+            this._updateCurrentDimension(nextContext);
+
+            // update the grid offset for the current bot
+            this._updateGridOffset(calc);
+
+            const auxMatrix = new Matrix4()
+                .multiply(auxPosition)
+                .multiply(auxRotation)
+                .multiply(auxScale)
+                .premultiply(this._gridOffset);
+
+            const finalPosition = new Vector3();
+            const finalRotation = new Quaternion();
+            const finalScale = new Vector3();
+            auxMatrix.decompose(finalPosition, finalRotation, finalScale);
+
+            this._toCoord = new Vector2(finalPosition.x, finalPosition.y);
+
+            this._updateBotsPositions(
+                this._bots,
+                finalPosition,
+                new Euler().setFromQuaternion(finalRotation)
+            );
+
+            return true;
+        }
+        return false;
+    }
+
+    private _dragInGroundSpace(
+        calc: BotCalculationContext,
+        grid3D: Grid3D,
+        inputRay: Ray
+    ) {
+        const gridTile = grid3D.getTileFromRay(inputRay, false);
+        if (gridTile) {
+            // Update the next dimension
+            const nextContext = this._calculateNextDimension(gridTile.grid);
+
+            this._updateCurrentDimension(nextContext);
+
+            // update the grid offset for the current bot
+            this._updateGridOffset(calc);
+
+            // Drag on the grid
+            const result = new Vector3(
+                gridTile.tileCoordinate.x,
+                gridTile.tileCoordinate.y,
+                0
+            );
+            result.applyMatrix4(this._gridOffset);
+            this._toCoord = new Vector2(result.x, result.y);
+            this._updateBotsPositions(this._bots, result);
+            return true;
+        }
+        return false;
+    }
+
+    private _dragWithSnapPoints(
+        calc: BotCalculationContext,
+        inputRay: Ray,
+        grid3D: Grid3D,
+        snapPointGrid: Grid3D,
+        snapPoints: SnapOptions['snapPoints']
+    ): boolean {
+        const grid = snapPointGrid ?? grid3D;
+        let closestPoint: Vector3 = null;
+        let closestSqrDistance = Infinity;
+        let targetPoint = new Vector3();
+        let snapPoint = new Vector3();
+        for (let point of snapPoints) {
+            snapPoint.set(point.position.x, point.position.y, point.position.z);
+            const targetDistance = point.distance * point.distance;
+
+            // use world space for comparing the snap point to the ray
+            const convertedPoint = grid.getWorldPosition(snapPoint);
+            inputRay.closestPointToPoint(convertedPoint, targetPoint);
+
+            // convert back to grid space for comparing distances
+            const closestGridPoint = grid.getGridPosition(targetPoint);
+            const sqrDistance = closestGridPoint.distanceToSquared(snapPoint);
+
+            if (sqrDistance > targetDistance) {
+                continue;
+            }
+            if (sqrDistance < closestSqrDistance) {
+                closestPoint = new Vector3(
+                    point.position.x,
+                    point.position.y,
+                    point.position.z
+                );
+                closestSqrDistance = sqrDistance;
+            }
+        }
+
+        if (closestPoint) {
+            const nextContext = this._calculateNextDimension(grid);
+            this._updateCurrentDimension(nextContext);
+            this._updateGridOffset(calc);
+
+            closestPoint.applyMatrix4(this._gridOffset);
+            this._toCoord = new Vector2(closestPoint.x, closestPoint.y);
+
+            this._updateBotsPositions(this._bots, closestPoint);
+            return true;
+        }
+
+        return false;
+    }
+
+    private _dragOnGrid(
         calc: BotCalculationContext,
         grid3D: Grid3D,
         inputRay: Ray
     ) {
         const gridTile = grid3D.getTileFromRay(inputRay);
+        if (gridTile) {
+            // Update the next context
+            const nextContext = this._calculateNextDimension(gridTile.grid);
 
-        if (!gridTile) {
-            return;
+            this._updateCurrentDimension(nextContext);
+
+            this._updateGridOffset(calc);
+
+            // Drag on the grid
+            this._dragOnGridTile(calc, gridTile);
+            return true;
         }
-
-        const raycastMode = this._calculateRaycastMode(gridTile);
-
-        if (raycastMode === 'grid') {
-            this._dragOnGrid(calc, gridTile);
-        } else {
-            const viewport = (this._inInventory
-                ? this._inventorySimulation3D.getMainCameraRig()
-                : this._simulation3D.getMainCameraRig()
-            ).viewport;
-            const {
-                gameObject,
-                hit,
-            } = this._interaction.findHoveredGameObjectFromRay(
-                inputRay,
-                (obj) => {
-                    return (
-                        obj.pointable &&
-                        obj instanceof AuxBot3D &&
-                        !this._bots.find((b) => b.id === obj.bot.id)
-                    );
-                },
-                viewport
-            );
-
-            if (gameObject instanceof AuxBot3D) {
-                const nextContext = gameObject.dimension;
-                const canDragIntoDimension = this._canDragInDimension(
-                    calc,
-                    nextContext
-                );
-
-                if (!canDragIntoDimension) {
-                    return;
-                }
-
-                this._updateCurrentDimension(nextContext);
-
-                this._updateGridOffset(calc, gameObject.bot);
-
-                // Drag on the grid
-                const botPosition = getBotPosition(
-                    calc,
-                    gameObject.bot,
-                    nextContext
-                );
-                const botIndex = getBotIndex(calc, gameObject.bot, nextContext);
-                const coord = (this._toCoord = new Vector2(
-                    botPosition.x + this._gridOffset.x,
-                    botPosition.y + this._gridOffset.y
-                ));
-                this._other = gameObject.bot;
-                this._sendDropEnterExitEvents(this._other);
-
-                this._updateBotsPositions(
-                    this._bots,
-                    coord,
-                    botIndex + 1,
-                    calc
-                );
-            } else {
-                this._dragOnGrid(calc, gridTile);
-            }
-        }
-    }
-
-    private _dragOnGrid(calc: BotCalculationContext, gridTile: GridTile) {
-        // Update the next context
-        const nextContext = this._calculateNextDimension(gridTile);
-
-        const canDragIntoDimension = this._canDragInDimension(
-            calc,
-            nextContext
-        );
-
-        if (!canDragIntoDimension) {
-            return;
-        }
-
-        this._updateCurrentDimension(nextContext);
-
-        this._updateGridOffset(calc);
-
-        // Drag on the grid
-        this._dragOnGridTile(calc, gridTile);
+        return false;
     }
 
     private _updateCurrentViewport() {
@@ -295,14 +657,31 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             return;
         }
         this._targetBot = targetBot;
-        this._gridOffset.set(0, 0);
+        this._gridOffset.identity();
         const transformer = getBotTransformer(calc, this._bots[0]);
         if (hasValue(transformer)) {
             this._hasGridOffset = true;
             let parent = calc.objects.find((bot) => bot.id === transformer);
             while (parent) {
                 const pos = getBotPosition(calc, parent, this._dimension);
-                this._gridOffset.sub(new Vector2(pos.x, pos.y));
+                const scale = getBotScale(calc, parent, 1);
+                const rotation = getBotRotation(calc, parent, this._dimension);
+                const anchorPointOffset = getAnchorPointOffset(calc, parent);
+                let temp = new Matrix4();
+                temp.makeTranslation(
+                    anchorPointOffset.x * 2,
+                    anchorPointOffset.y * 2,
+                    anchorPointOffset.z * 2
+                ).invert();
+                this._gridOffset.multiply(temp);
+                temp.makeScale(scale.x, scale.y, scale.z).invert();
+                this._gridOffset.multiply(temp);
+                temp.makeRotationFromEuler(
+                    new Euler(rotation.x, rotation.y, rotation.z)
+                ).invert();
+                this._gridOffset.multiply(temp);
+                temp.makeTranslation(pos.x, pos.y, pos.z).invert();
+                this._gridOffset.multiply(temp);
 
                 if (parent === targetBot) {
                     break;
@@ -314,38 +693,14 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         }
     }
 
-    private _canDragInDimension(
-        calc: BotCalculationContext,
-        nextContext: string
-    ) {
-        const mode = getBotDragMode(calc, this._bots[0]);
-        const changingContexts = this._originalDimension !== nextContext;
-        let canDrag = false;
-
-        if (!changingContexts && this._canDragWithinContext(mode)) {
-            canDrag = true;
-        } else if (changingContexts && this._canDragOutOfContext(mode)) {
-            canDrag = true;
-        }
-
-        return canDrag;
+    private _canDrag(calc: BotCalculationContext) {
+        return isBotMovable(calc, this._bots[0]);
     }
 
-    /**
-     * Calculates the raycast mode for the portal that contains the given grid tile.
-     * @param tile
-     */
-    private _calculateRaycastMode(tile: GridTile) {
-        const config =
-            this._simulation3D.getPortalConfigForGrid(tile.grid) ||
-            this._inventorySimulation3D.getPortalConfigForGrid(tile.grid);
-        return config.raycastMode;
-    }
-
-    private _calculateNextDimension(tile: GridTile) {
+    private _calculateNextDimension(grid: Grid3D) {
         const dimension =
-            this._simulation3D.getDimensionForGrid(tile.grid) ||
-            this._inventorySimulation3D.getDimensionForGrid(tile.grid);
+            this._simulation3D.getDimensionForGrid(grid) ||
+            this._inventorySimulation3D.getDimensionForGrid(grid);
         return dimension;
     }
 
@@ -437,13 +792,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             threeSpaceRotation.z,
             threeSpaceRotation.y
         );
-        this._updateBotsPositions(
-            this._bots,
-            gridPosition,
-            0,
-            calc,
-            auxSpaceRotation
-        );
+        this._updateBotsPositions(this._bots, gridPosition, auxSpaceRotation);
     }
 
     /**
@@ -454,53 +803,24 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
      */
     private _dragOnGridTile(calc: BotCalculationContext, gridTile: GridTile) {
         if (gridTile) {
-            this._toCoord = gridTile.tileCoordinate.clone();
-            this._toCoord.add(this._gridOffset);
-            const result = calculateBotDragStackPosition(
-                calc,
-                this._dimension,
-                gridTile.tileCoordinate,
-                ...this._bots
+            const result = new Vector3(
+                gridTile.tileCoordinate.x,
+                gridTile.tileCoordinate.y,
+                0
             );
-            this._other = result.other;
-            this._sendDropEnterExitEvents(this._other);
-            if (result.stackable || result.index === 0) {
-                this._updateBotsPositions(
-                    this._bots,
-                    this._toCoord,
-                    result.index,
-                    calc
-                );
-            } else if (!result.stackable) {
-                this._updateBotsPositions(this._bots, this._toCoord, 0, calc);
-            }
+            result.applyMatrix4(this._gridOffset);
+            this._toCoord = new Vector2(result.x, result.y);
+            this._updateBotsPositions(this._bots, result);
         }
     }
 
-    private _getBotsPositioningMode(
-        calc: BotCalculationContext
-    ): BotPositioningMode {
-        if (this._bots.length === 1) {
-            return getBotPositioningMode(calc, this._bots[0]);
-        } else {
-            return 'stack';
-        }
-    }
-
-    protected _canDragWithinContext(mode: BotDragMode): boolean {
-        return this._isDraggable(mode);
-    }
-
-    protected _canDragOutOfContext(mode: BotDragMode): boolean {
-        return this._isPickupable(mode);
-    }
-
-    private _isPickupable(mode: BotDragMode): boolean {
-        return mode === 'all' || mode === 'pickupOnly';
-    }
-
-    private _isDraggable(mode: BotDragMode): boolean {
-        return mode === 'all' || mode === 'moveOnly';
+    protected async _updateBotsPositions(
+        bots: Bot[],
+        gridPosition: Vector3 | Vector2,
+        rotation: Euler = new Euler()
+    ) {
+        this._sendDropEnterExitEvents(this._other);
+        super._updateBotsPositions(bots, gridPosition, rotation);
     }
 
     protected _onDragReleased(calc: BotCalculationContext): void {

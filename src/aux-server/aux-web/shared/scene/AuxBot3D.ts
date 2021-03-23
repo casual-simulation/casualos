@@ -6,6 +6,9 @@ import {
     Group,
     Color,
     Vector3,
+    Quaternion,
+    Matrix4,
+    Euler,
 } from '@casual-simulation/three';
 import {
     Bot,
@@ -121,12 +124,7 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
 
     get gridScale(): number {
         if (this.isOnGrid) {
-            const group = this.dimensionGroup;
-            const sim = group ? group.simulation3D : null;
-            const gridScale = sim
-                ? sim.getGridScale(this)
-                : calculateGridScale(null, null);
-            return gridScale;
+            return this.calculateGridScale();
         }
         return 1;
     }
@@ -136,6 +134,19 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
      */
     get isOnGrid(): boolean {
         return this._isOnGrid;
+    }
+
+    /**
+     * Calculates the grid scale that this bot would have if it was on the grid.
+     * @returns
+     */
+    calculateGridScale() {
+        const group = this.dimensionGroup;
+        const sim = group ? group.simulation3D : null;
+        const gridScale = sim
+            ? sim.getGridScale(this)
+            : calculateGridScale(null, null);
+        return gridScale;
     }
 
     constructor(
@@ -213,12 +224,16 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
      * Sets the parent of this bot.
      * @param parent The parent that this bot should have.
      */
-    setParent(logicalParent: AuxBot3D | DimensionGroup3D) {
+    setParent(logicalParent: AuxBot3D | DimensionGroup3D | Object3D) {
         if (logicalParent instanceof DimensionGroup3D) {
             this._isOnGrid = true;
             logicalParent.display.add(this);
-        } else {
+        } else if (logicalParent instanceof AuxBot3D) {
             if (safeSetParent(this, logicalParent.transformContainer)) {
+                this._isOnGrid = false;
+            }
+        } else {
+            if (safeSetParent(this, logicalParent)) {
                 this._isOnGrid = false;
             }
         }

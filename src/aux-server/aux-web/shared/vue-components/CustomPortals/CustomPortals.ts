@@ -22,6 +22,7 @@ import RxjsDeclarations from '!raw-loader!@casual-simulation/aux-custom-portals/
 import RxjsOperatorsLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/esbuild/rxjs/rxjs-operators.js';
 import LodashLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/esbuild/lodash.js';
 import UuidLibraryCode from '!raw-loader!@casual-simulation/aux-custom-portals/dist/esbuild/uuid.js';
+import { onMonacoLoaded } from '../../MonacoAsync';
 import { addDefinitionsForLibrary } from '../../MonacoHelpers';
 import { hasValue } from '@casual-simulation/aux-common/bots/BotCalculations';
 
@@ -99,7 +100,9 @@ export default class CustomPortals extends Vue {
 
         for (let lib of libraries) {
             sim.portals.addLibrary(lib);
-            addDefinitionsForLibrary(lib);
+            onMonacoLoaded
+                .then(() => import('../../MonacoHelpers'))
+                .then((monaco) => monaco.addDefinitionsForLibrary(lib));
         }
 
         sub.add(

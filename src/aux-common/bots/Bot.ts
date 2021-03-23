@@ -269,7 +269,6 @@ export interface BotTags {
     ['color']?: unknown;
     ['draggable']?: unknown;
     ['draggableMode']?: unknown;
-    ['positioningMode']?: unknown;
     ['destroyable']?: unknown;
     ['editable']?: unknown;
     ['strokeColor']?: unknown;
@@ -347,7 +346,6 @@ export interface BotTags {
     [`portalZoomableMin`]?: number | null;
     [`portalZoomableMax`]?: number | null;
     ['portalRotatable']?: number | null;
-    ['portalPointerDragMode']?: PortalPointerDragMode;
     ['portalShowFocusPoint']?: boolean | null;
     ['portalDisableCanvasTransparency']?: boolean;
     ['inventoryPortalHeight']?: unknown;
@@ -546,11 +544,6 @@ export type MeetPortalAnchorPoint =
     | [number | string, number | string, number | string, number | string];
 
 /**
- * Defines the possible portal raycast modes.
- */
-export type PortalPointerDragMode = 'grid' | 'world';
-
-/**
  * Defines the possible backup types.
  */
 export type BackupType = 'github' | 'download';
@@ -613,11 +606,6 @@ export const DEFAULT_ORIENTATION_MODE: BotOrientationMode = 'absolute';
  * The default bot orientation mode.
  */
 export const DEFAULT_ANCHOR_POINT: BotAnchorPoint = 'bottom';
-
-/**
- * The default portal raycast mode.
- */
-export const DEFAULT_PORTAL_POINTER_DRAG_MODE: PortalPointerDragMode = 'world';
 
 /**
  * The default portal camera controls mode.
@@ -1483,7 +1471,6 @@ export const KNOWN_TAGS: string[] = [
     `portalCameraZoom`,
     `portalCameraRotationX`,
     `portalCameraRotationY`,
-    'portalPointerDragMode',
     'portalCameraControls',
     'portalShowFocusPoint',
     'portalDisableCanvasTransparency',
@@ -1509,8 +1496,6 @@ export const KNOWN_TAGS: string[] = [
     'color',
     'creator',
     'draggable',
-    'draggableMode',
-    'positioningMode',
     'destroyable',
     'editable',
     'strokeColor',

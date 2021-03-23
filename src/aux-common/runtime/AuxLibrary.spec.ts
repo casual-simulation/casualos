@@ -144,6 +144,7 @@ import {
     beginAudioRecording,
     endAudioRecording,
     cancelAnimation,
+    addDropSnap,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2730,6 +2731,86 @@ describe('AuxLibrary', () => {
                     context.tasks.size
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.addDropSnap()', () => {
+            it('should return a AddDropSnapTargetAction', () => {
+                const action = library.api.os.addDropSnap('grid');
+                const expected = addDropSnap(null, ['grid']);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept a list of targets', () => {
+                const action = library.api.os.addDropSnap('grid', 'face', {
+                    position: {
+                        x: 1,
+                        y: 2,
+                        z: 3,
+                    },
+                    distance: 1,
+                });
+                const expected = addDropSnap(null, [
+                    'grid',
+                    'face',
+                    {
+                        position: {
+                            x: 1,
+                            y: 2,
+                            z: 3,
+                        },
+                        distance: 1,
+                    },
+                ]);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.addBotDropSnap()', () => {
+            it('should return a AddDropSnapTargetAction', () => {
+                const action = library.api.os.addBotDropSnap('test', 'grid');
+                const expected = addDropSnap('test', ['grid']);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept a bot', () => {
+                const action = library.api.os.addBotDropSnap(bot1, 'grid');
+                const expected = addDropSnap(bot1.id, ['grid']);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept a list of targets', () => {
+                const action = library.api.os.addBotDropSnap(
+                    bot1,
+                    'grid',
+                    'face',
+                    {
+                        position: {
+                            x: 1,
+                            y: 2,
+                            z: 3,
+                        },
+                        distance: 1,
+                    }
+                );
+                const expected = addDropSnap(bot1.id, [
+                    'grid',
+                    'face',
+                    {
+                        position: {
+                            x: 1,
+                            y: 2,
+                            z: 3,
+                        },
+                        distance: 1,
+                    },
+                ]);
+                expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });

@@ -94,7 +94,8 @@ export type ExtraActions =
     | RequestFullscreenAction
     | ExitFullscreenAction
     | LocalFormAnimationAction
-    | GetRemoteCountAction;
+    | GetRemoteCountAction
+    | AddDropSnapTargetsAction;
 
 /**
  * Defines a set of possible async action types.
@@ -2507,6 +2508,48 @@ export interface OpenCircleWipeOptions {
 }
 
 /**
+ * An event that is used to add some snap points for a drag operation.
+ */
+export interface AddDropSnapTargetsAction extends Action {
+    type: 'add_drop_snap_targets';
+
+    /**
+     * The ID of the bot that, when it is a drop target, the snap points should be enabled.
+     * If null, then the targets apply globally during the drag operation.
+     */
+    botId?: string;
+
+    /**
+     * The list of snap targets that should be used.
+     */
+    targets: SnapTarget[];
+}
+
+/**
+ * Defines an interface that represents a snap point.
+ * That is, a point in 3D space with an associated snap distance.
+ */
+export interface SnapPoint {
+    /**
+     * The 3D position for the point.
+     */
+    position: { x: number; y: number; z: number };
+
+    /**
+     * The distance that the snap point should take effect at.
+     */
+    distance: number;
+}
+
+/**
+ * The list of possible snap targets.
+ * - "ground" means that the dragged bot should snap to the ground plane. This option is overriden by "grid".
+ * - "grid" means that the dragged bot should snap to grid tiles.
+ * - "face" means that the dragged bot should snap to other bot faces.
+ */
+export type SnapTarget = 'ground' | 'grid' | 'face' | SnapPoint;
+
+/**
  * An event that is used to start audio recording.
  */
 export interface BeginAudioRecordingAction extends AsyncAction {
@@ -4705,6 +4748,22 @@ export function circleWipe(
         open,
         options,
         taskId,
+    };
+}
+
+/**
+ * Creates a AddDropSnapTargetsAction.
+ * @param botId The ID of the bot.
+ * @param targets The list of snap targets to add.
+ */
+export function addDropSnap(
+    botId: string,
+    targets: SnapTarget[]
+): AddDropSnapTargetsAction {
+    return {
+        type: 'add_drop_snap_targets',
+        botId,
+        targets,
     };
 }
 

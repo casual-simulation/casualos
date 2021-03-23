@@ -53,6 +53,22 @@ export function calculateGridTileLocalCenter(
     z: number,
     scale: number
 ) {
+    return convertCasualOSPositionToThreePosition(gridX, gridY, z, scale);
+}
+
+/**
+ * Calculates the center position of the tile at the given X and Y grid coordinates.
+ * @param gridX The grid X coordinate.
+ * @param gridY The grid Y coordinate.
+ * @param z The height of the tile.
+ * @param scale The size of the tiles.
+ */
+export function convertCasualOSPositionToThreePosition(
+    gridX: number,
+    gridY: number,
+    z: number,
+    scale: number
+) {
     const x = gridX * scale;
     const y = gridY * -scale; // for some reason the Y coordinate needs mirroring
     z = z * scale;

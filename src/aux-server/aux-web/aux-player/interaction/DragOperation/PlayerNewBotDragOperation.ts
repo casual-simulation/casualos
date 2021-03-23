@@ -3,7 +3,6 @@ import {
     Bot,
     BotCalculationContext,
     BotAction,
-    isBotMovable,
     merge,
     createBot,
     botAdded,
@@ -60,13 +59,5 @@ export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
             this.simulation.helper.action(CREATE_ACTION_NAME, this._bots);
         }
         super._onDragReleased(calc);
-    }
-
-    protected _canDragWithinContext(mode: BotDragMode): boolean {
-        return true;
-    }
-
-    protected _canDragOutOfContext(mode: BotDragMode): boolean {
-        return true;
     }
 }

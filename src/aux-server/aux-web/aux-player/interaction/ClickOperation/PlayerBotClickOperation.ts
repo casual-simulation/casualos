@@ -10,7 +10,6 @@ import {
     getBotIndex,
     duplicateBot,
     Bot,
-    getBotDragMode,
     tagsOnBot,
     CLICK_ACTION_NAME,
     ANY_CLICK_ACTION_NAME,

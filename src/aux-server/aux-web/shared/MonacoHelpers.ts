@@ -74,6 +74,7 @@ import {
     customPortalTypescriptDefaults,
     getCustomPortalWorker,
 } from './public/monaco-editor/languages.contribution';
+import { triggerMonacoLoaded } from './MonacoAsync';
 
 // load TypescriptWorker by require().
 // For some reason, loading relative imports with worker-loader fails when using the import syntax
@@ -163,6 +164,8 @@ export function setup() {
             .getModels()
             .find((model) => model.uri.toString() === resource.toString());
     };
+
+    triggerMonacoLoaded();
 }
 
 interface ModelInfo {
