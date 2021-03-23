@@ -35,9 +35,6 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where dragging a parent bot onto a child bot would cause the bot to rapidly snap back and forth.
-
-### :bug: Bug Fixes
-
 -   Fixed an issue where negative sort orders could not be used on menu bots.
 
 ## V1.5.2
