@@ -13,12 +13,12 @@ import {
     PlaneHelper,
     Quaternion,
 } from '@casual-simulation/three';
-import { getOptionalValue } from '../shared/SharedUtils';
-import { DebugObjectManager } from '../shared/scene/debugobjectmanager/DebugObjectManager';
-import { Physics } from '../shared/scene/Physics';
+import { getOptionalValue } from '../SharedUtils';
+import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
+import { Physics } from './Physics';
 import { Dictionary, groupBy, flatMap, sortBy } from 'lodash';
 import { GridTile, Grid3D } from './Grid3D';
-import { disposeObject3D } from '../shared/scene/SceneUtils';
+import { disposeObject3D } from './SceneUtils';
 import { hasValue } from '@casual-simulation/aux-common';
 
 export const GRIDLINES_Y_OFFSET = 0.01;

@@ -32,14 +32,6 @@ import {
     switchMap,
 } from 'rxjs/operators';
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
-import { doesBotDefinePlayerDimension } from '../PlayerUtils';
-import {
-    Color,
-    Texture,
-    OrthographicCamera,
-    PerspectiveCamera,
-    MathUtils as ThreeMath,
-} from '@casual-simulation/three';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
@@ -51,9 +43,8 @@ import {
 } from '@casual-simulation/aux-vm';
 import { PortalConfig } from './PortalConfig';
 import { AuxBot3D } from '../../shared/scene/AuxBot3D';
-import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
-import { CompoundGrid3D } from '../CompoundGrid3D';
-import { Grid3D } from '../Grid3D';
+import { CompoundGrid3D } from '../../shared/scene/CompoundGrid3D';
+import { Grid3D } from '../../shared/scene/Grid3D';
 
 export abstract class PlayerSimulation3D extends Simulation3D {
     /**

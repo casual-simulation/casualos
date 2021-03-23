@@ -46,11 +46,8 @@ import {
     isBotChildOf,
     objectForwardRay,
 } from '../../../shared/scene/SceneUtils';
-import { DebugObjectManager } from '../../../shared/scene/debugobjectmanager/DebugObjectManager';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import { Grid3D, GridTile } from '../../Grid3D';
-import { BoundedGrid3D } from '../../BoundedGrid3D';
-import { CompoundGrid3D } from '../../CompoundGrid3D';
+import { Grid3D, GridTile } from '../../../shared/scene/Grid3D';
 import {
     SnapBotsInterface,
     SnapOptions,

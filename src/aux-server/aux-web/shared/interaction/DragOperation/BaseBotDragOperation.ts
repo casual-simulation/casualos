@@ -6,7 +6,6 @@ import {
     Vector3,
     Euler,
     Intersection,
-    AlwaysStencilFunc,
 } from '@casual-simulation/three';
 import {
     Bot,

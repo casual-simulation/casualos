@@ -39,9 +39,7 @@ import {
 import { DimensionGroup } from './DimensionGroup';
 import { DimensionGroup3D } from './DimensionGroup3D';
 import { AuxBot3D } from './AuxBot3D';
-import { PortalConfig } from 'aux-web/aux-player/scene/PortalConfig';
-import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
-import { Grid3D } from 'aux-web/aux-player/Grid3D';
+import { Grid3D } from './Grid3D';
 
 /**
  * Defines a class that is able to render a simulation.
