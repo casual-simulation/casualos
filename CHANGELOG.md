@@ -9,6 +9,10 @@
 -   Added the `@onAnyBotDropEnter` and `@onAnyBotDropExit` shouts.
 -   Added the `@onAnyBotPointerDown` and `@onAnyBotPointerUp` shouts.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where negative sort orders could not be used on menu bots.
+
 ## V1.5.2
 
 #### Date: 3/18/2021
