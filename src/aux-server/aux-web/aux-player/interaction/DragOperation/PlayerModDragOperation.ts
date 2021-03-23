@@ -28,7 +28,7 @@ import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
 import { GridTile } from '../../Grid3D';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import { SnapBotsInterface } from 'aux-web/shared/interaction/DragOperation/SnapInterface';
+import { SnapBotsInterface } from '../../../shared/interaction/DragOperation/SnapInterface';
 
 /**
  * Mod drag operation handles dragging mods
