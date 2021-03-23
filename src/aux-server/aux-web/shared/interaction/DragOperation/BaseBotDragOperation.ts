@@ -359,9 +359,12 @@ export abstract class BaseBotDragOperation implements IOperation {
             if (rotation) {
                 merge(tags, {
                     tags: {
-                        [`${this._dimension}RotationX`]: rotation.x,
-                        [`${this._dimension}RotationY`]: rotation.y,
-                        [`${this._dimension}RotationZ`]: rotation.z,
+                        [`${this._dimension}RotationX`]:
+                            Math.abs(rotation.x) > 0 ? rotation.x : null,
+                        [`${this._dimension}RotationY`]:
+                            Math.abs(rotation.y) > 0 ? rotation.y : null,
+                        [`${this._dimension}RotationZ`]:
+                            Math.abs(rotation.z) > 0 ? rotation.z : null,
                     },
                 });
             }
