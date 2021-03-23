@@ -2745,7 +2745,7 @@ describe('AuxLibrary', () => {
 
             it('should accept a list of targets', () => {
                 const action = library.api.os.addDropSnap('grid', 'face', {
-                    point: {
+                    position: {
                         x: 1,
                         y: 2,
                         z: 3,
@@ -2756,7 +2756,7 @@ describe('AuxLibrary', () => {
                     'grid',
                     'face',
                     {
-                        point: {
+                        position: {
                             x: 1,
                             y: 2,
                             z: 3,
@@ -2790,7 +2790,7 @@ describe('AuxLibrary', () => {
                     'grid',
                     'face',
                     {
-                        point: {
+                        position: {
                             x: 1,
                             y: 2,
                             z: 3,
@@ -2802,7 +2802,7 @@ describe('AuxLibrary', () => {
                     'grid',
                     'face',
                     {
-                        point: {
+                        position: {
                             x: 1,
                             y: 2,
                             z: 3,

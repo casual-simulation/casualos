@@ -2533,7 +2533,7 @@ export interface SnapPoint {
     /**
      * The 3D position for the point.
      */
-    point: { x: number; y: number; z: number };
+    position: { x: number; y: number; z: number };
 
     /**
      * The distance that the snap point should take effect at.

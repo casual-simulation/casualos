@@ -574,7 +574,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         let targetPoint = new Vector3();
         let snapPoint = new Vector3();
         for (let point of snapPoints) {
-            snapPoint.set(point.point.x, point.point.y, point.point.z);
+            snapPoint.set(point.position.x, point.position.y, point.position.z);
             const targetDistance = point.distance * point.distance;
 
             // use world space for comparing the snap point to the ray
@@ -590,9 +590,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             }
             if (sqrDistance < closestSqrDistance) {
                 closestPoint = new Vector3(
-                    point.point.x,
-                    point.point.y,
-                    point.point.z
+                    point.position.x,
+                    point.position.y,
+                    point.position.z
                 );
                 closestSqrDistance = sqrDistance;
             }
