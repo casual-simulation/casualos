@@ -42,6 +42,7 @@ import { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
 import {
     calculateHitFace,
+    convertRotationToAuxCoordinates,
     isBotChildOf,
     objectForwardRay,
 } from '../../../shared/scene/SceneUtils';
@@ -447,7 +448,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             }
 
             // 8.
-            const snapPointWorld = snapPointTarget.container.matrixWorld;
+            const snapPointWorld = snapPointTarget.container.matrixWorld.clone();
             targetMatrix.premultiply(snapPointWorld);
 
             // 9.
@@ -466,11 +467,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             const rotation = new Quaternion();
             const worldScale = new Vector3();
 
-            // TODO: Cleanup so that we don't decompose this matrix
-            // just to make another. We should be able to rotate and mirror the correct parts
-            // of targetMatrix so that it ends up in aux coordinate space.
             targetMatrix.decompose(position, rotation, worldScale);
-            const euler = new Euler().setFromQuaternion(rotation);
 
             const auxPosition = new Matrix4().makeTranslation(
                 position.x,
@@ -478,9 +475,11 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 position.y
             );
 
-            const auxRotation = new Matrix4().makeRotationFromEuler(
-                new Euler(euler.x, euler.z, euler.y)
+            const auxRotation = new Matrix4().makeRotationFromQuaternion(
+                rotation
             );
+            convertRotationToAuxCoordinates(auxRotation);
+
             const auxScale = new Matrix4().makeScale(
                 worldScale.x,
                 worldScale.z,

@@ -803,3 +803,47 @@ export function isBotChildOf(
 
     return false;
 }
+
+/**
+ * A matrix that can be premultiplied into another matrix to convert it from a left handed system
+ * to a right-handed system.
+ * Note that only works on individual rotations and not on entire transformations. (e.g. matrices with rotation + position)
+ */
+const CHANGE_ROTATION_Y_TO_Z_1 = new Matrix4().set(
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1
+);
+
+/**
+ * A matrix can be be multiplied into another matrix to finish the conversion from a left handed system to a right handed system.
+ * Note that only works on individual rotations and not on entire transformations. (e.g. matrices with rotation + position)
+ */
+const CHANGE_ROTATION_Y_TO_Z_2 = CHANGE_ROTATION_Y_TO_Z_1.clone().invert();
+
+/**
+ * A function that changes the given rotation matrix from three.js coordinates (Y-up) to AUX coordinates (Z-up).
+ *
+ * Note that this function only works on rotation-only matrices.
+ * Matrices that contain translations will not function correctly since they have already bound the translations and rotations together.
+ *
+ * @param rotation The rotation to change.
+ */
+export function convertRotationToAuxCoordinates(rotation: Matrix4) {
+    return rotation
+        .premultiply(CHANGE_ROTATION_Y_TO_Z_1)
+        .multiply(CHANGE_ROTATION_Y_TO_Z_2);
+}
