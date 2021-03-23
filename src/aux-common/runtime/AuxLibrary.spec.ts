@@ -2790,18 +2790,24 @@ describe('AuxLibrary', () => {
                     'grid',
                     'face',
                     {
-                        x: 1,
-                        y: 2,
-                        z: 3,
+                        point: {
+                            x: 1,
+                            y: 2,
+                            z: 3,
+                        },
+                        distance: 1,
                     }
                 );
                 const expected = addDropSnap(bot1.id, [
                     'grid',
                     'face',
                     {
-                        x: 1,
-                        y: 2,
-                        z: 3,
+                        point: {
+                            x: 1,
+                            y: 2,
+                            z: 3,
+                        },
+                        distance: 1,
                     },
                 ]);
                 expect(action).toEqual(expected);
