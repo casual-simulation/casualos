@@ -210,9 +210,13 @@ import {
     AsyncAction,
     beginAudioRecording as calcBeginAudioRecording,
     endAudioRecording as calcEndAudioRecording,
+    beginRecording as calcBeginRecording,
+    endRecording as calcEndRecording,
     cancelAnimation,
     SnapTarget,
     AddDropSnapTargetsAction,
+    RecordingOptions,
+    Recording,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -790,6 +794,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getAnchorPointPosition,
                 beginAudioRecording,
                 endAudioRecording,
+                beginRecording,
+                endRecording,
             },
 
             math: {
@@ -3813,6 +3819,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function endAudioRecording(): Promise<Blob> {
         const task = context.createTask();
         const action = calcEndAudioRecording(task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Starts a new recording.
+     * @param options The options for the recording.
+     * @returns A promise that resolves when the recording has started.
+     */
+    function beginRecording(
+        options: RecordingOptions = { audio: true, video: true, screen: false }
+    ): Promise<void> {
+        const task = context.createTask();
+        const action = calcBeginRecording(options, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Finishes a recording.
+     * Returns a promise that resolves with the recorded data.
+     */
+    function endRecording(): Promise<Recording> {
+        const task = context.createTask();
+        const action = calcEndRecording(task.taskId);
         return addAsyncAction(task, action);
     }
 

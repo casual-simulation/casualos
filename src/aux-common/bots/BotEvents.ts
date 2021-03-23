@@ -187,7 +187,9 @@ export type AsyncActions =
     | AnimateToPositionAction
     | BeginAudioRecordingAction
     | EndAudioRecordingAction
-    | CancelAnimationAction;
+    | CancelAnimationAction
+    | BeginRecordingAction
+    | EndRecordingAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2563,6 +2565,72 @@ export interface EndAudioRecordingAction extends AsyncAction {
     type: 'end_audio_recording';
 }
 
+/**
+ * An interface that represents the options that can be used for making recordings.
+ */
+export interface RecordingOptions {
+    /**
+     * Whether to record audio.
+     */
+    audio: boolean;
+
+    /**
+     * Whether to record video.
+     */
+    video: boolean;
+
+    /**
+     * Whether to record the screen.
+     */
+    screen: boolean;
+}
+
+/**
+ * An event that is used to start audio recording.
+ */
+export interface BeginRecordingAction extends AsyncAction, RecordingOptions {
+    type: 'begin_recording';
+}
+
+/**
+ * An event that is used to finish audio recording.
+ */
+export interface EndRecordingAction extends AsyncAction {
+    type: 'end_recording';
+}
+
+/**
+ * Defines an interface that contains recorded data.
+ */
+export interface Recording {
+    /**
+     * The list of files that were produced when recording.
+     */
+    files: RecordedFile[];
+}
+
+export interface RecordedFile {
+    /**
+     * Whether the file contains the recorded audio.
+     */
+    containsAudio: boolean;
+
+    /**
+     * Whether the file contains the recorded video.
+     */
+    containsVideo: boolean;
+
+    /**
+     * Whether the file contains the recorded screen data.
+     */
+    containsScreen: boolean;
+
+    /**
+     * The data that the file contains.
+     */
+    data: Blob;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -4927,6 +4995,33 @@ export function endAudioRecording(
 ): EndAudioRecordingAction {
     return {
         type: 'end_audio_recording',
+        taskId,
+    };
+}
+
+/**
+ * Creates a BeginRecordingAction.
+ * @param options The options for the recording.
+ * @param taskId The task ID.
+ */
+export function beginRecording(
+    options: RecordingOptions,
+    taskId?: string | number
+): BeginRecordingAction {
+    return {
+        type: 'begin_recording',
+        ...options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a EndRecordingAction.
+ * @param taskId The task ID.
+ */
+export function endRecording(taskId?: string | number): EndRecordingAction {
+    return {
+        type: 'end_recording',
         taskId,
     };
 }

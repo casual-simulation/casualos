@@ -66,6 +66,7 @@ import TagPortal from '../../shared/vue-components/TagPortal/TagPortal';
 import CustomPortals from '../../shared/vue-components/CustomPortals/CustomPortals';
 import IdePortal from '../../shared/vue-components/IdePortal/IdePortal';
 import { AudioRecorder, AudioRecording } from '../../shared/AudioRecorder';
+import { MediaRecording, Recorder } from '../../shared/Recorder';
 
 @Component({
     components: {
@@ -202,7 +203,9 @@ export default class PlayerApp extends Vue {
     private _subs: SubscriptionLike[] = [];
     private _simulationSubs: Map<Simulation, SubscriptionLike[]> = new Map();
     private _audioRecorder: AudioRecorder;
-    private _currentRecording: AudioRecording;
+    private _recorder: Recorder;
+    private _currentAudioRecording: AudioRecording;
+    private _currentRecording: MediaRecording;
 
     get version() {
         return appManager.version.latestTaggedVersion;
@@ -300,6 +303,7 @@ export default class PlayerApp extends Vue {
         this._simulationSubs = new Map();
         this.camera = null;
         this._audioRecorder = new AudioRecorder();
+        this._recorder = new Recorder();
         this._subs.push(
             appManager.updateAvailableObservable.subscribe(
                 (updateAvailable) => {
@@ -733,7 +737,7 @@ export default class PlayerApp extends Vue {
                         );
                     }
                 } else if (e.type === 'begin_audio_recording') {
-                    if (this._currentRecording) {
+                    if (this._currentAudioRecording) {
                         simulation.helper.transaction(
                             asyncError(
                                 e.taskId,
@@ -742,7 +746,7 @@ export default class PlayerApp extends Vue {
                         );
                     } else {
                         try {
-                            this._currentRecording = await this._audioRecorder.start();
+                            this._currentAudioRecording = await this._audioRecorder.start();
                             simulation.helper.transaction(
                                 asyncResult(e.taskId, null)
                             );
@@ -753,16 +757,56 @@ export default class PlayerApp extends Vue {
                         }
                     }
                 } else if (e.type === 'end_audio_recording') {
+                    if (!this._currentAudioRecording) {
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, 'No recording was started.')
+                        );
+                    } else {
+                        try {
+                            const blob = await this._currentAudioRecording.stop();
+                            this._currentAudioRecording = null;
+                            simulation.helper.transaction(
+                                asyncResult(e.taskId, blob)
+                            );
+                        } catch (err) {
+                            simulation.helper.transaction(
+                                asyncError(e.taskId, err.toString())
+                            );
+                        }
+                    }
+                } else if (e.type === 'begin_recording') {
+                    if (this._currentRecording) {
+                        simulation.helper.transaction(
+                            asyncError(
+                                e.taskId,
+                                'A recording is already happening.'
+                            )
+                        );
+                    } else {
+                        try {
+                            this._currentRecording = await this._recorder.start(
+                                e
+                            );
+                            simulation.helper.transaction(
+                                asyncResult(e.taskId, null)
+                            );
+                        } catch (err) {
+                            simulation.helper.transaction(
+                                asyncError(e.taskId, err.toString())
+                            );
+                        }
+                    }
+                } else if (e.type === 'end_recording') {
                     if (!this._currentRecording) {
                         simulation.helper.transaction(
                             asyncError(e.taskId, 'No recording was started.')
                         );
                     } else {
                         try {
-                            const blob = await this._currentRecording.stop();
+                            const recording = await this._currentRecording.stop();
                             this._currentRecording = null;
                             simulation.helper.transaction(
-                                asyncResult(e.taskId, blob)
+                                asyncResult(e.taskId, recording, false)
                             );
                         } catch (err) {
                             simulation.helper.transaction(

@@ -145,6 +145,8 @@ import {
     endAudioRecording,
     cancelAnimation,
     addDropSnap,
+    beginRecording,
+    endRecording,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -6004,6 +6006,49 @@ describe('AuxLibrary', () => {
             it('should emit a EndAudioRecordingAction', () => {
                 const action: any = library.api.experiment.endAudioRecording();
                 const expected = endAudioRecording(context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('experiment.beginRecording()', () => {
+            it('should emit a BeginRecordingAction', () => {
+                const action: any = library.api.experiment.beginRecording();
+                const expected = beginRecording(
+                    {
+                        audio: true,
+                        video: true,
+                        screen: false,
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', () => {
+                const action: any = library.api.experiment.beginRecording({
+                    audio: false,
+                    video: false,
+                    screen: true,
+                });
+                const expected = beginRecording(
+                    {
+                        audio: false,
+                        video: false,
+                        screen: true,
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('experiment.endRecording()', () => {
+            it('should emit a EndRecordingAction', () => {
+                const action: any = library.api.experiment.endRecording();
+                const expected = endRecording(context.tasks.size);
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

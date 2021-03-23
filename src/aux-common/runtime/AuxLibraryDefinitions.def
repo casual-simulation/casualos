@@ -232,7 +232,9 @@ declare type AsyncActions =
     | OpenCustomPortalAction
     | RegisterPrefixAction
     | AnimateToBotAction
-    | AnimateToPositionAction;
+    | AnimateToPositionAction
+    | BeginRecordingAction
+    | EndRecordingAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1870,6 +1872,74 @@ export interface RegisterPrefixOptions {
      * The possible languages that prefixes can use.
      */
     language?: 'javascript' | 'typescript' | 'json' | 'jsx' | 'tsx' | 'text';
+}
+
+
+/**
+ * An interface that represents the options that can be used for making recordings.
+ */
+ export interface RecordingOptions {
+    /**
+     * Whether to record audio.
+     */
+    audio: boolean;
+
+    /**
+     * Whether to record video.
+     */
+    video: boolean;
+
+    /**
+     * Whether to record the screen.
+     */
+    screen: boolean;
+}
+
+/**
+ * An event that is used to start audio recording.
+ */
+ export interface BeginRecordingAction extends AsyncAction, RecordingOptions {
+    type: 'begin_recording';
+}
+
+/**
+ * An event that is used to finish audio recording.
+ */
+export interface EndRecordingAction extends AsyncAction {
+    type: 'end_recording';
+}
+
+/**
+ * Defines an interface that contains recorded data.
+ */
+export interface Recording {
+
+    /**
+     * The list of files that were produced when recording.
+     */
+    files: RecordedFile[];
+}
+
+export interface RecordedFile {
+    /**
+     * Whether the file contains the recorded audio.
+     */
+    containsAudio: boolean;
+    
+    /**
+     * Whether the file contains the recorded video.
+     */
+    containsVideo: boolean;
+
+    /**
+     * Whether the file contains the recorded screen data.
+     */
+    containsScreen: boolean;
+
+    /**
+     * The data that the file contains.
+     */
+    data: Blob;
 }
 
 /**
@@ -4395,6 +4465,19 @@ declare global {
          * Returns a promise that resolves with the recorded blob.
          */
         endAudioRecording(): Promise<Blob>;
+
+        /**
+         * Starts a new recording.
+         * @param options The options for the recording.
+         * @returns A promise that resolves when the recording has started.
+         */
+        beginRecording(options?: RecordingOptions): Promise<void>;
+
+        /**
+         * Finishes a recording.
+         * Returns a promise that resolves with the recorded data.
+         */
+        endRecording(): Promise<Recording>;
     };
 
     /**
