@@ -6003,6 +6003,94 @@ for(let point of points) {
 }
 ```
 
+### `experiment.beginRecording(options?)`
+
+Starts a new recording. Returns a promise that resolves when recording has started.
+The returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.
+
+The **first parameter** should be an object and contains the options that should be used for the recording. It should have the following structure:
+```typescript
+let options: {
+    /**
+     * Whether the audio should be recorded.
+     * If the computer does not have an audio device attached, then setting this to true
+     * will cause an error.
+     * 
+     * Defaults to true.
+     */
+    audio: boolean;
+
+    /**
+     * Whether video from a video camera should be recorded.
+     * 
+     * If the computer does not have a video device attached (like a web cam), then setting this to true
+     * will cause an error.
+     * 
+     * Defaults to true.
+     */
+    video: boolean;
+
+    /**
+     * Whether the screen should be recorded.
+     * 
+     * Defaults to false.
+     */
+    screen: boolean;
+};
+```
+
+#### Examples:
+
+1. Record for 10 seconds and download the files.
+```typescript
+await experiment.beginRecording({
+    audio: true,
+    video: true,
+    screen: false
+});
+await os.sleep(10000);
+const data = await experiment.endRecording();
+let index = 0;
+for(let file of data.files) {
+    os.download(file.data, `file-${index}`);
+    index += 1;
+}
+```
+
+### `experiment.endRecording()`
+
+Stops the recording that is in progress. Returns a promise that resolves with the recorded data.
+
+The resolved data is an object and has the following structure:
+```typescript
+let recording: {
+    files: {
+        containsAudio: boolean;
+        containsVideo: boolean;
+        containsScreen: boolean;
+        data: Blob;
+    }[];
+};
+```
+
+#### Examples:
+
+1. Record for 10 seconds and download the files.
+```typescript
+await experiment.beginRecording({
+    audio: true,
+    video: true,
+    screen: false
+});
+await os.sleep(10000);
+const data = await experiment.endRecording();
+let index = 0;
+for(let file of data.files) {
+    os.download(file.data, `file-${index}`);
+    index += 1;
+}
+```
+
 ### `experiment.beginAudioRecording()`
 
 Starts a new audio recording. Returns a promise that resolves when recording has started.
