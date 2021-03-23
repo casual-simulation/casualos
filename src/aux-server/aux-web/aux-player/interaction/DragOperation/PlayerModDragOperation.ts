@@ -26,7 +26,7 @@ import { PlayerGame } from '../../scene/PlayerGame';
 import { Input, InputMethod } from '../../../shared/scene/Input';
 import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
-import { GridTile } from '../../Grid3D';
+import { GridTile } from '../../../shared/scene/Grid3D';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { SnapBotsInterface } from '../../../shared/interaction/DragOperation/SnapInterface';
 
