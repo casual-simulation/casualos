@@ -4,10 +4,37 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Removed bot stacking.
+    -   Bots will no longer automatically stack on each other based on position. Instead, they need to be stacked manually.
+    -   The `{dimension}SortOrder` tags still exist and are used by the menu portal to order bots.
+-   Drag events are now sent for bots that are not draggable.
+    -   This means you can set `#draggable` to false and still get a `@onDrag` or `@onAnyBotDrag` event for it.
+    -   This change makes it easier to write your own custom dragging logic because it prevents the bot(s) from being automatically moved but still sends the correct events.
+    -   If you don't want drag events sent to a bot, you can make it not pointable or you can use your own custom logic on `@onDrag`/`@onDrop`.
+-   The `#draggableMode` and `#positioningMode` tags have been removed.
+    -   `#draggableMode` can be emulated by setting `#draggable` to false and adding custom `@onDrag` events to limit which dimensions the bot can be moved to.
+    -   `#positioningMode` has been replaced with the `os.addDropSnap()` and `os.addBotDropSnap()` functions.
+
 ### :rocket: Improvements
 
 -   Added the `@onAnyBotDropEnter` and `@onAnyBotDropExit` shouts.
 -   Added the `@onAnyBotPointerDown` and `@onAnyBotPointerUp` shouts.
+-   Added the `os.addDropSnap(...targets)` and `os.addBotDropSnap(bot, ...targets)` functions.
+    -   These can be used to customize the behavior of a drag operation.
+    -   Each function accepts one or more "targets" which are positions that the bot can be dropped at. There are 4 possible values:
+        -   `"ground"` - The bot will snap to the ground as it is being dragged. (Default when not in VR)
+        -   `"grid"` - The bot will snap to individual grid tiles as it is being dragged.
+        -   `"face"` - The bot will snap to the face of other bots as it is being dragged.
+        -   A snap point object. The bot will snap to the point when the mouse is within a specified distance. It should be an object with the following properties:
+            -   `position` - An object with `x`, `y`, and `z` values representing the world position of the snap point.
+            -   `distance` - The distance that the pointer ray should be from the position in order to trigger snapping to the position.
+    -   The `os.addBotDropSnap(bot, ...targets)` function accepts a bot as its first parameter which limits the specified snap targets to when the given bot is being dropped on.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where dragging a parent bot onto a child bot would cause the bot to rapidly snap back and forth.
 
 ## V1.5.2
 
