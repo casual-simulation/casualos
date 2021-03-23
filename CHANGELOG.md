@@ -31,6 +31,9 @@
             -   `position` - An object with `x`, `y`, and `z` values representing the world position of the snap point.
             -   `distance` - The distance that the pointer ray should be from the position in order to trigger snapping to the position.
     -   The `os.addBotDropSnap(bot, ...targets)` function accepts a bot as its first parameter which limits the specified snap targets to when the given bot is being dropped on.
+-   Added the `experiment.beginRecording(options?)` and `experiment.endRecording()` functions.
+    -   These can be used to record both audio and video at the same time.
+    -   See the documentation for more details.
 
 ### :bug: Bug Fixes
 
