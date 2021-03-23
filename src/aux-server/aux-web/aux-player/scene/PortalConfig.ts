@@ -21,7 +21,7 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
 import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
-import { BoundedGrid3D } from '../BoundedGrid3D';
+import { BoundedGrid3D } from '../../shared/scene/BoundedGrid3D';
 import { AuxTextureLoader } from '../../shared/scene/AuxTextureLoader';
 
 /**
