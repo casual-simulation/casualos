@@ -242,14 +242,20 @@ export class MenuPortal implements SubscriptionLike {
         calc: BotCalculationContext,
         item: DimensionItem
     ): number {
-        let order = 0;
+        let order = -Infinity;
+        let hasOrder = false;
         for (let dimension of item.dimensions) {
             let sort = getBotIndex(calc, item.bot, dimension);
             if (sort > order) {
                 order = sort;
+                hasOrder = true;
             }
         }
-        return order;
+        if (hasOrder) {
+            return order;
+        } else {
+            return 0;
+        }
     }
 
     private _getBotIdsDefiningDimension(dimension: string) {
