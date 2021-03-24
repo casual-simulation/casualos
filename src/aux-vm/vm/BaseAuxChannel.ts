@@ -275,6 +275,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._statusHelper = new StatusHelper(
             partitions.map((p) => p.onStatusUpdated)
         );
+        this._statusHelper.defaultUser = this.user;
 
         let statusMapper = remapProgressPercent(0.3, 0.6);
         this._subs.push(

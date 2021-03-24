@@ -1514,6 +1514,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return {
             supportsAR: null as boolean,
             supportsVR: null as boolean,
+            isCollaborative: null as boolean,
         };
     }
 

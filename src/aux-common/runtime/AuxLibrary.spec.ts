@@ -197,6 +197,7 @@ describe('AuxLibrary', () => {
         device = {
             supportsAR: true,
             supportsVR: false,
+            isCollaborative: true,
         };
         notifier = {
             notifyChange: jest.fn(),
@@ -1790,6 +1791,7 @@ describe('AuxLibrary', () => {
                 expect(d).toEqual({
                     supportsAR: null,
                     supportsVR: null,
+                    isCollaborative: null,
                 });
             });
         });
