@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.5.4
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved `os.download()` to add the correct file extension if one is omitted from the given filename.
+
 ## V1.5.3
 
 #### Date: 3/23/2021
