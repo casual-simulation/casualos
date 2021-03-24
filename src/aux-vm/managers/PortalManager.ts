@@ -53,6 +53,11 @@ export const DEFAULT_SCRIPT_PREFIXES: ScriptPrefix[] = [
         isDefault: true,
         isFallback: true,
     },
+    {
+        prefix: '📖',
+        language: 'javascript',
+        isDefault: false,
+    },
 ];
 
 /**
