@@ -114,15 +114,6 @@ describe('BaseAuxChannel', () => {
             expect(partitions.shared.space).toEqual('shared');
         });
 
-        it('should create a user dimension bot', async () => {
-            uuidMock.mockReturnValue('dimensionBot');
-            await channel.initAndWait();
-
-            const dimensionBot = channel.helper.botsState['dimensionBot'];
-            expect(dimensionBot).toBeTruthy();
-            expect(dimensionBot.tags).toMatchSnapshot();
-        });
-
         it('should load the builder aux file', async () => {
             channel = new AuxChannelImpl(
                 user,
@@ -363,10 +354,7 @@ describe('BaseAuxChannel', () => {
             };
             channel = new AuxChannelImpl(user, device, config);
 
-            uuidMock
-                .mockReturnValueOnce('uuid0')
-                .mockReturnValueOnce('uuid1')
-                .mockReturnValueOnce('uuid2');
+            uuidMock.mockReturnValueOnce('uuid1').mockReturnValueOnce('uuid2');
 
             await channel.initAndWait();
 
@@ -1019,7 +1007,6 @@ describe('BaseAuxChannel', () => {
             expect(exported).toEqual({
                 version: 1,
                 state: {
-                    dimensionBot: expect.any(Object),
                     userId: expect.any(Object),
                     test: createBot('test', {}, 'shared'),
                     def: createBot('def', {}, 'tempLocal'),
@@ -1038,7 +1025,6 @@ describe('BaseAuxChannel', () => {
             expect(exported).toEqual({
                 version: 1,
                 state: {
-                    dimensionBot: expect.any(Object),
                     userId: expect.any(Object),
                     test: createBot('test', {}, 'shared'),
                     def: createBot('def', {}, 'tempLocal'),

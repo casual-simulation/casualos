@@ -1,14 +1,3 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`BaseAuxChannel init() should create a bot for the user 1`] = `
-Object {
-  "aux-users": true,
-}
-`;
-
-exports[`BaseAuxChannel init() should create a user dimension bot 1`] = `
-Object {
-  "auxDimensionConfig": "aux-users",
-  "auxDimensionVisualize": true,
-}
-`;
+exports[`BaseAuxChannel init() should create a bot for the user 1`] = `Object {}`;

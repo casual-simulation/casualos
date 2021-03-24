@@ -491,7 +491,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             message: 'Launching interface...',
             progress: 0.9,
         });
-        await this._initUserDimensionBot();
 
         if (!this._hasRegisteredSubs) {
             this._hasRegisteredSubs = true;
@@ -645,17 +644,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             await this._helper.createOrUpdateUserBot(this.user, userBot);
         } catch (err) {
             console.error('[BaseAuxChannel] Unable to init user bot:', err);
-        }
-    }
-
-    private async _initUserDimensionBot() {
-        try {
-            await this._helper.createOrUpdateUserDimensionBot();
-        } catch (err) {
-            console.error(
-                '[BaseAuxChannel] Unable to init user dimension bot:',
-                err
-            );
         }
     }
 

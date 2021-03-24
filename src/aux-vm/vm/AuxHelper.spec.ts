@@ -8,7 +8,6 @@ import {
     toast,
     addState,
     botRemoved,
-    USERS_DIMENSION,
     runScript,
     ON_RUN_ACTION_NAME,
     loadBots,
@@ -1743,9 +1742,7 @@ describe('AuxHelper', () => {
 
             expect(helper.botsState['testUser']).toMatchObject({
                 id: 'testUser',
-                tags: {
-                    [USERS_DIMENSION]: true,
-                },
+                tags: {},
             });
         });
 
@@ -1779,54 +1776,8 @@ describe('AuxHelper', () => {
             expect(helper.botsState['testUser']).toEqual({
                 id: 'testUser',
                 space: 'tempLocal',
-                tags: {
-                    [USERS_DIMENSION]: true,
-                },
+                tags: {},
             });
-        });
-    });
-
-    describe('createOrUpdateUserDimensionBot()', () => {
-        it('should create a dimension bot for all the users', async () => {
-            memory = createMemoryPartition({
-                type: 'memory',
-                initialState: {},
-            });
-            helper = createHelper({
-                shared: memory,
-            });
-            helper.userId = userId;
-
-            uuidMock.mockReturnValueOnce('dimension');
-            await helper.createOrUpdateUserDimensionBot();
-
-            expect(helper.botsState['dimension']).toMatchObject({
-                id: 'dimension',
-                tags: {
-                    ['auxDimensionConfig']: USERS_DIMENSION,
-                    ['auxDimensionVisualize']: true,
-                },
-            });
-        });
-
-        it('should not create a dimension bot for all the users if one already exists', async () => {
-            memory = createMemoryPartition({
-                type: 'memory',
-                initialState: {},
-            });
-            helper = createHelper({
-                shared: memory,
-            });
-            helper.userId = userId;
-
-            await helper.createBot('userDimension', {
-                auxDimensionConfig: USERS_DIMENSION,
-            });
-
-            uuidMock.mockReturnValueOnce('dimension');
-            await helper.createOrUpdateUserDimensionBot();
-
-            expect(helper.botsState['dimension']).toBeUndefined();
         });
     });
 
