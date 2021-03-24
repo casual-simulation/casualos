@@ -8,10 +8,8 @@ import {
     BotAction,
     BotCalculationContext,
     objectsAtDimensionGridPosition,
-    isBotStackable,
     getBotIndex,
     botRemoved,
-    isMergeable,
     DROP_ACTION_NAME,
     DROP_ANY_ACTION_NAME,
     MOD_DROP_ACTION_NAME,
@@ -32,6 +30,8 @@ import { setParent } from '../../scene/SceneUtils';
 import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { ControllerData, InputMethod } from '../../../shared/scene/Input';
 import { posesEqual } from '../ClickOperation/ClickOperationUtils';
+import { SnapBotsHelper, SnapBotsInterface } from './SnapInterface';
+import { Subscription } from 'rxjs';
 
 /**
  * Class that provides base functionality for dragging mods.
@@ -43,7 +43,6 @@ export abstract class BaseModDragOperation implements IOperation {
     protected _finished: boolean;
     protected _lastScreenPos: Vector2;
     protected _lastGridPos: Vector2;
-    protected _lastIndex: number;
     protected _lastVRControllerPose: Object3D;
     protected _merge: boolean;
     protected _other: Bot;
@@ -51,6 +50,8 @@ export abstract class BaseModDragOperation implements IOperation {
     protected _dimension: string;
     protected _previousDimension: string;
     protected _controller: ControllerData;
+    protected _snapInterface: SnapBotsInterface;
+    protected _createdSnapInterface: boolean;
 
     /**
      * The bot that the onModDropEnter event was sent to.
@@ -61,6 +62,7 @@ export abstract class BaseModDragOperation implements IOperation {
 
     protected _toCoord: Vector2;
     protected _fromCoord: Vector2;
+    protected _sub: Subscription;
     private _dragStartFrame: number;
 
     protected get game() {
@@ -101,18 +103,41 @@ export abstract class BaseModDragOperation implements IOperation {
         interaction: BaseInteractionManager,
         mod: BotTags,
         inputMethod: InputMethod,
-        fromCoord?: Vector2
+        fromCoord?: Vector2,
+        snapInterface?: SnapBotsInterface
     ) {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
         this._mod = mod;
         this._previousDimension = null;
         this._lastGridPos = null;
-        this._lastIndex = null;
         this._controller =
             inputMethod.type === 'controller' ? inputMethod.controller : null;
         this._fromCoord = fromCoord;
         this._dragStartFrame = this.game.getTime().frameCount;
+        this._sub = new Subscription();
+
+        this._snapInterface = snapInterface;
+        if (!this._snapInterface) {
+            this._createdSnapInterface = true;
+            this._snapInterface = new SnapBotsHelper();
+
+            if (!this._controller) {
+                this._snapInterface.addSnapTargets(null, ['ground']);
+            }
+
+            const sub = this._simulation3D.simulation.localEvents.subscribe(
+                (action) => {
+                    if (action.type === 'add_drop_snap_targets') {
+                        this._snapInterface.addSnapTargets(
+                            action.botId,
+                            action.targets
+                        );
+                    }
+                }
+            );
+            this._sub.add(sub);
+        }
 
         if (this._controller) {
             this._lastVRControllerPose = this._controller.ray.clone();
@@ -192,6 +217,9 @@ export abstract class BaseModDragOperation implements IOperation {
         this._disposeCore();
         this.game.setGridsVisible(false);
         this._releaseMeshes();
+        if (this._sub) {
+            this._sub.unsubscribe();
+        }
         this._mod = null;
     }
 
@@ -232,30 +260,23 @@ export abstract class BaseModDragOperation implements IOperation {
 
     protected async _updateModPosition(
         calc: BotCalculationContext,
-        gridPosition: Vector2,
-        index: number
+        gridPosition: Vector2
     ) {
         if (!this._dimension) {
             return;
         }
 
-        if (
-            this._lastGridPos &&
-            this._lastGridPos.equals(gridPosition) &&
-            this._lastIndex === index
-        ) {
+        if (this._lastGridPos && this._lastGridPos.equals(gridPosition)) {
             return;
         }
 
         this._toCoord = gridPosition;
         this._lastGridPos = gridPosition.clone();
-        this._lastIndex = index;
 
         let tags = {
             [this._dimension]: true,
             [`${this._dimension}X`]: gridPosition.x,
             [`${this._dimension}Y`]: gridPosition.y,
-            [`${this._dimension}SortOrder`]: index,
         };
 
         if (this._previousDimension) {

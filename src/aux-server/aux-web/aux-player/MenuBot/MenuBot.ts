@@ -34,6 +34,10 @@ import {
     getTagValueForSpace,
     MenuBotResolvedHoverStyle,
     getMenuBotHoverStyle,
+    ON_POINTER_DOWN,
+    ON_POINTER_UP,
+    ON_ANY_POINTER_UP,
+    ON_ANY_POINTER_DOWN,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
@@ -175,10 +179,20 @@ export default class MenuBot extends Vue {
 
         const simulation = _simulation(this.item);
         const dimension = first(this.item.dimensions.values());
-        simulation.helper.action(
-            'onPointerDown',
-            [this.item.bot],
-            onPointerUpDownArg(this.item.bot, dimension)
+        let arg = onPointerUpDownArg(this.item.bot, dimension);
+        simulation.helper.transaction(
+            ...simulation.helper.actions([
+                {
+                    eventName: ON_POINTER_DOWN,
+                    bots: [this.item.bot],
+                    arg,
+                },
+                {
+                    eventName: ON_ANY_POINTER_DOWN,
+                    bots: null,
+                    arg,
+                },
+            ])
         );
     }
 
@@ -229,10 +243,20 @@ export default class MenuBot extends Vue {
             this._down = false;
             const simulation = _simulation(this.item);
             const dimension = first(this.item.dimensions.values());
-            simulation.helper.action(
-                'onPointerUp',
-                [this.item.bot],
-                onPointerUpDownArg(this.item.bot, dimension)
+            let arg = onPointerUpDownArg(this.item.bot, dimension);
+            simulation.helper.transaction(
+                ...simulation.helper.actions([
+                    {
+                        eventName: ON_POINTER_UP,
+                        bots: [this.item.bot],
+                        arg,
+                    },
+                    {
+                        eventName: ON_ANY_POINTER_UP,
+                        bots: null,
+                        arg,
+                    },
+                ])
             );
         }
     }

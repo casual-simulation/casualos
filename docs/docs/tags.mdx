@@ -133,42 +133,6 @@ Whether the bot is able to be dragged.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `draggableMode`
-
-The mode that controls how a bot can be dragged.
-
-#### Possible values are:
-
-<PossibleValuesTable>
-  <PossibleValueCode value='all'>
-    The bot can be dragged anywhere. (Default)
-  </PossibleValueCode>
-  <PossibleValueCode value='none'>
-    The bot cannot be dragged.
-  </PossibleValueCode>
-  <PossibleValueCode value='moveOnly'>
-    The bot can be moved anywhere within the dimension it is currently in but not moved to another dimension.
-  </PossibleValueCode>
-  <PossibleValueCode value='pickupOnly'>
-    The bot can be moved to another dimension but not within the dimension it is currently in.
-  </PossibleValueCode>
-</PossibleValuesTable>
-
-### `positioningMode`
-
-The positioning mode that the bot uses.
-
-#### Possible values are:
-
-<PossibleValuesTable>
-  <PossibleValueCode value='stack'>
-    The bot can be stacked upon other bots and other bots can be stacked upon it. (default)
-  </PossibleValueCode>
-  <PossibleValueCode value='absolute'>
-    The bot will ignore all other bots for positioning.
-  </PossibleValueCode>
-</PossibleValuesTable>
-
 ### `pointable`
 
 Whether the bot interacts with the pointer.
@@ -1323,24 +1287,6 @@ The scale of surfaces.
   <PossibleValue value='Any Number > 0'>
     The scale of surface for the dimension. (Default is 2)
   </PossibleValue>
-</PossibleValuesTable>
-
-### `portalPointerDragMode`
-<Badges>
-    <PagePortalBadge/>
-    <InventoryPortalBadge/>
-</Badges>
-
-The mode that specifies how the mouse pointer/controller drags bots in the portal.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValueCode value='world'>
-    Specifies that the pointer should use the other bots in the portal for positioning the dragged bot(s). (Default)
-  </PossibleValueCode>
-  <PossibleValueCode value='grid'>
-    Specifies that the pointer should ignore other bots in the portal for positioning the dragged bot(s).
-  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `portalCameraControls`

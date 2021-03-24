@@ -94,7 +94,8 @@ export type ExtraActions =
     | RequestFullscreenAction
     | ExitFullscreenAction
     | LocalFormAnimationAction
-    | GetRemoteCountAction;
+    | GetRemoteCountAction
+    | AddDropSnapTargetsAction;
 
 /**
  * Defines a set of possible async action types.
@@ -186,7 +187,9 @@ export type AsyncActions =
     | AnimateToPositionAction
     | BeginAudioRecordingAction
     | EndAudioRecordingAction
-    | CancelAnimationAction;
+    | CancelAnimationAction
+    | BeginRecordingAction
+    | EndRecordingAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2507,6 +2510,48 @@ export interface OpenCircleWipeOptions {
 }
 
 /**
+ * An event that is used to add some snap points for a drag operation.
+ */
+export interface AddDropSnapTargetsAction extends Action {
+    type: 'add_drop_snap_targets';
+
+    /**
+     * The ID of the bot that, when it is a drop target, the snap points should be enabled.
+     * If null, then the targets apply globally during the drag operation.
+     */
+    botId?: string;
+
+    /**
+     * The list of snap targets that should be used.
+     */
+    targets: SnapTarget[];
+}
+
+/**
+ * Defines an interface that represents a snap point.
+ * That is, a point in 3D space with an associated snap distance.
+ */
+export interface SnapPoint {
+    /**
+     * The 3D position for the point.
+     */
+    position: { x: number; y: number; z: number };
+
+    /**
+     * The distance that the snap point should take effect at.
+     */
+    distance: number;
+}
+
+/**
+ * The list of possible snap targets.
+ * - "ground" means that the dragged bot should snap to the ground plane. This option is overriden by "grid".
+ * - "grid" means that the dragged bot should snap to grid tiles.
+ * - "face" means that the dragged bot should snap to other bot faces.
+ */
+export type SnapTarget = 'ground' | 'grid' | 'face' | SnapPoint;
+
+/**
  * An event that is used to start audio recording.
  */
 export interface BeginAudioRecordingAction extends AsyncAction {
@@ -2518,6 +2563,72 @@ export interface BeginAudioRecordingAction extends AsyncAction {
  */
 export interface EndAudioRecordingAction extends AsyncAction {
     type: 'end_audio_recording';
+}
+
+/**
+ * An interface that represents the options that can be used for making recordings.
+ */
+export interface RecordingOptions {
+    /**
+     * Whether to record audio.
+     */
+    audio: boolean;
+
+    /**
+     * Whether to record video.
+     */
+    video: boolean;
+
+    /**
+     * Whether to record the screen.
+     */
+    screen: boolean;
+}
+
+/**
+ * An event that is used to start audio recording.
+ */
+export interface BeginRecordingAction extends AsyncAction, RecordingOptions {
+    type: 'begin_recording';
+}
+
+/**
+ * An event that is used to finish audio recording.
+ */
+export interface EndRecordingAction extends AsyncAction {
+    type: 'end_recording';
+}
+
+/**
+ * Defines an interface that contains recorded data.
+ */
+export interface Recording {
+    /**
+     * The list of files that were produced when recording.
+     */
+    files: RecordedFile[];
+}
+
+export interface RecordedFile {
+    /**
+     * Whether the file contains the recorded audio.
+     */
+    containsAudio: boolean;
+
+    /**
+     * Whether the file contains the recorded video.
+     */
+    containsVideo: boolean;
+
+    /**
+     * Whether the file contains the recorded screen data.
+     */
+    containsScreen: boolean;
+
+    /**
+     * The data that the file contains.
+     */
+    data: Blob;
 }
 
 /**z
@@ -4709,6 +4820,22 @@ export function circleWipe(
 }
 
 /**
+ * Creates a AddDropSnapTargetsAction.
+ * @param botId The ID of the bot.
+ * @param targets The list of snap targets to add.
+ */
+export function addDropSnap(
+    botId: string,
+    targets: SnapTarget[]
+): AddDropSnapTargetsAction {
+    return {
+        type: 'add_drop_snap_targets',
+        botId,
+        targets,
+    };
+}
+
+/**
  * Creates an action that registers a portal that is builtin.
  * This instructs the runtime to create a portal bot if one has not already been created.
  * @param portalId The ID of the portal.
@@ -4868,6 +4995,33 @@ export function endAudioRecording(
 ): EndAudioRecordingAction {
     return {
         type: 'end_audio_recording',
+        taskId,
+    };
+}
+
+/**
+ * Creates a BeginRecordingAction.
+ * @param options The options for the recording.
+ * @param taskId The task ID.
+ */
+export function beginRecording(
+    options: RecordingOptions,
+    taskId?: string | number
+): BeginRecordingAction {
+    return {
+        type: 'begin_recording',
+        ...options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a EndRecordingAction.
+ * @param taskId The task ID.
+ */
+export function endRecording(taskId?: string | number): EndRecordingAction {
+    return {
+        type: 'end_recording',
         taskId,
     };
 }

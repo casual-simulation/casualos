@@ -210,7 +210,8 @@ declare type ExtraActions =
     | ExitFullscreenAction
     | LoadBotsAction
     | ClearSpaceAction
-    | LocalFormAnimationAction;
+    | LocalFormAnimationAction
+    | AddDropSnapTargetsAction;
 
 /**
  * Defines a set of possible async action types.
@@ -231,7 +232,9 @@ declare type AsyncActions =
     | OpenCustomPortalAction
     | RegisterPrefixAction
     | AnimateToBotAction
-    | AnimateToPositionAction;
+    | AnimateToPositionAction
+    | BeginRecordingAction
+    | EndRecordingAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1763,6 +1766,48 @@ export interface OpenCircleWipeOptions {
 }
 
 /**
+ * An event that is used to add some snap points for a drag operation.
+ */
+ export interface AddDropSnapTargetsAction extends Action {
+    type: 'add_drop_snap_targets';
+
+    /**
+     * The ID of the bot that, when it is a drop target, the snap points should be enabled.
+     * If null, then the targets apply globally during the drag operation.
+     */
+    botId?: string;
+
+    /**
+     * The list of snap targets that should be used.
+     */
+    targets: SnapTarget[];
+}
+
+/**
+ * Defines an interface that represents a snap point.
+ * That is, a point in 3D space with an associated snap distance.
+ */
+ export interface SnapPoint {
+    /**
+     * The 3D position for the point.
+     */
+    position: { x: number; y: number; z: number };
+
+    /**
+     * The distance that the snap point should take effect at.
+     */
+    distance: number;
+}
+
+/**
+ * The list of possible snap targets.
+ * - "ground" means that the dragged bot should snap to the ground plane. This option is overriden by "grid".
+ * - "grid" means that the dragged bot should snap to grid tiles.
+ * - "face" means that the dragged bot should snap to other bot faces.
+ */
+export type SnapTarget = 'ground' | 'grid' | 'face' | SnapPoint;
+
+/**
  * The possible options for a custom portal.
  */
 export interface OpenCustomPortalOptions {
@@ -1827,6 +1872,74 @@ export interface RegisterPrefixOptions {
      * The possible languages that prefixes can use.
      */
     language?: 'javascript' | 'typescript' | 'json' | 'jsx' | 'tsx' | 'text';
+}
+
+
+/**
+ * An interface that represents the options that can be used for making recordings.
+ */
+ export interface RecordingOptions {
+    /**
+     * Whether to record audio.
+     */
+    audio: boolean;
+
+    /**
+     * Whether to record video.
+     */
+    video: boolean;
+
+    /**
+     * Whether to record the screen.
+     */
+    screen: boolean;
+}
+
+/**
+ * An event that is used to start audio recording.
+ */
+ export interface BeginRecordingAction extends AsyncAction, RecordingOptions {
+    type: 'begin_recording';
+}
+
+/**
+ * An event that is used to finish audio recording.
+ */
+export interface EndRecordingAction extends AsyncAction {
+    type: 'end_recording';
+}
+
+/**
+ * Defines an interface that contains recorded data.
+ */
+export interface Recording {
+
+    /**
+     * The list of files that were produced when recording.
+     */
+    files: RecordedFile[];
+}
+
+export interface RecordedFile {
+    /**
+     * Whether the file contains the recorded audio.
+     */
+    containsAudio: boolean;
+    
+    /**
+     * Whether the file contains the recorded video.
+     */
+    containsVideo: boolean;
+
+    /**
+     * Whether the file contains the recorded screen data.
+     */
+    containsScreen: boolean;
+
+    /**
+     * The data that the file contains.
+     */
+    data: Blob;
 }
 
 /**
@@ -3069,6 +3182,19 @@ declare global {
          * @param options The options that should be used for the effect.
          */
         openCircleWipe(options?: Partial<OpenCircleWipeOptions>): Promise<void>;
+
+        /**
+         * Adds the given list of snap targets to the current drag operation.
+         * @param targets The list of targets to add.
+         */
+        addDropSnap(...targets: SnapTarget[]): AddDropSnapTargetsAction;
+
+        /**
+         * Adds the given list of snap targets for when the specified bot is being dropped on.
+         * @param bot The bot.
+         * @param targets The targets that should be enabled when the bot is being dropped on.
+         */
+        addBotDropSnap(bot: Bot | string, ...targets: SnapTarget[]): AddDropSnapTargetsAction;
 
         /**
          * Logs the given data to the developer console.
@@ -4339,6 +4465,19 @@ declare global {
          * Returns a promise that resolves with the recorded blob.
          */
         endAudioRecording(): Promise<Blob>;
+
+        /**
+         * Starts a new recording.
+         * @param options The options for the recording.
+         * @returns A promise that resolves when the recording has started.
+         */
+        beginRecording(options?: RecordingOptions): Promise<void>;
+
+        /**
+         * Finishes a recording.
+         * Returns a promise that resolves with the recorded data.
+         */
+        endRecording(): Promise<Recording>;
     };
 
     /**

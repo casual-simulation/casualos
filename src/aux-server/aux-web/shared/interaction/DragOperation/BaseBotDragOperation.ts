@@ -14,10 +14,8 @@ import {
     BotAction,
     BotCalculationContext,
     objectsAtDimensionGridPosition,
-    isBotStackable,
     getBotIndex,
     botRemoved,
-    isMergeable,
     DROP_ACTION_NAME,
     DROP_ANY_ACTION_NAME,
     MOD_DROP_ACTION_NAME,
@@ -35,6 +33,10 @@ import {
     onDropArg,
     BotDropToDestination,
     onDragArg,
+    ANY_DROP_ENTER_ACTION_NAME,
+    ANY_DROP_EXIT_ACTION_NAME,
+    SnapTarget,
+    SnapPoint,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -43,6 +45,11 @@ import { Subscription } from 'rxjs';
 import { ControllerData, InputMethod } from '../../../shared/scene/Input';
 import { posesEqual } from '../ClickOperation/ClickOperationUtils';
 import { merge } from 'lodash';
+import {
+    SnapBotsHelper,
+    SnapBotsInterface,
+    SnapOptions,
+} from './SnapInterface';
 
 /**
  * Shared class for both BotDragOperation and NewBotDragOperation.
@@ -55,7 +62,6 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected _finished: boolean;
     protected _lastScreenPos: Vector2;
     protected _lastGridPos: Vector2;
-    protected _lastIndex: number;
     protected _lastVRControllerPose: Object3D;
     protected _other: Bot;
     protected _dimension: string;
@@ -67,6 +73,8 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected _clickedFace: string;
     protected _hit: Intersection;
     protected _dragStartFrame: number;
+    protected _snapInterface: SnapBotsInterface;
+    protected _createdSnapInterface: boolean;
 
     /**
      * The bot that the onDropEnter event was sent to.
@@ -104,7 +112,8 @@ export abstract class BaseBotDragOperation implements IOperation {
         fromCoord?: Vector2,
         skipOnDragEvents?: boolean,
         clickedFace?: string,
-        hit?: Intersection
+        hit?: Intersection,
+        snapInterface?: SnapBotsInterface
     ) {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
@@ -112,7 +121,6 @@ export abstract class BaseBotDragOperation implements IOperation {
         this._originalDimension = this._dimension = dimension;
         this._previousDimension = null;
         this._lastGridPos = null;
-        this._lastIndex = null;
         this._inDimension = true;
         this._inputMethod = inputMethod;
         this._controller =
@@ -122,6 +130,27 @@ export abstract class BaseBotDragOperation implements IOperation {
         this._hit = hit;
         this._dragStartFrame = this.game.getTime().frameCount;
         this._sub = new Subscription();
+        this._snapInterface = snapInterface;
+        if (!this._snapInterface) {
+            this._createdSnapInterface = true;
+            this._snapInterface = new SnapBotsHelper();
+
+            if (!this._controller) {
+                this._snapInterface.addSnapTargets(null, ['ground']);
+            }
+
+            const sub = this._simulation3D.simulation.localEvents.subscribe(
+                (action) => {
+                    if (action.type === 'add_drop_snap_targets') {
+                        this._snapInterface.addSnapTargets(
+                            action.botId,
+                            action.targets
+                        );
+                    }
+                }
+            );
+            this._sub.add(sub);
+        }
 
         if (this._controller) {
             this._lastVRControllerPose = this._controller.ray.clone();
@@ -290,8 +319,6 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected async _updateBotsPositions(
         bots: Bot[],
         gridPosition: Vector2 | Vector3,
-        index: number,
-        calc: BotCalculationContext,
         rotation?: Euler
     ) {
         if (!this._dimension) {
@@ -300,17 +327,11 @@ export abstract class BaseBotDragOperation implements IOperation {
         this._inDimension = true;
 
         if (gridPosition instanceof Vector2) {
-            await this._updateBotsGridPositions(
-                bots,
-                gridPosition,
-                index,
-                calc
-            );
+            await this._updateBotsGridPositions(bots, gridPosition);
         } else {
             await this._updateBotsAbsolutePositions(
                 bots,
                 gridPosition,
-                calc,
                 rotation
             );
         }
@@ -319,11 +340,9 @@ export abstract class BaseBotDragOperation implements IOperation {
     private async _updateBotsAbsolutePositions(
         bots: Bot[],
         position: Vector3,
-        calc: BotCalculationContext,
         rotation: Euler
     ) {
         this._lastGridPos = null;
-        this._lastIndex = 0;
 
         let events: BotAction[] = [];
         for (let i = 0; i < bots.length; i++) {
@@ -334,15 +353,17 @@ export abstract class BaseBotDragOperation implements IOperation {
                     [`${this._dimension}X`]: position.x,
                     [`${this._dimension}Y`]: position.y,
                     [`${this._dimension}Z`]: position.z,
-                    [`${this._dimension}SortOrder`]: 0,
                 },
             };
             if (rotation) {
                 merge(tags, {
                     tags: {
-                        [`${this._dimension}RotationX`]: rotation.x,
-                        [`${this._dimension}RotationY`]: rotation.y,
-                        [`${this._dimension}RotationZ`]: rotation.z,
+                        [`${this._dimension}RotationX`]:
+                            Math.abs(rotation.x) > 0 ? rotation.x : null,
+                        [`${this._dimension}RotationY`]:
+                            Math.abs(rotation.y) > 0 ? rotation.y : null,
+                        [`${this._dimension}RotationZ`]:
+                            Math.abs(rotation.z) > 0 ? rotation.z : null,
                     },
                 });
             }
@@ -357,47 +378,26 @@ export abstract class BaseBotDragOperation implements IOperation {
 
     protected async _updateBotsGridPositions(
         bots: Bot[],
-        gridPosition: Vector2,
-        index: number,
-        calc: BotCalculationContext
+        gridPosition: Vector2
     ) {
-        if (
-            this._lastGridPos &&
-            this._lastGridPos.equals(gridPosition) &&
-            this._lastIndex === index
-        ) {
+        if (this._lastGridPos && this._lastGridPos.equals(gridPosition)) {
             return;
         }
 
         this._toCoord = gridPosition;
         this._lastGridPos = gridPosition.clone();
-        this._lastIndex = index;
 
         let events: BotAction[] = [];
         for (let i = 0; i < bots.length; i++) {
             let tags;
 
-            if (!isBotStackable(calc, bots[i])) {
-                tags = {
-                    tags: {
-                        [this._dimension]: true,
-                        [`${this._dimension}X`]: gridPosition.x,
-                        [`${this._dimension}Y`]: gridPosition.y,
-                        [`${this._dimension}Z`]: null,
-                        [`${this._dimension}SortOrder`]: 0,
-                    },
-                };
-            } else {
-                tags = {
-                    tags: {
-                        [this._dimension]: true,
-                        [`${this._dimension}X`]: gridPosition.x,
-                        [`${this._dimension}Y`]: gridPosition.y,
-                        [`${this._dimension}Z`]: null,
-                        [`${this._dimension}SortOrder`]: index + i,
-                    },
-                };
-            }
+            tags = {
+                tags: {
+                    [this._dimension]: true,
+                    [`${this._dimension}X`]: gridPosition.x,
+                    [`${this._dimension}Y`]: gridPosition.y,
+                },
+            };
             if (this._previousDimension) {
                 tags.tags[this._previousDimension] = null;
             }
@@ -548,6 +548,11 @@ export abstract class BaseBotDragOperation implements IOperation {
                         bots: this._bots,
                         arg: arg,
                     },
+                    {
+                        eventName: ANY_DROP_EXIT_ACTION_NAME,
+                        bots: null,
+                        arg: arg,
+                    },
                 ])
             );
         }
@@ -564,6 +569,11 @@ export abstract class BaseBotDragOperation implements IOperation {
                     {
                         eventName: DROP_ENTER_ACTION_NAME,
                         bots: this._bots,
+                        arg: arg,
+                    },
+                    {
+                        eventName: ANY_DROP_ENTER_ACTION_NAME,
+                        bots: null,
                         arg: arg,
                     },
                 ])

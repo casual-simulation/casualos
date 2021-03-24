@@ -269,7 +269,6 @@ export interface BotTags {
     ['color']?: unknown;
     ['draggable']?: unknown;
     ['draggableMode']?: unknown;
-    ['positioningMode']?: unknown;
     ['destroyable']?: unknown;
     ['editable']?: unknown;
     ['strokeColor']?: unknown;
@@ -347,7 +346,6 @@ export interface BotTags {
     [`portalZoomableMin`]?: number | null;
     [`portalZoomableMax`]?: number | null;
     ['portalRotatable']?: number | null;
-    ['portalPointerDragMode']?: PortalPointerDragMode;
     ['portalShowFocusPoint']?: boolean | null;
     ['portalDisableCanvasTransparency']?: boolean;
     ['inventoryPortalHeight']?: unknown;
@@ -546,11 +544,6 @@ export type MeetPortalAnchorPoint =
     | [number | string, number | string, number | string, number | string];
 
 /**
- * Defines the possible portal raycast modes.
- */
-export type PortalPointerDragMode = 'grid' | 'world';
-
-/**
  * Defines the possible backup types.
  */
 export type BackupType = 'github' | 'download';
@@ -613,11 +606,6 @@ export const DEFAULT_ORIENTATION_MODE: BotOrientationMode = 'absolute';
  * The default bot orientation mode.
  */
 export const DEFAULT_ANCHOR_POINT: BotAnchorPoint = 'bottom';
-
-/**
- * The default portal raycast mode.
- */
-export const DEFAULT_PORTAL_POINTER_DRAG_MODE: PortalPointerDragMode = 'world';
 
 /**
  * The default portal camera controls mode.
@@ -926,6 +914,16 @@ export const DROP_ENTER_ACTION_NAME: string = 'onDropEnter';
 export const DROP_EXIT_ACTION_NAME: string = 'onDropExit';
 
 /**
+ * The name of the event that represents a bot entering over another bot.
+ */
+export const ANY_DROP_ENTER_ACTION_NAME: string = 'onAnyBotDropEnter';
+
+/**
+ * The name of the event that represents a bot exiting from over another bot.
+ */
+export const ANY_DROP_EXIT_ACTION_NAME: string = 'onAnyBotDropExit';
+
+/**
  * The name of the event that represents a bot being dropped onto a dimension.
  */
 export const DROP_ACTION_NAME: string = 'onDrop';
@@ -974,6 +972,26 @@ export const ON_ANY_POINTER_ENTER: string = 'onAnyBotPointerEnter';
  * The name of the event that is triggered when a pointer stops hovering any bot.
  */
 export const ON_ANY_POINTER_EXIT: string = 'onAnyBotPointerExit';
+
+/**
+ * The name of the event that is triggered when a pointer starts clicking a bot.
+ */
+export const ON_POINTER_DOWN: string = 'onPointerDown';
+
+/**
+ * The name of the event that is triggered when a pointer stops clicking a bot.
+ */
+export const ON_POINTER_UP: string = 'onPointerUp';
+
+/**
+ * The name of the event that is triggered when a pointer starts hovering any bot.
+ */
+export const ON_ANY_POINTER_DOWN: string = 'onAnyBotPointerDown';
+
+/**
+ * The name of the event that is triggered when a pointer stops hovering any bot.
+ */
+export const ON_ANY_POINTER_UP: string = 'onAnyBotPointerUp';
 
 /**
  * The name of the event that is triggered when a QR Code is scanned.
@@ -1453,7 +1471,6 @@ export const KNOWN_TAGS: string[] = [
     `portalCameraZoom`,
     `portalCameraRotationX`,
     `portalCameraRotationY`,
-    'portalPointerDragMode',
     'portalCameraControls',
     'portalShowFocusPoint',
     'portalDisableCanvasTransparency',
@@ -1479,8 +1496,6 @@ export const KNOWN_TAGS: string[] = [
     'color',
     'creator',
     'draggable',
-    'draggableMode',
-    'positioningMode',
     'destroyable',
     'editable',
     'strokeColor',
@@ -1569,6 +1584,8 @@ export const KNOWN_TAGS: string[] = [
     DESTROY_ACTION_NAME,
     DROP_ENTER_ACTION_NAME,
     DROP_EXIT_ACTION_NAME,
+    ANY_DROP_ENTER_ACTION_NAME,
+    ANY_DROP_EXIT_ACTION_NAME,
     DROP_ACTION_NAME,
     DROP_ANY_ACTION_NAME,
     DRAG_ACTION_NAME,
@@ -1584,8 +1601,10 @@ export const KNOWN_TAGS: string[] = [
     ON_POINTER_EXIT,
     ON_ANY_POINTER_ENTER,
     ON_ANY_POINTER_EXIT,
-    'onPointerDown',
-    'onPointerUp',
+    ON_POINTER_DOWN,
+    ON_POINTER_UP,
+    ON_ANY_POINTER_DOWN,
+    ON_ANY_POINTER_UP,
     ON_SERVER_STREAMING_ACTION_NAME,
     ON_SERVER_STREAM_LOST_ACTION_NAME,
 

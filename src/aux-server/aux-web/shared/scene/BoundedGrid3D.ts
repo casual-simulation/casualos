@@ -13,12 +13,12 @@ import {
     PlaneHelper,
     Quaternion,
 } from '@casual-simulation/three';
-import { getOptionalValue } from '../shared/SharedUtils';
-import { DebugObjectManager } from '../shared/scene/debugobjectmanager/DebugObjectManager';
-import { Physics } from '../shared/scene/Physics';
+import { getOptionalValue } from '../SharedUtils';
+import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
+import { Physics } from './Physics';
 import { Dictionary, groupBy, flatMap, sortBy } from 'lodash';
 import { GridTile, Grid3D } from './Grid3D';
-import { disposeObject3D } from '../shared/scene/SceneUtils';
+import { disposeObject3D } from './SceneUtils';
 import { hasValue } from '@casual-simulation/aux-common';
 
 export const GRIDLINES_Y_OFFSET = 0.01;
@@ -94,7 +94,7 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
         if (!planeHit) {
             return null;
         }
-        const tile = this.getTileFromPosition(planeHit);
+        const tile = this.getTileFromPosition(planeHit, true);
         if (tile === null) {
             return null;
         }
@@ -105,10 +105,12 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
      * Scales the given position by the tile scale and returns the result.
      * @param position The input position.
      */
-    getGridPosition(position: Vector3): Vector3 {
-        const result = new Vector3()
-            .copy(position)
-            .divideScalar(this.tileScale);
+    getGridPosition(position: { x: number; y: number; z: number }): Vector3 {
+        const result = new Vector3(
+            position.x,
+            position.y,
+            position.z
+        ).divideScalar(this.tileScale);
         return new Vector3(
             result.x,
             this.useAuxCoordinates ? -result.z : result.z,
@@ -116,11 +118,23 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
         );
     }
 
+    getWorldPosition(position: { x: number; y: number; z: number }): Vector3 {
+        const result = new Vector3(
+            position.x,
+            position.z,
+            this.useAuxCoordinates ? -position.y : position.y
+        ).multiplyScalar(this.tileScale);
+        return result;
+    }
+
     /**
      * Retrive the grid tile that contains the given position.
      * @param position The world space position.
      */
-    getTileFromPosition(position: Vector3): GridTile {
+    getTileFromPosition(
+        position: Vector3,
+        roundToWholeNumber: boolean
+    ): GridTile {
         const localPos = position.clone();
         this.worldToLocal(localPos);
 
@@ -130,8 +144,8 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
         }
 
         // Snap position to a grid center.
-        let tileX = this._snapToTileCoord(localPos.x);
-        let tileY = this._snapToTileCoord(localPos.z);
+        let tileX = this._snapToTileCoord(localPos.x, roundToWholeNumber);
+        let tileY = this._snapToTileCoord(localPos.z, roundToWholeNumber);
 
         if (
             tileX < this.minX ||
@@ -151,7 +165,6 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
             grid: this,
         };
 
-        tile.tileCoordinate = new Vector2(tileX, tileY);
         return tile;
     }
 
@@ -185,11 +198,14 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
      * Will return null if the ray does not interesect with the grid.
      * @param ray The ray to test.
      */
-    getTileFromRay(ray: Ray): GridTile {
+    getTileFromRay(ray: Ray, roundToWholeNumber: boolean = true): GridTile {
         let planeHit = Physics.pointOnPlane(ray, this.plane);
 
         if (planeHit) {
-            let gridTile = this.getTileFromPosition(planeHit);
+            let gridTile = this.getTileFromPosition(
+                planeHit,
+                roundToWholeNumber
+            );
             return gridTile;
         }
 
@@ -286,26 +302,30 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
         this.add(this._gridLines);
     }
 
-    private _snapToTileCoord(num: number): number {
+    private _snapToTileCoord(num: number, roundToWholeNumber: boolean): number {
         // We need to snap the number to a tile coordinate.
         let normalized = num / this.tileScale;
-        let remaining = normalized % 1;
-        let whole = normalized - remaining;
+        if (roundToWholeNumber) {
+            let remaining = normalized % 1;
+            let whole = normalized - remaining;
 
-        if (remaining >= 0) {
-            // Positive side
-            if (remaining <= 0.5) {
-                num = whole;
+            if (remaining >= 0) {
+                // Positive side
+                if (remaining <= 0.5) {
+                    num = whole;
+                } else {
+                    num = whole + 1;
+                }
             } else {
-                num = whole + 1;
+                // Negative side
+                if (remaining >= -0.5) {
+                    num = whole;
+                } else {
+                    num = whole - 1;
+                }
             }
         } else {
-            // Negative side
-            if (remaining >= -0.5) {
-                num = whole;
-            } else {
-                num = whole - 1;
-            }
+            num = normalized;
         }
         return num;
     }

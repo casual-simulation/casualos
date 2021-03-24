@@ -12,7 +12,6 @@ import {
     getDimensionGridHeight,
     cacheFunction,
     calculateBooleanTagValue,
-    isBotStackable,
     getBotOrientationMode,
     getBotAnchorPoint,
     BotAnchorPoint,
@@ -410,32 +409,6 @@ export function calculateObjectPositionInGrid(
     );
 
     let totalScales = 0;
-
-    if (!bot.isOnGrid || !isBotStackable(context, bot.bot)) {
-        totalScales = 0;
-    } else {
-        const objectsAtPosition = objectsAtDimensionGridPosition(
-            context,
-            bot.dimension,
-            position
-        );
-
-        // Offset local position using index of bot.
-        for (let obj of objectsAtPosition) {
-            if (obj.id === bot.bot.id) {
-                break;
-            }
-
-            if (isBotStackable(context, obj)) {
-                totalScales += calculateVerticalHeight(
-                    context,
-                    obj,
-                    bot.dimension,
-                    gridScale
-                );
-            }
-        }
-    }
 
     const indexOffset = new Vector3(0, totalScales, 0);
 

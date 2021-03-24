@@ -29,8 +29,6 @@ import {
     DEFAULT_ORIENTATION_MODE,
     BotAnchorPoint,
     DEFAULT_ANCHOR_POINT,
-    PortalPointerDragMode,
-    DEFAULT_PORTAL_POINTER_DRAG_MODE,
     BotLOD,
     BotLabelAlignment,
     DEFAULT_LABEL_ALIGNMENT,
@@ -1753,29 +1751,6 @@ export function calculateBotLOD(
 }
 
 /**
- * Calculates the portal raycast mode that the given bot has set.
- * @param calc The calculation context.
- * @param bot The portal config bot.
- */
-export function calculatePortalPointerDragMode(
-    calc: BotCalculationContext,
-    bot: Bot
-): PortalPointerDragMode {
-    const mode = <PortalPointerDragMode>(
-        calculateStringTagValue(
-            calc,
-            bot,
-            'auxPortalPointerDragMode',
-            DEFAULT_PORTAL_POINTER_DRAG_MODE
-        )
-    );
-    if (mode === 'grid' || mode === 'world') {
-        return mode;
-    }
-    return DEFAULT_PORTAL_POINTER_DRAG_MODE;
-}
-
-/**
  * Calculates the portal camera controls mode that the given bot has set.
  * @param calc The calculation context.
  * @param bot The portal config bot.
@@ -1911,32 +1886,6 @@ export function getDimensionValue(
 }
 
 /**
- * Gets the drag mode for the bot.
- * @param calc The bot calculation context.
- * @param bot The bot to check.
- */
-export function getBotDragMode(
-    calc: BotCalculationContext,
-    bot: Bot
-): BotDragMode {
-    const draggable = calculateBooleanTagValue(calc, bot, 'auxDraggable', true);
-    const val = calculateStringTagValue(calc, bot, 'auxDraggableMode', null);
-    if (!draggable) {
-        return 'none';
-    }
-    if (
-        val === 'all' ||
-        val === 'none' ||
-        val === 'pickupOnly' ||
-        val === 'moveOnly'
-    ) {
-        return val;
-    } else {
-        return 'all';
-    }
-}
-
-/**
  * Gets the ID of the bot that the given bot should be transformed by.
  * @param calc The bot calculation context.
  * @param bot The bot to check.
@@ -1946,36 +1895,6 @@ export function getBotTransformer(
     bot: Bot
 ): string {
     return calculateStringTagValue(calc, bot, 'transformer', null);
-}
-
-/**
- * Gets whether the given bot is stackable.
- * @param calc The calculation context.
- * @param bot The bot to check.
- */
-export function isBotStackable(calc: BotCalculationContext, bot: Bot): boolean {
-    return getBotPositioningMode(calc, bot) === 'stack';
-}
-
-/**
- * Gets the positioning mode for the bot.
- * @param calc The calculation context.
- * @param bot The bot.
- */
-export function getBotPositioningMode(
-    calc: BotCalculationContext,
-    bot: Bot
-): BotPositioningMode {
-    const mode = calculateStringTagValue(
-        calc,
-        bot,
-        'auxPositioningMode',
-        'stack'
-    );
-    if (mode === 'stack' || mode === 'absolute') {
-        return mode;
-    }
-    return 'stack';
 }
 
 /**
@@ -2238,7 +2157,7 @@ export function objectsAtDimensionGridPosition(
  * @param gridPosition The grid position that the bot is being dragged to.
  * @param bot The bot that is being dragged.
  */
-export function calculateBotDragStackPosition(
+export function getDropBotFromGridPosition(
     calc: BotCalculationContext,
     dimension: string,
     gridPosition: { x: number; y: number },
@@ -2250,72 +2169,9 @@ export function calculateBotDragStackPosition(
         (f) => f.id
     );
 
-    const canMerge = canMergeBots(calc, objs, bots);
-
-    const firstBot = bots[0];
-
-    // Can stack if we're dragging more than one bot,
-    // or (if the single bot we're dragging is stackable and
-    // the stack we're dragging onto is stackable)
-    let canStack =
-        bots.length > 1 ||
-        ((isBotTags(firstBot) || isBotStackable(calc, firstBot)) &&
-            (objs.length === 0 || isBotStackable(calc, objs[0])));
-
-    const index = nextAvailableObjectIndex(calc, dimension, bots, objs);
-
     return {
-        merge: canMerge,
-        stackable: canStack,
         other: objs[0],
-        index: index,
     };
-}
-
-function canMergeBots(
-    calc: BotCalculationContext,
-    objs: Bot[],
-    bots: (Bot | BotTags)[]
-) {
-    return (
-        objs.length >= 1 &&
-        bots.length === 1 &&
-        isBotTags(bots[0]) &&
-        isMergeable(calc, objs[0])
-    );
-}
-
-/**
- * Calculates the next available index that an object can be placed at on the given workspace at the
- * given grid position.
- * @param dimension The dimension.
- * @param gridPosition The grid position that the next available index should be found for.
- * @param bots The bots that we're trying to find the next index for.
- * @param objs The objects at the same grid position.
- */
-export function nextAvailableObjectIndex(
-    calc: BotCalculationContext,
-    dimension: string,
-    bots: (Bot | BotTags)[],
-    objs: Bot[]
-): number {
-    const except = differenceBy(objs, bots, (f) => f.id);
-
-    const indexes = except.map((o) => ({
-        object: o,
-        index: getBotIndex(calc, o, dimension),
-    }));
-
-    // TODO: Improve to handle other scenarios like:
-    // - Reordering objects
-    // - Filling in gaps that can be made by moving bots from the center of the list
-    const maxIndex = maxBy(indexes, (i) => i.index);
-    let nextIndex = 0;
-    if (maxIndex) {
-        nextIndex = maxIndex.index + 1;
-    }
-
-    return nextIndex;
 }
 
 /**
@@ -2396,26 +2252,6 @@ export function isWellKnownOrDimension(tag: string, dimensions: string[]): any {
  */
 export function isBotTags(value: any): value is BotTags {
     return !isBot(value);
-}
-
-/**
- * Determines if the given bot allows for merging.
- * @param bot The bot to check.
- */
-export function isMergeable(calc: BotCalculationContext, bot: Bot): boolean {
-    return true;
-}
-
-/**
- * Determines if the given bot allows for the bot to be place in inventory.
- * @param bot The bot to check.
- */
-export function isPickupable(calc: BotCalculationContext, bot: Bot): boolean {
-    if (!!bot && isBotMovable(calc, bot)) {
-        const mode = getBotDragMode(calc, bot);
-        return mode === 'pickupOnly' || mode === 'all';
-    }
-    return false;
 }
 
 export function simulationIdToString(id: SimulationIdParseSuccess): string {

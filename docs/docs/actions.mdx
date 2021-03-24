@@ -1612,6 +1612,158 @@ os.replaceDragBot({
 });
 ```
 
+### `os.addDropSnap(...targets)`
+
+Specifies a list of snap targets that can be used to position the currently dragged bot.
+
+If called when the user is not dragging anything, then this function does nothing.
+
+**Each parameter** is a snap target and can be one of the following values:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='ground'>
+    The bot will snap to the ground plane. (Default when not in VR)
+  </PossibleValueCode>
+  <PossibleValueCode value='grid'>
+    The bot will snap to individual grid tiles.
+  </PossibleValueCode>
+  <PossibleValueCode value='face'>
+    The bot will snap the faces of other pointable bots.
+  </PossibleValueCode>
+  <PossibleValue value='A snap point object'>
+    The bot will snap to the specified position when dragged within the specified distance.
+  </PossibleValue>
+</PossibleValuesTable>
+
+Snap point objects should have the following form:
+```typescript
+let snapPoint: {
+    /**
+     * The position that the bot should be snapped to.
+     */
+    position: { x: number, y: number, z: number };
+
+    /**
+     * The distance that the bot should be from the position in order to snap to it.
+     */
+    distance: number;
+};
+```
+
+#### Examples:
+
+1. Snap the dragged bot to the grid.
+```typescript
+os.addDropSnap("grid");
+```
+
+2. Snap the dragged bot to other bot faces.
+```typescript
+os.addDropSnap("face");
+```
+
+3. Snap the dragged bot to a point.
+```typescript
+os.addDropSnap({
+    position: {
+        x: 0,
+        y: 0,
+        z: 3,
+    },
+    distance: 1
+});
+```
+
+4. Snap the dragged bot to the center or bot faces.
+```typescript
+os.addDropSnap({
+    position: {
+        x: 0,
+        y: 0,
+        z: 0,
+    },
+    distance: 1
+}, "face");
+```
+
+### `os.addBotDropSnap(bot, ...targets)`
+
+Specifies a list of snap targets that can be used to position the currently dragged bot when it is being dropped on the given bot.
+This function is useful for making some bots act like a "selector" or mask for drop areas.
+
+If called when the user is not dragging anything, then this function does nothing.
+
+The **first parameter** is the bot which, when the dragged bot is being dropped onto it (as indicated by <TagLink tag='@onDropEnter'/>/<TagLink tag='@onDropExit'/>),
+the specified snap targets will take effect.
+
+The **other parameters** are the snap targets and each can be one of the following values:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='ground'>
+    The bot will snap to the ground plane. (Default when not in VR)
+  </PossibleValueCode>
+  <PossibleValueCode value='grid'>
+    The bot will snap to individual grid tiles.
+  </PossibleValueCode>
+  <PossibleValueCode value='face'>
+    The bot will snap the faces of other pointable bots.
+  </PossibleValueCode>
+  <PossibleValue value='A snap point object'>
+    The bot will snap to the specified position when dragged within the specified distance.
+  </PossibleValue>
+</PossibleValuesTable>
+
+Snap point objects should have the following form:
+```typescript
+let snapPoint: {
+    /**
+     * The position that the bot should be snapped to.
+     */
+    position: { x: number, y: number, z: number };
+
+    /**
+     * The distance that the bot should be from the position in order to snap to it.
+     */
+    distance: number;
+};
+```
+
+#### Examples:
+
+1. Snap the dragged bot to the grid when it is being dropped on this bot.
+```typescript
+os.addBotDropSnap(thisBot, "grid");
+```
+
+2. Snap the dragged bot to this bot's faces.
+```typescript
+os.addBotDropSnap(thisBot, "face");
+```
+
+3. Snap the dragged bot to a point when it is being dropped on this bot.
+```typescript
+os.addBotDropSnap(thisBot, {
+    position: {
+        x: 0,
+        y: 0,
+        z: 3,
+    },
+    distance: 1
+});
+```
+
+4. Snap the dragged bot to the center or bot faces when it is being dropped on this bot.
+```typescript
+os.addBotDropSnap(thisBot, {
+    position: {
+        x: 0,
+        y: 0,
+        z: 0,
+    },
+    distance: 1
+}, "face");
+```
+
 ### `os.showChat(placeholder?)`
 
 
@@ -5844,11 +5996,98 @@ for(let point of points) {
         [os.getCurrentDimension() + "X"]: pos.x,
         [os.getCurrentDimension() + "Y"]: pos.y,
         [os.getCurrentDimension() + "Z"]: pos.z,
-        positioningMode: 'absolute',
         anchorPoint: 'center',
         targetAnchorPoint: point,
         scale: 0.1,
     });
+}
+```
+
+### `experiment.beginRecording(options?)`
+
+Starts a new recording. Returns a promise that resolves when recording has started.
+The returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.
+
+The **first parameter** should be an object and contains the options that should be used for the recording. It should have the following structure:
+```typescript
+let options: {
+    /**
+     * Whether the audio should be recorded.
+     * If the computer does not have an audio device attached, then setting this to true
+     * will cause an error.
+     * 
+     * Defaults to true.
+     */
+    audio: boolean;
+
+    /**
+     * Whether video from a video camera should be recorded.
+     * 
+     * If the computer does not have a video device attached (like a web cam),
+     * then setting this to true will cause an error.
+     * 
+     * Defaults to true.
+     */
+    video: boolean;
+
+    /**
+     * Whether the screen should be recorded.
+     * 
+     * Defaults to false.
+     */
+    screen: boolean;
+};
+```
+
+#### Examples:
+
+1. Record for 10 seconds and download the files.
+```typescript
+await experiment.beginRecording({
+    audio: true,
+    video: true,
+    screen: false
+});
+await os.sleep(10000);
+const data = await experiment.endRecording();
+let index = 0;
+for(let file of data.files) {
+    os.download(file.data, `file-${index}`);
+    index += 1;
+}
+```
+
+### `experiment.endRecording()`
+
+Stops the recording that is in progress. Returns a promise that resolves with the recorded data.
+
+The resolved data is an object and has the following structure:
+```typescript
+let recording: {
+    files: {
+        containsAudio: boolean;
+        containsVideo: boolean;
+        containsScreen: boolean;
+        data: Blob;
+    }[];
+};
+```
+
+#### Examples:
+
+1. Record for 10 seconds and download the files.
+```typescript
+await experiment.beginRecording({
+    audio: true,
+    video: true,
+    screen: false
+});
+await os.sleep(10000);
+const data = await experiment.endRecording();
+let index = 0;
+for(let file of data.files) {
+    os.download(file.data, `file-${index}`);
+    index += 1;
 }
 ```
 

@@ -35,14 +35,14 @@ export class CompoundGrid3D implements Grid3D {
         return closestPoint;
     }
 
-    getTileFromRay(ray: Ray): GridTile {
+    getTileFromRay(ray: Ray, roundToWholeNumber?: boolean): GridTile {
         let closestTile: GridTile = null;
         let closestDist: number = Infinity;
         for (let grid of this.grids) {
             if (!grid.enabled) {
                 continue;
             }
-            const tile = grid.getTileFromRay(ray);
+            const tile = grid.getTileFromRay(ray, roundToWholeNumber);
             if (tile) {
                 const dist = ray.origin.distanceTo(tile.center);
                 if (dist < closestDist) {
@@ -59,7 +59,7 @@ export class CompoundGrid3D implements Grid3D {
      * Scales the given position by the tile scale and returns the result.
      * @param position The input position.
      */
-    getGridPosition(position: Vector3): Vector3 {
+    getGridPosition(position: { x: number; y: number; z: number }): Vector3 {
         const grid = this.primaryGrid;
         if (!grid) {
             throw new Error(
@@ -68,5 +68,20 @@ export class CompoundGrid3D implements Grid3D {
         }
 
         return grid.getGridPosition(position);
+    }
+
+    /**
+     * Scales the given position by the tile scale and returns the result.
+     * @param position The input position.
+     */
+    getWorldPosition(position: { x: number; y: number; z: number }): Vector3 {
+        const grid = this.primaryGrid;
+        if (!grid) {
+            throw new Error(
+                'Cannot scale the position because no primrary grid exists!'
+            );
+        }
+
+        return grid.getWorldPosition(position);
     }
 }

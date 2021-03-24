@@ -34,6 +34,7 @@ import {
     LineSegments,
     LineBasicMaterial,
     MeshToonMaterial,
+    Intersection,
 } from '@casual-simulation/three';
 import { flatMap } from 'lodash';
 import {
@@ -41,8 +42,10 @@ import {
     Bot,
     BotLabelAnchor,
     getBotScale,
+    getBotTransformer,
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
+import { Simulation } from '@casual-simulation/aux-vm';
 
 /**
  * Create copy of material that most meshes in Aux Builder/Player use.
@@ -744,4 +747,103 @@ export function safeSetParent(obj: Object3D, parent: Object3D): boolean {
     }
     parent.add(obj);
     return true;
+}
+
+export function calculateHitFace(hit: Intersection) {
+    // Based on the normals of the bot the raycast hit, determine side of the cube
+    if (hit.face) {
+        if (hit.face.normal.x != 0) {
+            if (hit.face.normal.x > 0) {
+                return 'left';
+            } else {
+                return 'right';
+            }
+        } else if (hit.face.normal.y != 0) {
+            if (hit.face.normal.y > 0) {
+                return 'top';
+            } else {
+                return 'bottom';
+            }
+        } else if (hit.face.normal.z != 0) {
+            if (hit.face.normal.z > 0) {
+                return 'front';
+            } else {
+                return 'back';
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * Determines if the given bot is a child of the given parent bot.
+ * @param child The child bot.
+ * @param parent The parent bot.
+ */
+export function isBotChildOf(
+    sim: Simulation,
+    child: Bot,
+    parent: Bot
+): boolean {
+    const maxDepth = 1000;
+    let transformer = getBotTransformer(null, child);
+    let index = 0;
+    while (transformer && index < maxDepth) {
+        if (transformer === parent.id) {
+            return true;
+        }
+        const realParent = sim.helper.botsState[transformer];
+        if (realParent) {
+            transformer = getBotTransformer(null, child);
+        } else {
+            transformer = null;
+        }
+        index += 1;
+    }
+
+    return false;
+}
+
+/**
+ * A matrix that can be premultiplied into another matrix to convert it from a left handed system
+ * to a right-handed system.
+ * Note that only works on individual rotations and not on entire transformations. (e.g. matrices with rotation + position)
+ */
+const CHANGE_ROTATION_Y_TO_Z_1 = new Matrix4().set(
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1
+);
+
+/**
+ * A matrix can be be multiplied into another matrix to finish the conversion from a left handed system to a right handed system.
+ * Note that only works on individual rotations and not on entire transformations. (e.g. matrices with rotation + position)
+ */
+const CHANGE_ROTATION_Y_TO_Z_2 = CHANGE_ROTATION_Y_TO_Z_1.clone().invert();
+
+/**
+ * A function that changes the given rotation matrix from three.js coordinates (Y-up) to AUX coordinates (Z-up).
+ *
+ * Note that this function only works on rotation-only matrices.
+ * Matrices that contain translations will not function correctly since they have already bound the translations and rotations together.
+ *
+ * @param rotation The rotation to change.
+ */
+export function convertRotationToAuxCoordinates(rotation: Matrix4) {
+    return rotation
+        .premultiply(CHANGE_ROTATION_Y_TO_Z_1)
+        .multiply(CHANGE_ROTATION_Y_TO_Z_2);
 }

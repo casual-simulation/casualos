@@ -1,20 +1,9 @@
 import {
-    isDimensionLocked,
-    DEFAULT_PORTAL_ZOOMABLE,
-    DEFAULT_PORTAL_PANNABLE,
     hasValue,
     calculateBotValue,
     BotCalculationContext,
     PrecalculatedBot,
-    calculateGridScale,
     calculateBooleanTagValue,
-    calculateNumericalTagValue,
-    DEFAULT_PORTAL_ROTATABLE,
-    PortalPointerDragMode,
-    DEFAULT_PORTAL_POINTER_DRAG_MODE,
-    calculatePortalPointerDragMode,
-    getBotMeetPortalAnchorPointOffset,
-    DEFAULT_MEET_PORTAL_ANCHOR_POINT,
     calculateMeetPortalAnchorPointOffset,
     DEFAULT_TAG_PORTAL_ANCHOR_POINT,
     getBotTagPortalAnchorPointOffset,
@@ -23,7 +12,6 @@ import {
     CLICK_ACTION_NAME,
     onClickArg,
 } from '@casual-simulation/aux-common';
-import { Color } from '@casual-simulation/three';
 import {
     BrowserSimulation,
     watchPortalConfigBot,

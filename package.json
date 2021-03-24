@@ -27,6 +27,7 @@
         "build:cli": "lerna exec --scope @casual-simulation/causal-tree-cli -- npm run build:prod",
         "build:docs": "npm run clean && lerna exec -- npm run build:docs",
         "build:profile": "npm run clean && npm run build:portals && npm run build:libs && lerna exec --scope @casual-simulation/aux-server -- npm run build:profile",
+        "build:dev:profile": "npm run clean && npm run build:portals && npm run build:libs && lerna exec --scope @casual-simulation/aux-server -- npm run build:dev:profile",
         "package:docker": "docker build -t casualsimulation/aux .",
         "package:docker:arm32": "docker build -t casualsimulation/aux-arm32 -f Dockerfile.arm32 .",
         "package:docker:proxy": "docker build -t casualsimulation/aux-proxy ./src/aux-proxy",
