@@ -8,6 +8,10 @@
 
 -   Improved `os.download()` to add the correct file extension if one is omitted from the given filename.
 
+### :bug: Bug Fixes
+
+-   Fixed the "Docs" link when linking to a listen tag.
+
 ## V1.5.3
 
 #### Date: 3/23/2021
