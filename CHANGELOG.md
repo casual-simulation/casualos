@@ -7,6 +7,8 @@
 ### :rocket: Improvements
 
 -   Improved `os.download()` to add the correct file extension if one is omitted from the given filename.
+-   Added the 📖 emoji has a builtin tag prefix.
+    -   This is a useful default prefix for custom portals.
 
 ### :bug: Bug Fixes
 
