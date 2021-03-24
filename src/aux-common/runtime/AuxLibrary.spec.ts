@@ -1890,6 +1890,72 @@ describe('AuxLibrary', () => {
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
+
+            const extensionCases = [
+                ['.xml', 'application/xml'],
+                ['.mp4', 'video/mp4'],
+                ['.mkv', 'video/x-matroska'],
+                ['.txt', 'text/plain'],
+                ['.js', 'application/javascript'],
+                ['.json', 'application/json'],
+            ];
+
+            it.each(extensionCases)(
+                'should add %s for %s MIME types',
+                (extension, mimeType) => {
+                    const action = library.api.os.download(
+                        new Blob(['abc'], {
+                            type: mimeType,
+                        }),
+                        'file'
+                    );
+                    const expected = download(
+                        new Blob(['abc'], {
+                            type: mimeType,
+                        }),
+                        'file' + extension,
+                        mimeType
+                    );
+                    expect(action).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                }
+            );
+
+            it('should not add an extension for unknown MIME types', () => {
+                const action = library.api.os.download(
+                    new Blob(['abc'], {
+                        type: 'unknown',
+                    }),
+                    'file'
+                );
+                const expected = download(
+                    new Blob(['abc'], {
+                        type: 'unknown',
+                    }),
+                    'file',
+                    'unknown'
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should allow manually specifying a different extension', () => {
+                const action = library.api.os.download(
+                    new Blob(['abc'], {
+                        type: 'text/plain',
+                    }),
+                    'file.json'
+                );
+                const expected = download(
+                    new Blob(['abc'], {
+                        type: 'text/plain',
+                    }),
+                    'file.json',
+                    'text/plain'
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
         });
 
         describe('os.downloadBots()', () => {

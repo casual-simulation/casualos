@@ -1563,12 +1563,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             throw new Error('The mimeType must be a string.');
         }
 
+        if (data instanceof Blob) {
+            mimeType = data.type;
+        }
+
+        if (!hasExtension(filename)) {
+            const extension = mime.getExtension(mimeType);
+            if (hasValue(extension)) {
+                filename = `${filename}.${extension}`;
+            }
+        }
+
         if (typeof data === 'string') {
             return addAction(download(data, filename, mimeType));
         } else if (data instanceof ArrayBuffer) {
             return addAction(download(data, filename, mimeType));
         } else if (data instanceof Blob) {
-            return addAction(download(data, filename, data.type));
+            return addAction(download(data, filename, mimeType));
         } else if (typeof data === 'object') {
             return addAction(
                 download(JSON.stringify(data), filename, mimeType)
@@ -1578,6 +1589,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         throw new Error(
             'The data must be either a string, object, or ArrayBuffer.'
         );
+    }
+
+    /**
+     * Determines if the given filename has an extension.
+     * Returns null if the file has no extension.
+     * @param filename The name of the file.
+     */
+    function hasExtension(filename: string) {
+        const dot = filename.lastIndexOf('.');
+        return dot >= 0;
     }
 
     /**
