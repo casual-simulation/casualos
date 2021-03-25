@@ -641,6 +641,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 run,
                 version,
                 device,
+                isCollaborative,
                 enableAR,
                 disableAR,
                 enableVR,
@@ -1516,6 +1517,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             supportsVR: null as boolean,
             isCollaborative: null as boolean,
         };
+    }
+
+    /**
+     * Gets whether this device has enabled collaborative features.
+     */
+    function isCollaborative(): boolean {
+        if (context.device) {
+            return context.device.isCollaborative;
+        }
+
+        return true;
     }
 
     /**

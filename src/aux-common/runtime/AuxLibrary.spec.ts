@@ -1796,6 +1796,44 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.isCollaborative()', () => {
+            it('should return true when the device is collaborative', () => {
+                device.isCollaborative = true;
+                const d = library.api.os.isCollaborative();
+                expect(d).toEqual(true);
+            });
+
+            it('should return false when the device is not collaborative', () => {
+                device.isCollaborative = false;
+                const d = library.api.os.isCollaborative();
+                expect(d).toEqual(false);
+            });
+
+            it('should return true when no device is available', () => {
+                version = {
+                    hash: 'hash',
+                    version: 'v1.2.3',
+                    major: 1,
+                    minor: 2,
+                    patch: 3,
+                };
+                device = null;
+                notifier = {
+                    notifyChange: jest.fn(),
+                };
+                context = new MemoryGlobalContext(
+                    version,
+                    device,
+                    new TestScriptBotFactory(),
+                    notifier
+                );
+                library = createDefaultLibrary(context);
+
+                const d = library.api.os.isCollaborative();
+                expect(d).toEqual(true);
+            });
+        });
+
         describe('os.enableAR()', () => {
             it('should issue an EnableARAction', () => {
                 const action = library.api.os.enableAR();
