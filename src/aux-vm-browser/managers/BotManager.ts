@@ -171,7 +171,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                           temporary: true,
                           remoteEvents: false,
                       }
-                    : null,
+                    : {
+                          type: 'memory',
+                          initialState: {},
+                      },
                 [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: config.device
                     .isCollaborative
                     ? {
