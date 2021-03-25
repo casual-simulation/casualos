@@ -63,6 +63,7 @@ describe('RuntimeBot', () => {
         device = {
             supportsAR: true,
             supportsVR: false,
+            isCollaborative: true,
         };
         updateTagMock = jest.fn();
         updateTagMock.mockImplementation((bot, tag, value) => {

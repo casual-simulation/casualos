@@ -863,11 +863,6 @@ export const TAG_MASK_SPACE_PRIORITIES = [
 export const ADMIN_BRANCH_NAME = '$admin';
 
 /**
- * The dimension ID that all users should be placed in.
- */
-export const USERS_DIMENSION = 'aux-users';
-
-/**
  * The name of the tag used to represent the space that the bot is
  * stored in.
  */

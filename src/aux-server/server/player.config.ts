@@ -14,6 +14,7 @@ const config: ClientConfig = {
             'socket.io',
         causalRepoConnectionUrl: process.env.CAUSAL_REPO_CONNECTION_URL,
         vmOrigin: process.env.VM_ORIGIN || null,
+        disableCollaboration: process.env.DISABLE_COLLABORATION === 'true',
     },
 };
 

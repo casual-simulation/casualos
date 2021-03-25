@@ -408,6 +408,54 @@ describe('StatusHelper', () => {
                 },
             ]);
         });
+
+        it('should default to the given user if authenticated but has no user', async () => {
+            let channel1 = new Subject<StatusUpdate>();
+            let channel2 = new Subject<StatusUpdate>();
+
+            const helper = new StatusHelper([channel1, channel2]);
+            helper.defaultUser = {
+                id: 'user',
+                name: 'name',
+                token: 'token',
+                username: 'username',
+            };
+
+            let updates: StatusUpdate[] = [];
+            helper.updates.subscribe((update) => {
+                updates.push(update);
+            });
+
+            channel2.next({
+                type: 'authentication',
+                authenticated: false,
+            });
+
+            await waitAsync();
+
+            expect(updates).toEqual([]);
+
+            channel1.next({
+                type: 'authentication',
+                authenticated: true,
+            });
+
+            await waitAsync();
+
+            // Should merge multiple of the same result
+            expect(updates).toEqual([
+                {
+                    type: 'authentication',
+                    authenticated: true,
+                    user: {
+                        id: 'user',
+                        name: 'name',
+                        token: 'token',
+                        username: 'username',
+                    },
+                },
+            ]);
+        });
     });
 
     describe('authorization', () => {

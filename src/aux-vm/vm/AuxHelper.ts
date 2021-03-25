@@ -13,7 +13,6 @@ import {
     botAdded,
     botUpdated,
     tagsOnBot,
-    USERS_DIMENSION,
     BotSpace,
     getBotSpace,
     TEMPORARY_BOT_PARTITION_ID,
@@ -270,29 +269,13 @@ export class AuxHelper extends BaseHelper<Bot> {
             console.log('[AuxHelper] Create user bot');
             await this.createBot(
                 user.id,
-                {
-                    [USERS_DIMENSION]: true,
-                },
+                {},
                 TEMPORARY_BOT_PARTITION_ID in this._partitions
                     ? TEMPORARY_BOT_PARTITION_ID
                     : undefined
             );
             console.log('[AuxHelper] User bot created');
         }
-    }
-
-    async createOrUpdateUserDimensionBot() {
-        const calc = this.createContext();
-        const dimensionBot = this.objects.find(
-            (b) => getBotConfigDimensions(calc, b).indexOf(USERS_DIMENSION) >= 0
-        );
-        if (dimensionBot) {
-            return;
-        }
-        await this.createBot(undefined, {
-            auxDimensionConfig: USERS_DIMENSION,
-            auxDimensionVisualize: true,
-        });
     }
 
     async createOrUpdateBuilderBots(builder: string) {

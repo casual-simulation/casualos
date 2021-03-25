@@ -127,13 +127,24 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             );
             const protocol = config.causalRepoConnectionProtocol;
 
+            if (!config.device.isCollaborative) {
+                console.log('[BotManager] Disabling Collaboration Features');
+            }
+
             let partitions: AuxPartitionConfig = {
-                shared: {
-                    type: 'remote_causal_repo',
-                    branch: parsedId.channel,
-                    host: causalRepoHost,
-                    connectionProtocol: protocol,
-                },
+                // Use a memory partition instead of a shared partition
+                // when collaboration is disabled.
+                shared: config.device.isCollaborative
+                    ? {
+                          type: 'remote_causal_repo',
+                          branch: parsedId.channel,
+                          host: causalRepoHost,
+                          connectionProtocol: protocol,
+                      }
+                    : {
+                          type: 'memory',
+                          initialState: {},
+                      },
                 [COOKIE_BOT_PARTITION_ID]: {
                     type: 'proxy',
                     partition: new LocalStoragePartitionImpl({
@@ -145,22 +156,34 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 [TEMPORARY_BOT_PARTITION_ID]: {
                     type: 'memory',
                     private: true,
-                    initialState: {},
+                    initialState: {
+                        [user.id]: createBot(user.id, {
+                            server: id,
+                        }),
+                    },
                 },
-                [TEMPORARY_SHARED_PARTITION_ID]: {
-                    type: 'remote_causal_repo',
-                    branch: `${parsedId.channel}-player-${user.id}`,
-                    host: causalRepoHost,
-                    connectionProtocol: protocol,
-                    temporary: true,
-                    remoteEvents: false,
-                },
-                [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
-                    type: 'other_players_repo',
-                    branch: parsedId.channel,
-                    host: causalRepoHost,
-                    connectionProtocol: protocol,
-                },
+                [TEMPORARY_SHARED_PARTITION_ID]: config.device.isCollaborative
+                    ? {
+                          type: 'remote_causal_repo',
+                          branch: `${parsedId.channel}-player-${user.id}`,
+                          host: causalRepoHost,
+                          connectionProtocol: protocol,
+                          temporary: true,
+                          remoteEvents: false,
+                      }
+                    : {
+                          type: 'memory',
+                          initialState: {},
+                      },
+                [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: config.device
+                    .isCollaborative
+                    ? {
+                          type: 'other_players_repo',
+                          branch: parsedId.channel,
+                          host: causalRepoHost,
+                          connectionProtocol: protocol,
+                      }
+                    : null,
                 [BOOTSTRAP_PARTITION_ID]: {
                     type: 'memory',
                     initialState: config.bootstrapState
@@ -175,14 +198,16 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 !config.causalRepoConnectionProtocol ||
                 config.causalRepoConnectionProtocol === 'socket.io'
             ) {
-                partitions[ADMIN_PARTITION_ID] = {
-                    type: 'remote_causal_repo',
-                    branch: ADMIN_BRANCH_NAME,
-                    host: causalRepoHost,
-                    connectionProtocol: protocol,
-                    private: true,
-                    static: true,
-                };
+                partitions[ADMIN_PARTITION_ID] = config.device.isCollaborative
+                    ? {
+                          type: 'remote_causal_repo',
+                          branch: ADMIN_BRANCH_NAME,
+                          host: causalRepoHost,
+                          connectionProtocol: protocol,
+                          private: true,
+                          static: true,
+                      }
+                    : null;
             }
 
             return partitions;

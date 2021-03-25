@@ -197,6 +197,7 @@ describe('AuxLibrary', () => {
         device = {
             supportsAR: true,
             supportsVR: false,
+            isCollaborative: true,
         };
         notifier = {
             notifyChange: jest.fn(),
@@ -1790,7 +1791,46 @@ describe('AuxLibrary', () => {
                 expect(d).toEqual({
                     supportsAR: null,
                     supportsVR: null,
+                    isCollaborative: null,
                 });
+            });
+        });
+
+        describe('os.isCollaborative()', () => {
+            it('should return true when the device is collaborative', () => {
+                device.isCollaborative = true;
+                const d = library.api.os.isCollaborative();
+                expect(d).toEqual(true);
+            });
+
+            it('should return false when the device is not collaborative', () => {
+                device.isCollaborative = false;
+                const d = library.api.os.isCollaborative();
+                expect(d).toEqual(false);
+            });
+
+            it('should return true when no device is available', () => {
+                version = {
+                    hash: 'hash',
+                    version: 'v1.2.3',
+                    major: 1,
+                    minor: 2,
+                    patch: 3,
+                };
+                device = null;
+                notifier = {
+                    notifyChange: jest.fn(),
+                };
+                context = new MemoryGlobalContext(
+                    version,
+                    device,
+                    new TestScriptBotFactory(),
+                    notifier
+                );
+                library = createDefaultLibrary(context);
+
+                const d = library.api.os.isCollaborative();
+                expect(d).toEqual(true);
             });
         });
 
@@ -1886,6 +1926,72 @@ describe('AuxLibrary', () => {
                     'my XML',
                     'test.xml',
                     'application/xml'
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            const extensionCases = [
+                ['.xml', 'application/xml'],
+                ['.mp4', 'video/mp4'],
+                ['.mkv', 'video/x-matroska'],
+                ['.txt', 'text/plain'],
+                ['.js', 'application/javascript'],
+                ['.json', 'application/json'],
+            ];
+
+            it.each(extensionCases)(
+                'should add %s for %s MIME types',
+                (extension, mimeType) => {
+                    const action = library.api.os.download(
+                        new Blob(['abc'], {
+                            type: mimeType,
+                        }),
+                        'file'
+                    );
+                    const expected = download(
+                        new Blob(['abc'], {
+                            type: mimeType,
+                        }),
+                        'file' + extension,
+                        mimeType
+                    );
+                    expect(action).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                }
+            );
+
+            it('should not add an extension for unknown MIME types', () => {
+                const action = library.api.os.download(
+                    new Blob(['abc'], {
+                        type: 'unknown',
+                    }),
+                    'file'
+                );
+                const expected = download(
+                    new Blob(['abc'], {
+                        type: 'unknown',
+                    }),
+                    'file',
+                    'unknown'
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should allow manually specifying a different extension', () => {
+                const action = library.api.os.download(
+                    new Blob(['abc'], {
+                        type: 'text/plain',
+                    }),
+                    'file.json'
+                );
+                const expected = download(
+                    new Blob(['abc'], {
+                        type: 'text/plain',
+                    }),
+                    'file.json',
+                    'text/plain'
                 );
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);

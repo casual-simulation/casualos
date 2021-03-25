@@ -1,5 +1,23 @@
 # CasualOS Changelog
 
+## V1.5.4
+
+#### Date: 3/25/2021
+
+### :rocket: Improvements
+
+-   Improved `os.download()` to add the correct file extension if one is omitted from the given filename.
+-   Added the 📖 emoji has a builtin tag prefix.
+    -   This is a useful default prefix for custom portals.
+-   Added the ability to load CasualOS in a non-collaborative mode.
+    -   This will make the shared spaces (`shared`, `tempShared`, and `remoteTempShared`) act like they are `tempLocal` spaces.
+    -   As a result, CasualOS needs no persistent network connection to run an experience when loaded in this mode.
+-   Added the `os.isCollaborative()` function to get whether CasualOS was loaded in a collaborative mode or non-collaborative mode.
+
+### :bug: Bug Fixes
+
+-   Fixed the "Docs" link when linking to a listen tag.
+
 ## V1.5.3
 
 #### Date: 3/23/2021
