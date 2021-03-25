@@ -4583,6 +4583,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (tag === 'id' || tag === BOT_SPACE_TAG) {
             return value;
         }
+        if (isRuntimeBot(value)) {
+            throw new Error(
+                `It is not possible to save bots as tag values. (Setting '${tag}')`
+            );
+        }
         if (Array.isArray(bot) && bot.length > 0) {
             for (let b of bot) {
                 setTag(b, tag, value);
