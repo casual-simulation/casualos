@@ -75,6 +75,7 @@ import {
     getCustomPortalWorker,
 } from './public/monaco-editor/languages.contribution';
 import { triggerMonacoLoaded } from './MonacoAsync';
+import './public/monaco-editor/quick-open-file/quick-open-file';
 
 // load TypescriptWorker by require().
 // For some reason, loading relative imports with worker-loader fails when using the import syntax
