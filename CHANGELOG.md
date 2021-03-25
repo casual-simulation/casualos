@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.5.5
+
+#### Date: 3/25/2021
+
+### :rocket: Improvements
+
+-   Changed CasualOS to not show the `server` URL parameter when loaded in non-collaborative mode.
+-   CasualOS will now throw an error when trying to save a bot to a tag during creation.
+
 ## V1.5.4
 
 #### Date: 3/25/2021

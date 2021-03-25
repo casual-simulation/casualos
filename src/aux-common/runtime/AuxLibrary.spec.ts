@@ -6189,6 +6189,12 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.name).toEqual('bob');
         });
 
+        it('should error if trying to set a tag to a bot', () => {
+            expect(() => {
+                library.api.setTag(bot1, '#name', bot2);
+            }).toThrow();
+        });
+
         it('should recursively set the tags on the given bots', () => {
             let bot3 = createDummyRuntimeBot('test3');
             let bot4 = createDummyRuntimeBot('test4');
@@ -7230,6 +7236,16 @@ describe('AuxLibrary', () => {
                 num: 1,
             });
         });
+
+        it('should error when adding a bot to a mod', () => {
+            const other = createDummyRuntimeBot('other');
+            addToContext(context, other);
+
+            let mod: any = {};
+            expect(() => {
+                library.api.applyMod(mod, { myBot: other });
+            }).toThrow();
+        });
     });
 
     describe('subtractMods()', () => {
@@ -7344,6 +7360,22 @@ describe('AuxLibrary', () => {
                     num: 1,
                 })
             );
+        });
+
+        it('should error when setting a bot to a tag', () => {
+            const other = createDummyRuntimeBot('other');
+            addToContext(context, other);
+
+            other.tags.abc = 'def';
+            other.tags.num = 1;
+
+            uuidMock.mockReturnValue('uuid');
+            const create = library.tagSpecificApi.create(tagContext);
+            expect(() => {
+                create({
+                    myTag: other,
+                });
+            }).toThrow();
         });
 
         it('should support modifying the returned bot', () => {
