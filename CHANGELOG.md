@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.5.5
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Changed CasualOS to not show the `server` URL parameter when loaded in non-collaborative mode.
+
 ## V1.5.4
 
 #### Date: 3/25/2021
