@@ -4,6 +4,11 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the "bots" snap target for `os.addDropSnap()` and `os.addBotDropSnap()`.
+    -   This will cause the dragged bot to snap to other bots.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where tag edits would appear duplicated when running CasualOS in the non-collaborative mode.
