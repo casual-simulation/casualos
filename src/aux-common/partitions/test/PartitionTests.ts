@@ -658,6 +658,7 @@ export function testPartitionImplementation(
                         },
                     }),
                 ]);
+                expect(Object.keys(version.vector).length).toBeGreaterThan(0);
             });
 
             it('should support deleting text from a tag value', async () => {
@@ -694,6 +695,7 @@ export function testPartitionImplementation(
                         },
                     }),
                 ]);
+                expect(Object.keys(version.vector).length).toBeGreaterThan(0);
             });
 
             it('should support deletes in multiple edit sequences', async () => {
@@ -738,6 +740,7 @@ export function testPartitionImplementation(
                         },
                     }),
                 ]);
+                expect(Object.keys(version.vector).length).toBeGreaterThan(0);
             });
 
             it('should support inserts in multiple edit sequences', async () => {
@@ -782,6 +785,7 @@ export function testPartitionImplementation(
                         },
                     }),
                 ]);
+                expect(Object.keys(version.vector).length).toBeGreaterThan(0);
             });
 
             const valueCases = [
@@ -1052,6 +1056,9 @@ export function testPartitionImplementation(
                             },
                         }),
                     ]);
+                    expect(Object.keys(version.vector).length).toBeGreaterThan(
+                        0
+                    );
                 });
 
                 it('should support deleting text from a tag mask value', async () => {
@@ -1100,6 +1107,9 @@ export function testPartitionImplementation(
                             },
                         }),
                     ]);
+                    expect(Object.keys(version.vector).length).toBeGreaterThan(
+                        0
+                    );
                 });
             });
         });
