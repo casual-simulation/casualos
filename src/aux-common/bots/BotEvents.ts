@@ -2548,8 +2548,9 @@ export interface SnapPoint {
  * - "ground" means that the dragged bot should snap to the ground plane. This option is overriden by "grid".
  * - "grid" means that the dragged bot should snap to grid tiles.
  * - "face" means that the dragged bot should snap to other bot faces.
+ * - "bots" means that the dragged bot will snap to other bots.
  */
-export type SnapTarget = 'ground' | 'grid' | 'face' | SnapPoint;
+export type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint;
 
 /**
  * An event that is used to start audio recording.

@@ -81,7 +81,6 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     protected _hitBot: AuxBot3D;
     protected _gridOffset: Matrix4 = new Matrix4();
 
-    private _faceSnapBot: AuxBot3D;
     private _hasGridOffset: boolean = false;
     private _targetBot: Bot = undefined;
 
@@ -325,6 +324,30 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 if (this._dragInFaceSpace(calc, hit, target)) {
                     return true;
                 }
+            }
+        }
+
+        if (options.snapBots) {
+            if (target) {
+                const nextContext = target.dimension;
+
+                this._updateCurrentDimension(nextContext);
+
+                // update the grid offset for the current bot
+                this._updateGridOffset(calc);
+
+                const position = getBotPosition(calc, target.bot, nextContext);
+                const rotation = getBotRotation(calc, target.bot, nextContext);
+
+                this._toCoord = new Vector2(position.x, position.y);
+
+                this._updateBotsPositions(
+                    this._bots,
+                    new Vector3(position.x, position.y, position.z),
+                    new Euler(rotation.x, rotation.y, rotation.z, 'XYZ')
+                );
+
+                return true;
             }
         }
 
