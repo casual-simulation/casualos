@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.5.6
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where tag edits would appear duplicated when running CasualOS in the non-collaborative mode.
+
 ## V1.5.5
 
 #### Date: 3/25/2021
