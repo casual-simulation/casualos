@@ -202,6 +202,20 @@ function playerConfig(latestTag) {
                         to: path.resolve(__dirname, 'dist', 'privacy-policy'),
                         toType: 'file',
                     },
+                    {
+                        from: path.resolve(
+                            __dirname,
+                            'aux-player',
+                            'legal',
+                            'acceptable-use-policy.txt'
+                        ),
+                        to: path.resolve(
+                            __dirname,
+                            'dist',
+                            'acceptable-use-policy'
+                        ),
+                        toType: 'file',
+                    },
                 ],
             }),
             new WebpackAssetsManifest(),
