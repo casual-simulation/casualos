@@ -1805,6 +1805,11 @@ export interface SerialConnectAction extends AsyncAction {
     type: 'serial_connect';
 
     /**
+     * A friendly device name. Example: Brush01
+     */
+    name: string;
+
+    /**
      * The device path. Example: /dev/rfcomm0
      */
     device: string;
@@ -1857,18 +1862,33 @@ export interface SerialConnectAction extends AsyncAction {
  */
 export interface SerialStreamAction extends AsyncAction {
     type: 'serial_stream';
+    /**
+     * A friendly device name. Example: Brush01
+     */
+    name: string;
+
 }
 /**
  * Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
  */
 export interface SerialOpenAction extends AsyncAction {
     type: 'serial_open';
+    /**
+     * A friendly device name. Example: Brush01
+     */
+    name: string;
+
 }
 /**
  * Updates the SerialPort object with a new baudRate.
  */
 export interface SerialUpdateAction extends AsyncAction {
     type: 'serial_update';
+    /**
+     * A friendly device name. Example: Brush01
+     */
+    name: string;
+
 
     /**
      * {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
@@ -1885,6 +1905,11 @@ export interface SerialUpdateAction extends AsyncAction {
  */
 export interface SerialWriteAction extends AsyncAction {
     type: 'serial_write';
+    /**
+     * A friendly device name. Example: Brush01
+     */
+    name: string;
+
 
     /**
      * The data/command to send.
@@ -1906,6 +1931,11 @@ export interface SerialWriteAction extends AsyncAction {
  */
 export interface SerialReadAction extends AsyncAction {
     type: 'serial_read';
+    /**
+     * A friendly device name. Example: Brush01
+     */
+    name: string;
+
 
     /**
      * Specify how many bytes of data to return, if available
@@ -1917,6 +1947,11 @@ export interface SerialReadAction extends AsyncAction {
  */
 export interface SerialCloseAction extends AsyncAction {
     type: 'serial_close';
+    /**
+     * A friendly device name. Example: Brush01
+     */
+    name: string;
+
 
     /**
      * The device path. Example: /dev/rfcomm0
@@ -1933,24 +1968,44 @@ export interface SerialCloseAction extends AsyncAction {
  */
 export interface SerialFlushAction extends AsyncAction {
     type: 'serial_flush';
+    /**
+     * A friendly device name. Example: Brush01
+     */
+    name: string;
+
 }
 /**
  * Waits until all output data is transmitted to the serial port. After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device.
  */
 export interface SerialDrainAction extends AsyncAction {
     type: 'serial_drain';
+    /**
+     * A friendly device name. Example: Brush01
+     */
+    name: string;
+
 }
 /**
  * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
  */
 export interface SerialPauseAction extends AsyncAction {
     type: 'serial_pause';
+    /**
+     * A friendly device name. Example: Brush01
+     */
+    name: string;
+
 }
 /**
  * Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
  */
 export interface SerialResumeAction extends AsyncAction {
     type: 'serial_resume';
+    /**
+     * A friendly device name. Example: Brush01
+     */
+    name: string;
+
 }
 /**
  * Defines an event that sets some text on the user's clipboard.
@@ -3974,6 +4029,7 @@ export function rpioSPIEndPin(
 
 /**
  * Establish the connection to the bluetooth serial device
+ * @param name A friendly device name. Example: Brush01
  * @param path The device path. Example: /dev/rfcomm0
  * @param options
  * {boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
@@ -4008,6 +4064,7 @@ export function rpioSPIEndPin(
  * @param taskId The ID of the async task.
  */
 export function serialConnectPin(
+    name: string,
     device: string,
     mac: string,
     channel: number,
@@ -4016,6 +4073,7 @@ export function serialConnectPin(
     playerId?: string
 ): SerialConnectAction {
     return {
+        name,
         device,
         mac,
         channel,
@@ -4028,13 +4086,16 @@ export function serialConnectPin(
 
 /**
  * Parses and returns the serial stream to the event tag 'onSerialData'.
+ * @param name A friendly device name. Example: Brush01
  * @param taskId The ID of the async task.
  */
 export function serialStreamPin(
+    name: string,
     taskId?: string | number,
     playerId?: string
 ): SerialStreamAction {
     return {
+        name,
         type: 'serial_stream',
         taskId,
         playerId,
@@ -4043,13 +4104,16 @@ export function serialStreamPin(
 
 /**
  * Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
+ * @param name A friendly device name. Example: Brush01
  * @param taskId The ID of the async task.
  */
 export function serialOpenPin(
+    name: string,
     taskId?: string | number,
     playerId?: string
 ): SerialOpenAction {
     return {
+        name,
         type: 'serial_open',
         taskId,
         playerId,
@@ -4058,17 +4122,20 @@ export function serialOpenPin(
 
 /**
  * Updates the SerialPort object with a new baudRate.
+ * @param name A friendly device name. Example: Brush01
  * @param options {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
  * @param cb
  * @param taskId The ID of the async task.
  */
 export function serialUpdatePin(
+    name: string,
     options: object,
     cb?: any,
     taskId?: string | number,
     playerId?: string
 ): SerialUpdateAction {
     return {
+        name,
         options,
         cb,
         type: 'serial_update',
@@ -4079,12 +4146,14 @@ export function serialUpdatePin(
 
 /**
  * Writes the provided data/command to the device
+ * @param name A friendly device name. Example: Brush01
  * @param data The data/command to send
  * @param encoding The encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
  * @param cb
  * @param taskId The ID of the async task.
  */
 export function serialWritePin(
+    name: string,
     data: string | number[],
     encoding?: string,
     cb?: any,
@@ -4092,6 +4161,7 @@ export function serialWritePin(
     playerId?: string
 ): SerialWriteAction {
     return {
+        name,
         data,
         encoding,
         cb,
@@ -4103,15 +4173,18 @@ export function serialWritePin(
 
 /**
  * Request a number of bytes from the SerialPort.
+ * @param name A friendly device name. Example: Brush01
  * @param size Specify how many bytes of data to return, if available.
  * @param taskId The ID of the async task.
  */
 export function serialReadPin(
+    name: string,
     size?: number,
     taskId?: string | number,
     playerId?: string
 ): SerialReadAction {
     return {
+        name,
         size,
         type: 'serial_read',
         taskId,
@@ -4121,17 +4194,20 @@ export function serialReadPin(
 
 /**
  * Closes an open connection.
+ * @param name A friendly device name. Example: Brush01
  * @param cb
  * @param device The device path. Example: /dev/rfcomm0
  * @param taskId The ID of the async task.
  */
 export function serialClosePin(
+    name: string,
     device: string,
     cb?: any,
     taskId?: string | number,
     playerId?: string
 ): SerialCloseAction {
     return {
+        name,
         device,
         cb,
         type: 'serial_close',
@@ -4142,13 +4218,16 @@ export function serialClosePin(
 
 /**
  * Flush discards data that has been received but not read, or written but not transmitted by the operating system.
+ * @param name A friendly device name. Example: Brush01
  * @param taskId The ID of the async task.
  */
 export function serialFlushPin(
+    name: string,
     taskId?: string | number,
     playerId?: string
 ): SerialFlushAction {
     return {
+        name,
         type: 'serial_flush',
         taskId,
         playerId,
@@ -4157,13 +4236,16 @@ export function serialFlushPin(
 
 /**
  * Waits until all output data is transmitted to the serial port. After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device.
+ * @param name A friendly device name. Example: Brush01
  * @param taskId The ID of the async task.
  */
 export function serialDrainPin(
+    name: string,
     taskId?: string | number,
     playerId?: string
 ): SerialDrainAction {
     return {
+        name,
         type: 'serial_drain',
         taskId,
         playerId,
@@ -4172,13 +4254,16 @@ export function serialDrainPin(
 
 /**
  * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
+ * @param name A friendly device name. Example: Brush01
  * @param taskId The ID of the async task.
  */
 export function serialPausePin(
+    name: string,
     taskId?: string | number,
     playerId?: string
 ): SerialPauseAction {
     return {
+        name,
         type: 'serial_pause',
         taskId,
         playerId,
@@ -4187,13 +4272,16 @@ export function serialPausePin(
 
 /**
  * Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
+ * @param name A friendly device name. Example: Brush01
  * @param taskId The ID of the async task.
  */
 export function serialResumePin(
+    name: string,
     taskId?: string | number,
     playerId?: string
 ): SerialResumeAction {
     return {
+        name,
         type: 'serial_resume',
         taskId,
         playerId,

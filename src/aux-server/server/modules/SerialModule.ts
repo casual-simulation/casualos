@@ -27,6 +27,7 @@ const execSync = require('child_process').execSync;
 const SerialPort = require('serialport');
 const parsers = SerialPort.parsers;
 
+// Make multiple btSerial devices?
 let btSerial = new Map<string, typeof SerialPort>();
 
 /**
@@ -94,7 +95,7 @@ export class SerialModule implements AuxModule2 {
             execSync(curl_command);
 
             const port = new SerialPort(event.device, event.options);
-            btSerial.set('Connection01', port);
+            btSerial.set(event.name, port);
 
             port.on('open', () => {
                 simulation.helper.transaction(
@@ -124,8 +125,7 @@ export class SerialModule implements AuxModule2 {
     }
     _serialStream(simulation: Simulation, event: SerialStreamAction) {
         try {
-            // TODO: Pass an event name and a conneciton name
-            const port = btSerial.get('Connection01');
+            const port = btSerial.get(event.name);
 
             // Use a `\r\n` as a line terminator
             const parser = new parsers.Readline({
@@ -153,7 +153,7 @@ export class SerialModule implements AuxModule2 {
     }
     _serialOpen(simulation: Simulation, event: SerialOpenAction) {
         try {
-            const port = btSerial.get('Connection01');
+            const port = btSerial.get(event.name);
             port.open();
             port.on('open', () => {
                 simulation.helper.transaction(
@@ -183,10 +183,10 @@ export class SerialModule implements AuxModule2 {
     }
     _serialUpdate(simulation: Simulation, event: SerialUpdateAction) {
         try {
-            const port = btSerial.get('Connection01');
+            const port = btSerial.get(event.name);
             port.update(event.options, event.cb);
 
-            btSerial.set('Connection01', port);
+            btSerial.set(event.name, port);
 
             simulation.helper.transaction(
                 hasValue(event.playerId)
@@ -214,7 +214,7 @@ export class SerialModule implements AuxModule2 {
     }
     _serialWrite(simulation: Simulation, event: SerialWriteAction) {
         try {
-            const port = btSerial.get('Connection01');
+            const port = btSerial.get(event.name);
             port.write(event.data, event.encoding, () => {
                 simulation.helper.transaction(
                     hasValue(event.playerId)
@@ -243,7 +243,7 @@ export class SerialModule implements AuxModule2 {
     }
     _serialRead(simulation: Simulation, event: SerialReadAction) {
         try {
-            const port = btSerial.get('Connection01');
+            const port = btSerial.get(event.name);
             let data = port.read(event.size);
 
             simulation.helper.transaction(
@@ -279,7 +279,7 @@ export class SerialModule implements AuxModule2 {
 
             execSync(curl_command);
 
-            const port = btSerial.get('Connection01');
+            const port = btSerial.get(event.name);
             port.close(event.cb);
             port.on('close', () => {
                 simulation.helper.transaction(
@@ -309,7 +309,7 @@ export class SerialModule implements AuxModule2 {
     }
     _serialFlush(simulation: Simulation, event: SerialFlushAction) {
         try {
-            const port = btSerial.get('Connection01');
+            const port = btSerial.get(event.name);
             port.flush();
 
             simulation.helper.transaction(
@@ -338,7 +338,7 @@ export class SerialModule implements AuxModule2 {
     }
     _serialDrain(simulation: Simulation, event: SerialDrainAction) {
         try {
-            const port = btSerial.get('Connection01');
+            const port = btSerial.get(event.name);
             port.drain();
 
             simulation.helper.transaction(
@@ -367,7 +367,7 @@ export class SerialModule implements AuxModule2 {
     }
     _serialPause(simulation: Simulation, event: SerialPauseAction) {
         try {
-            const port = btSerial.get('Connection01');
+            const port = btSerial.get(event.name);
             port.pause();
 
             simulation.helper.transaction(
@@ -396,7 +396,7 @@ export class SerialModule implements AuxModule2 {
     }
     _serialResume(simulation: Simulation, event: SerialResumeAction) {
         try {
-            const port = btSerial.get('Connection01');
+            const port = btSerial.get(event.name);
             port.resume();
 
             simulation.helper.transaction(

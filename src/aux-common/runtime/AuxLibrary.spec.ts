@@ -3598,13 +3598,14 @@ describe('AuxLibrary', () => {
             it('should send a SerialConnectAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
                 const action: any = library.api.server.serialConnect(
+                    'Brush01',
                     '/dev/ttyS0',
                     'AA:BB:CC:DD:EE',
                     1,
                     { baudRate: 9600 }
                 );
                 const expected = remote(
-                    serialConnectPin('/dev/ttyS0','AA:BB:CC:DD:EE', 1, { baudRate: 9600 }),
+                    serialConnectPin('Brush01','/dev/ttyS0','AA:BB:CC:DD:EE', 1, { baudRate: 9600 }),
                     undefined,
                     undefined,
                     'task1'
@@ -3615,7 +3616,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialConnect('/dev/ttyS0','AA:BB:CC:DD:EE', 1, { baudRate: 9600 });
+                library.api.server.serialConnect('Brush01','/dev/ttyS0','AA:BB:CC:DD:EE', 1, { baudRate: 9600 });
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -3625,9 +3626,9 @@ describe('AuxLibrary', () => {
         describe('server.serialStream()', () => {
             it('should send a SerialStreamAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialStream();
+                const action: any = library.api.server.serialStream('Brush01');
                 const expected = remote(
-                    serialStreamPin(),
+                    serialStreamPin('Brush01'),
                     undefined,
                     undefined,
                     'task1'
@@ -3638,7 +3639,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialStream();
+                library.api.server.serialStream('Brush01');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -3648,9 +3649,9 @@ describe('AuxLibrary', () => {
         describe('server.serialOpen()', () => {
             it('should send a SerialOpenAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialOpen();
+                const action: any = library.api.server.serialOpen('Brush01');
                 const expected = remote(
-                    serialOpenPin(),
+                    serialOpenPin('Brush01'),
                     undefined,
                     undefined,
                     'task1'
@@ -3661,7 +3662,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialOpen();
+                library.api.server.serialOpen('Brush01');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -3671,11 +3672,11 @@ describe('AuxLibrary', () => {
         describe('server.serialUpdate()', () => {
             it('should send a SerialUpdateAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialUpdate({
+                const action: any = library.api.server.serialUpdate('Brush01', {
                     baudRate: 9600,
                 });
                 const expected = remote(
-                    serialUpdatePin({ baudRate: 9600 }),
+                    serialUpdatePin('Brush01', { baudRate: 9600 }),
                     undefined,
                     undefined,
                     'task1'
@@ -3686,7 +3687,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialUpdate({ baudRate: 9600 });
+                library.api.server.serialUpdate('Brush01', { baudRate: 9600 });
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -3697,11 +3698,12 @@ describe('AuxLibrary', () => {
             it('should send a SerialWriteAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
                 const action: any = library.api.server.serialWrite(
+                    'Brush01',
                     'Hello World!',
                     'utf8'
                 );
                 const expected = remote(
-                    serialWritePin('Hello World!', 'utf8'),
+                    serialWritePin('Brush01', 'Hello World!', 'utf8'),
                     undefined,
                     undefined,
                     'task1'
@@ -3712,7 +3714,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialWrite('Hello World!', 'utf8');
+                library.api.server.serialWrite('Brush01', 'Hello World!', 'utf8');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -3722,9 +3724,9 @@ describe('AuxLibrary', () => {
         describe('server.serialRead()', () => {
             it('should send a SerialReadAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialRead();
+                const action: any = library.api.server.serialRead('Brush01');
                 const expected = remote(
-                    serialReadPin(),
+                    serialReadPin('Brush01'),
                     undefined,
                     undefined,
                     'task1'
@@ -3735,7 +3737,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialRead();
+                library.api.server.serialRead('Brush01');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -3745,9 +3747,9 @@ describe('AuxLibrary', () => {
         describe('server.serialClose()', () => {
             it('should send a SerialCloseAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialClose("/dev/rfcomm0");
+                const action: any = library.api.server.serialClose('Brush01', "/dev/rfcomm0");
                 const expected = remote(
-                    serialClosePin("/dev/rfcomm0"),
+                    serialClosePin('Brush01', "/dev/rfcomm0"),
                     undefined,
                     undefined,
                     'task1'
@@ -3758,7 +3760,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialClose("/dev/rfcomm0");
+                library.api.server.serialClose('Brush01', "/dev/rfcomm0");
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -3768,9 +3770,9 @@ describe('AuxLibrary', () => {
         describe('server.serialFlush()', () => {
             it('should send a SerialFlushAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialFlush();
+                const action: any = library.api.server.serialFlush('Brush01');
                 const expected = remote(
-                    serialFlushPin(),
+                    serialFlushPin('Brush01'),
                     undefined,
                     undefined,
                     'task1'
@@ -3781,7 +3783,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialFlush();
+                library.api.server.serialFlush('Brush01');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -3791,9 +3793,9 @@ describe('AuxLibrary', () => {
         describe('server.serialDrain()', () => {
             it('should send a SerialDrainAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialDrain();
+                const action: any = library.api.server.serialDrain('Brush01');
                 const expected = remote(
-                    serialDrainPin(),
+                    serialDrainPin('Brush01'),
                     undefined,
                     undefined,
                     'task1'
@@ -3804,7 +3806,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialDrain();
+                library.api.server.serialDrain('Brush01');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -3814,9 +3816,9 @@ describe('AuxLibrary', () => {
         describe('server.serialPause()', () => {
             it('should send a SerialPauseAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialPause();
+                const action: any = library.api.server.serialPause('Brush01');
                 const expected = remote(
-                    serialPausePin(),
+                    serialPausePin('Brush01'),
                     undefined,
                     undefined,
                     'task1'
@@ -3827,7 +3829,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialPause();
+                library.api.server.serialPause('Brush01');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -3837,9 +3839,9 @@ describe('AuxLibrary', () => {
         describe('server.serialResume()', () => {
             it('should send a SerialResumeAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialResume();
+                const action: any = library.api.server.serialResume('Brush01');
                 const expected = remote(
-                    serialResumePin(),
+                    serialResumePin('Brush01'),
                     undefined,
                     undefined,
                     'task1'
@@ -3850,7 +3852,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialResume();
+                library.api.server.serialResume('Brush01');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
