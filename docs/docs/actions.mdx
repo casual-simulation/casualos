@@ -1489,6 +1489,98 @@ Logs the given data to the developer console.
 os.log("Hello, World!");
 ```
 
+### `os.getGeolocation()`
+
+Gets the geographic location that the current device is at in the world.
+
+Returns a promise that resolves with the location. The location is an object with the following properties:
+```typescript
+let location: {
+    /**
+     * Whether the operation was successful.
+     */
+    success: boolean;
+
+    /**
+     * The code of the error that occurred.
+     * Only defined if the operation was unsuccessful.
+     */
+     errorCode?: 'permission_denied' | 'position_unavailable' | 'timeout' | 'unknown';
+
+     /**
+      * The message of the error that occurred.
+      * Only defined if the operation was unsuccessful.
+      */
+     errorMessage?: string;
+
+     /**
+     * The altitude that the device is near.
+     * Null if the device does not support determining the altitude.
+     * Only defined if the operation was successful.
+     */
+     altitude?: number;
+
+     /**
+      * The accuracy of the altitude in meters.
+      * Null if the device does not support altitude.
+      * Only defined if the operation was successful.
+      */
+     altitudeAccuracy?: number;
+ 
+     /**
+      * The latitude that the device is near.
+      * Only defined if the operation was successful.
+      */
+     latitude: number;
+ 
+     /**
+      * The longitude that the device is near.
+      * Only defined if the operation was successful.
+      */
+     longitude: number;
+ 
+     /**
+      * The accuracy of the positional location (latitude and longitude) in meters.
+      * Only defined if the operation was successful.
+      */
+     positionalAccuracy: number;
+ 
+     /**
+      * The heading of the device from north in radians.
+      * 0 is true north, Math.PI/2 is east, Math.PI is south and 3/2*Math.PI is west.
+      * This value is null if the device is unable to determine the heading.
+      * Only defined if the operation was successful.
+      */
+     heading: number;
+ 
+     /**
+      * The speed that the device is moving in meters per second.
+      * Null if the device does not support calculating the speed.
+      * Only defined if the operation was successful.
+      */
+     speed: number;
+ 
+     /**
+      * The timestamp of the geolocation result.
+      * Only defined if the operation was successful.
+      */
+     timestamp: number;
+}
+```
+
+#### Examples:
+
+1. Get the current geolocation.
+```typescript
+const location = await os.getGeolocation();
+
+if (location.success) {
+    os.toast(`You are at (${location.latitude}, ${location.longitude})`);
+} else {
+    os.toast(location.errorMessage);
+}
+```
+
 ### `os.checkout(options)`
 
 
