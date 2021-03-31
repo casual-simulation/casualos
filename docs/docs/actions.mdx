@@ -1489,6 +1489,98 @@ Logs the given data to the developer console.
 os.log("Hello, World!");
 ```
 
+### `os.getGeolocation()`
+
+Gets the geographic location that the current device is at in the world.
+
+Returns a promise that resolves with the location. The location is an object with the following properties:
+```typescript
+let location: {
+    /**
+     * Whether the operation was successful.
+     */
+    success: boolean;
+
+    /**
+     * The code of the error that occurred.
+     * Only defined if the operation was unsuccessful.
+     */
+     errorCode?: 'permission_denied' | 'position_unavailable' | 'timeout' | 'unknown';
+
+     /**
+      * The message of the error that occurred.
+      * Only defined if the operation was unsuccessful.
+      */
+     errorMessage?: string;
+
+     /**
+     * The altitude that the device is near.
+     * Null if the device does not support determining the altitude.
+     * Only defined if the operation was successful.
+     */
+     altitude?: number;
+
+     /**
+      * The accuracy of the altitude in meters.
+      * Null if the device does not support altitude.
+      * Only defined if the operation was successful.
+      */
+     altitudeAccuracy?: number;
+ 
+     /**
+      * The latitude that the device is near.
+      * Only defined if the operation was successful.
+      */
+     latitude: number;
+ 
+     /**
+      * The longitude that the device is near.
+      * Only defined if the operation was successful.
+      */
+     longitude: number;
+ 
+     /**
+      * The accuracy of the positional location (latitude and longitude) in meters.
+      * Only defined if the operation was successful.
+      */
+     positionalAccuracy: number;
+ 
+     /**
+      * The heading of the device from north in radians.
+      * 0 is true north, Math.PI/2 is east, Math.PI is south and 3/2*Math.PI is west.
+      * This value is null if the device is unable to determine the heading.
+      * Only defined if the operation was successful.
+      */
+     heading: number;
+ 
+     /**
+      * The speed that the device is moving in meters per second.
+      * Null if the device does not support calculating the speed.
+      * Only defined if the operation was successful.
+      */
+     speed: number;
+ 
+     /**
+      * The timestamp of the geolocation result.
+      * Only defined if the operation was successful.
+      */
+     timestamp: number;
+}
+```
+
+#### Examples:
+
+1. Get the current geolocation.
+```typescript
+const location = await os.getGeolocation();
+
+if (location.success) {
+    os.toast(`You are at (${location.latitude}, ${location.longitude})`);
+} else {
+    os.toast(location.errorMessage);
+}
+```
+
 ### `os.checkout(options)`
 
 
@@ -1630,6 +1722,9 @@ If called when the user is not dragging anything, then this function does nothin
   <PossibleValueCode value='face'>
     The bot will snap the faces of other pointable bots.
   </PossibleValueCode>
+  <PossibleValueCode value='bots'>
+    The bot will snap to other pointable bots.
+  </PossibleValueCode>
   <PossibleValue value='A snap point object'>
     The bot will snap to the specified position when dragged within the specified distance.
   </PossibleValue>
@@ -1707,6 +1802,9 @@ The **other parameters** are the snap targets and each can be one of the followi
   </PossibleValueCode>
   <PossibleValueCode value='face'>
     The bot will snap the faces of other pointable bots.
+  </PossibleValueCode>
+  <PossibleValueCode value='bots'>
+    The bot will snap to other pointable bots.
   </PossibleValueCode>
   <PossibleValue value='A snap point object'>
     The bot will snap to the specified position when dragged within the specified distance.
@@ -3251,7 +3349,6 @@ os.toast(info.version);
 
 ### `os.device()`
 
-
 Gets information about the device that the player is using.
 
 The returned value is an object with the following properties:
@@ -3260,6 +3357,7 @@ The returned value is an object with the following properties:
 const returned: {
     supportsAR: boolean;
     supportsVR: boolean;
+    isCollaborative: boolean;
 };
 ```
 
@@ -3271,8 +3369,23 @@ const info = os.device();
 os.toast(info);
 ```
 
-### `os.requestFullscreenMode()`
+### `os.isCollaborative()`
 
+Gets whether the current session was loaded with collaborative features enabled.
+
+When true, CasualOS will attempt to sync the shared (including `tempShared` and `remoteTempShared`) spaces with other players.
+When false, CasualOS will treat all the shared spaces like they are all `tempLocal`.
+
+#### Examples:
+
+1. Toast whether the current session is collaborative.
+```typescript
+const isCollaborative = os.isCollaborative();
+
+os.toast(isCollaborative ? "We are collaborative!" : "We are not collaborative!");
+```
+
+### `os.requestFullscreenMode()`
 
 Attempts to enter fullscreen mode. Depending on which web browser the player is using, this might ask for permission to go fullscreen.
 
@@ -3287,7 +3400,6 @@ os.requestFullscreenMode();
 
 ### `os.exitFullscreenMode()`
 
-
 Exists fullscreen mode.
 
 #### Examples:
@@ -3300,7 +3412,6 @@ os.exitFullscreenMode();
 ## Server Actions
 
 ### `server.backupToGithub(auth)`
-
 
 Saves all the servers to GitHub as a private Gist using the given authentication token.
 
@@ -6120,6 +6231,98 @@ await os.sleep(10000);
 const data = await experiment.endAudioRecording();
 
 os.download(data);
+```
+
+### `experiment.getVoices()`
+
+Gets the list of synthetic voices that are supported by the system.
+Returns a promise that resolves with the list. Each item in the list is an object with the following properties:
+```typescript
+let voice: {
+    /**
+     * Whether this voice is the default synthetic voice.
+     */
+    default: boolean;
+
+    /**
+     * The language that this voice can speak.
+     * This is the BCP 47 tag indicating which language and which region the language is for.
+     * For example, "en-US" represents English for the United States locale.
+     */
+    language: string;
+
+    /**
+     * The name of the voice.
+     */
+    name: string;
+};
+```
+
+#### Examples:
+
+1. Toast the list of voices that are supported.
+```typescript
+const voices = await experiment.getVoices();
+os.toast(voices);
+```
+
+2. Get the first US English voice.
+```typescript
+const voices = await experiment.getVoices();
+const usEnglish = voices.find(v => v.language === "en-US");
+os.toast(usEnglish);
+```
+
+### `experiment.speakText(text, options?)`
+
+Speaks the given text using a synthetic voice and options.
+Note that this is a local effect. The gererated sounds are only played in the current session.
+
+Returns a promise that resolves when the text has been spoken.
+
+The **first parameter** is the text that should be spoken.
+
+The **second parameter** is optional and are the options that should be used to speak the text. It should be an object with the following properties:
+```typescript
+let options: {
+    /**
+     * The voice that the text should be spoken with.
+     * This can be the voice object or the name of a voice.
+     * Note that not all browsers support the same voices.
+     */
+    voice?: string | object;
+
+    /**
+     * The rate that the text should be spoken at.
+     * This can be any positive number.
+     */
+    rate?: number;
+
+    /**
+     * The pitch that the text should be spoken at.
+     * This can be any positive number.
+     */
+    pitch?: number;
+};
+```
+
+#### Examples:
+
+1. Say "hello".
+```typescript
+await experiment.speakText("hello");
+os.toast("We said hello!");
+```
+
+2. Say "hello" using the first US English voice.
+```typescript
+const voices = await experiment.getVoices();
+const usEnglish = voices.find(v => v.language === "en-US");
+
+await experiment.speakText("hello", {
+    voice: usEnglish
+});
+os.toast("Spoken!");
 ```
 
 ### `perf.getStats()`

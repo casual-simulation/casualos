@@ -341,7 +341,9 @@ function processPartitions(config: AuxConfig): AuxConfig {
     let transferrables = [] as any[];
     for (let key in config.partitions) {
         const partition = config.partitions[key];
-        if (partition.type === 'proxy') {
+        if (!partition) {
+            delete config.partitions[key];
+        } else if (partition.type === 'proxy') {
             const bridge = new ProxyBridgePartitionImpl(partition.partition);
             const channel = new MessageChannel();
             expose(bridge, channel.port1);

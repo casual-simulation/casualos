@@ -4,6 +4,7 @@ export interface SnapOptions {
     snapGround: boolean;
     snapGrid: boolean;
     snapFace: boolean;
+    snapBots: boolean;
     snapPoints: SnapPoint[];
     botId: string;
 }
@@ -39,6 +40,7 @@ export class SnapBotsHelper implements SnapBotsInterface {
                 snapGround: targets.some((t) => t === 'ground'),
                 snapGrid: targets.some((t) => t === 'grid'),
                 snapFace: targets.some((t) => t === 'face'),
+                snapBots: targets.some((t) => t === 'bots'),
                 snapPoints: targets.filter(
                     (t) => typeof t === 'object'
                 ) as SnapOptions['snapPoints'],
@@ -53,6 +55,8 @@ export class SnapBotsHelper implements SnapBotsInterface {
                     options.snapGrid = true;
                 } else if (target === 'face') {
                     options.snapFace = true;
+                } else if (target === 'bots') {
+                    options.snapBots = true;
                 } else {
                     options.snapPoints.push(target);
                 }

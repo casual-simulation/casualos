@@ -64,7 +64,9 @@ export default class PlayerHome extends Vue {
     @Watch('query')
     async onQueryChanged() {
         const server = this.query['server'] as string | string[];
-        await this._setServer(server);
+        if (hasValue(server)) {
+            await this._setServer(server);
+        }
         for (let [sim, sub] of this._simulations) {
             getUserBotAsync(sim).subscribe(
                 (bot) => {
@@ -124,9 +126,10 @@ export default class PlayerHome extends Vue {
                     const randomName: string = uniqueNamesGenerator(
                         namesConfig
                     );
-                    let update: Dictionary<string> = {
-                        server: randomName,
-                    };
+                    let update: Dictionary<string> = {};
+                    if (!appManager.config.disableCollaboration) {
+                        update.server = randomName;
+                    }
                     if (!hasValue(this.query['pagePortal'])) {
                         update.pagePortal = 'home';
                     }
@@ -148,7 +151,10 @@ export default class PlayerHome extends Vue {
                 } else {
                     if (sim.id === appManager.simulationManager.primary.id) {
                         this._handleQueryUpdates(sim, update);
-                        if (update.tags.has('server')) {
+                        if (
+                            update.tags.has('server') &&
+                            !appManager.config.disableCollaboration
+                        ) {
                             // server changed - update it
                             const calc = sim.helper.createContext();
                             const server = calculateStringListTagValue(

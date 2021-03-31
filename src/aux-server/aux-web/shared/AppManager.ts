@@ -257,6 +257,7 @@ export class AppManager {
         this._deviceConfig = {
             supportsAR: arSupported,
             supportsVR: vrSupported,
+            isCollaborative: !this._config.disableCollaboration,
         };
     }
 

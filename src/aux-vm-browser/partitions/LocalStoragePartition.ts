@@ -40,6 +40,7 @@ import {
 import { startWith, filter, map } from 'rxjs/operators';
 import {
     applyEdit,
+    edits,
     isTagEdit,
 } from '@casual-simulation/aux-common/aux-format-2';
 import { v4 as uuid } from 'uuid';
@@ -49,7 +50,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
     protected _onStateUpdated = new Subject<StateUpdatedEvent>();
-    protected _onVersionUpdated: Subject<CurrentVersion>;
+    protected _onVersionUpdated: BehaviorSubject<CurrentVersion>;
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -58,6 +59,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     private _state: BotsState = {};
     private _sub = new Subscription();
     private _siteId: string = uuid();
+    private _updateCounter: number = 0;
 
     get realtimeStrategy(): AuxPartitionRealtimeStrategy {
         return 'immediate';
@@ -204,6 +206,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
         let removedBots = [] as string[];
         let updated = new Map<string, UpdatedBot>();
         let updatedState = {} as PartialBotsState;
+        let nextVersion: CurrentVersion;
         // Flag to record if we have already created a new state object
         // during the update.
         let createdNewState = false;
@@ -269,10 +272,23 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                                     newBot.tags[tag],
                                     newVal
                                 );
+                                nextVersion = {
+                                    currentSite: this._onVersionUpdated.value
+                                        .currentSite,
+                                    vector: {
+                                        ...this._onVersionUpdated.value.vector,
+                                        [this
+                                            ._siteId]: this._updateCounter += 1,
+                                    },
+                                };
+                                updatedBot.tags[tag] = edits(
+                                    nextVersion.vector,
+                                    ...newVal.operations
+                                );
                             } else {
                                 newBot.tags[tag] = newVal;
+                                updatedBot.tags[tag] = newVal;
                             }
-                            updatedBot.tags[tag] = newVal;
                         } else {
                             delete newBot.tags[tag];
                             updatedBot.tags[tag] = null;
@@ -319,6 +335,19 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                         if (hasValue(newVal)) {
                             if (isTagEdit(newVal)) {
                                 masks[tag] = applyEdit(masks[tag], newVal);
+                                nextVersion = {
+                                    currentSite: this._onVersionUpdated.value
+                                        .currentSite,
+                                    vector: {
+                                        ...this._onVersionUpdated.value.vector,
+                                        [this
+                                            ._siteId]: this._updateCounter += 1,
+                                    },
+                                };
+                                updatedBot.masks[this.space][tag] = edits(
+                                    nextVersion.vector,
+                                    ...newVal.operations
+                                );
                             } else {
                                 masks[tag] = newVal;
                             }
@@ -366,6 +395,9 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
             }
 
             this._onStateUpdated.next(updateEvent);
+        }
+        if (nextVersion) {
+            this._onVersionUpdated.next(nextVersion);
         }
     }
 }

@@ -1,5 +1,49 @@
 # CasualOS Changelog
 
+## V1.5.6
+
+#### Date: 3/31/2021
+
+### :rocket: Improvements
+
+-   Added the "bots" snap target for `os.addDropSnap()` and `os.addBotDropSnap()`.
+    -   This will cause the dragged bot to snap to other bots.
+-   Added the `experiment.speakText(text, options?)` and `experiment.getVoices()` functions.
+    -   See the documentation for more information.
+-   Added the `os.getGeolocation()` function.
+    -   Returns a promise that resolves with the geolocation of the device.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where tag edits would appear duplicated when running CasualOS in the non-collaborative mode.
+
+## V1.5.5
+
+#### Date: 3/25/2021
+
+### :rocket: Improvements
+
+-   Changed CasualOS to not show the `server` URL parameter when loaded in non-collaborative mode.
+-   CasualOS will now throw an error when trying to save a bot to a tag during creation.
+
+## V1.5.4
+
+#### Date: 3/25/2021
+
+### :rocket: Improvements
+
+-   Improved `os.download()` to add the correct file extension if one is omitted from the given filename.
+-   Added the 📖 emoji has a builtin tag prefix.
+    -   This is a useful default prefix for custom portals.
+-   Added the ability to load CasualOS in a non-collaborative mode.
+    -   This will make the shared spaces (`shared`, `tempShared`, and `remoteTempShared`) act like they are `tempLocal` spaces.
+    -   As a result, CasualOS needs no persistent network connection to run an experience when loaded in this mode.
+-   Added the `os.isCollaborative()` function to get whether CasualOS was loaded in a collaborative mode or non-collaborative mode.
+
+### :bug: Bug Fixes
+
+-   Fixed the "Docs" link when linking to a listen tag.
+
 ## V1.5.3
 
 #### Date: 3/23/2021

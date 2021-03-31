@@ -189,7 +189,10 @@ export type AsyncActions =
     | EndAudioRecordingAction
     | CancelAnimationAction
     | BeginRecordingAction
-    | EndRecordingAction;
+    | EndRecordingAction
+    | SpeakTextAction
+    | GetVoicesAction
+    | GetGeolocationAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2548,8 +2551,9 @@ export interface SnapPoint {
  * - "ground" means that the dragged bot should snap to the ground plane. This option is overriden by "grid".
  * - "grid" means that the dragged bot should snap to grid tiles.
  * - "face" means that the dragged bot should snap to other bot faces.
+ * - "bots" means that the dragged bot will snap to other bots.
  */
-export type SnapTarget = 'ground' | 'grid' | 'face' | SnapPoint;
+export type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint;
 
 /**
  * An event that is used to start audio recording.
@@ -2598,6 +2602,141 @@ export interface BeginRecordingAction extends AsyncAction, RecordingOptions {
 export interface EndRecordingAction extends AsyncAction {
     type: 'end_recording';
 }
+
+export interface SpeakTextOptions {
+    /**
+     * The pitch that the text should be spoken at.
+     */
+    pitch?: number;
+
+    /**
+     * The rate that the text should be spoken at.
+     */
+    rate?: number;
+
+    /**
+     * The name of the voice that the text should be spoken with.
+     */
+    voice?: string;
+}
+
+/**
+ * An event that is used to speak some text using the builtin text to speech engine.
+ */
+export interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
+    type: 'speak_text';
+
+    /**
+     * The text that should be spoken.
+     */
+    text: string;
+}
+
+/**
+ * An event that is used to retrieve the synthetic voices that are supported by the current system.
+ */
+export interface GetVoicesAction extends AsyncAction {
+    type: 'get_voices';
+}
+
+/**
+ * Defines an interface that represents a synthetic voice.
+ */
+export interface SyntheticVoice {
+    /**
+     * Whether this voice is the default synthetic voice.
+     */
+    default: boolean;
+
+    /**
+     * The language that this voice can speak.
+     */
+    language: string;
+
+    /**
+     * The name of the voice.
+     */
+    name: string;
+}
+
+/**
+ * An event that is used to retrieve the current geolocation of the device.
+ */
+export interface GetGeolocationAction extends AsyncAction {
+    type: 'get_geolocation';
+}
+
+export interface SuccessfulGeolocation {
+    success: true;
+
+    /**
+     * The altitude that the device is near.
+     * Null if the device does not support determining the altitude.
+     */
+    altitude?: number;
+
+    /**
+     * The accuracy of the altitude in meters.
+     * Null if the device does not support altitude.
+     */
+    altitudeAccuracy?: number;
+
+    /**
+     * The latitude that the device is near.
+     */
+    latitude?: number;
+
+    /**
+     * The longitude that the device is near.
+     */
+    longitude?: number;
+
+    /**
+     * The accuracy of the positional location (latitude and longitude) in meters.
+     */
+    positionalAccuracy?: number;
+
+    /**
+     * The heading of the device from north in radians.
+     * 0 is true north, Math.PI/2 is east, Math.PI is south and 3/2*Math.PI is west.
+     * This value is null if the device is unable to determine the heading.
+     */
+    heading: number;
+
+    /**
+     * The speed that the device is moving in meters per second.
+     * Null if the device does not support calculating the speed.
+     */
+    speed: number;
+
+    /**
+     * The timestamp of the geolocation result.
+     */
+    timestamp: number;
+}
+
+export interface UnsuccessfulGeolocation {
+    success: false;
+
+    /**
+     * The code of the error that occurred.
+     */
+    errorCode?:
+        | 'permission_denied'
+        | 'position_unavailable'
+        | 'timeout'
+        | 'unknown';
+
+    /**
+     * The message of the error that occurred.
+     */
+    errorMessage?: string;
+}
+
+/**
+ * Defines an interface that represents a geolocation result.
+ */
+export type Geolocation = SuccessfulGeolocation | UnsuccessfulGeolocation;
 
 /**
  * Defines an interface that contains recorded data.
@@ -5022,6 +5161,47 @@ export function beginRecording(
 export function endRecording(taskId?: string | number): EndRecordingAction {
     return {
         type: 'end_recording',
+        taskId,
+    };
+}
+
+/**
+ * Creates a SpeakTextAction.
+ * @param text The text that should be spoken.
+ * @param options The options that should be used.
+ * @param taskId The ID of the task.
+ */
+export function speakText(
+    text: string,
+    options: SpeakTextOptions,
+    taskId?: string | number
+): SpeakTextAction {
+    return {
+        type: 'speak_text',
+        text,
+        ...options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetVoicesAction.
+ * @param taskId The task ID.
+ */
+export function getVoices(taskId?: string | number): GetVoicesAction {
+    return {
+        type: 'get_voices',
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetGeolocationAction.
+ * @param taskId The ID of the task.
+ */
+export function getGeolocation(taskId?: string | number): GetGeolocationAction {
+    return {
+        type: 'get_geolocation',
         taskId,
     };
 }

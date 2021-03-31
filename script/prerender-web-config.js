@@ -10,6 +10,7 @@ const webConfig = {
         process.env.CAUSAL_REPO_CONNECTION_PROTOCOL || 'socket.io',
     causalRepoConnectionUrl: process.env.CAUSAL_REPO_CONNECTION_URL,
     vmOrigin: process.env.VM_ORIGIN || null,
+    disableCollaboration: process.env.DISABLE_COLLABORATION === 'true',
 };
 
 // Creates /tmp/a/apple, regardless of whether `/tmp` and /tmp/a exist.

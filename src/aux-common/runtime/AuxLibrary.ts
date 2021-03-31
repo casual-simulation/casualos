@@ -212,11 +212,16 @@ import {
     endAudioRecording as calcEndAudioRecording,
     beginRecording as calcBeginRecording,
     endRecording as calcEndRecording,
+    speakText as calcSpeakText,
+    getVoices as calcGetVoices,
+    getGeolocation as calcGetGeolocation,
     cancelAnimation,
     SnapTarget,
     AddDropSnapTargetsAction,
     RecordingOptions,
     Recording,
+    SyntheticVoice,
+    SpeakTextOptions,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -641,6 +646,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 run,
                 version,
                 device,
+                isCollaborative,
                 enableAR,
                 disableAR,
                 enableVR,
@@ -686,6 +692,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 addDropSnap,
                 addBotDropSnap,
                 log,
+                getGeolocation,
                 inSheet,
 
                 getCameraPosition,
@@ -796,6 +803,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 endAudioRecording,
                 beginRecording,
                 endRecording,
+                speakText,
+                getVoices,
             },
 
             math: {
@@ -1514,7 +1523,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return {
             supportsAR: null as boolean,
             supportsVR: null as boolean,
+            isCollaborative: null as boolean,
         };
+    }
+
+    /**
+     * Gets whether this device has enabled collaborative features.
+     */
+    function isCollaborative(): boolean {
+        if (context.device) {
+            return context.device.isCollaborative;
+        }
+
+        return true;
     }
 
     /**
@@ -1563,12 +1584,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             throw new Error('The mimeType must be a string.');
         }
 
+        if (data instanceof Blob) {
+            mimeType = data.type;
+        }
+
+        if (!hasExtension(filename)) {
+            const extension = mime.getExtension(mimeType);
+            if (hasValue(extension)) {
+                filename = `${filename}.${extension}`;
+            }
+        }
+
         if (typeof data === 'string') {
             return addAction(download(data, filename, mimeType));
         } else if (data instanceof ArrayBuffer) {
             return addAction(download(data, filename, mimeType));
         } else if (data instanceof Blob) {
-            return addAction(download(data, filename, data.type));
+            return addAction(download(data, filename, mimeType));
         } else if (typeof data === 'object') {
             return addAction(
                 download(JSON.stringify(data), filename, mimeType)
@@ -1578,6 +1610,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         throw new Error(
             'The data must be either a string, object, or ArrayBuffer.'
         );
+    }
+
+    /**
+     * Determines if the given filename has an extension.
+     * Returns null if the file has no extension.
+     * @param filename The name of the file.
+     */
+    function hasExtension(filename: string) {
+        const dot = filename.lastIndexOf('.');
+        return dot >= 0;
     }
 
     /**
@@ -2117,6 +2159,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function log(...args: any[]) {
         console.log(...args);
+    }
+
+    /**
+     * Gets the geolocation of the device.
+     * Returns a promise that resolves with the location.
+     */
+    function getGeolocation(): Promise<Geolocation> {
+        const task = context.createTask();
+        const event = calcGetGeolocation(task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -3846,6 +3898,46 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Speaks the given text.
+     * Returns a promise that resolves when the text has been spoken.
+     * @param text The text that should be spoken.
+     * @param options The options that should be used.
+     */
+    function speakText(
+        text: string,
+        options: {
+            rate?: number;
+            pitch?: number;
+            voice?: string | SyntheticVoice;
+        } = {}
+    ): Promise<void> {
+        const task = context.createTask();
+        const voice =
+            typeof options.voice === 'object'
+                ? options.voice?.name
+                : options.voice;
+        const action = calcSpeakText(
+            text,
+            {
+                ...options,
+                voice,
+            },
+            task.taskId
+        );
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Gets the list of synthetic voices that are supported by the system.
+     * Returns a promise that resolves with the voices.
+     */
+    function getVoices(): Promise<SyntheticVoice[]> {
+        const task = context.createTask();
+        const action = calcGetVoices(task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
      * Sums the given array of numbers and returns the result.
      * If any value in the list is not a number, it will be converted to one.
      * If the given value is not an array, then it will be converted to a number and returned.
@@ -4548,6 +4640,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         tag = trimTag(tag);
         if (tag === 'id' || tag === BOT_SPACE_TAG) {
             return value;
+        }
+        if (isRuntimeBot(value)) {
+            throw new Error(
+                `It is not possible to save bots as tag values. (Setting '${tag}')`
+            );
         }
         if (Array.isArray(bot) && bot.length > 0) {
             for (let b of bot) {

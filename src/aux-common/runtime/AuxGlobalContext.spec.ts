@@ -38,6 +38,7 @@ describe('AuxGlobalContext', () => {
             {
                 supportsAR: false,
                 supportsVR: false,
+                isCollaborative: true,
             },
             factory,
             notifier

@@ -29,7 +29,7 @@ import {
 import { startWith } from 'rxjs/operators';
 import { flatMap, union } from 'lodash';
 import { merge } from '../utils';
-import { applyEdit, isTagEdit } from '../aux-format-2';
+import { applyEdit, edits, isTagEdit } from '../aux-format-2';
 import { v4 as uuid } from 'uuid';
 
 /**
@@ -54,11 +54,12 @@ export class MemoryPartitionImpl implements MemoryPartition {
     private _onBotsRemoved = new Subject<string[]>();
     private _onBotsUpdated = new Subject<UpdatedBot[]>();
     private _onStateUpdated = new Subject<StateUpdatedEvent>();
-    private _onVersionUpdated: Subject<CurrentVersion>;
+    private _onVersionUpdated: BehaviorSubject<CurrentVersion>;
     private _onError = new Subject<any>();
     private _onEvents = new Subject<Action[]>();
     private _onStatusUpdated = new Subject<StatusUpdate>();
     private _siteId: string = uuid();
+    private _updateCounter: number = 0;
 
     type = 'memory' as const;
     state: BotsState;
@@ -166,6 +167,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
         let removed: string[] = [];
         let updated = new Map<string, UpdatedBot>();
         let updatedState = {} as PartialBotsState;
+        let nextVersion: CurrentVersion;
         // Flag to record if we have already created a new state object
         // during the update.
         let createdNewState = false;
@@ -220,10 +222,23 @@ export class MemoryPartitionImpl implements MemoryPartition {
                                     newBot.tags[tag],
                                     newVal
                                 );
+                                nextVersion = {
+                                    currentSite: this._onVersionUpdated.value
+                                        .currentSite,
+                                    vector: {
+                                        ...this._onVersionUpdated.value.vector,
+                                        [this
+                                            ._siteId]: this._updateCounter += 1,
+                                    },
+                                };
+                                updatedBot.tags[tag] = edits(
+                                    nextVersion.vector,
+                                    ...newVal.operations
+                                );
                             } else {
                                 newBot.tags[tag] = newVal;
+                                updatedBot.tags[tag] = newVal;
                             }
-                            updatedBot.tags[tag] = newVal;
                         } else {
                             delete newBot.tags[tag];
                             updatedBot.tags[tag] = null;
@@ -270,6 +285,19 @@ export class MemoryPartitionImpl implements MemoryPartition {
                         if (hasValue(newVal)) {
                             if (isTagEdit(newVal)) {
                                 masks[tag] = applyEdit(masks[tag], newVal);
+                                nextVersion = {
+                                    currentSite: this._onVersionUpdated.value
+                                        .currentSite,
+                                    vector: {
+                                        ...this._onVersionUpdated.value.vector,
+                                        [this
+                                            ._siteId]: this._updateCounter += 1,
+                                    },
+                                };
+                                updatedBot.masks[this.space][tag] = edits(
+                                    nextVersion.vector,
+                                    ...newVal.operations
+                                );
                             } else {
                                 masks[tag] = newVal;
                             }
@@ -308,6 +336,9 @@ export class MemoryPartitionImpl implements MemoryPartition {
             updateEvent.updatedBots.length > 0
         ) {
             this._onStateUpdated.next(updateEvent);
+        }
+        if (nextVersion) {
+            this._onVersionUpdated.next(nextVersion);
         }
     }
 }

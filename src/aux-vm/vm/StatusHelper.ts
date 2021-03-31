@@ -1,4 +1,5 @@
 import { StatusUpdate } from '@casual-simulation/causal-trees';
+import { AuxUser } from '../AuxUser';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 
 /**
@@ -15,6 +16,12 @@ export class StatusHelper implements SubscriptionLike {
     private _updates = new Subject<StatusUpdate>();
     private _sub: Subscription;
 
+    /**
+     * The user that should be included in authenticated results
+     * if one is not included.
+     */
+    defaultUser: AuxUser;
+
     get updates(): Observable<StatusUpdate> {
         return this._updates;
     }
@@ -30,7 +37,7 @@ export class StatusHelper implements SubscriptionLike {
             this._connection.set(i, false);
             this._init.set(i, false);
             this._sub.add(
-                observable.subscribe(update => this._process(update, i))
+                observable.subscribe((update) => this._process(update, i))
             );
         }
     }
@@ -86,7 +93,11 @@ export class StatusHelper implements SubscriptionLike {
             }
         } else if (update.type === 'authentication') {
             if (channelId === 0) {
-                this._updates.next(update);
+                let result = { ...update };
+                if (!result.user && this.defaultUser) {
+                    result.user = this.defaultUser;
+                }
+                this._updates.next(result);
             }
         } else if (update.type === 'authorization') {
             if (channelId === 0) {

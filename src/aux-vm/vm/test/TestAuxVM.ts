@@ -66,6 +66,7 @@ export class TestAuxVM implements AuxVM {
             {
                 supportsAR: false,
                 supportsVR: false,
+                isCollaborative: true,
             }
         );
         this._runtime.userId = userId;

@@ -9,6 +9,7 @@ import {
     DeviceInfo,
     Action,
     CurrentVersion,
+    StatusUpdate,
 } from '@casual-simulation/causal-trees';
 import {
     createBot,
@@ -112,15 +113,6 @@ describe('BaseAuxChannel', () => {
             const partitions = (<any>channel)._partitions as AuxPartitions;
 
             expect(partitions.shared.space).toEqual('shared');
-        });
-
-        it('should create a user dimension bot', async () => {
-            uuidMock.mockReturnValue('dimensionBot');
-            await channel.initAndWait();
-
-            const dimensionBot = channel.helper.botsState['dimensionBot'];
-            expect(dimensionBot).toBeTruthy();
-            expect(dimensionBot.tags).toMatchSnapshot();
         });
 
         it('should load the builder aux file', async () => {
@@ -363,10 +355,7 @@ describe('BaseAuxChannel', () => {
             };
             channel = new AuxChannelImpl(user, device, config);
 
-            uuidMock
-                .mockReturnValueOnce('uuid0')
-                .mockReturnValueOnce('uuid1')
-                .mockReturnValueOnce('uuid2');
+            uuidMock.mockReturnValueOnce('uuid1').mockReturnValueOnce('uuid2');
 
             await channel.initAndWait();
 
@@ -501,6 +490,46 @@ describe('BaseAuxChannel', () => {
                     vector: { a: 10, b: 11, c: 20 },
                 },
             ]);
+        });
+
+        it('should use the channel user for the authentication event if the partition does not include a user in the authentication event', async () => {
+            const tempLocal = new MemoryPartitionImpl({
+                type: 'memory',
+                initialState: {},
+            });
+            config = {
+                config: {
+                    version: 'v1.0.0',
+                    versionHash: 'hash',
+                },
+                partitions: {
+                    shared: {
+                        type: 'memory',
+                        partition: memory,
+                    },
+                },
+            };
+            channel = new AuxChannelImpl(user, device, config);
+
+            let statuses = [] as StatusUpdate[];
+            channel.onConnectionStateChanged.subscribe((a) => statuses.push(a));
+
+            uuidMock
+                .mockReturnValueOnce('uuid0')
+                .mockReturnValueOnce('uuid1')
+                .mockReturnValueOnce('uuid2');
+
+            await channel.initAndWait();
+
+            expect(statuses.filter((s) => s.type === 'authentication')).toEqual(
+                [
+                    {
+                        type: 'authentication',
+                        authenticated: true,
+                        user: user,
+                    },
+                ]
+            );
         });
     });
 
@@ -1019,7 +1048,6 @@ describe('BaseAuxChannel', () => {
             expect(exported).toEqual({
                 version: 1,
                 state: {
-                    dimensionBot: expect.any(Object),
                     userId: expect.any(Object),
                     test: createBot('test', {}, 'shared'),
                     def: createBot('def', {}, 'tempLocal'),
@@ -1038,7 +1066,6 @@ describe('BaseAuxChannel', () => {
             expect(exported).toEqual({
                 version: 1,
                 state: {
-                    dimensionBot: expect.any(Object),
                     userId: expect.any(Object),
                     test: createBot('test', {}, 'shared'),
                     def: createBot('def', {}, 'tempLocal'),

@@ -127,6 +127,7 @@ describe('AuxRuntime', () => {
         auxDevice = {
             supportsAR: false,
             supportsVR: false,
+            isCollaborative: true,
         };
         runtime = new AuxRuntime(
             version,
@@ -9854,6 +9855,7 @@ describe('original action tests', () => {
             const result = calculateActionResults(state, botAction, {
                 supportsAR: true,
                 supportsVR: false,
+                isCollaborative: true,
             });
 
             expect(result.actions).toEqual([
@@ -9862,6 +9864,7 @@ describe('original action tests', () => {
                         device: {
                             supportsAR: true,
                             supportsVR: false,
+                            isCollaborative: true,
                         },
                     },
                 }),
@@ -9889,6 +9892,7 @@ describe('original action tests', () => {
                         device: {
                             supportsAR: null,
                             supportsVR: null,
+                            isCollaborative: null,
                         },
                     },
                 }),
