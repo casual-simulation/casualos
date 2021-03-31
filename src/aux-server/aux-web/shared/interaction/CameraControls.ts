@@ -9,16 +9,21 @@ import {
     OrthographicCamera,
     Plane,
     Camera,
+    Color,
+    Euler,
+    Matrix3,
 } from '@casual-simulation/three';
 import { InputType, MouseButtonId, Input } from '../../shared/scene/Input';
-import { lerp, normalize } from '@casual-simulation/aux-common';
+import { lerp } from '@casual-simulation/aux-common';
 import { Viewport } from '../scene/Viewport';
 import { Game } from '../scene/Game';
 import {
     cameraForwardRay,
+    objectForwardRay,
     objectWorldDirectionRay,
     objectWorldForwardRay,
 } from '../scene/SceneUtils';
+import { Physics } from '../scene/Physics';
 
 export class CameraControls {
     // "target" sets the location of focus, where the object orbits around
@@ -124,6 +129,10 @@ export class CameraControls {
         finger0: new Vector2(),
         finger1: new Vector2(),
     };
+
+    // The midpoint between the two fingers when the rotate gesture
+    // is started.
+    private originMidpoint: Vector3;
 
     private touchRotateEnd: TouchRotate = {
         finger0: new Vector2(),
@@ -631,6 +640,7 @@ export class CameraControls {
                 let cross = startDir.x * endDir.y - startDir.y * endDir.x;
                 if (cross >= 0) xAngle = -xAngle;
                 this.rotateLeft(xAngle);
+
                 // Rotate Y (vertical delta of midpoint between fingers).
                 let startMidpoint = new Vector2(
                     (this.touchRotateStart.finger0.x +
@@ -651,10 +661,10 @@ export class CameraControls {
                 let midpointDelta = new Vector2()
                     .subVectors(endMidpoint, startMidpoint)
                     .multiplyScalar(this.rotateSpeed);
+
                 let yAngle =
                     (2 * Math.PI * midpointDelta.y) /
                     this._game.gameView.gameView.clientHeight;
-                ``;
                 this.rotateUp(yAngle);
                 // Set rotate start positions to the current end positions for the next frame.
                 this.touchRotateStart.finger0.copy(this.touchRotateEnd.finger0);
@@ -699,6 +709,33 @@ export class CameraControls {
                     // Rotate start.
                     this.touchRotateStart.finger0 = input.getTouchPagePos(0);
                     this.touchRotateStart.finger1 = input.getTouchPagePos(1);
+
+                    const finger0 = input.getTouchScreenPos(0);
+                    const finger1 = input.getTouchScreenPos(1);
+
+                    const originFinger0Ray = Physics.rayAtScreenPos(
+                        finger0,
+                        this._camera
+                    );
+                    const originFinger1Ray = Physics.rayAtScreenPos(
+                        finger1,
+                        this._camera
+                    );
+                    const originFinger0Point = Physics.pointOnPlane(
+                        originFinger0Ray,
+                        new Plane(new Vector3(0, 1, 0))
+                    );
+                    const originFinger1Point = Physics.pointOnPlane(
+                        originFinger1Ray,
+                        new Plane(new Vector3(0, 1, 0))
+                    );
+
+                    this.originMidpoint = new Vector3(
+                        (originFinger0Point.x + originFinger1Point.x) / 2,
+                        (originFinger0Point.y + originFinger1Point.y) / 2,
+                        (originFinger0Point.z + originFinger1Point.z) / 2
+                    );
+
                     this.state = STATE.TOUCH_ROTATE_ZOOM;
                 }
             } else if (input.getTouchUp(0) || input.getTouchUp(1)) {
@@ -908,7 +945,30 @@ export class CameraControls {
         let lastQuaternion = new Quaternion();
         let position = this._camera.position;
 
-        offset.copy(position).sub(this.target);
+        let lookTarget = this.target;
+        let rotationTarget = this.target;
+
+        // Rotate the target position around the touch origin midpoint
+        // before applying the spherical rotation to the camera
+        if (this.state === STATE.TOUCH_ROTATE_ZOOM && this.originMidpoint) {
+            rotationTarget = this.originMidpoint;
+
+            lookTarget.sub(this.originMidpoint);
+            const s = new Spherical().setFromVector3(lookTarget);
+
+            s.theta += this.sphericalDelta.theta;
+            s.theta = Math.max(
+                this.minAzimuthAngle,
+                Math.min(this.maxAzimuthAngle, s.theta)
+            );
+            s.makeSafe();
+
+            lookTarget.setFromSpherical(s);
+
+            lookTarget.add(this.originMidpoint);
+        }
+
+        offset.copy(position).sub(rotationTarget);
 
         // rotate offset to "y-axis-is-up" space
         offset.applyQuaternion(quat);
@@ -991,14 +1051,13 @@ export class CameraControls {
         // rotate offset back to "camera-up-vector-is-up" space
         offset.applyQuaternion(quatInverse);
 
-        let finalTarget = this.target.clone();
-        position.copy(finalTarget).add(offset);
+        position.copy(rotationTarget).add(offset);
 
         if (this._camera.parent) {
-            this._camera.parent.localToWorld(finalTarget);
+            this._camera.parent.localToWorld(rotationTarget);
         }
 
-        this._camera.lookAt(finalTarget);
+        this._camera.lookAt(lookTarget);
 
         if (this.enableDamping === true) {
             this.sphericalDelta.theta *= 1 - this.dampingFactor;
