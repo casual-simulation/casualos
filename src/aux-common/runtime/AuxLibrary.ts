@@ -214,6 +214,7 @@ import {
     endRecording as calcEndRecording,
     speakText as calcSpeakText,
     getVoices as calcGetVoices,
+    getGeolocation as calcGetGeolocation,
     cancelAnimation,
     SnapTarget,
     AddDropSnapTargetsAction,
@@ -691,6 +692,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 addDropSnap,
                 addBotDropSnap,
                 log,
+                getGeolocation,
                 inSheet,
 
                 getCameraPosition,
@@ -2157,6 +2159,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function log(...args: any[]) {
         console.log(...args);
+    }
+
+    /**
+     * Gets the geolocation of the device.
+     * Returns a promise that resolves with the location.
+     */
+    function getGeolocation(): Promise<Geolocation> {
+        const task = context.createTask();
+        const event = calcGetGeolocation(task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**

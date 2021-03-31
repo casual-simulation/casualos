@@ -236,7 +236,8 @@ declare type AsyncActions =
     | BeginRecordingAction
     | EndRecordingAction
     | SpeakTextAction
-    | GetVoicesAction;
+    | GetVoicesAction
+    | GetGeolocationAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1738,7 +1739,7 @@ declare interface ShareAction extends AsyncAction, ShareOptions {
 /**
  * An event that is used to show or hide the circle wipe.
  */
-export interface OpenCircleWipeAction extends AsyncAction {
+ declare interface OpenCircleWipeAction extends AsyncAction {
     type: 'show_circle_wipe';
 
     /**
@@ -1755,7 +1756,7 @@ export interface OpenCircleWipeAction extends AsyncAction {
 /**
  * The options for the circle wipe.
  */
-export interface OpenCircleWipeOptions {
+ declare interface OpenCircleWipeOptions {
     /**
      * The duration of this half of the circle wipe animation in seconds.
      */
@@ -1770,7 +1771,7 @@ export interface OpenCircleWipeOptions {
 /**
  * An event that is used to add some snap points for a drag operation.
  */
- export interface AddDropSnapTargetsAction extends Action {
+ declare interface AddDropSnapTargetsAction extends Action {
     type: 'add_drop_snap_targets';
 
     /**
@@ -1789,7 +1790,7 @@ export interface OpenCircleWipeOptions {
  * Defines an interface that represents a snap point.
  * That is, a point in 3D space with an associated snap distance.
  */
- export interface SnapPoint {
+ declare interface SnapPoint {
     /**
      * The 3D position for the point.
      */
@@ -1808,12 +1809,12 @@ export interface OpenCircleWipeOptions {
  * - "face" means that the dragged bot should snap to other bot faces.
  * - "bots" means that the dragged bot will snap to other bots.
  */
-export type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint;
+ declare type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint;
 
 /**
  * The possible options for a custom portal.
  */
-export interface OpenCustomPortalOptions {
+ declare interface OpenCustomPortalOptions {
     /**
      * The mode that the portal should be opened in.
      * "Tag" indicates that the portal should watch the given tag and automatically produce bundles for the portal.
@@ -1832,7 +1833,7 @@ export interface OpenCustomPortalOptions {
 /**
  * Defines an event that creates a custom portal using the given source code.
  */
-export interface OpenCustomPortalAction extends AsyncAction {
+ declare interface OpenCustomPortalAction extends AsyncAction {
     type: 'open_custom_portal';
     /**
      * The ID of the portal.
@@ -1853,7 +1854,7 @@ export interface OpenCustomPortalAction extends AsyncAction {
 /**
  * Defines an event that adds an entry point to a custom portal.
  */
-export interface RegisterPrefixAction extends AsyncAction {
+declare interface RegisterPrefixAction extends AsyncAction {
     type: 'register_prefix';
 
     /**
@@ -1870,7 +1871,7 @@ export interface RegisterPrefixAction extends AsyncAction {
 /**
  * Defines an interface that contains options for register prefix actions.
  */
-export interface RegisterPrefixOptions {
+declare interface RegisterPrefixOptions {
     /**
      * The possible languages that prefixes can use.
      */
@@ -1881,7 +1882,7 @@ export interface RegisterPrefixOptions {
 /**
  * An interface that represents the options that can be used for making recordings.
  */
- export interface RecordingOptions {
+declare interface RecordingOptions {
     /**
      * Whether to record audio.
      */
@@ -1901,21 +1902,21 @@ export interface RegisterPrefixOptions {
 /**
  * An event that is used to start audio recording.
  */
- export interface BeginRecordingAction extends AsyncAction, RecordingOptions {
+declare interface BeginRecordingAction extends AsyncAction, RecordingOptions {
     type: 'begin_recording';
 }
 
 /**
  * An event that is used to finish audio recording.
  */
-export interface EndRecordingAction extends AsyncAction {
+declare interface EndRecordingAction extends AsyncAction {
     type: 'end_recording';
 }
 
 /**
  * Defines an interface that contains recorded data.
  */
-export interface Recording {
+declare interface Recording {
 
     /**
      * The list of files that were produced when recording.
@@ -1923,7 +1924,7 @@ export interface Recording {
     files: RecordedFile[];
 }
 
-export interface RecordedFile {
+declare interface RecordedFile {
     /**
      * Whether the file contains the recorded audio.
      */
@@ -1946,7 +1947,7 @@ export interface RecordedFile {
 }
 
 
-export interface SpeakTextOptions {
+declare interface SpeakTextOptions {
     /**
      * The pitch that the text should be spoken at.
      */
@@ -1966,7 +1967,7 @@ export interface SpeakTextOptions {
 /**
  * An event that is used to speak some text using the builtin text to speech engine.
  */
-export interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
+ declare interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
     type: 'speak_text';
 
     /**
@@ -1978,14 +1979,14 @@ export interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
 /**
  * An event that is used to retrieve the synthetic voices that are supported by the current system.
  */
-export interface GetVoicesAction extends AsyncAction {
+ declare interface GetVoicesAction extends AsyncAction {
     type: 'get_voices';
 }
 
 /**
  * Defines an interface that represents a synthetic voice.
  */
-export interface SyntheticVoice {
+ declare interface SyntheticVoice {
     /**
      * Whether this voice is the default synthetic voice.
      */
@@ -2001,6 +2002,82 @@ export interface SyntheticVoice {
      */
     name: string;
 }
+
+
+/**
+ * An event that is used to retrieve the current geolocation of the device.
+ */
+ declare interface GetGeolocationAction extends AsyncAction {
+    type: 'get_geolocation';
+}
+
+declare interface SuccessfulGeolocation {
+    success: true;
+
+    /**
+     * The altitude that the device is near.
+     * Null if the device does not support determining the altitude.
+     */
+     altitude?: number;
+
+     /**
+      * The accuracy of the altitude in meters.
+      * Null if the device does not support altitude.
+      */
+     altitudeAccuracy?: number;
+ 
+     /**
+      * The latitude that the device is near.
+      */
+     latitude: number;
+ 
+     /**
+      * The longitude that the device is near.
+      */
+     longitude: number;
+ 
+     /**
+      * The accuracy of the positional location (latitude and longitude) in meters.
+      */
+     positionalAccuracy: number;
+ 
+     /**
+      * The heading of the device from north in radians.
+      * 0 is true north, Math.PI/2 is east, Math.PI is south and 3/2*Math.PI is west.
+      * This value is null if the device is unable to determine the heading.
+      */
+     heading: number;
+ 
+     /**
+      * The speed that the device is moving in meters per second.
+      * Null if the device does not support calculating the speed.
+      */
+     speed: number;
+ 
+     /**
+      * The timestamp of the geolocation result.
+      */
+     timestamp: number;
+}
+
+declare interface UnsuccessfulGeolocation {
+    success: false;
+
+    /**
+     * The code of the error that occurred.
+     */
+     errorCode?: 'permission_denied' | 'position_unavailable' | 'timeout' | 'unknown';
+
+     /**
+      * The message of the error that occurred.
+      */
+     errorMessage?: string;
+}
+
+/**
+ * Defines an interface that represents a geolocation result.
+ */
+declare type GeoLocation = SuccessfulGeolocation | UnsuccessfulGeolocation;
 
 /**
  * Defines an interface for options that show a payment box.
@@ -3261,6 +3338,12 @@ declare global {
          * @param args The data to log.
          */
         log(...args: any[]): void;
+
+        /**
+         * Gets the geolocation of the device.
+         * Returns a promise that resolves with the location.
+         */
+        getGeolocation(): Promise<GeoLocation>;
 
         /**
          * Shows some HTML to the user.

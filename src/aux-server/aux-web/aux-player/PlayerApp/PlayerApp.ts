@@ -31,6 +31,7 @@ import {
     ON_SERVER_LEAVE_ACTION_NAME,
     SyntheticVoice,
     hasValue,
+    Geolocation,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -886,6 +887,68 @@ export default class PlayerApp extends Vue {
                         };
 
                         window.speechSynthesis.speak(u);
+                    } catch (ex) {
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, ex.toString())
+                        );
+                    }
+                } else if (e.type === 'get_geolocation') {
+                    try {
+                        const promise = new Promise<
+                            GeolocationPosition | GeolocationPositionError
+                        >((resolve, reject) => {
+                            try {
+                                navigator.geolocation.getCurrentPosition(
+                                    (pos) => {
+                                        resolve(pos);
+                                    },
+                                    (err) => {
+                                        resolve(err);
+                                    }
+                                );
+                            } catch (ex) {
+                                reject(ex);
+                            }
+                        });
+
+                        const result = await promise;
+
+                        const value: Geolocation =
+                            'code' in result
+                                ? {
+                                      success: false,
+                                      errorCode:
+                                          result.code ===
+                                          GeolocationPositionError.PERMISSION_DENIED
+                                              ? 'permission_denied'
+                                              : result.code ===
+                                                GeolocationPositionError.POSITION_UNAVAILABLE
+                                              ? 'position_unavailable'
+                                              : result.code ===
+                                                GeolocationPositionError.TIMEOUT
+                                              ? 'timeout'
+                                              : 'unknown',
+                                      errorMessage: result.message,
+                                  }
+                                : {
+                                      success: true,
+                                      timestamp: result.timestamp,
+                                      heading: isNaN(result.coords.heading)
+                                          ? null
+                                          : result.coords.heading,
+                                      speed: result.coords.speed,
+                                      altitude: result.coords.altitude,
+                                      altitudeAccuracy:
+                                          result.coords.altitudeAccuracy,
+                                      latitude: result.coords.latitude,
+                                      longitude: result.coords.longitude,
+                                      positionalAccuracy:
+                                          result.coords.accuracy,
+                                  };
+
+                        simulation.helper.transaction(
+                            asyncResult(e.taskId, value, false)
+                        );
                     } catch (ex) {
                         simulation.helper.transaction(
                             asyncError(e.taskId, ex.toString())

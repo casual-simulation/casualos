@@ -149,6 +149,7 @@ import {
     endRecording,
     speakText,
     getVoices,
+    getGeolocation,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2941,6 +2942,15 @@ describe('AuxLibrary', () => {
             it('should pipe everything to console.log', () => {
                 library.api.os.log('This', 'is', 'a', 'test');
                 expect(logMock).toBeCalledWith('This', 'is', 'a', 'test');
+            });
+        });
+
+        describe('os.getGeolocation()', () => {
+            it('should return a OpenCustomPortal action', () => {
+                const promise: any = library.api.os.getGeolocation();
+                const expected = getGeolocation(context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

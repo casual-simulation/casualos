@@ -191,7 +191,8 @@ export type AsyncActions =
     | BeginRecordingAction
     | EndRecordingAction
     | SpeakTextAction
-    | GetVoicesAction;
+    | GetVoicesAction
+    | GetGeolocationAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2659,6 +2660,85 @@ export interface SyntheticVoice {
 }
 
 /**
+ * An event that is used to retrieve the current geolocation of the device.
+ */
+export interface GetGeolocationAction extends AsyncAction {
+    type: 'get_geolocation';
+}
+
+export interface SuccessfulGeolocation {
+    success: true;
+
+    /**
+     * The altitude that the device is near.
+     * Null if the device does not support determining the altitude.
+     */
+    altitude?: number;
+
+    /**
+     * The accuracy of the altitude in meters.
+     * Null if the device does not support altitude.
+     */
+    altitudeAccuracy?: number;
+
+    /**
+     * The latitude that the device is near.
+     */
+    latitude?: number;
+
+    /**
+     * The longitude that the device is near.
+     */
+    longitude?: number;
+
+    /**
+     * The accuracy of the positional location (latitude and longitude) in meters.
+     */
+    positionalAccuracy?: number;
+
+    /**
+     * The heading of the device from north in radians.
+     * 0 is true north, Math.PI/2 is east, Math.PI is south and 3/2*Math.PI is west.
+     * This value is null if the device is unable to determine the heading.
+     */
+    heading: number;
+
+    /**
+     * The speed that the device is moving in meters per second.
+     * Null if the device does not support calculating the speed.
+     */
+    speed: number;
+
+    /**
+     * The timestamp of the geolocation result.
+     */
+    timestamp: number;
+}
+
+export interface UnsuccessfulGeolocation {
+    success: false;
+
+    /**
+     * The code of the error that occurred.
+     */
+    errorCode?:
+        | 'permission_denied'
+        | 'position_unavailable'
+        | 'timeout'
+        | 'unknown';
+
+    /**
+     * The message of the error that occurred.
+     */
+    errorMessage?: string;
+}
+
+/**
+ * Defines an interface that represents a geolocation result.
+ */
+export type Geolocation = SuccessfulGeolocation | UnsuccessfulGeolocation;
+
+/**
  * Defines an interface that contains recorded data.
  */
 export interface Recording {
@@ -5111,6 +5191,17 @@ export function speakText(
 export function getVoices(taskId?: string | number): GetVoicesAction {
     return {
         type: 'get_voices',
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetGeolocationAction.
+ * @param taskId The ID of the task.
+ */
+export function getGeolocation(taskId?: string | number): GetGeolocationAction {
+    return {
+        type: 'get_geolocation',
         taskId,
     };
 }
