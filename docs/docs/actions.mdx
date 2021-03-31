@@ -6141,6 +6141,98 @@ const data = await experiment.endAudioRecording();
 os.download(data);
 ```
 
+### `experiment.getVoices()`
+
+Gets the list of synthetic voices that are supported by the system.
+Returns a promise that resolves with the list. Each item in the list is an object with the following properties:
+```typescript
+let voice: {
+    /**
+     * Whether this voice is the default synthetic voice.
+     */
+    default: boolean;
+
+    /**
+     * The language that this voice can speak.
+     * This is the BCP 47 tag indicating which language and which region the language is for.
+     * For example, "en-US" represents English for the United States locale.
+     */
+    language: string;
+
+    /**
+     * The name of the voice.
+     */
+    name: string;
+};
+```
+
+#### Examples:
+
+1. Toast the list of voices that are supported.
+```typescript
+const voices = await experiment.getVoices();
+os.toast(voices);
+```
+
+2. Get the first US English voice.
+```typescript
+const voices = await experiment.getVoices();
+const usEnglish = voices.find(v => v.language === "en-US");
+os.toast(usEnglish);
+```
+
+### `experiment.speakText(text, options?)`
+
+Speaks the given text using a synthetic voice and options.
+Note that this is a local effect. The gererated sounds are only played in the current session.
+
+Returns a promise that resolves when the text has been spoken.
+
+The **first parameter** is the text that should be spoken.
+
+The **second parameter** is optional and are the options that should be used to speak the text. It should be an object with the following properties:
+```typescript
+let options: {
+    /**
+     * The voice that the text should be spoken with.
+     * This can be the voice object or the name of a voice.
+     * Note that not all browsers support the same voices.
+     */
+    voice?: string | object;
+
+    /**
+     * The rate that the text should be spoken at.
+     * This can be any positive number.
+     */
+    rate?: number;
+
+    /**
+     * The pitch that the text should be spoken at.
+     * This can be any positive number.
+     */
+    pitch?: number;
+};
+```
+
+#### Examples:
+
+1. Say "hello".
+```typescript
+await experiment.speakText("hello");
+os.toast("We said hello!");
+```
+
+2. Say "hello" using the first US English voice.
+```typescript
+const voices = await experiment.getVoices();
+const usEnglish = voices.find(v => v.language === "en-US");
+
+await experiment.speakText("hello", {
+    voice: usEnglish
+});
+os.toast("Spoken!");
+```
+
 ### `perf.getStats()`
 
 Gets an object that contains statistics about the performance of the server.
