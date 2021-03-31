@@ -8,6 +8,8 @@
 
 -   Added the "bots" snap target for `os.addDropSnap()` and `os.addBotDropSnap()`.
     -   This will cause the dragged bot to snap to other bots.
+-   Added the `experiment.speakText(text, options?)` and `experiment.getVoices()` functions.
+    -   See the documentation for more information.
 
 ### :bug: Bug Fixes
 
