@@ -10,6 +10,8 @@
     -   This will cause the dragged bot to snap to other bots.
 -   Added the `experiment.speakText(text, options?)` and `experiment.getVoices()` functions.
     -   See the documentation for more information.
+-   Added the `os.getGeolocation()` function.
+    -   Returns a promise that resolves with the geolocation of the device.
 
 ### :bug: Bug Fixes
 
