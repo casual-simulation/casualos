@@ -189,7 +189,9 @@ export type AsyncActions =
     | EndAudioRecordingAction
     | CancelAnimationAction
     | BeginRecordingAction
-    | EndRecordingAction;
+    | EndRecordingAction
+    | SpeakTextAction
+    | GetVoicesAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2598,6 +2600,62 @@ export interface BeginRecordingAction extends AsyncAction, RecordingOptions {
  */
 export interface EndRecordingAction extends AsyncAction {
     type: 'end_recording';
+}
+
+export interface SpeakTextOptions {
+    /**
+     * The pitch that the text should be spoken at.
+     */
+    pitch?: number;
+
+    /**
+     * The rate that the text should be spoken at.
+     */
+    rate?: number;
+
+    /**
+     * The name of the voice that the text should be spoken with.
+     */
+    voice?: string;
+}
+
+/**
+ * An event that is used to speak some text using the builtin text to speech engine.
+ */
+export interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
+    type: 'speak_text';
+
+    /**
+     * The text that should be spoken.
+     */
+    text: string;
+}
+
+/**
+ * An event that is used to retrieve the synthetic voices that are supported by the current system.
+ */
+export interface GetVoicesAction extends AsyncAction {
+    type: 'get_voices';
+}
+
+/**
+ * Defines an interface that represents a synthetic voice.
+ */
+export interface SyntheticVoice {
+    /**
+     * Whether this voice is the default synthetic voice.
+     */
+    default: boolean;
+
+    /**
+     * The language that this voice can speak.
+     */
+    language: string;
+
+    /**
+     * The name of the voice.
+     */
+    name: string;
 }
 
 /**
@@ -5023,6 +5081,36 @@ export function beginRecording(
 export function endRecording(taskId?: string | number): EndRecordingAction {
     return {
         type: 'end_recording',
+        taskId,
+    };
+}
+
+/**
+ * Creates a SpeakTextAction.
+ * @param text The text that should be spoken.
+ * @param options The options that should be used.
+ * @param taskId The ID of the task.
+ */
+export function speakText(
+    text: string,
+    options: SpeakTextOptions,
+    taskId?: string | number
+): SpeakTextAction {
+    return {
+        type: 'speak_text',
+        text,
+        ...options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetVoicesAction.
+ * @param taskId The task ID.
+ */
+export function getVoices(taskId?: string | number): GetVoicesAction {
+    return {
+        type: 'get_voices',
         taskId,
     };
 }

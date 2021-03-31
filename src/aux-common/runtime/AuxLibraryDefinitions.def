@@ -234,7 +234,9 @@ declare type AsyncActions =
     | AnimateToBotAction
     | AnimateToPositionAction
     | BeginRecordingAction
-    | EndRecordingAction;
+    | EndRecordingAction
+    | SpeakTextAction
+    | GetVoicesAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1941,6 +1943,63 @@ export interface RecordedFile {
      * The data that the file contains.
      */
     data: Blob;
+}
+
+
+export interface SpeakTextOptions {
+    /**
+     * The pitch that the text should be spoken at.
+     */
+     pitch?: number;
+
+     /**
+      * The rate that the text should be spoken at.
+      */
+     rate?: number;
+ 
+     /**
+      * The name of the voice that the text should be spoken with.
+      */
+     voice?: string;
+}
+
+/**
+ * An event that is used to speak some text using the builtin text to speech engine.
+ */
+export interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
+    type: 'speak_text';
+
+    /**
+     * The text that should be spoken.
+     */
+    text: string;
+}
+
+/**
+ * An event that is used to retrieve the synthetic voices that are supported by the current system.
+ */
+export interface GetVoicesAction extends AsyncAction {
+    type: 'get_voices';
+}
+
+/**
+ * Defines an interface that represents a synthetic voice.
+ */
+export interface SyntheticVoice {
+    /**
+     * Whether this voice is the default synthetic voice.
+     */
+    default: boolean;
+
+    /**
+     * The language that this voice can speak.
+     */
+    language: string;
+
+    /**
+     * The name of the voice.
+     */
+    name: string;
 }
 
 /**
@@ -4479,6 +4538,20 @@ declare global {
          * Returns a promise that resolves with the recorded data.
          */
         endRecording(): Promise<Recording>;
+
+        /**
+         * Speaks the given text.
+         * Returns a promise that resolves when the text has been spoken.
+         * @param text The text that should be spoken.
+         * @param options The options that should be used.
+         */
+        speakText(text: string, options?: { rate?: number, pitch?: number, voice?: string | SyntheticVoice }): Promise<void>;
+
+        /**
+         * Gets the list of synthetic voices that are supported by the system.
+         * Returns a promise that resolves with the voices.
+         */
+        getVoices(): Promise<SyntheticVoice[]>;
     };
 
     /**

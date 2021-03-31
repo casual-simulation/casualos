@@ -147,6 +147,8 @@ import {
     addDropSnap,
     beginRecording,
     endRecording,
+    speakText,
+    getVoices,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -6155,6 +6157,66 @@ describe('AuxLibrary', () => {
             it('should emit a EndRecordingAction', () => {
                 const action: any = library.api.experiment.endRecording();
                 const expected = endRecording(context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('experiment.speakText()', () => {
+            it('should emit a SpeakTextAction', () => {
+                const action: any = library.api.experiment.speakText('abcdef');
+                const expected = speakText('abcdef', {}, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', () => {
+                const action: any = library.api.experiment.speakText('abcdef', {
+                    rate: 2,
+                    pitch: 3,
+                    voice: 'test',
+                });
+                const expected = speakText(
+                    'abcdef',
+                    {
+                        rate: 2,
+                        pitch: 3,
+                        voice: 'test',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should convert synthetic voice objects to a name', () => {
+                const action: any = library.api.experiment.speakText('abcdef', {
+                    rate: 2,
+                    pitch: 3,
+                    voice: {
+                        default: true,
+                        language: 'abc',
+                        name: 'def',
+                    },
+                });
+                const expected = speakText(
+                    'abcdef',
+                    {
+                        rate: 2,
+                        pitch: 3,
+                        voice: 'def',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('experiment.getVoices()', () => {
+            it('should emit a GetVoicesAction', () => {
+                const action: any = library.api.experiment.getVoices();
+                const expected = getVoices(context.tasks.size);
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

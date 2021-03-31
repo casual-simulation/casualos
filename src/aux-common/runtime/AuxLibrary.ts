@@ -212,11 +212,15 @@ import {
     endAudioRecording as calcEndAudioRecording,
     beginRecording as calcBeginRecording,
     endRecording as calcEndRecording,
+    speakText as calcSpeakText,
+    getVoices as calcGetVoices,
     cancelAnimation,
     SnapTarget,
     AddDropSnapTargetsAction,
     RecordingOptions,
     Recording,
+    SyntheticVoice,
+    SpeakTextOptions,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -797,6 +801,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 endAudioRecording,
                 beginRecording,
                 endRecording,
+                speakText,
+                getVoices,
             },
 
             math: {
@@ -3876,6 +3882,46 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function endRecording(): Promise<Recording> {
         const task = context.createTask();
         const action = calcEndRecording(task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Speaks the given text.
+     * Returns a promise that resolves when the text has been spoken.
+     * @param text The text that should be spoken.
+     * @param options The options that should be used.
+     */
+    function speakText(
+        text: string,
+        options: {
+            rate?: number;
+            pitch?: number;
+            voice?: string | SyntheticVoice;
+        } = {}
+    ): Promise<void> {
+        const task = context.createTask();
+        const voice =
+            typeof options.voice === 'object'
+                ? options.voice?.name
+                : options.voice;
+        const action = calcSpeakText(
+            text,
+            {
+                ...options,
+                voice,
+            },
+            task.taskId
+        );
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Gets the list of synthetic voices that are supported by the system.
+     * Returns a promise that resolves with the voices.
+     */
+    function getVoices(): Promise<SyntheticVoice[]> {
+        const task = context.createTask();
+        const action = calcGetVoices(task.taskId);
         return addAsyncAction(task, action);
     }
 
