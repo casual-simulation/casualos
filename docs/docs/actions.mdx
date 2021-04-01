@@ -2700,6 +2700,43 @@ Disables virtual reality on the device.
 os.disableVR();
 ```
 
+### `os.enablePointOfView(center?)`
+
+Enables Point-of-View mode on the device. Useful for getting a "ground level" view in the page portal.
+This will move the camera to the given position, set the camera type to `perspective`, and change the camera controls so that dragging the screen causes the camera to look around.
+
+It is not possible to manually move the camera in this mode, however it is still possible to use <ActionLink action='os.focusOn(botOrPosition, options?)'/> to move the camera.
+
+The **first parameter** is optional and is the position that the camera should be placed at. If not specified, then the camera will be placed at `(0, 0, 0)`.
+
+#### Examples:
+
+1. Enable POV mode.
+```typescript
+os.enablePointOfView();
+```
+
+2. Enable POV mode at `(5, 0, 3)`.
+```typescript
+os.enablePointOfView({
+    x: 5,
+    y: 0,
+    z: 3
+});
+```
+
+### `os.disablePointOfView()`
+
+Disables Point-of-View mode on the device.
+This will return the camera to its original position, set the camera type back to what it was before, and change the camera controls to the defaults.
+
+#### Examples:
+
+1. Disable POV mode.
+```typescript
+os.disablePointOfView();
+```
+
 ### `os.getCurrentServer()`
 
 
