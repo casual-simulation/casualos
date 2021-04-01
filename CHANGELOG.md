@@ -12,6 +12,11 @@
     -   See the documentation for more information.
 -   Added the `os.getGeolocation()` function.
     -   Returns a promise that resolves with the geolocation of the device.
+-   Added the `imuPortal` to be able to stream IMU data into CasualOS.
+    -   When defined on the config bot, the `imuPortalBot` will be updated with IMU data from the device.
+    -   The following tags are used:
+        -   `imuSupported` - Whether reading from the IMU is supported. This will be shortly after the `imuPortal` is defined.
+        -   `deviceRotationX`, `deviceRotationY`, `deviceRotationZ` - The X, Y, and Z values that represent the orientation of the device.
 
 ### :bug: Bug Fixes
 
