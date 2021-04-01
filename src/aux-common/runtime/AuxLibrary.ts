@@ -222,6 +222,9 @@ import {
     Recording,
     SyntheticVoice,
     SpeakTextOptions,
+    EnablePOVAction,
+    disablePOV,
+    enablePOV,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -651,6 +654,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 disableAR,
                 enableVR,
                 disableVR,
+                enablePointOfView,
+                disablePointOfView,
                 download: downloadData,
                 downloadBots,
                 downloadServer,
@@ -1564,6 +1569,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function disableVR(): EnableVRAction {
         return addAction(calcDisableVR());
+    }
+
+    /**
+     * Enables Point-of-View mode.
+     */
+    function enablePointOfView(
+        center: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 }
+    ): EnablePOVAction {
+        return addAction(enablePOV(center));
+    }
+
+    /**
+     * Disables Point-of-View mode.
+     */
+    function disablePointOfView(): EnablePOVAction {
+        return addAction(disablePOV());
     }
 
     /**

@@ -211,7 +211,8 @@ declare type ExtraActions =
     | LoadBotsAction
     | ClearSpaceAction
     | LocalFormAnimationAction
-    | AddDropSnapTargetsAction;
+    | AddDropSnapTargetsAction
+    | EnablePOVAction;
 
 /**
  * Defines a set of possible async action types.
@@ -1674,6 +1675,23 @@ declare interface EnableVRAction {
      * Whether VR features should be enabled.
      */
     enabled: boolean;
+}
+
+/**
+ * Defines an event that enables POV on the device.
+ */
+ export interface EnablePOVAction {
+    type: 'enable_pov';
+
+    /**
+     * Whether POV features should be enabled.
+     */
+    enabled: boolean;
+
+    /**
+     * The point that the camera should be placed at for POV.
+     */
+    center?: { x: number, y: number, z: number };
 }
 
 /**
@@ -3141,6 +3159,16 @@ declare global {
          * Disables Virtual Reality features.
          */
         disableVR(): EnableVRAction;
+
+        /**
+         * Enables Point-of-View mode.
+         */
+        enablePointOfView(center?: Point3D): EnablePOVAction;
+
+        /**
+         * Disables Point-of-View mode.
+         */
+        disablePointOfView(): EnablePOVAction;
 
         /**
          * Gets the dimension that is loaded into the given portal for the player.

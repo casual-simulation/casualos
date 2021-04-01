@@ -95,7 +95,8 @@ export type ExtraActions =
     | ExitFullscreenAction
     | LocalFormAnimationAction
     | GetRemoteCountAction
-    | AddDropSnapTargetsAction;
+    | AddDropSnapTargetsAction
+    | EnablePOVAction;
 
 /**
  * Defines a set of possible async action types.
@@ -2325,6 +2326,23 @@ export interface EnableVRAction {
      * Whether VR features should be enabled.
      */
     enabled: boolean;
+}
+
+/**
+ * Defines an event that enables POV on the device.
+ */
+export interface EnablePOVAction {
+    type: 'enable_pov';
+
+    /**
+     * Whether POV features should be enabled.
+     */
+    enabled: boolean;
+
+    /**
+     * The point that the camera should be placed at for POV.
+     */
+    center?: { x: number; y: number; z: number };
 }
 
 /**
@@ -4631,6 +4649,33 @@ export function disableAR(): EnableARAction {
 export function disableVR(): EnableVRAction {
     return {
         type: 'enable_vr',
+        enabled: false,
+    };
+}
+
+/**
+ * Creates a EnablePOVAction that enables point-of-view mode.
+ * @param center
+ * @returns
+ */
+export function enablePOV(center: {
+    x: number;
+    y: number;
+    z: number;
+}): EnablePOVAction {
+    return {
+        type: 'enable_pov',
+        enabled: true,
+        center,
+    };
+}
+
+/**
+ * Creates a EnablePOVAction that disables point-of-view mode.
+ */
+export function disablePOV(): EnablePOVAction {
+    return {
+        type: 'enable_pov',
         enabled: false,
     };
 }

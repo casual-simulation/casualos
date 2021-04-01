@@ -484,6 +484,12 @@ export class PlayerGame extends Game {
                         TweenCameraToOperation
                     );
                     sim.helper.transaction(asyncResult(e.taskId, null));
+                } else if (e.type === 'enable_pov') {
+                    if (e.enabled) {
+                        this.startPOV(e.center);
+                    } else {
+                        this.stopPOV();
+                    }
                 }
             })
         );

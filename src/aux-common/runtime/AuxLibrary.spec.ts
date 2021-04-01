@@ -150,6 +150,8 @@ import {
     speakText,
     getVoices,
     getGeolocation,
+    enablePOV,
+    disablePOV,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1866,6 +1868,42 @@ describe('AuxLibrary', () => {
                 const action = library.api.os.disableVR();
                 expect(action).toEqual(disableVR());
                 expect(context.actions).toEqual([disableVR()]);
+            });
+        });
+
+        describe('os.enablePointOfView()', () => {
+            it('should issue an EnablePOVAction', () => {
+                const action = library.api.os.enablePointOfView({
+                    x: 0,
+                    y: 1,
+                    z: 2,
+                });
+                const expected = enablePOV({
+                    x: 0,
+                    y: 1,
+                    z: 2,
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should default the center to 0,0,0', () => {
+                const action = library.api.os.enablePointOfView();
+                const expected = enablePOV({
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.disablePointOfView()', () => {
+            it('should issue an EnablePOVAction', () => {
+                const action = library.api.os.disablePointOfView();
+                expect(action).toEqual(disablePOV());
+                expect(context.actions).toEqual([disablePOV()]);
             });
         });
 

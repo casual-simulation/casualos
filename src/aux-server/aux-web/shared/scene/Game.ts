@@ -708,7 +708,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
         );
     }
 
-    protected startPOV(center: Vector3) {
+    protected startPOV(center: { x: number; y: number; z: number }) {
         if (this._isPOV) {
             console.log('[Game] POV already started!');
             return;
