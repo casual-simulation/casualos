@@ -568,6 +568,11 @@ export type BotLOD = 'normal' | 'min' | 'max';
 export type PortalCameraControlsMode = 'player' | false;
 
 /**
+ * The possible camera types.
+ */
+export type PortalCameraType = 'orthographic' | 'perspective';
+
+/**
  * The default bot shape.
  */
 export const DEFAULT_BOT_SHAPE: BotShape = 'cube';
@@ -1481,6 +1486,7 @@ export const KNOWN_TAGS: string[] = [
     'portalCameraControls',
     'portalShowFocusPoint',
     'portalDisableCanvasTransparency',
+    'portalCameraType',
     'inventoryPortalHeight',
     'inventoryPortalResizable',
     'wristPortalHeight',

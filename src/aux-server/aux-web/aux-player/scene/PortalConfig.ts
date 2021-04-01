@@ -13,6 +13,8 @@ import {
     calculateStringTagValue,
     PortalCameraControlsMode,
     calculatePortalCameraControlsMode,
+    PortalCameraType,
+    getCameraType,
 } from '@casual-simulation/aux-common';
 import { Color, Texture } from '@casual-simulation/three';
 import {
@@ -49,6 +51,7 @@ export class PortalConfig implements SubscriptionLike {
     private _gridScale: number;
     private _disableCanvasTransparency: boolean = null;
     private _grid3D: BoundedGrid3D;
+    private _cameraType: PortalCameraType;
 
     private _onGridScaleUpdated: Subject<void>;
 
@@ -247,6 +250,10 @@ export class PortalConfig implements SubscriptionLike {
         return this._grid3D;
     }
 
+    get cameraType() {
+        return this._cameraType;
+    }
+
     unsubscribe(): void {
         this._sub.unsubscribe();
     }
@@ -308,6 +315,7 @@ export class PortalConfig implements SubscriptionLike {
         this._showFocusPoint = null;
         this._cameraControlsMode = null;
         this._disableCanvasTransparency = null;
+        this._cameraType = null;
         this.gridScale = this._getDefaultGridScale();
     }
 
@@ -418,6 +426,7 @@ export class PortalConfig implements SubscriptionLike {
             'auxPortalDisableCanvasTransparency',
             null
         );
+        this._cameraType = getCameraType(calc, bot);
         this.gridScale = calculateGridScale(calc, bot);
 
         // TODO:

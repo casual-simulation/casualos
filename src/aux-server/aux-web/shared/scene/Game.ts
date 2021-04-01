@@ -70,6 +70,10 @@ export abstract class Game implements AuxBotVisualizerFinder {
     mainViewport: Viewport = null;
     showMainCameraHome: boolean;
 
+    /**
+     * The WebXR session that is currently active.
+     * Null if no XR session is active.
+     */
     xrSession: any = null;
     xrMode: 'immersive-ar' | 'immersive-vr' = null;
 

@@ -52,6 +52,7 @@ import {
     MenuBotHoverStyle,
     MenuBotResolvedHoverStyle,
     DEFAULT_MENU_BOT_HOVER_STYLE,
+    PortalCameraType,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -1550,6 +1551,25 @@ export function getBotTagPortalAnchorPoint(
         return mode;
     }
     return DEFAULT_TAG_PORTAL_ANCHOR_POINT;
+}
+
+/**
+ * Gets the camera type for the given portal bot.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getCameraType(
+    calc: BotCalculationContext,
+    bot: Bot
+): PortalCameraType {
+    const mode = <PortalCameraType>(
+        calculateBotValue(calc, bot, 'auxPortalCameraType')
+    );
+
+    if (mode === 'orthographic' || mode === 'perspective') {
+        return mode;
+    }
+    return 'orthographic';
 }
 
 /**
