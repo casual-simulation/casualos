@@ -17,6 +17,10 @@
     -   The following tags are used:
         -   `imuSupported` - Whether reading from the IMU is supported. This will be shortly after the `imuPortal` is defined.
         -   `deviceRotationX`, `deviceRotationY`, `deviceRotationZ` - The X, Y, and Z values that represent the orientation of the device.
+-   Added the `portalCameraType` tag to allow switching between `perspective` and `orthographic` projections.
+    -   Camera projections act similarly to real world camera lenses except that they avoid certain limitations like focal lengths.
+    -   `orthographic` - This projection preserves parallel lines from the 3D scene in the output 2D image. As a result, same-sized objects appear the same size on the screen, regardless of how far away they are from the camera.
+    -   `perspective` - This projection makes same-sized objects appear larger or smaller based on how far away they are from the camera. Closer objects appear larger and vice versa.
 
 ### :bug: Bug Fixes
 
