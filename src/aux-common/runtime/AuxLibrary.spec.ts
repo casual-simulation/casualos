@@ -3626,9 +3626,9 @@ describe('AuxLibrary', () => {
         describe('server.serialStream()', () => {
             it('should send a SerialStreamAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialStream('Brush01');
+                const action: any = library.api.server.serialStream(this, 'Brush01');
                 const expected = remote(
-                    serialStreamPin('Brush01'),
+                    serialStreamPin(this, 'Brush01'),
                     undefined,
                     undefined,
                     'task1'
@@ -3639,7 +3639,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialStream('Brush01');
+                library.api.server.serialStream(this, 'Brush01');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);

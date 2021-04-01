@@ -2701,12 +2701,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Parses and returns the serial stream to the event tag 'onSerialData'.
+     * @param bot The bot you want data streamed to. The bot needs the 'onSerialData' tag.
      * @param name A friendly device name. Example: Brush01
      */
-    function serialStream(name: string) {
+    function serialStream(bot: Bot[], name: string) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialStreamPin(name),
+            serialStreamPin(bot, name),
             undefined,
             undefined,
             task.taskId

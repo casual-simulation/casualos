@@ -3696,9 +3696,10 @@ declare global {
         
         /**
          * Parses and returns the serial stream to the event tag 'onSerialData'.
+         * @param bot The bot you want data streamed to. The bot needs the 'onSerialData' tag.
          * @param name A friendly device name. Example: Brush01
          */
-        serialStream(name: string): Promise<void>;
+        serialStream(bot: Bot[], name: string): Promise<void>;
 
         /**
          * Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
