@@ -21,6 +21,10 @@
     -   Camera projections act similarly to real world camera lenses except that they avoid certain limitations like focal lengths.
     -   `orthographic` - This projection preserves parallel lines from the 3D scene in the output 2D image. As a result, same-sized objects appear the same size on the screen, regardless of how far away they are from the camera.
     -   `perspective` - This projection makes same-sized objects appear larger or smaller based on how far away they are from the camera. Closer objects appear larger and vice versa.
+-   Added the `os.enablePointOfView(center?)` and `os.disablePointOfView()` functions.
+    -   These are similar to `os.enableVR()` or `os.enableAR()` and can be used to give the player a "ground level" perspective in the page portal.
+    -   `os.enablePointOfView(center?)` - Enables POV mode by moving the camera to the given position, setting the camera type to `perspective`, and changing the controls so that it is only possible to rotate the camera.
+    -   `os.disablePointOfView()` - Disables POV mode by resetting the camera, camera type, and controls.
 
 ### :bug: Bug Fixes
 
