@@ -1331,6 +1331,11 @@ export const SHEET_PORTAL: string = 'sheetPortal';
 export const IDE_PORTAL: string = 'idePortal';
 
 /**
+ * The name of the IMU portal.
+ */
+export const IMU_PORTAL: string = 'imuPortal';
+
+/**
  * The prefix for DNA Tags.
  */
 export const DNA_TAG_PREFIX: string = '🧬';
@@ -1347,6 +1352,7 @@ export const KNOWN_PORTALS: string[] = [
     'pagePortal',
     SHEET_PORTAL,
     IDE_PORTAL,
+    IMU_PORTAL,
     'inventoryPortal',
     'menuPortal',
     'leftWristPortal',
@@ -1385,6 +1391,12 @@ export const KNOWN_TAGS: string[] = [
     DATA_PORTAL,
     TAG_PORTAL,
     TAG_PORTAL_SPACE,
+
+    IMU_PORTAL,
+    'imuSupported',
+    'deviceRotationX',
+    'deviceRotationY',
+    'deviceRotationZ',
 
     'cameraPositionX',
     'cameraPositionY',
