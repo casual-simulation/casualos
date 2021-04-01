@@ -1946,6 +1946,42 @@ The Y position of the focus point for the player's camera in the page portal.
 
 The Z position of the focus point for the player's camera in the page portal.
 
+### `imuSupported`
+
+<Badges>
+    <AutomaticBadge/>
+    <ImuPortalBadge/>
+</Badges>
+
+Whether IMU data is supported on this device.
+
+### `deviceRotationX`
+
+<Badges>
+    <AutomaticBadge/>
+    <ImuPortalBadge/>
+</Badges>
+
+The X rotation of the device as determined by the IMU.
+
+### `deviceRotationY`
+
+<Badges>
+    <AutomaticBadge/>
+    <ImuPortalBadge/>
+</Badges>
+
+The Y rotation of the device as determined by the IMU.
+
+### `deviceRotationZ`
+
+<Badges>
+    <AutomaticBadge/>
+    <ImuPortalBadge/>
+</Badges>
+
+The Z rotation of the device as determined by the IMU.
+
 ## History Tags
 
 History tags are tags that are automatically applied to bots in the `history` space.
@@ -2114,6 +2150,19 @@ const tag = "abc";
 playerBot.tags.tagPortal = getID(configBot) + "." + tag;
 playerBot.tags.tagPortalSpace = "tempLocal";
 ```
+
+### `imuPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+Determines if the IMU portal should be constantly reading IMU (inertial measurement unit) data for the device.
+When set to `true`, CasualOS will start updating the `imuPortalBot` with the data from the IMU.
+
+Note that not all devices support the IMU portal. In particular, laptops and desktop computers will likely not support the IMU portal while mobile devices probably will.
+
+Only available on the config bot.
 
 ### `dataPortal`
 
