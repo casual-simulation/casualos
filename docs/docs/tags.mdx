@@ -1330,6 +1330,27 @@ When a bot is between the focus point and the camera, then focus events will tri
   </PossibleValueCode>
 </PossibleValuesTable>
 
+### `portalCameraType`
+<Badges>
+    <PagePortalBadge/>
+</Badges>
+
+The type of camera that should be used for the portal.
+The "type" of a camera determines how objects are visualized and how they appear. Conceptually, camera types are similar to camera lenses.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='orthographic'>
+    The camera uses an orthographic projection.
+    This camera type preserves parallel lines so lines that are parallel to each other will remain parallel in the 2D image.
+    As a consequence, objects that are the same size always appear the same size no matter how far away they are from the camera. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='perspective'>
+    The camera uses a perspective projection.
+    This camera type makes objects appear larger or smaller based on how far away they are from the camera.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
 ### `portalDisableCanvasTransparency`
 <Badges>
     <PagePortalBadge/>
