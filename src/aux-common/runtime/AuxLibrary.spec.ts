@@ -147,6 +147,11 @@ import {
     addDropSnap,
     beginRecording,
     endRecording,
+    speakText,
+    getVoices,
+    getGeolocation,
+    enablePOV,
+    disablePOV,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1866,6 +1871,42 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.enablePointOfView()', () => {
+            it('should issue an EnablePOVAction', () => {
+                const action = library.api.os.enablePointOfView({
+                    x: 0,
+                    y: 1,
+                    z: 2,
+                });
+                const expected = enablePOV({
+                    x: 0,
+                    y: 1,
+                    z: 2,
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should default the center to 0,0,0', () => {
+                const action = library.api.os.enablePointOfView();
+                const expected = enablePOV({
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.disablePointOfView()', () => {
+            it('should issue an EnablePOVAction', () => {
+                const action = library.api.os.disablePointOfView();
+                expect(action).toEqual(disablePOV());
+                expect(context.actions).toEqual([disablePOV()]);
+            });
+        });
+
         describe('os.download()', () => {
             it('should emit a DownloadAction with the string data', () => {
                 const action = library.api.os.download('abcdef', 'test.txt');
@@ -2939,6 +2980,15 @@ describe('AuxLibrary', () => {
             it('should pipe everything to console.log', () => {
                 library.api.os.log('This', 'is', 'a', 'test');
                 expect(logMock).toBeCalledWith('This', 'is', 'a', 'test');
+            });
+        });
+
+        describe('os.getGeolocation()', () => {
+            it('should return a OpenCustomPortal action', () => {
+                const promise: any = library.api.os.getGeolocation();
+                const expected = getGeolocation(context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
@@ -6155,6 +6205,66 @@ describe('AuxLibrary', () => {
             it('should emit a EndRecordingAction', () => {
                 const action: any = library.api.experiment.endRecording();
                 const expected = endRecording(context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('experiment.speakText()', () => {
+            it('should emit a SpeakTextAction', () => {
+                const action: any = library.api.experiment.speakText('abcdef');
+                const expected = speakText('abcdef', {}, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', () => {
+                const action: any = library.api.experiment.speakText('abcdef', {
+                    rate: 2,
+                    pitch: 3,
+                    voice: 'test',
+                });
+                const expected = speakText(
+                    'abcdef',
+                    {
+                        rate: 2,
+                        pitch: 3,
+                        voice: 'test',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should convert synthetic voice objects to a name', () => {
+                const action: any = library.api.experiment.speakText('abcdef', {
+                    rate: 2,
+                    pitch: 3,
+                    voice: {
+                        default: true,
+                        language: 'abc',
+                        name: 'def',
+                    },
+                });
+                const expected = speakText(
+                    'abcdef',
+                    {
+                        rate: 2,
+                        pitch: 3,
+                        voice: 'def',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('experiment.getVoices()', () => {
+            it('should emit a GetVoicesAction', () => {
+                const action: any = library.api.experiment.getVoices();
+                const expected = getVoices(context.tasks.size);
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

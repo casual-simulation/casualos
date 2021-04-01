@@ -15,6 +15,7 @@ import {
     hasValue,
     AnimateToBotAction,
     AnimateToOptions,
+    DEFAULT_WORKSPACE_GRID_SCALE,
 } from '@casual-simulation/aux-common';
 import {
     CameraRig,
@@ -41,6 +42,7 @@ import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { AuxBot3D } from './AuxBot3D';
 import { Simulation } from '@casual-simulation/aux-vm';
+import { convertCasualOSPositionToThreePosition } from './grid/Grid';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -70,6 +72,10 @@ export abstract class Game implements AuxBotVisualizerFinder {
     mainViewport: Viewport = null;
     showMainCameraHome: boolean;
 
+    /**
+     * The WebXR session that is currently active.
+     * Null if no XR session is active.
+     */
     xrSession: any = null;
     xrMode: 'immersive-ar' | 'immersive-vr' = null;
 
@@ -77,6 +83,16 @@ export abstract class Game implements AuxBotVisualizerFinder {
     onBotUpdated: ArgEvent<Bot> = new ArgEvent<Bot>();
     onBotRemoved: ArgEvent<Bot> = new ArgEvent<Bot>();
     onCameraRigTypeChanged: ArgEvent<CameraRig> = new ArgEvent<CameraRig>();
+
+    private _isPOV: boolean = false;
+
+    /**
+     * Gets whether the game is currently in an immersive viewing mode.
+     * Generally, this means VR or AR but it can also be POV mode.
+     */
+    get isImmersive() {
+        return !!this.xrSession || this._isPOV;
+    }
 
     private _onUpdate: Subject<void> = new Subject<void>();
 
@@ -342,7 +358,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
     }
 
     /**
-     * Animates the main camera to the given position.
+     * Animates the main camera to view the given position.
      * @param cameraRig The camera rig to tween.
      * @param position The position to animate to.
      * @param zoomValue The zoom value to use.
@@ -690,6 +706,57 @@ export abstract class Game implements AuxBotVisualizerFinder {
         this.xrSession.requestAnimationFrame((time: any, nextXRFrame: any) =>
             this.frameUpdate(nextXRFrame)
         );
+    }
+
+    protected startPOV(center: { x: number; y: number; z: number }) {
+        if (this._isPOV) {
+            console.log('[Game] POV already started!');
+            return;
+        }
+        console.log('[Game] Start POV');
+
+        this._isPOV = true;
+
+        // POV requires that we be using a perspective camera.
+        this.setCameraType('perspective');
+
+        // Remove the camera toggle from the menu while in XR.
+        this.removeSidebarItem('toggle_camera_type');
+
+        document.documentElement.classList.add('pov-app');
+
+        if (center) {
+            const sims = this.getSimulations();
+            const gridScale =
+                sims.length > 0
+                    ? sims[0].getDefaultGridScale()
+                    : DEFAULT_WORKSPACE_GRID_SCALE;
+            this.mainCameraRig.mainCamera.position.copy(
+                convertCasualOSPositionToThreePosition(
+                    center.x,
+                    center.y,
+                    center.z,
+                    gridScale
+                )
+            );
+            this.mainCameraRig.mainCamera.rotation.set(0, 0, 0);
+            this.mainCameraRig.mainCamera.updateMatrixWorld(true);
+        }
+    }
+
+    protected stopPOV() {
+        if (!this._isPOV) {
+            console.log('[Game] POV already stopped!');
+            return;
+        }
+        console.log('[Game] Stop POV');
+
+        this._isPOV = false;
+
+        // Go back to the orthographic camera type when exiting XR.
+        this.setCameraType('orthographic');
+
+        document.documentElement.classList.remove('pov-app');
     }
 
     protected handleXRSessionEnded() {

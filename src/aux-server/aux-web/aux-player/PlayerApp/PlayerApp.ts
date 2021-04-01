@@ -29,6 +29,9 @@ import {
     asyncResult,
     ON_SERVER_JOINED_ACTION_NAME,
     ON_SERVER_LEAVE_ACTION_NAME,
+    SyntheticVoice,
+    hasValue,
+    Geolocation,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -67,6 +70,20 @@ import CustomPortals from '../../shared/vue-components/CustomPortals/CustomPorta
 import IdePortal from '../../shared/vue-components/IdePortal/IdePortal';
 import { AudioRecorder, AudioRecording } from '../../shared/AudioRecorder';
 import { MediaRecording, Recorder } from '../../shared/Recorder';
+import ImuPortal from '../../shared/vue-components/ImuPortal/ImuPortal';
+
+let syntheticVoices = [] as SyntheticVoice[];
+
+window.speechSynthesis.onvoiceschanged = (e) => {
+    syntheticVoices = window.speechSynthesis.getVoices().map(
+        (v) =>
+            ({
+                default: v.default,
+                language: v.lang,
+                name: v.name,
+            } as SyntheticVoice)
+    );
+};
 
 @Component({
     components: {
@@ -91,6 +108,7 @@ import { MediaRecording, Recorder } from '../../shared/Recorder';
         checkout: Checkout,
         login: LoginPopup,
         authorize: AuthorizePopup,
+        'imu-portal': ImuPortal,
     },
 })
 export default class PlayerApp extends Vue {
@@ -813,6 +831,130 @@ export default class PlayerApp extends Vue {
                                 asyncError(e.taskId, err.toString())
                             );
                         }
+                    }
+                } else if (e.type === 'get_voices') {
+                    try {
+                        const voices =
+                            syntheticVoices.length > 0
+                                ? syntheticVoices
+                                : window.speechSynthesis.getVoices().map(
+                                      (v) =>
+                                          ({
+                                              default: v.default,
+                                              language: v.lang,
+                                              name: v.name,
+                                          } as SyntheticVoice)
+                                  );
+
+                        simulation.helper.transaction(
+                            asyncResult(e.taskId, voices, false)
+                        );
+                    } catch (ex) {
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, ex.toString())
+                        );
+                    }
+                } else if (e.type === 'speak_text') {
+                    try {
+                        const u = new SpeechSynthesisUtterance(e.text);
+
+                        if (e.voice) {
+                            const voice = window.speechSynthesis
+                                .getVoices()
+                                .find((v) => v.name === e.voice);
+
+                            if (voice) {
+                                u.voice = voice;
+                            }
+                        }
+
+                        if (hasValue(e.rate)) {
+                            u.rate = e.rate;
+                        }
+
+                        if (hasValue(e.pitch)) {
+                            u.pitch = e.pitch;
+                        }
+
+                        u.onerror = (event) => {
+                            simulation.helper.transaction(
+                                asyncError(e.taskId, event.error)
+                            );
+                        };
+
+                        u.onend = (event) => {
+                            simulation.helper.transaction(
+                                asyncResult(e.taskId, null)
+                            );
+                        };
+
+                        window.speechSynthesis.speak(u);
+                    } catch (ex) {
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, ex.toString())
+                        );
+                    }
+                } else if (e.type === 'get_geolocation') {
+                    try {
+                        const promise = new Promise<
+                            GeolocationPosition | GeolocationPositionError
+                        >((resolve, reject) => {
+                            try {
+                                navigator.geolocation.getCurrentPosition(
+                                    (pos) => {
+                                        resolve(pos);
+                                    },
+                                    (err) => {
+                                        resolve(err);
+                                    }
+                                );
+                            } catch (ex) {
+                                reject(ex);
+                            }
+                        });
+
+                        const result = await promise;
+
+                        const value: Geolocation =
+                            'code' in result
+                                ? {
+                                      success: false,
+                                      errorCode:
+                                          result.code ===
+                                          GeolocationPositionError.PERMISSION_DENIED
+                                              ? 'permission_denied'
+                                              : result.code ===
+                                                GeolocationPositionError.POSITION_UNAVAILABLE
+                                              ? 'position_unavailable'
+                                              : result.code ===
+                                                GeolocationPositionError.TIMEOUT
+                                              ? 'timeout'
+                                              : 'unknown',
+                                      errorMessage: result.message,
+                                  }
+                                : {
+                                      success: true,
+                                      timestamp: result.timestamp,
+                                      heading: isNaN(result.coords.heading)
+                                          ? null
+                                          : result.coords.heading,
+                                      speed: result.coords.speed,
+                                      altitude: result.coords.altitude,
+                                      altitudeAccuracy:
+                                          result.coords.altitudeAccuracy,
+                                      latitude: result.coords.latitude,
+                                      longitude: result.coords.longitude,
+                                      positionalAccuracy:
+                                          result.coords.accuracy,
+                                  };
+
+                        simulation.helper.transaction(
+                            asyncResult(e.taskId, value, false)
+                        );
+                    } catch (ex) {
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, ex.toString())
+                        );
                     }
                 }
             }),

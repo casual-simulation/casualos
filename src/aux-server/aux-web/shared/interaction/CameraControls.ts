@@ -9,16 +9,21 @@ import {
     OrthographicCamera,
     Plane,
     Camera,
+    Color,
+    Euler,
+    Matrix3,
 } from '@casual-simulation/three';
 import { InputType, MouseButtonId, Input } from '../../shared/scene/Input';
-import { lerp, normalize } from '@casual-simulation/aux-common';
+import { lerp } from '@casual-simulation/aux-common';
 import { Viewport } from '../scene/Viewport';
 import { Game } from '../scene/Game';
 import {
     cameraForwardRay,
+    objectForwardRay,
     objectWorldDirectionRay,
     objectWorldForwardRay,
 } from '../scene/SceneUtils';
+import { Physics } from '../scene/Physics';
 
 export class CameraControls {
     // "target" sets the location of focus, where the object orbits around
@@ -77,6 +82,13 @@ export class CameraControls {
     // Set to false to disable use of the keys
     public enableKeys: boolean = true;
 
+    // Whether special controls are enabled in immersive mode.
+    public enableImmersive: boolean = true;
+
+    // The position override that the camera should look at.
+    // Overrides the default behavior of looking at the target location.
+    public immersiveLookPosition: Vector3 = null;
+
     public zoomOffset: number = 0;
 
     // for reset
@@ -124,6 +136,10 @@ export class CameraControls {
         finger0: new Vector2(),
         finger1: new Vector2(),
     };
+
+    // The midpoint between the two fingers when the rotate gesture
+    // is started.
+    private originMidpoint: Vector3;
 
     private touchRotateEnd: TouchRotate = {
         finger0: new Vector2(),
@@ -173,6 +189,13 @@ export class CameraControls {
         } else {
             return this._camera.zoom;
         }
+    }
+
+    /**
+     * Gets whether immersive controls are currently being used.
+     */
+    get usingImmersiveControls() {
+        return this._game.isImmersive && this.enableImmersive;
     }
 
     constructor(
@@ -523,6 +546,7 @@ export class CameraControls {
         this.updateStates();
         if (!this._enabled) return;
         if (this._game.xrSession && !this.updateInARMode) return;
+        if (this._game.isImmersive && !this.enableImmersive) return;
         this.updateInput();
         this.updateCamera();
     }
@@ -572,6 +596,40 @@ export class CameraControls {
     }
 
     private updateTouchMovement(input: Input) {
+        if (this.usingImmersiveControls) {
+            return this.updateImmersiveTouchMovement(input);
+        } else {
+            return this.updateNormalTouchMovement(input);
+        }
+    }
+
+    private updateImmersiveTouchMovement(input: Input) {
+        if (input.getTouchCount() === 1) {
+            if (input.getTouchHeld(0) && this.state === STATE.ROTATE) {
+                this.panEnd.copy(input.getTouchScreenPos(0));
+                this.panDelta
+                    .subVectors(this.panEnd, this.panStart)
+                    .multiplyScalar(-1);
+                const ray = Physics.screenPosToRay(this.panDelta, this._camera);
+                const position = ray.origin;
+                position.add(ray.direction);
+                position.sub(this._camera.position);
+                const spherical = new Spherical().setFromVector3(position);
+                // restrict phi to be between desired limits
+                spherical.phi = Math.max(
+                    0.1,
+                    Math.min(Math.PI - 0.1, spherical.phi)
+                );
+                position.setFromSpherical(spherical);
+                position.add(this._camera.position);
+
+                this.immersiveLookPosition = position;
+                this.panStart.copy(this.panEnd);
+            }
+        }
+    }
+
+    private updateNormalTouchMovement(input: Input) {
         //
         // Pan/Dolly/Rotate [Move]
         //
@@ -631,6 +689,7 @@ export class CameraControls {
                 let cross = startDir.x * endDir.y - startDir.y * endDir.x;
                 if (cross >= 0) xAngle = -xAngle;
                 this.rotateLeft(xAngle);
+
                 // Rotate Y (vertical delta of midpoint between fingers).
                 let startMidpoint = new Vector2(
                     (this.touchRotateStart.finger0.x +
@@ -651,10 +710,10 @@ export class CameraControls {
                 let midpointDelta = new Vector2()
                     .subVectors(endMidpoint, startMidpoint)
                     .multiplyScalar(this.rotateSpeed);
+
                 let yAngle =
                     (2 * Math.PI * midpointDelta.y) /
                     this._game.gameView.gameView.clientHeight;
-                ``;
                 this.rotateUp(yAngle);
                 // Set rotate start positions to the current end positions for the next frame.
                 this.touchRotateStart.finger0.copy(this.touchRotateEnd.finger0);
@@ -664,6 +723,33 @@ export class CameraControls {
     }
 
     private updateTouchState(input: Input) {
+        if (this.usingImmersiveControls) {
+            return this.updateImmersiveTouchState(input);
+        } else {
+            return this.updateNormalTouchState(input);
+        }
+    }
+
+    private updateImmersiveTouchState(input: Input) {
+        if (input.getTouchCount() === 1) {
+            if (input.getTouchDown(0) && this.enableRotate) {
+                this.zooming = false;
+                this._setRot = false;
+                // Pan start.
+                this.panStart.copy(input.getTouchScreenPos(0));
+                this.state = STATE.ROTATE;
+            }
+        }
+
+        //
+        // Pan/Dolly/Rotate [End]
+        //
+        if (input.getTouchCount() === 0) {
+            this.state = STATE.NONE;
+        }
+    }
+
+    private updateNormalTouchState(input: Input) {
         //
         // Pan/Dolly/Rotate [Start]
         //
@@ -699,6 +785,33 @@ export class CameraControls {
                     // Rotate start.
                     this.touchRotateStart.finger0 = input.getTouchPagePos(0);
                     this.touchRotateStart.finger1 = input.getTouchPagePos(1);
+
+                    const finger0 = input.getTouchScreenPos(0);
+                    const finger1 = input.getTouchScreenPos(1);
+
+                    const originFinger0Ray = Physics.rayAtScreenPos(
+                        finger0,
+                        this._camera
+                    );
+                    const originFinger1Ray = Physics.rayAtScreenPos(
+                        finger1,
+                        this._camera
+                    );
+                    const originFinger0Point = Physics.pointOnPlane(
+                        originFinger0Ray,
+                        new Plane(new Vector3(0, 1, 0))
+                    );
+                    const originFinger1Point = Physics.pointOnPlane(
+                        originFinger1Ray,
+                        new Plane(new Vector3(0, 1, 0))
+                    );
+
+                    this.originMidpoint = new Vector3(
+                        (originFinger0Point.x + originFinger1Point.x) / 2,
+                        (originFinger0Point.y + originFinger1Point.y) / 2,
+                        (originFinger0Point.z + originFinger1Point.z) / 2
+                    );
+
                     this.state = STATE.TOUCH_ROTATE_ZOOM;
                 }
             } else if (input.getTouchUp(0) || input.getTouchUp(1)) {
@@ -721,6 +834,42 @@ export class CameraControls {
     }
 
     private updateMouseMovement(input: Input) {
+        if (this.usingImmersiveControls) {
+            return this.updateImmersiveMouseMovement(input);
+        } else {
+            return this.updateNormalMouseMovement(input);
+        }
+    }
+
+    private updateImmersiveMouseMovement(input: Input) {
+        if (
+            (input.getMouseButtonHeld(MouseButtonId.Left) ||
+                input.getMouseButtonHeld(MouseButtonId.Right)) &&
+            this.state === STATE.ROTATE
+        ) {
+            this.panEnd.copy(input.getMouseScreenPos());
+            this.panDelta
+                .subVectors(this.panEnd, this.panStart)
+                .multiplyScalar(-1);
+            const ray = Physics.screenPosToRay(this.panDelta, this._camera);
+            const position = ray.origin;
+            position.add(ray.direction);
+            position.sub(this._camera.position);
+            const spherical = new Spherical().setFromVector3(position);
+            // restrict phi to be between desired limits
+            spherical.phi = Math.max(
+                0.1,
+                Math.min(Math.PI - 0.1, spherical.phi)
+            );
+            position.setFromSpherical(spherical);
+            position.add(this._camera.position);
+
+            this.immersiveLookPosition = position;
+            this.panStart.copy(this.panEnd);
+        }
+    }
+
+    private updateNormalMouseMovement(input: Input) {
         //
         // Pan/Dolly/Rotate [Move]
         //
@@ -797,6 +946,40 @@ export class CameraControls {
     }
 
     private updateMouseState(input: Input) {
+        if (this.usingImmersiveControls) {
+            return this.updateImmersiveMouseState(input);
+        } else {
+            return this.updateNormalMouseState(input);
+        }
+    }
+
+    private updateImmersiveMouseState(input: Input) {
+        if (
+            (input.getMouseButtonDown(MouseButtonId.Left) ||
+                input.getMouseButtonDown(MouseButtonId.Right)) &&
+            this.enableRotate
+        ) {
+            this.zooming = false;
+            this._setRot = false;
+            // Pan start.
+            this.panStart.copy(input.getMouseScreenPos());
+            this.state = STATE.ROTATE;
+        }
+
+        //
+        // Pan/Dolly/Rotate [End]
+        //
+        if (
+            input.getMouseButtonUp(MouseButtonId.Left) ||
+            input.getMouseButtonUp(MouseButtonId.Middle) ||
+            input.getMouseButtonUp(MouseButtonId.Right) ||
+            (!input.getWheelMoved() && this.state === STATE.PINCH_DOLLY)
+        ) {
+            this.state = STATE.NONE;
+        }
+    }
+
+    private updateNormalMouseState(input: Input) {
         //
         // Pan/Dolly/Rotate [Start]
         //
@@ -867,7 +1050,15 @@ export class CameraControls {
             Math.min(this.maxAzimuthAngle, theta)
         );
 
-        phi = Math.max(this.minPolarAngle, Math.min(this.maxPolarAngle, phi));
+        phi = Math.max(
+            this.usingImmersiveControls ? 0.1 : this.minPolarAngle,
+            Math.min(
+                this.usingImmersiveControls
+                    ? Math.PI - 0.1
+                    : this.maxPolarAngle,
+                phi
+            )
+        );
 
         // Prevent phi from being exactly 0.
         // This is because the lookAt function in three.js
@@ -908,7 +1099,30 @@ export class CameraControls {
         let lastQuaternion = new Quaternion();
         let position = this._camera.position;
 
-        offset.copy(position).sub(this.target);
+        let lookTarget = this.target;
+        let rotationTarget = this.target;
+
+        // Rotate the target position around the touch origin midpoint
+        // before applying the spherical rotation to the camera
+        if (this.state === STATE.TOUCH_ROTATE_ZOOM && this.originMidpoint) {
+            rotationTarget = this.originMidpoint;
+
+            lookTarget.sub(this.originMidpoint);
+            const s = new Spherical().setFromVector3(lookTarget);
+
+            s.theta += this.sphericalDelta.theta;
+            s.theta = Math.max(
+                this.minAzimuthAngle,
+                Math.min(this.maxAzimuthAngle, s.theta)
+            );
+            s.makeSafe();
+
+            lookTarget.setFromSpherical(s);
+
+            lookTarget.add(this.originMidpoint);
+        }
+
+        offset.copy(position).sub(rotationTarget);
 
         // rotate offset to "y-axis-is-up" space
         offset.applyQuaternion(quat);
@@ -925,45 +1139,40 @@ export class CameraControls {
             this.spherical.phi += this.sphericalDelta.phi;
 
             // restrict theta to be between desired limits
-            this.spherical.theta = Math.max(
-                this.minAzimuthAngle,
-                Math.min(this.maxAzimuthAngle, this.spherical.theta)
-            );
-
-            // restrict phi to be between desired limits
-            this.spherical.phi = Math.max(
-                this.minPolarAngle,
-                Math.min(this.maxPolarAngle, this.spherical.phi)
-            );
+            this._restrictSpherical(this.spherical);
 
             this.spherical.makeSafe();
 
-            if (this._camera instanceof PerspectiveCamera) {
-                if (
-                    this.zooming &&
-                    this.spherical.radius != this.zoomSetValue
-                ) {
-                    this.sphereRadiusSetter = lerp(
-                        this.spherical.radius,
-                        this.zoomSetValue,
-                        0.1
-                    );
+            if (!this.usingImmersiveControls) {
+                if (this._camera instanceof PerspectiveCamera) {
+                    if (
+                        this.zooming &&
+                        this.spherical.radius != this.zoomSetValue
+                    ) {
+                        this.sphereRadiusSetter = lerp(
+                            this.spherical.radius,
+                            this.zoomSetValue,
+                            0.1
+                        );
 
-                    if (this.tweenNum >= 1) {
+                        if (this.tweenNum >= 1) {
+                            this.zooming = false;
+                        }
+
+                        this.spherical.radius = this.sphereRadiusSetter;
+                    } else {
                         this.zooming = false;
+                        this.spherical.radius = this.sphereRadiusSetter;
                     }
-
-                    this.spherical.radius = this.sphereRadiusSetter;
-                } else {
-                    this.zooming = false;
-                    this.spherical.radius = this.sphereRadiusSetter;
                 }
             }
 
             this.spherical.radius *= this.scale;
 
-            if (this._camera instanceof PerspectiveCamera) {
-                this.sphereRadiusSetter = this.spherical.radius;
+            if (!this.usingImmersiveControls) {
+                if (this._camera instanceof PerspectiveCamera) {
+                    this.sphereRadiusSetter = this.spherical.radius;
+                }
             }
 
             // restrict radius to be between desired limits
@@ -991,14 +1200,20 @@ export class CameraControls {
         // rotate offset back to "camera-up-vector-is-up" space
         offset.applyQuaternion(quatInverse);
 
-        let finalTarget = this.target.clone();
-        position.copy(finalTarget).add(offset);
+        position.copy(rotationTarget).add(offset);
 
         if (this._camera.parent) {
-            this._camera.parent.localToWorld(finalTarget);
+            this._camera.parent.localToWorld(rotationTarget);
         }
 
-        this._camera.lookAt(finalTarget);
+        if (this.usingImmersiveControls) {
+            if (this.immersiveLookPosition) {
+                this._camera.lookAt(this.immersiveLookPosition);
+                this.immersiveLookPosition = null;
+            }
+        } else {
+            this._camera.lookAt(lookTarget);
+        }
 
         if (this.enableDamping === true) {
             this.sphericalDelta.theta *= 1 - this.dampingFactor;
@@ -1029,6 +1244,25 @@ export class CameraControls {
         }
 
         this._camera.updateMatrixWorld(true);
+    }
+
+    private _restrictSpherical(spherical: Spherical) {
+        // restrict theta to be between desired limits
+        spherical.theta = Math.max(
+            this.minAzimuthAngle,
+            Math.min(this.maxAzimuthAngle, spherical.theta)
+        );
+
+        // restrict phi to be between desired limits
+        spherical.phi = Math.max(
+            this.usingImmersiveControls ? 0.1 : this.minPolarAngle,
+            Math.min(
+                this.usingImmersiveControls
+                    ? Math.PI - 0.1
+                    : this.maxPolarAngle,
+                spherical.phi
+            )
+        );
     }
 }
 

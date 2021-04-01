@@ -14,6 +14,7 @@ import { CameraRig } from '../scene/CameraRigFactory';
 import { CameraRigControls } from './CameraRigControls';
 import TWEEN, { Tween } from '@tweenjs/tween.js';
 import { Time } from '../scene/Time';
+import { objectForwardRay } from '../scene/SceneUtils';
 
 /**
  * Class that is able to tween the main camera to a given location.
@@ -33,6 +34,7 @@ export class TweenCameraToOperation implements IOperation {
     private _positionTween: any;
     private _rotationTween: any;
     private _zoomTween: any;
+    private _lookTween: any;
     private _canceled: boolean;
 
     get simulation(): Simulation {
@@ -89,18 +91,6 @@ export class TweenCameraToOperation implements IOperation {
         }
 
         const controlsTarget = this._rigControls.controls.target.clone();
-        // const controlsTargetToTweenTarget = this._target
-        //     .clone()
-        //     .sub(controlsTarget);
-        // const cameraToControlsTarget = this._rigControls.rig.mainCamera.position
-        //     .clone()
-        //     .sub(controlsTarget);
-        // const finalPosition = controlsTarget
-        //     .clone()
-        //     .add(controlsTargetToTweenTarget)
-        //     .add(cameraToControlsTarget);
-        // let intermediateTarget = this._target.clone();
-        // this._cameraTarget = finalPosition;
 
         const easing = getEasing(options.easing);
         const tweenDuration = this._duration * 1000;
@@ -170,10 +160,36 @@ export class TweenCameraToOperation implements IOperation {
                 });
         }
 
+        if (this._rigControls.controls.usingImmersiveControls) {
+            // animate the camera look point to look at the focus point
+            const targetLookPoint = this._target.clone();
+            let currentLookPoint = this._rigControls.controls.immersiveLookPosition?.clone();
+            if (!currentLookPoint) {
+                const forward = objectForwardRay(
+                    this._rigControls.rig.mainCamera
+                );
+                currentLookPoint = forward.origin.clone();
+                currentLookPoint.add(forward.direction);
+            }
+
+            this._lookTween = new TWEEN.Tween<any>(currentLookPoint)
+                .to(<any>targetLookPoint)
+                .duration(tweenDuration)
+                .easing(easing)
+                .onUpdate(() => {
+                    this._rigControls.controls.immersiveLookPosition = currentLookPoint;
+                })
+                .onComplete(() => {
+                    this._rigControls.controls.immersiveLookPosition = currentLookPoint;
+                    this._finished = true;
+                });
+        }
+
         const currentTime = time.timeSinceStart * 1000;
         this._positionTween.start(currentTime);
         this._rotationTween?.start(currentTime);
         this._zoomTween?.start(currentTime);
+        this._lookTween?.start(currentTime);
     }
 
     update(calc: BotCalculationContext): void {
@@ -201,6 +217,10 @@ export class TweenCameraToOperation implements IOperation {
         if (this._zoomTween) {
             this._zoomTween.stop();
             this._zoomTween = null;
+        }
+        if (this._lookTween) {
+            this._lookTween.stop();
+            this._lookTween = null;
         }
         if (hasValue(this._simulation) && hasValue(this._taskId)) {
             if (this._canceled || !this._finished) {

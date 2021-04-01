@@ -212,11 +212,19 @@ import {
     endAudioRecording as calcEndAudioRecording,
     beginRecording as calcBeginRecording,
     endRecording as calcEndRecording,
+    speakText as calcSpeakText,
+    getVoices as calcGetVoices,
+    getGeolocation as calcGetGeolocation,
     cancelAnimation,
     SnapTarget,
     AddDropSnapTargetsAction,
     RecordingOptions,
     Recording,
+    SyntheticVoice,
+    SpeakTextOptions,
+    EnablePOVAction,
+    disablePOV,
+    enablePOV,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -646,6 +654,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 disableAR,
                 enableVR,
                 disableVR,
+                enablePointOfView,
+                disablePointOfView,
                 download: downloadData,
                 downloadBots,
                 downloadServer,
@@ -687,6 +697,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 addDropSnap,
                 addBotDropSnap,
                 log,
+                getGeolocation,
                 inSheet,
 
                 getCameraPosition,
@@ -797,6 +808,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 endAudioRecording,
                 beginRecording,
                 endRecording,
+                speakText,
+                getVoices,
             },
 
             math: {
@@ -1559,6 +1572,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Enables Point-of-View mode.
+     */
+    function enablePointOfView(
+        center: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 }
+    ): EnablePOVAction {
+        return addAction(enablePOV(center));
+    }
+
+    /**
+     * Disables Point-of-View mode.
+     */
+    function disablePointOfView(): EnablePOVAction {
+        return addAction(disablePOV());
+    }
+
+    /**
      * Downloads the given data.
      * @param data The data to download. Objects will be formatted as JSON before downloading.
      * @param filename The name of the file that the data should be downloaded as.
@@ -2151,6 +2180,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function log(...args: any[]) {
         console.log(...args);
+    }
+
+    /**
+     * Gets the geolocation of the device.
+     * Returns a promise that resolves with the location.
+     */
+    function getGeolocation(): Promise<Geolocation> {
+        const task = context.createTask();
+        const event = calcGetGeolocation(task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -3876,6 +3915,46 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function endRecording(): Promise<Recording> {
         const task = context.createTask();
         const action = calcEndRecording(task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Speaks the given text.
+     * Returns a promise that resolves when the text has been spoken.
+     * @param text The text that should be spoken.
+     * @param options The options that should be used.
+     */
+    function speakText(
+        text: string,
+        options: {
+            rate?: number;
+            pitch?: number;
+            voice?: string | SyntheticVoice;
+        } = {}
+    ): Promise<void> {
+        const task = context.createTask();
+        const voice =
+            typeof options.voice === 'object'
+                ? options.voice?.name
+                : options.voice;
+        const action = calcSpeakText(
+            text,
+            {
+                ...options,
+                voice,
+            },
+            task.taskId
+        );
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Gets the list of synthetic voices that are supported by the system.
+     * Returns a promise that resolves with the voices.
+     */
+    function getVoices(): Promise<SyntheticVoice[]> {
+        const task = context.createTask();
+        const action = calcGetVoices(task.taskId);
         return addAsyncAction(task, action);
     }
 
