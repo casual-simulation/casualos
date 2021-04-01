@@ -1081,7 +1081,7 @@ export function botCalculationContextTests(
         const cameraTypeCases = [
             ['orthographic', 'orthographic'],
             ['perspective', 'perspective'],
-            ['other', 'orthographic'],
+            ['other', null],
         ];
 
         describe.each(tagCases)('%s', (tag: string) => {

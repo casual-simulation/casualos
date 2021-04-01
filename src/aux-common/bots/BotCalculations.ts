@@ -1569,7 +1569,7 @@ export function getCameraType(
     if (mode === 'orthographic' || mode === 'perspective') {
         return mode;
     }
-    return 'orthographic';
+    return null;
 }
 
 /**

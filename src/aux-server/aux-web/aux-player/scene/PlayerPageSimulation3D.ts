@@ -259,7 +259,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         }
 
         if (hasValue(this.pageConfig.cameraType)) {
-            if (!this.game.xrSession) {
+            if (!this.game.isImmersive) {
                 this.game.setCameraType(this.pageConfig.cameraType);
             }
         }
