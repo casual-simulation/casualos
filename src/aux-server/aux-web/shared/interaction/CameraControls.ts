@@ -843,7 +843,8 @@ export class CameraControls {
 
     private updateImmersiveMouseMovement(input: Input) {
         if (
-            input.getMouseButtonHeld(MouseButtonId.Left) &&
+            (input.getMouseButtonHeld(MouseButtonId.Left) ||
+                input.getMouseButtonHeld(MouseButtonId.Right)) &&
             this.state === STATE.ROTATE
         ) {
             this.panEnd.copy(input.getMouseScreenPos());
@@ -953,7 +954,11 @@ export class CameraControls {
     }
 
     private updateImmersiveMouseState(input: Input) {
-        if (input.getMouseButtonDown(MouseButtonId.Left) && this.enableRotate) {
+        if (
+            (input.getMouseButtonDown(MouseButtonId.Left) ||
+                input.getMouseButtonDown(MouseButtonId.Right)) &&
+            this.enableRotate
+        ) {
             this.zooming = false;
             this._setRot = false;
             // Pan start.
