@@ -4423,6 +4423,12 @@ declare global {
         decrypt(secret: string, data: string): string;
 
         /**
+         * Determines if the given value has been encrypted with symmetric encryption.
+         * @param cyphertext The value to test to see if it is encrypted.
+         */
+         isEncrypted(cyphertext: string): boolean;
+
+        /**
          * Contains functions useful for asymmetric encryption.
          */
         asymmetric: {
@@ -4445,6 +4451,13 @@ declare global {
              * @param secret The secret that should be used to encrypt the private key.
              */
             keypair(secret: string): string;
+
+            /**
+             * Determines if the given value is a keypair that can be used to encrypt and decrypt data using
+             * asymmetric encryption.
+             * @param keypair The value to test to see if it is a keypair that can be used for asymmetric encryption.
+             */
+             isKeypair(keypair: string): boolean;
 
             /**
              * Encrypts the given data with the given keypair and returns the result.
@@ -4476,6 +4489,12 @@ declare global {
              * @param data The data to decrypt.
              */
             decrypt(keypair: string, secret: string, data: string): string;
+
+            /**
+             * Determines if the given value is encrypted using asymmetric encryption.
+             * @param cyphertext The value to test to see if it is encrypted.
+             */
+             isEncrypted(cyphertext: string): boolean;
         };
 
         /**
