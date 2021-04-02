@@ -55,5 +55,26 @@ describe('MemoryPartition', () => {
             expect(version.currentSite).not.toBe(null);
             expect(version.currentSite).toBeDefined();
         });
+
+        it('should place all the initial bots in the space that the partition is for', async () => {
+            const mem = createMemoryPartition({
+                type: 'memory',
+                initialState: {
+                    test: createBot('test'),
+                    test2: createBot('test2'),
+                },
+            });
+            mem.space = 'tempLocal';
+
+            mem.connect();
+
+            let added: Bot[] = [];
+            mem.onBotsAdded.subscribe((e) => added.push(...e));
+
+            expect(added).toEqual([
+                createBot('test', undefined, 'tempLocal'),
+                createBot('test2', undefined, 'tempLocal'),
+            ]);
+        });
     });
 });
