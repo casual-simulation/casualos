@@ -134,6 +134,13 @@ export class MemoryPartitionImpl implements MemoryPartition {
     }
 
     connect(): void {
+        if (this.space) {
+            for (let id in this.state) {
+                const bot = this.state[id];
+                bot.space = this.space as BotSpace;
+            }
+        }
+
         this._onStatusUpdated.next({
             type: 'connection',
             connected: true,

@@ -21,7 +21,14 @@ import {
     userBotChanged,
     getPortalConfigBot,
 } from '@casual-simulation/aux-vm-browser';
-import { Euler, Quaternion } from '@casual-simulation/three';
+import {
+    Euler,
+    MathUtils,
+    Quaternion,
+    Vector3,
+} from '@casual-simulation/three';
+import { Simulation } from '@casual-simulation/aux-vm';
+import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 
 @Component({})
 export default class ImuPortal extends Vue {
@@ -29,6 +36,10 @@ export default class ImuPortal extends Vue {
     private _simulations: Map<BrowserSimulation, Subscription> = new Map();
     private _portals: Map<BrowserSimulation, Subscription> = new Map();
     private _currentSim: BrowserSimulation;
+    private _resolveDevicePermissions: Function;
+    private _rejectDevicePermissions: Function;
+
+    showRequestDeviceMotionPermission: boolean = false;
 
     constructor() {
         super();
@@ -38,6 +49,7 @@ export default class ImuPortal extends Vue {
         this._sub = new Subscription();
         this._simulations = new Map();
         this._portals = new Map();
+        this.showRequestDeviceMotionPermission = false;
 
         this._sub.add(
             appManager.simulationManager.simulationAdded
@@ -66,6 +78,27 @@ export default class ImuPortal extends Vue {
                 },
             });
         }
+    }
+
+    async onConfirmDeviceMotion() {
+        try {
+            const permission = await DeviceMotionEvent.requestPermission();
+            if (permission === 'granted') {
+                this._resolveDevicePermissions();
+            } else {
+                this._rejectDevicePermissions();
+            }
+        } catch (ex) {
+            console.error(
+                '[ImuPortal] Unable to start the DeviceMotionEvent',
+                ex
+            );
+            this._rejectDevicePermissions();
+        }
+    }
+
+    onCancelDeviceMotion() {
+        this._rejectDevicePermissions();
     }
 
     private _onSimulationAdded(sim: BrowserSimulation) {
@@ -97,7 +130,10 @@ export default class ImuPortal extends Vue {
         this._portals.delete(sim);
     }
 
-    private _onUserBotUpdated(sim: BrowserSimulation, user: PrecalculatedBot) {
+    private async _onUserBotUpdated(
+        sim: BrowserSimulation,
+        user: PrecalculatedBot
+    ) {
         const portal = calculateStringTagValue(null, user, IMU_PORTAL, null);
         if (hasValue(portal)) {
             let sub = this._portals.get(sim);
@@ -105,125 +141,16 @@ export default class ImuPortal extends Vue {
                 sub = new Subscription();
                 this._portals.set(sim, sub);
 
-                if (typeof AbsoluteOrientationSensor === 'undefined') {
-                    console.log(
-                        '[ImuPortal] IMU data is not supported on this browser.'
-                    );
-                    updatePortalBot({
-                        tags: {
-                            imuSupported: false,
-                        },
-                    });
-                    return;
-                }
-
-                try {
-                    const sensor = new AbsoluteOrientationSensor();
-
-                    const readingListener = (event: any) => {
-                        const portalBot = getPortalConfigBot(sim, IMU_PORTAL);
-                        if (portalBot) {
-                            const [x, y, z, w] = sensor.quaternion;
-
-                            const q = new Quaternion(x, y, z, w).invert();
-                            const rotation = new Euler().setFromQuaternion(q);
-
-                            sim.helper.updateBot(portalBot, {
-                                tags: {
-                                    imuSupported: true,
-                                    deviceRotationX: rotation.x,
-                                    deviceRotationY: -rotation.z,
-                                    deviceRotationZ: rotation.y,
-                                },
-                            });
-                        }
-                    };
-                    const errorListener = (event: any) => {
-                        if (event.error.name == 'NotReadableError') {
-                            console.log('[ImuPortal] Sensor is not available.');
-                        } else {
-                            console.log(
-                                '[ImuPortal] Encountered an error.',
-                                event.error
-                            );
-                        }
-
-                        updatePortalBot({
+                if (!(await this._startOrientationSensor(sim, sub, portal))) {
+                    if (!(await this._startDeviceMotion(sim, sub, portal))) {
+                        console.log(
+                            '[ImuPortal] IMU data is not supported on this browser.'
+                        );
+                        this._updatePortalBot(sim, {
                             tags: {
                                 imuSupported: false,
                             },
                         });
-                        sub.unsubscribe();
-                    };
-                    sensor.addEventListener('reading', readingListener);
-                    sensor.addEventListener('error', errorListener);
-
-                    sub.add(() => {
-                        sensor.stop();
-                        sensor.removeEventListener('reading', readingListener);
-                        sensor.removeEventListener('error', errorListener);
-                    });
-
-                    updatePortalData();
-
-                    async function updatePortalData() {
-                        try {
-                            const results = await Promise.all([
-                                navigator.permissions.query({
-                                    name: 'accelerometer',
-                                }),
-                                navigator.permissions.query({
-                                    name: 'magnetometer',
-                                }),
-                                navigator.permissions.query({
-                                    name: 'gyroscope',
-                                }),
-                            ]);
-
-                            if (sub.closed) {
-                                return;
-                            }
-
-                            if (results.every((r) => r.state === 'granted')) {
-                                await sim.helper.transaction(
-                                    registerBuiltinPortal(portal)
-                                );
-                                console.log('[ImuPortal] Starting sensor...');
-                                sensor.start();
-                                return;
-                            } else {
-                                console.error(
-                                    '[ImuPortal] Unable to start the AbsoluteOrientationSensor. The correct permissions have not been granted.'
-                                );
-                            }
-                        } catch (ex) {
-                            console.error(
-                                '[ImuPortal] Unable to start the AbsoluteOrientationSensor',
-                                ex
-                            );
-                        }
-                        updatePortalBot({
-                            tags: {
-                                imuSupported: false,
-                            },
-                        });
-                    }
-                } catch (ex) {
-                    console.error(
-                        '[ImuPortal] Unable to start the AbsoluteOrientationSensor',
-                        ex
-                    );
-                    updatePortalBot({
-                        tags: {
-                            imuSupported: false,
-                        },
-                    });
-                }
-
-                async function updatePortalBot(newData: Partial<Bot>) {
-                    const portalBot = getPortalConfigBot(sim, IMU_PORTAL);
-                    if (portalBot) {
-                        await sim.helper.updateBot(portalBot, newData);
                     }
                 }
             }
@@ -233,6 +160,231 @@ export default class ImuPortal extends Vue {
             if (sub) {
                 sub.unsubscribe();
             }
+        }
+    }
+
+    private async _startOrientationSensor(
+        sim: RemoteSimulation,
+        sub: Subscription,
+        portal: string
+    ): Promise<boolean> {
+        if (typeof AbsoluteOrientationSensor === 'undefined') {
+            return false;
+        }
+
+        try {
+            const sensor = new AbsoluteOrientationSensor();
+
+            const readingListener = (event: any) => {
+                const portalBot = getPortalConfigBot(sim, IMU_PORTAL);
+                if (portalBot) {
+                    const [x, y, z, w] = sensor.quaternion;
+
+                    const q = new Quaternion(x, y, z, w).invert();
+                    const rotation = new Euler().setFromQuaternion(q);
+
+                    sim.helper.updateBot(portalBot, {
+                        tags: {
+                            imuSupported: true,
+                            deviceRotationX: rotation.x,
+                            deviceRotationY: -rotation.z,
+                            deviceRotationZ: rotation.y,
+                        },
+                    });
+                }
+            };
+            const errorListener = (event: any) => {
+                if (event.error.name == 'NotReadableError') {
+                    console.log('[ImuPortal] Sensor is not available.');
+                } else {
+                    console.log(
+                        '[ImuPortal] Encountered an error.',
+                        event.error
+                    );
+                }
+
+                this._updatePortalBot(sim, {
+                    tags: {
+                        imuSupported: false,
+                    },
+                });
+                sub.unsubscribe();
+            };
+            sensor.addEventListener('reading', readingListener);
+            sensor.addEventListener('error', errorListener);
+
+            sub.add(() => {
+                sensor.stop();
+                sensor.removeEventListener('reading', readingListener);
+                sensor.removeEventListener('error', errorListener);
+            });
+
+            return await updatePortalData();
+
+            async function updatePortalData() {
+                try {
+                    const results = await Promise.all([
+                        navigator.permissions.query({
+                            name: 'accelerometer',
+                        }),
+                        navigator.permissions.query({
+                            name: 'magnetometer',
+                        }),
+                        navigator.permissions.query({
+                            name: 'gyroscope',
+                        }),
+                    ]);
+
+                    if (sub.closed) {
+                        return;
+                    }
+
+                    if (results.every((r) => r.state === 'granted')) {
+                        await sim.helper.transaction(
+                            registerBuiltinPortal(portal)
+                        );
+                        console.log('[ImuPortal] Starting sensor...');
+                        sensor.start();
+                        return true;
+                    } else {
+                        console.error(
+                            '[ImuPortal] Unable to start the AbsoluteOrientationSensor. The correct permissions have not been granted.'
+                        );
+                    }
+                } catch (ex) {
+                    console.error(
+                        '[ImuPortal] Unable to start the AbsoluteOrientationSensor',
+                        ex
+                    );
+                }
+                return false;
+            }
+        } catch (ex) {
+            console.error(
+                '[ImuPortal] Unable to start the AbsoluteOrientationSensor',
+                ex
+            );
+            return false;
+        }
+    }
+
+    private async _startDeviceMotion(
+        sim: RemoteSimulation,
+        sub: Subscription,
+        portal: string
+    ) {
+        if (typeof DeviceMotionEvent === 'undefined') {
+            return false;
+        }
+
+        if (!DeviceMotionEvent.requestPermission) {
+            return false;
+        }
+
+        // if()
+
+        try {
+            let hasPermission = false;
+
+            try {
+                const permission = await DeviceMotionEvent.requestPermission();
+                hasPermission = permission === 'granted';
+            } catch (ex) {
+                console.log('[ImuPortal] Requesting permissions via dialog.');
+                const promise = new Promise<void>((resolve, reject) => {
+                    this._resolveDevicePermissions = resolve;
+                    this._rejectDevicePermissions = reject;
+                });
+
+                try {
+                    this.showRequestDeviceMotionPermission = true;
+                    await promise;
+                    hasPermission = true;
+                } catch (ex) {
+                    hasPermission = false;
+                }
+            }
+
+            if (hasPermission) {
+                const orientationListener = (event: DeviceOrientationEvent) => {
+                    const portalBot = getPortalConfigBot(sim, IMU_PORTAL);
+                    if (portalBot) {
+                        // Taken from https://github.com/mrdoob/three.js/blob/dev/examples/jsm/controls/DeviceOrientationControls.js
+                        const beta = MathUtils.degToRad(event.beta);
+                        const alpha = MathUtils.degToRad(event.alpha);
+                        const gamma = MathUtils.degToRad(event.gamma);
+
+                        let euler = new Euler();
+
+                        let quaternion = new Quaternion();
+
+                        let q1 = new Quaternion(
+                            -Math.sqrt(0.5),
+                            0,
+                            0,
+                            Math.sqrt(0.5)
+                        ); // - PI/2 around the x-axis
+
+                        euler.set(beta, alpha, -gamma, 'YXZ'); // 'ZXY' for the device, but 'YXZ' for us
+
+                        quaternion.setFromEuler(euler); // orient the device
+
+                        quaternion.multiply(q1); // camera looks out the back of the device, not the top
+
+                        euler.setFromQuaternion(quaternion);
+
+                        //var zee = new Vector3( 0, 0, 1 );
+                        // quaternion.multiply( q0.setFromAxisAngle( zee, - orient ) ); // adjust for screen orientation
+
+                        sim.helper.updateBot(portalBot, {
+                            tags: {
+                                imuSupported: true,
+                                deviceRotationX: -euler.x,
+                                deviceRotationY: -euler.z,
+                                deviceRotationZ: euler.y,
+                            },
+                        });
+                    }
+                };
+
+                window.addEventListener(
+                    'deviceorientation',
+                    orientationListener
+                );
+
+                sub.add(() => {
+                    window.removeEventListener(
+                        'deviceorientation',
+                        orientationListener
+                    );
+                });
+
+                await sim.helper.transaction(registerBuiltinPortal(portal));
+                console.log('[ImuPortal] Starting sensor...');
+
+                return true;
+            }
+
+            console.error(
+                '[ImuPortal] Unable to start the DeviceMotionEvent. The correct permissions have not been granted.'
+            );
+            return false;
+        } catch (ex) {
+            console.error(
+                '[ImuPortal] Unable to start the DeviceMotionEvent',
+                ex
+            );
+            return false;
+        }
+    }
+
+    private async _updatePortalBot(
+        sim: RemoteSimulation,
+        newData: Partial<Bot>
+    ) {
+        const portalBot = getPortalConfigBot(sim, IMU_PORTAL);
+        if (portalBot) {
+            await sim.helper.updateBot(portalBot, newData);
         }
     }
 }

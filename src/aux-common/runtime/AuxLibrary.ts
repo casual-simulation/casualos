@@ -248,6 +248,9 @@ import {
     asymmetricKeypair as realAsymmetricKeypair,
     asymmetricEncrypt as realAsymmetricEncrypt,
     asymmetricDecrypt as realAsymmetricDecrypt,
+    isAsymmetricKeypair,
+    isAsymmetricEncrypted,
+    isEncrypted,
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { convertToString, del, insert, preserve } from '../aux-format-2';
@@ -841,10 +844,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 hmacSha512,
                 encrypt,
                 decrypt,
+                isEncrypted,
                 asymmetric: {
                     keypair: asymmetricKeypair,
+                    isKeypair: isAsymmetricKeypair,
                     encrypt: asymmetricEncrypt,
                     decrypt: asymmetricDecrypt,
+                    isEncrypted: isAsymmetricEncrypted,
                 },
                 keypair,
                 sign,

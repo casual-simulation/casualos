@@ -10685,10 +10685,38 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('crypto.isEncrypted()', () => {
+        it('should return true if given some encrypted data', () => {
+            const encrypted = library.api.crypto.encrypt('password', 'data');
+            const result = library.api.crypto.isEncrypted(encrypted);
+            expect(result).toBe(true);
+        });
+
+        it('should return false if not given encrypted data', () => {
+            const result = library.api.crypto.isEncrypted('vA1.abc.def');
+            expect(result).toBe(false);
+        });
+    });
+
     describe('crypto.asymmetric.keypair()', () => {
         it('should create and return a keypair', () => {
             const result = library.api.crypto.asymmetric.keypair('password');
             expect(typeof result).toEqual('string');
+        });
+    });
+
+    describe('crypto.asymmetric.isKeypair()', () => {
+        it('should return true if given a keypair', () => {
+            const keypair = library.api.crypto.asymmetric.keypair('password');
+            const result = library.api.crypto.asymmetric.isKeypair(keypair);
+            expect(result).toBe(true);
+        });
+
+        it('should return false if not given a keypair', () => {
+            const result = library.api.crypto.asymmetric.isKeypair(
+                'v1.abc.def'
+            );
+            expect(result).toBe(false);
         });
     });
 
@@ -10730,6 +10758,25 @@ describe('AuxLibrary', () => {
                 'wrong'
             );
             expect(result).toBe(null);
+        });
+    });
+
+    describe('crypto.asymmetric.isEncrypted()', () => {
+        it('should return true if given some encrypted data', () => {
+            const keypair = asymmetricKeypairV1('password');
+            const encrypted = library.api.crypto.asymmetric.encrypt(
+                keypair,
+                'data'
+            );
+            const result = library.api.crypto.asymmetric.isEncrypted(encrypted);
+            expect(result).toBe(true);
+        });
+
+        it('should return false if not given encrypted data', () => {
+            const result = library.api.crypto.asymmetric.isEncrypted(
+                'v1.abc.def'
+            );
+            expect(result).toBe(false);
         });
     });
 

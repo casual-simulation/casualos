@@ -5299,6 +5299,21 @@ const decrypted = crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iik
 os.toast(decrypted);
 ```
 
+### `crypto.isEncrypted(cyphertext)`
+
+Determines if the given value has been encrypted using <ActionLink action='crypto.encrypt(secret, data)'/>.
+Returns `true` if the data is encrypted and `false` otherwise.
+
+The **first parameter** is the value that should be tested to see if it has been encrypted.
+
+#### Examples
+
+1. Determine if a value is encrypted.
+```typescript
+const encrypted = crypto.isEncrypted("hello, world");
+os.toast('Is it encrypted? ' + encrypted);
+```
+
 ### `crypto.keypair(secret)`
 
 Creates a keypair that can be used to [digitially sign](https://en.wikipedia.org/wiki/Digital_signature) and verify data.
@@ -5419,6 +5434,21 @@ const keypair = crypto.asymmetric.keypair("my secret");
 os.toast(keypair);
 ```
 
+### `crypto.asymmetric.isKeypair(keypair)`
+
+Determines if the given value is a keypair generated using <ActionLink action='crypto.asymmetric.keypair(secret)'/>.
+Returns `true` if the data is a keypair and `false` otherwise.
+
+The **first parameter** is the value that should be tested to see if it is a keypair.
+
+#### Examples
+
+1. Determine if a value is a keypair.
+```typescript
+const encrypted = crypto.asymmetric.isKeypair("hello, world");
+os.toast('Is it a keypair? ' + encrypted);
+```
+
 ### `crypto.asymmetric.encrypt(keypair, data)`
 
 [Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given keypair's public key and returns the result.
@@ -5475,6 +5505,21 @@ const keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa
 const encrypted = 'vA1.3CC1r0fJP2tPS09C8YrTDQCJmgFczxprNEcMOzY4JD4=.3oiC7nG6N4jblFhBd4usrdid/w4Phwg/.X/9mbZYOGBjRX7YAO4D2zYJvZ3c=';
 const decrypted = crypto.asymmetric.decrypt(keypair, 'password', encrypted);
 os.toast(decrypted);
+```
+
+### `crypto.asymmetric.isEncrypted(cyphertext)`
+
+Determines if the given value was encrypted using <ActionLink action='crypto.asymmetric.encrypt(keypair, data)'/>.
+Returns `true` if the data is a keypair and `false` otherwise.
+
+The **first parameter** is the value that should be tested to see if it is encrypted.
+
+#### Examples
+
+1. Determine if a value is encrypted with asymmetric encryption.
+```typescript
+const encrypted = crypto.asymmetric.isEncrypted("hello, world");
+os.toast('Is it encrypted? ' + encrypted);
 ```
 
 ### `crypto.createCertificate(certificate, secret, keypair)`

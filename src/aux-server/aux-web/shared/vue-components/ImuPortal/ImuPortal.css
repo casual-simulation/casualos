@@ -1,0 +1,7 @@
+.md-dialog.imu-request-dialog {
+    z-index: 15;
+}
+
+.md-dialog.imu-request-dialog + .md-overlay.md-dialog-overlay {
+    z-index: 14;
+}

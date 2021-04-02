@@ -1,5 +1,19 @@
 # CasualOS Changelog
 
+## V1.5.7
+
+#### Date: 4/2/2021
+
+### :rocket: Improvements
+
+-   Improved `imuPortal` to support Safari on iOS.
+-   Added the `crypto.isEncrypted(cyphertext)`, `crypto.asymmetric.isEncrypted(cyphertext)`, and `crypto.asymmetric.isKeypair(keypair)` functions.
+    -   These can help in determining if a string is supposed to be a asymmetric keypair or if it has been encrypted with symmetric or asymmetric encryption.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the configBot would appear to be in the `shared` space but was actually in the `tempLocal` space.
+
 ## V1.5.6
 
 #### Date: 4/1/2021
