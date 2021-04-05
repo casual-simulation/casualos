@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the ability to see the full text of script errors by using the "Show Error" button in the multiline editor.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the `imuPortal` would only open when set to a string value. Now it also supports `true` and non 0 numerical values.
