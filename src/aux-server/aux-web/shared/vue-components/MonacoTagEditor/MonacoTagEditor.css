@@ -90,7 +90,8 @@
     line-height: 22px;
 }
 
-.editor-breadcrumbs .editor-docs .md-button.md-dense.md-theme-default {
+.editor-breadcrumbs .editor-docs .md-button.md-dense.md-theme-default,
+.editor-breadcrumbs .editor-error .md-button.md-dense.md-theme-default {
     width: auto;
     padding: 0 8px;
 }

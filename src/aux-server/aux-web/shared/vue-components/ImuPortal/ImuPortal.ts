@@ -134,8 +134,8 @@ export default class ImuPortal extends Vue {
         sim: BrowserSimulation,
         user: PrecalculatedBot
     ) {
-        const portal = calculateStringTagValue(null, user, IMU_PORTAL, null);
-        if (hasValue(portal)) {
+        const portal = calculateBotValue(null, user, IMU_PORTAL);
+        if (portal) {
             let sub = this._portals.get(sim);
             if (!sub) {
                 sub = new Subscription();
