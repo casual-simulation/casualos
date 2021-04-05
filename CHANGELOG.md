@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.5.8
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `imuPortal` would only open when set to a string value. Now it also supports `true` and non 0 numerical values.
+
 ## V1.5.7
 
 #### Date: 4/2/2021
