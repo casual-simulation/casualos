@@ -134,7 +134,7 @@ export class SerialModule implements AuxModule2 {
 
             port.pipe(parser);
             parser.on('data', (data: string) => {
-                simulation.helper.shout('onSerialData', event.bot, data);
+                simulation.helper.shout('onSerialData', [event.bot], data);
             });
         } catch (error) {
             simulation.helper.transaction(

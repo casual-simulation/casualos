@@ -1864,9 +1864,9 @@ export interface SerialStreamAction extends AsyncAction {
     type: 'serial_stream';
 
     /**
-     * The bot you want data streamed to. The bot needs the 'onSerialData' tag.
+     * The id of the bot you want data streamed to. The bot needs the 'onSerialData' tag.
      */
-    bot: Bot[];
+    bot: string;
 
     /**
      * A friendly device name. Example: Brush01
@@ -4092,12 +4092,12 @@ export function serialConnectPin(
 
 /**
  * Parses and returns the serial stream to the event tag 'onSerialData'.
- * @param bot The bot you want data streamed to. The bot needs the 'onSerialData' tag.
+ * @param bot The id of the bot you want data streamed to. The bot needs the 'onSerialData' tag.
  * @param name A friendly device name. Example: Brush01
  * @param taskId The ID of the async task.
  */
 export function serialStreamPin(
-    bot: Bot[],
+    bot: string,
     name: string,
     taskId?: string | number,
     playerId?: string
