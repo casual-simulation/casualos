@@ -50,7 +50,7 @@ export interface IdeTagNode {
 
 export interface IdePortalUpdate {
     hasPortal: boolean;
-    items: IdeNode[];
+    items: IdeTagNode[];
 }
 
 /**
@@ -71,6 +71,10 @@ export class IdePortalManager implements SubscriptionLike {
      */
     get itemsUpdated(): Observable<IdePortalUpdate> {
         return this._itemsUpdated;
+    }
+
+    get items() {
+        return this._itemsUpdated.value;
     }
 
     /**
@@ -114,7 +118,7 @@ export class IdePortalManager implements SubscriptionLike {
         }
         const prefix = this._helper.userBot.tags[IDE_PORTAL];
         if (prefix) {
-            let items = [] as IdeNode[];
+            let items = [] as IdeTagNode[];
             for (let bot of this._helper.objects) {
                 if (bot.id === this._helper.userId) {
                     continue;

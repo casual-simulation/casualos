@@ -9,6 +9,8 @@ import { Extensions } from 'monaco-editor/esm/vs/platform/quickinput/common/quic
 import { EditorAction, registerEditorAction } from 'monaco-editor/esm/vs/editor/browser/editorExtensions';
 import { EditorContextKeys } from 'monaco-editor/esm/vs/editor/common/editorContextKeys';
 import { IQuickInputService } from 'monaco-editor/esm/vs/platform/quickinput/common/quickInput';
+import { appManager } from '../../../../shared/AppManager';
+import { goToTag } from '@casual-simulation/aux-common';
 
 /**
  * Virtual Key Codes, the value does not hold any inherent meaning.
@@ -218,18 +220,29 @@ class GoToTagQuickAccessProvider {
     static readonly PREFIX = '#';
 
     provide(picker: any, token: any): IDisposable {
-        picker.items = [
-            {
-                label: 'Test 1',
-            },
-            {
-                label: 'Test 2',
-            }
-        ];
+        const sim = appManager.simulationManager.primary;
+        const disposables = [] as IDisposable[];
 
-        // picker.
+        picker.items = sim.idePortal.items.items.map(i => ({
+            label: i.name,
+            description: i.botId,
+            botId: i.botId,
+            tag: i.tag,
+        }));
+
+        disposables.push(picker.onDidAccept((event: any) => {
+            const [item] = picker.selectedItems;
+            if (item && item.botId && item.tag) {
+                sim.helper.transaction(goToTag(item.botId, item.tag));
+            }
+        }));
+
         return {
-            dispose() { }
+            dispose() { 
+                for(let d of disposables) {
+                    d.dispose();
+                }
+            }
         };
     }
 }

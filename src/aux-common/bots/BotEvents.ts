@@ -96,7 +96,8 @@ export type ExtraActions =
     | LocalFormAnimationAction
     | GetRemoteCountAction
     | AddDropSnapTargetsAction
-    | EnablePOVAction;
+    | EnablePOVAction
+    | GoToTagAction;
 
 /**
  * Defines a set of possible async action types.
@@ -2788,6 +2789,28 @@ export interface RecordedFile {
     data: Blob;
 }
 
+/**
+ * Defines an event that tells the IDE portal to open the given bot and tag.
+ */
+export interface GoToTagAction {
+    type: 'go_to_tag';
+
+    /**
+     * The ID of the bot.
+     */
+    botId: string;
+
+    /**
+     * The tag to open.
+     */
+    tag: string;
+
+    /**
+     * The space to open.
+     */
+    space: string | null;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -5248,5 +5271,23 @@ export function getGeolocation(taskId?: string | number): GetGeolocationAction {
     return {
         type: 'get_geolocation',
         taskId,
+    };
+}
+
+/**
+ * Creates a GoToTagAction.
+ * @param botId The ID of the bot.
+ * @param tag The tag to navigate to.
+ */
+export function goToTag(
+    botId: string,
+    tag: string,
+    space: string = null
+): GoToTagAction {
+    return {
+        type: 'go_to_tag',
+        botId,
+        tag,
+        space,
     };
 }
