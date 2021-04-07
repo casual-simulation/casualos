@@ -7,9 +7,6 @@
 ### :rocket: Improvements
 
 -   Added the ability to see the full text of script errors by using the "Show Error" button in the multiline editor.
--   Added the ability to specify whether a text edit should be treated as if it was applied through the UI or not.
-    -   The `insertTagText()`, `insertTagMaskText()`, `deleteTagText()` and `deleteTagMaskText()` functions all act like remote edits so their changes will be seen while the user is using the multiline editor.
-    -   Additionally, tag edits in a `update_bot` event can now be modified to specify `isRemote: true` and they will be treated as remote edits when performed.
 
 ### :bug: Bug Fixes
 
@@ -19,6 +16,9 @@
     -   The `pagePortal` also now supports setting `cameraRotationOffsetW` to indicate that the offset should be applied as a quaternion.
     -   Try the `imuExample01` auxCode for an example.
 -   Fixed an issue where CasualOS would fail to load on browsers that do not support speech synthesis.
+-   Fixed an issue where bot updates that were executed via `action.perform()` would be treated like they were being performed by the user themselves.
+    -   In particular, this issue affected text edits which were originally created by the multiline text editor but were then replayed via `action.perform()`.
+    -   The effect of this bug would be that while the data was updated correctly, the multiline text editor would ignore the new data because it assumed it already had the changes.
 
 ## V1.5.7
 
