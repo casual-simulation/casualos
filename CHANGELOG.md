@@ -7,6 +7,9 @@
 ### :rocket: Improvements
 
 -   Added the ability to see the full text of script errors by using the "Show Error" button in the multiline editor.
+-   Added the ability to specify whether a text edit should be treated as if it was applied through the UI or not.
+    -   The `insertTagText()`, `insertTagMaskText()`, `deleteTagText()` and `deleteTagMaskText()` functions all act like remote edits so their changes will be seen while the user is using the multiline editor.
+    -   Additionally, tag edits in a `update_bot` event can now be modified to specify `isRemote: true` and they will be treated as remote edits when performed.
 
 ### :bug: Bug Fixes
 
