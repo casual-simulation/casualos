@@ -35,6 +35,8 @@ import {
     insert,
     isTagEdit,
     preserve,
+    remoteEdit,
+    remoteEdits,
 } from '../aux-format-2';
 
 describe('RuntimeBot', () => {
@@ -848,7 +850,7 @@ describe('RuntimeBot', () => {
             expect(script.tags.abc).toEqual('d111f');
             expect(script.raw.abc).toEqual('d111f');
             expect(script.changes.abc).toEqual(
-                edit(
+                remoteEdit(
                     manager.currentVersion.vector,
                     preserve(1),
                     insert('111'),
@@ -882,7 +884,7 @@ describe('RuntimeBot', () => {
             expect(script.tags.abc).toEqual('d121f');
             expect(script.raw.abc).toEqual('d121f');
             expect(script.changes.abc).toEqual(
-                edits(
+                remoteEdits(
                     manager.currentVersion.vector,
                     [preserve(1), insert('111'), del(1)],
                     [preserve(2), insert('2'), del(1)]
@@ -907,7 +909,7 @@ describe('RuntimeBot', () => {
             expect(script.changes).toEqual({});
             expect(script.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         manager.currentVersion.vector,
                         preserve(1),
                         insert('111'),
@@ -956,7 +958,7 @@ describe('RuntimeBot', () => {
             expect(script.raw.abc).toEqual('def');
             expect(script.maskChanges).toEqual({
                 local: {
-                    abc: edits(
+                    abc: remoteEdits(
                         manager.currentVersion.vector,
                         [preserve(1), insert('111'), del(1)],
                         [preserve(2), insert('2'), del(1)]
@@ -980,7 +982,7 @@ describe('RuntimeBot', () => {
             expect(script.changes).toEqual({});
             expect(script.maskChanges).toEqual({
                 [DEFAULT_TAG_MASK_SPACE]: {
-                    abc: edit(
+                    abc: remoteEdit(
                         manager.currentVersion.vector,
                         preserve(1),
                         insert('111'),
@@ -1005,7 +1007,7 @@ describe('RuntimeBot', () => {
             expect(script.changes).toEqual({});
             expect(script.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         manager.currentVersion.vector,
                         preserve(1),
                         insert('111'),
@@ -1031,7 +1033,7 @@ describe('RuntimeBot', () => {
             expect(script.changes).toEqual({});
             expect(script.maskChanges).toEqual({
                 tempLocal: {
-                    abc: edit(
+                    abc: remoteEdit(
                         manager.currentVersion.vector,
                         preserve(1),
                         insert('111'),

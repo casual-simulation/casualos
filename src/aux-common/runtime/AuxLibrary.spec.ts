@@ -176,7 +176,14 @@ import {
     keypair,
 } from '@casual-simulation/crypto';
 import { CERTIFIED_SPACE } from '../aux-format-2/AuxWeaveReducer';
-import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
+import {
+    del,
+    edit,
+    insert,
+    preserve,
+    remoteEdit,
+    tagValueHash,
+} from '../aux-format-2';
 import { RanOutOfEnergyError } from './AuxResults';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import { waitAsync } from '../test/TestHelpers';
@@ -6662,7 +6669,7 @@ describe('AuxLibrary', () => {
             expect(bot1.tags.abc).toEqual('hello');
             expect(bot1.raw.abc).toEqual('hello');
             expect(bot1.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(0),
                     insert('hello')
@@ -6677,7 +6684,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('123hello');
             expect(bot2.raw.abc).toEqual('123hello');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(0),
                     insert('123')
@@ -6692,7 +6699,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('he123llo');
             expect(bot2.raw.abc).toEqual('he123llo');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(2),
                     insert('123')
@@ -6707,7 +6714,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('hello123');
             expect(bot2.raw.abc).toEqual('hello123');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(5),
                     insert('123')
@@ -6722,7 +6729,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('hell123o');
             expect(bot2.raw.abc).toEqual('hell123o');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(4),
                     insert('123')
@@ -6737,7 +6744,7 @@ describe('AuxLibrary', () => {
             expect(bot1.tags.abc).toEqual('123');
             expect(bot1.raw.abc).toEqual('123');
             expect(bot1.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(0),
                     insert('123')
@@ -6752,7 +6759,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('hello123');
             expect(bot2.raw.abc).toEqual('hello123');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(5),
                     insert('123')
@@ -6788,7 +6795,7 @@ describe('AuxLibrary', () => {
             expect(bot1.masks.abc).toEqual('hello');
             expect(bot1.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(0),
                         insert('hello')
@@ -6810,7 +6817,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('123hello');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(0),
                         insert('123')
@@ -6832,7 +6839,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('he123llo');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(2),
                         insert('123')
@@ -6854,7 +6861,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('hello123');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(5),
                         insert('123')
@@ -6876,7 +6883,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('hell123o');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(4),
                         insert('123')
@@ -6898,7 +6905,7 @@ describe('AuxLibrary', () => {
             expect(bot1.masks.abc).toEqual('123');
             expect(bot1.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(0),
                         insert('123')
@@ -6920,7 +6927,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('hello123');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(5),
                         insert('123')
@@ -6960,7 +6967,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('llo');
             expect(bot2.raw.abc).toEqual('llo');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(0),
                     del(2)
@@ -6975,7 +6982,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('heo');
             expect(bot2.raw.abc).toEqual('heo');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(2),
                     del(2)
@@ -6990,7 +6997,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('hel');
             expect(bot2.raw.abc).toEqual('hel');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(3),
                     del(2)
@@ -7005,7 +7012,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('hel');
             expect(bot2.raw.abc).toEqual('hel');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(3),
                     del(2)
@@ -7073,7 +7080,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('llo');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(0),
                         del(2)
@@ -7095,7 +7102,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('heo');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(2),
                         del(2)
@@ -7117,7 +7124,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('hel');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(3),
                         del(2)
@@ -7139,7 +7146,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('hel');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(3),
                         del(2)
@@ -7164,7 +7171,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('wrong');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(3),
                         del(2)

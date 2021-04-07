@@ -4,8 +4,12 @@ import {
     applyEdit,
     del,
     edit,
+    edits,
     insert,
+    mergeEdits,
     preserve,
+    remoteEdit,
+    remoteEdits,
     updates,
 } from './AuxStateHelpers';
 import { Bot } from '../bots/Bot';
@@ -1495,6 +1499,36 @@ describe('AuxStateHelpers', () => {
                     updatedBots: [],
                 });
             });
+        });
+    });
+
+    describe('mergeEdits()', () => {
+        it('should concatenate the edits', () => {
+            const first = edit({}, insert('abc'));
+            const second = edit({}, insert('def'));
+
+            const final = mergeEdits(first, second);
+            expect(final).toEqual(edits({}, [insert('abc')], [insert('def')]));
+        });
+
+        it('should merge the version vectors', () => {
+            const first = edit({ a: 1 }, insert('abc'));
+            const second = edit({ b: 2 }, insert('def'));
+
+            const final = mergeEdits(first, second);
+            expect(final).toEqual(
+                edits({ a: 1, b: 2 }, [insert('abc')], [insert('def')])
+            );
+        });
+
+        it('should be remote if at least one edit is remote', () => {
+            const first = edit({ a: 1 }, insert('abc'));
+            const second = remoteEdit({ b: 2 }, insert('def'));
+
+            const final = mergeEdits(first, second);
+            expect(final).toEqual(
+                remoteEdits({ a: 1, b: 2 }, [insert('abc')], [insert('def')])
+            );
         });
     });
 });

@@ -36,6 +36,18 @@ export function edit(
 /**
  * Creates a tag edit using the given list of operations.
  */
+export function remoteEdit(
+    version: VersionVector,
+    ...operations: TagEditOp[]
+): TagEdit {
+    const e = edit(version, ...operations);
+    e.isRemote = true;
+    return e;
+}
+
+/**
+ * Creates a tag edit using the given list of operations.
+ */
 export function edits(
     version: VersionVector,
     ...operations: TagEditOp[][]
@@ -48,16 +60,34 @@ export function edits(
 }
 
 /**
+ * Creates a tag edit using the given list of operations.
+ */
+export function remoteEdits(
+    version: VersionVector,
+    ...operations: TagEditOp[][]
+): TagEdit {
+    const e = edits(version, ...operations);
+    e.isRemote = true;
+    return e;
+}
+
+/**
  * Creates a new tag edit using the operations from both of the given edits.
  * @param first The first edit.
  * @param second The second edit.
  */
 export function mergeEdits(first: TagEdit, second: TagEdit): TagEdit {
-    return edits(
+    const result = edits(
         mergeVersions(first.version, second.version),
         ...first.operations,
         ...second.operations
     );
+
+    if (first.isRemote || second.isRemote) {
+        result.isRemote = true;
+    }
+
+    return result;
 }
 
 /**
@@ -130,6 +160,14 @@ export interface TagEdit {
      * The timestamp that the edit should be made at.
      */
     version: VersionVector;
+
+    /**
+     * Whether the edit should be considered a "remote" edit.
+     * Remote edits should be processed by partitions as a separate site ID from the
+     * local partition site ID.
+     * This is useful for edits that were not made through the UI.
+     */
+    isRemote?: boolean;
 
     /**
      * The operations that are part of the edit.

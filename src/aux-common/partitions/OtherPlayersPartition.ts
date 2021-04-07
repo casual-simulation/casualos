@@ -78,6 +78,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     protected _onStateUpdated = new Subject<StateUpdatedEvent>();
     private _onVersionUpdated = new BehaviorSubject<CurrentVersion>({
         currentSite: null,
+        remoteSite: null,
         vector: {},
     });
 
