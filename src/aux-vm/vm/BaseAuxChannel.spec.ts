@@ -446,6 +446,7 @@ describe('BaseAuxChannel', () => {
 
             shared.onVersionUpdated.next({
                 currentSite: 'a',
+                remoteSite: 'c',
                 vector: {
                     a: 10,
                 },
@@ -453,6 +454,7 @@ describe('BaseAuxChannel', () => {
 
             other.onVersionUpdated.next({
                 currentSite: 'b',
+                remoteSite: 'd',
                 vector: {
                     b: 11,
                 },
@@ -460,6 +462,7 @@ describe('BaseAuxChannel', () => {
 
             shared.onVersionUpdated.next({
                 currentSite: 'a',
+                remoteSite: 'c',
                 vector: {
                     a: 10,
                     c: 20,

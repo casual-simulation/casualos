@@ -253,7 +253,13 @@ import {
     isEncrypted,
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
-import { convertToString, del, insert, preserve } from '../aux-format-2';
+import {
+    convertToString,
+    del,
+    insert,
+    isTagEdit,
+    preserve,
+} from '../aux-format-2';
 import {
     Euler,
     Vector3,
@@ -3752,6 +3758,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param action The action to perform.
      */
     function perform(action: any): any {
+        const event: BotAction = action;
+        if (event.type === 'update_bot') {
+            if (event.update.tags) {
+                for (let tag in event.update.tags) {
+                    const val = event.update.tags[tag];
+                    if (isTagEdit(val)) {
+                        val.isRemote = true;
+                    }
+                }
+            }
+            if (event.update.masks) {
+                for (let space in event.update.masks) {
+                    const tags = event.update.masks[space];
+                    if (tags) {
+                        for (let tag in tags) {
+                            const val = tags[tag];
+                            if (isTagEdit(val)) {
+                                val.isRemote = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         return addAction(action);
     }
 

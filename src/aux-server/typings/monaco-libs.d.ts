@@ -23,6 +23,18 @@ declare module 'monaco-editor/esm/vs/editor/edcore.main' {
 declare module 'monaco-editor/esm/vs/basic-languages/_.contribution.js';
 declare module 'monaco-editor/esm/vs/basic-languages/typescript/typescript.js';
 declare module 'monaco-editor/esm/vs/language/typescript/languageFeatures';
+declare module 'monaco-editor/esm/vs/nls';
+declare module 'monaco-editor/esm/vs/base/common/filters';
+declare module 'monaco-editor/esm/vs/base/parts/quickopen/browser/quickOpenModel';
+declare module 'monaco-editor/esm/vs/base/parts/quickopen/common/quickOpen';
+declare module 'monaco-editor/esm/vs/editor/common/editorContextKeys';
+declare module 'monaco-editor/esm/vs/editor/standalone/browser/quickOpen/editorQuickOpen';
+declare module 'monaco-editor/esm/vs/editor/browser/editorExtensions';
+declare module 'monaco-editor/esm/vs/base/common/keyCodes';
+declare module 'monaco-editor/esm/vs/editor/browser/editorBrowser';
+declare module 'monaco-editor/esm/vs/platform/registry/common/platform';
+declare module 'monaco-editor/esm/vs/platform/quickinput/common/quickAccess';
+declare module 'monaco-editor/esm/vs/platform/quickinput/common/quickInput';
 
 //
 // **NOTE**: Do not edit directly! This file is generated using `npm run import-typescript`

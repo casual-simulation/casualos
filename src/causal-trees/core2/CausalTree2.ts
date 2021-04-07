@@ -26,6 +26,12 @@ export interface CurrentVersion {
     currentSite: string | null;
 
     /**
+     * The ID of the site that is used for "remote" edits.
+     * That is, edits that were not made through the UI.
+     */
+    remoteSite: string | null;
+
+    /**
      * The current version vector.
      */
     vector: VersionVector;
@@ -44,6 +50,7 @@ export interface VersionVector {
 export interface CausalTree<T> {
     weave: Weave<T>;
     site: SiteStatus;
+    remoteSite?: SiteStatus;
     version: VersionVector;
 }
 
@@ -53,17 +60,24 @@ export interface CausalTree<T> {
 export interface TreeResult {
     results: WeaveResult[];
     newSite: SiteStatus;
+    newRemoteSite?: SiteStatus;
 }
 
 /**
  * Creates a new tree.
  * @param id The ID to use for the site.
  */
-export function tree<T>(id?: string, time?: number): CausalTree<T> {
+export function tree<T>(
+    id?: string,
+    time?: number,
+    remoteId?: string
+): CausalTree<T> {
     const site = newSite(id, time);
+    const remoteSite = remoteId ? newSite(remoteId, time) : undefined;
     return {
         weave: new Weave(),
         site: site,
+        remoteSite: remoteSite,
         version: {
             [site.id]: site.time,
         },
@@ -73,10 +87,12 @@ export function tree<T>(id?: string, time?: number): CausalTree<T> {
 /**
  * Gets the current version for the given tree.
  * @param tree The tree.
+ * @param remoteSite The site ID for the remote site.
  */
 export function treeVersion<T>(tree: CausalTree<T>): CurrentVersion {
     return {
         currentSite: tree.site.id,
+        remoteSite: tree.remoteSite?.id,
         vector: tree.version,
     };
 }
@@ -140,15 +156,23 @@ export function removeAtoms<T>(
  * @param cause The cause of the new atom.
  * @param op The operation for the new atom.
  * @param priority The priority of the new atom.
+ * @param remote Whether the atom should be created for the remote site.
  */
 export function addAtom<T, O extends T>(
     tree: CausalTree<T>,
     cause: Atom<T>,
     op: O,
     priority?: number,
-    cardinality?: AtomCardinality
+    cardinality?: AtomCardinality,
+    remote?: boolean
 ): TreeResult {
-    const atom = createAtom(tree.site, cause, op, priority, cardinality);
+    const atom = createAtom(
+        remote ? tree.remoteSite ?? tree.site : tree.site,
+        cause,
+        op,
+        priority,
+        cardinality
+    );
     return insertAtom<T, O>(tree, atom);
 }
 
@@ -157,12 +181,19 @@ export function addAtom<T, O extends T>(
  * @param tree The tree.
  * @param atom The atom.
  */
-export function insertAtom<T, O extends T>(tree: CausalTree<T>, atom: Atom<O>) {
+export function insertAtom<T, O extends T>(
+    tree: CausalTree<T>,
+    atom: Atom<O>
+): TreeResult {
     const weaveResult = tree.weave.insert(atom);
     const newSite = updateSite(tree.site, weaveResult);
+    const newRemoteSite = tree.remoteSite
+        ? updateSite(tree.remoteSite, weaveResult)
+        : undefined;
     return {
         results: [weaveResult],
         newSite,
+        newRemoteSite,
     };
 }
 
@@ -183,6 +214,7 @@ export function removeAtom<T>(tree: CausalTree<T>, hash: string): TreeResult {
     return {
         results: [weaveResult],
         newSite: tree.site,
+        newRemoteSite: tree.remoteSite,
     };
 }
 
@@ -198,6 +230,12 @@ export function mergeResults(
     return {
         results: [...first.results, ...second.results],
         newSite: mergeSites(first.newSite, second.newSite),
+        newRemoteSite:
+            first.newRemoteSite && second.newRemoteSite
+                ? mergeSites(first.newRemoteSite, second.newRemoteSite)
+                : first.newRemoteSite
+                ? first.newRemoteSite
+                : second.newRemoteSite,
     };
 }
 
@@ -210,6 +248,14 @@ export function mergeResults(
 export function addResults(first: TreeResult, second: TreeResult) {
     first.results.push(...second.results);
     first.newSite = mergeSites(first.newSite, second.newSite);
+    if (first.newRemoteSite && second.newRemoteSite) {
+        first.newRemoteSite = mergeSites(
+            first.newRemoteSite,
+            second.newRemoteSite
+        );
+    } else if (second.newRemoteSite) {
+        first.newRemoteSite = second.newRemoteSite;
+    }
     return first;
 }
 
@@ -236,6 +282,7 @@ export function applyResult<T>(
     return {
         weave: tree.weave,
         site: result.newSite,
+        remoteSite: result.newRemoteSite,
         version: tree.version,
     };
 }

@@ -17,12 +17,13 @@ import {
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
+    IdeTagNode,
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike } from 'rxjs';
 import { copyToClipboard } from '../../SharedUtils';
-import { tap } from 'rxjs/operators';
+import { flatMap, tap } from 'rxjs/operators';
 import { IdePortalConfig } from './IdePortalConfig';
 import { IdeNode } from '@casual-simulation/aux-vm-browser';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
@@ -35,7 +36,7 @@ import BotTag from '../BotTag/BotTag';
     },
 })
 export default class IdePortal extends Vue {
-    items: IdeNode[] = [];
+    items: IdeTagNode[] = [];
     hasPortal: boolean = false;
 
     showButton: boolean = true;
@@ -83,6 +84,23 @@ export default class IdePortal extends Vue {
                 this._simulation.idePortal.itemsUpdated.subscribe((e) => {
                     this.items = e.items;
                     this.hasPortal = e.hasPortal;
+                }),
+                this._simulation.localEvents.subscribe((e) => {
+                    if (e.type === 'go_to_tag') {
+                        const targetBot = this._simulation.helper.botsState[
+                            e.botId
+                        ];
+                        if (targetBot) {
+                            this.currentBot = targetBot;
+                            this.currentTag = e.tag;
+                            this.currentSpace = e.space;
+                            this.selectedItem =
+                                this.items.find(
+                                    (i) =>
+                                        i.botId === e.botId && i.tag === e.tag
+                                ) ?? this.selectedItem;
+                        }
+                    }
                 })
             );
             this._currentConfig = new IdePortalConfig(IDE_PORTAL, botManager);
@@ -100,7 +118,7 @@ export default class IdePortal extends Vue {
         });
     }
 
-    selectItem(item: IdeNode) {
+    selectItem(item: IdeTagNode) {
         if (item.type === 'tag') {
             this.selectedItem = item;
             this.currentBot = this._simulation.helper.botsState[item.botId];

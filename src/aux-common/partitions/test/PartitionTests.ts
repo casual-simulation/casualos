@@ -20,7 +20,14 @@ import {
     bufferCount,
     skip,
 } from 'rxjs/operators';
-import { del, edit, edits, insert, preserve } from '../../aux-format-2';
+import {
+    del,
+    edit,
+    edits,
+    insert,
+    preserve,
+    TAG_EDIT_NAME,
+} from '../../aux-format-2';
 
 export function testPartitionImplementation(
     createPartition: () => Promise<AuxPartition>
@@ -837,6 +844,46 @@ export function testPartitionImplementation(
                     });
                 }
             );
+
+            it('should use a separate site ID for remote edits', async () => {
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test', {
+                            abc: 'def',
+                        })
+                    ),
+                ]);
+
+                await waitAsync();
+
+                const editVersion = { ...version.vector };
+                const tagEdit = edit(editVersion, insert('ghi'));
+                tagEdit.isRemote = true;
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        tags: {
+                            abc: tagEdit,
+                        },
+                    }),
+                ]);
+
+                expect(partition.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'ghidef',
+                    }),
+                });
+
+                const partitionEdit = updates[1].state.test.tags.abc;
+
+                expect(partitionEdit.version).not.toEqual({
+                    [version.currentSite]: expect.any(Number),
+                });
+                expect(partitionEdit.version).toEqual({
+                    [version.remoteSite]: expect.any(Number),
+                });
+
+                expect(Object.keys(version.vector).length).toBeGreaterThan(0);
+            });
         });
 
         describe('TagMasks', () => {

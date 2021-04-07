@@ -731,7 +731,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
                 sims.length > 0
                     ? sims[0].getDefaultGridScale()
                     : DEFAULT_WORKSPACE_GRID_SCALE;
-            this.mainCameraRig.mainCamera.position.copy(
+            this.mainCameraRig.cameraParent.position.copy(
                 convertCasualOSPositionToThreePosition(
                     center.x,
                     center.y,
@@ -739,7 +739,9 @@ export abstract class Game implements AuxBotVisualizerFinder {
                     gridScale
                 )
             );
+            this.mainCameraRig.mainCamera.position.set(0, 0, 0);
             this.mainCameraRig.mainCamera.rotation.set(0, 0, 0);
+            this.mainCameraRig.cameraParent.updateMatrixWorld(true);
             this.mainCameraRig.mainCamera.updateMatrixWorld(true);
         }
     }
@@ -757,6 +759,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
         this.setCameraType('orthographic');
 
         document.documentElement.classList.remove('pov-app');
+        this.mainCameraRig.cameraParent.position.set(0, 0, 0);
     }
 
     protected handleXRSessionEnded() {

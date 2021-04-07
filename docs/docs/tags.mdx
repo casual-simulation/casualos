@@ -1914,6 +1914,17 @@ The offset that should be applied to the Z rotation of the player's camera in th
 
 Units are in radians.
 
+### `cameraRotationOffsetW`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The W value that the camera rotation offset should use.
+
+When specified, the camera rotation offset will be interpreted as a [Quaternion (video)](https://youtu.be/zjMuIxRvygQ), which is a rotation around the
+X, Y, Z axis by `cos(W/2) + sin(W/2)(xi + yj + zk)`.
+
 ### `cameraZoom`
 
 <Badges>
@@ -1984,6 +1995,7 @@ Whether IMU data is supported on this device.
 </Badges>
 
 The X rotation of the device as determined by the IMU.
+This rotation is represented as a [Quaternion (video)](https://youtu.be/zjMuIxRvygQ).
 
 ### `deviceRotationY`
 
@@ -1993,6 +2005,7 @@ The X rotation of the device as determined by the IMU.
 </Badges>
 
 The Y rotation of the device as determined by the IMU.
+This rotation is represented as a [Quaternion (video)](https://youtu.be/zjMuIxRvygQ).
 
 ### `deviceRotationZ`
 
@@ -2002,6 +2015,17 @@ The Y rotation of the device as determined by the IMU.
 </Badges>
 
 The Z rotation of the device as determined by the IMU.
+This rotation is represented as a [Quaternion (video)](https://youtu.be/zjMuIxRvygQ).
+
+### `deviceRotationW`
+
+<Badges>
+    <AutomaticBadge/>
+    <ImuPortalBadge/>
+</Badges>
+
+The W value of the device rotation.
+This rotation is represented as a [Quaternion (video)](https://youtu.be/zjMuIxRvygQ).
 
 ## History Tags
 

@@ -61,7 +61,7 @@ import {
     BotsState,
     ON_REMOTE_DATA_ACTION_NAME,
 } from '../bots';
-import { flatMap } from 'lodash';
+import { flatMap, uniqueId } from 'lodash';
 import {
     PartitionConfig,
     RemoteCausalRepoPartitionConfig,
@@ -114,7 +114,7 @@ export class RemoteCausalRepoPartitionImpl
      */
     private _watchingBranch: boolean = false;
 
-    private _tree: AuxCausalTree = auxTree();
+    private _tree: AuxCausalTree = auxTree(undefined, true);
     private _client: CausalRepoClient;
     private _synced: boolean;
     private _gotInitialAtoms: boolean = false;
@@ -205,6 +205,7 @@ export class RemoteCausalRepoPartitionImpl
             'remoteEvents' in config ? config.remoteEvents : true;
         this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
             currentSite: this._tree.site.id,
+            remoteSite: this._tree.remoteSite?.id,
             vector: {},
         });
 

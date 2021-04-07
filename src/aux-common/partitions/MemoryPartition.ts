@@ -59,6 +59,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
     private _onEvents = new Subject<Action[]>();
     private _onStatusUpdated = new Subject<StatusUpdate>();
     private _siteId: string = uuid();
+    private _remoteSite: string = uuid();
     private _updateCounter: number = 0;
 
     type = 'memory' as const;
@@ -109,6 +110,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
         this.state = config.initialState;
         this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
             currentSite: this._siteId,
+            remoteSite: this._remoteSite,
             vector: {},
         });
     }
@@ -232,12 +234,17 @@ export class MemoryPartitionImpl implements MemoryPartition {
                                 nextVersion = {
                                     currentSite: this._onVersionUpdated.value
                                         .currentSite,
+                                    remoteSite: this._onVersionUpdated.value
+                                        .remoteSite,
                                     vector: {
                                         ...this._onVersionUpdated.value.vector,
-                                        [this
-                                            ._siteId]: this._updateCounter += 1,
+                                        [newVal.isRemote
+                                            ? this._remoteSite
+                                            : this
+                                                  ._siteId]: this._updateCounter += 1,
                                     },
                                 };
+
                                 updatedBot.tags[tag] = edits(
                                     nextVersion.vector,
                                     ...newVal.operations
@@ -295,12 +302,17 @@ export class MemoryPartitionImpl implements MemoryPartition {
                                 nextVersion = {
                                     currentSite: this._onVersionUpdated.value
                                         .currentSite,
+                                    remoteSite: this._onVersionUpdated.value
+                                        .remoteSite,
                                     vector: {
                                         ...this._onVersionUpdated.value.vector,
-                                        [this
-                                            ._siteId]: this._updateCounter += 1,
+                                        [newVal.isRemote
+                                            ? this._remoteSite
+                                            : this
+                                                  ._siteId]: this._updateCounter += 1,
                                     },
                                 };
+
                                 updatedBot.masks[this.space][tag] = edits(
                                     nextVersion.vector,
                                     ...newVal.operations
