@@ -152,6 +152,7 @@ import {
     getGeolocation,
     enablePOV,
     disablePOV,
+    botUpdated,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -5684,7 +5685,7 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected, expected]);
             });
 
-            it('should should add the action if it has been rejected', () => {
+            it('should add the action if it has been rejected', () => {
                 const action = library.api.os.toast('abc');
                 library.api.action.reject(action);
                 library.api.action.perform(action);
@@ -5692,6 +5693,44 @@ describe('AuxLibrary', () => {
                     toast('abc'),
                     reject(toast('abc')),
                     toast('abc'),
+                ]);
+            });
+
+            it('should convert tag edits to remote tag edits', () => {
+                const action = botUpdated('test', {
+                    tags: {
+                        abc: edit({}, insert('abc')),
+                    },
+                });
+
+                library.api.action.perform(action);
+                expect(context.actions).toEqual([
+                    botUpdated('test', {
+                        tags: {
+                            abc: remoteEdit({}, insert('abc')),
+                        },
+                    }),
+                ]);
+            });
+
+            it('should convert tag mask edits to remote tag edits', () => {
+                const action = botUpdated('test', {
+                    masks: {
+                        tempLocal: {
+                            abc: edit({}, insert('abc')),
+                        },
+                    },
+                });
+
+                library.api.action.perform(action);
+                expect(context.actions).toEqual([
+                    botUpdated('test', {
+                        masks: {
+                            tempLocal: {
+                                abc: remoteEdit({}, insert('abc')),
+                            },
+                        },
+                    }),
                 ]);
             });
         });
