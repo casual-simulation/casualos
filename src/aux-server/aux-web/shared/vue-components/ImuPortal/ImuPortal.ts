@@ -24,6 +24,7 @@ import {
 import {
     Euler,
     MathUtils,
+    Matrix4,
     Quaternion,
     Vector3,
 } from '@casual-simulation/three';
@@ -173,22 +174,40 @@ export default class ImuPortal extends Vue {
         }
 
         try {
-            const sensor = new AbsoluteOrientationSensor();
+            const sensor = new AbsoluteOrientationSensor({
+                // referenceFrame: 'screen'
+            });
 
             const readingListener = (event: any) => {
                 const portalBot = getPortalConfigBot(sim, IMU_PORTAL);
                 if (portalBot) {
                     const [x, y, z, w] = sensor.quaternion;
 
-                    const q = new Quaternion(x, y, z, w).invert();
-                    const rotation = new Euler().setFromQuaternion(q);
+                    const quaternion = new Quaternion(x, y, z, w).invert();
+
+                    const rotation = new Matrix4().makeRotationFromQuaternion(
+                        quaternion
+                    );
+
+                    let q1 = new Matrix4().makeRotationAxis(
+                        new Vector3(1, 0, 0),
+                        Math.PI / 2
+                    );
+
+                    rotation.premultiply(q1);
+
+                    const mirror = new Matrix4().makeScale(1, -1, 1);
+                    rotation.premultiply(mirror).multiply(mirror);
+
+                    quaternion.setFromRotationMatrix(rotation);
 
                     sim.helper.updateBot(portalBot, {
                         tags: {
                             imuSupported: true,
-                            deviceRotationX: rotation.x,
-                            deviceRotationY: -rotation.z,
-                            deviceRotationZ: rotation.y,
+                            deviceRotationX: quaternion.x,
+                            deviceRotationY: quaternion.y,
+                            deviceRotationZ: quaternion.z,
+                            deviceRotationW: quaternion.w,
                         },
                     });
                 }
@@ -309,39 +328,83 @@ export default class ImuPortal extends Vue {
                 const orientationListener = (event: DeviceOrientationEvent) => {
                     const portalBot = getPortalConfigBot(sim, IMU_PORTAL);
                     if (portalBot) {
-                        // Taken from https://github.com/mrdoob/three.js/blob/dev/examples/jsm/controls/DeviceOrientationControls.js
-                        const beta = MathUtils.degToRad(event.beta);
-                        const alpha = MathUtils.degToRad(event.alpha);
-                        const gamma = MathUtils.degToRad(event.gamma);
+                        // This is some madness...
+                        // for iOS, deviceorientation events are in the "device coordinate" frame
+                        // where the X axis points to the right of the phone,
+                        // the Y axis points to the top of the phone (from the center towards the front facing camera),
+                        // and the Z axis points towards the user.
+                        // alpha the Z axis, beta is the X axis, gamma is the Y axis.
+                        // everything is in degrees.
+                        // The X axis is absolute.
+                        // Therefore, 0 on the X axis indicates the phone is parallel with the ground.
+                        // The Y and Z axes are relative and are initialzed to the initial rotation that the phone has when streaming starts.
+                        const beta = MathUtils.degToRad(event.beta ?? 0);
+                        const alpha = MathUtils.degToRad(event.alpha ?? 0);
+                        const gamma = MathUtils.degToRad(event.gamma ?? 0);
 
                         let euler = new Euler();
+                        // because the rotation we get is in Euler angles,
+                        // we need to represent the order correctly.
+                        // We infer from the names "alpha", "beta", and "gamma" that
+                        // they are in the order that the greek alphabet uses (a, b, g)
+                        // this means the order is Z, Y, and then X.
+                        euler.set(beta, gamma, alpha, 'ZXY');
+
+                        // we convert this euler rotation to a 4x4 matrix rotation
+                        // so that we can manipulate in 4D and not worry too much about gimbal lock.
+                        const rotation = new Matrix4().makeRotationFromEuler(
+                            euler
+                        );
+
+                        const orientation = MathUtils.degToRad(
+                            <number>window.orientation ?? 0
+                        );
+
+                        let q1 = new Matrix4();
+                        // Adjust for orientation
+                        q1.makeRotationAxis(new Vector3(0, 0, 1), -orientation);
+
+                        rotation.multiply(q1);
+
+                        // Create a rotation that is -90 degrees around the
+                        // X axis.
+                        q1.makeRotationAxis(new Vector3(1, 0, 0), -Math.PI / 2);
+
+                        // Apply the -90 degree rotation twice.
+                        // The first is to rotate -90 degrees so that
+                        // 0 on the X axis means the phone is perpendicular to the ground.
+                        // The second is to rotate -90 degrees so that the Y and Z axes are swapped.
+                        rotation.premultiply(q1).premultiply(q1);
+
+                        // Here we take out the second X axis rotation
+                        // but since it is multiplied on the right
+                        // the coordinate conversion stays.
+                        // However, the Z axis has been negated as a result of this conversion.
+                        // This is because the new Z axis was the old Y axis, and that axis is now pointing
+                        // the opposite direction that the old Z axis was pointing. (right hand rule)
+                        q1.invert();
+                        rotation.multiply(q1);
+
+                        // Because we need to mirror the Z axis,
+                        // we need to change handedness. However any scale operation we apply
+                        // mirrors the other two axes. So (-1, 1, 1) mirrors the Y and Z axes but not the
+                        // X axis. Therefore we need to invert the matrix to mirror all the rotations
+                        // and then scale by (1, 1, -1) to mirror the X and Y axes back to how they were.
+                        rotation.invert();
+
+                        const mirror = new Matrix4().makeScale(1, 1, -1);
+                        rotation.premultiply(mirror).multiply(mirror);
 
                         let quaternion = new Quaternion();
-
-                        let q1 = new Quaternion(
-                            -Math.sqrt(0.5),
-                            0,
-                            0,
-                            Math.sqrt(0.5)
-                        ); // - PI/2 around the x-axis
-
-                        euler.set(beta, alpha, -gamma, 'YXZ'); // 'ZXY' for the device, but 'YXZ' for us
-
-                        quaternion.setFromEuler(euler); // orient the device
-
-                        quaternion.multiply(q1); // camera looks out the back of the device, not the top
-
-                        euler.setFromQuaternion(quaternion);
-
-                        //var zee = new Vector3( 0, 0, 1 );
-                        // quaternion.multiply( q0.setFromAxisAngle( zee, - orient ) ); // adjust for screen orientation
+                        quaternion.setFromRotationMatrix(rotation);
 
                         sim.helper.updateBot(portalBot, {
                             tags: {
                                 imuSupported: true,
-                                deviceRotationX: -euler.x,
-                                deviceRotationY: -euler.z,
-                                deviceRotationZ: euler.y,
+                                deviceRotationX: quaternion.x,
+                                deviceRotationY: quaternion.y,
+                                deviceRotationZ: quaternion.z,
+                                deviceRotationW: quaternion.w,
                             },
                         });
                     }

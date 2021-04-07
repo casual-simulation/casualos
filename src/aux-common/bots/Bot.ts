@@ -1402,6 +1402,7 @@ export const KNOWN_TAGS: string[] = [
     'deviceRotationX',
     'deviceRotationY',
     'deviceRotationZ',
+    'deviceRotationW',
 
     'cameraPositionX',
     'cameraPositionY',
@@ -1416,6 +1417,7 @@ export const KNOWN_TAGS: string[] = [
     'cameraRotationOffsetX',
     'cameraRotationOffsetY',
     'cameraRotationOffsetZ',
+    'cameraRotationOffsetW',
 
     'cameraFocusX',
     'cameraFocusY',
