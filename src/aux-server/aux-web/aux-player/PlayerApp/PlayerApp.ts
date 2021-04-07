@@ -74,16 +74,18 @@ import ImuPortal from '../../shared/vue-components/ImuPortal/ImuPortal';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
-window.speechSynthesis.onvoiceschanged = (e) => {
-    syntheticVoices = window.speechSynthesis.getVoices().map(
-        (v) =>
-            ({
-                default: v.default,
-                language: v.lang,
-                name: v.name,
-            } as SyntheticVoice)
-    );
-};
+if (window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = (e) => {
+        syntheticVoices = window.speechSynthesis.getVoices().map(
+            (v) =>
+                ({
+                    default: v.default,
+                    language: v.lang,
+                    name: v.name,
+                } as SyntheticVoice)
+        );
+    };
+}
 
 @Component({
     components: {
