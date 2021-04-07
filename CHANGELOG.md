@@ -15,6 +15,7 @@
     -   Now, the `imuPortal` sets the `deviceRotationX`, `deviceRotationY`, `deviceRotationZ` and `deviceRotationW` values which is the rotation of the device represented as a quaternion.
     -   The `pagePortal` also now supports setting `cameraRotationOffsetW` to indicate that the offset should be applied as a quaternion.
     -   Try the `imuExample01` auxCode for an example.
+-   Fixed an issue where CasualOS would fail to load on browsers that do not support speech synthesis.
 
 ## V1.5.7
 
