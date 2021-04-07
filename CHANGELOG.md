@@ -7,6 +7,7 @@
 ### :rocket: Improvements
 
 -   Added the ability to see the full text of script errors by using the "Show Error" button in the multiline editor.
+-   Added the ability to jump to a tag while in the IDE Portal using `Ctrl+P`.
 
 ### :bug: Bug Fixes
 
