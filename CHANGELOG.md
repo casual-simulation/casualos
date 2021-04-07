@@ -1,17 +1,15 @@
 # CasualOS Changelog
 
-## V1.5.8
+## V1.5.9
 
-#### Date: 4/5/2021
+#### Date: TBD
 
 ### :rocket: Improvements
 
--   Added the ability to see the full text of script errors by using the "Show Error" button in the multiline editor.
 -   Added the ability to jump to a tag while in the IDE Portal using `Ctrl+P`.
 
 ### :bug: Bug Fixes
 
--   Fixed an issue where the `imuPortal` would only open when set to a string value. Now it also supports `true` and non 0 numerical values.
 -   Fixed an issue where the `imuPortal` would return values that were incorrect for usage on the camera.
     -   Now, the `imuPortal` sets the `deviceRotationX`, `deviceRotationY`, `deviceRotationZ` and `deviceRotationW` values which is the rotation of the device represented as a quaternion.
     -   The `pagePortal` also now supports setting `cameraRotationOffsetW` to indicate that the offset should be applied as a quaternion.
@@ -20,6 +18,18 @@
 -   Fixed an issue where bot updates that were executed via `action.perform()` would be treated like they were being performed by the user themselves.
     -   In particular, this issue affected text edits which were originally created by the multiline text editor but were then replayed via `action.perform()`.
     -   The effect of this bug would be that while the data was updated correctly, the multiline text editor would ignore the new data because it assumed it already had the changes.
+
+## V1.5.8
+
+#### Date: 4/5/2021
+
+### :rocket: Improvements
+
+-   Added the ability to see the full text of script errors by using the "Show Error" button in the multiline editor.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `imuPortal` would only open when set to a string value. Now it also supports `true` and non 0 numerical values.
 
 ## V1.5.7
 
