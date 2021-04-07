@@ -11,6 +11,10 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the `imuPortal` would only open when set to a string value. Now it also supports `true` and non 0 numerical values.
+-   Fixed an issue where the `imuPortal` would return values that were incorrect for usage on the camera.
+    -   Now, the `imuPortal` sets the `deviceRotationX`, `deviceRotationY`, `deviceRotationZ` and `deviceRotationW` values which is the rotation of the device represented as a quaternion.
+    -   The `pagePortal` also now supports setting `cameraRotationOffsetW` to indicate that the offset should be applied as a quaternion.
+    -   Try the `imuExample01` auxCode for an example.
 
 ## V1.5.7
 
