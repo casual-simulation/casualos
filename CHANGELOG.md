@@ -8,6 +8,14 @@
 
 -   Improved the IDE Portal to support showing all tags by setting the `idePortal` tag on the config bot to `true`.
 -   Added the `sheetPortalAddedTags` tag for the `sheetPortalBot` which specifies additional tags that should always be shown in the sheet portal.
+-   Added support for auxcli v2.0.0 to retain current functionality. 
+-   Added support for multiple serial connections simultaneously.
+
+### :boom: Breaking Changes
+
+-   Renamed `onStreamData` to `onSerialData`.
+-   Serial functions now require a "friendly" name to keep track of each device: `serialConnect`, `serialStream`, `serialOpen`, `serialUpdate`, `serialWrite`, `serialRead`, `serialClose`, `serialFlush`,`serialDrain`, `serialPause`, `serialResume`
+-   `serialStream` now requires a bot id to send the stream to that bot.
 
 ## V1.5.9
 
