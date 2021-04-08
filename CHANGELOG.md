@@ -7,8 +7,10 @@
 ### :rocket: Improvements
 
 -   Improved the IDE Portal to support showing all tags by setting the `idePortal` tag on the config bot to `true`.
+-   Added a search tab to the IDE Portal which makes it easy to search within tags that are loaded in the IDE Portal.
+    -   It can be focused from the idePortal by using the `Ctrl+Shift+F` hotkey.
 -   Added the `sheetPortalAddedTags` tag for the `sheetPortalBot` which specifies additional tags that should always be shown in the sheet portal.
--   Added support for auxcli v2.0.0 to retain current functionality. 
+-   Added support for auxcli v2.0.0 to retain current functionality.
 -   Added support for multiple serial connections simultaneously.
 
 ### :boom: Breaking Changes
