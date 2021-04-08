@@ -4,6 +4,12 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Renamed `onStreamData` to `onSerialData`.
+-   Serial functions now require a "friendly" name to keep track of each device: `serialConnect`, `serialStream`, `serialOpen`, `serialUpdate`, `serialWrite`, `serialRead`, `serialClose`, `serialFlush`,`serialDrain`, `serialPause`, `serialResume`
+-   `serialStream` now requires a bot id to send the stream to that bot.
+
 ### :rocket: Improvements
 
 -   Improved the IDE Portal to support showing all tags by setting the `idePortal` tag on the config bot to `true`.
@@ -13,11 +19,9 @@
 -   Added support for auxcli v2.0.0 to retain current functionality.
 -   Added support for multiple serial connections simultaneously.
 
-### :boom: Breaking Changes
+### :bug: Bug Fixes
 
--   Renamed `onStreamData` to `onSerialData`.
--   Serial functions now require a "friendly" name to keep track of each device: `serialConnect`, `serialStream`, `serialOpen`, `serialUpdate`, `serialWrite`, `serialRead`, `serialClose`, `serialFlush`,`serialDrain`, `serialPause`, `serialResume`
--   `serialStream` now requires a bot id to send the stream to that bot.
+-   Fixed an issue where the `url` tag would not be created on initial load unless the URL was updated.
 
 ## V1.5.9
 
