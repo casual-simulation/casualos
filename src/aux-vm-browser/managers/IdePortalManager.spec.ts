@@ -373,5 +373,57 @@ describe('IdePortalManager', () => {
             ]);
             expect(hasPortal).toBe(true);
         });
+
+        it('should include all tags if set to the string true', async () => {
+            let items: IdeNode[];
+            let hasPortal: boolean;
+            manager.itemsUpdated.subscribe((e) => {
+                items = e.items;
+                hasPortal = e.hasPortal;
+            });
+
+            await vm.sendEvents([
+                botAdded(
+                    createBot('user', {
+                        idePortal: 'true',
+                    })
+                ),
+            ]);
+
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test', {
+                        hello: '🔺script',
+                        other: 'abc',
+                        def: false,
+                    })
+                ),
+            ]);
+
+            expect(items).toEqual([
+                {
+                    type: 'tag',
+                    key: 'def.test',
+                    botId: 'test',
+                    tag: 'def',
+                    name: 'def',
+                },
+                {
+                    type: 'tag',
+                    key: 'hello.test',
+                    botId: 'test',
+                    tag: 'hello',
+                    name: 'hello',
+                },
+                {
+                    type: 'tag',
+                    key: 'other.test',
+                    botId: 'test',
+                    tag: 'other',
+                    name: 'other',
+                },
+            ]);
+            expect(hasPortal).toBe(true);
+        });
     });
 });

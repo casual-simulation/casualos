@@ -129,6 +129,7 @@ export class IdePortalManager implements SubscriptionLike {
                     const val = bot.tags[tag];
                     if (
                         prefix === true ||
+                        prefix === 'true' ||
                         isPortalScript(prefix, bot.tags[tag])
                     ) {
                         let item: IdeTagNode = {
@@ -143,7 +144,10 @@ export class IdePortalManager implements SubscriptionLike {
                             item.isScript = true;
                         } else if (isFormula(val)) {
                             item.isFormula = true;
-                        } else if (typeof prefix === 'string') {
+                        } else if (
+                            typeof prefix === 'string' &&
+                            prefix !== 'true'
+                        ) {
                             item.prefix = prefix;
                         }
 
