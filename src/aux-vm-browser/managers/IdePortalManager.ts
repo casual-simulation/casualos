@@ -20,6 +20,8 @@ import {
     IDE_PORTAL,
     isPortalScript,
     DNA_TAG_PREFIX,
+    isScript,
+    isFormula,
 } from '@casual-simulation/aux-common';
 import {
     PortalManager,
@@ -124,7 +126,11 @@ export class IdePortalManager implements SubscriptionLike {
                     continue;
                 }
                 for (let tag in bot.values) {
-                    if (isPortalScript(prefix, bot.tags[tag])) {
+                    const val = bot.tags[tag];
+                    if (
+                        prefix === true ||
+                        isPortalScript(prefix, bot.tags[tag])
+                    ) {
                         let item: IdeTagNode = {
                             type: 'tag',
                             botId: bot.id,
@@ -133,11 +139,11 @@ export class IdePortalManager implements SubscriptionLike {
                             key: `${tag}.${bot.id}`,
                         };
 
-                        if (prefix === '@') {
+                        if (isScript(val)) {
                             item.isScript = true;
-                        } else if (prefix === DNA_TAG_PREFIX) {
+                        } else if (isFormula(val)) {
                             item.isFormula = true;
-                        } else {
+                        } else if (typeof prefix === 'string') {
                             item.prefix = prefix;
                         }
 
