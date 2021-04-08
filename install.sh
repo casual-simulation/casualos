@@ -3,6 +3,7 @@ set -e
 
 newhost="auxplayer"
 commands=(-n --hostname -f --full -y --yes -h --help)
+docker=false
 
 help_menu() {
     echo ""
@@ -16,7 +17,7 @@ help_menu() {
     echo "-y        --yes           Auto skips 'Are you sure?'"
     echo "-h        --help          Displays this help information."
     echo ""
-    echo "Run 'aux-cli COMMAND --help' for more information on a command."
+    echo "Run 'auxcli COMMAND --help' for more information on a command."
     echo ""
     exit 1
 }
@@ -52,11 +53,11 @@ while [[ $# -gt 0 ]]; do
         shift # past value
         ;;
     -f | --full)
-        full="true"
+        full=true
         shift # past argument
         ;;
     -y | --yes)
-        yes="true"
+        yes=true
         shift # past argument
         ;;
     -h | --help)
@@ -72,7 +73,7 @@ boot_config() {
     # Setup Startup Script
     echo "DEBUG: Setting up Crontab..."
     echo "export EDITOR=nano" >>~/.bashrc
-    echo "@reboot sleep 10 && sudo -u pi bash /lib/aux-cli/startup" | sudo -u pi crontab -
+    # echo "@reboot sleep 10 && sudo -u pi bash /lib/auxcli/startup" | sudo -u pi crontab -
 }
 
 system_settings() {
@@ -109,9 +110,11 @@ ssh_enable() {
 
 system_software() {
     # Update/Upgrade the Software that comes with Raspbian
+    echo "DEBUG: Updating System Software..."
     sudo apt-get update || sudo apt update -y
     sudo apt-get upgrade -y
 
+    echo "DEBUG: Installing python3-pip..."
     sudo apt-get install -y python3-pip
     sudo pip3 install --upgrade pip setuptools
 }
@@ -120,11 +123,13 @@ docker() {
     # Install Docker
     if [ -x "$(command -v docker)" ]; then
         echo "Docker is already installed."
-    else
+        docker=true
+    fi
+    if ! $docker; then
         echo "DEBUG: Installing Docker..."
 
         error_msg="Docker failed to install."
-        curl -fsSL get.docker.com -o get-docker.sh
+        curl -fsSL https://get.docker.com -o get-docker.sh
 
         while [[ $(sh get-docker.sh >/dev/null 2>&1 || echo "${error_msg}") == "$error_msg" ]]; do
             sudo rm -rf /var/lib/dpkg/info/docker-ce*
@@ -181,12 +186,18 @@ docker_compose() {
 }
 
 get_cli() {
-    curl https://raw.githubusercontent.com/casual-simulation/aux-cli/master/install.sh --output install.sh && sudo bash install.sh
-    sudo rm -rf install.sh
+    # Check the path to make sure helpers can be found
+    if ! [[ "$PATH" == *":/lib/auxcli/commands/helper"* ]]; then
+    export PATH=$PATH:/lib/auxcli/commands/helper
+    fi
+
+    echo "DEBUG: Getting AUXCLI..."
+    curl https://raw.githubusercontent.com/casual-simulation/aux-cli/master/install.sh --output install-cli.sh && sudo bash install-cli.sh
+    sudo rm -rf install-cli.sh
 }
 
 run_steps() {
-    if [ ! "${yes}" == true ]; then
+    if ! $yes; then
         read -p "Are you sure you want to install AUX? Press 'y' to continue or press anything else to exit." -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -202,11 +213,22 @@ run_steps() {
     docker
     docker_compose
     get_cli
-    aux-cli changehost -n "${newhost}"
-    echo "Hostname changes requires a reboot to take effect."
-    if [ "${full}" == true ]; then
-        sudo aux-cli install everything
+    echo "DEBUG: Changing Hostname..."
+    auxcli changehost -n "${newhost}"
+    if $full; then
+        echo "DEBUG: Beginning AUXLCI Full Install..."
+        auxcli install everything
+        echo "DEBUG: AUXLCI Full Install Complete"
     fi
 }
 
 run_steps
+
+echo "DEBUG: casualOS Installation Complete."
+sudo rm -rf install.sh
+
+echo "The rest of the setup will complete after a reboot. This may take 10-20 minutes depending on your connection."
+read -rep $'Press "y" to reboot now or press anything else to wait.\n' -n 1 -r
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    sudo reboot now
+fi
