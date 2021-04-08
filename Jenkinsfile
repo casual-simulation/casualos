@@ -20,7 +20,7 @@ pipeline {
     }
 
     tools {
-        nodejs('Node10.13.0')
+        nodejs('Node10.15.1')
     }
 
     stages {
@@ -148,7 +148,7 @@ def BuildDockerArm32() {
     . ~/.bashrc
     
     echo "Building..."
-    npm run tar
+    npm run tar:docker
     """
 
     def remote = [:]
@@ -184,19 +184,23 @@ def PublishNPM() {
 }
 
 def PublishDocs() {
-    sh """#!/bin/bash
-    set -e
-    cd docs
-    
-    echo "Installing NPM Packages..."
-    yarn install --frozen-lockfile
+    if (env.GIT_BRANCH.endsWith(params.MAIN_BRANCH)) {
+        sh """#!/bin/bash
+        set -e
+        cd docs
+        
+        echo "Installing NPM Packages..."
+        yarn install --frozen-lockfile
 
-    echo "Upgrading Casual Simulation NPM Packages.."
-    yarn upgrade --scope @casual-simulation --latest
+        echo "Upgrading Casual Simulation NPM Packages.."
+        yarn upgrade --scope @casual-simulation --latest
 
-    echo "Building and deploying..."
-    GIT_USER="YETi-DevOps" USE_SSH=true yarn deploy
-    """
+        echo "Building and deploying..."
+        GIT_USER="YETi-DevOps" USE_SSH=true yarn deploy
+        """
+    } else {
+        echo "Skipping Docs."
+    }
 }
 
 def CreateGithubRelease() {
