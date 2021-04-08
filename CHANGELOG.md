@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.5.10
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved the IDE Portal to support showing all tags by setting the `idePortal` tag on the config bot to `true`.
+-   Added the `sheetPortalAddedTags` tag for the `sheetPortalBot` which specifies additional tags that should always be shown in the sheet portal.
+
 ## V1.5.9
 
 #### Date: 4/7/2021
