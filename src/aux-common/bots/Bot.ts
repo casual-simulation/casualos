@@ -1506,6 +1506,7 @@ export const KNOWN_TAGS: string[] = [
     'sheetPortalButtonIcon',
     'sheetPortalButtonHint',
     'sheetPortalAllowedTags',
+    'sheetPortalAddedTags',
     'menuPortalStyle',
 
     'color',

@@ -1,5 +1,28 @@
 # CasualOS Changelog
 
+## V1.5.10
+
+#### Date: 4/8/2021
+
+### :boom: Breaking Changes
+
+-   Renamed `onStreamData` to `onSerialData`.
+-   Serial functions now require a "friendly" name to keep track of each device: `serialConnect`, `serialStream`, `serialOpen`, `serialUpdate`, `serialWrite`, `serialRead`, `serialClose`, `serialFlush`,`serialDrain`, `serialPause`, `serialResume`
+-   `serialStream` now requires a bot id to send the stream to that bot.
+
+### :rocket: Improvements
+
+-   Improved the IDE Portal to support showing all tags by setting the `idePortal` tag on the config bot to `true`.
+-   Added a search tab to the IDE Portal which makes it easy to search within tags that are loaded in the IDE Portal.
+    -   It can be focused from the idePortal by using the `Ctrl+Shift+F` hotkey.
+-   Added the `sheetPortalAddedTags` tag for the `sheetPortalBot` which specifies additional tags that should always be shown in the sheet portal.
+-   Added support for auxcli v2.0.0 to retain current functionality.
+-   Added support for multiple serial connections simultaneously.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `url` tag would not be created on initial load unless the URL was updated.
+
 ## V1.5.9
 
 #### Date: 4/7/2021
