@@ -5,6 +5,7 @@ import { Bot } from '@casual-simulation/aux-common';
 import SimpleTagEditor from '../SimpleTagEditor/SimpleTagEditor';
 import MonacoLoader from '../MonacoLoader/MonacoLoader';
 import MonacoLoaderError from '../MonacoLoaderError/MonacoLoaderError';
+import type MonacoTagEditor from '../MonacoTagEditor/MonacoTagEditor';
 
 const MonacoAsync = () => ({
     component: import(
@@ -32,6 +33,10 @@ export default class TagValueEditor extends Vue {
     @Prop({ required: true }) space: string;
     @Prop({ default: false }) showDesktopEditor: boolean;
     @Prop({ default: true }) showResize: boolean;
+
+    monacoEditor() {
+        return this.$refs.monacoEditor as MonacoTagEditor;
+    }
 
     constructor() {
         super();

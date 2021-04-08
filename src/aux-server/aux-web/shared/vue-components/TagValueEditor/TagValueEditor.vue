@@ -6,6 +6,7 @@
         :tag="tag"
         :space="space"
         :showResize="showResize"
+        ref="monacoEditor"
     ></monaco-editor>
 </template>
 <script src="./TagValueEditor.ts"></script>

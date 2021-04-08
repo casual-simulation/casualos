@@ -1,10 +1,24 @@
 <template>
     <div v-if="hasPortal" class="ide-portal" v-on:keydown.stop v-on:keyup.stop>
+        <hotkey :keys="['ctrl', 'shift', 'f']" @triggered="showSearch()" />
         <md-card ref="card" class="info-card maximized">
             <md-card-content>
                 <div class="items-list">
-                    <div class="items-list-header">Tags</div>
-                    <div class="items-list-items">
+                    <div class="items-list-header">
+                        <span
+                            @click="showTags()"
+                            class="items-list-header-option"
+                            :class="{ active: isViewingTags }"
+                            >Tags</span
+                        >
+                        <span
+                            @click="showSearch()"
+                            class="items-list-header-option"
+                            :class="{ active: !isViewingTags }"
+                            >Search</span
+                        >
+                    </div>
+                    <div class="items-list-items" v-show="isViewingTags">
                         <div
                             v-for="item in items"
                             :key="item.key"
@@ -20,6 +34,32 @@
                                 :light="true"
                             >
                             </bot-tag>
+                        </div>
+                    </div>
+                    <div class="search-container" v-show="!isViewingTags">
+                        <div class="search-input-container">
+                            <input
+                                ref="searchInput"
+                                class="search-input"
+                                placeholder="Search"
+                                @input="updateSearch"
+                            />
+                        </div>
+                        <div class="items-list-items">
+                            <div
+                                v-for="item in searchItems"
+                                :key="item.key"
+                                class="item"
+                                @click="selectSearchItem(item)"
+                            >
+                                <bot-tag
+                                    :tag="item.tag"
+                                    :isScript="item.isScript"
+                                    :isFormula="item.isFormula"
+                                    :prefix="item.prefix"
+                                ></bot-tag>
+                                <div class="search-item-hint">{{ item.text }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
