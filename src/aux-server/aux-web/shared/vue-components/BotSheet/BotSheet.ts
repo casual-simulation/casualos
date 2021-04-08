@@ -41,6 +41,7 @@ export default class BotSheet extends Vue {
     buttonIcon: string = null;
     buttonHint: string = null;
     allowedTags: string[] = null;
+    addedTags: string[] = null;
 
     private _simulation: BrowserSimulation;
     private _currentConfig: SheetPortalConfig;
@@ -168,11 +169,13 @@ export default class BotSheet extends Vue {
             this.buttonIcon = this._currentConfig.buttonIcon;
             this.buttonHint = this._currentConfig.buttonHint;
             this.allowedTags = this._currentConfig.allowedTags;
+            this.addedTags = this._currentConfig.addedTags;
         } else {
             this.showButton = true;
             this.buttonIcon = null;
             this.buttonHint = null;
             this.allowedTags = null;
+            this.addedTags = null;
         }
     }
 }
