@@ -5,6 +5,7 @@ import {
     ProxyBridgePartition,
     MemoryPartition,
     AuxPartitionRealtimeStrategy,
+    YjsPartition,
 } from './AuxPartition';
 import { BotClient } from './BotClient';
 
@@ -34,7 +35,8 @@ export type PartitionConfig =
     | BotPartitionConfig
     | SearchPartitionClientConfig
     | OtherPlayersClientPartitionConfig
-    | OtherPlayersRepoPartitionConfig;
+    | OtherPlayersRepoPartitionConfig
+    | YjsPartitionConfig;
 
 /**
  * Defines a base interface for partitions.
@@ -290,4 +292,11 @@ export interface SearchPartitionClientConfig extends PartitionConfigBase {
      * The client that the partition should connect with.
      */
     client: BotClient;
+}
+
+/**
+ * Defines a partition that uses yjs to store bot data.
+ */
+export interface YjsPartitionConfig extends PartitionConfigBase {
+    type: 'yjs';
 }

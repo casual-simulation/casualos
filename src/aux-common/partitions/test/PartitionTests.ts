@@ -97,6 +97,10 @@ export function testPartitionImplementation(
                     updatedBots: [],
                 },
             ]);
+
+            expect(partition.state).toEqual({
+                test: bot,
+            });
         });
 
         it('should be able to add multiple bots to the partition at a time', async () => {
@@ -111,6 +115,10 @@ export function testPartitionImplementation(
             await waitAsync();
 
             expect(added).toEqual([bot1, bot2]);
+            expect(partition.state).toEqual({
+                test: bot1,
+                test2: bot2,
+            });
         });
 
         it('should issue an event for all the existing bots upon subscription', async () => {
@@ -127,6 +135,10 @@ export function testPartitionImplementation(
             partition.onBotsAdded.subscribe((a) => added.push(...a));
 
             expect(added).toEqual([bot1, bot2]);
+            expect(partition.state).toEqual({
+                [bot1.id]: bot1,
+                [bot2.id]: bot2,
+            });
         });
 
         it('should issue an state updated event for the existing state upon subscription', async () => {
@@ -157,6 +169,10 @@ export function testPartitionImplementation(
                     updatedBots: [],
                 },
             ]);
+            expect(partition.state).toEqual({
+                test: bot1,
+                test2: bot2,
+            });
         });
 
         it('should add bots to the configured space.', async () => {
@@ -189,6 +205,22 @@ export function testPartitionImplementation(
                     <any>'test'
                 ),
             ]);
+            expect(partition.state).toEqual({
+                test: createBot(
+                    'test',
+                    {
+                        abc: 'def',
+                    },
+                    <any>'test'
+                ),
+                test2: createBot(
+                    'test2',
+                    {
+                        abc: 'xyz',
+                    },
+                    <any>'test'
+                ),
+            });
         });
     });
 
@@ -218,6 +250,7 @@ export function testPartitionImplementation(
                     updatedBots: [],
                 },
             ]);
+            expect(partition.state).toEqual({});
         });
 
         it('should be able to remove multiple bots from the partition', async () => {
@@ -252,6 +285,7 @@ export function testPartitionImplementation(
                     updatedBots: [],
                 },
             ]);
+            expect(partition.state).toEqual({});
         });
 
         it('should be able to remove a bot that was just added to the partition', async () => {
@@ -269,6 +303,7 @@ export function testPartitionImplementation(
             expect(added).toEqual([]);
             expect(updated).toEqual([]);
             expect(removed).toEqual([]);
+            expect(partition.state).toEqual({});
         });
     });
 
