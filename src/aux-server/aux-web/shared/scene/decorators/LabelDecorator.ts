@@ -161,13 +161,17 @@ export class LabelDecorator
                         0.025
                     )
                     .then((size) => {
-                        this.text3D.setFontSize(size);
-                        this.text3D.visible = true;
-                        this.text3D.sync();
+                        if (this.text3D) {
+                            this.text3D.setFontSize(size);
+                            this.text3D.visible = true;
+                            this.text3D.sync();
+                        }
                     })
                     .catch((err) => {
                         console.error('[LabelDecorator]', err);
-                        this.text3D.visible = true;
+                        if (this.text3D) {
+                            this.text3D.visible = true;
+                        }
                     });
             } else if (updateNeeded) {
                 this.text3D.sync();
