@@ -29,7 +29,7 @@ import {
 import { startWith } from 'rxjs/operators';
 import { flatMap, union } from 'lodash';
 import { merge } from '../utils';
-import { applyEdit, edits, isTagEdit } from '../aux-format-2';
+import { applyEdit, edits, isTagEdit, TagEdit } from '../aux-format-2';
 import { v4 as uuid } from 'uuid';
 
 /**
@@ -231,19 +231,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
                                     newBot.tags[tag],
                                     newVal
                                 );
-                                nextVersion = {
-                                    currentSite: this._onVersionUpdated.value
-                                        .currentSite,
-                                    remoteSite: this._onVersionUpdated.value
-                                        .remoteSite,
-                                    vector: {
-                                        ...this._onVersionUpdated.value.vector,
-                                        [newVal.isRemote
-                                            ? this._remoteSite
-                                            : this
-                                                  ._siteId]: this._updateCounter += 1,
-                                    },
-                                };
+                                nextVersion = this.getNextVersion(newVal);
 
                                 updatedBot.tags[tag] = edits(
                                     nextVersion.vector,
@@ -359,5 +347,18 @@ export class MemoryPartitionImpl implements MemoryPartition {
         if (nextVersion) {
             this._onVersionUpdated.next(nextVersion);
         }
+    }
+
+    getNextVersion(textEdit: TagEdit): CurrentVersion {
+        return {
+            currentSite: this._onVersionUpdated.value.currentSite,
+            remoteSite: this._onVersionUpdated.value.remoteSite,
+            vector: {
+                ...this._onVersionUpdated.value.vector,
+                [textEdit.isRemote
+                    ? this._remoteSite
+                    : this._siteId]: this._updateCounter += 1,
+            },
+        };
     }
 }

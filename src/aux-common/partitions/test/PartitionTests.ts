@@ -29,8 +29,14 @@ import {
     TAG_EDIT_NAME,
 } from '../../aux-format-2';
 
+/**
+ * Tests the given partition implementation for various features.
+ * @param createPartition A function that creates a new instance of the partition that should be tested.
+ * @param testForMergedEdits Whether to test that multiple edit sequences are merged instead of preserved as separate sequences.
+ */
 export function testPartitionImplementation(
-    createPartition: () => Promise<AuxPartition>
+    createPartition: () => Promise<AuxPartition>,
+    testForMergedEdits: boolean = false
 ) {
     let partition: AuxPartition;
     let added: Bot[];
@@ -773,11 +779,18 @@ export function testPartitionImplementation(
                     stateUpdatedEvent({
                         test: {
                             tags: {
-                                abc: edits(
-                                    version.vector,
-                                    [preserve(3), del(3)],
-                                    [preserve(6), del(3)]
-                                ),
+                                abc: testForMergedEdits
+                                    ? edits(version.vector, [
+                                          preserve(3),
+                                          del(3),
+                                          preserve(3),
+                                          del(3),
+                                      ])
+                                    : edits(
+                                          version.vector,
+                                          [preserve(3), del(3)],
+                                          [preserve(6), del(3)]
+                                      ),
                             },
                         },
                     }),
@@ -814,15 +827,23 @@ export function testPartitionImplementation(
                         abc: 'abc123def456',
                     }),
                 });
+
                 expect(updates.slice(1)).toEqual([
                     stateUpdatedEvent({
                         test: {
                             tags: {
-                                abc: edits(
-                                    version.vector,
-                                    [preserve(3), insert('123')],
-                                    [preserve(9), insert('456')]
-                                ),
+                                abc: testForMergedEdits
+                                    ? edits(version.vector, [
+                                          preserve(3),
+                                          insert('123'),
+                                          preserve(3),
+                                          insert('456'),
+                                      ])
+                                    : edits(
+                                          version.vector,
+                                          [preserve(3), insert('123')],
+                                          [preserve(9), insert('456')]
+                                      ),
                             },
                         },
                     }),

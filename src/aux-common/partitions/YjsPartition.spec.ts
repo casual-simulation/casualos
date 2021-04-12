@@ -22,7 +22,8 @@ describe('YjsPartition', () => {
                     username: 'username',
                 },
                 { type: 'yjs' }
-            )
+            ),
+        true
     );
 
     it('should return immediate for the editStrategy', () => {
