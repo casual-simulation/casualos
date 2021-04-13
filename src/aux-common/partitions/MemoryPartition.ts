@@ -287,19 +287,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
                         if (hasValue(newVal)) {
                             if (isTagEdit(newVal)) {
                                 masks[tag] = applyEdit(masks[tag], newVal);
-                                nextVersion = {
-                                    currentSite: this._onVersionUpdated.value
-                                        .currentSite,
-                                    remoteSite: this._onVersionUpdated.value
-                                        .remoteSite,
-                                    vector: {
-                                        ...this._onVersionUpdated.value.vector,
-                                        [newVal.isRemote
-                                            ? this._remoteSite
-                                            : this
-                                                  ._siteId]: this._updateCounter += 1,
-                                    },
-                                };
+                                nextVersion = this.getNextVersion(newVal);
 
                                 updatedBot.masks[this.space][tag] = edits(
                                     nextVersion.vector,
