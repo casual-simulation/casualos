@@ -76,12 +76,9 @@ import {
  * Attempts to create a YjsPartition from the given config.
  * @param config The config.
  */
-export function createYjsPartition(
-    config: PartitionConfig,
-    user: User
-): YjsPartition {
+export function createYjsPartition(config: PartitionConfig): YjsPartition {
     if (config.type === 'yjs') {
-        return new YjsPartitionImpl(user, config);
+        return new YjsPartitionImpl(config);
     }
     return undefined;
 }
@@ -174,7 +171,7 @@ export class YjsPartitionImpl implements YjsPartition {
         return this._onVersionUpdated.value.currentSite;
     }
 
-    constructor(user: User, config: YjsPartitionConfig) {
+    constructor(config: YjsPartitionConfig) {
         this.private = config.private || false;
         this._bots = this._doc.getMap('bots');
         this._masks = this._doc.getMap('masks');

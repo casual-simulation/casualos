@@ -12,3 +12,5 @@ export * from './BotClient';
 export * from './BotPartition';
 export * from './MemoryBotClient';
 export * from './AuxPartitionRealtimeEditModeProvider';
+
+export * from './YjsPartition';

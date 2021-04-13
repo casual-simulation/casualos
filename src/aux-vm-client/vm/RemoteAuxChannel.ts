@@ -10,6 +10,7 @@ import {
     createBotClientPartition,
     iteratePartitions,
     createOtherPlayersClientPartition,
+    createYjsPartition,
 } from '@casual-simulation/aux-common';
 import {
     AuxConfig,
@@ -40,14 +41,16 @@ export class RemoteAuxChannel extends BaseAuxChannel {
         return await createAuxPartition(
             config,
             createMemoryPartition,
-            config => createCausalRepoPartition(config, this.user),
-            config => createRemoteCausalRepoPartition(config, this.user),
-            config => createCausalRepoClientPartition(config, this.user),
-            config => createCausalRepoHistoryClientPartition(config, this.user),
-            config => createBotPartition(config),
-            config => createBotClientPartition(config),
-            config => createOtherPlayersClientPartition(config, this.user),
-            config => createOtherPlayersRepoPartition(config, this.user)
+            (config) => createCausalRepoPartition(config, this.user),
+            (config) => createRemoteCausalRepoPartition(config, this.user),
+            (config) => createCausalRepoClientPartition(config, this.user),
+            (config) =>
+                createCausalRepoHistoryClientPartition(config, this.user),
+            (config) => createBotPartition(config),
+            (config) => createBotClientPartition(config),
+            (config) => createOtherPlayersClientPartition(config, this.user),
+            (config) => createOtherPlayersRepoPartition(config, this.user),
+            (config) => createYjsPartition(config)
         );
     }
 
