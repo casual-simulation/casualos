@@ -95,13 +95,13 @@ export class YjsPartitionImpl implements YjsPartition {
     private _sub = new Subscription();
 
     private _doc: Doc = new Doc();
-    private _remoteDoc: Doc = new Doc();
     private _bots: Map<TagsMap>;
-    private _remoteBots: Map<TagsMap>;
     private _internalPartition: MemoryPartitionImpl = new MemoryPartitionImpl({
         type: 'memory',
         initialState: {},
     });
+
+    private _isLocalTransaction: boolean = true;
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._internalPartition.onBotsAdded;
@@ -161,38 +161,36 @@ export class YjsPartitionImpl implements YjsPartition {
         return 'immediate';
     }
 
+    private get _remoteSite() {
+        return this._onVersionUpdated.value.remoteSite;
+    }
+
+    private get _currentSite() {
+        return this._onVersionUpdated.value.currentSite;
+    }
+
     constructor(user: User, config: YjsPartitionConfig) {
         this.private = config.private || false;
         this._bots = this._doc.getMap('bots');
-        this._remoteBots = this._remoteDoc.getMap('bots');
-
-        this._remoteDoc.on('update', (update: Uint8Array) => {
-            applyUpdate(this._doc, update);
-        });
-        this._doc.on('update', (update: Uint8Array) => {
-            applyUpdate(this._remoteDoc, update);
-        });
         this._doc.on('afterTransaction', (transaction: Transaction) => {
             this._processTransaction(transaction);
         });
         this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
             currentSite: this._doc.clientID.toString(),
-            remoteSite: this._remoteDoc.clientID.toString(),
+            remoteSite: uuid(),
             vector: {},
         });
 
         this._internalPartition.getNextVersion = (textEdit: TagEdit) => {
-            const version = getStateVector(
-                textEdit.isRemote ? this._remoteDoc : this._doc
-            );
+            const version = getStateVector(this._doc);
             const site = textEdit.isRemote
-                ? this._onVersionUpdated.value.remoteSite
-                : this._onVersionUpdated.value.currentSite;
+                ? this._remoteSite
+                : this._currentSite;
             return {
-                currentSite: this._onVersionUpdated.value.currentSite,
-                remoteSite: this._onVersionUpdated.value.remoteSite,
+                currentSite: this._currentSite,
+                remoteSite: this._remoteSite,
                 vector: {
-                    [site]: version[site],
+                    [site]: version[this._doc.clientID],
                 },
             };
         };
@@ -255,131 +253,131 @@ export class YjsPartitionImpl implements YjsPartition {
             | RevokeCertificateAction
         )[]
     ) {
+        this._isLocalTransaction = true;
         this._doc.transact((t) => {
-            this._remoteDoc.transact((remoteTransaction) => {
-                for (let event of events) {
-                    if (event.type === 'add_bot') {
-                        const map: TagsMap = new Map();
+            for (let event of events) {
+                if (event.type === 'add_bot') {
+                    const map: TagsMap = new Map();
 
-                        for (let tag in event.bot.tags) {
-                            const val = event.bot.tags[tag];
-                            const yVal =
-                                typeof val === 'string' ? new Text(val) : val;
-                            map.set(tag, yVal);
-                        }
+                    for (let tag in event.bot.tags) {
+                        const val = event.bot.tags[tag];
+                        const yVal =
+                            typeof val === 'string' ? new Text(val) : val;
+                        map.set(tag, yVal);
+                    }
 
-                        this._bots.set(event.id, map);
-                    } else if (event.type === 'remove_bot') {
-                        this._bots.delete(event.id);
-                    } else if (event.type === 'update_bot') {
-                        const currentBot = this.state[event.id];
-                        const currentMap = this._bots.get(event.id);
-                        if (!event.update.tags || !currentBot || !currentMap) {
+                    this._bots.set(event.id, map);
+                } else if (event.type === 'remove_bot') {
+                    this._bots.delete(event.id);
+                } else if (event.type === 'update_bot') {
+                    const currentBot = this.state[event.id];
+                    const currentMap = this._bots.get(event.id);
+                    if (!event.update.tags || !currentBot || !currentMap) {
+                        continue;
+                    }
+                    for (let tag of Object.keys(event.update.tags)) {
+                        const newVal = event.update.tags[tag];
+                        const oldVal = currentBot.tags[tag];
+
+                        if (newVal === oldVal) {
                             continue;
                         }
-                        for (let tag of Object.keys(event.update.tags)) {
-                            const newVal = event.update.tags[tag];
-                            const oldVal = currentBot.tags[tag];
 
-                            if (newVal === oldVal) {
-                                continue;
-                            }
+                        if (hasValue(newVal)) {
+                            if (isTagEdit(newVal)) {
+                                if (newVal.isRemote) {
+                                    this._isLocalTransaction = false;
+                                }
+                                const map = currentMap;
+                                const doc = this._doc;
 
-                            if (hasValue(newVal)) {
-                                if (isTagEdit(newVal)) {
-                                    const map = newVal.isRemote
-                                        ? this._remoteBots.get(event.id)
-                                        : currentMap;
-                                    const doc = newVal.isRemote
-                                        ? this._remoteDoc
-                                        : this._doc;
+                                if (!map) {
+                                    continue;
+                                }
 
-                                    if (!map) {
-                                        continue;
-                                    }
-
-                                    const val = map.get(tag);
-                                    let text: Text;
-                                    if (val instanceof Text) {
-                                        text = val;
-                                    } else {
-                                        text = new Text(convertToString(val));
-                                        map.set(tag, text);
+                                const val = map.get(tag);
+                                let text: Text;
+                                if (val instanceof Text) {
+                                    text = val;
+                                } else {
+                                    text = new Text(convertToString(val));
+                                    map.set(tag, text);
+                                    newVal.version[
+                                        doc.clientID.toString()
+                                    ] = Math.max(
                                         newVal.version[
                                             doc.clientID.toString()
-                                        ] = Math.max(
-                                            newVal.version[
-                                                doc.clientID.toString()
-                                            ] ?? -1,
-                                            text._first.id.clock
-                                        );
+                                        ] ?? -1,
+                                        text._first.id.clock
+                                    );
+                                }
+
+                                if (text instanceof Text) {
+                                    if (this._remoteSite in newVal.version) {
+                                        newVal.version[this._currentSite] =
+                                            newVal.version[this._remoteSite];
+                                        delete newVal.version[this._remoteSite];
                                     }
 
-                                    if (text instanceof Text) {
-                                        for (let ops of newVal.operations) {
-                                            let index = 0;
-                                            for (let op of ops) {
-                                                if (op.type === 'preserve') {
-                                                    index += op.count;
-                                                } else if (
-                                                    op.type === 'insert'
-                                                ) {
-                                                    if (op.text.length <= 0) {
-                                                        continue;
-                                                    }
-                                                    const relativePos = createRelativePositionFromStateVector(
-                                                        text,
-                                                        newVal.version,
-                                                        index
-                                                    );
-                                                    const finalPosition = createAbsolutePositionFromRelativePosition(
-                                                        relativePos,
-                                                        doc
-                                                    );
-
-                                                    text.insert(
-                                                        finalPosition.index,
-                                                        op.text
-                                                    );
-                                                    index += op.text.length;
-                                                } else if (
-                                                    op.type === 'delete'
-                                                ) {
-                                                    if (op.count <= 0) {
-                                                        continue;
-                                                    }
-                                                    const relativePos = createRelativePositionFromStateVector(
-                                                        text,
-                                                        newVal.version,
-                                                        index
-                                                    );
-                                                    const finalPosition = createAbsolutePositionFromRelativePosition(
-                                                        relativePos,
-                                                        doc
-                                                    );
-
-                                                    text.delete(
-                                                        finalPosition.index,
-                                                        op.count
-                                                    );
+                                    for (let ops of newVal.operations) {
+                                        let index = 0;
+                                        for (let op of ops) {
+                                            if (op.type === 'preserve') {
+                                                index += op.count;
+                                            } else if (op.type === 'insert') {
+                                                if (op.text.length <= 0) {
+                                                    continue;
                                                 }
+                                                const relativePos = createRelativePositionFromStateVector(
+                                                    text,
+                                                    newVal.version,
+                                                    index
+                                                );
+                                                const finalPosition = createAbsolutePositionFromRelativePosition(
+                                                    relativePos,
+                                                    doc
+                                                );
+
+                                                text.insert(
+                                                    finalPosition.index,
+                                                    op.text
+                                                );
+                                                index += op.text.length;
+                                            } else if (op.type === 'delete') {
+                                                if (op.count <= 0) {
+                                                    continue;
+                                                }
+                                                const relativePos = createRelativePositionFromStateVector(
+                                                    text,
+                                                    newVal.version,
+                                                    index
+                                                );
+                                                const finalPosition = createAbsolutePositionFromRelativePosition(
+                                                    relativePos,
+                                                    doc
+                                                );
+
+                                                text.delete(
+                                                    finalPosition.index,
+                                                    op.count
+                                                );
                                             }
                                         }
                                     }
-                                } else {
-                                    const yVal =
-                                        typeof newVal === 'string'
-                                            ? new Text(newVal)
-                                            : newVal;
-                                    currentMap.set(tag, yVal);
                                 }
                             } else {
-                                currentMap.delete(tag);
+                                const yVal =
+                                    typeof newVal === 'string'
+                                        ? new Text(newVal)
+                                        : newVal;
+                                currentMap.set(tag, yVal);
                             }
+                        } else {
+                            currentMap.delete(tag);
                         }
                     }
                 }
-            });
+            }
         });
 
         // let { tree, updates, actions, result } = applyEvents(
@@ -426,11 +424,6 @@ export class YjsPartitionImpl implements YjsPartition {
         )[] = [];
 
         const version = getStateVector(this._doc);
-
-        const isLocal =
-            transaction.beforeState.get(this._doc.clientID) !==
-                transaction.afterState.get(this._doc.clientID) ||
-            transaction.deleteSet.clients.has(this._doc.clientID);
 
         for (let [type, events] of transaction.changedParentTypes) {
             if (type === this._bots) {
@@ -515,14 +508,14 @@ export class YjsPartitionImpl implements YjsPartition {
                                     }
                                 }
 
-                                const siteId = isLocal
-                                    ? this._doc.clientID.toString()
-                                    : this._remoteDoc.clientID.toString();
+                                const siteId = this._isLocalTransaction
+                                    ? this._currentSite
+                                    : this._remoteSite;
                                 const e = edit(
-                                    { [siteId]: version[siteId] },
+                                    { [siteId]: version[this._doc.clientID] },
                                     ...operations
                                 );
-                                e.isRemote = !isLocal;
+                                e.isRemote = !this._isLocalTransaction;
 
                                 memoryEvents.push(
                                     botUpdated(id, {
@@ -541,8 +534,8 @@ export class YjsPartitionImpl implements YjsPartition {
         await this._internalPartition.applyEvents(memoryEvents);
 
         this._onVersionUpdated.next({
-            currentSite: this._onVersionUpdated.value.currentSite,
-            remoteSite: this._onVersionUpdated.value.remoteSite,
+            currentSite: this._currentSite,
+            remoteSite: this._remoteSite,
             vector: version,
         });
     }
