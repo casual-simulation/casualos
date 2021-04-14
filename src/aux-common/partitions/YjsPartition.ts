@@ -69,6 +69,7 @@ import {
 import { MemoryPartitionImpl } from './MemoryPartition';
 import {
     createRelativePositionFromStateVector,
+    getClock,
     getStateVector,
 } from '../yjs/YjsHelpers';
 
@@ -95,6 +96,8 @@ export class YjsPartitionImpl implements YjsPartition {
     protected _hasRegisteredSubs = false;
     private _sub = new Subscription();
 
+    private _localId: number;
+    private _remoteId: number;
     private _doc: Doc = new Doc();
     private _bots: Map<TagsMap>;
     private _masks: Map<MapValue>;
@@ -164,23 +167,25 @@ export class YjsPartitionImpl implements YjsPartition {
     }
 
     private get _remoteSite() {
-        return this._onVersionUpdated.value.remoteSite;
+        return this._remoteId.toString();
     }
 
     private get _currentSite() {
-        return this._onVersionUpdated.value.currentSite;
+        return this._localId.toString();
     }
 
     constructor(config: YjsPartitionConfig) {
         this.private = config.private || false;
+        this._localId = this._doc.clientID;
+        this._remoteId = new Doc().clientID;
         this._bots = this._doc.getMap('bots');
         this._masks = this._doc.getMap('masks');
         this._doc.on('afterTransaction', (transaction: Transaction) => {
             this._processTransaction(transaction);
         });
         this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
-            currentSite: this._doc.clientID.toString(),
-            remoteSite: uuid(),
+            currentSite: this._localId.toString(),
+            remoteSite: this._remoteId.toString(),
             vector: {},
         });
 
@@ -465,9 +470,11 @@ export class YjsPartitionImpl implements YjsPartition {
         valueId: string,
         newVal: any
     ) {
+        doc.clientID = this._localId;
         if (hasValue(newVal)) {
             if (isTagEdit(newVal)) {
                 if (newVal.isRemote) {
+                    doc.clientID = this._remoteId;
                     this._isLocalTransaction = false;
                 }
 
@@ -478,19 +485,14 @@ export class YjsPartitionImpl implements YjsPartition {
                 } else {
                     text = new Text(convertToString(val));
                     map.set(valueId, text);
-                    newVal.version[doc.clientID.toString()] = Math.max(
-                        newVal.version[doc.clientID.toString()] ?? -1,
-                        text._first.id.clock
-                    );
                 }
 
-                if (text instanceof Text) {
-                    if (this._remoteSite in newVal.version) {
-                        newVal.version[this._currentSite] =
-                            newVal.version[this._remoteSite];
-                        delete newVal.version[this._remoteSite];
-                    }
+                const version = {
+                    ...newVal.version,
+                    [this._currentSite]: getClock(doc, this._localId),
+                };
 
+                if (text instanceof Text) {
                     for (let ops of newVal.operations) {
                         let index = 0;
                         for (let op of ops) {
@@ -502,7 +504,7 @@ export class YjsPartitionImpl implements YjsPartition {
                                 }
                                 const relativePos = createRelativePositionFromStateVector(
                                     text,
-                                    newVal.version,
+                                    version,
                                     index
                                 );
                                 const finalPosition = createAbsolutePositionFromRelativePosition(
@@ -518,7 +520,7 @@ export class YjsPartitionImpl implements YjsPartition {
                                 }
                                 const relativePos = createRelativePositionFromStateVector(
                                     text,
-                                    newVal.version,
+                                    version,
                                     index
                                 );
                                 const finalPosition = createAbsolutePositionFromRelativePosition(
@@ -641,10 +643,7 @@ export class YjsPartitionImpl implements YjsPartition {
                 const siteId = this._isLocalTransaction
                     ? this._currentSite
                     : this._remoteSite;
-                const e = edit(
-                    { [siteId]: version[this._doc.clientID] },
-                    ...operations
-                );
+                const e = edit({ [siteId]: version[siteId] }, ...operations);
                 e.isRemote = !this._isLocalTransaction;
 
                 events.push(createTextUpdate(id, tag, e));

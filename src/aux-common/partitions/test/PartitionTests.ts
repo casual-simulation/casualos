@@ -28,6 +28,11 @@ import {
     preserve,
     TAG_EDIT_NAME,
 } from '../../aux-format-2';
+import faker from 'faker';
+import {
+    generateRandomEditCases,
+    generateRandomEditParagraphCases,
+} from '../../test/FuzzingHelpers';
 
 /**
  * Tests the given partition implementation for various features.
@@ -36,7 +41,8 @@ import {
  */
 export function testPartitionImplementation(
     createPartition: () => Promise<AuxPartition>,
-    testForMergedEdits: boolean = false
+    testForMergedEdits: boolean = false,
+    testConcurrentEdits: boolean = false
 ) {
     let partition: AuxPartition;
     let added: Bot[];
@@ -940,6 +946,258 @@ export function testPartitionImplementation(
 
                 expect(Object.keys(version.vector).length).toBeGreaterThan(0);
             });
+
+            if (testConcurrentEdits) {
+                describe('concurrent edits', () => {
+                    const cases = [
+                        [
+                            'should support concatenations',
+                            'def',
+                            [
+                                [insert('ghi')],
+                                [preserve(3), insert('jfk')],
+                                [preserve(6), insert('lmn')],
+                            ],
+                            'ghijfklmndef',
+                        ] as const,
+                        [
+                            'should support inserts',
+                            'def',
+                            [
+                                [insert('ghi')],
+                                [preserve(1), insert('jfk')],
+                                [preserve(3), insert('lmn')],
+                            ],
+                            'gjflmnkhidef',
+                        ] as const,
+                        [
+                            'should support deletes',
+                            'def',
+                            [
+                                [insert('ghi')],
+                                [preserve(1), del(2)],
+                                [preserve(1), del(2)],
+                            ],
+                            'gf',
+                        ] as const,
+                    ];
+
+                    it.each(cases)(
+                        '%s',
+                        async (desc, startValue, operations, expected) => {
+                            await partition.applyEvents([
+                                botAdded(
+                                    createBot('test', {
+                                        abc: startValue,
+                                    })
+                                ),
+                            ]);
+
+                            await waitAsync();
+
+                            const editVersion = { ...version.vector };
+
+                            const edits = operations.map((ops: any) =>
+                                edit(editVersion, ...ops)
+                            );
+
+                            for (let e of edits) {
+                                await partition.applyEvents([
+                                    botUpdated('test', {
+                                        tags: {
+                                            abc: e,
+                                        },
+                                    }),
+                                ]);
+                            }
+
+                            expect(partition.state).toEqual({
+                                test: createBot('test', {
+                                    abc: expected,
+                                }),
+                            });
+                            expect(
+                                Object.keys(version.vector).length
+                            ).toBeGreaterThan(0);
+                        }
+                    );
+
+                    it('should handle local edits while remote edits occur', async () => {
+                        await partition.applyEvents([
+                            botAdded(
+                                createBot('test', {
+                                    abc: 'def',
+                                })
+                            ),
+                        ]);
+
+                        await waitAsync();
+
+                        const editVersion = { ...version.vector };
+
+                        const edit1 = edit(editVersion, insert('111'));
+                        // after: 111def
+                        const edit2 = edit(
+                            editVersion,
+                            preserve(1),
+                            insert('222')
+                        );
+                        // after: 122211def
+                        const edit3 = edit(
+                            editVersion,
+                            preserve(2),
+                            insert('333')
+                        );
+                        // after: 122213331def
+
+                        const remoteEdit1 = edit(
+                            editVersion,
+                            preserve(2),
+                            insert('444')
+                        );
+                        // TODO: this is probably a bug but I want to wait on this until people
+                        // start having problems.
+                        // BUG: remote edits always see the local edits
+                        // after: 114441def
+                        edit2.isRemote = true;
+
+                        // final: 122213334441def
+
+                        await partition.applyEvents([
+                            botUpdated('test', {
+                                tags: {
+                                    abc: edit1,
+                                },
+                            }),
+                        ]);
+                        await partition.applyEvents([
+                            botUpdated('test', {
+                                tags: {
+                                    abc: remoteEdit1,
+                                },
+                            }),
+                        ]);
+                        await partition.applyEvents([
+                            botUpdated('test', {
+                                tags: {
+                                    abc: edit2,
+                                },
+                            }),
+                        ]);
+                        await partition.applyEvents([
+                            botUpdated('test', {
+                                tags: {
+                                    abc: edit3,
+                                },
+                            }),
+                        ]);
+
+                        expect(partition.state).toEqual({
+                            test: createBot('test', {
+                                abc: '122213334441def',
+                            }),
+                        });
+                    });
+                });
+
+                describe('fuzzing', () => {
+                    faker.seed(95423);
+
+                    const randomEdits = generateRandomEditCases(25);
+                    const paragraphCases = generateRandomEditParagraphCases(5);
+
+                    describe.each([...randomEdits, ...paragraphCases])(
+                        '%s -> %s',
+                        (startText, endText, intermediateTexts, edits) => {
+                            const space = 'space';
+
+                            it('should be able to apply the given edits to produce the final text', async () => {
+                                await partition.applyEvents([
+                                    botAdded(
+                                        createBot('test', {
+                                            abc: startText,
+                                        })
+                                    ),
+                                ]);
+
+                                for (let i = 0; i < edits.length; i++) {
+                                    let edit = edits[i];
+                                    let str = intermediateTexts[i];
+
+                                    await partition.applyEvents([
+                                        botUpdated('test', {
+                                            tags: {
+                                                abc: edit,
+                                            },
+                                        }),
+                                    ]);
+
+                                    expect(partition.state).toEqual({
+                                        test: createBot('test', {
+                                            abc: str,
+                                        }),
+                                    });
+                                }
+
+                                expect(partition.state).toEqual({
+                                    test: createBot('test', {
+                                        abc: endText,
+                                    }),
+                                });
+                            });
+
+                            it('should be able to apply the given edit to tag masks', async () => {
+                                partition.space = space;
+
+                                await partition.applyEvents([
+                                    botUpdated('test', {
+                                        masks: {
+                                            [space]: {
+                                                abc: startText,
+                                            },
+                                        },
+                                    }),
+                                ]);
+
+                                for (let i = 0; i < edits.length; i++) {
+                                    let edit = edits[i];
+                                    let str = intermediateTexts[i];
+
+                                    await partition.applyEvents([
+                                        botUpdated('test', {
+                                            masks: {
+                                                [space]: {
+                                                    abc: edit,
+                                                },
+                                            },
+                                        }),
+                                    ]);
+
+                                    expect(partition.state).toEqual({
+                                        test: {
+                                            masks: {
+                                                [space]: {
+                                                    abc: str,
+                                                },
+                                            },
+                                        },
+                                    });
+                                }
+
+                                expect(partition.state).toEqual({
+                                    test: {
+                                        masks: {
+                                            [space]: {
+                                                abc: endText,
+                                            },
+                                        },
+                                    },
+                                });
+                            });
+                        }
+                    );
+                });
+            }
         });
 
         describe('TagMasks', () => {

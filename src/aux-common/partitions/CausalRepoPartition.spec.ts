@@ -24,7 +24,9 @@ describe('CausalRepoPartition', () => {
                     username: 'username',
                 },
                 { type: 'causal_repo' }
-            )
+            ),
+        undefined,
+        true
     );
 
     it('should return immediate for the editStrategy', () => {
@@ -53,7 +55,7 @@ describe('CausalRepoPartition', () => {
         );
 
         let events = [] as Action[];
-        partition.onEvents.subscribe(e => events.push(...e));
+        partition.onEvents.subscribe((e) => events.push(...e));
 
         const keys = keypair('password');
         await partition.applyEvents([
@@ -93,7 +95,7 @@ describe('CausalRepoPartition', () => {
         );
 
         let events = [] as Action[];
-        partition.onEvents.subscribe(e => events.push(...e));
+        partition.onEvents.subscribe((e) => events.push(...e));
 
         await partition.applyEvents([
             createCertificate(
@@ -140,7 +142,7 @@ describe('CausalRepoPartition', () => {
         );
 
         let events = [] as Action[];
-        partition.onEvents.subscribe(e => events.push(...e));
+        partition.onEvents.subscribe((e) => events.push(...e));
 
         partition.connect();
 

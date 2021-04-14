@@ -15,6 +15,7 @@ import { first } from 'rxjs/operators';
 describe('YjsPartition', () => {
     testPartitionImplementation(
         async () => new YjsPartitionImpl({ type: 'yjs' }),
+        true,
         true
     );
 
