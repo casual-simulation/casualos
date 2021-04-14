@@ -192,4 +192,63 @@ describe('YjsHelpers', () => {
             expect(pos1).toEqual(expected1);
         });
     });
+
+    describe('yjs', () => {
+        it('should support making edits with different client IDs', () => {
+            let doc = new Doc();
+            doc.clientID = 1;
+
+            const text1 = doc.getText();
+            let transaction: Transaction;
+            doc.transact((t) => {
+                transaction = t;
+
+                text1.insert(0, 'abc');
+
+                doc.clientID = 2;
+
+                text1.insert(0, 'ghi');
+
+                doc.clientID = 1;
+
+                text1.insert(3, 'def');
+            });
+
+            expect(text1.toString()).toEqual('ghidefabc');
+
+            let ids = [] as any;
+
+            let item = text1._first;
+            while (item) {
+                ids.push({
+                    ...item.id,
+                    content: item.content.getContent(),
+                });
+                item = item.next;
+            }
+
+            expect(ids).toEqual([
+                { client: 2, clock: 0, content: ['g', 'h', 'i'] },
+                { client: 1, clock: 3, content: ['d', 'e', 'f'] },
+                { client: 1, clock: 0, content: ['a', 'b', 'c'] },
+            ]);
+
+            expect(transaction.changedParentTypes.size).toBe(1);
+            let events = first(transaction.changedParentTypes.values());
+            expect(events.length).toBe(1);
+            const event: YTextEvent = events[0] as YTextEvent;
+            expect(event).toBeInstanceOf(YTextEvent);
+            expect(event.changes.delta).toEqual([
+                {
+                    insert: 'ghidefabc',
+                },
+            ]);
+
+            const version = getStateVector(doc);
+            expect(version).toEqual({
+                '1': 6,
+                '2': 3,
+            });
+        });
+    });
 });
