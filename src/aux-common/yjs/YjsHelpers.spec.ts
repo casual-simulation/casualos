@@ -1,11 +1,15 @@
+import { first } from '@casual-simulation/causal-trees';
 import {
     applyUpdate,
     createRelativePositionFromTypeIndex,
     Doc,
     encodeStateAsUpdate,
+    Transaction,
+    YTextEvent,
 } from 'yjs';
 import {
     createRelativePositionFromStateVector,
+    getClock,
     getStateVector,
 } from './YjsHelpers';
 
@@ -69,6 +73,58 @@ describe('YjsHelpers', () => {
                 [doc1.clientID]: 1,
                 [doc2.clientID]: 1,
             });
+        });
+    });
+
+    describe('getClock()', () => {
+        it('should return the default clock for a document', () => {
+            const doc1 = new Doc();
+
+            const clock = getClock(doc1, doc1.clientID);
+
+            expect(clock).toEqual(undefined);
+        });
+
+        it('should return the client ID mapped to the timestamp', () => {
+            const doc1 = new Doc();
+            const map1 = doc1.getMap();
+            map1.set('abc', 'def');
+
+            const clock = getClock(doc1, doc1.clientID);
+
+            expect(clock).toEqual(1);
+        });
+
+        it('should include the correct timestamp for docs that contain strings', () => {
+            const doc1 = new Doc();
+            const text1 = doc1.getText();
+            text1.insert(0, 'abcdef');
+
+            const clock = getClock(doc1, doc1.clientID);
+
+            expect(clock).toEqual(6);
+        });
+
+        it('should include timestamps for other clients', () => {
+            const doc1 = new Doc();
+            const doc2 = new Doc();
+            const map1 = doc1.getMap();
+            map1.set('abc', 'def');
+
+            const map2 = doc2.getMap();
+            map2.set('def', 123);
+
+            const state1 = encodeStateAsUpdate(doc1);
+            const state2 = encodeStateAsUpdate(doc2);
+
+            applyUpdate(doc1, state2);
+            applyUpdate(doc2, state1);
+
+            const clock1 = getClock(doc1, doc2.clientID);
+            const clock2 = getClock(doc2, doc1.clientID);
+
+            expect(clock1).toEqual(1);
+            expect(clock2).toEqual(1);
         });
     });
 

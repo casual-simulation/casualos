@@ -25,6 +25,22 @@ export function getStateVector(doc: Doc) {
 }
 
 /**
+ * Gets the latest clock value for the given client.
+ * @param doc The document.
+ * @param client The client.
+ */
+export function getClock(doc: Doc, client: number): number {
+    const structs = doc.store.clients.get(client);
+    if (structs) {
+        const struct = structs[structs.length - 1];
+        if (struct) {
+            return struct.id.clock + struct.length;
+        }
+    }
+    return undefined;
+}
+
+/**
  * Creates a relative position from an absolute position based on the given state vector.
  * @param text The text that the position should be created from.
  * @param vector The version vector that the position should be calculated from.
