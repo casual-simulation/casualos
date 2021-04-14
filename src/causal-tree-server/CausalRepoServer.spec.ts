@@ -55,6 +55,9 @@ import {
     AuthenticateBranchWritesEvent,
     branchSettings,
     AUTHENTICATED_TO_BRANCH,
+    ADD_UPDATES,
+    AddUpdatesEvent,
+    UPDATES_RECEIVED,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -71,6 +74,7 @@ import {
     SET_BRANCH_PASSWORD,
     AUTHENTICATE_BRANCH_WRITES,
     DEVICE_COUNT,
+    MemoryUpdatesStore,
 } from '@casual-simulation/causal-trees';
 import { bot } from '../aux-vm/node_modules/@casual-simulation/aux-common/aux-format-2';
 import {
@@ -93,12 +97,19 @@ describe('CausalRepoServer', () => {
     let connections: MemoryConnectionServer;
     let store: MemoryCausalRepoStore;
     let stageStore: MemoryStageStore;
+    let updateStore: MemoryUpdatesStore;
 
     beforeEach(() => {
         store = new MemoryCausalRepoStore();
         stageStore = new MemoryStageStore();
         connections = new MemoryConnectionServer();
-        server = new CausalRepoServer(connections, store, stageStore);
+        updateStore = new MemoryUpdatesStore();
+        server = new CausalRepoServer(
+            connections,
+            store,
+            stageStore,
+            updateStore
+        );
     });
 
     describe(WATCH_BRANCH, () => {
@@ -577,6 +588,178 @@ describe('CausalRepoServer', () => {
                         },
                     },
                 ]);
+            });
+        });
+
+        describe('updates', () => {
+            it('should do nothing if updates are not supported', async () => {
+                server = new CausalRepoServer(
+                    connections,
+                    store,
+                    stageStore,
+                    null
+                );
+                server.init();
+
+                const device = new MemoryConnection(device1Info);
+                const joinBranch = new Subject<WatchBranchEvent>();
+                device.events.set(WATCH_BRANCH, joinBranch);
+
+                connections.connection.next(device);
+
+                joinBranch.next({
+                    branch: 'testBranch',
+                    protocol: 'updates',
+                });
+
+                await waitAsync();
+
+                expect(device.messages).toEqual([]);
+            });
+
+            it('should load the given branch and send the current updates', async () => {
+                server.init();
+
+                const device = new MemoryConnection(device1Info);
+                const joinBranch = new Subject<WatchBranchEvent>();
+                device.events.set(WATCH_BRANCH, joinBranch);
+
+                connections.connection.next(device);
+
+                await updateStore.addUpdates('testBranch', ['111', '222']);
+
+                joinBranch.next({
+                    branch: 'testBranch',
+                    protocol: 'updates',
+                });
+
+                await waitAsync();
+
+                expect(device.messages).toEqual([
+                    {
+                        name: ADD_UPDATES,
+                        data: {
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                            initial: true,
+                        },
+                    },
+                ]);
+            });
+
+            it('should create a new orphan branch if the branch name does not exist', async () => {
+                server.init();
+
+                const device = new MemoryConnection(device1Info);
+                const joinBranch = new Subject<WatchBranchEvent>();
+                device.events.set(WATCH_BRANCH, joinBranch);
+
+                connections.connection.next(device);
+                await waitAsync();
+
+                joinBranch.next({
+                    branch: 'doesNotExist',
+                    protocol: 'updates',
+                });
+
+                await waitAsync();
+
+                expect(device.messages).toEqual([
+                    {
+                        name: ADD_UPDATES,
+                        data: {
+                            branch: 'doesNotExist',
+                            updates: [] as string[],
+                            initial: true,
+                        },
+                    },
+                ]);
+            });
+
+            describe('temp', () => {
+                it('should load the branch without persistent data if the branch is temporary', async () => {
+                    server.init();
+
+                    const device = new MemoryConnection(device1Info);
+                    const joinBranch = new Subject<WatchBranchEvent>();
+                    device.events.set(WATCH_BRANCH, joinBranch);
+
+                    connections.connection.next(device);
+
+                    await updateStore.addUpdates('testBranch', ['111', '222']);
+
+                    joinBranch.next({
+                        branch: 'testBranch',
+                        temporary: true,
+                        protocol: 'updates',
+                    });
+
+                    await waitAsync();
+
+                    expect(device.messages).toEqual([
+                        {
+                            name: ADD_UPDATES,
+                            data: {
+                                branch: 'testBranch',
+                                updates: [],
+                                initial: true,
+                            },
+                        },
+                    ]);
+                });
+
+                it('should load the updates that were added to the branch by another device', async () => {
+                    server.init();
+
+                    const device = new MemoryConnection(device1Info);
+                    const joinBranch = new Subject<WatchBranchEvent>();
+                    const addUpdates = new Subject<AddUpdatesEvent>();
+                    device.events.set(ADD_UPDATES, addUpdates);
+                    device.events.set(WATCH_BRANCH, joinBranch);
+
+                    const device3 = new MemoryConnection(device3Info);
+                    const joinBranch3 = new Subject<WatchBranchEvent>();
+                    device3.events.set(WATCH_BRANCH, joinBranch3);
+
+                    connections.connection.next(device);
+                    connections.connection.next(device3);
+
+                    await waitAsync();
+
+                    joinBranch.next({
+                        branch: 'testBranch',
+                        temporary: true,
+                        protocol: 'updates',
+                    });
+
+                    await waitAsync();
+
+                    addUpdates.next({
+                        branch: 'testBranch',
+                        updates: ['abc', 'def'],
+                    });
+
+                    await waitAsync();
+
+                    joinBranch3.next({
+                        branch: 'testBranch',
+                        temporary: true,
+                        protocol: 'updates',
+                    });
+
+                    await waitAsync();
+
+                    expect(device3.messages).toEqual([
+                        {
+                            name: ADD_UPDATES,
+                            data: {
+                                branch: 'testBranch',
+                                updates: ['abc', 'def'],
+                                initial: true,
+                            },
+                        },
+                    ]);
+                });
             });
         });
     });
@@ -1119,6 +1302,82 @@ describe('CausalRepoServer', () => {
                     connectionReason: 'watch_branch',
                 },
             ]);
+        });
+
+        describe('updates', () => {
+            it('should clear the temporary branch when all devices have left', async () => {
+                server.init();
+
+                const device = new MemoryConnection(device1Info);
+                const addUpdates = new Subject<AddUpdatesEvent>();
+                device.events.set(ADD_UPDATES, addUpdates);
+
+                const device2 = new MemoryConnection(device2Info);
+                const joinBranch1 = new Subject<WatchBranchEvent>();
+                const leaveBranch1 = new Subject<string>();
+                device2.events.set(WATCH_BRANCH, joinBranch1);
+                device2.events.set(UNWATCH_BRANCH, leaveBranch1);
+
+                connections.connection.next(device);
+                connections.connection.next(device2);
+                await waitAsync();
+
+                joinBranch1.next({
+                    branch: 'testBranch',
+                    protocol: 'updates',
+                    temporary: true,
+                });
+                await waitAsync();
+
+                addUpdates.next({
+                    branch: 'testBranch',
+                    updates: ['abc'],
+                });
+                await waitAsync();
+
+                leaveBranch1.next('testBranch');
+                await waitAsync();
+
+                addUpdates.next({
+                    branch: 'testBranch',
+                    updates: ['def'],
+                });
+                await waitAsync();
+
+                joinBranch1.next({
+                    branch: 'testBranch',
+                    protocol: 'updates',
+                    temporary: true,
+                });
+
+                await waitAsync();
+
+                expect(device2.messages).toEqual([
+                    {
+                        name: ADD_UPDATES,
+                        data: {
+                            branch: 'testBranch',
+                            updates: [],
+                            initial: true,
+                        },
+                    },
+                    {
+                        name: ADD_UPDATES,
+                        data: {
+                            branch: 'testBranch',
+                            updates: ['abc'],
+                        },
+                    },
+                    {
+                        name: ADD_UPDATES,
+                        data: {
+                            branch: 'testBranch',
+                            updates: [],
+                            initial: true,
+                        },
+                    },
+                ]);
+            });
         });
     });
 
@@ -2614,6 +2873,251 @@ describe('CausalRepoServer', () => {
                     },
                 },
             ]);
+        });
+    });
+
+    describe(ADD_UPDATES, () => {
+        it('should add the given atoms to the given branch', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addUpdates = new Subject<AddUpdatesEvent>();
+            device.events.set(ADD_UPDATES, addUpdates);
+
+            const joinBranch = new Subject<WatchBranchEvent>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+
+            await updateStore.addUpdates('testBranch', ['111', '222']);
+
+            addUpdates.next({
+                branch: 'testBranch',
+                updates: ['abc'],
+                updateId: 1,
+            });
+
+            await waitAsync();
+
+            joinBranch.next({
+                branch: 'testBranch',
+                protocol: 'updates',
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                // Server should send a updates received event
+                // back indicating which updates it processed
+                {
+                    name: UPDATES_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        updateId: 1,
+                    },
+                },
+
+                {
+                    name: ADD_UPDATES,
+                    data: {
+                        branch: 'testBranch',
+                        updates: ['111', '222', 'abc'],
+                        initial: true,
+                    },
+                },
+            ]);
+        });
+
+        it('should notify all other devices connected to the branch', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addUpdates = new Subject<AddUpdatesEvent>();
+            device.events.set(ADD_UPDATES, addUpdates);
+
+            const device2 = new MemoryConnection(device2Info);
+            const joinBranch2 = new Subject<WatchBranchEvent>();
+            device2.events.set(WATCH_BRANCH, joinBranch2);
+
+            const device3 = new MemoryConnection(device3Info);
+            const joinBranch3 = new Subject<WatchBranchEvent>();
+            device3.events.set(WATCH_BRANCH, joinBranch3);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            connections.connection.next(device3);
+
+            await waitAsync();
+
+            await updateStore.addUpdates('testBranch', ['111', '222']);
+
+            joinBranch2.next({
+                branch: 'testBranch',
+                protocol: 'updates',
+            });
+            joinBranch3.next({
+                branch: 'testBranch',
+                protocol: 'updates',
+            });
+
+            await waitAsync();
+
+            addUpdates.next({
+                branch: 'testBranch',
+                updates: ['abc'],
+                updateId: 1,
+            });
+
+            await waitAsync();
+
+            expect(device2.messages).toEqual([
+                {
+                    name: ADD_UPDATES,
+                    data: {
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
+                        initial: true,
+                    },
+                },
+                {
+                    name: ADD_UPDATES,
+                    data: {
+                        branch: 'testBranch',
+                        updates: ['abc'],
+                    },
+                },
+            ]);
+
+            expect(device3.messages).toEqual([
+                {
+                    name: ADD_UPDATES,
+                    data: {
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
+                        initial: true,
+                    },
+                },
+                {
+                    name: ADD_UPDATES,
+                    data: {
+                        branch: 'testBranch',
+                        updates: ['abc'],
+                    },
+                },
+            ]);
+        });
+
+        describe('temp', () => {
+            it('should not store the given atoms with the current branch', async () => {
+                server.init();
+
+                const device = new MemoryConnection(device1Info);
+                const addUpdates = new Subject<AddUpdatesEvent>();
+                device.events.set(ADD_UPDATES, addUpdates);
+
+                const joinBranch = new Subject<WatchBranchEvent>();
+                device.events.set(WATCH_BRANCH, joinBranch);
+
+                connections.connection.next(device);
+
+                await waitAsync();
+
+                joinBranch.next({
+                    branch: '@testBranch',
+                    temporary: true,
+                    protocol: 'updates',
+                });
+
+                await waitAsync();
+
+                addUpdates.next({
+                    branch: '@testBranch',
+                    updates: ['abc'],
+                });
+
+                await waitAsync();
+
+                const updates = await updateStore.getUpdates('@testBranch');
+                expect(updates).toEqual([]);
+            });
+
+            it('should notify all other devices connected to the branch', async () => {
+                server.init();
+
+                const device = new MemoryConnection(device1Info);
+                const addUpdates = new Subject<AddUpdatesEvent>();
+                device.events.set(ADD_UPDATES, addUpdates);
+
+                const device2 = new MemoryConnection(device2Info);
+                const joinBranch2 = new Subject<WatchBranchEvent>();
+                device2.events.set(WATCH_BRANCH, joinBranch2);
+
+                const device3 = new MemoryConnection(device3Info);
+                const joinBranch3 = new Subject<WatchBranchEvent>();
+                device3.events.set(WATCH_BRANCH, joinBranch3);
+
+                connections.connection.next(device);
+                connections.connection.next(device2);
+                connections.connection.next(device3);
+
+                await waitAsync();
+
+                joinBranch2.next({
+                    branch: '@testBranch',
+                    temporary: true,
+                    protocol: 'updates',
+                });
+                joinBranch3.next({
+                    branch: '@testBranch',
+                    temporary: true,
+                    protocol: 'updates',
+                });
+
+                await waitAsync();
+
+                addUpdates.next({
+                    branch: '@testBranch',
+                    updates: ['abc'],
+                });
+
+                await waitAsync();
+
+                expect(device2.messages).toEqual([
+                    {
+                        name: ADD_UPDATES,
+                        data: {
+                            branch: '@testBranch',
+                            updates: [],
+                            initial: true,
+                        },
+                    },
+                    {
+                        name: ADD_UPDATES,
+                        data: {
+                            branch: '@testBranch',
+                            updates: ['abc'],
+                        },
+                    },
+                ]);
+
+                expect(device3.messages).toEqual([
+                    {
+                        name: ADD_UPDATES,
+                        data: {
+                            branch: '@testBranch',
+                            updates: [],
+                            initial: true,
+                        },
+                    },
+                    {
+                        name: ADD_UPDATES,
+                        data: {
+                            branch: '@testBranch',
+                            updates: ['abc'],
+                        },
+                    },
+                ]);
+            });
         });
     });
 

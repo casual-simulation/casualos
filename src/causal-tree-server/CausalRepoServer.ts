@@ -79,6 +79,11 @@ import {
     AUTHENTICATED_TO_BRANCH,
     AuthenticatedToBranchEvent,
     DEVICE_COUNT,
+    UpdatesStore,
+    ADD_UPDATES,
+    MemoryUpdatesStore,
+    AddUpdatesEvent,
+    UPDATES_RECEIVED,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -95,7 +100,9 @@ export class CausalRepoServer {
     private _deviceManager: DeviceManager;
     private _store: CausalRepoStore;
     private _stage: CausalRepoStageStore;
+    private _updatesStore: UpdatesStore;
     private _repos: Map<string, RepoData>;
+    private _temporaryUpdatesStore: UpdatesStore;
     private _repoPromises: Map<string, Promise<RepoData>>;
     /**
      * The map of branch and device IDs to their site ID.
@@ -122,10 +129,12 @@ export class CausalRepoServer {
     constructor(
         server: ConnectionServer,
         store: CausalRepoStore,
-        stageStore: CausalRepoStageStore
+        stageStore: CausalRepoStageStore,
+        updatesStore?: UpdatesStore
     ) {
         this._connectionServer = server;
         this._store = store;
+        this._updatesStore = updatesStore;
         this._deviceManager = new DeviceManagerImpl();
         this._repos = new Map();
         this._repoPromises = new Map();
@@ -134,6 +143,7 @@ export class CausalRepoServer {
         this._branchAuthentications = new Map();
         this._deviceAuthentications = new Map();
         this._stage = stageStore;
+        this._temporaryUpdatesStore = new MemoryUpdatesStore();
     }
 
     init() {
@@ -168,31 +178,55 @@ export class CausalRepoServer {
                         if (!currentBranch) {
                             this._branches.set(branch, event);
                         }
-                        if (!event.temporary && event.siteId) {
-                            this._branchSiteIds.set(
-                                branchSiteIdKey(branch, device.id),
-                                event.siteId
-                            );
-                            await this._store.logSite(
-                                event.branch,
-                                event.siteId,
-                                'WATCH',
-                                'watch_branch'
-                            );
-                        }
-                        const repo = await this._getOrLoadRepo(
-                            branch,
-                            true,
-                            event.temporary
-                        );
-                        const atoms = repo.repo.getAtoms();
 
-                        this._sendConnectedToBranch(device, branch);
-                        conn.send(ADD_ATOMS, {
-                            branch: branch,
-                            atoms: atoms,
-                            initial: true,
-                        });
+                        if (event.protocol === 'updates') {
+                            if (!this._updatesStore) {
+                                console.warn(
+                                    `[CausalRepoServer] The updates protocol is not supported!`
+                                );
+                                return;
+                            }
+
+                            const updates = await (event.temporary
+                                ? this._temporaryUpdatesStore
+                                : this._updatesStore
+                            ).getUpdates(branch);
+
+                            this._branchLoaded(branch);
+                            this._sendConnectedToBranch(device, branch);
+                            conn.send(ADD_UPDATES, {
+                                branch: branch,
+                                updates: updates,
+                                initial: true,
+                            });
+                        } else {
+                            if (!event.temporary && event.siteId) {
+                                this._branchSiteIds.set(
+                                    branchSiteIdKey(branch, device.id),
+                                    event.siteId
+                                );
+                                await this._store.logSite(
+                                    event.branch,
+                                    event.siteId,
+                                    'WATCH',
+                                    'watch_branch'
+                                );
+                            }
+
+                            const repo = await this._getOrLoadRepo(
+                                branch,
+                                true,
+                                event.temporary
+                            );
+                            const atoms = repo.repo.getAtoms();
+
+                            this._sendConnectedToBranch(device, branch);
+                            conn.send(ADD_ATOMS, {
+                                branch: branch,
+                                atoms: atoms,
+                                initial: true,
+                            });
+                        }
                     },
                     [GET_BRANCH]: async (branch) => {
                         const info = infoForBranch(branch);
@@ -333,6 +367,55 @@ export class CausalRepoServer {
                                     ...removedAtomHashes,
                                 ],
                             });
+                        } catch (err) {
+                            console.error(
+                                `Error while adding atoms to ${event.branch}: `,
+                                err
+                            );
+                        }
+                    },
+                    [ADD_UPDATES]: async (event) => {
+                        if (!event || !event.branch) {
+                            return;
+                        }
+
+                        const branchEvent = this._branches.get(event.branch);
+                        const isTemp = branchEvent
+                            ? branchEvent.temporary
+                            : false;
+
+                        try {
+                            await (isTemp
+                                ? this._temporaryUpdatesStore
+                                : this._updatesStore
+                            ).addUpdates(event.branch, event.updates);
+
+                            const hasUpdates = event.updates.length > 0;
+                            if (hasUpdates) {
+                                const info = infoForBranch(event.branch);
+                                const devices = this._deviceManager.getConnectedDevices(
+                                    info
+                                );
+
+                                let ret: AddUpdatesEvent = {
+                                    branch: event.branch,
+                                    updates: event.updates,
+                                };
+
+                                sendToDevices(
+                                    devices,
+                                    ADD_UPDATES,
+                                    ret,
+                                    device
+                                );
+                            }
+
+                            if ('updateId' in event) {
+                                sendToDevices([device], UPDATES_RECEIVED, {
+                                    branch: event.branch,
+                                    updateId: event.updateId,
+                                });
+                            }
                         } catch (err) {
                             console.error(
                                 `Error while adding atoms to ${event.branch}: `,
@@ -962,6 +1045,11 @@ export class CausalRepoServer {
             }
         }
         this._repos.delete(branch);
+
+        if (this._temporaryUpdatesStore) {
+            await this._temporaryUpdatesStore.clearUpdates(branch);
+        }
+
         this._branchUnloaded(branch);
     }
 
