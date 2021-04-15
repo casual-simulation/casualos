@@ -63,6 +63,7 @@ import {
     AddUpdatesEvent,
     UpdatesReceivedEvent,
     UPDATES_RECEIVED,
+    GET_UPDATES,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -1132,6 +1133,92 @@ describe('CausalRepoClient', () => {
             await waitAsync();
 
             expect(atoms).toEqual([a1, a2]);
+        });
+    });
+
+    describe('getBranchUpdates()', () => {
+        it('should send a get updates event after connecting', async () => {
+            client.getBranchUpdates('abc').subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: GET_UPDATES,
+                    data: 'abc',
+                },
+            ]);
+        });
+
+        it('should return an observable of atoms for the branch', async () => {
+            const addUpdates = new Subject<AddUpdatesEvent>();
+            connection.events.set(ADD_UPDATES, addUpdates);
+
+            let updates = [] as string[];
+            connection.connect();
+            client.getBranchUpdates('abc').subscribe((a) => updates.push(...a));
+
+            await waitAsync();
+
+            addUpdates.next({
+                branch: 'abc',
+                updates: ['111', '222'],
+            });
+
+            addUpdates.next({
+                branch: 'other',
+                updates: ['333', '444'],
+            });
+
+            await waitAsync();
+
+            expect(updates).toEqual(['111', '222']);
+        });
+
+        it('should finish after the first add atoms event for the branch', async () => {
+            const addUpdates = new Subject<AddUpdatesEvent>();
+            connection.events.set(ADD_UPDATES, addUpdates);
+
+            let updates = [] as string[];
+            let finished = false;
+            connection.connect();
+            client.getBranchUpdates('abc').subscribe(
+                (a) => updates.push(...a),
+                (err) => {},
+                () => (finished = true)
+            );
+
+            await waitAsync();
+
+            addUpdates.next({
+                branch: 'other',
+                updates: ['111', '222'],
+            });
+
+            await waitAsync();
+
+            expect(finished).toBe(false);
+
+            addUpdates.next({
+                branch: 'abc',
+                updates: ['333', '444'],
+            });
+
+            await waitAsync();
+
+            expect(finished).toBe(true);
+
+            addUpdates.next({
+                branch: 'abc',
+                updates: ['555'],
+            });
+
+            await waitAsync();
+
+            expect(updates).toEqual(['333', '444']);
         });
     });
 

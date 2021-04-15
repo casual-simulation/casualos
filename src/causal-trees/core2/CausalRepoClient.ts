@@ -72,6 +72,7 @@ import {
     ADD_UPDATES,
     UpdatesReceivedEvent,
     UPDATES_RECEIVED,
+    GET_UPDATES,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -464,6 +465,25 @@ export class CausalRepoClient {
                 this._client.event<AddAtomsEvent>(ADD_ATOMS).pipe(
                     first((event) => event.branch === name),
                     map((event) => event.atoms)
+                )
+            )
+        );
+    }
+
+    /**
+     * Gets the updates stored on the given branch.
+     * @param name The name of the branch to get.
+     */
+    getBranchUpdates(name: string) {
+        return this._whenConnected().pipe(
+            first((connected) => connected),
+            tap((connected) => {
+                this._client.send(GET_UPDATES, name);
+            }),
+            switchMap((connected) =>
+                this._client.event<AddUpdatesEvent>(ADD_UPDATES).pipe(
+                    first((event) => event.branch === name),
+                    map((event) => event.updates)
                 )
             )
         );
