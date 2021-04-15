@@ -93,9 +93,9 @@ import { toByteArray } from 'base64-js';
  * @param user The user.
  * @param config The config.
  */
-export function createRemoteYjsPartition(
-    user: User,
-    config: PartitionConfig
+export function createRemoteClientYjsPartition(
+    config: PartitionConfig,
+    user: User
 ): YjsPartition {
     if (config.type === 'yjs_client') {
         return new RemoteYjsPartitionImpl(user, config.client, config);
