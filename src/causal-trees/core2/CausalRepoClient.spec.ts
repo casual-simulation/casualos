@@ -3,6 +3,7 @@ import {
     isClientAtoms,
     isClientEvent,
     isClientResetAtoms,
+    isClientUpdates,
 } from './CausalRepoClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { Subject } from 'rxjs';
@@ -58,6 +59,10 @@ import {
     AUTHENTICATED_TO_BRANCH,
     DEVICE_COUNT,
     DeviceCountEvent,
+    ADD_UPDATES,
+    AddUpdatesEvent,
+    UpdatesReceivedEvent,
+    UPDATES_RECEIVED,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -81,9 +86,9 @@ describe('CausalRepoClient', () => {
         client = new CausalRepoClient(connection);
     });
 
-    describe('watchBranch()', () => {
+    describe('watchBranchAtoms()', () => {
         it('should send a watch branch event after connecting', async () => {
-            client.watchBranch('abc').subscribe();
+            client.watchBranchAtoms('abc').subscribe();
 
             expect(connection.sentMessages).toEqual([]);
 
@@ -107,7 +112,7 @@ describe('CausalRepoClient', () => {
             let atoms = [] as Atom<any>[];
             connection.connect();
             client
-                .watchBranch('abc')
+                .watchBranchAtoms('abc')
                 .pipe(
                     filter(isClientAtoms),
                     map((e) => e.atoms)
@@ -144,7 +149,7 @@ describe('CausalRepoClient', () => {
             let atoms = [] as Atom<any>[];
             connection.connect();
             client
-                .watchBranch('abc')
+                .watchBranchAtoms('abc')
                 .pipe(
                     filter(isClientAtoms),
                     map((e) => e.atoms)
@@ -192,7 +197,7 @@ describe('CausalRepoClient', () => {
             let removed = [] as string[];
             connection.connect();
             client
-                .watchBranch('abc')
+                .watchBranchAtoms('abc')
                 .pipe(filter(isClientAtoms))
                 .subscribe((a) => {
                     atoms.push(...a.atoms);
@@ -242,7 +247,7 @@ describe('CausalRepoClient', () => {
             let hashes = [] as string[];
             connection.connect();
             client
-                .watchBranch('abc')
+                .watchBranchAtoms('abc')
                 .pipe(
                     filter(isClientAtoms),
                     map((e) => e.removedAtoms || [])
@@ -283,7 +288,7 @@ describe('CausalRepoClient', () => {
             )[];
             connection.connect();
             client
-                .watchBranch('abc')
+                .watchBranchAtoms('abc')
                 .pipe(
                     filter(isClientEvent),
                     map((e) => e.action)
@@ -324,7 +329,7 @@ describe('CausalRepoClient', () => {
             let atoms = [] as Atom<any>[];
             connection.connect();
             client
-                .watchBranch('abc')
+                .watchBranchAtoms('abc')
                 .pipe(
                     filter(isClientResetAtoms),
                     map((e) => e.atoms)
@@ -355,7 +360,7 @@ describe('CausalRepoClient', () => {
 
         it('should send a watch branch event after disconnecting and reconnecting', async () => {
             connection.connect();
-            client.watchBranch('abc').subscribe();
+            client.watchBranchAtoms('abc').subscribe();
 
             await waitAsync();
             expect(connection.sentMessages).toEqual([
@@ -400,7 +405,7 @@ describe('CausalRepoClient', () => {
             const atomsReceived = new Subject<AtomsReceivedEvent>();
             connection.events.set(ATOMS_RECEIVED, atomsReceived);
             connection.connect();
-            client.watchBranch('abc').subscribe();
+            client.watchBranchAtoms('abc').subscribe();
 
             const a1 = atom(atomId('a', 1), null, {});
             const a2 = atom(atomId('a', 2), null, {});
@@ -455,7 +460,7 @@ describe('CausalRepoClient', () => {
             const atomsReceived = new Subject<AtomsReceivedEvent>();
             connection.events.set(ATOMS_RECEIVED, atomsReceived);
             connection.connect();
-            client.watchBranch('abc').subscribe();
+            client.watchBranchAtoms('abc').subscribe();
 
             const a1 = atom(atomId('a', 1), null, {});
             const a2 = atom(atomId('a', 2), null, {});
@@ -513,7 +518,7 @@ describe('CausalRepoClient', () => {
             let atoms = [] as Atom<any>[][];
             connection.connect();
             client
-                .watchBranch('abc')
+                .watchBranchAtoms('abc')
                 .pipe(
                     filter(isClientAtoms),
                     map((e) => e.atoms)
@@ -534,7 +539,7 @@ describe('CausalRepoClient', () => {
         });
 
         it('should send a unwatch branch event when unsubscribed', async () => {
-            const sub = client.watchBranch('abc').subscribe();
+            const sub = client.watchBranchAtoms('abc').subscribe();
 
             connection.connect();
             await waitAsync();
@@ -558,7 +563,7 @@ describe('CausalRepoClient', () => {
 
         it('should allow connecting to temporary branches', async () => {
             const sub = client
-                .watchBranch({
+                .watchBranchAtoms({
                     branch: 'abc',
                     temporary: true,
                 })
@@ -590,7 +595,7 @@ describe('CausalRepoClient', () => {
             connection.events.set(ATOMS_RECEIVED, atomsReceived);
             connection.connect();
             client
-                .watchBranch({
+                .watchBranchAtoms({
                     branch: 'abc',
                     temporary: true,
                 })
@@ -781,7 +786,7 @@ describe('CausalRepoClient', () => {
         it('should wait to send the atoms until the watched branch is connected', async () => {
             const a1 = atom(atomId('a', 1), null, {});
             const a2 = atom(atomId('a', 2), a1, {});
-            client.watchBranch('abc').subscribe();
+            client.watchBranchAtoms('abc').subscribe();
             client.addAtoms('abc', [a1]);
             client.addAtoms('abc', [a2]);
 

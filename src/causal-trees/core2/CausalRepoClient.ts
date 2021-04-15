@@ -131,7 +131,7 @@ export class CausalRepoClient {
      * Starts watching the given branch.
      * @param name The name of the branch to watch.
      */
-    watchBranch(nameOrEvent: string | WatchBranchEvent) {
+    watchBranchAtoms(nameOrEvent: string | WatchBranchEvent) {
         let branchEvent: WatchBranchEvent;
         if (typeof nameOrEvent === 'string') {
             branchEvent = {
