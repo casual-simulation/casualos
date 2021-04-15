@@ -18,7 +18,10 @@ import {
 import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig, DRIVES_URL } from './config';
 import { SocketIOConnectionServer } from '@casual-simulation/causal-tree-server-socketio';
-import { MongoDBRepoStore } from '@casual-simulation/causal-tree-store-mongodb';
+import {
+    MongoDBRepoStore,
+    MongoDBUpdatesStore,
+} from '@casual-simulation/causal-tree-store-mongodb';
 import {
     ON_WEBHOOK_ACTION_NAME,
     merge,
@@ -79,6 +82,7 @@ import {
     CausalRepoStore,
     CombinedCausalRepoStore,
     CausalRepoStageStore,
+    UpdatesStore,
 } from '@casual-simulation/causal-trees/core2';
 import { SetupChannelModule2 } from './modules/SetupChannelModule2';
 import { map, first } from 'rxjs/operators';
@@ -944,7 +948,7 @@ export class Server {
     }
 
     private async _configureCausalRepoServices() {
-        const [store, stageStore] = await this._setupRepoStore();
+        const [store, stageStore, updatesStore] = await this._setupRepoStore();
         const socketIOServer = new SocketIOConnectionServer(this._socket);
         const serverUser = getServerUser();
         const serverDevice = deviceInfoFromUser(serverUser);
@@ -964,7 +968,8 @@ export class Server {
             const repoServer = new CausalRepoServer(
                 multiServer,
                 store,
-                stageStore
+                stageStore,
+                updatesStore
             );
             repoServer.defaultDeviceSelector = {
                 username: serverDevice.claims[USERNAME_CLAIM],
@@ -994,7 +999,8 @@ export class Server {
             const repoServer = new CausalRepoServer(
                 multiServer,
                 store,
-                stageStore
+                stageStore,
+                updatesStore
             );
             repoServer.defaultDeviceSelector = {
                 username: serverDevice.claims[USERNAME_CLAIM],
@@ -1113,7 +1119,7 @@ export class Server {
     }
 
     private async _setupRepoStore(): Promise<
-        [CausalRepoStore, CausalRepoStageStore]
+        [CausalRepoStore, CausalRepoStageStore, UpdatesStore]
     > {
         const db = this._mongoClient.db(this._config.repos.mongodb.dbName);
         const objectsCollection = db.collection('objects');
@@ -1171,7 +1177,14 @@ export class Server {
             }
         }
 
-        return [store, stageStore];
+        let updatesStore: UpdatesStore;
+        if (this._config.repos.mongodb) {
+            const updates = db.collection('updates');
+            let store = (updatesStore = new MongoDBUpdatesStore(updates));
+            await store.init();
+        }
+
+        return [store, stageStore, updatesStore];
     }
 }
 
