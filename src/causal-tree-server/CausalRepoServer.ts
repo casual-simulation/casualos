@@ -84,6 +84,7 @@ import {
     MemoryUpdatesStore,
     AddUpdatesEvent,
     UPDATES_RECEIVED,
+    GET_UPDATES,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -241,6 +242,22 @@ export class CausalRepoServer {
                             atoms: atoms,
                         });
                         await this._tryUnloadBranch(info);
+                    },
+                    [GET_UPDATES]: async (branch) => {
+                        if (!this._updatesStore) {
+                            console.warn(
+                                `[CausalRepoServer] The updates protocol is not supported!`
+                            );
+                            return;
+                        }
+
+                        const updates = await this._updatesStore.getUpdates(
+                            branch
+                        );
+                        conn.send(ADD_UPDATES, {
+                            branch: branch,
+                            updates: updates,
+                        });
                     },
                     [ADD_ATOMS]: async (event) => {
                         if (!event || !event.branch) {

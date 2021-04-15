@@ -58,6 +58,7 @@ import {
     ADD_UPDATES,
     AddUpdatesEvent,
     UPDATES_RECEIVED,
+    GET_UPDATES,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -876,6 +877,75 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2],
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe(GET_UPDATES, () => {
+        it('should load the given branch and send the current updates', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const getBranch = new Subject<string>();
+            device.events.set(GET_UPDATES, getBranch);
+
+            connections.connection.next(device);
+
+            await updateStore.addUpdates('testBranch', ['111', '222']);
+
+            await waitAsync();
+
+            getBranch.next('testBranch');
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: ADD_UPDATES,
+                    data: {
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
+                    },
+                },
+            ]);
+        });
+
+        it('should not send additional atoms that were added after the GET_UPDATES call', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const device2 = new MemoryConnection(device2Info);
+            const getBranch = new Subject<string>();
+            const addAtoms = new Subject<AddUpdatesEvent>();
+            device.events.set(GET_UPDATES, getBranch);
+            device2.events.set(ADD_UPDATES, addAtoms);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+
+            await updateStore.addUpdates('testBranch', ['111', '222']);
+
+            await waitAsync();
+
+            getBranch.next('testBranch');
+
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                updates: ['333', '444'],
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: ADD_UPDATES,
+                    data: {
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
                     },
                 },
             ]);

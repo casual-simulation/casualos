@@ -44,6 +44,12 @@ export type UnwatchReason = 'unwatch_branch';
 export const GET_BRANCH = 'repo/get_branch';
 
 /**
+ * The name of the event which gets all the current updates on a branch.
+ * The atoms are returned via a ADD_UPDATES event.
+ */
+export const GET_UPDATES = 'repo/get_updates';
+
+/**
  * The name of the event which stops watching changes on a branch.
  */
 export const UNWATCH_BRANCH = 'repo/unwatch_branch';
