@@ -36,7 +36,9 @@ export type PartitionConfig =
     | SearchPartitionClientConfig
     | OtherPlayersClientPartitionConfig
     | OtherPlayersRepoPartitionConfig
-    | YjsPartitionConfig;
+    | YjsPartitionConfig
+    | RemoteYjsPartitionConfig
+    | YjsClientPartitionConfig;
 
 /**
  * Defines a base interface for partitions.
@@ -299,4 +301,85 @@ export interface SearchPartitionClientConfig extends PartitionConfigBase {
  */
 export interface YjsPartitionConfig extends PartitionConfigBase {
     type: 'yjs';
+}
+
+/**
+ * Defines a yjs partition that uses the causal repo updates protocol to sync changes.
+ */
+export interface RemoteYjsPartitionConfig extends PartitionConfigBase {
+    type: 'remote_yjs';
+
+    /**
+     * The branch to load.
+     */
+    branch: string;
+
+    /**
+     * The host that the branch should be loaded from.
+     */
+    host: string;
+
+    /**
+     * Whether the partition should be loaded in read-only mode.
+     */
+    readOnly?: boolean;
+
+    /**
+     * Whether the partition should be loaded without realtime updates.
+     * Basically this means that all you get is the initial state.
+     */
+    static?: boolean;
+
+    /**
+     * Whether the partition should be temporary.
+     */
+    temporary?: boolean;
+
+    /**
+     * Whether to support remote events. (Default is true)
+     */
+    remoteEvents?: boolean;
+
+    /**
+     * Whether to use socket.io or the apiary protocol to connect. (Default is socket.io)
+     */
+    connectionProtocol?: RemoteCausalRepoProtocol;
+}
+
+/**
+ * Defines a yjs partitiont that uses the given CausalRepoClient to sync changes.
+ */
+export interface YjsClientPartitionConfig extends PartitionConfigBase {
+    type: 'yjs_client';
+
+    /**
+     * The branch to load.
+     */
+    branch: string;
+
+    /**
+     * The client that should be used to connect.
+     */
+    client: CausalRepoClient;
+
+    /**
+     * Whether the partition should be loaded in read-only mode.
+     */
+    readOnly?: boolean;
+
+    /**
+     * Whether the partition should be loaded without realtime updates.
+     * Basically this means that all you get is the initial state.
+     */
+    static?: boolean;
+
+    /**
+     * Whether the partition should be temporary.
+     */
+    temporary?: boolean;
+
+    /**
+     * Whether to support remote events. (Default is true)
+     */
+    remoteEvents?: boolean;
 }
