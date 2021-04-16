@@ -196,7 +196,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
                     createdNewState = true;
                 }
                 updatedState[event.bot.id] = bot;
-                added.set(event.bot.id, event.bot);
+                added.set(event.bot.id, bot);
             } else if (event.type === 'remove_bot') {
                 if (createdNewState) {
                     delete this.state[event.id];

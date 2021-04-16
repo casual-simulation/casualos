@@ -195,11 +195,11 @@ export function testPartitionImplementation(
                 abc: 'xyz',
             });
 
-            partition.space = 'test';
-            await partition.applyEvents([botAdded(bot1), botAdded(bot2)]);
-
             let added: Bot[] = [];
             partition.onBotsAdded.subscribe((a) => added.push(...a));
+
+            partition.space = 'test';
+            await partition.applyEvents([botAdded(bot1), botAdded(bot2)]);
 
             expect(added).toEqual([
                 createBot(
