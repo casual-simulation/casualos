@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.5.11
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Overhauled the `shared`, `tempShared`, and `remoteTempShared` spaces to use a faster and more efficient storage mechanism.
+
 ## V1.5.10
 
 #### Date: 4/8/2021
