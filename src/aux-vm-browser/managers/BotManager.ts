@@ -136,7 +136,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 // when collaboration is disabled.
                 shared: config.device.isCollaborative
                     ? {
-                          type: 'remote_causal_repo',
+                          type: 'remote_yjs',
                           branch: parsedId.channel,
                           host: causalRepoHost,
                           connectionProtocol: protocol,
@@ -164,7 +164,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 },
                 [TEMPORARY_SHARED_PARTITION_ID]: config.device.isCollaborative
                     ? {
-                          type: 'remote_causal_repo',
+                          type: 'remote_yjs',
                           branch: `${parsedId.channel}-player-${user.id}`,
                           host: causalRepoHost,
                           connectionProtocol: protocol,
@@ -182,6 +182,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                           branch: parsedId.channel,
                           host: causalRepoHost,
                           connectionProtocol: protocol,
+                          childPartitionType: 'yjs_client',
                       }
                     : null,
                 [BOOTSTRAP_PARTITION_ID]: {
