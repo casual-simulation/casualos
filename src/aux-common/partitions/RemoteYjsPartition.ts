@@ -4,6 +4,7 @@ import {
     Action,
     SESSION_ID_CLAIM,
     device,
+    RemoteActions,
 } from '@casual-simulation/causal-trees';
 import {
     CausalRepoClient,
@@ -58,6 +59,10 @@ import {
     ON_REMOTE_DATA_ACTION_NAME,
     ON_REMOTE_WHISPER_ACTION_NAME,
     AsyncAction,
+    GetRemoteCountAction,
+    asyncResult,
+    asyncError,
+    GetServersAction,
 } from '../bots';
 import {
     PartitionConfig,
@@ -86,7 +91,8 @@ import {
     getClock,
     getStateVector,
 } from '../yjs/YjsHelpers';
-import { toByteArray } from 'base64-js';
+import { fromByteArray, toByteArray } from 'base64-js';
+import { doc } from 'prettier';
 
 /**
  * Attempts to create a YjsPartition from the given config.
@@ -133,6 +139,8 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     private _synced: boolean;
     private _branch: string;
     private _temporary: boolean;
+    private _readOnly: boolean;
+    private _remoteEvents: boolean;
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._internalPartition.onBotsAdded;
@@ -190,7 +198,11 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     }
 
     get realtimeStrategy(): AuxPartitionRealtimeStrategy {
-        return 'immediate';
+        return this._static ? 'delayed' : 'immediate';
+    }
+
+    get site() {
+        return this._currentSite;
     }
 
     private get _remoteSite() {
@@ -210,8 +222,14 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         this._client = client;
         this._user = user;
         this._static = config.static;
+        this._remoteEvents =
+            'remoteEvents' in config ? config.remoteEvents : true;
         this._branch = config.branch;
         this._temporary = config.temporary;
+
+        // static implies read only
+        this._readOnly = config.readOnly || this._static || false;
+
         this._localId = this._doc.clientID;
         this._remoteId = new Doc().clientID;
         this._bots = this._doc.getMap('bots');
@@ -241,9 +259,21 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
-        const finalEvents = flatMap(events, (e) => {
+        if (this._static) {
+            return [];
+        }
+
+        let finalEvents = [] as (
+            | AddBotAction
+            | RemoveBotAction
+            | UpdateBotAction
+            | CreateCertificateAction
+            | SignTagAction
+            | RevokeCertificateAction
+        )[];
+        for (let e of events) {
             if (e.type === 'apply_state') {
-                return breakIntoIndividualEvents(this.state, e);
+                finalEvents.push(...breakIntoIndividualEvents(this.state, e));
             } else if (
                 e.type === 'add_bot' ||
                 e.type === 'remove_bot' ||
@@ -252,11 +282,12 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                 e.type === 'sign_tag' ||
                 e.type === 'revoke_certificate'
             ) {
-                return [e] as const;
-            } else {
-                return [];
+                finalEvents.push(e);
+            } else if (e.type === 'unlock_space') {
+                // Resolve the unlock_space task
+                this._onEvents.next([asyncResult(e.taskId, undefined)]);
             }
-        });
+        }
 
         this._applyEvents(finalEvents);
 
@@ -270,6 +301,84 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
             this._requestBranch();
         } else {
             this._watchBranch();
+        }
+    }
+
+    async sendRemoteEvents(events: RemoteActions[]): Promise<void> {
+        if (this._readOnly || !this._remoteEvents) {
+            return;
+        }
+        for (let event of events) {
+            if (event.type === 'remote') {
+                if (event.event.type === 'get_remote_count') {
+                    const action = <GetRemoteCountAction>event.event;
+                    this._client.deviceCount(action.server).subscribe(
+                        (count) => {
+                            this._onEvents.next([
+                                asyncResult(event.taskId, count),
+                            ]);
+                        },
+                        (err) => {
+                            this._onEvents.next([
+                                asyncError(event.taskId, err),
+                            ]);
+                        }
+                    );
+                } else if (event.event.type === 'get_servers') {
+                    const action = <GetServersAction>event.event;
+                    if (action.includeStatuses) {
+                        this._client.branchesStatus().subscribe(
+                            (e) => {
+                                this._onEvents.next([
+                                    asyncResult(
+                                        event.taskId,
+                                        e.branches
+                                            .filter(
+                                                (b) => !b.branch.startsWith('$')
+                                            )
+                                            .map((b) => ({
+                                                server: b.branch,
+                                                lastUpdateTime:
+                                                    b.lastUpdateTime,
+                                            }))
+                                    ),
+                                ]);
+                            },
+                            (err) => {
+                                this._onEvents.next([
+                                    asyncError(event.taskId, err),
+                                ]);
+                            }
+                        );
+                    } else {
+                        this._client.branches().subscribe(
+                            (e) => {
+                                this._onEvents.next([
+                                    asyncResult(
+                                        event.taskId,
+                                        e.branches.filter(
+                                            (b) => !b.startsWith('$')
+                                        )
+                                    ),
+                                ]);
+                            },
+                            (err) => {
+                                this._onEvents.next([
+                                    asyncError(event.taskId, err),
+                                ]);
+                            }
+                        );
+                    }
+                } else if (event.event.type === 'get_remotes') {
+                    // Do nothing for get_remotes since it will be handled by the OtherPlayersPartition.
+                    // TODO: Make this mechanism more extensible so that we don't have to hardcode for each time
+                    //       we do this type of logic.
+                } else {
+                    this._client.sendEvent(this._branch, event);
+                }
+            } else {
+                this._client.sendEvent(this._branch, event);
+            }
         }
     }
 
@@ -404,6 +513,28 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                     },
                     (err) => this._onError.next(err)
                 )
+        );
+
+        const updateHandler = (
+            update: Uint8Array,
+            origin: any,
+            doc: Doc,
+            transaction: Transaction
+        ) => {
+            if (this._readOnly) {
+                return;
+            }
+            if (transaction && transaction.local) {
+                const updates = [fromByteArray(update)];
+                this._client.addUpdates(this._branch, updates);
+            }
+        };
+        this._doc.on('update', updateHandler);
+
+        this._sub.add(
+            new Subscription(() => {
+                this._doc.off('update', updateHandler);
+            })
         );
     }
 
