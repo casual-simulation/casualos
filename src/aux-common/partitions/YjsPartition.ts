@@ -166,6 +166,10 @@ export class YjsPartitionImpl implements YjsPartition {
         return 'immediate';
     }
 
+    get doc() {
+        return this._doc;
+    }
+
     private get _remoteSite() {
         return this._remoteId.toString();
     }

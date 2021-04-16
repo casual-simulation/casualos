@@ -225,6 +225,14 @@ export interface OtherPlayersRepoPartitionConfig extends PartitionConfigBase {
      * Whether to use socket.io or the apiary protocol to connect. (Default is socket.io)
      */
     connectionProtocol?: RemoteCausalRepoProtocol;
+
+    /**
+     * The type of partitions that should be used for the child partitions.
+     * Defaults to causal_repo_client.
+     */
+    childPartitionType?:
+        | CausalRepoClientPartitionConfig['type']
+        | YjsClientPartitionConfig['type'];
 }
 
 /**
@@ -242,6 +250,14 @@ export interface OtherPlayersClientPartitionConfig extends PartitionConfigBase {
      * The client that should be used.
      */
     client: CausalRepoClient;
+
+    /**
+     * The type of partitions that should be used for the child partitions.
+     * Defaults to causal_repo_client.
+     */
+    childPartitionType?:
+        | CausalRepoClientPartitionConfig['type']
+        | YjsClientPartitionConfig['type'];
 }
 
 /**

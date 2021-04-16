@@ -19,6 +19,8 @@ import {
     WATCH_BRANCH,
     UNWATCH_BRANCH,
     Action,
+    AddUpdatesEvent,
+    ADD_UPDATES,
 } from '@casual-simulation/causal-trees';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
@@ -35,1036 +37,2240 @@ import {
     StateUpdatedEvent,
     ON_REMOTE_JOINED_ACTION_NAME,
     ON_REMOTE_LEAVE_ACTION_NAME,
+    botRemoved,
+    botUpdated,
 } from '../bots';
 import { OtherPlayersRepoPartitionConfig } from './AuxPartitionConfig';
 import { bot, tag, value, deleteOp, tagMask } from '../aux-format-2';
 import { waitAsync, wait } from '../test/TestHelpers';
 import { takeWhile, bufferCount, skip } from 'rxjs/operators';
+import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
+import { YjsPartitionImpl } from './YjsPartition';
+import { encodeStateAsUpdate } from 'yjs';
+import { fromByteArray } from 'base64-js';
+import { cloneDeep } from 'lodash';
 
 console.log = jest.fn();
 
 describe('OtherPlayersPartition', () => {
+    let connection: MemoryConnectionClient;
+    let client: CausalRepoClient;
+    let partition: OtherPlayersPartitionImpl;
+    let receiveEvent: Subject<ReceiveDeviceActionEvent>;
+    let deviceConnected: Subject<ConnectedToBranchEvent>;
+    let deviceDisconnected: Subject<DisconnectedFromBranchEvent>;
+    let added: Bot[];
+    let removed: string[];
+    let updated: UpdatedBot[];
+    let updates: StateUpdatedEvent[];
+    let sub: Subscription;
+
+    let device1 = deviceInfo('device1', 'device1Id', 'device1SessionId');
+
     describe('connection', () => {
-        let connection: MemoryConnectionClient;
-        let client: CausalRepoClient;
-        let partition: OtherPlayersPartitionImpl;
-        let receiveEvent: Subject<ReceiveDeviceActionEvent>;
-        let addAtoms: Subject<AddAtomsEvent>;
-        let deviceConnected: Subject<ConnectedToBranchEvent>;
-        let deviceDisconnected: Subject<DisconnectedFromBranchEvent>;
-        let added: Bot[];
-        let removed: string[];
-        let updated: UpdatedBot[];
-        let updates: StateUpdatedEvent[];
-        let sub: Subscription;
+        describe('causal_repo_client', () => {
+            let addAtoms: Subject<AddAtomsEvent>;
 
-        let device1 = deviceInfo('device1', 'device1Id', 'device1SessionId');
+            beforeEach(async () => {
+                connection = new MemoryConnectionClient();
+                receiveEvent = new Subject<ReceiveDeviceActionEvent>();
+                addAtoms = new Subject<AddAtomsEvent>();
+                deviceConnected = new Subject();
+                deviceDisconnected = new Subject();
+                connection.events.set(RECEIVE_EVENT, receiveEvent);
+                connection.events.set(ADD_ATOMS, addAtoms);
+                connection.events.set(
+                    DEVICE_CONNECTED_TO_BRANCH,
+                    deviceConnected
+                );
+                connection.events.set(
+                    DEVICE_DISCONNECTED_FROM_BRANCH,
+                    deviceDisconnected
+                );
+                client = new CausalRepoClient(connection);
+                connection.connect();
+                sub = new Subscription();
 
-        beforeEach(async () => {
-            connection = new MemoryConnectionClient();
-            receiveEvent = new Subject<ReceiveDeviceActionEvent>();
-            addAtoms = new Subject<AddAtomsEvent>();
-            deviceConnected = new Subject();
-            deviceDisconnected = new Subject();
-            connection.events.set(RECEIVE_EVENT, receiveEvent);
-            connection.events.set(ADD_ATOMS, addAtoms);
-            connection.events.set(DEVICE_CONNECTED_TO_BRANCH, deviceConnected);
-            connection.events.set(
-                DEVICE_DISCONNECTED_FROM_BRANCH,
-                deviceDisconnected
-            );
-            client = new CausalRepoClient(connection);
-            connection.connect();
-            sub = new Subscription();
+                added = [];
+                removed = [];
+                updated = [];
+                updates = [];
 
-            added = [];
-            removed = [];
-            updated = [];
-            updates = [];
-
-            setupPartition({
-                type: 'other_players_repo',
-                branch: 'testBranch',
-                host: 'testHost',
-            });
-        });
-
-        afterEach(() => {
-            sub.unsubscribe();
-        });
-
-        it('should return delayed for the realtimeStrategy', () => {
-            expect(partition.realtimeStrategy).toEqual('delayed');
-        });
-
-        it('should issue connection, authentication, authorization, and sync events in that order', async () => {
-            const promise = partition.onStatusUpdated
-                .pipe(
-                    takeWhile((update) => update.type !== 'sync', true),
-                    bufferCount(4)
-                )
-                .toPromise();
-
-            partition.connect();
-
-            deviceConnected.next({
-                broadcast: false,
-                branch: {
+                setupPartition({
+                    type: 'other_players_repo',
                     branch: 'testBranch',
-                },
-                device: device1,
+                    host: 'testHost',
+                });
             });
 
-            const update = await promise;
-
-            expect(update).toEqual([
-                {
-                    type: 'connection',
-                    connected: true,
-                },
-                expect.objectContaining({
-                    type: 'authentication',
-                    authenticated: true,
-                }),
-                expect.objectContaining({
-                    type: 'authorization',
-                    authorized: true,
-                }),
-                {
-                    type: 'sync',
-                    synced: true,
-                },
-            ]);
-        });
-
-        describe('remote events', () => {
-            it('should not send the remote event to the server', async () => {
-                await partition.sendRemoteEvents([
-                    remote(
-                        {
-                            type: 'def',
-                        },
-                        {
-                            deviceId: 'device',
-                        }
-                    ),
-                ]);
-
-                expect(connection.sentMessages).toEqual([]);
+            afterEach(() => {
+                sub.unsubscribe();
             });
 
-            describe('get_remotes', () => {
-                it(`should send an async result with the player list`, async () => {
-                    setupPartition({
-                        type: 'other_players_repo',
+            it('should return delayed for the realtimeStrategy', () => {
+                expect(partition.realtimeStrategy).toEqual('delayed');
+            });
+
+            it('should issue connection, authentication, authorization, and sync events in that order', async () => {
+                const promise = partition.onStatusUpdated
+                    .pipe(
+                        takeWhile((update) => update.type !== 'sync', true),
+                        bufferCount(4)
+                    )
+                    .toPromise();
+
+                partition.connect();
+
+                deviceConnected.next({
+                    broadcast: false,
+                    branch: {
                         branch: 'testBranch',
-                        host: 'testHost',
+                    },
+                    device: device1,
+                });
+
+                const update = await promise;
+
+                expect(update).toEqual([
+                    {
+                        type: 'connection',
+                        connected: true,
+                    },
+                    expect.objectContaining({
+                        type: 'authentication',
+                        authenticated: true,
+                    }),
+                    expect.objectContaining({
+                        type: 'authorization',
+                        authorized: true,
+                    }),
+                    {
+                        type: 'sync',
+                        synced: true,
+                    },
+                ]);
+            });
+
+            describe('remote events', () => {
+                it('should not send the remote event to the server', async () => {
+                    await partition.sendRemoteEvents([
+                        remote(
+                            {
+                                type: 'def',
+                            },
+                            {
+                                deviceId: 'device',
+                            }
+                        ),
+                    ]);
+
+                    expect(connection.sentMessages).toEqual([]);
+                });
+
+                describe('get_remotes', () => {
+                    it(`should send an async result with the player list`, async () => {
+                        setupPartition({
+                            type: 'other_players_repo',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                        });
+                        partition.connect();
+
+                        await waitAsync();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+
+                        const info1 = deviceInfo(
+                            'info1Username',
+                            'info1Device',
+                            'info1Session'
+                        );
+                        const info2 = deviceInfo(
+                            'info2Username',
+                            'info2Device',
+                            'info2Session'
+                        );
+                        deviceConnected.next({
+                            broadcast: false,
+                            branch: {
+                                branch: 'testBranch',
+                            },
+                            device: info1,
+                        });
+                        deviceConnected.next({
+                            broadcast: false,
+                            branch: {
+                                branch: 'testBranch',
+                            },
+                            device: info2,
+                        });
+
+                        await waitAsync();
+
+                        await partition.sendRemoteEvents([
+                            remote(getRemotes(), undefined, undefined, 'task1'),
+                        ]);
+
+                        expect(events.slice(4)).toEqual([
+                            asyncResult('task1', [
+                                'info1Session',
+                                'info2Session',
+                                // Should include the current player
+                                'test',
+                            ]),
+                        ]);
                     });
+
+                    it(`should return only the players that are currently connected`, async () => {
+                        setupPartition({
+                            type: 'other_players_repo',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                        });
+                        partition.connect();
+
+                        await waitAsync();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+
+                        const info1 = deviceInfo(
+                            'info1Username',
+                            'info1Device',
+                            'info1Session'
+                        );
+                        const info2 = deviceInfo(
+                            'info2Username',
+                            'info2Device',
+                            'info2Session'
+                        );
+                        deviceConnected.next({
+                            broadcast: false,
+                            branch: {
+                                branch: 'testBranch',
+                            },
+                            device: info1,
+                        });
+                        deviceConnected.next({
+                            broadcast: false,
+                            branch: {
+                                branch: 'testBranch',
+                            },
+                            device: info2,
+                        });
+
+                        await waitAsync();
+
+                        deviceDisconnected.next({
+                            broadcast: false,
+                            branch: 'testBranch',
+                            device: info2,
+                        });
+
+                        await partition.sendRemoteEvents([
+                            remote(getRemotes(), undefined, undefined, 'task1'),
+                        ]);
+
+                        expect(events.slice(6)).toEqual([
+                            asyncResult('task1', [
+                                'info1Session',
+                                // Should include the current player
+                                'test',
+                            ]),
+                        ]);
+                    });
+
+                    it(`should return only the current player if not connected`, async () => {
+                        setupPartition({
+                            type: 'other_players_repo',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                        });
+
+                        await waitAsync();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+
+                        const info1 = deviceInfo(
+                            'info1Username',
+                            'info1Device',
+                            'info1Session'
+                        );
+                        const info2 = deviceInfo(
+                            'info2Username',
+                            'info2Device',
+                            'info2Session'
+                        );
+                        deviceConnected.next({
+                            broadcast: false,
+                            branch: {
+                                branch: 'testBranch',
+                            },
+                            device: info1,
+                        });
+                        deviceConnected.next({
+                            broadcast: false,
+                            branch: {
+                                branch: 'testBranch',
+                            },
+                            device: info2,
+                        });
+
+                        await waitAsync();
+
+                        deviceDisconnected.next({
+                            broadcast: false,
+                            branch: 'testBranch',
+                            device: info2,
+                        });
+
+                        await partition.sendRemoteEvents([
+                            remote(getRemotes(), undefined, undefined, 'task1'),
+                        ]);
+
+                        expect(events).toEqual([
+                            asyncResult('task1', [
+                                // Should include the current player
+                                'test',
+                            ]),
+                        ]);
+                    });
+                });
+            });
+
+            describe('other_players', () => {
+                it('should watch for other devices', async () => {
                     partition.connect();
 
                     await waitAsync();
 
-                    const events = [] as Action[];
-                    partition.onEvents.subscribe((e) => events.push(...e));
-
-                    const info1 = deviceInfo(
-                        'info1Username',
-                        'info1Device',
-                        'info1Session'
-                    );
-                    const info2 = deviceInfo(
-                        'info2Username',
-                        'info2Device',
-                        'info2Session'
-                    );
-                    deviceConnected.next({
-                        broadcast: false,
-                        branch: {
-                            branch: 'testBranch',
+                    expect(connection.sentMessages).toEqual([
+                        {
+                            name: WATCH_BRANCH_DEVICES,
+                            data: 'testBranch',
                         },
-                        device: info1,
-                    });
-                    deviceConnected.next({
-                        broadcast: false,
-                        branch: {
-                            branch: 'testBranch',
-                        },
-                        device: info2,
-                    });
-
-                    await waitAsync();
-
-                    await partition.sendRemoteEvents([
-                        remote(getRemotes(), undefined, undefined, 'task1'),
-                    ]);
-
-                    expect(events.slice(4)).toEqual([
-                        asyncResult('task1', [
-                            'info1Session',
-                            'info2Session',
-                            // Should include the current player
-                            'test',
-                        ]),
                     ]);
                 });
 
-                it(`should return only the players that are currently connected`, async () => {
-                    setupPartition({
-                        type: 'other_players_repo',
-                        branch: 'testBranch',
-                        host: 'testHost',
-                    });
+                it('should watch the branch for the given player', async () => {
                     partition.connect();
 
                     await waitAsync();
 
-                    const events = [] as Action[];
-                    partition.onEvents.subscribe((e) => events.push(...e));
-
-                    const info1 = deviceInfo(
-                        'info1Username',
-                        'info1Device',
-                        'info1Session'
-                    );
-                    const info2 = deviceInfo(
-                        'info2Username',
-                        'info2Device',
-                        'info2Session'
-                    );
                     deviceConnected.next({
                         broadcast: false,
                         branch: {
                             branch: 'testBranch',
                         },
-                        device: info1,
-                    });
-                    deviceConnected.next({
-                        broadcast: false,
-                        branch: {
-                            branch: 'testBranch',
-                        },
-                        device: info2,
+                        device: device1,
                     });
 
                     await waitAsync();
 
-                    deviceDisconnected.next({
-                        broadcast: false,
-                        branch: 'testBranch',
-                        device: info2,
-                    });
-
-                    await partition.sendRemoteEvents([
-                        remote(getRemotes(), undefined, undefined, 'task1'),
-                    ]);
-
-                    expect(events.slice(6)).toEqual([
-                        asyncResult('task1', [
-                            'info1Session',
-                            // Should include the current player
-                            'test',
-                        ]),
+                    expect(connection.sentMessages.slice(1)).toEqual([
+                        {
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-device1SessionId',
+                                temporary: true,
+                                siteId: expect.any(String),
+                            },
+                        },
                     ]);
                 });
 
-                it(`should return only the current player if not connected`, async () => {
-                    setupPartition({
-                        type: 'other_players_repo',
-                        branch: 'testBranch',
-                        host: 'testHost',
-                    });
+                it('should add bots from the new players branch', async () => {
+                    partition.connect();
 
                     await waitAsync();
 
-                    const events = [] as Action[];
-                    partition.onEvents.subscribe((e) => events.push(...e));
-
-                    const info1 = deviceInfo(
-                        'info1Username',
-                        'info1Device',
-                        'info1Session'
-                    );
-                    const info2 = deviceInfo(
-                        'info2Username',
-                        'info2Device',
-                        'info2Session'
-                    );
                     deviceConnected.next({
                         broadcast: false,
                         branch: {
                             branch: 'testBranch',
                         },
-                        device: info1,
+                        device: device1,
                     });
+
+                    await waitAsync();
+
+                    const state = partition.state;
+
+                    const bot1 = atom(atomId('device1', 1), null, bot('test1'));
+                    const tag1 = atom(atomId('device1', 2), bot1, tag('abc'));
+                    const value1 = atom(
+                        atomId('device1', 3),
+                        tag1,
+                        value('def')
+                    );
+
+                    addAtoms.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        atoms: [bot1, tag1, value1],
+                        initial: true,
+                    });
+
+                    await waitAsync();
+
+                    expect(added).toEqual([
+                        createBot('test1', {
+                            abc: 'def',
+                        }),
+                    ]);
+                    expect(partition.state).toEqual({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    });
+
+                    // Should make a new state object on updates.
+                    // This is because AuxHelper expects this in order for its caching to work properly.
+                    expect(partition.state).not.toBe(state);
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                            },
+                            addedBots: ['test1'],
+                            removedBots: [],
+                            updatedBots: [],
+                        },
+                    ]);
+                });
+
+                it('should remove bots from the new players branch', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+
                     deviceConnected.next({
                         broadcast: false,
                         branch: {
                             branch: 'testBranch',
                         },
-                        device: info2,
+                        device: device1,
                     });
 
                     await waitAsync();
 
-                    deviceDisconnected.next({
-                        broadcast: false,
-                        branch: 'testBranch',
-                        device: info2,
+                    const state = partition.state;
+
+                    const bot1 = atom(atomId('device1', 1), null, bot('test1'));
+                    const tag1 = atom(atomId('device1', 2), bot1, tag('abc'));
+                    const value1 = atom(
+                        atomId('device1', 3),
+                        tag1,
+                        value('def')
+                    );
+                    const del1 = atom(atomId('device1', 4), bot1, deleteOp());
+
+                    addAtoms.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        atoms: [bot1, tag1, value1],
+                        initial: true,
                     });
 
-                    await partition.sendRemoteEvents([
-                        remote(getRemotes(), undefined, undefined, 'task1'),
-                    ]);
+                    await waitAsync();
 
-                    expect(events).toEqual([
-                        asyncResult('task1', [
-                            // Should include the current player
-                            'test',
-                        ]),
-                    ]);
-                });
-            });
-        });
+                    addAtoms.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        atoms: [del1],
+                    });
 
-        describe('other_players', () => {
-            it('should watch for other devices', async () => {
-                partition.connect();
+                    expect(removed).toEqual(['test1']);
+                    expect(partition.state).toEqual({});
 
-                await waitAsync();
+                    // Should make a new state object on updates.
+                    // This is because AuxHelper expects this in order for its caching to work properly.
+                    expect(partition.state).not.toBe(state);
 
-                expect(connection.sentMessages).toEqual([
-                    {
-                        name: WATCH_BRANCH_DEVICES,
-                        data: 'testBranch',
-                    },
-                ]);
-            });
-
-            it('should watch the branch for the given player', async () => {
-                partition.connect();
-
-                await waitAsync();
-
-                deviceConnected.next({
-                    broadcast: false,
-                    branch: {
-                        branch: 'testBranch',
-                    },
-                    device: device1,
-                });
-
-                await waitAsync();
-
-                expect(connection.sentMessages.slice(1)).toEqual([
-                    {
-                        name: WATCH_BRANCH,
-                        data: {
-                            branch: 'testBranch-player-device1SessionId',
-                            temporary: true,
-                            siteId: expect.any(String),
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                            },
+                            addedBots: ['test1'],
+                            removedBots: [],
+                            updatedBots: [],
                         },
-                    },
-                ]);
-            });
-
-            it('should add bots from the new players branch', async () => {
-                partition.connect();
-
-                await waitAsync();
-
-                deviceConnected.next({
-                    broadcast: false,
-                    branch: {
-                        branch: 'testBranch',
-                    },
-                    device: device1,
+                        {
+                            state: {
+                                test1: null,
+                            },
+                            addedBots: [],
+                            removedBots: ['test1'],
+                            updatedBots: [],
+                        },
+                    ]);
                 });
 
-                await waitAsync();
+                it('should update bots on the new players branch', async () => {
+                    partition.connect();
 
-                const state = partition.state;
+                    await waitAsync();
 
-                const bot1 = atom(atomId('device1', 1), null, bot('test1'));
-                const tag1 = atom(atomId('device1', 2), bot1, tag('abc'));
-                const value1 = atom(atomId('device1', 3), tag1, value('def'));
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
 
-                addAtoms.next({
-                    branch: 'testBranch-player-device1SessionId',
-                    atoms: [bot1, tag1, value1],
-                    initial: true,
-                });
+                    await waitAsync();
 
-                await waitAsync();
+                    const state = partition.state;
 
-                expect(added).toEqual([
-                    createBot('test1', {
-                        abc: 'def',
-                    }),
-                ]);
-                expect(partition.state).toEqual({
-                    test1: createBot('test1', {
-                        abc: 'def',
-                    }),
-                });
+                    const bot1 = atom(atomId('device1', 1), null, bot('test1'));
+                    const tag1 = atom(atomId('device1', 2), bot1, tag('abc'));
+                    const value1 = atom(
+                        atomId('device1', 3),
+                        tag1,
+                        value('def')
+                    );
+                    const value2 = atom(
+                        atomId('device1', 4),
+                        tag1,
+                        value('ghi')
+                    );
 
-                // Should make a new state object on updates.
-                // This is because AuxHelper expects this in order for its caching to work properly.
-                expect(partition.state).not.toBe(state);
-                expect(updates).toEqual([
-                    {
-                        state: {
-                            test1: createBot('test1', {
-                                abc: 'def',
+                    addAtoms.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        atoms: [bot1, tag1, value1],
+                        initial: true,
+                    });
+
+                    await waitAsync();
+
+                    addAtoms.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        atoms: [value2],
+                    });
+
+                    expect(updated).toEqual([
+                        {
+                            bot: createBot('test1', {
+                                abc: 'ghi',
                             }),
+                            tags: ['abc'],
                         },
-                        addedBots: ['test1'],
-                        removedBots: [],
-                        updatedBots: [],
-                    },
-                ]);
-            });
-
-            it('should remove bots from the new players branch', async () => {
-                partition.connect();
-
-                await waitAsync();
-
-                deviceConnected.next({
-                    broadcast: false,
-                    branch: {
-                        branch: 'testBranch',
-                    },
-                    device: device1,
-                });
-
-                await waitAsync();
-
-                const state = partition.state;
-
-                const bot1 = atom(atomId('device1', 1), null, bot('test1'));
-                const tag1 = atom(atomId('device1', 2), bot1, tag('abc'));
-                const value1 = atom(atomId('device1', 3), tag1, value('def'));
-                const del1 = atom(atomId('device1', 4), bot1, deleteOp());
-
-                addAtoms.next({
-                    branch: 'testBranch-player-device1SessionId',
-                    atoms: [bot1, tag1, value1],
-                    initial: true,
-                });
-
-                await waitAsync();
-
-                addAtoms.next({
-                    branch: 'testBranch-player-device1SessionId',
-                    atoms: [del1],
-                });
-
-                expect(removed).toEqual(['test1']);
-                expect(partition.state).toEqual({});
-
-                // Should make a new state object on updates.
-                // This is because AuxHelper expects this in order for its caching to work properly.
-                expect(partition.state).not.toBe(state);
-
-                expect(updates).toEqual([
-                    {
-                        state: {
-                            test1: createBot('test1', {
-                                abc: 'def',
-                            }),
-                        },
-                        addedBots: ['test1'],
-                        removedBots: [],
-                        updatedBots: [],
-                    },
-                    {
-                        state: {
-                            test1: null,
-                        },
-                        addedBots: [],
-                        removedBots: ['test1'],
-                        updatedBots: [],
-                    },
-                ]);
-            });
-
-            it('should update bots on the new players branch', async () => {
-                partition.connect();
-
-                await waitAsync();
-
-                deviceConnected.next({
-                    broadcast: false,
-                    branch: {
-                        branch: 'testBranch',
-                    },
-                    device: device1,
-                });
-
-                await waitAsync();
-
-                const state = partition.state;
-
-                const bot1 = atom(atomId('device1', 1), null, bot('test1'));
-                const tag1 = atom(atomId('device1', 2), bot1, tag('abc'));
-                const value1 = atom(atomId('device1', 3), tag1, value('def'));
-                const value2 = atom(atomId('device1', 4), tag1, value('ghi'));
-
-                addAtoms.next({
-                    branch: 'testBranch-player-device1SessionId',
-                    atoms: [bot1, tag1, value1],
-                    initial: true,
-                });
-
-                await waitAsync();
-
-                addAtoms.next({
-                    branch: 'testBranch-player-device1SessionId',
-                    atoms: [value2],
-                });
-
-                expect(updated).toEqual([
-                    {
-                        bot: createBot('test1', {
+                    ]);
+                    expect(partition.state).toEqual({
+                        test1: createBot('test1', {
                             abc: 'ghi',
                         }),
-                        tags: ['abc'],
-                    },
-                ]);
-                expect(partition.state).toEqual({
-                    test1: createBot('test1', {
-                        abc: 'ghi',
-                    }),
-                });
+                    });
 
-                // Should make a new state object on updates.
-                // This is because AuxHelper expects this in order for its caching to work properly.
-                expect(partition.state).not.toBe(state);
+                    // Should make a new state object on updates.
+                    // This is because AuxHelper expects this in order for its caching to work properly.
+                    expect(partition.state).not.toBe(state);
 
-                expect(updates).toEqual([
-                    {
-                        state: {
-                            test1: createBot('test1', {
-                                abc: 'def',
-                            }),
-                        },
-                        addedBots: ['test1'],
-                        removedBots: [],
-                        updatedBots: [],
-                    },
-                    {
-                        state: {
-                            test1: {
-                                tags: {
-                                    abc: 'ghi',
-                                },
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
                             },
+                            addedBots: ['test1'],
+                            removedBots: [],
+                            updatedBots: [],
                         },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test1'],
-                    },
-                ]);
-            });
-
-            it('should add tag masks from other players', async () => {
-                partition.space = 'testSpace';
-                partition.connect();
-
-                await waitAsync();
-
-                deviceConnected.next({
-                    broadcast: false,
-                    branch: {
-                        branch: 'testBranch',
-                    },
-                    device: device1,
-                });
-
-                await waitAsync();
-
-                const state = partition.state;
-
-                const tag1 = atom(
-                    atomId('device1', 2),
-                    null,
-                    tagMask('test1', 'abc')
-                );
-                const value1 = atom(atomId('device1', 3), tag1, value('def'));
-                const value2 = atom(atomId('device1', 4), tag1, value('ghi'));
-
-                addAtoms.next({
-                    branch: 'testBranch-player-device1SessionId',
-                    atoms: [tag1, value1],
-                    initial: true,
-                });
-
-                await waitAsync();
-
-                addAtoms.next({
-                    branch: 'testBranch-player-device1SessionId',
-                    atoms: [value2],
-                });
-
-                expect(updated).toEqual([]);
-                expect(partition.state).toEqual({
-                    test1: {
-                        masks: {
-                            [partition.space]: {
-                                abc: 'ghi',
-                            },
-                        },
-                    },
-                });
-
-                // Should make a new state object on updates.
-                // This is because AuxHelper expects this in order for its caching to work properly.
-                expect(partition.state).not.toBe(state);
-
-                expect(updates).toEqual([
-                    {
-                        state: {
-                            test1: {
-                                masks: {
-                                    [partition.space]: {
-                                        abc: 'def',
-                                    },
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test1'],
-                    },
-                    {
-                        state: {
-                            test1: {
-                                masks: {
-                                    [partition.space]: {
+                        {
+                            state: {
+                                test1: {
+                                    tags: {
                                         abc: 'ghi',
                                     },
                                 },
                             },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test1'],
                         },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test1'],
-                    },
-                ]);
-            });
-
-            it('should stop watching the player branch when the device disconnects', async () => {
-                partition.connect();
-
-                await waitAsync();
-
-                deviceConnected.next({
-                    broadcast: false,
-                    branch: {
-                        branch: 'testBranch',
-                    },
-                    device: device1,
+                    ]);
                 });
 
-                await waitAsync();
+                it('should add tag masks from other players', async () => {
+                    partition.space = 'testSpace';
+                    partition.connect();
 
-                deviceDisconnected.next({
-                    broadcast: false,
-                    branch: 'testBranch',
-                    device: device1,
-                });
+                    await waitAsync();
 
-                await waitAsync();
-
-                expect(connection.sentMessages.slice(1)).toEqual([
-                    {
-                        name: WATCH_BRANCH,
-                        data: {
-                            branch: 'testBranch-player-device1SessionId',
-                            temporary: true,
-                            siteId: expect.any(String),
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
                         },
-                    },
-                    {
-                        name: UNWATCH_BRANCH,
-                        data: 'testBranch-player-device1SessionId',
-                    },
-                ]);
-            });
+                        device: device1,
+                    });
 
-            it('should remove all the bots that were part of the player branch when the device disconnects', async () => {
-                partition.connect();
+                    await waitAsync();
 
-                await waitAsync();
+                    const state = partition.state;
 
-                deviceConnected.next({
-                    broadcast: false,
-                    branch: {
+                    const tag1 = atom(
+                        atomId('device1', 2),
+                        null,
+                        tagMask('test1', 'abc')
+                    );
+                    const value1 = atom(
+                        atomId('device1', 3),
+                        tag1,
+                        value('def')
+                    );
+                    const value2 = atom(
+                        atomId('device1', 4),
+                        tag1,
+                        value('ghi')
+                    );
+
+                    addAtoms.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        atoms: [tag1, value1],
+                        initial: true,
+                    });
+
+                    await waitAsync();
+
+                    addAtoms.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        atoms: [value2],
+                    });
+
+                    expect(updated).toEqual([]);
+                    expect(partition.state).toEqual({
+                        test1: {
+                            masks: {
+                                [partition.space]: {
+                                    abc: 'ghi',
+                                },
+                            },
+                        },
+                    });
+
+                    // Should make a new state object on updates.
+                    // This is because AuxHelper expects this in order for its caching to work properly.
+                    expect(partition.state).not.toBe(state);
+
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: {
+                                    masks: {
+                                        [partition.space]: {
+                                            abc: 'def',
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test1'],
+                        },
+                        {
+                            state: {
+                                test1: {
+                                    masks: {
+                                        [partition.space]: {
+                                            abc: 'ghi',
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test1'],
+                        },
+                    ]);
+                });
+
+                it('should stop watching the player branch when the device disconnects', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    deviceDisconnected.next({
+                        broadcast: false,
                         branch: 'testBranch',
-                    },
-                    device: device1,
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(1)).toEqual([
+                        {
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-device1SessionId',
+                                temporary: true,
+                                siteId: expect.any(String),
+                            },
+                        },
+                        {
+                            name: UNWATCH_BRANCH,
+                            data: 'testBranch-player-device1SessionId',
+                        },
+                    ]);
                 });
 
-                await waitAsync();
+                it('should remove all the bots that were part of the player branch when the device disconnects', async () => {
+                    partition.connect();
 
-                const bot1 = atom(atomId('device1', 1), null, bot('test1'));
-                const tag1 = atom(atomId('device1', 2), bot1, tag('abc'));
-                const value1 = atom(atomId('device1', 3), tag1, value('def'));
+                    await waitAsync();
 
-                addAtoms.next({
-                    branch: 'testBranch-player-device1SessionId',
-                    atoms: [bot1, tag1, value1],
-                    initial: true,
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    const bot1 = atom(atomId('device1', 1), null, bot('test1'));
+                    const tag1 = atom(atomId('device1', 2), bot1, tag('abc'));
+                    const value1 = atom(
+                        atomId('device1', 3),
+                        tag1,
+                        value('def')
+                    );
+
+                    addAtoms.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        atoms: [bot1, tag1, value1],
+                        initial: true,
+                    });
+
+                    await waitAsync();
+
+                    deviceDisconnected.next({
+                        broadcast: false,
+                        branch: 'testBranch',
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    expect(removed).toEqual(['test1']);
+                    expect(partition.state).toEqual({});
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                            },
+                            addedBots: ['test1'],
+                            removedBots: [],
+                            updatedBots: [],
+                        },
+                        {
+                            state: {
+                                test1: null,
+                            },
+                            addedBots: [],
+                            removedBots: ['test1'],
+                            updatedBots: [],
+                        },
+                    ]);
                 });
 
-                await waitAsync();
+                it('should remove the tag masks that were part of the player branch when the device disconnects', async () => {
+                    partition.space = 'testSpace';
+                    partition.connect();
 
-                deviceDisconnected.next({
-                    broadcast: false,
-                    branch: 'testBranch',
-                    device: device1,
+                    await waitAsync();
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    const tag1 = atom(
+                        atomId('device1', 2),
+                        null,
+                        tagMask('test1', 'abc')
+                    );
+                    const value1 = atom(
+                        atomId('device1', 3),
+                        tag1,
+                        value('def')
+                    );
+
+                    addAtoms.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        atoms: [tag1, value1],
+                        initial: true,
+                    });
+
+                    await waitAsync();
+
+                    deviceDisconnected.next({
+                        broadcast: false,
+                        branch: 'testBranch',
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    expect(removed).toEqual([]);
+                    expect(partition.state).toEqual({});
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: {
+                                    masks: {
+                                        [partition.space]: {
+                                            abc: 'def',
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test1'],
+                        },
+                        {
+                            state: {
+                                test1: {
+                                    masks: {
+                                        [partition.space]: {
+                                            abc: null,
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test1'],
+                        },
+                    ]);
                 });
 
-                await waitAsync();
+                it('should do nothing when given a bot event', async () => {
+                    partition.connect();
 
-                expect(removed).toEqual(['test1']);
-                expect(partition.state).toEqual({});
-                expect(updates).toEqual([
-                    {
-                        state: {
-                            test1: createBot('test1', {
+                    await waitAsync();
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    const extra = await partition.applyEvents([
+                        botAdded(
+                            createBot('test1', {
                                 abc: 'def',
-                            }),
+                            })
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(extra).toEqual([]);
+                    expect(added).toEqual([]);
+                    expect(partition.state).toEqual({});
+                });
+
+                it('should ignore devices that are the same user as the partition', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+                    const userDevice = deviceInfo(
+                        'username',
+                        'username',
+                        'test'
+                    );
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
                         },
-                        addedBots: ['test1'],
-                        removedBots: [],
-                        updatedBots: [],
-                    },
-                    {
-                        state: {
-                            test1: null,
+                        device: userDevice,
+                    });
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(1)).toEqual([]);
+                });
+
+                it('should not ignore the server user', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+                    const serverDevice = deviceInfo(
+                        'Server',
+                        'Server',
+                        'server'
+                    );
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
                         },
-                        addedBots: [],
-                        removedBots: ['test1'],
-                        updatedBots: [],
-                    },
-                ]);
-            });
+                        device: serverDevice,
+                    });
 
-            it('should remove the tag masks that were part of the player branch when the device disconnects', async () => {
-                partition.space = 'testSpace';
-                partition.connect();
+                    await waitAsync();
 
-                await waitAsync();
-
-                deviceConnected.next({
-                    broadcast: false,
-                    branch: {
-                        branch: 'testBranch',
-                    },
-                    device: device1,
+                    expect(connection.sentMessages.slice(1)).toEqual([
+                        {
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-server',
+                                temporary: true,
+                                siteId: expect.any(String),
+                            },
+                        },
+                    ]);
                 });
 
-                await waitAsync();
+                it('should use the specified space', async () => {
+                    partition.space = 'test';
+                    partition.connect();
 
-                const tag1 = atom(
-                    atomId('device1', 2),
-                    null,
-                    tagMask('test1', 'abc')
-                );
-                const value1 = atom(atomId('device1', 3), tag1, value('def'));
+                    await waitAsync();
 
-                addAtoms.next({
-                    branch: 'testBranch-player-device1SessionId',
-                    atoms: [tag1, value1],
-                    initial: true,
-                });
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
 
-                await waitAsync();
+                    await waitAsync();
 
-                deviceDisconnected.next({
-                    broadcast: false,
-                    branch: 'testBranch',
-                    device: device1,
-                });
+                    const state = partition.state;
 
-                await waitAsync();
+                    const bot1 = atom(atomId('device1', 1), null, bot('test1'));
+                    const tag1 = atom(atomId('device1', 2), bot1, tag('abc'));
+                    const value1 = atom(
+                        atomId('device1', 3),
+                        tag1,
+                        value('def')
+                    );
 
-                expect(removed).toEqual([]);
-                expect(partition.state).toEqual({});
-                expect(updates).toEqual([
-                    {
-                        state: {
-                            test1: {
-                                masks: {
-                                    [partition.space]: {
+                    addAtoms.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        atoms: [bot1, tag1, value1],
+                        initial: true,
+                    });
+
+                    await waitAsync();
+
+                    expect(added).toEqual([
+                        createBot(
+                            'test1',
+                            {
+                                abc: 'def',
+                            },
+                            <any>'test'
+                        ),
+                    ]);
+                    expect(partition.state).toEqual({
+                        test1: createBot(
+                            'test1',
+                            {
+                                abc: 'def',
+                            },
+                            <any>'test'
+                        ),
+                    });
+
+                    // Should make a new state object on updates.
+                    // This is because AuxHelper expects this in order for its caching to work properly.
+                    expect(partition.state).not.toBe(state);
+
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: createBot(
+                                    'test1',
+                                    {
                                         abc: 'def',
                                     },
-                                },
+                                    <any>'test'
+                                ),
+                            },
+                            addedBots: ['test1'],
+                            removedBots: [],
+                            updatedBots: [],
+                        },
+                    ]);
+                });
+
+                it('should send a onRemotePlayerSubscribed shout', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+                    const device1 = deviceInfo(
+                        'device1Username',
+                        'device1DeviceId',
+                        'device1SessionId'
+                    );
+
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        action(ON_REMOTE_JOINED_ACTION_NAME, null, null, {
+                            remoteId: 'device1SessionId',
+                        }),
+                        action(
+                            ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
+                            null,
+                            null,
+                            {
+                                playerId: 'device1SessionId',
+                            }
+                        ),
+                    ]);
+                });
+
+                it('should send a onRemotePlayerUnsubscribed shout', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+                    const device1 = deviceInfo(
+                        'device1Username',
+                        'device1DeviceId',
+                        'device1SessionId'
+                    );
+
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    deviceDisconnected.next({
+                        broadcast: false,
+                        branch: 'testBranch',
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        action(ON_REMOTE_JOINED_ACTION_NAME, null, null, {
+                            remoteId: 'device1SessionId',
+                        }),
+                        action(
+                            ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
+                            null,
+                            null,
+                            {
+                                playerId: 'device1SessionId',
+                            }
+                        ),
+                        action(ON_REMOTE_LEAVE_ACTION_NAME, null, null, {
+                            remoteId: 'device1SessionId',
+                        }),
+                        action(
+                            ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
+                            null,
+                            null,
+                            {
+                                playerId: 'device1SessionId',
+                            }
+                        ),
+                    ]);
+                });
+            });
+        });
+
+        describe('yjs_client', () => {
+            let addUpdates: Subject<AddUpdatesEvent>;
+            let tempPartition: YjsPartitionImpl;
+
+            beforeEach(async () => {
+                connection = new MemoryConnectionClient();
+                receiveEvent = new Subject<ReceiveDeviceActionEvent>();
+                addUpdates = new Subject<AddUpdatesEvent>();
+                deviceConnected = new Subject();
+                deviceDisconnected = new Subject();
+                connection.events.set(RECEIVE_EVENT, receiveEvent);
+                connection.events.set(ADD_UPDATES, addUpdates);
+                connection.events.set(
+                    DEVICE_CONNECTED_TO_BRANCH,
+                    deviceConnected
+                );
+                connection.events.set(
+                    DEVICE_DISCONNECTED_FROM_BRANCH,
+                    deviceDisconnected
+                );
+                client = new CausalRepoClient(connection);
+                connection.connect();
+                sub = new Subscription();
+
+                added = [];
+                removed = [];
+                updated = [];
+                updates = [];
+
+                setupPartition({
+                    type: 'other_players_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                    childPartitionType: 'yjs_client',
+                });
+
+                tempPartition = new YjsPartitionImpl({
+                    type: 'yjs',
+                });
+            });
+
+            afterEach(() => {
+                sub.unsubscribe();
+            });
+
+            it('should return delayed for the realtimeStrategy', () => {
+                expect(partition.realtimeStrategy).toEqual('delayed');
+            });
+
+            it('should issue connection, authentication, authorization, and sync events in that order', async () => {
+                const promise = partition.onStatusUpdated
+                    .pipe(
+                        takeWhile((update) => update.type !== 'sync', true),
+                        bufferCount(4)
+                    )
+                    .toPromise();
+
+                partition.connect();
+
+                deviceConnected.next({
+                    broadcast: false,
+                    branch: {
+                        branch: 'testBranch',
+                    },
+                    device: device1,
+                });
+
+                const update = await promise;
+
+                expect(update).toEqual([
+                    {
+                        type: 'connection',
+                        connected: true,
+                    },
+                    expect.objectContaining({
+                        type: 'authentication',
+                        authenticated: true,
+                    }),
+                    expect.objectContaining({
+                        type: 'authorization',
+                        authorized: true,
+                    }),
+                    {
+                        type: 'sync',
+                        synced: true,
+                    },
+                ]);
+            });
+
+            describe('remote events', () => {
+                it('should not send the remote event to the server', async () => {
+                    await partition.sendRemoteEvents([
+                        remote(
+                            {
+                                type: 'def',
+                            },
+                            {
+                                deviceId: 'device',
+                            }
+                        ),
+                    ]);
+
+                    expect(connection.sentMessages).toEqual([]);
+                });
+
+                describe('get_remotes', () => {
+                    it(`should send an async result with the player list`, async () => {
+                        setupPartition({
+                            type: 'other_players_repo',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                        });
+                        partition.connect();
+
+                        await waitAsync();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+
+                        const info1 = deviceInfo(
+                            'info1Username',
+                            'info1Device',
+                            'info1Session'
+                        );
+                        const info2 = deviceInfo(
+                            'info2Username',
+                            'info2Device',
+                            'info2Session'
+                        );
+                        deviceConnected.next({
+                            broadcast: false,
+                            branch: {
+                                branch: 'testBranch',
+                                protocol: 'updates',
+                            },
+                            device: info1,
+                        });
+                        deviceConnected.next({
+                            broadcast: false,
+                            branch: {
+                                branch: 'testBranch',
+                                protocol: 'updates',
+                            },
+                            device: info2,
+                        });
+
+                        await waitAsync();
+
+                        await partition.sendRemoteEvents([
+                            remote(getRemotes(), undefined, undefined, 'task1'),
+                        ]);
+
+                        expect(events.slice(4)).toEqual([
+                            asyncResult('task1', [
+                                'info1Session',
+                                'info2Session',
+                                // Should include the current player
+                                'test',
+                            ]),
+                        ]);
+                    });
+
+                    it(`should return only the players that are currently connected`, async () => {
+                        setupPartition({
+                            type: 'other_players_repo',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                        });
+                        partition.connect();
+
+                        await waitAsync();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+
+                        const info1 = deviceInfo(
+                            'info1Username',
+                            'info1Device',
+                            'info1Session'
+                        );
+                        const info2 = deviceInfo(
+                            'info2Username',
+                            'info2Device',
+                            'info2Session'
+                        );
+                        deviceConnected.next({
+                            broadcast: false,
+                            branch: {
+                                branch: 'testBranch',
+                                protocol: 'updates',
+                            },
+                            device: info1,
+                        });
+                        deviceConnected.next({
+                            broadcast: false,
+                            branch: {
+                                branch: 'testBranch',
+                                protocol: 'updates',
+                            },
+                            device: info2,
+                        });
+
+                        await waitAsync();
+
+                        deviceDisconnected.next({
+                            broadcast: false,
+                            branch: 'testBranch',
+                            device: info2,
+                        });
+
+                        await partition.sendRemoteEvents([
+                            remote(getRemotes(), undefined, undefined, 'task1'),
+                        ]);
+
+                        expect(events.slice(6)).toEqual([
+                            asyncResult('task1', [
+                                'info1Session',
+                                // Should include the current player
+                                'test',
+                            ]),
+                        ]);
+                    });
+
+                    it(`should return only the current player if not connected`, async () => {
+                        setupPartition({
+                            type: 'other_players_repo',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                        });
+
+                        await waitAsync();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+
+                        const info1 = deviceInfo(
+                            'info1Username',
+                            'info1Device',
+                            'info1Session'
+                        );
+                        const info2 = deviceInfo(
+                            'info2Username',
+                            'info2Device',
+                            'info2Session'
+                        );
+                        deviceConnected.next({
+                            broadcast: false,
+                            branch: {
+                                branch: 'testBranch',
+                                protocol: 'updates',
+                            },
+                            device: info1,
+                        });
+                        deviceConnected.next({
+                            broadcast: false,
+                            branch: {
+                                branch: 'testBranch',
+                                protocol: 'updates',
+                            },
+                            device: info2,
+                        });
+
+                        await waitAsync();
+
+                        deviceDisconnected.next({
+                            broadcast: false,
+                            branch: 'testBranch',
+                            device: info2,
+                        });
+
+                        await partition.sendRemoteEvents([
+                            remote(getRemotes(), undefined, undefined, 'task1'),
+                        ]);
+
+                        expect(events).toEqual([
+                            asyncResult('task1', [
+                                // Should include the current player
+                                'test',
+                            ]),
+                        ]);
+                    });
+                });
+            });
+
+            describe('other_players', () => {
+                it('should watch for other devices', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages).toEqual([
+                        {
+                            name: WATCH_BRANCH_DEVICES,
+                            data: 'testBranch',
+                        },
+                    ]);
+                });
+
+                it('should watch the branch for the given player', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                            protocol: 'updates',
+                        },
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(1)).toEqual([
+                        {
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-device1SessionId',
+                                temporary: true,
+                                siteId: expect.any(String),
+                                protocol: 'updates',
                             },
                         },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test1'],
-                    },
-                    {
-                        state: {
-                            test1: {
-                                masks: {
-                                    [partition.space]: {
-                                        abc: null,
+                    ]);
+                });
+
+                it('should add bots from the new players branch', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    const state = partition.state;
+
+                    await tempPartition.applyEvents([
+                        botAdded(
+                            createBot('test1', {
+                                abc: 'def',
+                            })
+                        ),
+                    ]);
+
+                    const update = fromByteArray(
+                        encodeStateAsUpdate(tempPartition.doc)
+                    );
+
+                    addUpdates.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        updates: [update],
+                        initial: true,
+                    });
+
+                    await waitAsync();
+
+                    expect(added).toEqual([
+                        createBot('test1', {
+                            abc: 'def',
+                        }),
+                    ]);
+                    expect(partition.state).toEqual({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    });
+
+                    // Should make a new state object on updates.
+                    // This is because AuxHelper expects this in order for its caching to work properly.
+                    expect(partition.state).not.toBe(state);
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                            },
+                            addedBots: ['test1'],
+                            removedBots: [],
+                            updatedBots: [],
+                        },
+                    ]);
+                });
+
+                it('should remove bots from the new players branch', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    const state = partition.state;
+
+                    await tempPartition.applyEvents([
+                        botAdded(
+                            createBot('test1', {
+                                abc: 'def',
+                            })
+                        ),
+                    ]);
+
+                    let update = fromByteArray(
+                        encodeStateAsUpdate(tempPartition.doc)
+                    );
+
+                    addUpdates.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        updates: [update],
+                        initial: true,
+                    });
+
+                    await waitAsync();
+
+                    await tempPartition.applyEvents([botRemoved('test1')]);
+
+                    update = fromByteArray(
+                        encodeStateAsUpdate(tempPartition.doc)
+                    );
+
+                    addUpdates.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        updates: [update],
+                    });
+
+                    expect(removed).toEqual(['test1']);
+                    expect(partition.state).toEqual({});
+
+                    // Should make a new state object on updates.
+                    // This is because AuxHelper expects this in order for its caching to work properly.
+                    expect(partition.state).not.toBe(state);
+
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                            },
+                            addedBots: ['test1'],
+                            removedBots: [],
+                            updatedBots: [],
+                        },
+                        {
+                            state: {
+                                test1: null,
+                            },
+                            addedBots: [],
+                            removedBots: ['test1'],
+                            updatedBots: [],
+                        },
+                    ]);
+                });
+
+                it('should update bots on the new players branch', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                            protocol: 'updates',
+                        },
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    const state = partition.state;
+
+                    await tempPartition.applyEvents([
+                        botAdded(
+                            createBot('test1', {
+                                abc: 'def',
+                            })
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    let update = fromByteArray(
+                        encodeStateAsUpdate(tempPartition.doc)
+                    );
+
+                    addUpdates.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        updates: [update],
+                        initial: true,
+                    });
+
+                    await waitAsync();
+
+                    await tempPartition.applyEvents([
+                        botUpdated('test1', {
+                            tags: {
+                                abc: 'ghi',
+                            },
+                        }),
+                    ]);
+
+                    await waitAsync();
+
+                    update = fromByteArray(
+                        encodeStateAsUpdate(tempPartition.doc)
+                    );
+
+                    addUpdates.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        updates: [update],
+                    });
+
+                    await waitAsync();
+
+                    expect(updated).toEqual([
+                        {
+                            bot: createBot('test1', {
+                                abc: 'ghi',
+                            }),
+                            tags: ['abc'],
+                        },
+                    ]);
+                    expect(partition.state).toEqual({
+                        test1: createBot('test1', {
+                            abc: 'ghi',
+                        }),
+                    });
+
+                    // Should make a new state object on updates.
+                    // This is because AuxHelper expects this in order for its caching to work properly.
+                    expect(partition.state).not.toBe(state);
+
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                            },
+                            addedBots: ['test1'],
+                            removedBots: [],
+                            updatedBots: [],
+                        },
+                        {
+                            state: {
+                                test1: {
+                                    tags: {
+                                        abc: 'ghi',
                                     },
                                 },
                             },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test1'],
                         },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test1'],
-                    },
-                ]);
-            });
-
-            it('should do nothing when given a bot event', async () => {
-                partition.connect();
-
-                await waitAsync();
-
-                deviceConnected.next({
-                    broadcast: false,
-                    branch: {
-                        branch: 'testBranch',
-                    },
-                    device: device1,
+                    ]);
                 });
 
-                await waitAsync();
+                it('should add tag masks from other players', async () => {
+                    tempPartition.space = partition.space = 'testSpace';
+                    partition.connect();
 
-                const extra = await partition.applyEvents([
-                    botAdded(
-                        createBot('test1', {
-                            abc: 'def',
-                        })
-                    ),
-                ]);
+                    await waitAsync();
 
-                await waitAsync();
-
-                expect(extra).toEqual([]);
-                expect(added).toEqual([]);
-                expect(partition.state).toEqual({});
-            });
-
-            it('should ignore devices that are the same user as the partition', async () => {
-                partition.connect();
-
-                await waitAsync();
-                const userDevice = deviceInfo('username', 'username', 'test');
-
-                deviceConnected.next({
-                    broadcast: false,
-                    branch: {
-                        branch: 'testBranch',
-                    },
-                    device: userDevice,
-                });
-
-                await waitAsync();
-
-                expect(connection.sentMessages.slice(1)).toEqual([]);
-            });
-
-            it('should not ignore the server user', async () => {
-                partition.connect();
-
-                await waitAsync();
-                const serverDevice = deviceInfo('Server', 'Server', 'server');
-
-                deviceConnected.next({
-                    broadcast: false,
-                    branch: {
-                        branch: 'testBranch',
-                    },
-                    device: serverDevice,
-                });
-
-                await waitAsync();
-
-                expect(connection.sentMessages.slice(1)).toEqual([
-                    {
-                        name: WATCH_BRANCH,
-                        data: {
-                            branch: 'testBranch-player-server',
-                            temporary: true,
-                            siteId: expect.any(String),
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                            protocol: 'updates',
                         },
-                    },
-                ]);
-            });
+                        device: device1,
+                    });
 
-            it('should use the specified space', async () => {
-                partition.space = 'test';
-                partition.connect();
+                    await waitAsync();
 
-                await waitAsync();
+                    const state = partition.state;
 
-                deviceConnected.next({
-                    broadcast: false,
-                    branch: {
-                        branch: 'testBranch',
-                    },
-                    device: device1,
-                });
-
-                await waitAsync();
-
-                const state = partition.state;
-
-                const bot1 = atom(atomId('device1', 1), null, bot('test1'));
-                const tag1 = atom(atomId('device1', 2), bot1, tag('abc'));
-                const value1 = atom(atomId('device1', 3), tag1, value('def'));
-
-                addAtoms.next({
-                    branch: 'testBranch-player-device1SessionId',
-                    atoms: [bot1, tag1, value1],
-                    initial: true,
-                });
-
-                await waitAsync();
-
-                expect(added).toEqual([
-                    createBot(
-                        'test1',
-                        {
-                            abc: 'def',
-                        },
-                        <any>'test'
-                    ),
-                ]);
-                expect(partition.state).toEqual({
-                    test1: createBot(
-                        'test1',
-                        {
-                            abc: 'def',
-                        },
-                        <any>'test'
-                    ),
-                });
-
-                // Should make a new state object on updates.
-                // This is because AuxHelper expects this in order for its caching to work properly.
-                expect(partition.state).not.toBe(state);
-
-                expect(updates).toEqual([
-                    {
-                        state: {
-                            test1: createBot(
-                                'test1',
-                                {
+                    await tempPartition.applyEvents([
+                        botUpdated('test1', {
+                            masks: {
+                                [partition.space]: {
                                     abc: 'def',
                                 },
-                                <any>'test'
-                            ),
+                            },
+                        }),
+                    ]);
+
+                    let update = fromByteArray(
+                        encodeStateAsUpdate(tempPartition.doc)
+                    );
+
+                    addUpdates.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        updates: [update],
+                        initial: true,
+                    });
+
+                    await waitAsync();
+
+                    await tempPartition.applyEvents([
+                        botUpdated('test1', {
+                            masks: {
+                                [partition.space]: {
+                                    abc: 'ghi',
+                                },
+                            },
+                        }),
+                    ]);
+
+                    update = fromByteArray(
+                        encodeStateAsUpdate(tempPartition.doc)
+                    );
+
+                    addUpdates.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        updates: [update],
+                    });
+
+                    await waitAsync();
+
+                    expect(updated).toEqual([]);
+                    expect(partition.state).toEqual({
+                        test1: {
+                            masks: {
+                                [partition.space]: {
+                                    abc: 'ghi',
+                                },
+                            },
                         },
-                        addedBots: ['test1'],
-                        removedBots: [],
-                        updatedBots: [],
-                    },
-                ]);
-            });
+                    });
 
-            it('should send a onRemotePlayerSubscribed shout', async () => {
-                partition.connect();
+                    // Should make a new state object on updates.
+                    // This is because AuxHelper expects this in order for its caching to work properly.
+                    expect(partition.state).not.toBe(state);
 
-                await waitAsync();
-                const device1 = deviceInfo(
-                    'device1Username',
-                    'device1DeviceId',
-                    'device1SessionId'
-                );
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: {
+                                    masks: {
+                                        [partition.space]: {
+                                            abc: 'def',
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test1'],
+                        },
+                        {
+                            state: {
+                                test1: {
+                                    masks: {
+                                        [partition.space]: {
+                                            abc: 'ghi',
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test1'],
+                        },
+                    ]);
+                });
 
-                let events = [] as Action[];
-                partition.onEvents.subscribe((e) => events.push(...e));
+                it('should stop watching the player branch when the device disconnects', async () => {
+                    partition.connect();
 
-                deviceConnected.next({
-                    broadcast: false,
-                    branch: {
+                    await waitAsync();
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    deviceDisconnected.next({
+                        broadcast: false,
                         branch: 'testBranch',
-                    },
-                    device: device1,
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(1)).toEqual([
+                        {
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-device1SessionId',
+                                temporary: true,
+                                protocol: 'updates',
+                                siteId: expect.any(String),
+                            },
+                        },
+                        {
+                            name: UNWATCH_BRANCH,
+                            data: 'testBranch-player-device1SessionId',
+                        },
+                    ]);
                 });
 
-                await waitAsync();
+                it('should remove all the bots that were part of the player branch when the device disconnects', async () => {
+                    partition.connect();
 
-                expect(events).toEqual([
-                    action(ON_REMOTE_JOINED_ACTION_NAME, null, null, {
-                        remoteId: 'device1SessionId',
-                    }),
-                    action(
-                        ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
-                        null,
-                        null,
-                        {
-                            playerId: 'device1SessionId',
-                        }
-                    ),
-                ]);
-            });
+                    await waitAsync();
 
-            it('should send a onRemotePlayerUnsubscribed shout', async () => {
-                partition.connect();
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
 
-                await waitAsync();
-                const device1 = deviceInfo(
-                    'device1Username',
-                    'device1DeviceId',
-                    'device1SessionId'
-                );
+                    await waitAsync();
 
-                let events = [] as Action[];
-                partition.onEvents.subscribe((e) => events.push(...e));
+                    await tempPartition.applyEvents([
+                        botAdded(
+                            createBot('test1', {
+                                abc: 'def',
+                            })
+                        ),
+                    ]);
 
-                deviceConnected.next({
-                    broadcast: false,
-                    branch: {
+                    let update = fromByteArray(
+                        encodeStateAsUpdate(tempPartition.doc)
+                    );
+
+                    addUpdates.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        updates: [update],
+                        initial: true,
+                    });
+
+                    await waitAsync();
+
+                    deviceDisconnected.next({
+                        broadcast: false,
                         branch: 'testBranch',
-                    },
-                    device: device1,
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    expect(removed).toEqual(['test1']);
+                    expect(partition.state).toEqual({});
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                            },
+                            addedBots: ['test1'],
+                            removedBots: [],
+                            updatedBots: [],
+                        },
+                        {
+                            state: {
+                                test1: null,
+                            },
+                            addedBots: [],
+                            removedBots: ['test1'],
+                            updatedBots: [],
+                        },
+                    ]);
                 });
 
-                await waitAsync();
+                it('should remove the tag masks that were part of the player branch when the device disconnects', async () => {
+                    partition.space = 'testSpace';
+                    tempPartition.space = 'testSpace';
+                    partition.connect();
 
-                deviceDisconnected.next({
-                    broadcast: false,
-                    branch: 'testBranch',
-                    device: device1,
+                    await waitAsync();
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                            protocol: 'updates',
+                        },
+                        device: device1,
+                    });
+
+                    await tempPartition.applyEvents([
+                        botUpdated('test1', {
+                            masks: {
+                                [partition.space]: {
+                                    abc: 'def',
+                                },
+                            },
+                        }),
+                    ]);
+
+                    let update = fromByteArray(
+                        encodeStateAsUpdate(tempPartition.doc)
+                    );
+
+                    await waitAsync();
+
+                    const tag1 = atom(
+                        atomId('device1', 2),
+                        null,
+                        tagMask('test1', 'abc')
+                    );
+                    const value1 = atom(
+                        atomId('device1', 3),
+                        tag1,
+                        value('def')
+                    );
+
+                    addUpdates.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        updates: [update],
+                        initial: true,
+                    });
+
+                    await waitAsync();
+
+                    deviceDisconnected.next({
+                        broadcast: false,
+                        branch: 'testBranch',
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    expect(removed).toEqual([]);
+                    expect(partition.state).toEqual({});
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: {
+                                    masks: {
+                                        [partition.space]: {
+                                            abc: 'def',
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test1'],
+                        },
+                        {
+                            state: {
+                                test1: {
+                                    masks: {
+                                        [partition.space]: {
+                                            abc: null,
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test1'],
+                        },
+                    ]);
                 });
 
-                await waitAsync();
+                it('should do nothing when given a bot event', async () => {
+                    partition.connect();
 
-                expect(events).toEqual([
-                    action(ON_REMOTE_JOINED_ACTION_NAME, null, null, {
-                        remoteId: 'device1SessionId',
-                    }),
-                    action(
-                        ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
-                        null,
-                        null,
+                    await waitAsync();
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    const extra = await partition.applyEvents([
+                        botAdded(
+                            createBot('test1', {
+                                abc: 'def',
+                            })
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(extra).toEqual([]);
+                    expect(added).toEqual([]);
+                    expect(partition.state).toEqual({});
+                });
+
+                it('should ignore devices that are the same user as the partition', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+                    const userDevice = deviceInfo(
+                        'username',
+                        'username',
+                        'test'
+                    );
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: userDevice,
+                    });
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(1)).toEqual([]);
+                });
+
+                it('should not ignore the server user', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+                    const serverDevice = deviceInfo(
+                        'Server',
+                        'Server',
+                        'server'
+                    );
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                            protocol: 'updates',
+                        },
+                        device: serverDevice,
+                    });
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(1)).toEqual([
                         {
-                            playerId: 'device1SessionId',
-                        }
-                    ),
-                    action(ON_REMOTE_LEAVE_ACTION_NAME, null, null, {
-                        remoteId: 'device1SessionId',
-                    }),
-                    action(
-                        ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
-                        null,
-                        null,
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-server',
+                                temporary: true,
+                                protocol: 'updates',
+                                siteId: expect.any(String),
+                            },
+                        },
+                    ]);
+                });
+
+                it('should use the specified space', async () => {
+                    tempPartition.space = partition.space = 'test';
+                    partition.connect();
+
+                    await waitAsync();
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                            protocol: 'updates',
+                        },
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    const state = partition.state;
+
+                    await tempPartition.applyEvents([
+                        botAdded(
+                            createBot('test1', {
+                                abc: 'def',
+                            })
+                        ),
+                    ]);
+
+                    let update = fromByteArray(
+                        encodeStateAsUpdate(tempPartition.doc)
+                    );
+
+                    addUpdates.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        updates: [update],
+                        initial: true,
+                    });
+
+                    await waitAsync();
+
+                    expect(added).toEqual([
+                        createBot(
+                            'test1',
+                            {
+                                abc: 'def',
+                            },
+                            <any>'test'
+                        ),
+                    ]);
+                    expect(partition.state).toEqual({
+                        test1: createBot(
+                            'test1',
+                            {
+                                abc: 'def',
+                            },
+                            <any>'test'
+                        ),
+                    });
+
+                    // Should make a new state object on updates.
+                    // This is because AuxHelper expects this in order for its caching to work properly.
+                    expect(partition.state).not.toBe(state);
+
+                    expect(updates).toEqual([
                         {
-                            playerId: 'device1SessionId',
-                        }
-                    ),
-                ]);
+                            state: {
+                                test1: createBot(
+                                    'test1',
+                                    {
+                                        abc: 'def',
+                                    },
+                                    <any>'test'
+                                ),
+                            },
+                            addedBots: ['test1'],
+                            removedBots: [],
+                            updatedBots: [],
+                        },
+                    ]);
+                });
+
+                it('should send a onRemotePlayerSubscribed shout', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+                    const device1 = deviceInfo(
+                        'device1Username',
+                        'device1DeviceId',
+                        'device1SessionId'
+                    );
+
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        action(ON_REMOTE_JOINED_ACTION_NAME, null, null, {
+                            remoteId: 'device1SessionId',
+                        }),
+                        action(
+                            ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
+                            null,
+                            null,
+                            {
+                                playerId: 'device1SessionId',
+                            }
+                        ),
+                    ]);
+                });
+
+                it('should send a onRemotePlayerUnsubscribed shout', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+                    const device1 = deviceInfo(
+                        'device1Username',
+                        'device1DeviceId',
+                        'device1SessionId'
+                    );
+
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    deviceDisconnected.next({
+                        broadcast: false,
+                        branch: 'testBranch',
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        action(ON_REMOTE_JOINED_ACTION_NAME, null, null, {
+                            remoteId: 'device1SessionId',
+                        }),
+                        action(
+                            ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
+                            null,
+                            null,
+                            {
+                                playerId: 'device1SessionId',
+                            }
+                        ),
+                        action(ON_REMOTE_LEAVE_ACTION_NAME, null, null, {
+                            remoteId: 'device1SessionId',
+                        }),
+                        action(
+                            ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
+                            null,
+                            null,
+                            {
+                                playerId: 'device1SessionId',
+                            }
+                        ),
+                    ]);
+                });
             });
         });
 
@@ -1091,7 +2297,7 @@ describe('OtherPlayersPartition', () => {
             sub.add(
                 partition.onStateUpdated
                     .pipe(skip(1))
-                    .subscribe((b) => updates.push(b))
+                    .subscribe((b) => updates.push(cloneDeep(b)))
             );
         }
     });
