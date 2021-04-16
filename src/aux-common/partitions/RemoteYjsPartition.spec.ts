@@ -51,6 +51,7 @@ import { RemoteYjsPartitionConfig } from './AuxPartitionConfig';
 import { waitAsync } from '../test/TestHelpers';
 import { YText } from 'yjs/dist/src/internals';
 import { edit, insert, preserve } from '../aux-format-2';
+import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
 
 describe('RemoteYjsPartition', () => {
     testPartitionImplementation(
@@ -1102,31 +1103,6 @@ describe('RemoteYjsPartition', () => {
                 partition.onBotsUpdated.subscribe((b) => updated.push(...b))
             );
             sub.add(partition.onError.subscribe((e) => errors.push(e)));
-        }
-
-        function getUpdates(
-            func: (doc: Doc, bots: YMap<YMap<any>>) => void
-        ): string[] {
-            const doc = new Doc();
-            const bots = doc.getMap('bots');
-            let update: Uint8Array;
-            doc.on('update', (u: Uint8Array) => {
-                update = u;
-            });
-            doc.transact(() => {
-                func(doc, bots);
-            });
-
-            return [fromByteArray(update)];
-        }
-
-        function createDocFromUpdates(messageUpdates: any[]) {
-            const doc = new Doc();
-            for (let update of messageUpdates) {
-                applyUpdate(doc, toByteArray(update));
-            }
-
-            return doc;
         }
     });
 });
