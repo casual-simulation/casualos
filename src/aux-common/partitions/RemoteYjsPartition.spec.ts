@@ -42,11 +42,15 @@ import {
     getServerStatuses,
     ON_REMOTE_DATA_ACTION_NAME,
     ON_REMOTE_WHISPER_ACTION_NAME,
+    stateUpdatedEvent,
+    StateUpdatedEvent,
     unlockSpace,
     UpdatedBot,
 } from '../bots';
 import { RemoteYjsPartitionConfig } from './AuxPartitionConfig';
 import { waitAsync } from '../test/TestHelpers';
+import { YText } from 'yjs/dist/src/internals';
+import { edit, insert, preserve } from '../aux-format-2';
 
 describe('RemoteYjsPartition', () => {
     testPartitionImplementation(
@@ -106,6 +110,7 @@ describe('RemoteYjsPartition', () => {
         let added: Bot[];
         let removed: string[];
         let updated: UpdatedBot[];
+        let states: StateUpdatedEvent[];
         let errors: any[];
         let sub: Subscription;
 
@@ -122,6 +127,7 @@ describe('RemoteYjsPartition', () => {
             added = [];
             removed = [];
             updated = [];
+            states = [];
             errors = [];
 
             setupPartition({
@@ -844,6 +850,71 @@ describe('RemoteYjsPartition', () => {
                 await waitAsync();
 
                 expect(connection.sentMessages.slice(1).length).toBe(0);
+            });
+
+            it('should treat remote tag edits as remote', async () => {
+                partition.connect();
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    updates: [],
+                    initial: true,
+                });
+
+                const partitionUpdates = [] as string[];
+                partition.onUpdates.subscribe((u) =>
+                    partitionUpdates.push(...u)
+                );
+
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test1', {
+                            abc: 'a',
+                        })
+                    ),
+                ]);
+
+                await waitAsync();
+
+                partition.onStateUpdated.subscribe((s) => states.push(s));
+
+                const doc = createDocFromUpdates(partitionUpdates);
+                let update: Uint8Array;
+                doc.on('update', (u: Uint8Array) => {
+                    update = u;
+                });
+
+                doc.transact(() => {
+                    const bots = doc.getMap('bots');
+                    const bot = bots.get('test1');
+                    const tagText: YText = bot.get('abc');
+                    tagText.insert(1, 'bc');
+                });
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    updates: [fromByteArray(update)],
+                });
+
+                await waitAsync();
+
+                expect(states.slice(1)).toEqual([
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                abc: edit(
+                                    {
+                                        [doc.clientID.toString()]: expect.any(
+                                            Number
+                                        ),
+                                    },
+                                    preserve(1),
+                                    insert('bc')
+                                ),
+                            },
+                        },
+                    }),
+                ]);
             });
         });
 

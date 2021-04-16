@@ -84,6 +84,7 @@ import {
     YTextEvent,
     AbstractType,
     YEvent,
+    encodeStateAsUpdate,
 } from 'yjs';
 import { MemoryPartitionImpl } from './MemoryPartition';
 import {
@@ -93,6 +94,7 @@ import {
 } from '../yjs/YjsHelpers';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { doc } from 'prettier';
+import { startWith } from 'rxjs/operators';
 
 /**
  * Attempts to create a YjsPartition from the given config.
@@ -114,6 +116,7 @@ type TagsMap = Map<MapValue>;
 
 export class RemoteYjsPartitionImpl implements YjsPartition {
     protected _onVersionUpdated: BehaviorSubject<CurrentVersion>;
+    private _onUpdates: Subject<string[]>;
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -133,6 +136,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     });
 
     private _isLocalTransaction: boolean = true;
+    private _isRemoteUpdate: boolean = false;
     private _user: User;
     private _static: boolean;
     private _watchingBranch: any;
@@ -205,6 +209,12 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         return this._currentSite;
     }
 
+    get onUpdates() {
+        return this._onUpdates.pipe(
+            startWith([fromByteArray(encodeStateAsUpdate(this._doc))])
+        );
+    }
+
     private get _remoteSite() {
         return this._remoteId.toString();
     }
@@ -242,19 +252,33 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
             remoteSite: this._remoteId.toString(),
             vector: {},
         });
+        this._onUpdates = new Subject<string[]>();
 
         this._internalPartition.getNextVersion = (textEdit: TagEdit) => {
             const version = getStateVector(this._doc);
-            const site = textEdit.isRemote
-                ? this._remoteSite
-                : this._currentSite;
-            return {
-                currentSite: this._currentSite,
-                remoteSite: this._remoteSite,
-                vector: {
-                    [site]: version[this._doc.clientID],
-                },
-            };
+
+            if (this._isRemoteUpdate) {
+                const {
+                    [this._currentSite]: currentVersion,
+                    ...otherVersions
+                } = version;
+                return {
+                    currentSite: this._currentSite,
+                    remoteSite: this._remoteSite,
+                    vector: otherVersions,
+                };
+            } else {
+                const site = textEdit.isRemote
+                    ? this._remoteSite
+                    : this._currentSite;
+                return {
+                    currentSite: this._currentSite,
+                    remoteSite: this._remoteSite,
+                    vector: {
+                        [site]: version[this._doc.clientID],
+                    },
+                };
+            }
         };
     }
 
@@ -527,6 +551,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
             if (transaction && transaction.local) {
                 const updates = [fromByteArray(update)];
                 this._client.addUpdates(this._branch, updates);
+                this._onUpdates.next(updates);
             }
         };
         this._doc.on('update', updateHandler);
@@ -556,85 +581,94 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
             | RevokeCertificateAction
         )[]
     ) {
-        this._isLocalTransaction = true;
-        this._doc.transact((t) => {
-            for (let event of events) {
-                if (event.type === 'add_bot') {
-                    const map: TagsMap = new Map();
+        try {
+            this._isLocalTransaction = true;
+            this._doc.transact((t) => {
+                for (let event of events) {
+                    if (event.type === 'add_bot') {
+                        const map: TagsMap = new Map();
 
-                    for (let tag in event.bot.tags) {
-                        const val = event.bot.tags[tag];
-                        const yVal =
-                            typeof val === 'string' ? new Text(val) : val;
-                        map.set(tag, yVal);
-                    }
+                        for (let tag in event.bot.tags) {
+                            const val = event.bot.tags[tag];
+                            const yVal =
+                                typeof val === 'string' ? new Text(val) : val;
+                            map.set(tag, yVal);
+                        }
 
-                    if (this.space && event.bot.masks) {
-                        const tags = event.bot.masks[this.space];
-                        if (tags) {
-                            for (let tag of Object.keys(tags)) {
-                                const maskId = tagMaskId(event.id, tag);
-                                const val = tags[tag];
-                                const yVal =
-                                    typeof val === 'string'
-                                        ? new Text(val)
-                                        : val;
+                        if (this.space && event.bot.masks) {
+                            const tags = event.bot.masks[this.space];
+                            if (tags) {
+                                for (let tag of Object.keys(tags)) {
+                                    const maskId = tagMaskId(event.id, tag);
+                                    const val = tags[tag];
+                                    const yVal =
+                                        typeof val === 'string'
+                                            ? new Text(val)
+                                            : val;
 
-                                this._masks.set(maskId, yVal);
+                                    this._masks.set(maskId, yVal);
+                                }
                             }
                         }
-                    }
 
-                    this._bots.set(event.id, map);
-                } else if (event.type === 'remove_bot') {
-                    this._bots.delete(event.id);
-                } else if (event.type === 'update_bot') {
-                    const currentBot = this.state[event.id];
-                    const currentMap = this._bots.get(event.id);
-                    if (event.update.tags && currentBot && currentMap) {
-                        for (let tag of Object.keys(event.update.tags)) {
-                            const newVal = event.update.tags[tag];
-                            const oldVal = currentBot.tags[tag];
+                        this._bots.set(event.id, map);
+                    } else if (event.type === 'remove_bot') {
+                        this._bots.delete(event.id);
+                    } else if (event.type === 'update_bot') {
+                        const currentBot = this.state[event.id];
+                        const currentMap = this._bots.get(event.id);
+                        if (event.update.tags && currentBot && currentMap) {
+                            for (let tag of Object.keys(event.update.tags)) {
+                                const newVal = event.update.tags[tag];
+                                const oldVal = currentBot.tags[tag];
 
-                            if (newVal === oldVal) {
-                                continue;
-                            }
-
-                            this._updateValueInMap(
-                                this._doc,
-                                currentMap,
-                                tag,
-                                newVal
-                            );
-                        }
-                    }
-
-                    if (this.space && event.update.masks) {
-                        const tags = event.update.masks[this.space];
-
-                        if (tags) {
-                            for (let tag of Object.keys(tags)) {
-                                const maskId = tagMaskId(event.id, tag);
-                                const value = tags[tag];
+                                if (newVal === oldVal) {
+                                    continue;
+                                }
 
                                 this._updateValueInMap(
                                     this._doc,
-                                    this._masks,
-                                    maskId,
-                                    value
+                                    currentMap,
+                                    tag,
+                                    newVal
                                 );
+                            }
+                        }
+
+                        if (this.space && event.update.masks) {
+                            const tags = event.update.masks[this.space];
+
+                            if (tags) {
+                                for (let tag of Object.keys(tags)) {
+                                    const maskId = tagMaskId(event.id, tag);
+                                    const value = tags[tag];
+
+                                    this._updateValueInMap(
+                                        this._doc,
+                                        this._masks,
+                                        maskId,
+                                        value
+                                    );
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+        } finally {
+            this._isLocalTransaction = false;
+        }
     }
 
     private _applyUpdates(updates: string[]) {
-        for (let updateBase64 of updates) {
-            const update = toByteArray(updateBase64);
-            applyUpdate(this._doc, update);
+        try {
+            this._isRemoteUpdate = true;
+            for (let updateBase64 of updates) {
+                const update = toByteArray(updateBase64);
+                applyUpdate(this._doc, update);
+            }
+        } finally {
+            this._isRemoteUpdate = false;
         }
     }
 
@@ -947,7 +981,6 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                     : this._remoteSite;
                 const e = edit({ [siteId]: version[siteId] }, ...operations);
                 e.isRemote = !this._isLocalTransaction;
-
                 events.push(createTextUpdate(id, tag, e));
             }
         }
