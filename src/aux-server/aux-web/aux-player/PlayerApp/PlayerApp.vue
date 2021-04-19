@@ -134,6 +134,7 @@
             <html-modal></html-modal>
             <clipboard-modal></clipboard-modal>
             <upload-server-modal></upload-server-modal>
+            <imu-portal></imu-portal>
         </load-app>
     </div>
 </template>

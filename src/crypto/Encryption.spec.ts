@@ -6,6 +6,9 @@ import {
     asymmetricKeypair,
     asymmetricEncrypt,
     asymmetricDecrypt,
+    isAsymmetricKeypair,
+    isAsymmetricEncrypted,
+    isEncrypted,
 } from './Encryption';
 
 describe('Encryption', () => {
@@ -160,6 +163,41 @@ describe('Encryption', () => {
         });
     });
 
+    describe('isEncrypted()', () => {
+        it('should return true for data encrypted with encrypt()', () => {
+            const key = 'password';
+            const data = 'hello, world!';
+            const encoder = new TextEncoder();
+            const dataBytes = encoder.encode(data);
+            const cyphertext = encrypt(key, dataBytes);
+            expect(isEncrypted(cyphertext)).toBe(true);
+        });
+
+        const cyphertextCases = [
+            [true, `v1.YWJj.ZGVm`],
+            [true, `v1.YWJj.ZG`],
+            [true, `v1.YWJj.`],
+            [true, `v1.YWJj`],
+            [true, `v1.`],
+            [false, `v1`],
+            [false, ``],
+            [false, `vA1.abc.def`],
+            [false, `vK1.abc.def`],
+            [false, null as any],
+            [false, 0],
+            [false, 1],
+            [false, true],
+            [false, false],
+        ] as const;
+
+        it.each(cyphertextCases)(
+            'should return %s for %s',
+            (expected: boolean, cyphertext: any) => {
+                expect(isEncrypted(cyphertext)).toBe(expected);
+            }
+        );
+    });
+
     describe('asymmetricKeypair()', () => {
         it('should return a v1 keypair encrypted with the given password', () => {
             const key = asymmetricKeypair('password');
@@ -176,6 +214,72 @@ describe('Encryption', () => {
                 asymmetricKeypair(password);
             }).toThrow(expect.any(Error));
         });
+    });
+
+    describe('isAsymmetricKeypair()', () => {
+        it('should return true for keypairs generated with asymmetricKeypair()', () => {
+            const key = asymmetricKeypair('password');
+            expect(isAsymmetricKeypair(key)).toBe(true);
+        });
+
+        const keypairCases = [
+            [true, `vEK1.YWJj.ZGVm`],
+            [false, `vEK1.YWJj.ZG`],
+            [false, `vEK1.YWJj.`],
+            [false, `vEK1.YWJj`],
+            [false, `vEK1.`],
+            [false, `vEK1`],
+            [false, ``],
+            [false, `v1.abc.def`],
+            [false, `vK1.abc.def`],
+            [false, null as any],
+            [false, 0],
+            [false, 1],
+            [false, true],
+            [false, false],
+        ] as const;
+
+        it.each(keypairCases)(
+            'should return %s for %s',
+            (expected: boolean, keypair: any) => {
+                expect(isAsymmetricKeypair(keypair)).toBe(expected);
+            }
+        );
+    });
+
+    describe('isAsymmetricEncrypted()', () => {
+        it('should return true for data encrypted with asymmetricEncrypt()', () => {
+            const key = asymmetricKeypair('password');
+            const data = 'hello, world!';
+            const encoder = new TextEncoder();
+            const dataBytes = encoder.encode(data);
+            const cyphertext = asymmetricEncrypt(key, dataBytes);
+            expect(isAsymmetricEncrypted(cyphertext)).toBe(true);
+        });
+
+        const cyphertextCases = [
+            [true, `vA1.YWJj.ZGVm`],
+            [true, `vA1.YWJj.ZG`],
+            [true, `vA1.YWJj.`],
+            [true, `vA1.YWJj`],
+            [true, `vA1.`],
+            [false, `vA1`],
+            [false, ``],
+            [false, `v1.abc.def`],
+            [false, `vK1.abc.def`],
+            [false, null as any],
+            [false, 0],
+            [false, 1],
+            [false, true],
+            [false, false],
+        ] as const;
+
+        it.each(cyphertextCases)(
+            'should return %s for %s',
+            (expected: boolean, cyphertext: any) => {
+                expect(isAsymmetricEncrypted(cyphertext)).toBe(expected);
+            }
+        );
     });
 
     describe('asymmetricEncrypt()', () => {

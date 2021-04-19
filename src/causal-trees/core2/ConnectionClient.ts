@@ -18,6 +18,7 @@ export interface ClientConnectionState {
 
 /**
  * Defines an interface for a client connection.
+ * That is, a service that can send and receive arbitrary messages and track connection states.
  */
 export interface ConnectionClient {
     /**

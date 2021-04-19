@@ -448,6 +448,12 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 `cameraRotationOffsetY`,
                 0
             );
+            const targetWRot = calculateNumericalTagValue(
+                null,
+                portalBot,
+                `cameraRotationOffsetW`,
+                null
+            );
             const offsetZoom = calculateNumericalTagValue(
                 null,
                 portalBot,
@@ -491,11 +497,21 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     targetYPos,
                     targetZPos
                 );
-                rig.cameraParent.rotation.set(
-                    targetXRot,
-                    targetYRot,
-                    targetZRot
-                );
+
+                if (hasValue(targetWRot)) {
+                    rig.cameraParent.quaternion.set(
+                        targetXRot,
+                        targetYRot,
+                        targetZRot,
+                        targetWRot
+                    );
+                } else {
+                    rig.cameraParent.rotation.set(
+                        targetXRot,
+                        targetYRot,
+                        targetZRot
+                    );
+                }
                 rig.cameraParent.updateMatrixWorld();
             }
 

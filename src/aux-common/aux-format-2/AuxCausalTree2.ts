@@ -71,6 +71,7 @@ import {
 } from './AuxWeaveHelpers';
 import { Action } from '@casual-simulation/causal-trees';
 import { merge as lodashMerge } from 'lodash';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Defines an interface that represents the state of a causal tree that contains AUX state.
@@ -89,10 +90,22 @@ export interface AuxResult extends TreeResult {
 /**
  * Creates a new AUX tree with the given ID.
  * @param id The ID.
+ * @param remoteId The remote ID. If given true then a remote ID will be auto generated.
  */
-export function auxTree(id?: string): AuxCausalTree {
+export function auxTree(
+    id?: string,
+    remoteId?: string | boolean
+): AuxCausalTree {
     return {
-        ...tree(id),
+        ...tree(
+            id,
+            undefined,
+            remoteId === true
+                ? uuid()
+                : remoteId === false
+                ? undefined
+                : remoteId
+        ),
         state: {},
     };
 }
@@ -300,7 +313,10 @@ export function applyEvents(
                         const insertResult = addAtom(
                             updatedTree,
                             editPos.node.atom,
-                            insertOp(editPos.index, op.text)
+                            insertOp(editPos.index, op.text),
+                            undefined,
+                            undefined,
+                            val.isRemote
                         );
                         updatedTree = applyTreeResult(
                             updatedTree,
@@ -338,7 +354,9 @@ export function applyEvents(
                                 updatedTree,
                                 pos.node.atom,
                                 deleteOp(pos.index, pos.index + pos.count),
-                                1
+                                1,
+                                undefined,
+                                val.isRemote
                             );
                             updatedTree = applyTreeResult(
                                 updatedTree,
@@ -360,10 +378,15 @@ export function applyEvents(
                 }
 
                 version[updatedTree.site.id] = updatedTree.site.time;
+                if (updatedTree.remoteSite) {
+                    version[updatedTree.remoteSite.id] =
+                        updatedTree.remoteSite.time;
+                }
             }
 
             let auxResult: AuxResult = {
                 newSite: updatedTree.site,
+                newRemoteSite: updatedTree.remoteSite,
                 results: results,
                 update: update,
             };

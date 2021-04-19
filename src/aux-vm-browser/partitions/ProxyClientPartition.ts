@@ -106,6 +106,7 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
         this._onStateUpdated = new Subject<StateUpdatedEvent>();
         this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
             currentSite: null,
+            remoteSite: null,
             vector: {},
         });
         this._onError = new Subject<any>();

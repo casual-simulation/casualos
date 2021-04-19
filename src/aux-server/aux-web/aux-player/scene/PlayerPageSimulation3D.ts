@@ -257,6 +257,12 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
                 group.visible = facingCamera;
             }
         }
+
+        if (hasValue(this.pageConfig.cameraType)) {
+            if (!this.game.isImmersive) {
+                this.game.setCameraType(this.pageConfig.cameraType);
+            }
+        }
     }
 
     protected _createPortalConfig(portalTag: string) {

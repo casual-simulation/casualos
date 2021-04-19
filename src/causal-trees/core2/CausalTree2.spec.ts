@@ -32,6 +32,35 @@ describe('CausalTree2', () => {
                 },
             });
         });
+
+        it('should create an atom for the remote site if specified', () => {
+            const subject = tree('id', undefined, 'id2');
+            const result = addAtom(
+                subject,
+                null,
+                {},
+                undefined,
+                undefined,
+                true
+            );
+
+            expect(result).toEqual({
+                results: [
+                    {
+                        type: 'atom_added',
+                        atom: subject.weave.roots[0].atom,
+                    },
+                ],
+                newSite: {
+                    id: 'id',
+                    time: 2,
+                },
+                newRemoteSite: {
+                    id: 'id2',
+                    time: 1,
+                },
+            });
+        });
     });
 
     describe('insertAtoms()', () => {
@@ -113,6 +142,40 @@ describe('CausalTree2', () => {
             expect(final).toEqual({
                 results: [r1, r2],
                 newSite: mergeSites(result1.newSite, result2.newSite),
+            });
+        });
+
+        it('should merge remote sites', () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), null, {});
+            const r1: WeaveResult = {
+                type: 'atom_added',
+                atom: a1,
+            };
+            const r2: WeaveResult = {
+                type: 'atom_added',
+                atom: a2,
+            };
+            const result1: TreeResult = {
+                results: [r1],
+                newSite: newSite('a', 1),
+                newRemoteSite: newSite('b', 2),
+            };
+
+            const result2: TreeResult = {
+                results: [r2],
+                newSite: newSite('a', 3),
+                newRemoteSite: newSite('b', 3),
+            };
+
+            const final = mergeResults(result1, result2);
+            expect(final).toEqual({
+                results: [r1, r2],
+                newSite: mergeSites(result1.newSite, result2.newSite),
+                newRemoteSite: mergeSites(
+                    result1.newRemoteSite,
+                    result2.newRemoteSite
+                ),
             });
         });
     });

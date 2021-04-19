@@ -14,6 +14,8 @@ import {
     OtherPlayersPartition,
     OtherPlayersPartitionImpl,
     RemoteCausalRepoProtocol,
+    RemoteYjsPartitionImpl,
+    YjsPartition,
 } from '@casual-simulation/aux-common';
 import {
     SocketManager as ApiarySocketManager,
@@ -113,6 +115,28 @@ export async function createRemoteCausalRepoPartition(
             client,
             config
         );
+        await partition.init();
+        return partition;
+    }
+    return undefined;
+}
+
+/**
+ * Attempts to create a CausalTree2Partition from the given config.
+ * @param config The config.
+ */
+export async function createRemoteYjsPartition(
+    config: PartitionConfig,
+    user: User,
+    useCache: boolean = true
+): Promise<YjsPartition> {
+    if (config.type === 'remote_yjs') {
+        const client = getClientForHostAndProtocol(
+            config.host,
+            user,
+            config.connectionProtocol
+        );
+        const partition = new RemoteYjsPartitionImpl(user, client, config);
         await partition.init();
         return partition;
     }

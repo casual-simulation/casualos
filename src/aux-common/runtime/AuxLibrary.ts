@@ -222,6 +222,9 @@ import {
     Recording,
     SyntheticVoice,
     SpeakTextOptions,
+    EnablePOVAction,
+    disablePOV,
+    enablePOV,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -245,9 +248,18 @@ import {
     asymmetricKeypair as realAsymmetricKeypair,
     asymmetricEncrypt as realAsymmetricEncrypt,
     asymmetricDecrypt as realAsymmetricDecrypt,
+    isAsymmetricKeypair,
+    isAsymmetricEncrypted,
+    isEncrypted,
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
-import { convertToString, del, insert, preserve } from '../aux-format-2';
+import {
+    convertToString,
+    del,
+    insert,
+    isTagEdit,
+    preserve,
+} from '../aux-format-2';
 import {
     Euler,
     Vector3,
@@ -651,6 +663,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 disableAR,
                 enableVR,
                 disableVR,
+                enablePointOfView,
+                disablePointOfView,
                 download: downloadData,
                 downloadBots,
                 downloadServer,
@@ -836,10 +850,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 hmacSha512,
                 encrypt,
                 decrypt,
+                isEncrypted,
                 asymmetric: {
                     keypair: asymmetricKeypair,
+                    isKeypair: isAsymmetricKeypair,
                     encrypt: asymmetricEncrypt,
                     decrypt: asymmetricDecrypt,
+                    isEncrypted: isAsymmetricEncrypted,
                 },
                 keypair,
                 sign,
@@ -1564,6 +1581,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function disableVR(): EnableVRAction {
         return addAction(calcDisableVR());
+    }
+
+    /**
+     * Enables Point-of-View mode.
+     */
+    function enablePointOfView(
+        center: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 }
+    ): EnablePOVAction {
+        return addAction(enablePOV(center));
+    }
+
+    /**
+     * Disables Point-of-View mode.
+     */
+    function disablePointOfView(): EnablePOVAction {
+        return addAction(disablePOV());
     }
 
     /**
@@ -2874,7 +2907,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Establish the connection to the bluetooth serial device
-     * @param path The device path. Example: /dev/rfcomm0
+     * @param name A friendly device name. Example: Brush01
+     * @param device The device path. Example: /dev/rfcomm0
+     * @param mac The device MAC address. Example: AA:BB:CC:DD:EE
+     * @param channel The device channel. Example: 1
      * @param options
      * {boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
      *
@@ -2906,10 +2942,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * {number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
      */
-    function serialConnect(path: string, options?: object, cb?: any) {
+    function serialConnect(name: string, device: string, mac: string, channel: number, options?: object, cb?: any) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialConnectPin(path, options, cb),
+            serialConnectPin(name, device, mac, channel, options, cb),
             undefined,
             undefined,
             task.taskId
@@ -2918,12 +2954,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Parses and returns the serial stream to the event tag 'onStreamData'.
+     * Parses and returns the serial stream to the event tag 'onSerialData'.
+     * @param bot The id of the bot you want data streamed to. The bot needs the 'onSerialData' tag.
+     * @param name A friendly device name. Example: Brush01
      */
-    function serialStream() {
+    function serialStream(bot: string, name: string) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialStreamPin(),
+            serialStreamPin(bot, name),
             undefined,
             undefined,
             task.taskId
@@ -2933,11 +2971,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
+     * @param name A friendly device name. Example: Brush01
      */
-    function serialOpen() {
+    function serialOpen(name: string) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialOpenPin(),
+            serialOpenPin(name),
             undefined,
             undefined,
             task.taskId
@@ -2947,13 +2986,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Updates the SerialPort object with a new baudRate.
+     * @param name A friendly device name. Example: Brush01
      * @param options {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
      * @param cb
      */
-    function serialUpdate(options: object, cb?: any) {
+    function serialUpdate(name: string, options: object, cb?: any) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialUpdatePin(options, cb),
+            serialUpdatePin(name, options, cb),
             undefined,
             undefined,
             task.taskId
@@ -2963,15 +3003,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Writes the provided data/command to the device
+     * @param name A friendly device name. Example: Brush01
      * @param data The data/command to send
      * @param encoding The encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
      * @param cb
      * @param taskId The ID of the async task.
      */
-    function serialWrite(data: string | number[], encoding?: string, cb?: any) {
+    function serialWrite(name: string, data: string | number[], encoding?: string, cb?: any) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialWritePin(data, encoding, cb),
+            serialWritePin(name, data, encoding, cb),
             undefined,
             undefined,
             task.taskId
@@ -2981,13 +3022,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Request a number of bytes from the SerialPort.
+     * @param name A friendly device name. Example: Brush01
      * @param size Specify how many bytes of data to return, if available.
      * @param taskId The ID of the async task.
      */
-    function serialRead(size?: number) {
+    function serialRead(name: string, size?: number) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialReadPin(size),
+            serialReadPin(name, size),
             undefined,
             undefined,
             task.taskId
@@ -2997,13 +3039,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Closes an open connection.
+     * @param name A friendly device name. Example: Brush01
      * @param cb
+     * @param device The device path. Example: /dev/rfcomm0
      * @param taskId The ID of the async task.
      */
-    function serialClose(cb?: any) {
+    function serialClose(name: string, device: string, cb?: any) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialClosePin(cb),
+            serialClosePin(name, device, cb),
             undefined,
             undefined,
             task.taskId
@@ -3013,11 +3057,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Flush discards data that has been received but not read, or written but not transmitted by the operating system.
+     * @param name A friendly device name. Example: Brush01
      */
-    function serialFlush() {
+    function serialFlush(name: string) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialFlushPin(),
+            serialFlushPin(name),
             undefined,
             undefined,
             task.taskId
@@ -3027,11 +3072,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Waits until all output data is transmitted to the serial port. After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device.
+     * @param name A friendly device name. Example: Brush01
      */
-    function serialDrain() {
+    function serialDrain(name: string) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialDrainPin(),
+            serialDrainPin(name),
             undefined,
             undefined,
             task.taskId
@@ -3041,11 +3087,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
+     * @param name A friendly device name. Example: Brush01
      */
-    function serialPause() {
+    function serialPause(name: string) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialPausePin(),
+            serialPausePin(name),
             undefined,
             undefined,
             task.taskId
@@ -3055,11 +3102,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
+     * @param name A friendly device name. Example: Brush01
      */
-    function serialResume() {
+    function serialResume(name: string) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            serialResumePin(),
+            serialResumePin(name),
             undefined,
             undefined,
             task.taskId
@@ -3725,6 +3773,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param action The action to perform.
      */
     function perform(action: any): any {
+        const event: BotAction = action;
+        if (event.type === 'update_bot') {
+            if (event.update.tags) {
+                for (let tag in event.update.tags) {
+                    const val = event.update.tags[tag];
+                    if (isTagEdit(val)) {
+                        val.isRemote = true;
+                    }
+                }
+            }
+            if (event.update.masks) {
+                for (let space in event.update.masks) {
+                    const tags = event.update.masks[space];
+                    if (tags) {
+                        for (let tag in tags) {
+                            const val = tags[tag];
+                            if (isTagEdit(val)) {
+                                val.isRemote = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         return addAction(action);
     }
 

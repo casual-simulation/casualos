@@ -61,6 +61,7 @@ import {
     getMenuBotForm,
     calculatePortalCameraControlsMode,
     getMenuBotHoverStyle,
+    getCameraType,
 } from '../BotCalculations';
 import {
     Bot,
@@ -1060,6 +1061,40 @@ export function botCalculationContextTests(
                     expect(getBotTagPortalAnchorPoint(calc, bot)).toEqual(
                         expected
                     );
+                }
+            );
+        });
+
+        it('should default to fullscreen', () => {
+            const bot = createBot();
+
+            const calc = createPrecalculatedContext([bot]);
+            const shape = getBotTagPortalAnchorPoint(calc, bot);
+
+            expect(shape).toBe('fullscreen');
+        });
+    });
+
+    describe('getCameraType()', () => {
+        const tagCases = ['auxPortalCameraType', 'portalCameraType'];
+
+        const cameraTypeCases = [
+            ['orthographic', 'orthographic'],
+            ['perspective', 'perspective'],
+            ['other', null],
+        ];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cameraTypeCases)(
+                'should support %s',
+                (mode: string, expected: any) => {
+                    const bot = createBot('test', {
+                        [tag]: <any>mode,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+
+                    expect(getCameraType(calc, bot)).toEqual(expected);
                 }
             );
         });

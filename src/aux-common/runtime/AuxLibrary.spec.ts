@@ -150,6 +150,9 @@ import {
     speakText,
     getVoices,
     getGeolocation,
+    enablePOV,
+    disablePOV,
+    botUpdated,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -174,7 +177,14 @@ import {
     keypair,
 } from '@casual-simulation/crypto';
 import { CERTIFIED_SPACE } from '../aux-format-2/AuxWeaveReducer';
-import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
+import {
+    del,
+    edit,
+    insert,
+    preserve,
+    remoteEdit,
+    tagValueHash,
+} from '../aux-format-2';
 import { RanOutOfEnergyError } from './AuxResults';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import { waitAsync } from '../test/TestHelpers';
@@ -1866,6 +1876,42 @@ describe('AuxLibrary', () => {
                 const action = library.api.os.disableVR();
                 expect(action).toEqual(disableVR());
                 expect(context.actions).toEqual([disableVR()]);
+            });
+        });
+
+        describe('os.enablePointOfView()', () => {
+            it('should issue an EnablePOVAction', () => {
+                const action = library.api.os.enablePointOfView({
+                    x: 0,
+                    y: 1,
+                    z: 2,
+                });
+                const expected = enablePOV({
+                    x: 0,
+                    y: 1,
+                    z: 2,
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should default the center to 0,0,0', () => {
+                const action = library.api.os.enablePointOfView();
+                const expected = enablePOV({
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.disablePointOfView()', () => {
+            it('should issue an EnablePOVAction', () => {
+                const action = library.api.os.disablePointOfView();
+                expect(action).toEqual(disablePOV());
+                expect(context.actions).toEqual([disablePOV()]);
             });
         });
 
@@ -3989,11 +4035,14 @@ describe('AuxLibrary', () => {
             it('should send a SerialConnectAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
                 const action: any = library.api.server.serialConnect(
+                    'Brush01',
                     '/dev/ttyS0',
+                    'AA:BB:CC:DD:EE',
+                    1,
                     { baudRate: 9600 }
                 );
                 const expected = remote(
-                    serialConnectPin('/dev/ttyS0', { baudRate: 9600 }),
+                    serialConnectPin('Brush01','/dev/ttyS0','AA:BB:CC:DD:EE', 1, { baudRate: 9600 }),
                     undefined,
                     undefined,
                     'task1'
@@ -4004,9 +4053,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialConnect('/dev/ttyS0', {
-                    baudRate: 9600,
-                });
+                library.api.server.serialConnect('Brush01','/dev/ttyS0','AA:BB:CC:DD:EE', 1, { baudRate: 9600 });
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -4016,9 +4063,9 @@ describe('AuxLibrary', () => {
         describe('server.serialStream()', () => {
             it('should send a SerialStreamAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialStream();
+                const action: any = library.api.server.serialStream('1a2b3', 'Brush01');
                 const expected = remote(
-                    serialStreamPin(),
+                    serialStreamPin('1a2b3', 'Brush01'),
                     undefined,
                     undefined,
                     'task1'
@@ -4029,7 +4076,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialStream();
+                library.api.server.serialStream('1a2b3', 'Brush01');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -4039,9 +4086,9 @@ describe('AuxLibrary', () => {
         describe('server.serialOpen()', () => {
             it('should send a SerialOpenAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialOpen();
+                const action: any = library.api.server.serialOpen('Brush01');
                 const expected = remote(
-                    serialOpenPin(),
+                    serialOpenPin('Brush01'),
                     undefined,
                     undefined,
                     'task1'
@@ -4052,7 +4099,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialOpen();
+                library.api.server.serialOpen('Brush01');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -4062,11 +4109,11 @@ describe('AuxLibrary', () => {
         describe('server.serialUpdate()', () => {
             it('should send a SerialUpdateAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialUpdate({
+                const action: any = library.api.server.serialUpdate('Brush01', {
                     baudRate: 9600,
                 });
                 const expected = remote(
-                    serialUpdatePin({ baudRate: 9600 }),
+                    serialUpdatePin('Brush01', { baudRate: 9600 }),
                     undefined,
                     undefined,
                     'task1'
@@ -4077,7 +4124,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialUpdate({ baudRate: 9600 });
+                library.api.server.serialUpdate('Brush01', { baudRate: 9600 });
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -4088,11 +4135,12 @@ describe('AuxLibrary', () => {
             it('should send a SerialWriteAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
                 const action: any = library.api.server.serialWrite(
+                    'Brush01',
                     'Hello World!',
                     'utf8'
                 );
                 const expected = remote(
-                    serialWritePin('Hello World!', 'utf8'),
+                    serialWritePin('Brush01', 'Hello World!', 'utf8'),
                     undefined,
                     undefined,
                     'task1'
@@ -4103,7 +4151,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialWrite('Hello World!', 'utf8');
+                library.api.server.serialWrite('Brush01', 'Hello World!', 'utf8');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -4113,9 +4161,9 @@ describe('AuxLibrary', () => {
         describe('server.serialRead()', () => {
             it('should send a SerialReadAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialRead();
+                const action: any = library.api.server.serialRead('Brush01');
                 const expected = remote(
-                    serialReadPin(),
+                    serialReadPin('Brush01'),
                     undefined,
                     undefined,
                     'task1'
@@ -4126,7 +4174,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialRead();
+                library.api.server.serialRead('Brush01');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -4136,9 +4184,9 @@ describe('AuxLibrary', () => {
         describe('server.serialClose()', () => {
             it('should send a SerialCloseAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialClose();
+                const action: any = library.api.server.serialClose('Brush01', "/dev/rfcomm0");
                 const expected = remote(
-                    serialClosePin(),
+                    serialClosePin('Brush01', "/dev/rfcomm0"),
                     undefined,
                     undefined,
                     'task1'
@@ -4149,7 +4197,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialClose();
+                library.api.server.serialClose('Brush01', "/dev/rfcomm0");
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -4159,9 +4207,9 @@ describe('AuxLibrary', () => {
         describe('server.serialFlush()', () => {
             it('should send a SerialFlushAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialFlush();
+                const action: any = library.api.server.serialFlush('Brush01');
                 const expected = remote(
-                    serialFlushPin(),
+                    serialFlushPin('Brush01'),
                     undefined,
                     undefined,
                     'task1'
@@ -4172,7 +4220,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialFlush();
+                library.api.server.serialFlush('Brush01');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -4182,9 +4230,9 @@ describe('AuxLibrary', () => {
         describe('server.serialDrain()', () => {
             it('should send a SerialDrainAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialDrain();
+                const action: any = library.api.server.serialDrain('Brush01');
                 const expected = remote(
-                    serialDrainPin(),
+                    serialDrainPin('Brush01'),
                     undefined,
                     undefined,
                     'task1'
@@ -4195,7 +4243,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialDrain();
+                library.api.server.serialDrain('Brush01');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -4205,9 +4253,9 @@ describe('AuxLibrary', () => {
         describe('server.serialPause()', () => {
             it('should send a SerialPauseAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialPause();
+                const action: any = library.api.server.serialPause('Brush01');
                 const expected = remote(
-                    serialPausePin(),
+                    serialPausePin('Brush01'),
                     undefined,
                     undefined,
                     'task1'
@@ -4218,7 +4266,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialPause();
+                library.api.server.serialPause('Brush01');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -4228,9 +4276,9 @@ describe('AuxLibrary', () => {
         describe('server.serialResume()', () => {
             it('should send a SerialResumeAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialResume();
+                const action: any = library.api.server.serialResume('Brush01');
                 const expected = remote(
-                    serialResumePin(),
+                    serialResumePin('Brush01'),
                     undefined,
                     undefined,
                     'task1'
@@ -4241,7 +4289,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialResume();
+                library.api.server.serialResume('Brush01');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -5639,7 +5687,7 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected, expected]);
             });
 
-            it('should should add the action if it has been rejected', () => {
+            it('should add the action if it has been rejected', () => {
                 const action = library.api.os.toast('abc');
                 library.api.action.reject(action);
                 library.api.action.perform(action);
@@ -5647,6 +5695,44 @@ describe('AuxLibrary', () => {
                     toast('abc'),
                     reject(toast('abc')),
                     toast('abc'),
+                ]);
+            });
+
+            it('should convert tag edits to remote tag edits', () => {
+                const action = botUpdated('test', {
+                    tags: {
+                        abc: edit({}, insert('abc')),
+                    },
+                });
+
+                library.api.action.perform(action);
+                expect(context.actions).toEqual([
+                    botUpdated('test', {
+                        tags: {
+                            abc: remoteEdit({}, insert('abc')),
+                        },
+                    }),
+                ]);
+            });
+
+            it('should convert tag mask edits to remote tag edits', () => {
+                const action = botUpdated('test', {
+                    masks: {
+                        tempLocal: {
+                            abc: edit({}, insert('abc')),
+                        },
+                    },
+                });
+
+                library.api.action.perform(action);
+                expect(context.actions).toEqual([
+                    botUpdated('test', {
+                        masks: {
+                            tempLocal: {
+                                abc: remoteEdit({}, insert('abc')),
+                            },
+                        },
+                    }),
                 ]);
             });
         });
@@ -6624,7 +6710,7 @@ describe('AuxLibrary', () => {
             expect(bot1.tags.abc).toEqual('hello');
             expect(bot1.raw.abc).toEqual('hello');
             expect(bot1.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(0),
                     insert('hello')
@@ -6639,7 +6725,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('123hello');
             expect(bot2.raw.abc).toEqual('123hello');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(0),
                     insert('123')
@@ -6654,7 +6740,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('he123llo');
             expect(bot2.raw.abc).toEqual('he123llo');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(2),
                     insert('123')
@@ -6669,7 +6755,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('hello123');
             expect(bot2.raw.abc).toEqual('hello123');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(5),
                     insert('123')
@@ -6684,7 +6770,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('hell123o');
             expect(bot2.raw.abc).toEqual('hell123o');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(4),
                     insert('123')
@@ -6699,7 +6785,7 @@ describe('AuxLibrary', () => {
             expect(bot1.tags.abc).toEqual('123');
             expect(bot1.raw.abc).toEqual('123');
             expect(bot1.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(0),
                     insert('123')
@@ -6714,7 +6800,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('hello123');
             expect(bot2.raw.abc).toEqual('hello123');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(5),
                     insert('123')
@@ -6750,7 +6836,7 @@ describe('AuxLibrary', () => {
             expect(bot1.masks.abc).toEqual('hello');
             expect(bot1.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(0),
                         insert('hello')
@@ -6772,7 +6858,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('123hello');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(0),
                         insert('123')
@@ -6794,7 +6880,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('he123llo');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(2),
                         insert('123')
@@ -6816,7 +6902,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('hello123');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(5),
                         insert('123')
@@ -6838,7 +6924,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('hell123o');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(4),
                         insert('123')
@@ -6860,7 +6946,7 @@ describe('AuxLibrary', () => {
             expect(bot1.masks.abc).toEqual('123');
             expect(bot1.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(0),
                         insert('123')
@@ -6882,7 +6968,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('hello123');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(5),
                         insert('123')
@@ -6922,7 +7008,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('llo');
             expect(bot2.raw.abc).toEqual('llo');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(0),
                     del(2)
@@ -6937,7 +7023,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('heo');
             expect(bot2.raw.abc).toEqual('heo');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(2),
                     del(2)
@@ -6952,7 +7038,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('hel');
             expect(bot2.raw.abc).toEqual('hel');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(3),
                     del(2)
@@ -6967,7 +7053,7 @@ describe('AuxLibrary', () => {
             expect(bot2.tags.abc).toEqual('hel');
             expect(bot2.raw.abc).toEqual('hel');
             expect(bot2.changes).toEqual({
-                abc: edit(
+                abc: remoteEdit(
                     testScriptBotInterface.currentVersion.vector,
                     preserve(3),
                     del(2)
@@ -7035,7 +7121,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('llo');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(0),
                         del(2)
@@ -7057,7 +7143,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('heo');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(2),
                         del(2)
@@ -7079,7 +7165,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('hel');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(3),
                         del(2)
@@ -7101,7 +7187,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('hel');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(3),
                         del(2)
@@ -7126,7 +7212,7 @@ describe('AuxLibrary', () => {
             expect(bot2.masks.abc).toEqual('wrong');
             expect(bot2.maskChanges).toEqual({
                 local: {
-                    abc: edit(
+                    abc: remoteEdit(
                         testScriptBotInterface.currentVersion.vector,
                         preserve(3),
                         del(2)
@@ -10647,10 +10733,38 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('crypto.isEncrypted()', () => {
+        it('should return true if given some encrypted data', () => {
+            const encrypted = library.api.crypto.encrypt('password', 'data');
+            const result = library.api.crypto.isEncrypted(encrypted);
+            expect(result).toBe(true);
+        });
+
+        it('should return false if not given encrypted data', () => {
+            const result = library.api.crypto.isEncrypted('vA1.abc.def');
+            expect(result).toBe(false);
+        });
+    });
+
     describe('crypto.asymmetric.keypair()', () => {
         it('should create and return a keypair', () => {
             const result = library.api.crypto.asymmetric.keypair('password');
             expect(typeof result).toEqual('string');
+        });
+    });
+
+    describe('crypto.asymmetric.isKeypair()', () => {
+        it('should return true if given a keypair', () => {
+            const keypair = library.api.crypto.asymmetric.keypair('password');
+            const result = library.api.crypto.asymmetric.isKeypair(keypair);
+            expect(result).toBe(true);
+        });
+
+        it('should return false if not given a keypair', () => {
+            const result = library.api.crypto.asymmetric.isKeypair(
+                'v1.abc.def'
+            );
+            expect(result).toBe(false);
         });
     });
 
@@ -10692,6 +10806,25 @@ describe('AuxLibrary', () => {
                 'wrong'
             );
             expect(result).toBe(null);
+        });
+    });
+
+    describe('crypto.asymmetric.isEncrypted()', () => {
+        it('should return true if given some encrypted data', () => {
+            const keypair = asymmetricKeypairV1('password');
+            const encrypted = library.api.crypto.asymmetric.encrypt(
+                keypair,
+                'data'
+            );
+            const result = library.api.crypto.asymmetric.isEncrypted(encrypted);
+            expect(result).toBe(true);
+        });
+
+        it('should return false if not given encrypted data', () => {
+            const result = library.api.crypto.asymmetric.isEncrypted(
+                'v1.abc.def'
+            );
+            expect(result).toBe(false);
         });
     });
 

@@ -4,6 +4,7 @@ import {
     edit,
     isTagEdit,
     mergeEdits,
+    remoteEdit,
     TagEditOp,
 } from '../aux-format-2';
 import {
@@ -336,7 +337,7 @@ export function createRuntimeBot(
             if (tag in constantTags) {
                 return;
             }
-            const e = edit(manager.currentVersion.vector, ...ops);
+            const e = remoteEdit(manager.currentVersion.vector, ...ops);
             script.tags[tag] = e;
         },
         configurable: false,
@@ -349,7 +350,7 @@ export function createRuntimeBot(
             if (tag in constantTags) {
                 return;
             }
-            const e = edit(manager.currentVersion.vector, ...ops);
+            const e = remoteEdit(manager.currentVersion.vector, ...ops);
             if (!hasValue(space)) {
                 const availableSpaces = getTagMaskSpaces(bot, tag);
                 if (availableSpaces.length <= 0) {

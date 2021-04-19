@@ -1330,6 +1330,27 @@ When a bot is between the focus point and the camera, then focus events will tri
   </PossibleValueCode>
 </PossibleValuesTable>
 
+### `portalCameraType`
+<Badges>
+    <PagePortalBadge/>
+</Badges>
+
+The type of camera that should be used for the portal.
+The "type" of a camera determines how objects are visualized and how they appear. Conceptually, camera types are similar to camera lenses.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='orthographic'>
+    The camera uses an orthographic projection.
+    This camera type preserves parallel lines so lines that are parallel to each other will remain parallel in the 2D image.
+    As a consequence, objects that are the same size always appear the same size no matter how far away they are from the camera. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='perspective'>
+    The camera uses a perspective projection.
+    This camera type makes objects appear larger or smaller based on how far away they are from the camera.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
 ### `portalDisableCanvasTransparency`
 <Badges>
     <PagePortalBadge/>
@@ -1742,6 +1763,23 @@ The list of tags that should be allowed in the sheet portal.
   </PossibleValue>
 </PossibleValuesTable>
 
+### `sheetPortalAddedTags`
+<Badges>
+    <SheetPortalBadge/>
+</Badges>
+
+The list of tags that should be shown in the sheet even if they do not have a value.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No additional tags are shown. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Array'>
+    The specified tags are shown in the sheet portal.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `pixelWidth`
 
 <Badges>
@@ -1893,6 +1931,17 @@ The offset that should be applied to the Z rotation of the player's camera in th
 
 Units are in radians.
 
+### `cameraRotationOffsetW`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The W value that the camera rotation offset should use.
+
+When specified, the camera rotation offset will be interpreted as a [Quaternion (video)](https://youtu.be/zjMuIxRvygQ), which is a rotation around the
+X, Y, Z axis by `cos(W/2) + sin(W/2)(xi + yj + zk)`.
+
 ### `cameraZoom`
 
 <Badges>
@@ -1945,6 +1994,55 @@ The Y position of the focus point for the player's camera in the page portal.
 </Badges>
 
 The Z position of the focus point for the player's camera in the page portal.
+
+### `imuSupported`
+
+<Badges>
+    <AutomaticBadge/>
+    <ImuPortalBadge/>
+</Badges>
+
+Whether IMU data is supported on this device.
+
+### `deviceRotationX`
+
+<Badges>
+    <AutomaticBadge/>
+    <ImuPortalBadge/>
+</Badges>
+
+The X rotation of the device as determined by the IMU.
+This rotation is represented as a [Quaternion (video)](https://youtu.be/zjMuIxRvygQ).
+
+### `deviceRotationY`
+
+<Badges>
+    <AutomaticBadge/>
+    <ImuPortalBadge/>
+</Badges>
+
+The Y rotation of the device as determined by the IMU.
+This rotation is represented as a [Quaternion (video)](https://youtu.be/zjMuIxRvygQ).
+
+### `deviceRotationZ`
+
+<Badges>
+    <AutomaticBadge/>
+    <ImuPortalBadge/>
+</Badges>
+
+The Z rotation of the device as determined by the IMU.
+This rotation is represented as a [Quaternion (video)](https://youtu.be/zjMuIxRvygQ).
+
+### `deviceRotationW`
+
+<Badges>
+    <AutomaticBadge/>
+    <ImuPortalBadge/>
+</Badges>
+
+The W value of the device rotation.
+This rotation is represented as a [Quaternion (video)](https://youtu.be/zjMuIxRvygQ).
 
 ## History Tags
 
@@ -2114,6 +2212,19 @@ const tag = "abc";
 playerBot.tags.tagPortal = getID(configBot) + "." + tag;
 playerBot.tags.tagPortalSpace = "tempLocal";
 ```
+
+### `imuPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+Determines if the IMU portal should be constantly reading IMU (inertial measurement unit) data for the device.
+When set to `true`, CasualOS will start updating the `imuPortalBot` with the data from the IMU.
+
+Note that not all devices support the IMU portal. In particular, laptops and desktop computers will likely not support the IMU portal while mobile devices probably will.
+
+Only available on the config bot.
 
 ### `dataPortal`
 

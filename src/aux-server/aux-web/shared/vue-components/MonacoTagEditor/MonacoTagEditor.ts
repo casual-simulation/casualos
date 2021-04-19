@@ -18,6 +18,7 @@ import {
     hasPortalScript,
     getScriptPrefix,
     trimPortalScript,
+    calculateBotValue,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike, Subscription } from 'rxjs';
@@ -59,6 +60,8 @@ export default class MonacoTagEditor extends Vue {
 
     signed: boolean;
     scriptPrefixes: ScriptPrefix[];
+    hasError: boolean = false;
+    showingError: boolean = false;
 
     @Watch('tag')
     tagChanged() {
@@ -154,6 +157,8 @@ export default class MonacoTagEditor extends Vue {
 
     created() {
         this.signed = false;
+        this.hasError = false;
+        this.showingError = false;
 
         this._sub = new Subscription();
         this._sub.add(
@@ -226,6 +231,11 @@ export default class MonacoTagEditor extends Vue {
         this._replacePrefix(prefix.prefix);
     }
 
+    toggleShowError() {
+        this.showingError = !this.showingError;
+        this._updateModel();
+    }
+
     private _replacePrefix(prefix: string) {
         let currentValue = getTagValueForSpace(this.bot, this.tag, this.space);
         if (typeof currentValue === 'object') {
@@ -271,14 +281,39 @@ export default class MonacoTagEditor extends Vue {
         const tag = this.tag;
         const space = this.space;
 
+        const calculatedTagValue = calculateBotValue(null, bot, tag);
+        const rawTagValue = getTagValueForSpace(bot, tag, space);
+
+        this.hasError =
+            typeof rawTagValue === 'string' &&
+            typeof calculatedTagValue === 'string' &&
+            rawTagValue !== calculatedTagValue;
+
         const oldModel = this._model;
-        this._model = loadModel(
-            this._simulation,
-            bot,
-            tag,
-            space,
-            () => (<MonacoEditor>this.$refs?.editor).editor
-        );
+        if (this.hasError && this.showingError) {
+            const uri = monaco.Uri.parse(
+                encodeURI(`file:///scriptError.error.txt`)
+            );
+            let model = monaco.editor.getModel(uri);
+            if (model) {
+                model.setValue(calculatedTagValue);
+            } else {
+                model = monaco.editor.createModel(
+                    calculatedTagValue,
+                    'plaintext',
+                    uri
+                );
+            }
+            this._model = model;
+        } else {
+            this._model = loadModel(
+                this._simulation,
+                bot,
+                tag,
+                space,
+                () => (<MonacoEditor>this.$refs?.editor).editor
+            );
+        }
         if (
             oldModel &&
             oldModel !== this._model &&

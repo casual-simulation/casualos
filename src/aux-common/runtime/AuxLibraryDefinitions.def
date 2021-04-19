@@ -211,7 +211,8 @@ declare type ExtraActions =
     | LoadBotsAction
     | ClearSpaceAction
     | LocalFormAnimationAction
-    | AddDropSnapTargetsAction;
+    | AddDropSnapTargetsAction
+    | EnablePOVAction;
 
 /**
  * Defines a set of possible async action types.
@@ -1674,6 +1675,23 @@ declare interface EnableVRAction {
      * Whether VR features should be enabled.
      */
     enabled: boolean;
+}
+
+/**
+ * Defines an event that enables POV on the device.
+ */
+ export interface EnablePOVAction {
+    type: 'enable_pov';
+
+    /**
+     * Whether POV features should be enabled.
+     */
+    enabled: boolean;
+
+    /**
+     * The point that the camera should be placed at for POV.
+     */
+    center?: { x: number, y: number, z: number };
 }
 
 /**
@@ -3143,6 +3161,16 @@ declare global {
         disableVR(): EnableVRAction;
 
         /**
+         * Enables Point-of-View mode.
+         */
+        enablePointOfView(center?: Point3D): EnablePOVAction;
+
+        /**
+         * Disables Point-of-View mode.
+         */
+        disablePointOfView(): EnablePOVAction;
+
+        /**
          * Gets the dimension that is loaded into the given portal for the player.
          * If no dimension is loaded, then null is returned.
          * @param portal The portal type.
@@ -3959,7 +3987,10 @@ declare global {
         
         /**
          * Establish the connection to the bluetooth serial device
-         * @param path The device path. Example: /dev/rfcomm0
+         * @param name A friendly device name. Example: Brush01
+         * @param device The device path. Example: /dev/rfcomm0
+         * @param mac The device MAC address. Example: AA:BB:CC:DD:EE
+         * @param channel The device channel. Example: 1
          * @param options 
          * {boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
          * 
@@ -3991,69 +4022,81 @@ declare global {
          * 
          * {number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
          */
-        serialConnect(path: string, options?: object, cb?: any): Promise<void>;
+        serialConnect(name: string, device: string, mac: string, channel: number, options?: object, cb?: any): Promise<void>;
         
         /**
-         * Parses and returns the serial stream to the event tag 'onStreamData'.
+         * Parses and returns the serial stream to the event tag 'onSerialData'.
+         * @param bot The id of the bot you want data streamed to. The bot needs the 'onSerialData' tag.
+         * @param name A friendly device name. Example: Brush01
          */
-        serialStream(): Promise<void>;
+        serialStream(bot: string, name: string): Promise<void>;
 
         /**
          * Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
+         * @param name A friendly device name. Example: Brush01
          */
-        serialOpen(): Promise<void>;
+        serialOpen(name: string): Promise<void>;
 
         /**
          * Updates the SerialPort object with a new baudRate.
+         * @param name A friendly device name. Example: Brush01
          * @param options {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
          * @param cb
          */
-        serialUpdate(options: object, cb?: any): Promise<void>;
+        serialUpdate(name: string, options: object, cb?: any): Promise<void>;
         
         /**
          * Writes the provided data/command to the device
+         * @param name A friendly device name. Example: Brush01
          * @param data The data/command to send
          * @param encoding The encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
          * @param cb
          * @param taskId The ID of the async task.
          */
-        serialWrite(data: string|number[], encoding?: string, cb?: any): Promise<void>;
+        serialWrite(name: string, data: string|number[], encoding?: string, cb?: any): Promise<void>;
         
         /**
          * Request a number of bytes from the SerialPort.
+         * @param name A friendly device name. Example: Brush01
          * @param size Specify how many bytes of data to return, if available.
          * @param taskId The ID of the async task.
          */
-        serialRead(size?: number): Promise<void>;
+        serialRead(name: string, size?: number): Promise<void>;
         
         /**
          * Closes an open connection. 
+         * @param name A friendly device name. Example: Brush01
          * @param cb
+         * @param device The device path. Example: /dev/rfcomm0
          * @param taskId The ID of the async task.
          */
-        serialClose(cb?: any): Promise<void>;
+        serialClose(name: string, device: string, cb?: any): Promise<void>;
         
         /**
          * Flush discards data that has been received but not read, or written but not transmitted by the operating system. 
+         * @param name A friendly device name. Example: Brush01
          * @param taskId The ID of the async task.
          */
-        serialFlush(): Promise<void>;
+        serialFlush(name: string): Promise<void>;
         
         /**
          * Waits until all output data is transmitted to the serial port. After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device. 
+         * @param name A friendly device name. Example: Brush01
          * @param taskId The ID of the async task.
          */
-        serialDrain(): Promise<void>;
+        serialDrain(name: string): Promise<void>;
         
         /**
          * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
+         * @param name A friendly device name. Example: Brush01
          */
-        serialPause(): Promise<void>;
+        serialPause(name: string): Promise<void>;
         
         /**
          * Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
+         * @param name A friendly device name. Example: Brush01
          */
-        serialResume(): Promise<void>;
+        serialResume(name: string): Promise<void>;
         
         /**
          * Executes the given shell script on the server.
@@ -4395,6 +4438,12 @@ declare global {
         decrypt(secret: string, data: string): string;
 
         /**
+         * Determines if the given value has been encrypted with symmetric encryption.
+         * @param cyphertext The value to test to see if it is encrypted.
+         */
+         isEncrypted(cyphertext: string): boolean;
+
+        /**
          * Contains functions useful for asymmetric encryption.
          */
         asymmetric: {
@@ -4417,6 +4466,13 @@ declare global {
              * @param secret The secret that should be used to encrypt the private key.
              */
             keypair(secret: string): string;
+
+            /**
+             * Determines if the given value is a keypair that can be used to encrypt and decrypt data using
+             * asymmetric encryption.
+             * @param keypair The value to test to see if it is a keypair that can be used for asymmetric encryption.
+             */
+             isKeypair(keypair: string): boolean;
 
             /**
              * Encrypts the given data with the given keypair and returns the result.
@@ -4448,6 +4504,12 @@ declare global {
              * @param data The data to decrypt.
              */
             decrypt(keypair: string, secret: string, data: string): string;
+
+            /**
+             * Determines if the given value is encrypted using asymmetric encryption.
+             * @param cyphertext The value to test to see if it is encrypted.
+             */
+             isEncrypted(cyphertext: string): boolean;
         };
 
         /**

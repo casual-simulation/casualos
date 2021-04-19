@@ -5,4 +5,9 @@ const path = require('path');
 
 module.exports = merge(common, {
     mode: 'development',
+    plugins: [
+        new webpack.DefinePlugin({
+            DEVELOPMENT: JSON.stringify(true),
+        }),
+    ],
 });

@@ -20,6 +20,8 @@ import {
     IDE_PORTAL,
     isPortalScript,
     DNA_TAG_PREFIX,
+    isScript,
+    isFormula,
 } from '@casual-simulation/aux-common';
 import {
     PortalManager,
@@ -50,7 +52,7 @@ export interface IdeTagNode {
 
 export interface IdePortalUpdate {
     hasPortal: boolean;
-    items: IdeNode[];
+    items: IdeTagNode[];
 }
 
 /**
@@ -71,6 +73,10 @@ export class IdePortalManager implements SubscriptionLike {
      */
     get itemsUpdated(): Observable<IdePortalUpdate> {
         return this._itemsUpdated;
+    }
+
+    get items() {
+        return this._itemsUpdated.value;
     }
 
     /**
@@ -114,13 +120,18 @@ export class IdePortalManager implements SubscriptionLike {
         }
         const prefix = this._helper.userBot.tags[IDE_PORTAL];
         if (prefix) {
-            let items = [] as IdeNode[];
+            let items = [] as IdeTagNode[];
             for (let bot of this._helper.objects) {
                 if (bot.id === this._helper.userId) {
                     continue;
                 }
                 for (let tag in bot.values) {
-                    if (isPortalScript(prefix, bot.tags[tag])) {
+                    const val = bot.tags[tag];
+                    if (
+                        prefix === true ||
+                        prefix === 'true' ||
+                        isPortalScript(prefix, bot.tags[tag])
+                    ) {
                         let item: IdeTagNode = {
                             type: 'tag',
                             botId: bot.id,
@@ -129,11 +140,14 @@ export class IdePortalManager implements SubscriptionLike {
                             key: `${tag}.${bot.id}`,
                         };
 
-                        if (prefix === '@') {
+                        if (isScript(val)) {
                             item.isScript = true;
-                        } else if (prefix === DNA_TAG_PREFIX) {
+                        } else if (isFormula(val)) {
                             item.isFormula = true;
-                        } else {
+                        } else if (
+                            typeof prefix === 'string' &&
+                            prefix !== 'true'
+                        ) {
                             item.prefix = prefix;
                         }
 

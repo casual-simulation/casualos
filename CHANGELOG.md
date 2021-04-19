@@ -1,8 +1,85 @@
 # CasualOS Changelog
 
+## V1.5.11
+
+#### Date: 4/19/2021
+
+### :rocket: Improvements
+
+-   Overhauled the `shared`, `tempShared`, and `remoteTempShared` spaces to use a faster and more efficient storage mechanism.
+    -   There is now a new configuration environment variable `SHARED_PARTITIONS_VERSION` which controls whether the new spaces are used. Use `v1` to indicate that the old causal repo based system should be used and use `v2` to indicate that the new system should be used.
+
+## V1.5.10
+
+#### Date: 4/8/2021
+
+### :boom: Breaking Changes
+
+-   Renamed `onStreamData` to `onSerialData`.
+-   Serial functions now require a "friendly" name to keep track of each device: `serialConnect`, `serialStream`, `serialOpen`, `serialUpdate`, `serialWrite`, `serialRead`, `serialClose`, `serialFlush`,`serialDrain`, `serialPause`, `serialResume`
+-   `serialStream` now requires a bot id to send the stream to that bot.
+
+### :rocket: Improvements
+
+-   Improved the IDE Portal to support showing all tags by setting the `idePortal` tag on the config bot to `true`.
+-   Added a search tab to the IDE Portal which makes it easy to search within tags that are loaded in the IDE Portal.
+    -   It can be focused from the idePortal by using the `Ctrl+Shift+F` hotkey.
+-   Added the `sheetPortalAddedTags` tag for the `sheetPortalBot` which specifies additional tags that should always be shown in the sheet portal.
+-   Added support for auxcli v2.0.0 to retain current functionality.
+-   Added support for multiple serial connections simultaneously.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `url` tag would not be created on initial load unless the URL was updated.
+
+## V1.5.9
+
+#### Date: 4/7/2021
+
+### :rocket: Improvements
+
+-   Added the ability to jump to a tag while in the IDE Portal using `Ctrl+P`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `imuPortal` would return values that were incorrect for usage on the camera.
+    -   Now, the `imuPortal` sets the `deviceRotationX`, `deviceRotationY`, `deviceRotationZ` and `deviceRotationW` values which is the rotation of the device represented as a quaternion.
+    -   The `pagePortal` also now supports setting `cameraRotationOffsetW` to indicate that the offset should be applied as a quaternion.
+    -   Try the `imuExample01` auxCode for an example.
+-   Fixed an issue where CasualOS would fail to load on browsers that do not support speech synthesis.
+-   Fixed an issue where bot updates that were executed via `action.perform()` would be treated like they were being performed by the user themselves.
+    -   In particular, this issue affected text edits which were originally created by the multiline text editor but were then replayed via `action.perform()`.
+    -   The effect of this bug would be that while the data was updated correctly, the multiline text editor would ignore the new data because it assumed it already had the changes.
+
+## V1.5.8
+
+#### Date: 4/5/2021
+
+### :rocket: Improvements
+
+-   Added the ability to see the full text of script errors by using the "Show Error" button in the multiline editor.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `imuPortal` would only open when set to a string value. Now it also supports `true` and non 0 numerical values.
+
+## V1.5.7
+
+#### Date: 4/2/2021
+
+### :rocket: Improvements
+
+-   Improved `imuPortal` to support Safari on iOS.
+-   Added the `crypto.isEncrypted(cyphertext)`, `crypto.asymmetric.isEncrypted(cyphertext)`, and `crypto.asymmetric.isKeypair(keypair)` functions.
+    -   These can help in determining if a string is supposed to be a asymmetric keypair or if it has been encrypted with symmetric or asymmetric encryption.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the configBot would appear to be in the `shared` space but was actually in the `tempLocal` space.
+
 ## V1.5.6
 
-#### Date: 3/31/2021
+#### Date: 4/1/2021
 
 ### :rocket: Improvements
 
@@ -12,6 +89,19 @@
     -   See the documentation for more information.
 -   Added the `os.getGeolocation()` function.
     -   Returns a promise that resolves with the geolocation of the device.
+-   Added the `imuPortal` to be able to stream IMU data into CasualOS.
+    -   When defined on the config bot, the `imuPortalBot` will be updated with IMU data from the device.
+    -   The following tags are used:
+        -   `imuSupported` - Whether reading from the IMU is supported. This will be shortly after the `imuPortal` is defined.
+        -   `deviceRotationX`, `deviceRotationY`, `deviceRotationZ` - The X, Y, and Z values that represent the orientation of the device.
+-   Added the `portalCameraType` tag to allow switching between `perspective` and `orthographic` projections.
+    -   Camera projections act similarly to real world camera lenses except that they avoid certain limitations like focal lengths.
+    -   `orthographic` - This projection preserves parallel lines from the 3D scene in the output 2D image. As a result, same-sized objects appear the same size on the screen, regardless of how far away they are from the camera.
+    -   `perspective` - This projection makes same-sized objects appear larger or smaller based on how far away they are from the camera. Closer objects appear larger and vice versa.
+-   Added the `os.enablePointOfView(center?)` and `os.disablePointOfView()` functions.
+    -   These are similar to `os.enableVR()` or `os.enableAR()` and can be used to give the player a "ground level" perspective in the page portal.
+    -   `os.enablePointOfView(center?)` - Enables POV mode by moving the camera to the given position, setting the camera type to `perspective`, and changing the controls so that it is only possible to rotate the camera.
+    -   `os.disablePointOfView()` - Disables POV mode by resetting the camera, camera type, and controls.
 
 ### :bug: Bug Fixes
 

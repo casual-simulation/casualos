@@ -1,4 +1,7 @@
-import { RemoteCausalRepoProtocol } from '@casual-simulation/aux-common';
+import {
+    RemoteCausalRepoProtocol,
+    SharedPartitionsVersion,
+} from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for the configuration that the web client should try to pull from the server.
@@ -23,6 +26,11 @@ export interface WebConfig {
      * The URL that should be used for realtime connections.
      */
     causalRepoConnectionUrl?: string;
+
+    /**
+     * The version of the shared partitions that should be used.
+     */
+    sharedPartitionsVersion?: SharedPartitionsVersion;
 
     /**
      * The HTTP Origin that should be used for VM Iframes.

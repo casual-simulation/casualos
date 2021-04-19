@@ -70,19 +70,22 @@ import CustomPortals from '../../shared/vue-components/CustomPortals/CustomPorta
 import IdePortal from '../../shared/vue-components/IdePortal/IdePortal';
 import { AudioRecorder, AudioRecording } from '../../shared/AudioRecorder';
 import { MediaRecording, Recorder } from '../../shared/Recorder';
+import ImuPortal from '../../shared/vue-components/ImuPortal/ImuPortal';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
-window.speechSynthesis.onvoiceschanged = (e) => {
-    syntheticVoices = window.speechSynthesis.getVoices().map(
-        (v) =>
-            ({
-                default: v.default,
-                language: v.lang,
-                name: v.name,
-            } as SyntheticVoice)
-    );
-};
+if (window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = (e) => {
+        syntheticVoices = window.speechSynthesis.getVoices().map(
+            (v) =>
+                ({
+                    default: v.default,
+                    language: v.lang,
+                    name: v.name,
+                } as SyntheticVoice)
+        );
+    };
+}
 
 @Component({
     components: {
@@ -107,6 +110,7 @@ window.speechSynthesis.onvoiceschanged = (e) => {
         checkout: Checkout,
         login: LoginPopup,
         authorize: AuthorizePopup,
+        'imu-portal': ImuPortal,
     },
 })
 export default class PlayerApp extends Vue {

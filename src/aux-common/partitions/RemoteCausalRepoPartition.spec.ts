@@ -83,33 +83,37 @@ import { certificateId } from '../aux-format-2/AuxWeaveReducer';
 console.log = jest.fn();
 
 describe('RemoteCausalRepoPartition', () => {
-    testPartitionImplementation(async () => {
-        const connection = new MemoryConnectionClient();
-        const addAtoms = new BehaviorSubject<AddAtomsEvent>({
-            branch: 'testBranch',
-            atoms: [atom(atomId('a', 1), null, {})],
-            initial: true,
-        });
-        connection.events.set(ADD_ATOMS, addAtoms);
-
-        const client = new CausalRepoClient(connection);
-        connection.connect();
-
-        return new RemoteCausalRepoPartitionImpl(
-            {
-                id: 'test',
-                name: 'name',
-                token: 'token',
-                username: 'username',
-            },
-            client,
-            {
-                type: 'remote_causal_repo',
+    testPartitionImplementation(
+        async () => {
+            const connection = new MemoryConnectionClient();
+            const addAtoms = new BehaviorSubject<AddAtomsEvent>({
                 branch: 'testBranch',
-                host: 'testHost',
-            }
-        );
-    });
+                atoms: [atom(atomId('a', 1), null, {})],
+                initial: true,
+            });
+            connection.events.set(ADD_ATOMS, addAtoms);
+
+            const client = new CausalRepoClient(connection);
+            connection.connect();
+
+            return new RemoteCausalRepoPartitionImpl(
+                {
+                    id: 'test',
+                    name: 'name',
+                    token: 'token',
+                    username: 'username',
+                },
+                client,
+                {
+                    type: 'remote_causal_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                }
+            );
+        },
+        undefined,
+        true
+    );
 
     describe('connection', () => {
         let connection: MemoryConnectionClient;

@@ -42,6 +42,7 @@ export class SheetPortalConfig implements SubscriptionLike {
     private _buttonIcon: string;
     private _buttonHint: string;
     private _allowedTags: string[];
+    private _addedTags: string[];
     private _configBot: Bot;
     private _simulation: Simulation;
 
@@ -69,6 +70,13 @@ export class SheetPortalConfig implements SubscriptionLike {
     get allowedTags(): string[] {
         if (hasValue(this._allowedTags)) {
             return this._allowedTags;
+        }
+        return null;
+    }
+
+    get addedTags(): string[] {
+        if (hasValue(this._addedTags)) {
+            return this._addedTags;
         }
         return null;
     }
@@ -119,6 +127,7 @@ export class SheetPortalConfig implements SubscriptionLike {
         this._buttonIcon = null;
         this._buttonHint = null;
         this._allowedTags = null;
+        this._addedTags = null;
         this._updated.next();
     }
 
@@ -149,6 +158,13 @@ export class SheetPortalConfig implements SubscriptionLike {
             calc,
             bot,
             'auxSheetPortalAllowedTags',
+            null
+        );
+
+        this._addedTags = calculateStringListTagValue(
+            calc,
+            bot,
+            'auxSheetPortalAddedTags',
             null
         );
         this._updated.next();

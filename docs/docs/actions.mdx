@@ -2700,6 +2700,43 @@ Disables virtual reality on the device.
 os.disableVR();
 ```
 
+### `os.enablePointOfView(center?)`
+
+Enables Point-of-View mode on the device. Useful for getting a "ground level" view in the page portal.
+This will move the camera to the given position, set the camera type to `perspective`, and change the camera controls so that dragging the screen causes the camera to look around.
+
+It is not possible to manually move the camera in this mode, however it is still possible to use <ActionLink action='os.focusOn(botOrPosition, options?)'/> to move the camera.
+
+The **first parameter** is optional and is the position that the camera should be placed at. If not specified, then the camera will be placed at `(0, 0, 0)`.
+
+#### Examples:
+
+1. Enable POV mode.
+```typescript
+os.enablePointOfView();
+```
+
+2. Enable POV mode at `(5, 0, 3)`.
+```typescript
+os.enablePointOfView({
+    x: 5,
+    y: 0,
+    z: 3
+});
+```
+
+### `os.disablePointOfView()`
+
+Disables Point-of-View mode on the device.
+This will return the camera to its original position, set the camera type back to what it was before, and change the camera controls to the defaults.
+
+#### Examples:
+
+1. Disable POV mode.
+```typescript
+os.disablePointOfView();
+```
+
 ### `os.getCurrentServer()`
 
 
@@ -4304,8 +4341,9 @@ The action is only executed if <TagLink tag='@onServerAction'/> has been configu
 
 Returns a promise that resolves on the 'open' event.
 
-The **first parameter** is a string with the path to the device.
-The **second parameter** is an object with the options you want to connect to the device with.
+The **first parameter** is a friendly device name.
+The **second parameter** is a string with the path to the device.
+The **third parameter** is an object with the options you want to connect to the device with.
 {boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
 {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
 {number} [dataBits=8] Must be one of these: 8, 7, 6, or 5.
@@ -4324,32 +4362,35 @@ The **second parameter** is an object with the options you want to connect to th
 
 #### Examples:
 
-1. Connect to the device '/dev/rfcomm0' with the baudRate option set to 9600.
+1. Connect to the device '/dev/rfcomm0' with the baudRate option set to 9600. Give it the name "device01" so the server can keep track of it.
 ```typescript
-await server.serialConnect("/dev/rfcomm0", {
+await server.serialConnect("device01", "/dev/rfcomm0", {
   baudRate: 9600,
 });
 ```
 
 ### `server.serialStream()`
 
-Parses and returns the serial stream to the event tag <TagLink tag='@onStreamData'/>.
+Parses and returns the serial stream to the event tag <TagLink tag='@onSerialData'/>.
 The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
-Shouts data to the <TagLink tag='@onStreamData'/> event tag.
+Shouts data to the <TagLink tag='@onSerialData'/> event tag.
+
+The **first parameter** is the bot id of the bot you want to stream the data to.
+The **second parameter** is a friendly device name.
 
 #### Examples:
 
-1. In the first tag, create the serial connection and stream the data.
+1. In the first tag, create the serial connection and stream the data. Pass the name "device01" so the server can find the device.
 ```typescript
 
-await server.serialConnect("/dev/rfcomm0", {
+await server.serialConnect("device01", "/dev/rfcomm0", {
   baudRate: 9600,
 });
-server.serialStream();
+server.serialStream("1a2b3", "device01");
 ```
 
-2. In the second tag, see the data update. This must be an <TagLink tag='@onStreamData'/> event tag.
+2. In the second tag, see the data update. This must be an <TagLink tag='@onSerialData'/> event tag.
 ```typescript
 tags.data=that;
 ```
@@ -4359,13 +4400,15 @@ tags.data=that;
 Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
 The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
+The **first parameter** is a friendly device name.
+
 Returns a promise that resolves on the 'open' event.
 
 #### Examples:
 
-1. Create the serial connection with autoOpen false and manually open it afterwards.
+1. Create the serial connection with autoOpen false and manually open it afterwards. Give it the name "device01" so the server can keep track of it.
 ```typescript
-await server.serialConnect("/dev/rfcomm0", {
+await server.serialConnect("device01", "/dev/rfcomm0", {
   baudRate: 9600,
   autoOpen: false
 });
@@ -4378,18 +4421,19 @@ await server.serialOpen();
 Updates the SerialPort object with a new baudRate.
 The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
-The **first parameter** is an object with the baudRate you want to update the connection with.
-The **second parameter** is a callback.
+The **first parameter** is a friendly device name.
+The **second parameter** is an object with the baudRate you want to update the connection with.
+The **third parameter** is a callback.
 
 #### Examples:
 
 1. Create the serial connection, then update the baudRate.
 ```typescript
-await server.serialConnect("/dev/rfcomm0", {
+await server.serialConnect("device01", "/dev/rfcomm0", {
   baudRate: 9600,
 });
 
-await server.serialUpdate({baudRate: 14400});
+await server.serialUpdate("device01", {baudRate: 14400});
 ```
 
 ### `server.serialWrite()`
@@ -4397,19 +4441,20 @@ await server.serialUpdate({baudRate: 14400});
 Writes the provided data/command to the device. Might be single-quote/double-quote sensitive.
 The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
-The **first parameter** is a string with the data/command to send.
-The **second parameter** is the encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
-The **third parameter** is a callback.
+The **first parameter** is a friendly device name.
+The **second parameter** is a string with the data/command to send.
+The **third parameter** is the encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
+The **fourth parameter** is a callback.
 
 #### Examples:
 
 1. Create the serial connection. Send some data encoded as utf8.
 ```typescript
-await server.serialConnect("/dev/rfcomm0", {
+await server.serialConnect(""device01", /dev/rfcomm0", {
   baudRate: 9600,
 });
 
-await server.serialWrite('#READ:0', 'utf8');
+await server.serialWrite("device01", '#READ:0', 'utf8');
 ```
 
 ### `server.serialRead()`
@@ -4419,17 +4464,18 @@ The action is only executed if <TagLink tag='@onServerAction'/> has been configu
 
 If no data is available to be read, null is returned.
 
-The **first parameter** is the number of bytes to read.
+The **first parameter** is a friendly device name.
+The **second parameter** is the number of bytes to read.
 
 #### Examples:
 
 1. Create the serial connection. Read 8 bytes of data.
 ```typescript
-await server.serialConnect("/dev/rfcomm0", {
+await server.serialConnect("device01", "/dev/rfcomm0", {
   baudRate: 9600,
 });
 
-await server.serialRead(8);
+await server.serialRead("device01", 8);
 ```
 
 ### `server.serialClose()`
@@ -4439,17 +4485,18 @@ The action is only executed if <TagLink tag='@onServerAction'/> has been configu
 
 Returns a promise that resolves on the 'close' event.
 
-The **first parameter** is a callback.
+The **first parameter** is a friendly device name.
+The **second parameter** is a callback.
 
 #### Examples:
 
 1. Create the serial connection. Close the serial connection.
 ```typescript
-await server.serialConnect("/dev/rfcomm0", {
+await server.serialConnect("device01", "/dev/rfcomm0", {
   baudRate: 9600,
 });
 
-await server.serialClose();
+await server.serialClose("device01");
 ```
 
 ### `server.serialFlush()`
@@ -4457,17 +4504,19 @@ await server.serialClose();
 Flush discards data that has been received but not read, or written but not transmitted by the operating system.
 The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
+The **first parameter** is a friendly device name.
+
 Returns a promise that resolves once the data has been flushed.
 
 #### Examples:
 
 1. Create the serial connection. Flush the serial connection.
 ```typescript
-await server.serialConnect("/dev/rfcomm0", {
+await server.serialConnect("device01", "/dev/rfcomm0", {
   baudRate: 9600,
 });
 
-await server.serialFlush();
+await server.serialFlush("device01");
 ```
 
 ### `server.serialDrain()`
@@ -4476,17 +4525,19 @@ Waits until all output data is transmitted to the serial port.
 After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device. 
 The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
+The **first parameter** is a friendly device name.
+
 Returns a promise that resolves once the data has been drained.
 
 #### Examples:
 
 1. Create the serial connection. Drain the serial connection.
 ```typescript
-await server.serialConnect("/dev/rfcomm0", {
+await server.serialConnect("device01", "/dev/rfcomm0", {
   baudRate: 9600,
 });
 
-await server.serialDrain();
+await server.serialDrain("device01");
 ```
 
 ### `server.serialPause()`
@@ -4494,15 +4545,17 @@ await server.serialDrain();
 Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
 The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
+The **first parameter** is a friendly device name.
+
 #### Examples:
 
 1. Create the serial connection. Pause the serial connection.
 ```typescript
-await server.serialConnect("/dev/rfcomm0", {
+await server.serialConnect("device01", "/dev/rfcomm0", {
   baudRate: 9600,
 });
 
-await server.serialPause();
+await server.serialPause("device01");
 ```
 
 ### `server.serialResume()`
@@ -4510,17 +4563,19 @@ await server.serialPause();
 Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
 The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
 
+The **first parameter** is a friendly device name.
+
 #### Examples:
 
 1. Create the serial connection. Pause the serial connection. Resume the serial connection.
 ```typescript
-await server.serialConnect("/dev/rfcomm0", {
+await server.serialConnect("device01", "/dev/rfcomm0", {
   baudRate: 9600,
 });
 
-await server.serialPause();
+await server.serialPause("device01");
 
-await server.serialResume();
+await server.serialResume("device01");
 ```
 
 ### `server.browseHistory()`
@@ -5262,6 +5317,21 @@ const decrypted = crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iik
 os.toast(decrypted);
 ```
 
+### `crypto.isEncrypted(cyphertext)`
+
+Determines if the given value has been encrypted using <ActionLink action='crypto.encrypt(secret, data)'/>.
+Returns `true` if the data is encrypted and `false` otherwise.
+
+The **first parameter** is the value that should be tested to see if it has been encrypted.
+
+#### Examples
+
+1. Determine if a value is encrypted.
+```typescript
+const encrypted = crypto.isEncrypted("hello, world");
+os.toast('Is it encrypted? ' + encrypted);
+```
+
 ### `crypto.keypair(secret)`
 
 Creates a keypair that can be used to [digitially sign](https://en.wikipedia.org/wiki/Digital_signature) and verify data.
@@ -5382,6 +5452,21 @@ const keypair = crypto.asymmetric.keypair("my secret");
 os.toast(keypair);
 ```
 
+### `crypto.asymmetric.isKeypair(keypair)`
+
+Determines if the given value is a keypair generated using <ActionLink action='crypto.asymmetric.keypair(secret)'/>.
+Returns `true` if the data is a keypair and `false` otherwise.
+
+The **first parameter** is the value that should be tested to see if it is a keypair.
+
+#### Examples
+
+1. Determine if a value is a keypair.
+```typescript
+const encrypted = crypto.asymmetric.isKeypair("hello, world");
+os.toast('Is it a keypair? ' + encrypted);
+```
+
 ### `crypto.asymmetric.encrypt(keypair, data)`
 
 [Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given keypair's public key and returns the result.
@@ -5438,6 +5523,21 @@ const keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa
 const encrypted = 'vA1.3CC1r0fJP2tPS09C8YrTDQCJmgFczxprNEcMOzY4JD4=.3oiC7nG6N4jblFhBd4usrdid/w4Phwg/.X/9mbZYOGBjRX7YAO4D2zYJvZ3c=';
 const decrypted = crypto.asymmetric.decrypt(keypair, 'password', encrypted);
 os.toast(decrypted);
+```
+
+### `crypto.asymmetric.isEncrypted(cyphertext)`
+
+Determines if the given value was encrypted using <ActionLink action='crypto.asymmetric.encrypt(keypair, data)'/>.
+Returns `true` if the data is a keypair and `false` otherwise.
+
+The **first parameter** is the value that should be tested to see if it is encrypted.
+
+#### Examples
+
+1. Determine if a value is encrypted with asymmetric encryption.
+```typescript
+const encrypted = crypto.asymmetric.isEncrypted("hello, world");
+os.toast('Is it encrypted? ' + encrypted);
 ```
 
 ### `crypto.createCertificate(certificate, secret, keypair)`

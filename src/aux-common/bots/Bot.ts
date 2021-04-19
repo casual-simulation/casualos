@@ -568,6 +568,11 @@ export type BotLOD = 'normal' | 'min' | 'max';
 export type PortalCameraControlsMode = 'player' | false;
 
 /**
+ * The possible camera types.
+ */
+export type PortalCameraType = 'orthographic' | 'perspective';
+
+/**
  * The default bot shape.
  */
 export const DEFAULT_BOT_SHAPE: BotShape = 'cube';
@@ -1331,6 +1336,11 @@ export const SHEET_PORTAL: string = 'sheetPortal';
 export const IDE_PORTAL: string = 'idePortal';
 
 /**
+ * The name of the IMU portal.
+ */
+export const IMU_PORTAL: string = 'imuPortal';
+
+/**
  * The prefix for DNA Tags.
  */
 export const DNA_TAG_PREFIX: string = '🧬';
@@ -1347,6 +1357,7 @@ export const KNOWN_PORTALS: string[] = [
     'pagePortal',
     SHEET_PORTAL,
     IDE_PORTAL,
+    IMU_PORTAL,
     'inventoryPortal',
     'menuPortal',
     'leftWristPortal',
@@ -1386,6 +1397,13 @@ export const KNOWN_TAGS: string[] = [
     TAG_PORTAL,
     TAG_PORTAL_SPACE,
 
+    IMU_PORTAL,
+    'imuSupported',
+    'deviceRotationX',
+    'deviceRotationY',
+    'deviceRotationZ',
+    'deviceRotationW',
+
     'cameraPositionX',
     'cameraPositionY',
     'cameraPositionZ',
@@ -1399,6 +1417,7 @@ export const KNOWN_TAGS: string[] = [
     'cameraRotationOffsetX',
     'cameraRotationOffsetY',
     'cameraRotationOffsetZ',
+    'cameraRotationOffsetW',
 
     'cameraFocusX',
     'cameraFocusY',
@@ -1469,6 +1488,7 @@ export const KNOWN_TAGS: string[] = [
     'portalCameraControls',
     'portalShowFocusPoint',
     'portalDisableCanvasTransparency',
+    'portalCameraType',
     'inventoryPortalHeight',
     'inventoryPortalResizable',
     'wristPortalHeight',
@@ -1486,6 +1506,7 @@ export const KNOWN_TAGS: string[] = [
     'sheetPortalButtonIcon',
     'sheetPortalButtonHint',
     'sheetPortalAllowedTags',
+    'sheetPortalAddedTags',
     'menuPortalStyle',
 
     'color',

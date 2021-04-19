@@ -31,6 +31,7 @@ import {
     CausalRepoPartitionConfig,
 } from './AuxPartitionConfig';
 import { flatMap } from 'lodash';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Attempts to create a CausalTree2Partition from the given config.
@@ -62,7 +63,7 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
     // private _weave: Weave<AuxOp> = new Weave<AuxOp>();
     // private _site: SiteStatus = newSite();
     // private _state: BotsState = {};
-    private _tree: AuxCausalTree = auxTree();
+    private _tree: AuxCausalTree = auxTree(undefined, true);
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._onBotsAdded.pipe(
@@ -124,6 +125,7 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
         this.private = config.private || false;
         this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
             currentSite: this._tree.site.id,
+            remoteSite: this._tree.remoteSite?.id,
             vector: {},
         });
     }

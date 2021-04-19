@@ -34,7 +34,8 @@ export type AuxPartition =
     | LocalStoragePartition
     | ProxyClientPartition
     | BotPartition
-    | OtherPlayersPartition;
+    | OtherPlayersPartition
+    | YjsPartition;
 
 /**
  * The list of edit stategies that a partition can use.
@@ -192,6 +193,16 @@ export interface RemoteCausalRepoPartition extends CausalRepoPartition {
      * Gets or sets whether the partition has been forced offline.
      */
     forcedOffline: boolean;
+}
+
+/**
+ * Defines a yjs partition.
+ * This is a partition that uses yjs (https://github.com/yjs/yjs) to internally represent changes.
+ */
+export interface YjsPartition extends AuxPartitionBase {
+    type: 'yjs';
+
+    state: BotsState;
 }
 
 /**

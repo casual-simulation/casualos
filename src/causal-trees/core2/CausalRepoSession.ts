@@ -11,6 +11,7 @@ import {
     WatchBranchEvent,
     SetBranchPasswordEvent,
     AuthenticateBranchWritesEvent,
+    AddUpdatesEvent,
 } from './CausalRepoEvents';
 import { DeviceInfo } from '../core/DeviceInfo';
 
@@ -55,8 +56,10 @@ export interface CausalRepoMessageHandlerTypes {
     'repo/unwatch_branches': void;
     'repo/watch_branch': WatchBranchEvent;
     'repo/get_branch': string;
+    'repo/get_updates': string;
     'repo/unwatch_branch': string;
     'repo/add_atoms': AddAtomsEvent;
+    'repo/add_updates': AddUpdatesEvent;
     'repo/send_event': SendRemoteActionEvent;
     'repo/watch_devices': void;
     'repo/unwatch_devices': void;

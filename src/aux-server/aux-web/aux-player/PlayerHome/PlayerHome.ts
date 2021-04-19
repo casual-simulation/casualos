@@ -260,6 +260,10 @@ export default class PlayerHome extends Vue {
                 hasChange = true;
             }
         }
+        if (bot.tags.url !== location.href) {
+            changes.url = location.href;
+            hasChange = true;
+        }
         if (hasChange) {
             await botManager.helper.updateBot(bot, {
                 tags: changes,

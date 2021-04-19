@@ -29,7 +29,7 @@ import {
 import { startWith } from 'rxjs/operators';
 import { flatMap, union } from 'lodash';
 import { merge } from '../utils';
-import { applyEdit, edits, isTagEdit } from '../aux-format-2';
+import { applyEdit, edits, isTagEdit, TagEdit } from '../aux-format-2';
 import { v4 as uuid } from 'uuid';
 
 /**
@@ -59,6 +59,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
     private _onEvents = new Subject<Action[]>();
     private _onStatusUpdated = new Subject<StatusUpdate>();
     private _siteId: string = uuid();
+    private _remoteSite: string = uuid();
     private _updateCounter: number = 0;
 
     type = 'memory' as const;
@@ -109,6 +110,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
         this.state = config.initialState;
         this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
             currentSite: this._siteId,
+            remoteSite: this._remoteSite,
             vector: {},
         });
     }
@@ -134,6 +136,13 @@ export class MemoryPartitionImpl implements MemoryPartition {
     }
 
     connect(): void {
+        if (this.space) {
+            for (let id in this.state) {
+                const bot = this.state[id];
+                bot.space = this.space as BotSpace;
+            }
+        }
+
         this._onStatusUpdated.next({
             type: 'connection',
             connected: true,
@@ -187,7 +196,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
                     createdNewState = true;
                 }
                 updatedState[event.bot.id] = bot;
-                added.set(event.bot.id, event.bot);
+                added.set(event.bot.id, bot);
             } else if (event.type === 'remove_bot') {
                 if (createdNewState) {
                     delete this.state[event.id];
@@ -222,15 +231,8 @@ export class MemoryPartitionImpl implements MemoryPartition {
                                     newBot.tags[tag],
                                     newVal
                                 );
-                                nextVersion = {
-                                    currentSite: this._onVersionUpdated.value
-                                        .currentSite,
-                                    vector: {
-                                        ...this._onVersionUpdated.value.vector,
-                                        [this
-                                            ._siteId]: this._updateCounter += 1,
-                                    },
-                                };
+                                nextVersion = this.getNextVersion(newVal);
+
                                 updatedBot.tags[tag] = edits(
                                     nextVersion.vector,
                                     ...newVal.operations
@@ -285,15 +287,8 @@ export class MemoryPartitionImpl implements MemoryPartition {
                         if (hasValue(newVal)) {
                             if (isTagEdit(newVal)) {
                                 masks[tag] = applyEdit(masks[tag], newVal);
-                                nextVersion = {
-                                    currentSite: this._onVersionUpdated.value
-                                        .currentSite,
-                                    vector: {
-                                        ...this._onVersionUpdated.value.vector,
-                                        [this
-                                            ._siteId]: this._updateCounter += 1,
-                                    },
-                                };
+                                nextVersion = this.getNextVersion(newVal);
+
                                 updatedBot.masks[this.space][tag] = edits(
                                     nextVersion.vector,
                                     ...newVal.operations
@@ -340,5 +335,18 @@ export class MemoryPartitionImpl implements MemoryPartition {
         if (nextVersion) {
             this._onVersionUpdated.next(nextVersion);
         }
+    }
+
+    getNextVersion(textEdit: TagEdit): CurrentVersion {
+        return {
+            currentSite: this._onVersionUpdated.value.currentSite,
+            remoteSite: this._onVersionUpdated.value.remoteSite,
+            vector: {
+                ...this._onVersionUpdated.value.vector,
+                [textEdit.isRemote
+                    ? this._remoteSite
+                    : this._siteId]: this._updateCounter += 1,
+            },
+        };
     }
 }

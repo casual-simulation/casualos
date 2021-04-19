@@ -55,6 +55,10 @@ import {
 import reducer, { CERTIFIED_SPACE, certificateId } from './AuxWeaveReducer';
 import { Action } from '@casual-simulation/causal-trees';
 import faker from 'faker';
+import {
+    generateRandomEditCases,
+    generateRandomEditParagraphCases,
+} from '../test/FuzzingHelpers';
 
 const keypair1 =
     'vK1.X9EJQT0znVqXj7D0kRyLSF1+F5u2bT7xKunF/H/SUxU=.djEueE1FL0VkOU1VanNaZGEwUDZ3cnlicjF5bnExZFptVzcubkxrNjV4ckdOTlM3Si9STGQzbGUvbUUzUXVEdmlCMWQucWZocVJQT21KeEhMbXVUWThORGwvU0M0dGdOdUVmaDFlcFdzMndYUllHWWxRZWpJRWthb1dJNnVZdXdNMFJVUTFWamkyc3JwMUpFTWJobk5sZ2Y2d01WTzRyTktDaHpwcUZGbFFnTUg0ZVU9';
@@ -1842,116 +1846,6 @@ describe('AuxCausalTree2', () => {
                     }
                 );
             });
-
-            function generateRandomEditCases(
-                count: number
-            ): [string, string, string[], TagEdit[]][] {
-                // Generate a bunch of
-                let cases = [] as [string, string, string[], TagEdit[]][];
-                for (let i = 0; i < count; i++) {
-                    const startText = faker.lorem.sentence();
-                    const editCount = faker.random.number({
-                        min: 1,
-                        max: startText.length,
-                    });
-                    let edits = [] as TagEdit[];
-                    let strings = [] as string[];
-                    let currentText = startText;
-
-                    for (let b = 0; b < editCount; b++) {
-                        const shouldInsert = faker.random.boolean();
-                        let tagEdit: TagEdit;
-                        if (shouldInsert || currentText.length <= 0) {
-                            const preserveCount = faker.random.number({
-                                min: 0,
-                                max: currentText.length,
-                            });
-                            const newText = faker.lorem.word();
-                            tagEdit = edit(
-                                {},
-                                preserve(preserveCount),
-                                insert(newText)
-                            );
-                        } else {
-                            const preserveCount = faker.random.number({
-                                min: 0,
-                                max: currentText.length - 1,
-                            });
-                            const deleteCount = faker.random.number({
-                                min: 1,
-                                max: currentText.length - preserveCount,
-                            });
-                            tagEdit = edit(
-                                {},
-                                preserve(preserveCount),
-                                del(deleteCount)
-                            );
-                        }
-                        edits.push(tagEdit);
-                        currentText = applyEdit(currentText, tagEdit);
-                        strings.push(currentText);
-                    }
-
-                    cases.push([startText, currentText, strings, edits]);
-                }
-
-                return cases;
-            }
-
-            function generateRandomEditParagraphCases(
-                count: number
-            ): [string, string, string[], TagEdit[]][] {
-                // Generate a bunch of
-                let cases = [] as [string, string, string[], TagEdit[]][];
-                for (let i = 0; i < count; i++) {
-                    const startText = faker.lorem.paragraph(4);
-                    const editCount = faker.random.number({
-                        min: 1,
-                        max: startText.length,
-                    });
-                    let edits = [] as TagEdit[];
-                    let strings = [] as string[];
-                    let currentText = startText;
-
-                    for (let b = 0; b < editCount; b++) {
-                        const shouldInsert = faker.random.boolean();
-                        let tagEdit: TagEdit;
-                        if (shouldInsert || currentText.length <= 0) {
-                            const preserveCount = faker.random.number({
-                                min: 0,
-                                max: currentText.length,
-                            });
-                            const newText = faker.lorem.sentence();
-                            tagEdit = edit(
-                                {},
-                                preserve(preserveCount),
-                                insert(newText)
-                            );
-                        } else {
-                            const preserveCount = faker.random.number({
-                                min: 0,
-                                max: currentText.length - 1,
-                            });
-                            const deleteCount = faker.random.number({
-                                min: 1,
-                                max: currentText.length - preserveCount,
-                            });
-                            tagEdit = edit(
-                                {},
-                                preserve(preserveCount),
-                                del(deleteCount)
-                            );
-                        }
-                        edits.push(tagEdit);
-                        currentText = applyEdit(currentText, tagEdit);
-                        strings.push(currentText);
-                    }
-
-                    cases.push([startText, currentText, strings, edits]);
-                }
-
-                return cases;
-            }
         });
 
         describe('certificates', () => {

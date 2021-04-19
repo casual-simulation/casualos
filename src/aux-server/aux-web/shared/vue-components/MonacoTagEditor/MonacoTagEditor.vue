@@ -14,6 +14,14 @@
                 </div>
             </div>
             <div class="editor-spacing"></div>
+            <div class="editor-error" v-show="hasError">
+                <md-button
+                    @click="toggleShowError()"
+                    class="md-dense"
+                    :class="{ active: showingError }"
+                    >Show Error</md-button
+                >
+            </div>
             <div class="editor-docs">
                 <a class="md-button md-dense md-theme-default" :href="docsLink" target="_blank"
                     >docs</a
