@@ -11,4 +11,9 @@ module.exports = merge(common, {
     optimization: {
         minimize: false,
     },
+    plugins: [
+        new webpack.DefinePlugin({
+            DEVELOPMENT: JSON.stringify(false),
+        }),
+    ],
 });
