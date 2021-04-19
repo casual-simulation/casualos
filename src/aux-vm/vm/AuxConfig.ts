@@ -4,6 +4,7 @@ import {
     BotsState,
     hasValue,
     RemoteCausalRepoProtocol,
+    SharedPartitionsVersion,
 } from '@casual-simulation/aux-common';
 import { StoredAux } from '../StoredAux';
 
@@ -47,6 +48,11 @@ export interface AuxConfigParameters {
      * The URL that causal repo partitions should connect to.
      */
     causalRepoConnectionUrl?: string;
+
+    /**
+     * The version of the shared partitions that should be used.
+     */
+    sharedPartitionsVersion?: SharedPartitionsVersion;
 
     /**
      * The origin that the VM iframe should be loaded from.

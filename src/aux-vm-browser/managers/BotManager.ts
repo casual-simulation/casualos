@@ -126,6 +126,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 parsedId.host
             );
             const protocol = config.causalRepoConnectionProtocol;
+            const versions = config.sharedPartitionsVersion;
 
             if (!config.device.isCollaborative) {
                 console.log('[BotManager] Disabling Collaboration Features');
@@ -135,12 +136,19 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 // Use a memory partition instead of a shared partition
                 // when collaboration is disabled.
                 shared: config.device.isCollaborative
-                    ? {
-                          type: 'remote_yjs',
-                          branch: parsedId.channel,
-                          host: causalRepoHost,
-                          connectionProtocol: protocol,
-                      }
+                    ? versions === 'v2'
+                        ? {
+                              type: 'remote_yjs',
+                              branch: parsedId.channel,
+                              host: causalRepoHost,
+                              connectionProtocol: protocol,
+                          }
+                        : {
+                              type: 'remote_causal_repo',
+                              branch: parsedId.channel,
+                              host: causalRepoHost,
+                              connectionProtocol: protocol,
+                          }
                     : {
                           type: 'memory',
                           initialState: {},
@@ -163,14 +171,23 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     },
                 },
                 [TEMPORARY_SHARED_PARTITION_ID]: config.device.isCollaborative
-                    ? {
-                          type: 'remote_yjs',
-                          branch: `${parsedId.channel}-player-${user.id}`,
-                          host: causalRepoHost,
-                          connectionProtocol: protocol,
-                          temporary: true,
-                          remoteEvents: false,
-                      }
+                    ? versions === 'v2'
+                        ? {
+                              type: 'remote_yjs',
+                              branch: `${parsedId.channel}-player-${user.id}`,
+                              host: causalRepoHost,
+                              connectionProtocol: protocol,
+                              temporary: true,
+                              remoteEvents: false,
+                          }
+                        : {
+                              type: 'remote_causal_repo',
+                              branch: `${parsedId.channel}-player-${user.id}`,
+                              host: causalRepoHost,
+                              connectionProtocol: protocol,
+                              temporary: true,
+                              remoteEvents: false,
+                          }
                     : {
                           type: 'memory',
                           initialState: {},
@@ -182,7 +199,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                           branch: parsedId.channel,
                           host: causalRepoHost,
                           connectionProtocol: protocol,
-                          childPartitionType: 'yjs_client',
+                          childPartitionType:
+                              versions === 'v2'
+                                  ? 'yjs_client'
+                                  : 'causal_repo_client',
                       }
                     : null,
                 [BOOTSTRAP_PARTITION_ID]: {

@@ -9,6 +9,7 @@ const webConfig = {
     causalRepoConnectionProtocol:
         process.env.CAUSAL_REPO_CONNECTION_PROTOCOL || 'socket.io',
     causalRepoConnectionUrl: process.env.CAUSAL_REPO_CONNECTION_URL,
+    sharedPartitionsVersion: process.env.SHARED_PARTITIONS_VERSION ?? 'v1',
     vmOrigin: process.env.VM_ORIGIN || null,
     disableCollaboration: process.env.DISABLE_COLLABORATION === 'true',
 };

@@ -160,6 +160,24 @@ export interface CausalRepoClientPartitionConfig extends PartitionConfigBase {
     remoteEvents?: boolean;
 }
 
+/**
+ * The possible version numbers for the shared partitions.
+ * "Shared partitions" means the set of partitions which are designed to work together to provide the "shared", "tempShared", and "remoteTempShared" spaces.
+ *
+ * - "v1" indicates that the shared partitions will be provided by the causal repo system. That is, the partitions use Causal Trees and atoms to communicate changes.
+ * - "v2" indicates that the shared partitions will be provided by the causal repo system combined with yjs.
+ *        That is, partitions use yjs to track changes and communicate via Causal Repo Servers (socket.io or otherwise) using the "updates" protocol.
+ */
+export type SharedPartitionsVersion = 'v1' | 'v2';
+
+/**
+ * The possible protocol types.
+ *
+ * - "socket.io" indicates that the protocol will use socket.io to connect to the causal repo server.
+ *    See the causal-tree-client-socketio project for more info.
+ * - "apiary-aws" indicates that the protocol will use WebSockets and a customized protocol wrapper to connect to a Causal Repo Server which
+ *    is hosted on AWS Lambda. See the causal-tree-client-apiary project for more info.
+ */
 export type RemoteCausalRepoProtocol = 'socket.io' | 'apiary-aws';
 
 /**
