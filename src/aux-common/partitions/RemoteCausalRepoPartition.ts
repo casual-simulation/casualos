@@ -510,7 +510,7 @@ export class RemoteCausalRepoPartitionImpl
         );
         this._sub.add(
             this._client
-                .watchBranch({
+                .watchBranchAtoms({
                     branch: this._branch,
                     temporary: this._temporary,
                     siteId: this._tree.site.id,

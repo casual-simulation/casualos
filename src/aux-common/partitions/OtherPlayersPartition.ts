@@ -23,6 +23,7 @@ import {
     OtherPlayersPartition,
     AuxPartitionRealtimeStrategy,
     RemoteCausalRepoPartition,
+    AuxPartition,
 } from './AuxPartition';
 import {
     BotsState,
@@ -52,6 +53,7 @@ import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { skip, startWith } from 'rxjs/operators';
 import { createCausalRepoClientPartition } from './RemoteCausalRepoPartition';
 import { sortBy } from 'lodash';
+import { createRemoteClientYjsPartition } from './RemoteYjsPartition';
 
 export async function createOtherPlayersClientPartition(
     config: PartitionConfig,
@@ -95,7 +97,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     /**
      * The map of branch names to partitions.
      */
-    private _partitions: Map<string, RemoteCausalRepoPartition>;
+    private _partitions: Map<string, AuxPartition>;
 
     /**
      * The map of session IDs to connected devices.
@@ -116,6 +118,8 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     private _synced: boolean;
 
     private: boolean;
+    private _childParitionType: OtherPlayersClientPartitionConfig['childPartitionType'];
+
     get space(): string {
         return this._space;
     }
@@ -200,6 +204,8 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
         this._user = user;
         this._branch = config.branch;
         this._client = client;
+        this._childParitionType =
+            config.childPartitionType ?? 'causal_repo_client';
         this._state = {};
         this._partitions = new Map();
         this._partitionSubs = new Map();
@@ -354,16 +360,29 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                 `[OtherPlayersPartitionImpl] Loading partition for ${device.claims[SESSION_ID_CLAIM]}`
             );
             const sub = new Subscription();
-            const partition = await createCausalRepoClientPartition(
-                {
-                    type: 'causal_repo_client',
-                    branch: branch,
-                    client: this._client,
-                    temporary: true,
-                    readOnly: true,
-                },
-                this._user
-            );
+            const promise =
+                this._childParitionType === 'yjs_client'
+                    ? createRemoteClientYjsPartition(
+                          {
+                              type: 'yjs_client',
+                              branch: branch,
+                              client: this._client,
+                              temporary: true,
+                              readOnly: true,
+                          },
+                          this._user
+                      )
+                    : createCausalRepoClientPartition(
+                          {
+                              type: 'causal_repo_client',
+                              branch: branch,
+                              client: this._client,
+                              temporary: true,
+                              readOnly: true,
+                          },
+                          this._user
+                      );
+            const partition = await promise;
             this._partitions.set(branch, partition);
             this._partitionSubs.set(branch, sub);
             sub.add(partition);

@@ -3,6 +3,7 @@ import {
     isClientAtoms,
     isClientEvent,
     isClientResetAtoms,
+    isClientUpdates,
 } from './CausalRepoClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { Subject } from 'rxjs';
@@ -58,6 +59,11 @@ import {
     AUTHENTICATED_TO_BRANCH,
     DEVICE_COUNT,
     DeviceCountEvent,
+    ADD_UPDATES,
+    AddUpdatesEvent,
+    UpdatesReceivedEvent,
+    UPDATES_RECEIVED,
+    GET_UPDATES,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -81,9 +87,9 @@ describe('CausalRepoClient', () => {
         client = new CausalRepoClient(connection);
     });
 
-    describe('watchBranch()', () => {
+    describe('watchBranchAtoms()', () => {
         it('should send a watch branch event after connecting', async () => {
-            client.watchBranch('abc').subscribe();
+            client.watchBranchAtoms('abc').subscribe();
 
             expect(connection.sentMessages).toEqual([]);
 
@@ -107,7 +113,7 @@ describe('CausalRepoClient', () => {
             let atoms = [] as Atom<any>[];
             connection.connect();
             client
-                .watchBranch('abc')
+                .watchBranchAtoms('abc')
                 .pipe(
                     filter(isClientAtoms),
                     map((e) => e.atoms)
@@ -144,7 +150,7 @@ describe('CausalRepoClient', () => {
             let atoms = [] as Atom<any>[];
             connection.connect();
             client
-                .watchBranch('abc')
+                .watchBranchAtoms('abc')
                 .pipe(
                     filter(isClientAtoms),
                     map((e) => e.atoms)
@@ -192,7 +198,7 @@ describe('CausalRepoClient', () => {
             let removed = [] as string[];
             connection.connect();
             client
-                .watchBranch('abc')
+                .watchBranchAtoms('abc')
                 .pipe(filter(isClientAtoms))
                 .subscribe((a) => {
                     atoms.push(...a.atoms);
@@ -242,7 +248,7 @@ describe('CausalRepoClient', () => {
             let hashes = [] as string[];
             connection.connect();
             client
-                .watchBranch('abc')
+                .watchBranchAtoms('abc')
                 .pipe(
                     filter(isClientAtoms),
                     map((e) => e.removedAtoms || [])
@@ -283,7 +289,7 @@ describe('CausalRepoClient', () => {
             )[];
             connection.connect();
             client
-                .watchBranch('abc')
+                .watchBranchAtoms('abc')
                 .pipe(
                     filter(isClientEvent),
                     map((e) => e.action)
@@ -324,7 +330,7 @@ describe('CausalRepoClient', () => {
             let atoms = [] as Atom<any>[];
             connection.connect();
             client
-                .watchBranch('abc')
+                .watchBranchAtoms('abc')
                 .pipe(
                     filter(isClientResetAtoms),
                     map((e) => e.atoms)
@@ -355,7 +361,7 @@ describe('CausalRepoClient', () => {
 
         it('should send a watch branch event after disconnecting and reconnecting', async () => {
             connection.connect();
-            client.watchBranch('abc').subscribe();
+            client.watchBranchAtoms('abc').subscribe();
 
             await waitAsync();
             expect(connection.sentMessages).toEqual([
@@ -400,7 +406,7 @@ describe('CausalRepoClient', () => {
             const atomsReceived = new Subject<AtomsReceivedEvent>();
             connection.events.set(ATOMS_RECEIVED, atomsReceived);
             connection.connect();
-            client.watchBranch('abc').subscribe();
+            client.watchBranchAtoms('abc').subscribe();
 
             const a1 = atom(atomId('a', 1), null, {});
             const a2 = atom(atomId('a', 2), null, {});
@@ -455,7 +461,7 @@ describe('CausalRepoClient', () => {
             const atomsReceived = new Subject<AtomsReceivedEvent>();
             connection.events.set(ATOMS_RECEIVED, atomsReceived);
             connection.connect();
-            client.watchBranch('abc').subscribe();
+            client.watchBranchAtoms('abc').subscribe();
 
             const a1 = atom(atomId('a', 1), null, {});
             const a2 = atom(atomId('a', 2), null, {});
@@ -513,7 +519,7 @@ describe('CausalRepoClient', () => {
             let atoms = [] as Atom<any>[][];
             connection.connect();
             client
-                .watchBranch('abc')
+                .watchBranchAtoms('abc')
                 .pipe(
                     filter(isClientAtoms),
                     map((e) => e.atoms)
@@ -534,7 +540,7 @@ describe('CausalRepoClient', () => {
         });
 
         it('should send a unwatch branch event when unsubscribed', async () => {
-            const sub = client.watchBranch('abc').subscribe();
+            const sub = client.watchBranchAtoms('abc').subscribe();
 
             connection.connect();
             await waitAsync();
@@ -558,7 +564,7 @@ describe('CausalRepoClient', () => {
 
         it('should allow connecting to temporary branches', async () => {
             const sub = client
-                .watchBranch({
+                .watchBranchAtoms({
                     branch: 'abc',
                     temporary: true,
                 })
@@ -590,7 +596,7 @@ describe('CausalRepoClient', () => {
             connection.events.set(ATOMS_RECEIVED, atomsReceived);
             connection.connect();
             client
-                .watchBranch({
+                .watchBranchAtoms({
                     branch: 'abc',
                     temporary: true,
                 })
@@ -642,6 +648,391 @@ describe('CausalRepoClient', () => {
                     data: {
                         branch: 'abc',
                         atoms: [a1, a2, a3],
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe('watchBranchUpdates()', () => {
+        it('should send a watch branch event after connecting', async () => {
+            client.watchBranchUpdates('abc').subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: {
+                        branch: 'abc',
+                        protocol: 'updates',
+                    },
+                },
+            ]);
+        });
+
+        it('should return an observable of updates for the branch', async () => {
+            const addUpdates = new Subject<AddUpdatesEvent>();
+            connection.events.set(ADD_UPDATES, addUpdates);
+
+            let updates = [] as string[];
+            connection.connect();
+            client
+                .watchBranchUpdates('abc')
+                .pipe(
+                    filter(isClientUpdates),
+                    map((e) => e.updates)
+                )
+                .subscribe((a) => updates.push(...a));
+
+            await waitAsync();
+
+            addUpdates.next({
+                branch: 'abc',
+                updates: ['111', '222'],
+                initial: true,
+            });
+
+            addUpdates.next({
+                branch: 'other',
+                updates: ['333', '444'],
+            });
+
+            await waitAsync();
+
+            expect(updates).toEqual(['111', '222']);
+        });
+
+        it('should buffer add updates events until the intial event', async () => {
+            const addUpdates = new Subject<AddUpdatesEvent>();
+            connection.events.set(ADD_UPDATES, addUpdates);
+
+            let updates = [] as string[];
+            connection.connect();
+            client
+                .watchBranchUpdates('abc')
+                .pipe(
+                    filter(isClientUpdates),
+                    map((e) => e.updates)
+                )
+                .subscribe((a) => updates.push(...a));
+
+            await waitAsync();
+
+            addUpdates.next({
+                branch: 'abc',
+                updates: ['111', '222'],
+            });
+
+            addUpdates.next({
+                branch: 'abc',
+                updates: ['333', '444'],
+            });
+
+            await waitAsync();
+            expect(updates).toEqual([]);
+
+            addUpdates.next({
+                branch: 'abc',
+                updates: ['555'],
+                initial: true,
+            });
+
+            await waitAsync();
+
+            expect(updates).toEqual(['111', '222', '333', '444', '555']);
+        });
+
+        it('should return an observable of events for the branch', async () => {
+            const receiveEvent = new Subject<ReceiveDeviceActionEvent>();
+            connection.events.set(RECEIVE_EVENT, receiveEvent);
+
+            let events = [] as (
+                | DeviceAction
+                | DeviceActionResult
+                | DeviceActionError
+            )[];
+            connection.connect();
+            client
+                .watchBranchUpdates('abc')
+                .pipe(
+                    filter(isClientEvent),
+                    map((e) => e.action)
+                )
+                .subscribe((a) => events.push(a));
+
+            await waitAsync();
+
+            const info = deviceInfo('username', 'deviceId', 'sessionId');
+
+            receiveEvent.next({
+                branch: 'abc',
+                action: device(info, {
+                    type: 'abc',
+                }),
+            });
+
+            receiveEvent.next({
+                branch: 'other',
+                action: device(info, {
+                    type: 'wrong',
+                }),
+            });
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                device(info, {
+                    type: 'abc',
+                }),
+            ]);
+        });
+
+        it('should send a watch branch event after disconnecting and reconnecting', async () => {
+            connection.connect();
+            client.watchBranchUpdates('abc').subscribe();
+
+            await waitAsync();
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: {
+                        branch: 'abc',
+                        protocol: 'updates',
+                    },
+                },
+            ]);
+
+            connection.disconnect();
+            await waitAsync();
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: {
+                        branch: 'abc',
+                        protocol: 'updates',
+                    },
+                },
+            ]);
+
+            connection.connect();
+            await waitAsync();
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: {
+                        branch: 'abc',
+                        protocol: 'updates',
+                    },
+                },
+                {
+                    name: WATCH_BRANCH,
+                    data: {
+                        branch: 'abc',
+                        protocol: 'updates',
+                    },
+                },
+            ]);
+        });
+
+        it('should remember updates that were sent to the branch and resend them after reconnecting if they were not acknowledged', async () => {
+            const updatesReceived = new Subject<UpdatesReceivedEvent>();
+            connection.events.set(UPDATES_RECEIVED, updatesReceived);
+            connection.connect();
+            client.watchBranchUpdates('abc').subscribe();
+
+            client.addUpdates('abc', ['111', '222']);
+
+            // updatesReceived.next({
+            //     branch: 'abc',
+            //     updateId: 1
+            // });
+
+            connection.disconnect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: {
+                        branch: 'abc',
+                        protocol: 'updates',
+                    },
+                },
+                {
+                    name: ADD_UPDATES,
+                    data: {
+                        branch: 'abc',
+                        updateId: 1,
+                        updates: ['111', '222'],
+                    },
+                },
+            ]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages.slice(2)).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: {
+                        branch: 'abc',
+                        protocol: 'updates',
+                    },
+                },
+                {
+                    name: ADD_UPDATES,
+                    data: {
+                        branch: 'abc',
+                        updateId: 1,
+                        updates: ['111', '222'],
+                    },
+                },
+            ]);
+        });
+
+        it('should allow the first list of atoms even if it is empty', async () => {
+            const addUpdates = new Subject<AddUpdatesEvent>();
+            connection.events.set(ADD_UPDATES, addUpdates);
+
+            let updates = [] as string[][];
+            connection.connect();
+            client
+                .watchBranchUpdates('abc')
+                .pipe(
+                    filter(isClientUpdates),
+                    map((e) => e.updates)
+                )
+                .subscribe((a) => updates.push(a));
+
+            await waitAsync();
+
+            addUpdates.next({
+                branch: 'abc',
+                updates: [],
+                initial: true,
+            });
+
+            await waitAsync();
+
+            expect(updates).toEqual([[]]);
+        });
+
+        it('should send a unwatch branch event when unsubscribed', async () => {
+            const sub = client.watchBranchUpdates('abc').subscribe();
+
+            connection.connect();
+            await waitAsync();
+
+            sub.unsubscribe();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: {
+                        branch: 'abc',
+                        protocol: 'updates',
+                    },
+                },
+                {
+                    name: UNWATCH_BRANCH,
+                    data: 'abc',
+                },
+            ]);
+        });
+
+        it('should allow connecting to temporary branches', async () => {
+            const sub = client
+                .watchBranchUpdates({
+                    branch: 'abc',
+                    temporary: true,
+                })
+                .subscribe();
+
+            connection.connect();
+            await waitAsync();
+
+            sub.unsubscribe();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: {
+                        branch: 'abc',
+                        temporary: true,
+                        protocol: 'updates',
+                    },
+                },
+                {
+                    name: UNWATCH_BRANCH,
+                    data: 'abc',
+                },
+            ]);
+        });
+
+        it('should resend all atoms after connecting if the branch is temporary', async () => {
+            const updatesReceived = new Subject<UpdatesReceivedEvent>();
+            connection.events.set(UPDATES_RECEIVED, updatesReceived);
+            connection.connect();
+            client
+                .watchBranchUpdates({
+                    branch: 'abc',
+                    temporary: true,
+                })
+                .subscribe();
+
+            client.addUpdates('abc', ['111', '222']);
+
+            updatesReceived.next({
+                branch: 'abc',
+                updateId: 1,
+            });
+
+            connection.disconnect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: {
+                        branch: 'abc',
+                        temporary: true,
+                        protocol: 'updates',
+                    },
+                },
+                {
+                    name: ADD_UPDATES,
+                    data: {
+                        branch: 'abc',
+                        updates: ['111', '222'],
+                        updateId: 1,
+                    },
+                },
+            ]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages.slice(2)).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: {
+                        branch: 'abc',
+                        temporary: true,
+                        protocol: 'updates',
+                    },
+                },
+                {
+                    name: ADD_UPDATES,
+                    data: {
+                        branch: 'abc',
+                        updateId: 1,
+                        updates: ['111', '222'],
                     },
                 },
             ]);
@@ -745,6 +1136,92 @@ describe('CausalRepoClient', () => {
         });
     });
 
+    describe('getBranchUpdates()', () => {
+        it('should send a get updates event after connecting', async () => {
+            client.getBranchUpdates('abc').subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: GET_UPDATES,
+                    data: 'abc',
+                },
+            ]);
+        });
+
+        it('should return an observable of atoms for the branch', async () => {
+            const addUpdates = new Subject<AddUpdatesEvent>();
+            connection.events.set(ADD_UPDATES, addUpdates);
+
+            let updates = [] as string[];
+            connection.connect();
+            client.getBranchUpdates('abc').subscribe((a) => updates.push(...a));
+
+            await waitAsync();
+
+            addUpdates.next({
+                branch: 'abc',
+                updates: ['111', '222'],
+            });
+
+            addUpdates.next({
+                branch: 'other',
+                updates: ['333', '444'],
+            });
+
+            await waitAsync();
+
+            expect(updates).toEqual(['111', '222']);
+        });
+
+        it('should finish after the first add atoms event for the branch', async () => {
+            const addUpdates = new Subject<AddUpdatesEvent>();
+            connection.events.set(ADD_UPDATES, addUpdates);
+
+            let updates = [] as string[];
+            let finished = false;
+            connection.connect();
+            client.getBranchUpdates('abc').subscribe(
+                (a) => updates.push(...a),
+                (err) => {},
+                () => (finished = true)
+            );
+
+            await waitAsync();
+
+            addUpdates.next({
+                branch: 'other',
+                updates: ['111', '222'],
+            });
+
+            await waitAsync();
+
+            expect(finished).toBe(false);
+
+            addUpdates.next({
+                branch: 'abc',
+                updates: ['333', '444'],
+            });
+
+            await waitAsync();
+
+            expect(finished).toBe(true);
+
+            addUpdates.next({
+                branch: 'abc',
+                updates: ['555'],
+            });
+
+            await waitAsync();
+
+            expect(updates).toEqual(['333', '444']);
+        });
+    });
+
     describe('addAtoms()', () => {
         it('should send a add atoms event', async () => {
             const a1 = atom(atomId('a', 1), null, {});
@@ -781,7 +1258,7 @@ describe('CausalRepoClient', () => {
         it('should wait to send the atoms until the watched branch is connected', async () => {
             const a1 = atom(atomId('a', 1), null, {});
             const a2 = atom(atomId('a', 2), a1, {});
-            client.watchBranch('abc').subscribe();
+            client.watchBranchAtoms('abc').subscribe();
             client.addAtoms('abc', [a1]);
             client.addAtoms('abc', [a2]);
 

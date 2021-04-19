@@ -1,6 +1,7 @@
 {
     "name": "@casual-simulation/aux-custom-portals",
     "version": "1.5.10",
+    "private": true,
     "description": "A set of utilities that can be used to help custom portals interface with CasualOS.",
     "keywords": [
         "aux"

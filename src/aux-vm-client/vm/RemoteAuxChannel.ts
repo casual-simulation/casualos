@@ -10,6 +10,8 @@ import {
     createBotClientPartition,
     iteratePartitions,
     createOtherPlayersClientPartition,
+    createYjsPartition,
+    createRemoteClientYjsPartition,
 } from '@casual-simulation/aux-common';
 import {
     AuxConfig,
@@ -21,6 +23,7 @@ import {
     createBotPartition,
     createRemoteCausalRepoPartition,
     createOtherPlayersRepoPartition,
+    createRemoteYjsPartition,
 } from '../partitions';
 
 export interface RemoteAuxChannelOptions extends AuxChannelOptions {}
@@ -40,14 +43,18 @@ export class RemoteAuxChannel extends BaseAuxChannel {
         return await createAuxPartition(
             config,
             createMemoryPartition,
-            config => createCausalRepoPartition(config, this.user),
-            config => createRemoteCausalRepoPartition(config, this.user),
-            config => createCausalRepoClientPartition(config, this.user),
-            config => createCausalRepoHistoryClientPartition(config, this.user),
-            config => createBotPartition(config),
-            config => createBotClientPartition(config),
-            config => createOtherPlayersClientPartition(config, this.user),
-            config => createOtherPlayersRepoPartition(config, this.user)
+            (config) => createCausalRepoPartition(config, this.user),
+            (config) => createRemoteCausalRepoPartition(config, this.user),
+            (config) => createCausalRepoClientPartition(config, this.user),
+            (config) =>
+                createCausalRepoHistoryClientPartition(config, this.user),
+            (config) => createBotPartition(config),
+            (config) => createBotClientPartition(config),
+            (config) => createOtherPlayersClientPartition(config, this.user),
+            (config) => createOtherPlayersRepoPartition(config, this.user),
+            (config) => createYjsPartition(config),
+            (config) => createRemoteYjsPartition(config, this.user),
+            (config) => createRemoteClientYjsPartition(config, this.user)
         );
     }
 
