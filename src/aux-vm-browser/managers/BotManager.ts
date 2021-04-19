@@ -127,16 +127,21 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             );
             const protocol = config.causalRepoConnectionProtocol;
             const versions = config.sharedPartitionsVersion;
+            const isV2 = versions === 'v2';
 
             if (!config.device.isCollaborative) {
                 console.log('[BotManager] Disabling Collaboration Features');
+            } else {
+                if (isV2) {
+                    console.log('[BotManager] Using v2 shared partitions');
+                }
             }
 
             let partitions: AuxPartitionConfig = {
                 // Use a memory partition instead of a shared partition
                 // when collaboration is disabled.
                 shared: config.device.isCollaborative
-                    ? versions === 'v2'
+                    ? isV2
                         ? {
                               type: 'remote_yjs',
                               branch: parsedId.channel,
@@ -171,7 +176,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     },
                 },
                 [TEMPORARY_SHARED_PARTITION_ID]: config.device.isCollaborative
-                    ? versions === 'v2'
+                    ? isV2
                         ? {
                               type: 'remote_yjs',
                               branch: `${parsedId.channel}-player-${user.id}`,
@@ -199,10 +204,9 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                           branch: parsedId.channel,
                           host: causalRepoHost,
                           connectionProtocol: protocol,
-                          childPartitionType:
-                              versions === 'v2'
-                                  ? 'yjs_client'
-                                  : 'causal_repo_client',
+                          childPartitionType: isV2
+                              ? 'yjs_client'
+                              : 'causal_repo_client',
                       }
                     : null,
                 [BOOTSTRAP_PARTITION_ID]: {
