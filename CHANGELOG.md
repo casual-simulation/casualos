@@ -7,6 +7,7 @@
 ### :rocket: Improvements
 
 -   Overhauled the `shared`, `tempShared`, and `remoteTempShared` spaces to use a faster and more efficient storage mechanism.
+    -   There is now a new configuration environment variable `SHARED_PARTITIONS_VERSION` which controls whether the new spaces are used. Use `v1` to indicate that the old causal repo based system should be used and use `v2` to indicate that the new system should be used.
 
 ## V1.5.10
 
