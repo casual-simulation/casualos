@@ -836,6 +836,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 subtractVectors,
                 negateVector,
                 scaleVector,
+                areClose,
             },
 
             mod: {
@@ -1171,8 +1172,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         y: number
     ): BotFilterFunction {
         const inCtx = inDimension(dimension);
-        const atX = byTag(`${dimension}X`, x);
-        const atY = byTag(`${dimension}Y`, y);
+        const atX = byTag(`${dimension}X`, (bx) => areClose(bx, x));
+        const atY = byTag(`${dimension}Y`, (by) => areClose(by, y));
         const filter: BotFilterFunction = (b) => inCtx(b) && atX(b) && atY(b);
         filter.sort = (b) => getTag(b, `${dimension}SortOrder`) || 0;
         return filter;
@@ -2942,7 +2943,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * {number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
      */
-    function serialConnect(name: string, device: string, mac: string, channel: number, options?: object, cb?: any) {
+    function serialConnect(
+        name: string,
+        device: string,
+        mac: string,
+        channel: number,
+        options?: object,
+        cb?: any
+    ) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             serialConnectPin(name, device, mac, channel, options, cb),
@@ -3009,7 +3017,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param cb
      * @param taskId The ID of the async task.
      */
-    function serialWrite(name: string, data: string | number[], encoding?: string, cb?: any) {
+    function serialWrite(
+        name: string,
+        data: string | number[],
+        encoding?: string,
+        cb?: any
+    ) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             serialWritePin(name, data, encoding, cb),
@@ -3689,6 +3702,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         let groups = [] as string[];
         for (let bot of bots) {
+            if (!bot) {
+                continue;
+            }
             const timers = context.getBotTimers(bot.id);
             for (let timer of timers) {
                 if (timer.type === 'animation' && timer.cancel) {
@@ -4272,6 +4288,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return result;
+    }
+
+    /**
+     * Determines if the two given numbers within 2 decimal places of each other.
+     * @param first The first number to check.
+     * @param second The second number to check.
+     */
+    function areClose(first: number, second: number): boolean {
+        const maxDelta = 0.005;
+        const delta = Math.abs(first - second);
+        return delta < maxDelta;
     }
 
     /**

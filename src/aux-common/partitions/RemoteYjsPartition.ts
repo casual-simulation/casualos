@@ -867,6 +867,11 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                                 text.delete(finalPosition.index, op.count);
                             }
                         }
+
+                        version[this._currentSite] = getClock(
+                            doc,
+                            this._localId
+                        );
                     }
                 }
             } else {
