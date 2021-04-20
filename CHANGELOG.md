@@ -16,6 +16,7 @@
 
 -   Fixed an issue with labels where an error could occur if the label text was updated while it was being rendered.
 -   Fixed an issue where `clearAnimations()` would error if given a null bot.
+-   Fixed an issue where autocomplete would not work correctly for properties on top level variables.
 
 ## V1.5.10
 
