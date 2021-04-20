@@ -3702,6 +3702,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         let groups = [] as string[];
         for (let bot of bots) {
+            if (!bot) {
+                continue;
+            }
             const timers = context.getBotTimers(bot.id);
             for (let timer of timers) {
                 if (timer.type === 'animation' && timer.cancel) {

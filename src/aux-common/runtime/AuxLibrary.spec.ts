@@ -5709,6 +5709,14 @@ describe('AuxLibrary', () => {
                 expect(bot1.raw.def).toEqual(0);
                 expect(bot1.raw.ghi).toEqual(0);
             });
+
+            it('should do nothing if given a null bot', async () => {
+                library.api.clearAnimations(null);
+            });
+
+            it('should do nothing if given a bot with no animations', async () => {
+                library.api.clearAnimations(bot1);
+            });
         });
 
         describe('action.perform()', () => {
