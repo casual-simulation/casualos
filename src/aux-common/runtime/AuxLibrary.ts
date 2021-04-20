@@ -2943,7 +2943,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * {number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
      */
-    function serialConnect(name: string, device: string, mac: string, channel: number, options?: object, cb?: any) {
+    function serialConnect(
+        name: string,
+        device: string,
+        mac: string,
+        channel: number,
+        options?: object,
+        cb?: any
+    ) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             serialConnectPin(name, device, mac, channel, options, cb),
@@ -3010,7 +3017,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param cb
      * @param taskId The ID of the async task.
      */
-    function serialWrite(name: string, data: string | number[], encoding?: string, cb?: any) {
+    function serialWrite(
+        name: string,
+        data: string | number[],
+        encoding?: string,
+        cb?: any
+    ) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             serialWritePin(name, data, encoding, cb),
