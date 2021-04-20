@@ -825,6 +825,17 @@ describe('AuxLibrary', () => {
                 expect(typeof filter.sort).toBe('function');
                 expect(filter.sort(bot1)).toBe(100);
             });
+
+            it('should return true for bots that are close to the target position', () => {
+                const filter = library.api.atPosition('#red', 1.001, 2.001);
+
+                bot1.tags.red = true;
+                bot1.tags.redX = 1;
+                bot1.tags.redY = 2;
+                bot1.tags.redSortOrder = 100;
+
+                expect(filter(bot1)).toBe(true);
+            });
         });
 
         describe('inStack()', () => {
@@ -905,6 +916,20 @@ describe('AuxLibrary', () => {
 
                 expect(typeof filter.sort).toBe('function');
                 expect(filter.sort(bot2)).toEqual(100);
+            });
+
+            it('should return true for bots that are close to each other', () => {
+                bot1.tags.red = true;
+                bot1.tags.redX = 1;
+                bot1.tags.redY = 2;
+                const filter = library.api.inStack(bot1, '#red');
+
+                bot2.tags.red = true;
+                bot2.tags.redX = 1.001;
+                bot2.tags.redY = 2.003;
+                bot2.tags.redSortOrder = 100;
+
+                expect(filter(bot2)).toBe(true);
             });
         });
 

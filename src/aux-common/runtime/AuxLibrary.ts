@@ -1172,8 +1172,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         y: number
     ): BotFilterFunction {
         const inCtx = inDimension(dimension);
-        const atX = byTag(`${dimension}X`, x);
-        const atY = byTag(`${dimension}Y`, y);
+        const atX = byTag(`${dimension}X`, (bx) => areClose(bx, x));
+        const atY = byTag(`${dimension}Y`, (by) => areClose(by, y));
         const filter: BotFilterFunction = (b) => inCtx(b) && atX(b) && atY(b);
         filter.sort = (b) => getTag(b, `${dimension}SortOrder`) || 0;
         return filter;
