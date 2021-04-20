@@ -1022,6 +1022,45 @@ export function testPartitionImplementation(
                         }
                     );
 
+                    it('should handle concurrent inserts that rely on each other', async () => {
+                        await partition.applyEvents([
+                            botAdded(
+                                createBot('test', {
+                                    abc: `abc\nabc\nabc\nabc`,
+                                })
+                            ),
+                        ]);
+
+                        await waitAsync();
+
+                        const editVersion = { ...version.vector };
+
+                        let edit = edits(
+                            editVersion,
+                            [preserve(3), insert('d')],
+                            [preserve(8), insert('d')],
+                            [preserve(13), insert('d')],
+                            [preserve(18), insert('d')]
+                        );
+
+                        await partition.applyEvents([
+                            botUpdated('test', {
+                                tags: {
+                                    abc: edit,
+                                },
+                            }),
+                        ]);
+
+                        expect(partition.state).toEqual({
+                            test: createBot('test', {
+                                abc: 'abcd\nabcd\nabcd\nabcd',
+                            }),
+                        });
+                        expect(
+                            Object.keys(version.vector).length
+                        ).toBeGreaterThan(0);
+                    });
+
                     it('should handle local edits while remote edits occur', async () => {
                         await partition.applyEvents([
                             botAdded(
