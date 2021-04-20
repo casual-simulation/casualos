@@ -9930,6 +9930,28 @@ describe('AuxLibrary', () => {
         );
     });
 
+    describe('math.areClose()', () => {
+        const cases = [
+            [false, 1, 2],
+            [true, 1, 1],
+            [true, 1, 1.001],
+            [false, 1, 1.009],
+            [true, 1, 1.005],
+            [false, 1, 1.01],
+            [false, 1, 0.99],
+            [false, 1, 0.991],
+            [true, 1, 0.996],
+            [true, 1, 0.9951],
+        ] as const;
+
+        it.each(cases)(
+            'should return %s for %s == %s',
+            (expected, first, second) => {
+                expect(library.api.math.areClose(first, second)).toBe(expected);
+            }
+        );
+    });
+
     describe('mod.cameraPositionOffset()', () => {
         it('should return a camera position offset mod for the given x,y,z mod', () => {
             expect(

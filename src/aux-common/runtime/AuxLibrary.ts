@@ -836,6 +836,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 subtractVectors,
                 negateVector,
                 scaleVector,
+                areClose,
             },
 
             mod: {
@@ -4272,6 +4273,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return result;
+    }
+
+    /**
+     * Determines if the two given numbers within 2 decimal places of each other.
+     * @param first The first number to check.
+     * @param second The second number to check.
+     */
+    function areClose(first: number, second: number): boolean {
+        const maxDelta = 0.005;
+        const delta = Math.abs(first - second);
+        return delta < maxDelta;
     }
 
     /**
