@@ -15,6 +15,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue with labels where an error could occur if the label text was updated while it was being rendered.
+-   Fixed an issue where `clearAnimations()` would error if given a null bot.
 
 ## V1.5.10
 
