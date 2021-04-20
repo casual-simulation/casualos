@@ -12,6 +12,10 @@
     -   For example, `math.areClose(1, 1.001)` will return true.
 -   Improved the `atPosition()` and `inStack()` bot filters to use `math.areClose()` internally when comparing bot positions.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue with labels where an error could occur if the label text was updated while it was being rendered.
+
 ## V1.5.10
 
 #### Date: 4/8/2021
