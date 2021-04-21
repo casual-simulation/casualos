@@ -1,7 +1,19 @@
 import * as Acorn from 'acorn';
 import { generate, baseGenerator } from 'astring';
 import LRU from 'lru-cache';
-import { replace } from 'estraverse';
+import { traverse } from 'estraverse';
+import {
+    createAbsolutePositionFromRelativePosition,
+    createRelativePositionFromTypeIndex,
+    getItem,
+    Doc,
+    Text,
+} from 'yjs';
+import {
+    createRelativePositionFromStateVector,
+    getClock,
+} from '../yjs/YjsHelpers';
+import { VersionVector } from '@casual-simulation/causal-trees';
 
 /**
  * The symbol that is used in script dependencies to represent any argument.
@@ -104,10 +116,10 @@ export function replaceMacros(text: string) {
  */
 export class Transpiler {
     private _parser: typeof Acorn.Parser;
-    private _cache: LRU.Cache<string, string>;
+    private _cache: LRU.Cache<string, TranspilerResult>;
 
     constructor() {
-        this._cache = new LRU<string, string>({
+        this._cache = new LRU<string, TranspilerResult>({
             max: 1000,
         });
         this._parser = Acorn.Parser;
@@ -117,25 +129,63 @@ export class Transpiler {
      * Transpiles the given code into ES6 JavaScript Code.
      */
     transpile(code: string): string {
+        const result = this._transpile(code);
+        return result.code;
+    }
+
+    /**
+     * Transpiles the given code and returns the result with the generated metadata.
+     * @param code The code that should be transpiled.
+     */
+    transpileWithMetadata(code: string): TranspilerResult {
+        return this._transpile(code);
+    }
+
+    /**
+     * Transpiles the given code into ES6 JavaScript Code.
+     */
+    private _transpile(code: string): TranspilerResult {
         const cached = this._cache.get(code);
         if (cached) {
             return cached;
         }
-        const node = this.parse(code);
-        const replaced = this._replace(node);
-        const final = this.toJs(replaced);
-        this._cache.set(code, final);
-        return final;
+        const macroed = replaceMacros(code);
+        const node = this._parse(macroed);
+
+        // we create a YJS document to track
+        // text changes. This lets us use a separate client ID for each change
+        // which makes the calculations for indexes much simpler.
+        // This is because we can use a separate client ID for every required
+        // change and ignore other changes when looking for the right edit position.
+        const doc = new Doc();
+        doc.clientID = 0;
+
+        const text = doc.getText();
+        text.insert(0, code);
+
+        this._replace(macroed, node, doc, text);
+        const finalCode = text.toString();
+        const result: TranspilerResult = {
+            code: finalCode,
+            original: macroed,
+            metadata: {
+                doc,
+                text,
+            },
+        };
+        this._cache.set(code, result);
+
+        return result;
     }
 
     /**
      * Parses the given code into a syntax tree.
      * @param code
      */
-    parse(code: string): any {
-        const macroed = replaceMacros(code);
-        const node = this._parser.parse(macroed, {
+    private _parse(code: string): any {
+        const node = this._parser.parse(code, {
             ecmaVersion: <any>11,
+            locations: true,
         });
         return node;
     }
@@ -174,142 +224,263 @@ export class Transpiler {
         });
     }
 
-    private _replace(node: Acorn.Node): any {
+    private _replace(
+        code: string,
+        node: Acorn.Node,
+        doc: Doc,
+        text: Text
+    ): void {
         if (!node) {
-            return node;
+            return;
         }
-        return <any>replace(<any>node, {
+
+        traverse(<any>node, {
             enter: <any>((n: any, parent: any) => {
                 if (n.type === 'WhileStatement') {
-                    return this._replaceWhileStatement(n);
+                    this._replaceWhileStatement(n, doc, text);
                 } else if (n.type === 'DoWhileStatement') {
-                    return this._replaceDoWhileStatement(n);
+                    this._replaceDoWhileStatement(n, doc, text);
                 } else if (n.type === 'ForStatement') {
-                    return this._replaceForStatement(n);
+                    this._replaceForStatement(n, doc, text);
                 } else if (n.type === 'ForInStatement') {
-                    return this._replaceForInStatement(n);
+                    this._replaceForInStatement(n, doc, text);
                 } else if (n.type === 'ForOfStatement') {
-                    return this._replaceForOfStatement(n);
+                    this._replaceForOfStatement(n, doc, text);
                 }
             }),
         });
     }
 
-    private _replaceWhileStatement(node: any): any {
-        let replacedBody = node.body;
+    private _replaceWhileStatement(node: any, doc: Doc, text: Text): any {
+        this._insertEnergyCheckIntoStatement(doc, text, node.body);
+    }
 
-        let existingStatements: any[] = [];
-        if (replacedBody.type === 'BlockStatement') {
-            existingStatements = replacedBody.body;
+    private _replaceDoWhileStatement(node: any, doc: Doc, text: Text): any {
+        this._insertEnergyCheckIntoStatement(doc, text, node.body);
+    }
+
+    private _replaceForStatement(node: any, doc: Doc, text: Text): any {
+        this._insertEnergyCheckIntoStatement(doc, text, node.body);
+    }
+
+    private _replaceForInStatement(node: any, doc: Doc, text: Text): any {
+        this._insertEnergyCheckIntoStatement(doc, text, node.body);
+    }
+
+    private _replaceForOfStatement(node: any, doc: Doc, text: Text): any {
+        this._insertEnergyCheckIntoStatement(doc, text, node.body);
+    }
+
+    private _insertEnergyCheckIntoStatement(
+        doc: Doc,
+        text: Text,
+        statement: any
+    ) {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+        let startIndex: number;
+        let postfix: string = '';
+        let wrapWithBraces: boolean = false;
+
+        if (statement.type === 'BlockStatement') {
+            // Block statements look like this:
+            // while(true) { }
+            // Block statements are wrapped with curly braces
+            // so we should use a full statement "__energyCheck();"
+            startIndex = statement.start + 1;
+            postfix = ';';
+        } else if (statement.type === 'ExpressionStatement') {
+            // Expression statements look like this:
+            // while(true) abc();
+            // therefore, we can find the start of the expression and use a comma
+            // between our call and the other code to make it a sequence expression.
+            startIndex = statement.start;
+            postfix = ';';
+            wrapWithBraces = true;
+        } else if (statement.type === 'EmptyStatement') {
+            // Empty statements look like this:
+            // while(true) ;
+            // as a result, we only need to insert the call to convert the expression from empty to
+            // an expression statement containing a single function call.
+            startIndex = statement.start;
         } else {
-            existingStatements = [replacedBody];
+            // Other statements (like "if", "try", "throw" and other loops)
+            // should be wrapped in curly braces
+            startIndex = statement.start;
+            postfix = ';';
+            wrapWithBraces = true;
         }
 
-        return {
-            type: 'WhileStatement',
-            test: node.test,
-            body: {
-                type: 'BlockStatement',
-                body: [this._energyCheckCall(), ...existingStatements],
-            },
-        };
+        this._insertEnergyCheck(
+            doc,
+            text,
+            version,
+            startIndex,
+            statement.end,
+            postfix,
+            wrapWithBraces
+        );
     }
 
-    private _replaceDoWhileStatement(node: any): any {
-        let replacedBody = node.body;
-
-        let existingStatements: any[] = [];
-        if (replacedBody.type === 'BlockStatement') {
-            existingStatements = replacedBody.body;
-        } else {
-            existingStatements = [replacedBody];
+    private _insertEnergyCheck(
+        doc: Doc,
+        text: Text,
+        version: VersionVector,
+        startIndex: number,
+        endIndex: number,
+        postfix: string,
+        wrapWithBraces: boolean
+    ) {
+        if (wrapWithBraces) {
+            const relative = createRelativePositionFromStateVector(
+                text,
+                version,
+                startIndex
+            );
+            const absolute = createAbsolutePositionFromRelativePosition(
+                relative,
+                doc
+            );
+            text.insert(absolute.index, '{');
         }
 
-        return {
-            type: 'DoWhileStatement',
-            test: node.test,
-            body: {
-                type: 'BlockStatement',
-                body: [this._energyCheckCall(), ...existingStatements],
-            },
-        };
-    }
+        const relative = createRelativePositionFromStateVector(
+            text,
+            version,
+            startIndex
+        );
+        const absolute = createAbsolutePositionFromRelativePosition(
+            relative,
+            doc
+        );
+        text.insert(absolute.index, ENERGY_CHECK_CALL + postfix);
 
-    private _replaceForStatement(node: any): any {
-        let replacedBody = node.body;
-
-        let existingStatements: any[] = [];
-        if (replacedBody.type === 'BlockStatement') {
-            existingStatements = replacedBody.body;
-        } else {
-            existingStatements = [replacedBody];
+        if (wrapWithBraces) {
+            const relative = createRelativePositionFromStateVector(
+                text,
+                version,
+                endIndex
+            );
+            const absolute = createAbsolutePositionFromRelativePosition(
+                relative,
+                doc
+            );
+            text.insert(absolute.index, '}');
         }
+    }
+}
 
-        return {
-            type: 'ForStatement',
-            init: node.init,
-            test: node.test,
-            update: node.update,
-            body: {
-                type: 'BlockStatement',
-                body: [this._energyCheckCall(), ...existingStatements],
-            },
-        };
+const ENERGY_CHECK_CALL = '__energyCheck()';
+
+export interface TranspilerResult {
+    /**
+     * The code that resulted from the transpiler.
+     */
+    code: string;
+
+    /**
+     * The original code.
+     */
+    original: string;
+
+    /**
+     * The metadata that the transpiler produced for the code.
+     */
+    metadata: {
+        /**
+         * The document that was used to edit the code.
+         */
+        doc: Doc;
+
+        /**
+         * The text structure that was used to edit the code.
+         */
+        text: Text;
+    };
+}
+
+/**
+ * Defines an interface that represents a location in some code by line number and column.
+ */
+export interface CodeLocation {
+    /**
+     * The zero based line number that the location represents.
+     */
+    lineNumber: number;
+
+    /**
+     * The zero based column number that the location represents.
+     */
+    column: number;
+}
+
+export function calculateOriginalLineLocation(
+    result: TranspilerResult,
+    location: CodeLocation
+): CodeLocation {
+    const index = calculateIndexFromLocation(result.code, location);
+
+    const relative = createRelativePositionFromTypeIndex(
+        result.metadata.text,
+        index
+    );
+
+    if (relative.item.client === 0) {
+        return calculateLocationFromIndex(result.original, relative.item.clock);
     }
 
-    private _replaceForInStatement(node: any): any {
-        let replacedBody = node.body;
+    let item = getItem(result.metadata.doc.store, relative.item);
 
-        let existingStatements: any[] = [];
-        if (replacedBody.type === 'BlockStatement') {
-            existingStatements = replacedBody.body;
+    while (item && item.id.client !== 0) {
+        item = item.left;
+    }
+
+    return calculateLocationFromIndex(
+        result.original,
+        item.id.clock + item.length
+    );
+}
+
+export function calculateIndexFromLocation(
+    code: string,
+    location: CodeLocation
+): number {
+    let line = location.lineNumber;
+    let column = location.column;
+    let index = 0;
+    for (; index < code.length; index++) {
+        const char = code[index];
+        if (line > 0) {
+            if (char === '\n') {
+                line -= 1;
+            }
         } else {
-            existingStatements = [replacedBody];
+            index += column;
+            break;
         }
-
-        return {
-            type: 'ForInStatement',
-            left: node.left,
-            right: node.right,
-            body: {
-                type: 'BlockStatement',
-                body: [this._energyCheckCall(), ...existingStatements],
-            },
-        };
     }
 
-    private _replaceForOfStatement(node: any): any {
-        let replacedBody = node.body;
+    return index;
+}
 
-        let existingStatements: any[] = [];
-        if (replacedBody.type === 'BlockStatement') {
-            existingStatements = replacedBody.body;
-        } else {
-            existingStatements = [replacedBody];
+export function calculateLocationFromIndex(
+    code: string,
+    index: number
+): CodeLocation {
+    let line = 0;
+    let lastLineIndex = 0;
+    for (let counter = 0; counter < code.length && counter < index; counter++) {
+        const char = code[counter];
+        if (char === '\n') {
+            line += 1;
+            lastLineIndex = counter + 1;
         }
-
-        return {
-            type: 'ForOfStatement',
-            left: node.left,
-            right: node.right,
-            body: {
-                type: 'BlockStatement',
-                body: [this._energyCheckCall(), ...existingStatements],
-            },
-        };
     }
 
-    private _energyCheckCall() {
-        return {
-            type: 'ExpressionStatement',
-            expression: {
-                type: 'CallExpression',
-                callee: {
-                    type: 'Identifier',
-                    name: '__energyCheck',
-                },
-                arguments: [] as any[],
-            },
-        };
-    }
+    let column = index - lastLineIndex;
+
+    return {
+        lineNumber: line,
+        column,
+    };
 }
