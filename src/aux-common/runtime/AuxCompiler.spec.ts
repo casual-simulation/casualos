@@ -420,7 +420,7 @@ describe('AuxCompiler', () => {
             });
 
             it('should be able to get the original location for errors on the second line', () => {
-                const script = 'let abc = 123;\nthrow new Error("abc");';
+                const script = 'let abc = 123;\r\nthrow new Error("abc");';
                 const func = compiler.compile(script, {
                     constants: {
                         num: -5,
@@ -485,7 +485,7 @@ describe('AuxCompiler', () => {
                     error
                 );
 
-                const lines = stack.split('\n');
+                const lines = stack.split('\r\n');
 
                 expect(lines).toEqual([
                     'Error: abc',
@@ -525,7 +525,7 @@ describe('AuxCompiler', () => {
                     error
                 );
 
-                const lines = stack.split('\n');
+                const lines = stack.split('\r\n');
 
                 expect(lines).toEqual([
                     'Error: abc',
@@ -565,7 +565,7 @@ describe('AuxCompiler', () => {
                     error
                 );
 
-                const lines = stack.split('\n');
+                const lines = stack.split('\r\n');
 
                 expect(lines).toEqual([
                     'Error: abc',
@@ -576,7 +576,7 @@ describe('AuxCompiler', () => {
 
             it('should support nested functions', () => {
                 const script =
-                    'let abc = 123;\nmyFunc();\n function myFunc() {\n throw new Error("test"); \n}';
+                    'let abc = 123;\r\nmyFunc();\r\n function myFunc() {\r\n throw new Error("test"); \r\n}';
                 const func = compiler.compile(script, {
                     constants: {
                         num: -5,
@@ -606,7 +606,7 @@ describe('AuxCompiler', () => {
                     error
                 );
 
-                const lines = stack.split('\n');
+                const lines = stack.split('\r\n');
 
                 expect(lines).toEqual([
                     'Error: test',
@@ -647,7 +647,7 @@ describe('AuxCompiler', () => {
                     error
                 );
 
-                const lines = stack.split('\n');
+                const lines = stack.split('\r\n');
 
                 expect(lines).toEqual([
                     'Error',
@@ -689,7 +689,7 @@ describe('AuxCompiler', () => {
                     error
                 );
 
-                const lines = stack.split('\n');
+                const lines = stack.split('\r\n');
 
                 expect(lines).toEqual([
                     'Error: abc',
@@ -743,7 +743,7 @@ describe('AuxCompiler', () => {
                     error
                 );
 
-                const lines = stack.split('\n');
+                const lines = stack.split('\r\n');
 
                 expect(lines).toEqual([
                     'Error: abc',
@@ -800,7 +800,7 @@ describe('AuxCompiler', () => {
                     error
                 );
 
-                const lines = stack.split('\n');
+                const lines = stack.split('\r\n');
 
                 expect(lines).toEqual([
                     'Error: abc',
@@ -828,7 +828,7 @@ describe('AuxCompiler', () => {
                 let error = new Error('abc');
                 error.stack =
                     error.toString() +
-                    '\n' +
+                    '\r\n' +
                     [
                         '    at Object._ (eval at __constructFunction (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxCompiler.ts:424:24), <anonymous>:6:7)',
                         '    at __wrapperFunc (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxCompiler.ts:229:36)',
@@ -840,7 +840,7 @@ describe('AuxCompiler', () => {
                         '    at AuxRuntime._shout (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:373:50)',
                         '    at AuxRuntime._processAction (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:247:33)',
                         '    at AuxRuntime._processCore (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:241:18)',
-                    ].join('\n');
+                    ].join('\r\n');
 
                 expect(error).toBeTruthy();
 
@@ -849,7 +849,7 @@ describe('AuxCompiler', () => {
                     error
                 );
 
-                const lines = stack.split('\n');
+                const lines = stack.split('\r\n');
 
                 expect(lines).toEqual([
                     'Error: abc',

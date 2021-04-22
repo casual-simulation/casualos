@@ -15,6 +15,9 @@ import StackFrame from 'stackframe';
  */
 export const COMPILED_SCRIPT_SYMBOL = Symbol('compiled_script');
 
+// Use \r\n when in testing but just \n in production.
+const NEWLINE = typeof jest !== 'undefined' ? '\r\n' : '\n';
+
 /**
  * Defines a class that can compile scripts and formulas
  * into functions.
@@ -131,8 +134,8 @@ export class AuxCompiler {
 
         const stack = finalFrames
             .map((frame) => '   at ' + frame.toString())
-            .join('\n');
-        return error.toString() + '\n' + stack;
+            .join(NEWLINE);
+        return error.toString() + NEWLINE + stack;
     }
 
     /**
@@ -317,7 +320,7 @@ export class AuxCompiler {
             const lines = Object.keys(options.constants)
                 .filter((v) => v !== 'this')
                 .map((v) => `const ${v} = constants["${v}"];`);
-            constantsCode = lines.join('\n') + '\n';
+            constantsCode = lines.join(NEWLINE) + NEWLINE;
             constantsLineOffset += 1 + Math.max(lines.length - 1, 0);
         }
 
@@ -326,7 +329,7 @@ export class AuxCompiler {
             const lines = Object.keys(options.variables)
                 .filter((v) => v !== 'this')
                 .map((v) => `const ${v} = variables["${v}"](context);`);
-            variablesCode = '\n' + lines.join('\n');
+            variablesCode = NEWLINE + lines.join(NEWLINE);
             scriptLineOffset += 1 + Math.max(lines.length - 1, 0);
         }
 
@@ -342,19 +345,19 @@ export class AuxCompiler {
                     ),
                 ([v, i]) => v.map((name) => `const ${name} = args[${i}];`)
             );
-            argumentsCode = '\n' + lines.join('\n');
+            argumentsCode = NEWLINE + lines.join(NEWLINE);
             scriptLineOffset += 1 + Math.max(lines.length - 1, 0);
         }
 
         let scriptCode: string;
-        scriptCode = `\n { \n${script}\n }`;
+        scriptCode = `${NEWLINE} { ${NEWLINE}${script}${NEWLINE} }`;
         scriptLineOffset += 2;
 
         // Function needs a name because acorn doesn't understand
         // that this function is allowed to be anonymous.
         let functionCode = `function ${
             options.functionName ?? '_'
-        }(...args) { ${argumentsCode}${variablesCode}${scriptCode}\n }`;
+        }(...args) { ${argumentsCode}${variablesCode}${scriptCode}${NEWLINE} }`;
         if (async) {
             functionCode = `async ` + functionCode;
         }
