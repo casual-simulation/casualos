@@ -7,6 +7,8 @@ import {
 } from './Transpiler';
 import { isFormula, isScript, parseScript, hasValue } from '../bots';
 import { flatMap } from 'lodash';
+import ErrorStackParser from '@casual-simulation/error-stack-parser';
+import StackFrame from 'stackframe';
 
 /**
  * A symbol that identifies a function as having been compiled using the AuxCompiler.
@@ -22,6 +24,99 @@ export class AuxCompiler {
     private _functionCache = new Map<string, Function>();
 
     /**
+     * Calculates the "original" stack trace that the given error occurred at
+     * within the given function.
+     * Returns null if the original stack trace was unable to be determined.
+     * @param functionNameMap A map of function names to their scripts.
+     * @param error The error that occurred.
+     */
+    calculateOriginalStackTrace(
+        functionNameMap: Map<string, AuxCompiledScript>,
+        error: Error
+    ): string {
+        const frames = ErrorStackParser.parse(error);
+
+        if (frames.length < 1) {
+            return null;
+        }
+
+        let transformedFrames: StackFrame[] = [];
+        let lastScriptFrameIndex = -1;
+        let lastScript: AuxCompiledScript;
+        for (let i = frames.length - 1; i >= 0; i--) {
+            const frame = frames[i];
+            const originFrame = frame.evalOrigin;
+            let savedFrame = false;
+            if (
+                !!originFrame &&
+                originFrame.functionName === '_constructFunction'
+            ) {
+                const script = functionNameMap.get(frame.functionName);
+
+                if (script) {
+                    lastScript = script;
+                    const location: CodeLocation = {
+                        lineNumber: originFrame.lineNumber,
+                        column: originFrame.columnNumber,
+                    };
+                    const originalLocation = this.calculateOriginalLineLocation(
+                        script,
+                        location
+                    );
+                    savedFrame = true;
+                    if (lastScriptFrameIndex < 0) {
+                        lastScriptFrameIndex = i;
+                    }
+                    transformedFrames.unshift(
+                        new StackFrame({
+                            functionName: frame.functionName,
+                            fileName:
+                                script.metadata.fileName ?? frame.functionName,
+                            lineNumber: originalLocation.lineNumber + 1,
+                            columnNumber: originalLocation.column + 1,
+                        })
+                    );
+                } else if (lastScript) {
+                    const location: CodeLocation = {
+                        lineNumber: originFrame.lineNumber,
+                        column: originFrame.columnNumber,
+                    };
+                    const originalLocation = this.calculateOriginalLineLocation(
+                        lastScript,
+                        location
+                    );
+                    savedFrame = true;
+                    transformedFrames.unshift(
+                        new StackFrame({
+                            functionName: frame.functionName,
+                            fileName:
+                                lastScript.metadata.fileName ??
+                                frame.functionName,
+                            lineNumber: originalLocation.lineNumber + 1,
+                            columnNumber: originalLocation.column + 1,
+                        })
+                    );
+                }
+            }
+
+            if (!savedFrame) {
+                transformedFrames.unshift(frame);
+            }
+        }
+
+        const finalFrames = [
+            ...transformedFrames.slice(0, lastScriptFrameIndex + 1),
+            new StackFrame({
+                fileName: '[Native CasualOS Code]',
+                functionName: '<CasualOS>',
+            }),
+        ];
+
+        const stack = finalFrames.map((frame) => frame.toString()).join('\n');
+        return stack;
+    }
+
+    /**
      * Calculates the original location within the given function for the given location.
      * @param func The function.
      * @param location The location.
@@ -30,8 +125,8 @@ export class AuxCompiler {
         func: AuxCompiledScript,
         location: CodeLocation
     ): CodeLocation {
-        // Line numbers should be zero based
-        if (location.lineNumber < func.metadata.scriptLineOffset - 1) {
+        // Line numbers should be one based
+        if (location.lineNumber < func.metadata.scriptLineOffset) {
             return {
                 lineNumber: 0,
                 column: 0,
@@ -40,7 +135,7 @@ export class AuxCompiler {
 
         let transpiledLocation: CodeLocation = {
             lineNumber: location.lineNumber - func.metadata.scriptLineOffset,
-            column: location.column,
+            column: location.column - 1,
         };
 
         return calculateOriginalLineLocation(
@@ -70,6 +165,7 @@ export class AuxCompiler {
             scriptFunction,
             scriptLineOffset,
             transpilerResult,
+            fileName: options?.fileName,
         };
 
         if (options) {
@@ -235,7 +331,9 @@ export class AuxCompiler {
 
         // Function needs a name because acorn doesn't understand
         // that this function is allowed to be anonymous.
-        let functionCode = `function _(...args) { ${argumentsCode}${variablesCode}${scriptCode}\n }`;
+        let functionCode = `function ${
+            options.functionName ?? '_'
+        }(...args) { ${argumentsCode}${variablesCode}${scriptCode}\n }`;
         if (async) {
             functionCode = `async ` + functionCode;
         }
@@ -287,6 +385,7 @@ export class AuxCompiler {
                 'context',
                 finalCode
             ) as any;
+
             this._functionCache.set(finalCode, existing);
         }
         return existing;
@@ -338,6 +437,11 @@ export interface AuxScriptMetadata {
      * The transpiler result;
      */
     transpilerResult: TranspilerResult;
+
+    /**
+     * The file name that was specified for the script.
+     */
+    fileName: string;
 }
 
 /**
@@ -387,6 +491,16 @@ export interface AuxCompileOptions<T> {
      * A function that should be called when an error occurs.
      */
     onError?: (error: any, context?: T, meta?: AuxScriptMetadata) => void;
+
+    /**
+     * The name that should be given to the function.
+     */
+    functionName?: string;
+
+    /**
+     * The file name that should be used for transformed error stack traces.
+     */
+    fileName?: string;
 }
 
 // export class CompiledScriptError extends Error {

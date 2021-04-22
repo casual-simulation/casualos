@@ -38,6 +38,7 @@
         "@casual-simulation/three": "^0.125.4",
         "@casual-simulation/stacktrace": "^1.5.0",
         "@casual-simulation/error-stack-parser": "^2.0.7",
+        "stackframe": "^1.2.0",
         "@tweenjs/tween.js": "18.6.0",
         "@types/acorn": "^4.0.5",
         "@types/astring": "1.3.0",
