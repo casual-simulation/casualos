@@ -1,4 +1,4 @@
-import { AuxCompiler } from './AuxCompiler';
+import { AuxCompiler, replaceSyntaxErrorLineNumber } from './AuxCompiler';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
 
 describe('AuxCompiler', () => {
@@ -300,6 +300,22 @@ describe('AuxCompiler', () => {
             }
         });
 
+        it('should map syntax errors to have the correct line numbers', () => {
+            let error: SyntaxError;
+            try {
+                compiler.compile('let def = ;', {
+                    variables: {
+                        abc: () => 100,
+                    },
+                });
+            } catch (err) {
+                error = err;
+            }
+
+            expect(error).toBeTruthy();
+            expect(error).toEqual(new SyntaxError('Unexpected token (1:10)'));
+        });
+
         describe('calculateOriginalLineLocation()', () => {
             it('should return (0, 0) if given a location before the user script actually starts', () => {
                 const script = 'return str + num + abc;';
@@ -575,6 +591,72 @@ describe('AuxCompiler', () => {
                     '<CasualOS> ([Native CasualOS Code]::)',
                 ]);
             });
+
+            it('should support using a separate diagnostic name for the function', () => {
+                const script = 'let abc = 123; throw new Error("abc");';
+                const func = compiler.compile(script, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                    },
+                    variables: {
+                        abc: () => 'def',
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'test',
+                    diagnosticFunctionName: 'def',
+                    fileName: 'abc',
+                });
+
+                let error: Error;
+                try {
+                    func();
+                } catch (err) {
+                    error = err;
+                }
+
+                expect(error).toBeTruthy();
+
+                const stack = compiler.calculateOriginalStackTrace(
+                    new Map([['test', func]]),
+                    error
+                );
+
+                const lines = stack.split('\n');
+
+                expect(lines).toEqual([
+                    'def (abc:1:22)',
+                    '<CasualOS> ([Native CasualOS Code]::)',
+                ]);
+            });
         });
+    });
+});
+
+describe('replaceSyntaxErrorLineNumber()', () => {
+    it('should return a new syntax error with the transformed location', () => {
+        const result = replaceSyntaxErrorLineNumber(
+            new SyntaxError('this is a test (44:21)'),
+            (location) => ({
+                lineNumber: location.lineNumber + 1,
+                column: location.column + 1,
+            })
+        );
+
+        expect(result).toEqual(new SyntaxError('this is a test (45:22)'));
+    });
+
+    it('should return null if it could not find the location', () => {
+        const result = replaceSyntaxErrorLineNumber(
+            new SyntaxError('this is a test'),
+            (location) => ({
+                lineNumber: location.lineNumber + 1,
+                column: location.column + 1,
+            })
+        );
+
+        expect(result).toBe(null);
     });
 });

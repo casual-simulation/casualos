@@ -69,7 +69,9 @@ export class AuxCompiler {
                     }
                     transformedFrames.unshift(
                         new StackFrame({
-                            functionName: frame.functionName,
+                            functionName:
+                                lastScript.metadata.diagnosticFunctionName ??
+                                frame.functionName,
                             fileName:
                                 script.metadata.fileName ?? frame.functionName,
                             lineNumber: originalLocation.lineNumber + 1,
@@ -88,7 +90,9 @@ export class AuxCompiler {
                     savedFrame = true;
                     transformedFrames.unshift(
                         new StackFrame({
-                            functionName: frame.functionName,
+                            functionName:
+                                lastScript.metadata.diagnosticFunctionName ??
+                                frame.functionName,
                             fileName:
                                 lastScript.metadata.fileName ??
                                 frame.functionName,
@@ -166,6 +170,7 @@ export class AuxCompiler {
             scriptLineOffset,
             transpilerResult,
             fileName: options?.fileName,
+            diagnosticFunctionName: options?.diagnosticFunctionName,
         };
 
         if (options) {
@@ -337,26 +342,52 @@ export class AuxCompiler {
         if (async) {
             functionCode = `async ` + functionCode;
         }
-        const transpiled = this._transpiler.transpileWithMetadata(functionCode);
+        try {
+            const transpiled = this._transpiler.transpileWithMetadata(
+                functionCode
+            );
 
-        const finalCode = `${constantsCode}return ${transpiled.code};`;
+            const finalCode = `${constantsCode}return ${transpiled.code};`;
 
-        let func = this._buildFunction(finalCode, options);
-        (<any>func)[COMPILED_SCRIPT_SYMBOL] = true;
+            let func = this._buildFunction(finalCode, options);
+            (<any>func)[COMPILED_SCRIPT_SYMBOL] = true;
 
-        // Add 1 extra line to count the line feeds that
-        // is automatically inserted at the start of the script as part of the process of
-        // compiling the dynamic script.
-        // See https://tc39.es/ecma262/#sec-createdynamicfunction
-        scriptLineOffset += 1;
+            // Add 1 extra line to count the line feeds that
+            // is automatically inserted at the start of the script as part of the process of
+            // compiling the dynamic script.
+            // See https://tc39.es/ecma262/#sec-createdynamicfunction
+            scriptLineOffset += 1;
 
-        if (options.variables) {
-            if ('this' in options.variables) {
-                func = func.bind(options.variables['this'](options.context));
+            if (options.variables) {
+                if ('this' in options.variables) {
+                    func = func.bind(
+                        options.variables['this'](options.context)
+                    );
+                }
             }
-        }
 
-        return { func, scriptLineOffset, async, transpilerResult: transpiled };
+            return {
+                func,
+                scriptLineOffset,
+                async,
+                transpilerResult: transpiled,
+            };
+        } catch (err) {
+            if (err instanceof SyntaxError) {
+                const replaced = replaceSyntaxErrorLineNumber(
+                    err,
+                    (location) => ({
+                        lineNumber: location.lineNumber - scriptLineOffset,
+                        column: location.column,
+                    })
+                );
+
+                if (replaced) {
+                    throw replaced;
+                }
+            }
+            throw err;
+        }
     }
 
     private _buildFunction<T>(
@@ -389,6 +420,43 @@ export class AuxCompiler {
             this._functionCache.set(finalCode, existing);
         }
         return existing;
+    }
+}
+
+const SYNTAX_ERROR_LINE_NUMBER_REGEX = /\((\d+):(\d+)\)$/;
+
+/**
+ * Parses the line and column numbers from the the given syntax error, transforms them with the given function,
+ * and returns a new syntax error that contains the new location. Returns null if the line and column numbers could not be parsed.
+ * @param error The error to transform.
+ * @param transform The function that should be used to transform the errors.
+ * @returns
+ */
+export function replaceSyntaxErrorLineNumber(
+    error: SyntaxError,
+    transform: (location: CodeLocation) => CodeLocation
+): SyntaxError {
+    const matches = SYNTAX_ERROR_LINE_NUMBER_REGEX.exec(error.message);
+
+    if (matches) {
+        const [str, line, column] = matches;
+
+        const lineNumber = parseInt(line);
+        const columnNumber = parseInt(column);
+
+        const location = transform({
+            lineNumber,
+            column: columnNumber,
+        });
+
+        return new SyntaxError(
+            error.message.replace(
+                str,
+                `(${location.lineNumber}:${location.column})`
+            )
+        );
+    } else {
+        return null;
     }
 }
 
@@ -437,6 +505,11 @@ export interface AuxScriptMetadata {
      * The transpiler result;
      */
     transpilerResult: TranspilerResult;
+
+    /**
+     * The name that should be used for the function in stack traces.
+     */
+    diagnosticFunctionName: string;
 
     /**
      * The file name that was specified for the script.
@@ -496,6 +569,11 @@ export interface AuxCompileOptions<T> {
      * The name that should be given to the function.
      */
     functionName?: string;
+
+    /**
+     * The name that should be used for the function in stack traces.
+     */
+    diagnosticFunctionName?: string;
 
     /**
      * The file name that should be used for transformed error stack traces.
