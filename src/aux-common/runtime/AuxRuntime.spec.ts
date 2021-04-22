@@ -3373,6 +3373,8 @@ describe('AuxRuntime', () => {
                 // for newer node.js versions.
                 if (os.platform() === 'win32') {
                     (<any>runtime)._compiler.functionErrorLineOffset = 2;
+                } else if (os.platform() === 'linux') {
+                    (<any>runtime)._compiler.functionErrorLineOffset = 2;
                 }
             });
 

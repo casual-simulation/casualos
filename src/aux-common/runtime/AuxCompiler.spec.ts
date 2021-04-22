@@ -14,6 +14,8 @@ describe('AuxCompiler', () => {
         // for newer node.js versions.
         if (os.platform() === 'win32') {
             compiler.functionErrorLineOffset = 2;
+        } else if (os.platform() === 'linux') {
+            compiler.functionErrorLineOffset = 2;
         }
     });
 
