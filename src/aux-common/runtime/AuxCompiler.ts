@@ -24,6 +24,12 @@ export class AuxCompiler {
     private _functionCache = new Map<string, Function>();
 
     /**
+     * The offset that should be applied to error line numbers when calculating their original
+     * position. Needed because Node.js Windows produces different line numbers than Mac/Linux.
+     */
+    functionErrorLineOffset: number = 0;
+
+    /**
      * Calculates the "original" stack trace that the given error occurred at
      * within the given function.
      * Returns null if the original stack trace was unable to be determined.
@@ -62,7 +68,9 @@ export class AuxCompiler {
                 if (script) {
                     lastScript = script;
                     const location: CodeLocation = {
-                        lineNumber: originFrame.lineNumber,
+                        lineNumber:
+                            originFrame.lineNumber +
+                            this.functionErrorLineOffset,
                         column: originFrame.columnNumber,
                     };
                     const originalLocation = this.calculateOriginalLineLocation(
@@ -85,7 +93,9 @@ export class AuxCompiler {
                     );
                 } else if (lastScript) {
                     const location: CodeLocation = {
-                        lineNumber: originFrame.lineNumber,
+                        lineNumber:
+                            originFrame.lineNumber +
+                            this.functionErrorLineOffset,
                         column: originFrame.columnNumber,
                     };
                     const originalLocation = this.calculateOriginalLineLocation(
@@ -153,7 +163,8 @@ export class AuxCompiler {
         }
 
         let transpiledLocation: CodeLocation = {
-            lineNumber: location.lineNumber - func.metadata.scriptLineOffset,
+            lineNumber:
+                location.lineNumber - func.metadata.scriptLineOffset - 1,
             column: location.column - 1,
         };
 
@@ -373,7 +384,7 @@ export class AuxCompiler {
             // is automatically inserted at the start of the script as part of the process of
             // compiling the dynamic script.
             // See https://tc39.es/ecma262/#sec-createdynamicfunction
-            scriptLineOffset += 1;
+            scriptLineOffset += 2;
 
             if (options.variables) {
                 if ('this' in options.variables) {

@@ -95,6 +95,7 @@ import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
 import { DeepObjectError } from './Utils';
 import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { merge } from '../utils';
+import os from 'os';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -3365,6 +3366,16 @@ describe('AuxRuntime', () => {
         });
 
         describe('onError', () => {
+            beforeEach(() => {
+                // Fix for a bug that causes line numbers in error stack traces
+                // on Windows to be 2 less than they should be.
+                // This issue seems to be Node.js specific (it works correct in browser) so this might have to be removed
+                // for newer node.js versions.
+                if (os.platform() === 'win32') {
+                    (<any>runtime)._compiler.functionErrorLineOffset = 2;
+                }
+            });
+
             it('should emit a onError shout when an error in a script occurs', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
@@ -3392,7 +3403,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            hello: '@debugger;throw new Error("My Error");',
+                            hello: '@throw new Error("My Error");',
                         }),
                         test3: createBot('test3', {
                             onError: '@tags.error = that;',

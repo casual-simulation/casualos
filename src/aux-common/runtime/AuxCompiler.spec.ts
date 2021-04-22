@@ -1,4 +1,5 @@
 import { AuxCompiler, replaceSyntaxErrorLineNumber } from './AuxCompiler';
+import os from 'os';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
 
 describe('AuxCompiler', () => {
@@ -6,6 +7,14 @@ describe('AuxCompiler', () => {
 
     beforeEach(() => {
         compiler = new AuxCompiler();
+
+        // Fix for a bug that causes line numbers in error stack traces
+        // on Windows to be 2 less than they should be.
+        // This issue seems to be Node.js specific (it works correct in browser) so this might have to be removed
+        // for newer node.js versions.
+        if (os.platform() === 'win32') {
+            compiler.functionErrorLineOffset = 2;
+        }
     });
 
     describe('compile()', () => {
@@ -168,7 +177,7 @@ describe('AuxCompiler', () => {
 
             // Contants + variables + extras + lines added by the JS spec
             // See https://tc39.es/ecma262/#sec-createdynamicfunction
-            expect(func.metadata.scriptLineOffset).toEqual(6);
+            expect(func.metadata.scriptLineOffset).toEqual(7);
         });
 
         it('should transpile the user code to include energy checks', () => {
@@ -382,7 +391,7 @@ describe('AuxCompiler', () => {
                 // Line number is before the user location
                 // because of extra lines added by the compiler.
                 const result = compiler.calculateOriginalLineLocation(func, {
-                    lineNumber: 6,
+                    lineNumber: 8,
                     column: 1,
                 });
 
@@ -409,7 +418,7 @@ describe('AuxCompiler', () => {
                 // Line number is before the user location
                 // because of extra lines added by the compiler.
                 const result = compiler.calculateOriginalLineLocation(func, {
-                    lineNumber: 6,
+                    lineNumber: 8,
                     column: 22,
                 });
 
@@ -433,17 +442,10 @@ describe('AuxCompiler', () => {
                     after: () => {},
                 });
 
-                let error: Error;
-                try {
-                    func();
-                } catch (err) {
-                    error = err;
-                }
-
                 // Line number is before the user location
                 // because of extra lines added by the compiler.
                 const result = compiler.calculateOriginalLineLocation(func, {
-                    lineNumber: 7,
+                    lineNumber: 9,
                     column: 7,
                 });
 
@@ -825,12 +827,14 @@ describe('AuxCompiler', () => {
                     fileName: 'def',
                 });
 
+                compiler.functionErrorLineOffset = 0;
+
                 let error = new Error('abc');
                 error.stack =
                     error.toString() +
                     '\n' +
                     [
-                        '    at Object._ (eval at __constructFunction (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxCompiler.ts:424:24), <anonymous>:6:7)',
+                        '    at Object._ (eval at __constructFunction (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxCompiler.ts:424:24), <anonymous>:8:7)',
                         '    at __wrapperFunc (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxCompiler.ts:229:36)',
                         '    at event (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxLibrary.ts:5568:36)',
                         '    at Object.shout (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxLibrary.ts:5303:16)',
