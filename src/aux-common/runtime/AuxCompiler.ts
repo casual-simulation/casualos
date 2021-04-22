@@ -49,9 +49,15 @@ export class AuxCompiler {
             let savedFrame = false;
             if (
                 !!originFrame &&
-                originFrame.functionName === '_constructFunction'
+                originFrame.functionName === '__constructFunction'
             ) {
-                const script = functionNameMap.get(frame.functionName);
+                let functionName = frame.functionName;
+                const lastDotIndex = functionName.lastIndexOf('.');
+                if (lastDotIndex >= 0) {
+                    functionName = functionName.slice(lastDotIndex + 1);
+                }
+
+                const script = functionNameMap.get(functionName);
 
                 if (script) {
                     lastScript = script;
@@ -71,9 +77,8 @@ export class AuxCompiler {
                         new StackFrame({
                             functionName:
                                 lastScript.metadata.diagnosticFunctionName ??
-                                frame.functionName,
-                            fileName:
-                                script.metadata.fileName ?? frame.functionName,
+                                functionName,
+                            fileName: script.metadata.fileName ?? functionName,
                             lineNumber: originalLocation.lineNumber + 1,
                             columnNumber: originalLocation.column + 1,
                         })
@@ -92,14 +97,22 @@ export class AuxCompiler {
                         new StackFrame({
                             functionName:
                                 lastScript.metadata.diagnosticFunctionName ??
-                                frame.functionName,
+                                functionName,
                             fileName:
-                                lastScript.metadata.fileName ??
-                                frame.functionName,
+                                lastScript.metadata.fileName ?? functionName,
                             lineNumber: originalLocation.lineNumber + 1,
                             columnNumber: originalLocation.column + 1,
                         })
                     );
+                }
+            }
+
+            if (!savedFrame) {
+                if (frame.functionName === '__wrapperFunc') {
+                    savedFrame = true;
+                    if (lastScriptFrameIndex > i) {
+                        lastScriptFrameIndex -= 1;
+                    }
                 }
             }
 
@@ -116,8 +129,10 @@ export class AuxCompiler {
             }),
         ];
 
-        const stack = finalFrames.map((frame) => frame.toString()).join('\n');
-        return stack;
+        const stack = finalFrames
+            .map((frame) => '   at ' + frame.toString())
+            .join('\n');
+        return error.toString() + '\n' + stack;
     }
 
     /**
@@ -197,7 +212,7 @@ export class AuxCompiler {
                           invoke(() => scriptFunc(...args), context)
                     : scriptFunc;
                 if (async) {
-                    func = function (...args: any[]) {
+                    func = function __wrapperFunc(...args: any[]) {
                         before(context);
                         try {
                             const result = finalFunc(...args);
@@ -214,7 +229,7 @@ export class AuxCompiler {
                         }
                     };
                 } else {
-                    func = function (...args: any[]) {
+                    func = function __wrapperFunc(...args: any[]) {
                         before(context);
                         try {
                             return finalFunc(...args);
@@ -295,6 +310,7 @@ export class AuxCompiler {
         }
         script = this._parseScript(script);
         let scriptLineOffset = 0;
+        let constantsLineOffset = 0;
 
         let constantsCode = '';
         if (options.constants) {
@@ -302,7 +318,7 @@ export class AuxCompiler {
                 .filter((v) => v !== 'this')
                 .map((v) => `const ${v} = constants["${v}"];`);
             constantsCode = lines.join('\n') + '\n';
-            scriptLineOffset += 1 + Math.max(lines.length - 1, 0);
+            constantsLineOffset += 1 + Math.max(lines.length - 1, 0);
         }
 
         let variablesCode = '';
@@ -347,6 +363,7 @@ export class AuxCompiler {
                 functionCode
             );
 
+            scriptLineOffset += constantsLineOffset;
             const finalCode = `${constantsCode}return ${transpiled.code};`;
 
             let func = this._buildFunction(finalCode, options);
@@ -394,14 +411,14 @@ export class AuxCompiler {
         finalCode: string,
         options: AuxCompileOptions<T>
     ) {
-        return this._constructFunction<T>(finalCode)(
+        return this.__constructFunction<T>(finalCode)(
             options.constants,
             options.variables,
             options.context
         );
     }
 
-    private _constructFunction<T>(
+    private __constructFunction<T>(
         finalCode: string
     ): (
         constants: AuxCompileOptions<T>['constants'],

@@ -316,6 +316,26 @@ describe('AuxCompiler', () => {
             expect(error).toEqual(new SyntaxError('Unexpected token (1:10)'));
         });
 
+        it('should not include constants when mapping syntax errors', () => {
+            let error: SyntaxError;
+            try {
+                compiler.compile('let def = ;', {
+                    variables: {
+                        abc: () => 100,
+                    },
+                    constants: {
+                        myTest: 123,
+                        myOtherTest: 456,
+                    },
+                });
+            } catch (err) {
+                error = err;
+            }
+
+            expect(error).toBeTruthy();
+            expect(error).toEqual(new SyntaxError('Unexpected token (1:10)'));
+        });
+
         describe('calculateOriginalLineLocation()', () => {
             it('should return (0, 0) if given a location before the user script actually starts', () => {
                 const script = 'return str + num + abc;';
@@ -323,6 +343,7 @@ describe('AuxCompiler', () => {
                     constants: {
                         num: -5,
                         str: 'abc',
+                        bool: true,
                     },
                     variables: {
                         abc: () => 'def',
@@ -467,8 +488,49 @@ describe('AuxCompiler', () => {
                 const lines = stack.split('\n');
 
                 expect(lines).toEqual([
-                    'test (test:1:22)',
-                    '<CasualOS> ([Native CasualOS Code]::)',
+                    'Error: abc',
+                    '   at test (test:1:22)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
+                ]);
+            });
+
+            it('should support functions with a bound this', () => {
+                const script = 'let abc = 123; throw new Error("abc");';
+                const func = compiler.compile(script, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                    },
+                    variables: {
+                        abc: () => 'def',
+                        this: () => {},
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'test',
+                });
+
+                let error: Error;
+                try {
+                    func();
+                } catch (err) {
+                    error = err;
+                }
+
+                expect(error).toBeTruthy();
+
+                const stack = compiler.calculateOriginalStackTrace(
+                    new Map([['test', func]]),
+                    error
+                );
+
+                const lines = stack.split('\n');
+
+                expect(lines).toEqual([
+                    'Error: abc',
+                    '   at test (test:1:22)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
                 ]);
             });
 
@@ -506,8 +568,9 @@ describe('AuxCompiler', () => {
                 const lines = stack.split('\n');
 
                 expect(lines).toEqual([
-                    'test (abc:1:22)',
-                    '<CasualOS> ([Native CasualOS Code]::)',
+                    'Error: abc',
+                    '   at test (abc:1:22)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
                 ]);
             });
 
@@ -546,9 +609,10 @@ describe('AuxCompiler', () => {
                 const lines = stack.split('\n');
 
                 expect(lines).toEqual([
-                    'myFunc (abc:4:8)',
-                    'test (abc:2:1)',
-                    '<CasualOS> ([Native CasualOS Code]::)',
+                    'Error: test',
+                    '   at myFunc (abc:4:8)',
+                    '   at test (abc:2:1)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
                 ]);
             });
 
@@ -586,9 +650,10 @@ describe('AuxCompiler', () => {
                 const lines = stack.split('\n');
 
                 expect(lines).toEqual([
+                    'Error',
                     expect.stringContaining('myFunc'),
-                    'test (abc:1:1)',
-                    '<CasualOS> ([Native CasualOS Code]::)',
+                    '   at test (abc:1:1)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
                 ]);
             });
 
@@ -627,8 +692,169 @@ describe('AuxCompiler', () => {
                 const lines = stack.split('\n');
 
                 expect(lines).toEqual([
-                    'def (abc:1:22)',
-                    '<CasualOS> ([Native CasualOS Code]::)',
+                    'Error: abc',
+                    '   at def (abc:1:22)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
+                ]);
+            });
+
+            it('should support errors which originate from a nested script call', () => {
+                const script1 = 'throw new Error("abc");';
+                const func1 = compiler.compile(script1, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'func1',
+                    fileName: 'abc',
+                });
+
+                const script2 = 'myFunc();';
+                const func2 = compiler.compile(script2, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                        myFunc: func1,
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'func2',
+                    fileName: 'def',
+                });
+
+                let error: Error;
+                try {
+                    func2();
+                } catch (err) {
+                    error = err;
+                }
+
+                expect(error).toBeTruthy();
+
+                const stack = compiler.calculateOriginalStackTrace(
+                    new Map([
+                        ['func1', func1],
+                        ['func2', func2],
+                    ]),
+                    error
+                );
+
+                const lines = stack.split('\n');
+
+                expect(lines).toEqual([
+                    'Error: abc',
+                    '   at func1 (abc:1:7)',
+                    '   at func2 (def:1:1)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
+                ]);
+            });
+
+            it('should support errors which originate from a nested script call inside a function call', () => {
+                const script1 = 'throw new Error("abc");';
+                const func1 = compiler.compile(script1, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'func1',
+                    fileName: 'abc',
+                });
+
+                const script2 = 'myFunc();';
+                const func2 = compiler.compile(script2, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                        myFunc: function myFunc() {
+                            return func1();
+                        },
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'func2',
+                    fileName: 'def',
+                });
+
+                let error: Error;
+                try {
+                    func2();
+                } catch (err) {
+                    error = err;
+                }
+
+                expect(error).toBeTruthy();
+
+                const stack = compiler.calculateOriginalStackTrace(
+                    new Map([
+                        ['func1', func1],
+                        ['func2', func2],
+                    ]),
+                    error
+                );
+
+                const lines = stack.split('\n');
+
+                expect(lines).toEqual([
+                    'Error: abc',
+                    '   at func1 (abc:1:7)',
+                    expect.stringContaining('myFunc'),
+                    '   at func2 (def:1:1)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
+                ]);
+            });
+
+            it('should support errors include a class identifier in the function name for some reason', () => {
+                const script = 'throw new Error("abc");';
+                const func = compiler.compile(script, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                    },
+                    before: () => {},
+                    after: () => {},
+                    diagnosticFunctionName: 'func',
+                    fileName: 'def',
+                });
+
+                let error = new Error('abc');
+                error.stack =
+                    error.toString() +
+                    '\n' +
+                    [
+                        '    at Object._ (eval at __constructFunction (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxCompiler.ts:424:24), <anonymous>:6:7)',
+                        '    at __wrapperFunc (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxCompiler.ts:229:36)',
+                        '    at event (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxLibrary.ts:5568:36)',
+                        '    at Object.shout (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxLibrary.ts:5303:16)',
+                        '    at E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:377:41',
+                        '    at AuxRuntime._calculateScriptResults (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:938:24)',
+                        '    at AuxRuntime._batchScriptResults (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:920:30)',
+                        '    at AuxRuntime._shout (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:373:50)',
+                        '    at AuxRuntime._processAction (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:247:33)',
+                        '    at AuxRuntime._processCore (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:241:18)',
+                    ].join('\n');
+
+                expect(error).toBeTruthy();
+
+                const stack = compiler.calculateOriginalStackTrace(
+                    new Map([['_', func]]),
+                    error
+                );
+
+                const lines = stack.split('\n');
+
+                expect(lines).toEqual([
+                    'Error: abc',
+                    '   at func (def:1:7)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
                 ]);
             });
         });
