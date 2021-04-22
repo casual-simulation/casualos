@@ -1,4 +1,5 @@
 import { AuxCompiler } from './AuxCompiler';
+import { computeStackTrace } from '@casual-simulation/stacktrace';
 
 describe('AuxCompiler', () => {
     let compiler: AuxCompiler;
@@ -167,7 +168,7 @@ describe('AuxCompiler', () => {
 
             // Contants + variables + extras + lines added by the JS spec
             // See https://tc39.es/ecma262/#sec-createdynamicfunction
-            expect(func.metadata.scriptLineOffset).toEqual(7);
+            expect(func.metadata.scriptLineOffset).toEqual(6);
         });
 
         it('should transpile the user code to include energy checks', () => {
@@ -297,6 +298,98 @@ describe('AuxCompiler', () => {
             } finally {
                 Promise = DefaultPromise;
             }
+        });
+
+        describe('calculateOriginalLineLocation()', () => {
+            it('should return (0, 0) if given a location before the user script actually starts', () => {
+                const script = 'return str + num + abc;';
+                const func = compiler.compile(script, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                    },
+                    variables: {
+                        abc: () => 'def',
+                    },
+                    before: () => {},
+                    after: () => {},
+                });
+
+                // Line number is before the user location
+                // because of extra lines added by the compiler.
+                const result = compiler.calculateOriginalLineLocation(func, {
+                    lineNumber: 2,
+                    column: 2,
+                });
+
+                expect(result).toEqual({
+                    lineNumber: 0,
+                    column: 0,
+                });
+            });
+
+            it('should be able to return location at the start of one line user scripts', () => {
+                const script = 'return str + num + abc;';
+                const func = compiler.compile(script, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                    },
+                    variables: {
+                        abc: () => 'def',
+                    },
+                    before: () => {},
+                    after: () => {},
+                });
+
+                // Line number is before the user location
+                // because of extra lines added by the compiler.
+                const result = compiler.calculateOriginalLineLocation(func, {
+                    lineNumber: 6,
+                    column: 0,
+                });
+
+                expect(result).toEqual({
+                    lineNumber: 0,
+                    column: 0,
+                });
+            });
+
+            it('should be able to get the original location for errors', () => {
+                const script = 'let abc = 123; throw new Error("abc");';
+                const func = compiler.compile(script, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                    },
+                    variables: {
+                        abc: () => 'def',
+                    },
+                    before: () => {},
+                    after: () => {},
+                });
+
+                let error: Error;
+                try {
+                    func();
+                } catch (err) {
+                    error = err;
+                }
+
+                expect(error).toBeTruthy();
+
+                // Line number is before the user location
+                // because of extra lines added by the compiler.
+                const result = compiler.calculateOriginalLineLocation(func, {
+                    lineNumber: 6 - 1,
+                    column: 22 - 1,
+                });
+
+                expect(result).toEqual({
+                    lineNumber: 0,
+                    column: 21,
+                });
+            });
         });
     });
 });

@@ -365,6 +365,70 @@ export function testPartitionImplementation(
             ]);
         });
 
+        it('should be able to update multiple bots at the same time', async () => {
+            const bot1 = createBot('test1', {
+                abc: 'def',
+            });
+            const bot2 = createBot('test2', {
+                number: 123,
+            });
+
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot1), botAdded(bot2)]);
+
+            await partition.applyEvents([
+                botUpdated('test1', {
+                    tags: {
+                        abc: 'ghi',
+                    },
+                }),
+                botUpdated('test2', {
+                    tags: {
+                        number: 456,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(updated).toEqual([
+                {
+                    bot: createBot('test1', {
+                        abc: 'ghi',
+                    }),
+                    tags: ['abc'],
+                },
+                {
+                    bot: createBot('test2', {
+                        number: 456,
+                    }),
+                    tags: ['number'],
+                },
+            ]);
+
+            expect(updates.slice(1)).toEqual([
+                {
+                    state: {
+                        test1: {
+                            tags: {
+                                abc: 'ghi',
+                            },
+                        },
+                        test2: {
+                            tags: {
+                                number: 456,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test1', 'test2'],
+                },
+            ]);
+        });
+
         it('should report tags that were added to the bot', async () => {
             const bot = createBot('test', {
                 abc: 'def',
@@ -1284,6 +1348,74 @@ export function testPartitionImplementation(
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                    },
+                ]);
+            });
+
+            it('should support tag mask updates on multiple bots at a time', async () => {
+                await partition.applyEvents([
+                    botUpdated('test1', {
+                        masks: {
+                            [partition.space]: {
+                                newTag: true,
+                                abc: 123,
+                            },
+                        },
+                    }),
+                    botUpdated('test2', {
+                        masks: {
+                            [partition.space]: {
+                                otherTag: true,
+                                num: 123,
+                            },
+                        },
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(partition.state).toEqual({
+                    test1: {
+                        masks: {
+                            [partition.space]: {
+                                newTag: true,
+                                abc: 123,
+                            },
+                        },
+                    },
+                    test2: {
+                        masks: {
+                            [partition.space]: {
+                                otherTag: true,
+                                num: 123,
+                            },
+                        },
+                    },
+                });
+                expect(updated).toEqual([]);
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            test1: {
+                                masks: {
+                                    [partition.space]: {
+                                        newTag: true,
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                            test2: {
+                                masks: {
+                                    [partition.space]: {
+                                        otherTag: true,
+                                        num: 123,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test1', 'test2'],
                     },
                 ]);
             });

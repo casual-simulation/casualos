@@ -604,6 +604,11 @@ export class YjsPartitionImpl implements YjsPartition {
                         events.push(createBotUpdate(id, tags));
                     }
                 } else {
+                    // Update the current target so that the event
+                    // path is calculated from the bots map.
+                    // see https://github.com/yjs/yjs/blob/5244755879daaa7b5a1ca64e6af617cdbb110462/src/utils/YEvent.js#L63
+                    event.currentTarget = this._bots;
+
                     // Maps are only used for bots and tags
                     // so a map that is not the bots map must be for a tag
                     const id = getMapBotId(event);

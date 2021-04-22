@@ -1,4 +1,10 @@
-import { Transpiler } from './Transpiler';
+import {
+    calculateIndexFromLocation,
+    calculateOriginalLineLocation,
+    CodeLocation,
+    Transpiler,
+    TranspilerResult,
+} from './Transpiler';
 import { isFormula, isScript, parseScript, hasValue } from '../bots';
 import { flatMap } from 'lodash';
 
@@ -16,6 +22,34 @@ export class AuxCompiler {
     private _functionCache = new Map<string, Function>();
 
     /**
+     * Calculates the original location within the given function for the given location.
+     * @param func The function.
+     * @param location The location.
+     */
+    calculateOriginalLineLocation(
+        func: AuxCompiledScript,
+        location: CodeLocation
+    ): CodeLocation {
+        // Line numbers should be zero based
+        if (location.lineNumber < func.metadata.scriptLineOffset - 1) {
+            return {
+                lineNumber: 0,
+                column: 0,
+            };
+        }
+
+        let transpiledLocation: CodeLocation = {
+            lineNumber: location.lineNumber - func.metadata.scriptLineOffset,
+            column: location.column,
+        };
+
+        return calculateOriginalLineLocation(
+            func.metadata.transpilerResult,
+            transpiledLocation
+        );
+    }
+
+    /**
      * Compiles the given script into a function.
      * @param script The script to compile.
      * @param options The options that should be used to compile the script.
@@ -24,15 +58,18 @@ export class AuxCompiler {
         script: string,
         options?: AuxCompileOptions<T>
     ): AuxCompiledScript {
-        let { func, scriptLineOffset, async } = this._compileFunction(
-            script,
-            options || {}
-        );
+        let {
+            func,
+            scriptLineOffset,
+            async,
+            transpilerResult,
+        } = this._compileFunction(script, options || {});
 
         const scriptFunction = func;
         const meta = {
             scriptFunction,
             scriptLineOffset,
+            transpilerResult,
         };
 
         if (options) {
@@ -134,23 +171,13 @@ export class AuxCompiler {
         return script;
     }
 
-    private _compileAndBindFunction<T>(
-        script: string,
-        options: AuxCompileOptions<T>
-    ): {
-        func: Function;
-        scriptLineOffset: number;
-        async: boolean;
-    } {
-        return this._compileFunction(script, options);
-    }
-
     private _compileFunction<T>(
         script: string,
         options: AuxCompileOptions<T>
     ): {
         func: Function;
         scriptLineOffset: number;
+        transpilerResult: TranspilerResult;
         async: boolean;
     } {
         // Yes this code is super ugly.
@@ -212,18 +239,18 @@ export class AuxCompiler {
         if (async) {
             functionCode = `async ` + functionCode;
         }
-        const transpiled = this._transpiler.transpile(functionCode);
+        const transpiled = this._transpiler.transpileWithMetadata(functionCode);
 
-        const finalCode = `${constantsCode}return ${transpiled};`;
+        const finalCode = `${constantsCode}return ${transpiled.code};`;
 
         let func = this._buildFunction(finalCode, options);
         (<any>func)[COMPILED_SCRIPT_SYMBOL] = true;
 
-        // Add 2 extra lines to count the line feeds that
-        // are automatically inserted as part of the process of
+        // Add 1 extra line to count the line feeds that
+        // is automatically inserted at the start of the script as part of the process of
         // compiling the dynamic script.
         // See https://tc39.es/ecma262/#sec-createdynamicfunction
-        scriptLineOffset += 2;
+        scriptLineOffset += 1;
 
         if (options.variables) {
             if ('this' in options.variables) {
@@ -231,7 +258,7 @@ export class AuxCompiler {
             }
         }
 
-        return { func, scriptLineOffset, async };
+        return { func, scriptLineOffset, async, transpilerResult: transpiled };
     }
 
     private _buildFunction<T>(
@@ -306,6 +333,11 @@ export interface AuxScriptMetadata {
      * The number of lines that the user's script is offset inside the returned function source.
      */
     scriptLineOffset: number;
+
+    /**
+     * The transpiler result;
+     */
+    transpilerResult: TranspilerResult;
 }
 
 /**
