@@ -1361,6 +1361,7 @@ export class AuxRuntime
                         );
 
                         if (newStack) {
+                            (<any>err).oldStack = err.stack;
                             err.stack = newStack;
                         }
                     } catch (stackError) {
