@@ -103,6 +103,14 @@ def UseNode() {
     echo "Using Node v14.16.1"
     nvm use v14.16.1
     """
+
+    sh """#!/bin/bash
+    set -e
+    . ~/.bashrc
+
+    node --version
+    which node
+    """
 }
 
 def InstallNPMPackages() {
