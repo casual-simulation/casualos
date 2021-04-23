@@ -3388,6 +3388,37 @@ describe('AuxRuntime', () => {
                 expect(error.error).toEqual(new Error('My Error'));
             });
 
+            it('should update the error stack trace to use the correct line numbers', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@throw new Error("My Error");',
+                        }),
+                        test3: createBot('test3', {
+                            onError: '@tags.error = that;',
+                        }),
+                    })
+                );
+                runtime.process([action('hello')]);
+
+                await waitAsync();
+
+                const error = runtime.currentState['test3'].tags.error;
+
+                expect(error).toBeTruthy();
+                expect(isRuntimeBot(error.bot)).toBe(true);
+                expect(error.tag).toBe('hello');
+                expect(error.error).toEqual(new Error('My Error'));
+
+                const lines = error.error.stack.split('\n');
+
+                expect(lines).toEqual([
+                    'Error: My Error',
+                    '   at hello (test1.hello:1:7)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
+                ]);
+            });
+
             it('should not emit errors that occur inside an onError tag', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
@@ -6434,10 +6465,6 @@ describe('original action tests', () => {
                     error: new Error('abc'),
                     bot: expect.objectContaining(state['thisBot']),
                     tag: 'test',
-
-                    //  TODO: Improve to support correct column numbers
-                    line: expect.any(Number),
-                    column: expect.any(Number),
                 },
             ]);
         });

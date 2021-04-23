@@ -412,6 +412,15 @@ const locationCases = [
         },
         7,
     ],
+    [
+        'should support windows line endings',
+        'abcdef\r\nghijfk',
+        {
+            lineNumber: 1,
+            column: 0,
+        },
+        8,
+    ],
 ] as const;
 
 describe('calculateIndexFromLocation()', () => {

@@ -122,6 +122,21 @@ export class AuxRuntime
     private _processingErrors: boolean = false;
     private _portalBots: Map<string, string> = new Map();
 
+    /**
+     * The counter that is used to generate function names.
+     */
+    private _functionNameCounter = 0;
+
+    /**
+     * A map of function names to their respective functions.
+     */
+    private _functionMap: Map<string, AuxCompiledScript> = new Map();
+
+    /**
+     * A map of bot IDs to a list of function names.
+     */
+    private _botFunctionMap: Map<string, Set<string>> = new Map();
+
     get forceSignedScripts() {
         return this._forceSignedScripts;
     }
@@ -167,6 +182,26 @@ export class AuxRuntime
             this._globalContext.cancelAllBotTimers();
         }));
         sub.add(this._globalContext.startAnimationLoop());
+
+        if (globalThis.addEventListener) {
+            const unhandledRejectionListener = (
+                event: PromiseRejectionEvent
+            ) => {
+                const data = this._handleError(event.reason, null, null);
+                this._globalContext.enqueueError(data);
+                event.preventDefault();
+            };
+            globalThis.addEventListener(
+                'unhandledrejection',
+                unhandledRejectionListener
+            );
+            sub.add(() => {
+                globalThis.removeEventListener(
+                    'unhandledrejection',
+                    unhandledRejectionListener
+                );
+            });
+        }
     }
 
     getShoutTimers(): { [shout: string]: number } {
@@ -667,6 +702,13 @@ export class AuxRuntime
                 removeFromContext(this._globalContext, [bot.script]);
             }
             delete this._compiledState[id];
+            const list = this._getFunctionNamesForBot(id, false);
+            if (list) {
+                for (let name of list) {
+                    this._functionMap.delete(name);
+                }
+                this._botFunctionMap.delete(id);
+            }
             nextUpdate.state[id] = null;
             nextUpdate.removedBots.push(id);
         }
@@ -1295,8 +1337,23 @@ export class AuxRuntime
             }
         }
 
-        return this._compiler.compile(script, {
+        let functionName: string;
+        let diagnosticFunctionName: string;
+        let fileName: string;
+        if (hasValue(bot)) {
+            this._functionNameCounter += 1;
+            functionName = '_' + this._functionNameCounter;
+            diagnosticFunctionName = tag;
+            fileName = `${bot.id}.${diagnosticFunctionName}`;
+        }
+
+        const func = this._compiler.compile(script, {
             // TODO: Support all the weird features
+
+            functionName: functionName,
+            diagnosticFunctionName: diagnosticFunctionName,
+            fileName: fileName,
+
             context: {
                 bot,
                 tag,
@@ -1308,44 +1365,7 @@ export class AuxRuntime
                     : null;
             },
             onError: (err, ctx, meta) => {
-                if (err instanceof RanOutOfEnergyError) {
-                    throw err;
-                }
-                let data: ScriptError = {
-                    error: err,
-                    bot: ctx.bot,
-                    tag: ctx.tag,
-                };
-                if (err instanceof Error) {
-                    if (Error.prepareStackTrace) {
-                        const prev = Error.prepareStackTrace;
-                        try {
-                            Error.prepareStackTrace = (err, stackTrace) => {
-                                const info = this._compiler.findLineInfo(
-                                    stackTrace,
-                                    meta
-                                );
-                                if (info) {
-                                    Object.assign(err, info);
-                                }
-
-                                return prev(err, stackTrace);
-                            };
-
-                            // force the stack trace to be computed
-                            err.stack;
-                            const anyError = <any>err;
-                            if (hasValue(anyError.line)) {
-                                data.line = anyError.line;
-                            }
-                            if (hasValue(anyError.column)) {
-                                data.column = anyError.column;
-                            }
-                        } finally {
-                            Error.prepareStackTrace = prev;
-                        }
-                    }
-                }
+                const data = this._handleError(err, ctx.bot, ctx.tag);
                 throw data;
             },
             constants: {
@@ -1365,6 +1385,44 @@ export class AuxRuntime
             },
             arguments: [['that', 'data']],
         });
+
+        if (hasValue(bot)) {
+            this._functionMap.set(functionName, func);
+            const botFunctionNames = this._getFunctionNamesForBot(bot.id);
+            botFunctionNames.add(functionName);
+        }
+
+        return func;
+    }
+
+    private _handleError(err: any, bot: Bot, tag: string): ScriptError {
+        if (err instanceof RanOutOfEnergyError) {
+            throw err;
+        }
+        let data: ScriptError = {
+            error: err,
+            bot: bot,
+            tag: tag,
+        };
+        if (err instanceof Error) {
+            try {
+                const newStack = this._compiler.calculateOriginalStackTrace(
+                    this._functionMap,
+                    err
+                );
+
+                if (newStack) {
+                    (<any>err).oldStack = err.stack;
+                    err.stack = newStack;
+                }
+            } catch (stackError) {
+                console.error(
+                    '[AuxRuntime] Unable to transform error stack trace',
+                    stackError
+                );
+            }
+        }
+        return data;
     }
 
     private _getRuntimeBot(id: string): RuntimeBot {
@@ -1459,6 +1517,19 @@ export class AuxRuntime
 
     private _transformBotsToRuntimeBots(result: any, value: any, key: any) {
         result[key] = this._mapBotsToRuntimeBots(value);
+    }
+
+    private _getFunctionNamesForBot(
+        botId: string,
+        createIfDoesNotExist = true
+    ): Set<string> {
+        let list = this._botFunctionMap.get(botId);
+        if (!list && createIfDoesNotExist) {
+            list = new Set();
+            this._botFunctionMap.set(botId, list);
+        }
+
+        return list;
     }
 }
 

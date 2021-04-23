@@ -20,6 +20,8 @@ module.exports = [
             ),
             plugins: [
                 emptyModulePlugin('@casual-simulation/three'),
+                emptyModulePlugin('@casual-simulation/error-stack-parser'),
+                emptyModulePlugin('stackframe'),
                 emptyModulePlugin('scrypt-js'),
                 emptyModulePlugin('base64-js'),
                 emptyModulePlugin('hash.js', /^hash\.js$/),
@@ -59,6 +61,8 @@ module.exports = [
                 'base64-js',
                 'hash.js',
                 '@casual-simulation/three',
+                '@casual-simulation/error-stack-parser',
+                'stackframe',
                 'scrypt-js',
                 'tweetnacl',
                 'astring',
