@@ -25,8 +25,6 @@ pipeline {
                 echo "Building branch: ${env.GIT_BRANCH}"
                 echo "Main Release: ${env.GIT_BRANCH.endsWith(params.MAIN_BRANCH)}"
 
-                UseNode()
-
                 NotifyStarted()
                 script {
                     env.PI_IP = sh(returnStdout: true, script: """
@@ -100,14 +98,7 @@ def UseNode() {
     set -e
     . ~/.bashrc
 
-    echo "Using Node v14.16.1"
-    nvm use v14.16.1
-    """
-
-    sh """#!/bin/bash
-    set -e
-    . ~/.bashrc
-
+    echo "Checking node version and path"
     node --version
     which node
     """
