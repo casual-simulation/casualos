@@ -19,15 +19,16 @@ pipeline {
         string(name: 'MAIN_BRANCH', defaultValue: 'master', description: 'The main branch that should be used to determine if the current build is the latest production release.')
     }
 
-    tools {
-        nodejs('Node14.16.1')
-    }
+    tools { }
 
     stages {
         stage('Setup') {
             steps {
                 echo "Building branch: ${env.GIT_BRANCH}"
                 echo "Main Release: ${env.GIT_BRANCH.endsWith(params.MAIN_BRANCH)}"
+
+                echo "Using Node v14.16.1"
+                sh "nvm use v14.16.1"
 
                 NotifyStarted()
                 script {
