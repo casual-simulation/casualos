@@ -5566,6 +5566,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 }
                 try {
                     const result = listener(arg);
+
+                    if (result instanceof Promise) {
+                        result.catch((ex) => {
+                            context.enqueueError(ex);
+                        });
+                    }
                     results.push(result);
                 } catch (ex) {
                     context.enqueueError(ex);

@@ -2,7 +2,7 @@
 
 ## V1.5.11
 
-#### Date: 4/21/2021
+#### Date: 4/23/2021
 
 ### :rocket: Improvements
 
@@ -11,6 +11,8 @@
 -   Added the `math.areClose(first, second)` function to determine if two numbers are within 2 decimal places of each other.
     -   For example, `math.areClose(1, 1.001)` will return true.
 -   Improved the `atPosition()` and `inStack()` bot filters to use `math.areClose()` internally when comparing bot positions.
+-   Improved handling of errors so they have correct line and column numbers in their stack traces.
+    -   Currently, this only functions correctly on Chrome-based browsers (Chrome, Edge, Opera, etc.). Part of this is due to differences between how web browsers generate stack traces and part is due to what browsers support for dynamically generated functions.
 
 ### :bug: Bug Fixes
 

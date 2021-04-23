@@ -92,10 +92,17 @@ export class AuxHelper extends BaseHelper<Bot> {
                         if (error instanceof RanOutOfEnergyError) {
                             console.error(error);
                         } else {
-                            console.error(
-                                `An error occurred in ${error.bot.id}.${error.tag}:`,
-                                error.error
-                            );
+                            if (error.bot) {
+                                console.error(
+                                    `An error occurred in ${error.bot.id}.${error.tag}:`,
+                                    error.error
+                                );
+                            } else {
+                                console.error(
+                                    `An error occurred:`,
+                                    error.error
+                                );
+                            }
                         }
                     }
                 })

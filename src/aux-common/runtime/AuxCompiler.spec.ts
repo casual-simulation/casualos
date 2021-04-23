@@ -1,5 +1,5 @@
-import { AuxCompiler } from './AuxCompiler';
-import { computeStackTrace } from '@casual-simulation/stacktrace';
+import { AuxCompiler, replaceSyntaxErrorLineNumber } from './AuxCompiler';
+import ErrorStackParser from '@casual-simulation/error-stack-parser';
 
 describe('AuxCompiler', () => {
     let compiler: AuxCompiler;
@@ -168,7 +168,7 @@ describe('AuxCompiler', () => {
 
             // Contants + variables + extras + lines added by the JS spec
             // See https://tc39.es/ecma262/#sec-createdynamicfunction
-            expect(func.metadata.scriptLineOffset).toEqual(6);
+            expect(func.metadata.scriptLineOffset).toEqual(7);
         });
 
         it('should transpile the user code to include energy checks', () => {
@@ -251,6 +251,21 @@ describe('AuxCompiler', () => {
             expect(errors).toEqual([new Error('abc')]);
         });
 
+        it('should support handling errors for promises', async () => {
+            let errors = [] as any[];
+            const func = compiler.compile(
+                'await Promise.resolve(); throw new Error("abc")',
+                {
+                    onError(err: any) {
+                        errors.push(err);
+                    },
+                }
+            );
+
+            await func();
+            expect(errors).toEqual([new Error('abc')]);
+        });
+
         it('should rethrow the error by default', () => {
             const func = compiler.compile('throw new Error("abc")', {
                 before() {},
@@ -281,7 +296,14 @@ describe('AuxCompiler', () => {
         it('should support wrapping the native promise with a global promise if theyre not the same', async () => {
             const DefaultPromise = Promise;
             try {
-                class CustomPromise {}
+                class CustomPromise {
+                    then() {
+                        return this;
+                    }
+                    catch() {
+                        return this;
+                    }
+                }
                 Promise = <any>CustomPromise;
 
                 const func = compiler.compile('return await abc;', {
@@ -300,6 +322,42 @@ describe('AuxCompiler', () => {
             }
         });
 
+        it('should map syntax errors to have the correct line numbers', () => {
+            let error: SyntaxError;
+            try {
+                compiler.compile('let def = ;', {
+                    variables: {
+                        abc: () => 100,
+                    },
+                });
+            } catch (err) {
+                error = err;
+            }
+
+            expect(error).toBeTruthy();
+            expect(error).toEqual(new SyntaxError('Unexpected token (1:10)'));
+        });
+
+        it('should not include constants when mapping syntax errors', () => {
+            let error: SyntaxError;
+            try {
+                compiler.compile('let def = ;', {
+                    variables: {
+                        abc: () => 100,
+                    },
+                    constants: {
+                        myTest: 123,
+                        myOtherTest: 456,
+                    },
+                });
+            } catch (err) {
+                error = err;
+            }
+
+            expect(error).toBeTruthy();
+            expect(error).toEqual(new SyntaxError('Unexpected token (1:10)'));
+        });
+
         describe('calculateOriginalLineLocation()', () => {
             it('should return (0, 0) if given a location before the user script actually starts', () => {
                 const script = 'return str + num + abc;';
@@ -307,6 +365,7 @@ describe('AuxCompiler', () => {
                     constants: {
                         num: -5,
                         str: 'abc',
+                        bool: true,
                     },
                     variables: {
                         abc: () => 'def',
@@ -345,8 +404,8 @@ describe('AuxCompiler', () => {
                 // Line number is before the user location
                 // because of extra lines added by the compiler.
                 const result = compiler.calculateOriginalLineLocation(func, {
-                    lineNumber: 6,
-                    column: 0,
+                    lineNumber: 8,
+                    column: 1,
                 });
 
                 expect(result).toEqual({
@@ -369,6 +428,64 @@ describe('AuxCompiler', () => {
                     after: () => {},
                 });
 
+                // Line number is before the user location
+                // because of extra lines added by the compiler.
+                const result = compiler.calculateOriginalLineLocation(func, {
+                    lineNumber: 8,
+                    column: 22,
+                });
+
+                expect(result).toEqual({
+                    lineNumber: 0,
+                    column: 21,
+                });
+            });
+
+            it('should be able to get the original location for errors on the second line', () => {
+                const script = 'let abc = 123;\nthrow new Error("abc");';
+                const func = compiler.compile(script, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                    },
+                    variables: {
+                        abc: () => 'def',
+                    },
+                    before: () => {},
+                    after: () => {},
+                });
+
+                // Line number is before the user location
+                // because of extra lines added by the compiler.
+                const result = compiler.calculateOriginalLineLocation(func, {
+                    lineNumber: 9,
+                    column: 7,
+                });
+
+                expect(result).toEqual({
+                    lineNumber: 1,
+                    column: 6,
+                });
+            });
+        });
+
+        describe('transformErrorStackTrace()', () => {
+            it('should transform the stack trace to have correct line numbers', () => {
+                const script = 'let abc = 123; throw new Error("abc");';
+                const func = compiler.compile(script, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                    },
+                    variables: {
+                        abc: () => 'def',
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'test',
+                });
+
                 let error: Error;
                 try {
                     func();
@@ -378,18 +495,446 @@ describe('AuxCompiler', () => {
 
                 expect(error).toBeTruthy();
 
-                // Line number is before the user location
-                // because of extra lines added by the compiler.
-                const result = compiler.calculateOriginalLineLocation(func, {
-                    lineNumber: 6 - 1,
-                    column: 22 - 1,
+                const stack = compiler.calculateOriginalStackTrace(
+                    new Map([['test', func]]),
+                    error
+                );
+
+                const lines = stack.split('\n');
+
+                expect(lines).toEqual([
+                    'Error: abc',
+                    '   at test (test:1:22)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
+                ]);
+            });
+
+            it('should support functions with a bound this', () => {
+                const script = 'let abc = 123; throw new Error("abc");';
+                const func = compiler.compile(script, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                    },
+                    variables: {
+                        abc: () => 'def',
+                        this: () => {},
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'test',
                 });
 
-                expect(result).toEqual({
-                    lineNumber: 0,
-                    column: 21,
+                let error: Error;
+                try {
+                    func();
+                } catch (err) {
+                    error = err;
+                }
+
+                expect(error).toBeTruthy();
+
+                const stack = compiler.calculateOriginalStackTrace(
+                    new Map([['test', func]]),
+                    error
+                );
+
+                const lines = stack.split('\n');
+
+                expect(lines).toEqual([
+                    'Error: abc',
+                    '   at test (test:1:22)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
+                ]);
+            });
+
+            it('should support custom file names', () => {
+                const script = 'let abc = 123; throw new Error("abc");';
+                const func = compiler.compile(script, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                    },
+                    variables: {
+                        abc: () => 'def',
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'test',
+                    fileName: 'abc',
                 });
+
+                let error: Error;
+                try {
+                    func();
+                } catch (err) {
+                    error = err;
+                }
+
+                expect(error).toBeTruthy();
+
+                const stack = compiler.calculateOriginalStackTrace(
+                    new Map([['test', func]]),
+                    error
+                );
+
+                const lines = stack.split('\n');
+
+                expect(lines).toEqual([
+                    'Error: abc',
+                    '   at test (abc:1:22)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
+                ]);
+            });
+
+            it('should support nested functions', () => {
+                const script =
+                    'let abc = 123;\nmyFunc();\n function myFunc() {\n throw new Error("test"); \n}';
+                const func = compiler.compile(script, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                    },
+                    variables: {
+                        abc: () => 'def',
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'test',
+                    fileName: 'abc',
+                });
+
+                let error: Error;
+                try {
+                    func();
+                } catch (err) {
+                    error = err;
+                }
+
+                expect(error).toBeTruthy();
+
+                const stack = compiler.calculateOriginalStackTrace(
+                    new Map([['test', func]]),
+                    error
+                );
+
+                const lines = stack.split('\n');
+
+                expect(lines).toEqual([
+                    'Error: test',
+                    '   at myFunc (abc:4:8)',
+                    '   at test (abc:2:1)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
+                ]);
+            });
+
+            it('should support errors which originate from another imported function', () => {
+                const script = 'myFunc();';
+                const func = compiler.compile(script, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                        myFunc: () => {
+                            throw new Error();
+                        },
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'test',
+                    fileName: 'abc',
+                });
+
+                let error: Error;
+                try {
+                    func();
+                } catch (err) {
+                    error = err;
+                }
+
+                expect(error).toBeTruthy();
+
+                const stack = compiler.calculateOriginalStackTrace(
+                    new Map([['test', func]]),
+                    error
+                );
+
+                const lines = stack.split('\n');
+
+                expect(lines).toEqual([
+                    'Error',
+                    expect.stringContaining('myFunc'),
+                    '   at test (abc:1:1)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
+                ]);
+            });
+
+            it('should support using a separate diagnostic name for the function', () => {
+                const script = 'let abc = 123; throw new Error("abc");';
+                const func = compiler.compile(script, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                    },
+                    variables: {
+                        abc: () => 'def',
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'test',
+                    diagnosticFunctionName: 'def',
+                    fileName: 'abc',
+                });
+
+                let error: Error;
+                try {
+                    func();
+                } catch (err) {
+                    error = err;
+                }
+
+                expect(error).toBeTruthy();
+
+                const stack = compiler.calculateOriginalStackTrace(
+                    new Map([['test', func]]),
+                    error
+                );
+
+                const lines = stack.split('\n');
+
+                expect(lines).toEqual([
+                    'Error: abc',
+                    '   at def (abc:1:22)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
+                ]);
+            });
+
+            it('should support errors which originate from a nested script call', () => {
+                const script1 = 'throw new Error("abc");';
+                const func1 = compiler.compile(script1, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'func1',
+                    fileName: 'abc',
+                });
+
+                const script2 = 'myFunc();';
+                const func2 = compiler.compile(script2, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                        myFunc: func1,
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'func2',
+                    fileName: 'def',
+                });
+
+                let error: Error;
+                try {
+                    func2();
+                } catch (err) {
+                    error = err;
+                }
+
+                expect(error).toBeTruthy();
+
+                const stack = compiler.calculateOriginalStackTrace(
+                    new Map([
+                        ['func1', func1],
+                        ['func2', func2],
+                    ]),
+                    error
+                );
+
+                const lines = stack.split('\n');
+
+                expect(lines).toEqual([
+                    'Error: abc',
+                    '   at func1 (abc:1:7)',
+                    '   at func2 (def:1:1)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
+                ]);
+            });
+
+            it('should support errors which originate from a nested script call inside a function call', () => {
+                const script1 = 'throw new Error("abc");';
+                const func1 = compiler.compile(script1, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'func1',
+                    fileName: 'abc',
+                });
+
+                const script2 = 'myFunc();';
+                const func2 = compiler.compile(script2, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                        myFunc: function myFunc() {
+                            return func1();
+                        },
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'func2',
+                    fileName: 'def',
+                });
+
+                let error: Error;
+                try {
+                    func2();
+                } catch (err) {
+                    error = err;
+                }
+
+                expect(error).toBeTruthy();
+
+                const stack = compiler.calculateOriginalStackTrace(
+                    new Map([
+                        ['func1', func1],
+                        ['func2', func2],
+                    ]),
+                    error
+                );
+
+                const lines = stack.split('\n');
+
+                expect(lines).toEqual([
+                    'Error: abc',
+                    '   at func1 (abc:1:7)',
+                    expect.stringContaining('myFunc'),
+                    '   at func2 (def:1:1)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
+                ]);
+            });
+
+            it('should support errors include a class identifier in the function name for some reason', () => {
+                const script = 'throw new Error("abc");';
+                const func = compiler.compile(script, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                    },
+                    before: () => {},
+                    after: () => {},
+                    diagnosticFunctionName: 'func',
+                    fileName: 'def',
+                });
+
+                compiler.functionErrorLineOffset = 0;
+
+                let error = new Error('abc');
+                error.stack =
+                    error.toString() +
+                    '\n' +
+                    [
+                        '    at Object._ (eval at __constructFunction (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxCompiler.ts:424:24), <anonymous>:8:7)',
+                        '    at __wrapperFunc (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxCompiler.ts:229:36)',
+                        '    at event (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxLibrary.ts:5568:36)',
+                        '    at Object.shout (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxLibrary.ts:5303:16)',
+                        '    at E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:377:41',
+                        '    at AuxRuntime._calculateScriptResults (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:938:24)',
+                        '    at AuxRuntime._batchScriptResults (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:920:30)',
+                        '    at AuxRuntime._shout (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:373:50)',
+                        '    at AuxRuntime._processAction (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:247:33)',
+                        '    at AuxRuntime._processCore (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:241:18)',
+                    ].join('\n');
+
+                expect(error).toBeTruthy();
+
+                const stack = compiler.calculateOriginalStackTrace(
+                    new Map([['_', func]]),
+                    error
+                );
+
+                const lines = stack.split('\n');
+
+                expect(lines).toEqual([
+                    'Error: abc',
+                    '   at func (def:1:7)',
+                    '   at <CasualOS> ([Native CasualOS Code]::)',
+                ]);
+            });
+
+            it('should do nothing if given an unrelated error', () => {
+                function test() {
+                    throw new Error('def');
+                }
+
+                const script1 = 'throw new Error("abc");';
+                const func1 = compiler.compile(script1, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'func1',
+                    fileName: 'abc',
+                });
+
+                let error: Error;
+                try {
+                    test();
+                } catch (err) {
+                    error = err;
+                }
+
+                expect(error).toBeTruthy();
+
+                const stack = compiler.calculateOriginalStackTrace(
+                    new Map([['func1', func1]]),
+                    error
+                );
+
+                expect(stack).toBe(null);
             });
         });
+    });
+});
+
+describe('replaceSyntaxErrorLineNumber()', () => {
+    it('should return a new syntax error with the transformed location', () => {
+        const result = replaceSyntaxErrorLineNumber(
+            new SyntaxError('this is a test (44:21)'),
+            (location) => ({
+                lineNumber: location.lineNumber + 1,
+                column: location.column + 1,
+            })
+        );
+
+        expect(result).toEqual(new SyntaxError('this is a test (45:22)'));
+    });
+
+    it('should return null if it could not find the location', () => {
+        const result = replaceSyntaxErrorLineNumber(
+            new SyntaxError('this is a test'),
+            (location) => ({
+                lineNumber: location.lineNumber + 1,
+                column: location.column + 1,
+            })
+        );
+
+        expect(result).toBe(null);
     });
 });
