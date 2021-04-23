@@ -252,6 +252,21 @@ describe('AuxCompiler', () => {
             expect(errors).toEqual([new Error('abc')]);
         });
 
+        it('should support handling errors for promises', async () => {
+            let errors = [] as any[];
+            const func = compiler.compile(
+                'await Promise.resolve(); throw new Error("abc")',
+                {
+                    onError(err: any) {
+                        errors.push(err);
+                    },
+                }
+            );
+
+            await func();
+            expect(errors).toEqual([new Error('abc')]);
+        });
+
         it('should rethrow the error by default', () => {
             const func = compiler.compile('throw new Error("abc")', {
                 before() {},
@@ -282,7 +297,14 @@ describe('AuxCompiler', () => {
         it('should support wrapping the native promise with a global promise if theyre not the same', async () => {
             const DefaultPromise = Promise;
             try {
-                class CustomPromise {}
+                class CustomPromise {
+                    then() {
+                        return this;
+                    }
+                    catch() {
+                        return this;
+                    }
+                }
                 Promise = <any>CustomPromise;
 
                 const func = compiler.compile('return await abc;', {
@@ -852,6 +874,41 @@ describe('AuxCompiler', () => {
                     '   at func (def:1:7)',
                     '   at <CasualOS> ([Native CasualOS Code]::)',
                 ]);
+            });
+
+            it('should do nothing if given an unrelated error', () => {
+                function test() {
+                    throw new Error('def');
+                }
+
+                const script1 = 'throw new Error("abc");';
+                const func1 = compiler.compile(script1, {
+                    constants: {
+                        num: -5,
+                        str: 'abc',
+                        bool: true,
+                    },
+                    before: () => {},
+                    after: () => {},
+                    functionName: 'func1',
+                    fileName: 'abc',
+                });
+
+                let error: Error;
+                try {
+                    test();
+                } catch (err) {
+                    error = err;
+                }
+
+                expect(error).toBeTruthy();
+
+                const stack = compiler.calculateOriginalStackTrace(
+                    new Map([['func1', func1]]),
+                    error
+                );
+
+                expect(stack).toBe(null);
             });
         });
     });

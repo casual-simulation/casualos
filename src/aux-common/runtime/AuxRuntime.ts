@@ -182,6 +182,26 @@ export class AuxRuntime
             this._globalContext.cancelAllBotTimers();
         }));
         sub.add(this._globalContext.startAnimationLoop());
+
+        if (globalThis.addEventListener) {
+            const unhandledRejectionListener = (
+                event: PromiseRejectionEvent
+            ) => {
+                const data = this._handleError(event.reason, null, null);
+                this._globalContext.enqueueError(data);
+                event.preventDefault();
+            };
+            globalThis.addEventListener(
+                'unhandledrejection',
+                unhandledRejectionListener
+            );
+            sub.add(() => {
+                globalThis.removeEventListener(
+                    'unhandledrejection',
+                    unhandledRejectionListener
+                );
+            });
+        }
     }
 
     getShoutTimers(): { [shout: string]: number } {
@@ -1345,32 +1365,7 @@ export class AuxRuntime
                     : null;
             },
             onError: (err, ctx, meta) => {
-                if (err instanceof RanOutOfEnergyError) {
-                    throw err;
-                }
-                let data: ScriptError = {
-                    error: err,
-                    bot: ctx.bot,
-                    tag: ctx.tag,
-                };
-                if (err instanceof Error) {
-                    try {
-                        const newStack = this._compiler.calculateOriginalStackTrace(
-                            this._functionMap,
-                            err
-                        );
-
-                        if (newStack) {
-                            (<any>err).oldStack = err.stack;
-                            err.stack = newStack;
-                        }
-                    } catch (stackError) {
-                        console.error(
-                            '[AuxRuntime] Unable to transform error stack trace',
-                            stackError
-                        );
-                    }
-                }
+                const data = this._handleError(err, ctx.bot, ctx.tag);
                 throw data;
             },
             constants: {
@@ -1398,6 +1393,36 @@ export class AuxRuntime
         }
 
         return func;
+    }
+
+    private _handleError(err: any, bot: Bot, tag: string): ScriptError {
+        if (err instanceof RanOutOfEnergyError) {
+            throw err;
+        }
+        let data: ScriptError = {
+            error: err,
+            bot: bot,
+            tag: tag,
+        };
+        if (err instanceof Error) {
+            try {
+                const newStack = this._compiler.calculateOriginalStackTrace(
+                    this._functionMap,
+                    err
+                );
+
+                if (newStack) {
+                    (<any>err).oldStack = err.stack;
+                    err.stack = newStack;
+                }
+            } catch (stackError) {
+                console.error(
+                    '[AuxRuntime] Unable to transform error stack trace',
+                    stackError
+                );
+            }
+        }
+        return data;
     }
 
     private _getRuntimeBot(id: string): RuntimeBot {

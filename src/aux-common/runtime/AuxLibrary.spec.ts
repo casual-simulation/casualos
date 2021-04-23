@@ -8609,6 +8609,28 @@ describe('AuxLibrary', () => {
             expect(context.errors).toEqual([new Error('abc')]);
         });
 
+        it('should handle exceptions on async listeners on a per-bot basis', async () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(
+                async () => {}
+            ));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(async () => {
+                throw new Error('abc');
+            }));
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+            recordListeners();
+
+            library.api.shout('sayHello');
+
+            await waitAsync();
+
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).toBeCalled();
+            expect(sayHello3).toBeCalled();
+            expect(sayHello4).toBeCalled();
+            expect(context.errors).toEqual([new Error('abc')]);
+        });
+
         it('should send a onListen whisper to all the listening bots', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {

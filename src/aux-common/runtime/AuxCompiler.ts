@@ -134,18 +134,22 @@ export class AuxCompiler {
             }
         }
 
-        const finalFrames = [
-            ...transformedFrames.slice(0, lastScriptFrameIndex + 1),
-            new StackFrame({
-                fileName: '[Native CasualOS Code]',
-                functionName: '<CasualOS>',
-            }),
-        ];
+        if (lastScriptFrameIndex >= 0) {
+            const finalFrames = [
+                ...transformedFrames.slice(0, lastScriptFrameIndex + 1),
+                new StackFrame({
+                    fileName: '[Native CasualOS Code]',
+                    functionName: '<CasualOS>',
+                }),
+            ];
 
-        const stack = finalFrames
-            .map((frame) => '   at ' + frame.toString())
-            .join('\n');
-        return error.toString() + '\n' + stack;
+            const stack = finalFrames
+                .map((frame) => '   at ' + frame.toString())
+                .join('\n');
+            return error.toString() + '\n' + stack;
+        }
+
+        return null;
     }
 
     /**
@@ -200,6 +204,7 @@ export class AuxCompiler {
             transpilerResult,
             fileName: options?.fileName,
             diagnosticFunctionName: options?.diagnosticFunctionName,
+            isAsync: async,
         };
 
         if (options) {
@@ -229,13 +234,15 @@ export class AuxCompiler {
                     func = function __wrapperFunc(...args: any[]) {
                         before(context);
                         try {
-                            const result = finalFunc(...args);
+                            let result = finalFunc(...args);
                             if (!(result instanceof Promise)) {
-                                return new Promise((resolve, reject) => {
+                                result = new Promise((resolve, reject) => {
                                     result.then(resolve, reject);
                                 });
                             }
-                            return result;
+                            return result.catch((ex: any) => {
+                                onError(ex, context, meta);
+                            });
                         } catch (ex) {
                             onError(ex, context, meta);
                         } finally {
@@ -546,6 +553,11 @@ export interface AuxScriptMetadata {
      * The file name that was specified for the script.
      */
     fileName: string;
+
+    /**
+     * Whether the function is asynchronous and returns a promise.
+     */
+    isAsync: boolean;
 }
 
 /**
