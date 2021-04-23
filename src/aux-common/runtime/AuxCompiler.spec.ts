@@ -1,5 +1,4 @@
 import { AuxCompiler, replaceSyntaxErrorLineNumber } from './AuxCompiler';
-import os from 'os';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
 
 describe('AuxCompiler', () => {

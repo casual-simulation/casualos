@@ -95,7 +95,6 @@ import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
 import { DeepObjectError } from './Utils';
 import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { merge } from '../utils';
-import os from 'os';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
