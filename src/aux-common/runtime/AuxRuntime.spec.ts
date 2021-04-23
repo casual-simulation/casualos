@@ -3366,18 +3366,6 @@ describe('AuxRuntime', () => {
         });
 
         describe('onError', () => {
-            beforeEach(() => {
-                // Fix for a bug that causes line numbers in error stack traces
-                // on Windows to be 2 less than they should be.
-                // This issue seems to be Node.js specific (it works correct in browser) so this might have to be removed
-                // for newer node.js versions.
-                if (os.platform() === 'win32') {
-                    (<any>runtime)._compiler.functionErrorLineOffset = 2;
-                } else if (os.platform() === 'linux') {
-                    (<any>runtime)._compiler.functionErrorLineOffset = 2;
-                }
-            });
-
             it('should emit a onError shout when an error in a script occurs', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({

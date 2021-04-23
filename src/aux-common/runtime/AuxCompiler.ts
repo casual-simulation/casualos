@@ -26,6 +26,9 @@ export class AuxCompiler {
     /**
      * The offset that should be applied to error line numbers when calculating their original
      * position. Needed because Node.js Windows produces different line numbers than Mac/Linux.
+     *
+     * Node.js versions greater than v12.14.0 have an issue with identifying the correct line number
+     * for errors and stack traces. This issue is fixed in Node.js v14 and later (possibly also fixed in v13 but I didn't check that).
      */
     functionErrorLineOffset: number = 0;
 

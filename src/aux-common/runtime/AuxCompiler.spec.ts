@@ -7,16 +7,6 @@ describe('AuxCompiler', () => {
 
     beforeEach(() => {
         compiler = new AuxCompiler();
-
-        // Fix for a bug that causes line numbers in error stack traces
-        // on Windows to be 2 less than they should be.
-        // This issue seems to be Node.js specific (it works correct in browser) so this might have to be removed
-        // for newer node.js versions.
-        if (os.platform() === 'win32') {
-            compiler.functionErrorLineOffset = 2;
-        } else if (os.platform() === 'linux') {
-            compiler.functionErrorLineOffset = 2;
-        }
     });
 
     describe('compile()', () => {
