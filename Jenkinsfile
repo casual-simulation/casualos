@@ -25,8 +25,7 @@ pipeline {
                 echo "Building branch: ${env.GIT_BRANCH}"
                 echo "Main Release: ${env.GIT_BRANCH.endsWith(params.MAIN_BRANCH)}"
 
-                echo "Using Node v14.16.1"
-                sh "nvm use v14.16.1"
+                UseNode()
 
                 NotifyStarted()
                 script {
@@ -95,6 +94,16 @@ pipeline {
     }
 }
 
+
+def UseNode() {
+    sh """#!/bin/bash
+    set -e
+    . ~/.bashrc
+
+    echo "Using Node v14.16.1"
+    nvm use v14.16.1
+    """
+}
 
 def InstallNPMPackages() {
     sh """#!/bin/bash
