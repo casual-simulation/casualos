@@ -19,8 +19,6 @@ pipeline {
         string(name: 'MAIN_BRANCH', defaultValue: 'master', description: 'The main branch that should be used to determine if the current build is the latest production release.')
     }
 
-    tools { }
-
     stages {
         stage('Setup') {
             steps {
