@@ -275,7 +275,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                     currentSite: this._currentSite,
                     remoteSite: this._remoteSite,
                     vector: {
-                        [site]: version[this._doc.clientID],
+                        [site]: version[this._doc.clientID] ?? 0,
                     },
                 };
             }

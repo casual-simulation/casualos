@@ -11,6 +11,7 @@ import {
     BranchesStatusEvent,
     BRANCHES_STATUS,
     CausalRepoClient,
+    CurrentVersion,
     device,
     DeviceCountEvent,
     deviceInfo,
@@ -21,10 +22,11 @@ import {
     RECEIVE_EVENT,
     remote,
     SEND_EVENT,
+    VersionVector,
     WATCH_BRANCH,
 } from '@casual-simulation/causal-trees';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
-import { applyUpdate, Doc, Map as YMap } from 'yjs';
+import { applyUpdate, Doc, Map as YMap, Text as YText } from 'yjs';
 import { testPartitionImplementation } from './test/PartitionTests';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { RemoteYjsPartitionImpl } from './RemoteYjsPartition';
@@ -35,6 +37,7 @@ import {
     asyncResult,
     Bot,
     botAdded,
+    botUpdated,
     createBot,
     getRemoteCount,
     getRemotes,
@@ -49,8 +52,7 @@ import {
 } from '../bots';
 import { RemoteYjsPartitionConfig } from './AuxPartitionConfig';
 import { waitAsync } from '../test/TestHelpers';
-import { YText } from 'yjs/dist/src/internals';
-import { edit, insert, preserve } from '../aux-format-2';
+import { del, edit, insert, preserve } from '../aux-format-2';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
 
 describe('RemoteYjsPartition', () => {
@@ -916,6 +918,55 @@ describe('RemoteYjsPartition', () => {
                         },
                     }),
                 ]);
+            });
+
+            it('should use 0 for the edit version when the site has no changes', async () => {
+                setupPartition({
+                    type: 'remote_yjs',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                });
+
+                partition.connect();
+
+                const updates = getUpdates((doc, bots) => {
+                    bots.set('bot1', new YMap([['tag1', new YText('abc')]]));
+                });
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    updates,
+                    initial: true,
+                });
+
+                await waitAsync();
+
+                let version: CurrentVersion;
+                sub.add(
+                    partition.onVersionUpdated.subscribe((v) => (version = v))
+                );
+                partition.onStateUpdated.subscribe((s) => states.push(s));
+
+                const editVersion = { ...version.vector };
+                await partition.applyEvents([
+                    botUpdated('bot1', {
+                        tags: {
+                            tag1: edit(editVersion, del(1)),
+                        },
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(partition.state).toEqual({
+                    bot1: createBot('bot1', {
+                        tag1: 'bc',
+                    }),
+                });
+
+                expect(states[1].state.bot1.tags.tag1.version).toEqual({
+                    [version.currentSite]: 0,
+                });
             });
         });
 
