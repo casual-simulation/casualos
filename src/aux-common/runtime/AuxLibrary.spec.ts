@@ -825,6 +825,17 @@ describe('AuxLibrary', () => {
                 expect(typeof filter.sort).toBe('function');
                 expect(filter.sort(bot1)).toBe(100);
             });
+
+            it('should return true for bots that are close to the target position', () => {
+                const filter = library.api.atPosition('#red', 1.001, 2.001);
+
+                bot1.tags.red = true;
+                bot1.tags.redX = 1;
+                bot1.tags.redY = 2;
+                bot1.tags.redSortOrder = 100;
+
+                expect(filter(bot1)).toBe(true);
+            });
         });
 
         describe('inStack()', () => {
@@ -905,6 +916,20 @@ describe('AuxLibrary', () => {
 
                 expect(typeof filter.sort).toBe('function');
                 expect(filter.sort(bot2)).toEqual(100);
+            });
+
+            it('should return true for bots that are close to each other', () => {
+                bot1.tags.red = true;
+                bot1.tags.redX = 1;
+                bot1.tags.redY = 2;
+                const filter = library.api.inStack(bot1, '#red');
+
+                bot2.tags.red = true;
+                bot2.tags.redX = 1.001;
+                bot2.tags.redY = 2.003;
+                bot2.tags.redSortOrder = 100;
+
+                expect(filter(bot2)).toBe(true);
             });
         });
 
@@ -4042,7 +4067,13 @@ describe('AuxLibrary', () => {
                     { baudRate: 9600 }
                 );
                 const expected = remote(
-                    serialConnectPin('Brush01','/dev/ttyS0','AA:BB:CC:DD:EE', 1, { baudRate: 9600 }),
+                    serialConnectPin(
+                        'Brush01',
+                        '/dev/ttyS0',
+                        'AA:BB:CC:DD:EE',
+                        1,
+                        { baudRate: 9600 }
+                    ),
                     undefined,
                     undefined,
                     'task1'
@@ -4053,7 +4084,13 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialConnect('Brush01','/dev/ttyS0','AA:BB:CC:DD:EE', 1, { baudRate: 9600 });
+                library.api.server.serialConnect(
+                    'Brush01',
+                    '/dev/ttyS0',
+                    'AA:BB:CC:DD:EE',
+                    1,
+                    { baudRate: 9600 }
+                );
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -4063,7 +4100,10 @@ describe('AuxLibrary', () => {
         describe('server.serialStream()', () => {
             it('should send a SerialStreamAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialStream('1a2b3', 'Brush01');
+                const action: any = library.api.server.serialStream(
+                    '1a2b3',
+                    'Brush01'
+                );
                 const expected = remote(
                     serialStreamPin('1a2b3', 'Brush01'),
                     undefined,
@@ -4151,7 +4191,11 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialWrite('Brush01', 'Hello World!', 'utf8');
+                library.api.server.serialWrite(
+                    'Brush01',
+                    'Hello World!',
+                    'utf8'
+                );
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -4184,9 +4228,12 @@ describe('AuxLibrary', () => {
         describe('server.serialClose()', () => {
             it('should send a SerialCloseAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.serialClose('Brush01', "/dev/rfcomm0");
+                const action: any = library.api.server.serialClose(
+                    'Brush01',
+                    '/dev/rfcomm0'
+                );
                 const expected = remote(
-                    serialClosePin('Brush01', "/dev/rfcomm0"),
+                    serialClosePin('Brush01', '/dev/rfcomm0'),
                     undefined,
                     undefined,
                     'task1'
@@ -4197,7 +4244,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.serialClose('Brush01', "/dev/rfcomm0");
+                library.api.server.serialClose('Brush01', '/dev/rfcomm0');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -5661,6 +5708,14 @@ describe('AuxLibrary', () => {
                 expect(bot1.raw.abc).toEqual(0);
                 expect(bot1.raw.def).toEqual(0);
                 expect(bot1.raw.ghi).toEqual(0);
+            });
+
+            it('should do nothing if given a null bot', async () => {
+                library.api.clearAnimations(null);
+            });
+
+            it('should do nothing if given a bot with no animations', async () => {
+                library.api.clearAnimations(bot1);
             });
         });
 
@@ -8554,6 +8609,28 @@ describe('AuxLibrary', () => {
             expect(context.errors).toEqual([new Error('abc')]);
         });
 
+        it('should handle exceptions on async listeners on a per-bot basis', async () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(
+                async () => {}
+            ));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(async () => {
+                throw new Error('abc');
+            }));
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+            recordListeners();
+
+            library.api.shout('sayHello');
+
+            await waitAsync();
+
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).toBeCalled();
+            expect(sayHello3).toBeCalled();
+            expect(sayHello4).toBeCalled();
+            expect(context.errors).toEqual([new Error('abc')]);
+        });
+
         it('should send a onListen whisper to all the listening bots', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
@@ -9926,6 +10003,28 @@ describe('AuxLibrary', () => {
                 expect(
                     library.api.math.scaleVector(first, second as any)
                 ).toEqual(expected);
+            }
+        );
+    });
+
+    describe('math.areClose()', () => {
+        const cases = [
+            [false, 1, 2],
+            [true, 1, 1],
+            [true, 1, 1.001],
+            [false, 1, 1.009],
+            [true, 1, 1.005],
+            [false, 1, 1.01],
+            [false, 1, 0.99],
+            [false, 1, 0.991],
+            [true, 1, 0.996],
+            [true, 1, 0.9951],
+        ] as const;
+
+        it.each(cases)(
+            'should return %s for %s == %s',
+            (expected, first, second) => {
+                expect(library.api.math.areClose(first, second)).toBe(expected);
             }
         );
     });

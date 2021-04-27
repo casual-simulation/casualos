@@ -125,6 +125,7 @@ export class AppManager {
             causalRepoConnectionProtocol: this._config
                 .causalRepoConnectionProtocol,
             causalRepoConnectionUrl: this._config.causalRepoConnectionUrl,
+            sharedPartitionsVersion: this._config.sharedPartitionsVersion,
             vmOrigin: this._config.vmOrigin,
             builtinPortals: KNOWN_PORTALS,
         };

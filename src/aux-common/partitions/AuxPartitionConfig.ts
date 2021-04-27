@@ -5,6 +5,7 @@ import {
     ProxyBridgePartition,
     MemoryPartition,
     AuxPartitionRealtimeStrategy,
+    YjsPartition,
 } from './AuxPartition';
 import { BotClient } from './BotClient';
 
@@ -34,7 +35,10 @@ export type PartitionConfig =
     | BotPartitionConfig
     | SearchPartitionClientConfig
     | OtherPlayersClientPartitionConfig
-    | OtherPlayersRepoPartitionConfig;
+    | OtherPlayersRepoPartitionConfig
+    | YjsPartitionConfig
+    | RemoteYjsPartitionConfig
+    | YjsClientPartitionConfig;
 
 /**
  * Defines a base interface for partitions.
@@ -156,6 +160,24 @@ export interface CausalRepoClientPartitionConfig extends PartitionConfigBase {
     remoteEvents?: boolean;
 }
 
+/**
+ * The possible version numbers for the shared partitions.
+ * "Shared partitions" means the set of partitions which are designed to work together to provide the "shared", "tempShared", and "remoteTempShared" spaces.
+ *
+ * - "v1" indicates that the shared partitions will be provided by the causal repo system. That is, the partitions use Causal Trees and atoms to communicate changes.
+ * - "v2" indicates that the shared partitions will be provided by the causal repo system combined with yjs.
+ *        That is, partitions use yjs to track changes and communicate via Causal Repo Servers (socket.io or otherwise) using the "updates" protocol.
+ */
+export type SharedPartitionsVersion = 'v1' | 'v2';
+
+/**
+ * The possible protocol types.
+ *
+ * - "socket.io" indicates that the protocol will use socket.io to connect to the causal repo server.
+ *    See the causal-tree-client-socketio project for more info.
+ * - "apiary-aws" indicates that the protocol will use WebSockets and a customized protocol wrapper to connect to a Causal Repo Server which
+ *    is hosted on AWS Lambda. See the causal-tree-client-apiary project for more info.
+ */
 export type RemoteCausalRepoProtocol = 'socket.io' | 'apiary-aws';
 
 /**
@@ -221,6 +243,14 @@ export interface OtherPlayersRepoPartitionConfig extends PartitionConfigBase {
      * Whether to use socket.io or the apiary protocol to connect. (Default is socket.io)
      */
     connectionProtocol?: RemoteCausalRepoProtocol;
+
+    /**
+     * The type of partitions that should be used for the child partitions.
+     * Defaults to causal_repo_client.
+     */
+    childPartitionType?:
+        | CausalRepoClientPartitionConfig['type']
+        | YjsClientPartitionConfig['type'];
 }
 
 /**
@@ -238,6 +268,14 @@ export interface OtherPlayersClientPartitionConfig extends PartitionConfigBase {
      * The client that should be used.
      */
     client: CausalRepoClient;
+
+    /**
+     * The type of partitions that should be used for the child partitions.
+     * Defaults to causal_repo_client.
+     */
+    childPartitionType?:
+        | CausalRepoClientPartitionConfig['type']
+        | YjsClientPartitionConfig['type'];
 }
 
 /**
@@ -290,4 +328,92 @@ export interface SearchPartitionClientConfig extends PartitionConfigBase {
      * The client that the partition should connect with.
      */
     client: BotClient;
+}
+
+/**
+ * Defines a partition that uses yjs to store bot data.
+ */
+export interface YjsPartitionConfig extends PartitionConfigBase {
+    type: 'yjs';
+}
+
+/**
+ * Defines a yjs partition that uses the causal repo updates protocol to sync changes.
+ */
+export interface RemoteYjsPartitionConfig extends PartitionConfigBase {
+    type: 'remote_yjs';
+
+    /**
+     * The branch to load.
+     */
+    branch: string;
+
+    /**
+     * The host that the branch should be loaded from.
+     */
+    host: string;
+
+    /**
+     * Whether the partition should be loaded in read-only mode.
+     */
+    readOnly?: boolean;
+
+    /**
+     * Whether the partition should be loaded without realtime updates.
+     * Basically this means that all you get is the initial state.
+     */
+    static?: boolean;
+
+    /**
+     * Whether the partition should be temporary.
+     */
+    temporary?: boolean;
+
+    /**
+     * Whether to support remote events. (Default is true)
+     */
+    remoteEvents?: boolean;
+
+    /**
+     * Whether to use socket.io or the apiary protocol to connect. (Default is socket.io)
+     */
+    connectionProtocol?: RemoteCausalRepoProtocol;
+}
+
+/**
+ * Defines a yjs partitiont that uses the given CausalRepoClient to sync changes.
+ */
+export interface YjsClientPartitionConfig extends PartitionConfigBase {
+    type: 'yjs_client';
+
+    /**
+     * The branch to load.
+     */
+    branch: string;
+
+    /**
+     * The client that should be used to connect.
+     */
+    client: CausalRepoClient;
+
+    /**
+     * Whether the partition should be loaded in read-only mode.
+     */
+    readOnly?: boolean;
+
+    /**
+     * Whether the partition should be loaded without realtime updates.
+     * Basically this means that all you get is the initial state.
+     */
+    static?: boolean;
+
+    /**
+     * Whether the partition should be temporary.
+     */
+    temporary?: boolean;
+
+    /**
+     * Whether to support remote events. (Default is true)
+     */
+    remoteEvents?: boolean;
 }

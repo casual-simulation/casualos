@@ -68,6 +68,11 @@ import {
     AUTHENTICATED_TO_BRANCH,
     DEVICE_COUNT,
     DeviceCountEvent,
+    AddUpdatesEvent,
+    ADD_UPDATES,
+    UpdatesReceivedEvent,
+    UPDATES_RECEIVED,
+    GET_UPDATES,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -78,7 +83,7 @@ import {
     RemoteActions,
 } from '../core/Event';
 import { DeviceInfo, SESSION_ID_CLAIM } from '../core/DeviceInfo';
-import { flatMap as lodashFlatMap, sortBy } from 'lodash';
+import { flatMap, flatMap as lodashFlatMap, sortBy } from 'lodash';
 
 /**
  * Defines a client for a causal repo.
@@ -86,6 +91,8 @@ import { flatMap as lodashFlatMap, sortBy } from 'lodash';
 export class CausalRepoClient {
     private _client: ConnectionClient;
     private _sentAtoms: Map<string, Map<string, Atom<any>>>;
+    private _sentUpdates: Map<string, Map<number, string[]>>;
+    private _updateCounter: number = 0;
     private _watchedBranches: Set<string>;
     private _connectedDevices: Map<string, Map<string, DeviceInfo>>;
     private _forcedOffline: boolean;
@@ -94,6 +101,7 @@ export class CausalRepoClient {
         this._client = connection;
         this._forcedOffline = false;
         this._sentAtoms = new Map();
+        this._sentUpdates = new Map();
         this._connectedDevices = new Map();
         this._watchedBranches = new Set();
     }
@@ -131,7 +139,7 @@ export class CausalRepoClient {
      * Starts watching the given branch.
      * @param name The name of the branch to watch.
      */
-    watchBranch(nameOrEvent: string | WatchBranchEvent) {
+    watchBranchAtoms(nameOrEvent: string | WatchBranchEvent) {
         let branchEvent: WatchBranchEvent;
         if (typeof nameOrEvent === 'string') {
             branchEvent = {
@@ -300,6 +308,150 @@ export class CausalRepoClient {
     }
 
     /**
+     * Starts watching the given branch.
+     * @param name The name of the branch to watch.
+     */
+    watchBranchUpdates(nameOrEvent: string | WatchBranchEvent) {
+        let branchEvent: WatchBranchEvent;
+        if (typeof nameOrEvent === 'string') {
+            branchEvent = {
+                branch: nameOrEvent,
+                protocol: 'updates',
+            };
+        } else {
+            branchEvent = {
+                ...nameOrEvent,
+                protocol: 'updates',
+            };
+        }
+        const name = branchEvent.branch;
+        this._watchedBranches.add(name);
+        return this._whenConnected().pipe(
+            tap((connected) => {
+                this._client.send(WATCH_BRANCH, branchEvent);
+
+                let list = this._getSentUpdates(name);
+
+                for (let [key, value] of list) {
+                    this._sendAddUpdates(name, value, key);
+                }
+            }),
+            switchMap((connected) =>
+                merge(
+                    this._client.event<AddUpdatesEvent>(ADD_UPDATES).pipe(
+                        filter((event) => event.branch === name),
+                        scan(
+                            (acc, event) => {
+                                // This is the first event
+                                if (acc[0] === null) {
+                                    // first event is initial event,
+                                    // skip to processing events
+                                    if (event.initial) {
+                                        return ['event', event] as [
+                                            'event',
+                                            AddUpdatesEvent
+                                        ];
+                                    } else {
+                                        // first event is not initial.
+                                        // store it for later.
+                                        return ['waiting', [event]] as [
+                                            'waiting',
+                                            AddUpdatesEvent[]
+                                        ];
+                                    }
+                                } else if (acc[0] === 'waiting') {
+                                    // This event is happening while we are waiting for the initial event.
+                                    const events = acc[1] as AddUpdatesEvent[];
+                                    if (event.initial) {
+                                        // current event is initial event,
+                                        // merge events.
+                                        const allEvents = events;
+                                        const allUpdates = lodashFlatMap(
+                                            allEvents,
+                                            (e) => e.updates ?? []
+                                        );
+
+                                        return [
+                                            'event',
+                                            {
+                                                branch: event.branch,
+                                                updates: [
+                                                    ...allUpdates,
+                                                    ...event.updates,
+                                                ],
+                                            } as AddUpdatesEvent,
+                                        ] as ['event', AddUpdatesEvent];
+                                    } else {
+                                        // current event is not initial,
+                                        // store event
+                                        return [
+                                            'waiting',
+                                            [...events, event],
+                                        ] as ['waiting', AddUpdatesEvent[]];
+                                    }
+                                } else {
+                                    // This event is happening after we have got the initial event
+                                    return ['event', event] as [
+                                        'event',
+                                        AddUpdatesEvent
+                                    ];
+                                }
+                            },
+                            [null] as
+                                | [null]
+                                | ['waiting', AddUpdatesEvent[]]
+                                | ['event', AddUpdatesEvent]
+                        ),
+                        filter(([type, event]) => type === 'event'),
+                        map(([type, event]) => event as AddUpdatesEvent),
+                        map(
+                            (e) =>
+                                ({
+                                    type: 'updates',
+                                    updates: e.updates,
+                                } as ClientUpdates)
+                        )
+                    ),
+                    this._client
+                        .event<UpdatesReceivedEvent>(UPDATES_RECEIVED)
+                        .pipe(
+                            filter((event) => event.branch === name),
+                            tap((event) => {
+                                if (branchEvent.temporary) {
+                                    return;
+                                }
+                                let list = this._getSentUpdates(event.branch);
+                                list.delete(event.updateId);
+                            }),
+                            map(
+                                (event) =>
+                                    ({
+                                        type: 'updates_received',
+                                    } as ClientUpdatesReceived)
+                            )
+                        ),
+                    this._client
+                        .event<ReceiveDeviceActionEvent>(RECEIVE_EVENT)
+                        .pipe(
+                            filter((event) => event.branch === name),
+                            map(
+                                (event) =>
+                                    ({
+                                        type: 'event',
+                                        action: event.action,
+                                    } as ClientEvent)
+                            )
+                        )
+                ).pipe(filter(isClientUpdatesOrEvents))
+            ),
+            finalize(() => {
+                this._watchedBranches.delete(name);
+                this._client.send(UNWATCH_BRANCH, name);
+            })
+        );
+    }
+
+    /**
      * Gets the atoms stored on the given branch.
      * @param name The name of the branch to get.
      */
@@ -313,6 +465,25 @@ export class CausalRepoClient {
                 this._client.event<AddAtomsEvent>(ADD_ATOMS).pipe(
                     first((event) => event.branch === name),
                     map((event) => event.atoms)
+                )
+            )
+        );
+    }
+
+    /**
+     * Gets the updates stored on the given branch.
+     * @param name The name of the branch to get.
+     */
+    getBranchUpdates(name: string) {
+        return this._whenConnected().pipe(
+            first((connected) => connected),
+            tap((connected) => {
+                this._client.send(GET_UPDATES, name);
+            }),
+            switchMap((connected) =>
+                this._client.event<AddUpdatesEvent>(ADD_UPDATES).pipe(
+                    first((event) => event.branch === name),
+                    map((event) => event.updates)
                 )
             )
         );
@@ -644,6 +815,19 @@ export class CausalRepoClient {
         this._sendAddAtoms(branch, atoms, removedAtoms);
     }
 
+    addUpdates(branch: string, updates: string[]) {
+        if (updates.length <= 0) {
+            return;
+        }
+
+        let list = this._getSentUpdates(branch);
+
+        this._updateCounter += 1;
+        list.set(this._updateCounter, updates);
+
+        this._sendAddUpdates(branch, updates, this._updateCounter);
+    }
+
     /**
      * Sends the given action to devices on the given branch.
      * @param branch The branch.
@@ -755,11 +939,39 @@ export class CausalRepoClient {
         this._client.send(ADD_ATOMS, event);
     }
 
+    private _sendAddUpdates(
+        branch: string,
+        updates: string[],
+        updateId: number
+    ) {
+        if (this._watchedBranches.has(branch) && !this.connection.isConnected) {
+            // Skip sending the atoms because we're watching the branch and we're not connected.
+            // This means that the new atoms are saved in the sent atoms list so they will be resent
+            // when we reconnect.
+            return;
+        }
+        let event: AddUpdatesEvent = {
+            branch: branch,
+            updates,
+            updateId,
+        };
+        this._client.send(ADD_UPDATES, event);
+    }
+
     private _getSentAtoms(branch: string) {
         let map = this._sentAtoms.get(branch);
         if (!map) {
             map = new Map();
             this._sentAtoms.set(branch, map);
+        }
+        return map;
+    }
+
+    private _getSentUpdates(branch: string) {
+        let map = this._sentUpdates.get(branch);
+        if (!map) {
+            map = new Map();
+            this._sentUpdates.set(branch, map);
         }
         return map;
     }
@@ -785,6 +997,15 @@ export interface ClientResetAtoms {
     atoms: Atom<any>[];
 }
 
+export interface ClientUpdates {
+    type: 'updates';
+    updates: string[];
+}
+
+export interface ClientUpdatesReceived {
+    type: 'updates_received';
+}
+
 export interface ClientAtomsReceived {
     type: 'atoms_received';
 }
@@ -799,7 +1020,14 @@ export type ClientWatchBranchEvents =
     | ClientAtomsReceived
     | ClientEvent
     | ClientResetAtoms;
+
+export type ClientWatchBranchUpdatesEvents =
+    | ClientUpdates
+    | ClientUpdatesReceived
+    | ClientEvent;
+
 export type ClientAtomsOrEvent = ClientAtoms | ClientEvent | ClientResetAtoms;
+export type ClientUpdatesOrEvent = ClientUpdates | ClientEvent;
 
 export function isClientAtoms(
     event: ClientWatchBranchEvents
@@ -808,7 +1036,7 @@ export function isClientAtoms(
 }
 
 export function isClientEvent(
-    event: ClientWatchBranchEvents
+    event: ClientWatchBranchEvents | ClientWatchBranchUpdatesEvents
 ): event is ClientEvent {
     return event.type === 'event';
 }
@@ -827,6 +1055,18 @@ export function isClientResetAtoms(
     event: ClientWatchBranchEvents
 ): event is ClientResetAtoms {
     return event.type === 'reset';
+}
+
+export function isClientUpdates(
+    event: ClientWatchBranchUpdatesEvents
+): event is ClientUpdates {
+    return event.type === 'updates';
+}
+
+export function isClientUpdatesOrEvents(
+    event: ClientWatchBranchUpdatesEvents
+): event is ClientUpdatesOrEvent {
+    return event.type === 'updates' || event.type === 'event';
 }
 
 function whenConnected(

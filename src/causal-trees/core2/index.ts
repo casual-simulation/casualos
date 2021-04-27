@@ -22,3 +22,6 @@ export * from './CausalRepoSession';
 export * from './CausalRepoClient';
 export * from './ConnectionClient';
 export * from './MemoryConnectionClient';
+
+export * from './UpdatesStore';
+export * from './MemoryUpdatesStore';
