@@ -25,9 +25,6 @@ pipeline {
                 echo "Building branch: ${env.GIT_BRANCH}"
                 echo "Main Release: ${env.GIT_BRANCH.endsWith(params.MAIN_BRANCH)}"
 
-                echo "Using Node v14.16.1"
-                sh "nvm use v14.16.1"
-
                 NotifyStarted()
                 script {
                     env.PI_IP = sh(returnStdout: true, script: """
