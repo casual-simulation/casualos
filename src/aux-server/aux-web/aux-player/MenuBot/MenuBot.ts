@@ -312,7 +312,7 @@ export default class MenuBot extends Vue {
         const simulation = _simulation(this.item);
         await simulation.helper.action(
             ON_SUBMIT_ACTION_NAME,
-            null,
+            [this.item.bot],
             onSubmitArg(this.text)
         );
     }
