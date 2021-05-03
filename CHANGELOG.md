@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.5.12
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `@onSubmit` was shouted to every bot instead of whispered to the bot that the input was submitted on.
+
 ## V1.5.11
 
 #### Date: 4/27/2021
