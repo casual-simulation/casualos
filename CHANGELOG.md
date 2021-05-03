@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.5.13
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the meet portal could stay open if the portal was cleared before it was fully loaded.
+
 ## V1.5.12
 
 #### Date: 5/2/2021
