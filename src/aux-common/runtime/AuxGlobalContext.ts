@@ -132,6 +132,7 @@ export interface AuxGlobalContext {
 
     /**
      * Removes the given bot timer from the bot.
+     * Note that this does not cancel the timer, it only removes it from the timer record.
      * @param id The ID of the bot.
      * @param type The type of the timer.
      * @param timer The timer to remove.
@@ -143,6 +144,17 @@ export interface AuxGlobalContext {
      * @param id The ID of the bot.
      */
     getBotTimers(id: string): BotTimer[];
+
+    /**
+     * Cancels the timer with the given timer ID and bot ID.
+     * @param id The ID of the bot.
+     * @param timerId The ID of the timer.
+     */
+    cancelAndRemoveBotTimer(
+        id: string,
+        type: BotTimer['type'],
+        timerId: number
+    ): void;
 
     /**
      * Cancels the list of timers for the given bot ID.
@@ -529,6 +541,22 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         return [];
     }
 
+    cancelAndRemoveBotTimer(
+        id: string,
+        type: BotTimer['type'],
+        timerId: number
+    ) {
+        let timers = this._botTimerMap.get(id);
+        for (let i = 0; i < timers.length; i++) {
+            let timer = timers[i];
+            if (timer.timerId === timerId && timer.type === type) {
+                timers.splice(i, 1);
+                this._clearTimer(timer);
+                i -= 1;
+            }
+        }
+    }
+
     cancelBotTimers(id: string): void {
         let list = this._botTimerMap.get(id);
         if (list) {
@@ -550,15 +578,19 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     }
 
     private _clearTimers(list: BotTimer[]) {
-        this._numberOfTimers = Math.max(0, this._numberOfTimers - list.length);
         for (let timer of list) {
-            if (timer.type === 'timeout') {
-                clearTimeout(timer.timerId);
-            } else if (timer.type === 'interval') {
-                clearInterval(timer.timerId);
-            } else if (timer.type === 'animation') {
-                timer.cancel();
-            }
+            this._clearTimer(timer);
+        }
+    }
+
+    private _clearTimer(timer: BotTimer) {
+        this._numberOfTimers = Math.max(0, this._numberOfTimers - 1);
+        if (timer.type === 'timeout') {
+            clearTimeout(timer.timerId);
+        } else if (timer.type === 'interval') {
+            clearInterval(timer.timerId);
+        } else if (timer.type === 'animation') {
+            timer.cancel();
         }
     }
 

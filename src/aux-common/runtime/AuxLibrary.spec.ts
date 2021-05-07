@@ -9103,6 +9103,30 @@ describe('AuxLibrary', () => {
             expect(fn).toBeCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
+
+        it('should be able to clear the timer with clearTimeout()', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setTimeout(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'timeout',
+                },
+            ]);
+
+            library.tagSpecificApi.clearTimeout(tagContext)(timeoutId);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(0);
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
     });
 
     describe('setInterval()', () => {
@@ -9178,6 +9202,54 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
             expect(fn).toBeCalledTimes(2);
+        });
+
+        it('should clear the timer when the bot is destroyed', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setInterval(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'interval',
+                },
+            ]);
+
+            library.api.destroy(bot1);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(0);
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('should clear the timer with clearInterval()', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setInterval(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'interval',
+                },
+            ]);
+
+            library.tagSpecificApi.clearInterval(tagContext)(timeoutId);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(0);
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
     });
 

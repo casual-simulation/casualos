@@ -884,6 +884,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 create(options.bot?.id, ...args),
             setTimeout: botTimer('timeout', setTimeout, true),
             setInterval: botTimer('interval', setInterval, false),
+            clearTimeout: clearTimer('timeout'),
+            clearInterval: clearTimer('interval'),
         },
     };
 
@@ -926,6 +928,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 });
 
                 return timer;
+            };
+    }
+
+    function clearTimer(type: TimeoutOrIntervalTimer['type']) {
+        return (options: TagSpecificApiOptions) =>
+            function (id: number) {
+                if (!options.bot) {
+                    throw new Error(
+                        `Timers are not supported when there is no current bot.`
+                    );
+                }
+                context.cancelAndRemoveBotTimer(options.bot.id, type, id);
             };
     }
 

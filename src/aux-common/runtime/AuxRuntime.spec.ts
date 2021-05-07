@@ -3935,6 +3935,26 @@ describe('AuxRuntime', () => {
                 expect(events).toEqual([[toast('abc')], [toast('abc')]]);
             });
 
+            it('should cancel setInterval() timers with clearInterval()', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello:
+                                '@const abc = setInterval(() => os.toast("abc"), 100); clearInterval(abc);',
+                        }),
+                    })
+                );
+                runtime.shout('hello');
+                jest.runAllTicks();
+
+                expect(events).toEqual([]);
+
+                jest.advanceTimersByTime(200);
+                jest.runAllTicks();
+
+                expect(events).toEqual([]);
+            });
+
             it('should dispatch events from setTimeout() callbacks', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
@@ -3954,6 +3974,28 @@ describe('AuxRuntime', () => {
                 jest.runAllTicks();
 
                 expect(events).toEqual([[toast('abc')]]);
+            });
+
+            it('should be able to cancel setTimeout() timers with clearTimeout()', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello:
+                                '@let abc = setTimeout(() => os.toast("abc"), 100); clearTimeout(abc);',
+                        }),
+                    })
+                );
+                runtime.shout('hello');
+
+                jest.runAllTicks();
+
+                expect(events).toEqual([]);
+
+                jest.advanceTimersByTime(200);
+
+                jest.runAllTicks();
+
+                expect(events).toEqual([]);
             });
 
             it('should handle a bot getting destroyed twice due to a setTimeout() callback', () => {
