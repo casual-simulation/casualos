@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.5.15
+
+#### Date: 5/7/2021
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was impossible to clear intervals/timeouts from a bot other than the one it was created from.
+
 ## V1.5.14
 
 #### Date: 5/7/2021

@@ -9118,7 +9118,7 @@ describe('AuxLibrary', () => {
                 },
             ]);
 
-            library.tagSpecificApi.clearTimeout(tagContext)(timeoutId);
+            library.api.clearTimeout(timeoutId);
 
             expect(context.getBotTimers(bot1.id)).toEqual([]);
 
@@ -9126,6 +9126,10 @@ describe('AuxLibrary', () => {
 
             expect(fn).toBeCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('clearTimeout() should not error if there are no timers for the bot', () => {
+            library.api.clearTimeout(99);
         });
     });
 
@@ -9242,7 +9246,7 @@ describe('AuxLibrary', () => {
                 },
             ]);
 
-            library.tagSpecificApi.clearInterval(tagContext)(timeoutId);
+            library.api.clearInterval(timeoutId);
 
             expect(context.getBotTimers(bot1.id)).toEqual([]);
 
@@ -9250,6 +9254,10 @@ describe('AuxLibrary', () => {
 
             expect(fn).toBeCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('clearInterval() should not error if there are no timers for the bot', () => {
+            library.api.clearInterval(99);
         });
     });
 
