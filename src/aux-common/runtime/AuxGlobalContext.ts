@@ -169,10 +169,9 @@ export interface AuxGlobalContext {
 
     /**
      * Cancels and removes the timers with the given timer ID.
-     * @param type The type of the timer.
      * @param timerId The ID of the timer.
      */
-    cancelAndRemoveTimers(type: BotTimer['type'], timerId: number): void;
+    cancelAndRemoveTimers(timerId: number): void;
 
     /**
      * Gets the number of timers.
@@ -583,11 +582,11 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this._botTimerMap.clear();
     }
 
-    cancelAndRemoveTimers(type: BotTimer['type'], timerId: number) {
+    cancelAndRemoveTimers(timerId: number) {
         for (let list of this._botTimerMap.values()) {
             for (let i = 0; i < list.length; i++) {
                 const timer = list[i];
-                if (timer.type === type && timer.timerId === timerId) {
+                if (timer.timerId === timerId) {
                     this._clearTimer(timer);
                     list.splice(i, 1);
                     i -= 1;

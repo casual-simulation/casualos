@@ -932,11 +932,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     function clearTimeout(id: number) {
-        context.cancelAndRemoveTimers('timeout', id);
+        context.cancelAndRemoveTimers(id);
     }
 
     function clearInterval(id: number) {
-        context.cancelAndRemoveTimers('interval', id);
+        context.cancelAndRemoveTimers(id);
     }
 
     /**
