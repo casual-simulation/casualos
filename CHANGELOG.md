@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.5.16
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was no longer possible to cancel `setInterval()` with `clearTimeout()` and cancel `setTimeout()` with `clearInterval()`.
+    -   They are not meant to be used together but because of an artifact of web browsers it needs to be supported.
+
 ## V1.5.15
 
 #### Date: 5/7/2021
