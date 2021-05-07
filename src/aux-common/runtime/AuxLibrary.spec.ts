@@ -9127,6 +9127,10 @@ describe('AuxLibrary', () => {
             expect(fn).toBeCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
+
+        it('clearInterval() should not error if there are no timers for the bot', () => {
+            library.tagSpecificApi.clearTimeout(tagContext)(99);
+        });
     });
 
     describe('setInterval()', () => {
@@ -9250,6 +9254,10 @@ describe('AuxLibrary', () => {
 
             expect(fn).toBeCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('clearInterval() should not error if there are no timers for the bot', () => {
+            library.tagSpecificApi.clearInterval(tagContext)(99);
         });
     });
 

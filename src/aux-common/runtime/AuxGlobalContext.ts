@@ -547,6 +547,9 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         timerId: number
     ) {
         let timers = this._botTimerMap.get(id);
+        if (!timers) {
+            return;
+        }
         for (let i = 0; i < timers.length; i++) {
             let timer = timers[i];
             if (timer.timerId === timerId && timer.type === type) {
