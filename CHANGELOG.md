@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V1.5.14
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the ability to clear bot timers using `clearInterval()` and `clearTimeout()`.
+    -   `clearInterval(timerId)` is useful for clearing intervals created by `setInterval()`.
+    -   `clearTimeout(timerId)` is useful for clearing timeouts created by `setTimeout()`
+
 ## V1.5.13
 
 #### Date: 5/3/2021
