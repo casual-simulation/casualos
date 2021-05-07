@@ -640,6 +640,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             sleep,
 
             __energyCheck,
+            clearTimeout,
+            clearInterval,
 
             os: {
                 sleep,
@@ -884,8 +886,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 create(options.bot?.id, ...args),
             setTimeout: botTimer('timeout', setTimeout, true),
             setInterval: botTimer('interval', setInterval, false),
-            clearTimeout: clearTimer('timeout'),
-            clearInterval: clearTimer('interval'),
         },
     };
 
@@ -931,16 +931,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             };
     }
 
-    function clearTimer(type: TimeoutOrIntervalTimer['type']) {
-        return (options: TagSpecificApiOptions) =>
-            function (id: number) {
-                if (!options.bot) {
-                    throw new Error(
-                        `Timers are not supported when there is no current bot.`
-                    );
-                }
-                context.cancelAndRemoveBotTimer(options.bot.id, type, id);
-            };
+    function clearTimeout(id: number) {
+        context.cancelAndRemoveTimers('timeout', id);
+    }
+
+    function clearInterval(id: number) {
+        context.cancelAndRemoveTimers('interval', id);
     }
 
     /**
