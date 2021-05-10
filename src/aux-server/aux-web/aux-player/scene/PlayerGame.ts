@@ -45,6 +45,7 @@ import {
     DEFAULT_SCENE_BACKGROUND_COLOR,
     getPortalConfigBotID,
     asyncResult,
+    BotCursorType,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -65,6 +66,7 @@ import { GameAudio } from '../../shared/scene/GameAudio';
 import TWEEN from '@tweenjs/tween.js';
 import { MathUtils as ThreeMath } from '@casual-simulation/three';
 import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
+import { Input } from '../../shared/scene/Input';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -187,6 +189,10 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(this.playerSimulations, 'rotatable');
     }
 
+    getCursor(): BotCursorType {
+        return this._getSimulationValue(this.playerSimulations, 'cursor');
+    }
+
     getInventoryVisible(): boolean {
         return this._getSimulationValue(
             this.inventorySimulations,
@@ -229,6 +235,10 @@ export class PlayerGame extends Game {
 
     getInventoryResizable(): boolean {
         return this._getSimulationValue(this.inventorySimulations, 'resizable');
+    }
+
+    getInventoryCursor(): BotCursorType {
+        return this._getSimulationValue(this.inventorySimulations, 'cursor');
     }
 
     getPlayerZoom(): number {
@@ -1145,6 +1155,21 @@ export class PlayerGame extends Game {
                 });
             }
         }
+    }
+
+    protected renderCursor() {
+        const pagePos = this.getInput().getMousePagePos();
+        const inventoryViewport = this.inventoryViewport;
+        const isInventory = Input.pagePositionOnViewport(
+            pagePos,
+            inventoryViewport,
+            this.getViewports()
+        );
+        this.backgroundCursor = isInventory
+            ? this.getInventoryCursor()
+            : this.getCursor();
+
+        super.renderCursor();
     }
 
     private _updateInventorySize() {

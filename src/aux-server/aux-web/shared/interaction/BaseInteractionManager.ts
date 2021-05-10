@@ -12,6 +12,8 @@ import {
     BotCalculationContext,
     Bot,
     BotTags,
+    getBotCursor,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
 import { flatMap } from 'lodash';
@@ -243,11 +245,29 @@ export abstract class BaseInteractionManager {
         this._updateHoveredBots();
         this._updateFocusedBots();
         this._updatePlayerBotTags();
+        this._updateCursors();
     }
 
     protected _updatePlayerBotTags() {}
 
     protected _updateCameraOffsets() {}
+
+    protected _updateCursors() {
+        let hasCursor = false;
+        for (let bot of this._hoveredBots) {
+            const cursor = getBotCursor(null, bot.bot);
+            if (hasValue(cursor)) {
+                // TODO: rework to do a better job of handling
+                this._game.botCursor = cursor;
+                hasCursor = true;
+                break;
+            }
+        }
+
+        if (!hasCursor) {
+            this._game.botCursor = null;
+        }
+    }
 
     protected _updateCameraControls() {
         for (let controller of this._cameraRigControllers) {

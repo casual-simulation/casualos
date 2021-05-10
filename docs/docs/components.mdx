@@ -36,6 +36,54 @@ export const AnyColorValues = ({}) => (<>
   </PossibleValue>
 </>);
 
+export const AnyCursorValues = ({}) => (<>
+  <PossibleValueCode value='auto'>
+      The cursor automatically changes its look based on the context.
+      For page portal bots, this means that the arrow cursor is used.
+      For menu portal bots, this means that the pointer is used when the bot has a <TagLink tag='@onClick'/> and the arrow is used otherwise. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='default'>
+      The cursor looks like the default cursor for the platform.
+      Generally, this means the arrow cursor.
+  </PossibleValueCode>
+  <PossibleValueCode value='none'>
+      The cursor is invisible.
+  </PossibleValueCode>
+  <PossibleValueCode value='wait'>wait</PossibleValueCode>
+  <PossibleValueCode value='context-menu'>context-menu</PossibleValueCode>
+  <PossibleValueCode value='help'>help</PossibleValueCode>
+  <PossibleValueCode value='pointer'>pointer</PossibleValueCode>
+  <PossibleValueCode value='progress'>progress</PossibleValueCode>
+  <PossibleValueCode value='cell'>cell</PossibleValueCode>
+  <PossibleValueCode value='crosshair'>crosshair</PossibleValueCode>
+  <PossibleValueCode value='text'>text</PossibleValueCode>
+  <PossibleValueCode value='vertical-text'>vertical-text</PossibleValueCode>
+  <PossibleValueCode value='alias'>alias</PossibleValueCode>
+  <PossibleValueCode value='copy'>copy</PossibleValueCode>
+  <PossibleValueCode value='move'>move</PossibleValueCode>
+  <PossibleValueCode value='no-drop'>no-drop</PossibleValueCode>
+  <PossibleValueCode value='not-allowed'>not-allowed</PossibleValueCode>
+  <PossibleValueCode value='grab'>grab</PossibleValueCode>
+  <PossibleValueCode value='grabbing'>grabbing</PossibleValueCode>
+  <PossibleValueCode value='all-scroll'>all-scroll</PossibleValueCode>
+  <PossibleValueCode value='col-resize'>col-resize</PossibleValueCode>
+  <PossibleValueCode value='row-resize'>row-resize</PossibleValueCode>
+  <PossibleValueCode value='n-resize'>n-resize</PossibleValueCode>
+  <PossibleValueCode value='e-resize'>e-resize</PossibleValueCode>
+  <PossibleValueCode value='s-resize'>s-resize</PossibleValueCode>
+  <PossibleValueCode value='w-resize'>w-resize</PossibleValueCode>
+  <PossibleValueCode value='ne-resize'>ne-resize</PossibleValueCode>
+  <PossibleValueCode value='nw-resize'>nw-resize</PossibleValueCode>
+  <PossibleValueCode value='se-resize'>se-resize</PossibleValueCode>
+  <PossibleValueCode value='sw-resize'>sw-resize</PossibleValueCode>
+  <PossibleValueCode value='ew-resize'>ew-resize</PossibleValueCode>
+  <PossibleValueCode value='ns-resize'>ns-resize</PossibleValueCode>
+  <PossibleValueCode value='nesw-resize'>nesw-resize</PossibleValueCode>
+  <PossibleValueCode value='nwse-resize'>nwse-resize</PossibleValueCode>
+  <PossibleValueCode value='zoom-in'>zoom-in</PossibleValueCode>
+  <PossibleValueCode value='zoom-out'>zoom-out</PossibleValueCode>
+</>);
+
 export const TagLink = ({tag}) => tag.startsWith('@') ? 
   (<ListenTagLink tag={tag}/>) : 
   (<DataTagLink tag={tag}/>);

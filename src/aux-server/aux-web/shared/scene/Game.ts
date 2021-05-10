@@ -88,12 +88,12 @@ export abstract class Game implements AuxBotVisualizerFinder {
     /**
      * The cursor value that should be used to override the background cursor value.
      */
-    botCursor: BotCursorType = null;
+    botCursor: BotCursorType;
 
     /**
      * The cursor value that should be used as the default cursor when none is available.
      */
-    backgroundCursor: BotCursorType = 'auto';
+    backgroundCursor: BotCursorType;
 
     /**
      * The cursor value that is currently used.
@@ -537,9 +537,13 @@ export abstract class Game implements AuxBotVisualizerFinder {
             );
         }
 
-        this.gameView.setCursor(this.cursor);
+        this.renderCursor();
 
         this._onUpdate.next();
+    }
+
+    protected renderCursor() {
+        this.gameView.setCursor(this.cursor);
     }
 
     private renderUpdate(xrFrame?: any) {

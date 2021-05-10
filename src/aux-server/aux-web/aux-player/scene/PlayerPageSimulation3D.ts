@@ -228,6 +228,13 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         return this.pageConfig.disableCanvasTransparency;
     }
 
+    /**
+     * Gets the style the cursor should have for this portal.
+     */
+    get cursor() {
+        return this.pageConfig.cursor;
+    }
+
     protected _frameUpdateCore(calc: BotCalculationContext) {
         super._frameUpdateCore(calc);
         const input = this.game.getInput();

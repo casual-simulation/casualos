@@ -1636,6 +1636,22 @@ const botCursors = [
 ];
 
 /**
+ * Finds and returns the bot cursor type that matches the given value.
+ * @param value The value.
+ */
+export function calculateBotCursorType(value: string): BotCursorType {
+    if (!hasValue(value)) {
+        return null;
+    }
+
+    if (botCursors.indexOf(value) >= 0) {
+        return value as BotCursorType;
+    }
+
+    return DEFAULT_BOT_CURSOR;
+}
+
+/**
  * Gets the cursor that has been configured on the given bot.
  * Returns null if the bot does not have a valid string value.
  * @param calc The calculation context.
@@ -1646,16 +1662,21 @@ export function getBotCursor(
     bot: Bot
 ): BotCursorType {
     const value = calculateStringTagValue(calc, bot, 'auxCursor', null);
+    return calculateBotCursorType(value);
+}
 
-    if (!hasValue(value)) {
-        return null;
-    }
-
-    if (botCursors.indexOf(value) >= 0) {
-        return value as BotCursorType;
-    }
-
-    return DEFAULT_BOT_CURSOR;
+/**
+ * Gets the cursor that has been configured as the portal cursor for the given bot.
+ * Returns null if the bot does not have a valid string value.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getPortalCursor(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotCursorType {
+    const value = calculateStringTagValue(calc, bot, 'auxPortalCursor', null);
+    return calculateBotCursorType(value);
 }
 
 /**

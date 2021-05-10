@@ -1515,6 +1515,7 @@ export const KNOWN_TAGS: string[] = [
     'cursorEndIndex',
 
     'portalColor',
+    'portalCursor',
     'portalBackgroundAddress',
     'portalLocked',
     'portalPannable',

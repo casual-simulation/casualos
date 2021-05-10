@@ -126,25 +126,6 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         }
     }
 
-    protected _updateHoveredBots(): void {
-        super._updateHoveredBots();
-
-        let hasCursor = false;
-        for (let bot of this._hoveredBots) {
-            const cursor = getBotCursor(null, bot.bot);
-            if (hasValue(cursor)) {
-                // TODO: rework to do a better job of handling
-                this._game.botCursor = cursor;
-                hasCursor = true;
-                break;
-            }
-        }
-
-        if (!hasCursor) {
-            this._game.botCursor = null;
-        }
-    }
-
     createBotDragOperation(
         simulation: Simulation,
         bot: Bot | BotTags,
