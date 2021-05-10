@@ -10,6 +10,7 @@
     -   The `cursor` tag specifies the mouse cursor that should be shown when the bot is being hovered.
     -   The `portalCursor` tag specifies the mouse cursor that should be used by default for the page portal.
     -   See the documentation for a list of possible options.
+-   Added the `labelPadding` tag to control how much space is between the edge of the bot and edge of the label.
 
 ## V1.5.16
 
