@@ -62,6 +62,9 @@ import {
     calculatePortalCameraControlsMode,
     getMenuBotHoverStyle,
     getCameraType,
+    getBotCursor,
+    getPortalCursor,
+    getBotLabelPadding,
 } from '../BotCalculations';
 import {
     Bot,
@@ -1284,6 +1287,88 @@ export function botCalculationContextTests(
         });
     });
 
+    const cursorCases = [
+        ['auto', 'auto'],
+        ['default', 'default'],
+        ['none', 'none'],
+        ['context-menu', 'context-menu'],
+        ['help', 'help'],
+        ['pointer', 'pointer'],
+        ['progress', 'progress'],
+        ['wait', 'wait'],
+        ['cell', 'cell'],
+        ['crosshair', 'crosshair'],
+        ['text', 'text'],
+        ['vertical-text', 'vertical-text'],
+        ['alias', 'alias'],
+        ['copy', 'copy'],
+        ['move', 'move'],
+        ['no-drop', 'no-drop'],
+        ['not-allowed', 'not-allowed'],
+        ['grab', 'grab'],
+        ['grabbing', 'grabbing'],
+        ['all-scroll', 'all-scroll'],
+        ['col-resize', 'col-resize'],
+        ['row-resize', 'row-resize'],
+        ['n-resize', 'n-resize'],
+        ['e-resize', 'e-resize'],
+        ['s-resize', 's-resize'],
+        ['w-resize', 'w-resize'],
+        ['ne-resize', 'ne-resize'],
+        ['nw-resize', 'nw-resize'],
+        ['se-resize', 'se-resize'],
+        ['sw-resize', 'sw-resize'],
+        ['ew-resize', 'ew-resize'],
+        ['ns-resize', 'ns-resize'],
+        ['nesw-resize', 'nesw-resize'],
+        ['nwse-resize', 'nwse-resize'],
+        ['zoom-in', 'zoom-in'],
+        ['zoom-out', 'zoom-out'],
+
+        ['missing', 'auto'],
+        ['', null],
+        [123, null],
+        [true, null],
+    ];
+
+    describe('getBotCursor()', () => {
+        const tagCases = ['auxCursor', 'cursor'];
+
+        describe.each(tagCases)('%s', (tag) => {
+            it.each(cursorCases)(
+                'should support %s',
+                (value: any, expected: any) => {
+                    const bot = createBot('test', {
+                        [tag]: value,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+
+                    expect(getBotCursor(calc, bot)).toBe(expected);
+                }
+            );
+        });
+    });
+
+    describe('getPortalCursor()', () => {
+        const tagCases = ['auxPortalCursor', 'portalCursor'];
+
+        describe.each(tagCases)('%s', (tag) => {
+            it.each(cursorCases)(
+                'should support %s',
+                (value: any, expected: any) => {
+                    const bot = createBot('test', {
+                        [tag]: value,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+
+                    expect(getPortalCursor(calc, bot)).toBe(expected);
+                }
+            );
+        });
+    });
+
     describe('getTagPortalAnchorPointOffset()', () => {
         const tagCases = ['auxTagPortalAnchorPoint', 'tagPortalAnchorPoint'];
 
@@ -2182,6 +2267,51 @@ export function botCalculationContextTests(
                     expect(a).toBe(expected);
                 }
             );
+        });
+    });
+
+    describe('getBotLabelPadding()', () => {
+        const tagCases = ['auxLabelPadding', 'labelPadding'];
+
+        describe.each(tagCases)('%s', (tag) => {
+            numericalTagValueTests(0, (given, expected) => {
+                const bot = createBot('test', {
+                    [tag]: given,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getBotLabelPadding(calc, bot)).toEqual(expected);
+            });
+
+            const outOfBoundsTests = [
+                ['Infinity', Infinity],
+                ['Negative Infinity', -Infinity],
+                ['NaN', NaN],
+            ];
+
+            it.each(outOfBoundsTests)(
+                'should map %s to 0',
+                (desc: string, value: number) => {
+                    const bot = createBot('test', {
+                        [tag]: value,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+
+                    expect(getBotLabelPadding(calc, bot)).toEqual(0);
+                }
+            );
+
+            it('should return 1 by default', () => {
+                const bot = createBot('test', {
+                    [tag]: null,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getBotLabelPadding(calc, bot)).toEqual(0);
+            });
         });
     });
 

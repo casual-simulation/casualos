@@ -35,6 +35,7 @@ import {
     ON_POINTER_UP,
     ON_ANY_POINTER_DOWN,
     ON_ANY_POINTER_UP,
+    getBotCursor,
 } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';

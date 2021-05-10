@@ -38,6 +38,7 @@ import {
     ON_POINTER_UP,
     ON_ANY_POINTER_UP,
     ON_ANY_POINTER_DOWN,
+    getBotCursor,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
@@ -77,6 +78,7 @@ export default class MenuBot extends Vue {
     text: string = null;
     form: MenuBotForm = 'button';
     hoverStyle: MenuBotResolvedHoverStyle = 'hover';
+    cursor: string = null;
 
     private _down: boolean = false;
     private _hover: boolean = false;
@@ -126,6 +128,7 @@ export default class MenuBot extends Vue {
             this._updateProgress(calc, item.bot);
             this._updateForm(calc, item.bot);
             this._updateText(calc, item.bot);
+            this._updateCursor(calc, item.bot);
         } else {
             this.label = '';
             this.labelColor = '#000';
@@ -137,6 +140,7 @@ export default class MenuBot extends Vue {
             this.progress = null;
             this.form = 'button';
             this.text = '';
+            this.cursor = null;
         }
     }
 
@@ -407,6 +411,10 @@ export default class MenuBot extends Vue {
                 this.text = text;
             });
         }
+    }
+
+    private _updateCursor(calc: BotCalculationContext, bot: Bot) {
+        this.cursor = getBotCursor(calc, bot);
     }
 
     private async _ignoreTextUpdates(action: (text: string) => Promise<void>) {

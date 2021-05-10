@@ -1,3 +1,4 @@
+import { BotCursorType } from '@casual-simulation/aux-common';
 import Vue from 'vue';
 import { Game } from '../scene/Game';
 
@@ -14,4 +15,9 @@ export interface IGameView extends Vue {
 
     calculateContainerSize(): { width: number; height: number };
     resize(): void;
+
+    /**
+     * Sets the cursor that should be used for the game view.
+     */
+    setCursor(cursor: BotCursorType): void;
 }

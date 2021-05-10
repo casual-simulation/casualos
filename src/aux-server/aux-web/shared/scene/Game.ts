@@ -16,6 +16,7 @@ import {
     AnimateToBotAction,
     AnimateToOptions,
     DEFAULT_WORKSPACE_GRID_SCALE,
+    BotCursorType,
 } from '@casual-simulation/aux-common';
 import {
     CameraRig,
@@ -83,6 +84,23 @@ export abstract class Game implements AuxBotVisualizerFinder {
     onBotUpdated: ArgEvent<Bot> = new ArgEvent<Bot>();
     onBotRemoved: ArgEvent<Bot> = new ArgEvent<Bot>();
     onCameraRigTypeChanged: ArgEvent<CameraRig> = new ArgEvent<CameraRig>();
+
+    /**
+     * The cursor value that should be used to override the background cursor value.
+     */
+    botCursor: BotCursorType;
+
+    /**
+     * The cursor value that should be used as the default cursor when none is available.
+     */
+    backgroundCursor: BotCursorType;
+
+    /**
+     * The cursor value that is currently used.
+     */
+    get cursor(): BotCursorType {
+        return this.botCursor || this.backgroundCursor;
+    }
 
     private _isPOV: boolean = false;
 
@@ -519,7 +537,13 @@ export abstract class Game implements AuxBotVisualizerFinder {
             );
         }
 
+        this.renderCursor();
+
         this._onUpdate.next();
+    }
+
+    protected renderCursor() {
+        this.gameView.setCursor(this.cursor);
     }
 
     private renderUpdate(xrFrame?: any) {

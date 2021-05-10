@@ -46,7 +46,7 @@
         "@casual-simulation/crypto": "^1.5.7",
         "esbuild": "^0.8.43",
         "esbuild-wasm": "^0.8.43",
-        "lodash": "4.17.19",
+        "lodash": "4.17.21",
         "rollup": "^2.39.0",
         "rxjs": "^6.5.2",
         "uuid": "^8.3.2"

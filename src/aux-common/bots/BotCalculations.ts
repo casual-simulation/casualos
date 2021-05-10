@@ -53,6 +53,8 @@ import {
     MenuBotResolvedHoverStyle,
     DEFAULT_MENU_BOT_HOVER_STYLE,
     PortalCameraType,
+    BotCursorType,
+    DEFAULT_BOT_CURSOR,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -1349,6 +1351,24 @@ export function getBotLabelAlignment(
 }
 
 /**
+ * Gets the amount of padding that should be used to auto-sized labels.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotLabelPadding(
+    calc: BotCalculationContext,
+    bot: Bot
+): number {
+    const val = calculateNumericalTagValue(calc, bot, 'auxLabelPadding', 0);
+
+    if (isNaN(val) || val === Infinity || val === -Infinity) {
+        return 0;
+    }
+
+    return val;
+}
+
+/**
  * Gets the text alignment for the bot's label.
  * @param calc The calculation context.
  * @param bot The bot.
@@ -1592,6 +1612,89 @@ export function getBotMeetPortalAnchorPointOffset(
 } {
     const point = getBotMeetPortalAnchorPoint(calc, bot);
     return calculateMeetPortalAnchorPointOffset(point);
+}
+
+const botCursors = [
+    'auto',
+    'default',
+    'none',
+    'context-menu',
+    'help',
+    'pointer',
+    'progress',
+    'wait',
+    'cell',
+    'crosshair',
+    'text',
+    'vertical-text',
+    'alias',
+    'copy',
+    'move',
+    'no-drop',
+    'not-allowed',
+    'grab',
+    'grabbing',
+    'all-scroll',
+    'col-resize',
+    'row-resize',
+    'n-resize',
+    'e-resize',
+    's-resize',
+    'w-resize',
+    'ne-resize',
+    'nw-resize',
+    'se-resize',
+    'sw-resize',
+    'ew-resize',
+    'ns-resize',
+    'nesw-resize',
+    'nwse-resize',
+    'zoom-in',
+    'zoom-out',
+];
+
+/**
+ * Finds and returns the bot cursor type that matches the given value.
+ * @param value The value.
+ */
+export function calculateBotCursorType(value: string): BotCursorType {
+    if (!hasValue(value)) {
+        return null;
+    }
+
+    if (botCursors.indexOf(value) >= 0) {
+        return value as BotCursorType;
+    }
+
+    return DEFAULT_BOT_CURSOR;
+}
+
+/**
+ * Gets the cursor that has been configured on the given bot.
+ * Returns null if the bot does not have a valid string value.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotCursor(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotCursorType {
+    const value = calculateStringTagValue(calc, bot, 'auxCursor', null);
+    return calculateBotCursorType(value);
+}
+
+/**
+ * Gets the cursor that has been configured as the portal cursor for the given bot.
+ * Returns null if the bot does not have a valid string value.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getPortalCursor(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotCursorType {
+    const value = calculateStringTagValue(calc, bot, 'auxPortalCursor', null);
+    return calculateBotCursorType(value);
 }
 
 /**

@@ -1,5 +1,17 @@
 # CasualOS Changelog
 
+## V1.5.17
+
+#### Date: 5/10/2021
+
+### :rocket: Improvements
+
+-   Added the `cursor` and `portalCursor` tags.
+    -   The `cursor` tag specifies the mouse cursor that should be shown when the bot is being hovered.
+    -   The `portalCursor` tag specifies the mouse cursor that should be used by default for the page portal.
+    -   See the documentation for a list of possible options.
+-   Added the `labelPadding` tag to control how much space is between the edge of the bot and edge of the label.
+
 ## V1.5.16
 
 #### Date: 5/7/2021

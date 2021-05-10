@@ -47,6 +47,7 @@
                 color: labelColor,
                 fill: labelColor,
                 whiteSpace: whiteSpace,
+                cursor: cursor,
             }"
         >
             <div class="menu-bot-text" v-show="label">

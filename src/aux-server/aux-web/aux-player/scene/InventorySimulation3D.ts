@@ -172,6 +172,13 @@ export class InventorySimulation3D extends PlayerSimulation3D {
         return this.inventoryConfig.showFocusPoint;
     }
 
+    /**
+     * Gets the style the cursor should have for this portal.
+     */
+    get cursor() {
+        return this.inventoryConfig.cursor;
+    }
+
     constructor(game: Game, simulation: BrowserSimulation) {
         super('inventoryPortal', game, simulation);
     }

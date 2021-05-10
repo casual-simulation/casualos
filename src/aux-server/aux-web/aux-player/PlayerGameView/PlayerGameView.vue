@@ -1,6 +1,6 @@
 <template>
     <div ref="container" class="game-container">
-        <div class="game-canvas" ref="gameView"></div>
+        <div class="game-canvas" :style="{ cursor: cursor }" ref="gameView"></div>
         <slot></slot>
         <div class="ui-container">
             <div ref="menuElement" class="toolbar menu" :style="finalMenuStyle">
