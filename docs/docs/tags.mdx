@@ -358,6 +358,26 @@ Changing this value scales the text characters in the label which changes the te
   </PossibleValue>
 </PossibleValuesTable>
 
+### `labelPadding`
+
+The amount of space that should be between the edge of the bot and the edge of the label.
+Units are in grid spaces.
+
+When <TagLink tag='labelFontSize'/> is set to `auto`, this setting affects both the label height and width.
+Otherwise, it only affects the width.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>
+    There is no space between the edge of the bot and the edge of the label. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>
+    The label is sized so that it fits in the space provided by the bot minus the padding.
+  </PossibleValue>
+</PossibleValuesTable>
+
+
 ### `labelSize`
 
 <Badges>

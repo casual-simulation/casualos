@@ -16,6 +16,7 @@ import {
     BotLabelAlignment,
     calculateLabelWordWrapMode,
     BotLabelFontSize,
+    getBotLabelPadding,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
 import {
@@ -92,7 +93,9 @@ export class LabelDecorator
                 this._initialSetup = true;
             }
 
-            let updateNeeded = this.text3D.setWidth(botWidth);
+            const labelPadding = getBotLabelPadding(calc, this.bot3D.bot);
+
+            let updateNeeded = this.text3D.setWidth(botWidth - labelPadding);
             updateNeeded =
                 this.text3D.setText(label, alignment) || updateNeeded;
 
@@ -155,7 +158,7 @@ export class LabelDecorator
                 }
                 this.text3D
                     .calculateFontSizeToFit(
-                        botHeight,
+                        botHeight - labelPadding,
                         0.1 * Text3D.defaultFontSize,
                         2 * Text3D.defaultFontSize,
                         0.025

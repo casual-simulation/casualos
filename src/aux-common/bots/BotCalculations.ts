@@ -1351,6 +1351,24 @@ export function getBotLabelAlignment(
 }
 
 /**
+ * Gets the amount of padding that should be used to auto-sized labels.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotLabelPadding(
+    calc: BotCalculationContext,
+    bot: Bot
+): number {
+    const val = calculateNumericalTagValue(calc, bot, 'auxLabelPadding', 0);
+
+    if (isNaN(val) || val === Infinity || val === -Infinity) {
+        return 0;
+    }
+
+    return val;
+}
+
+/**
  * Gets the text alignment for the bot's label.
  * @param calc The calculation context.
  * @param bot The bot.

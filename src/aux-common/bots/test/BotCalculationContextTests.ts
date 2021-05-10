@@ -64,6 +64,7 @@ import {
     getCameraType,
     getBotCursor,
     getPortalCursor,
+    getBotLabelPadding,
 } from '../BotCalculations';
 import {
     Bot,
@@ -2266,6 +2267,51 @@ export function botCalculationContextTests(
                     expect(a).toBe(expected);
                 }
             );
+        });
+    });
+
+    describe('getBotLabelPadding()', () => {
+        const tagCases = ['auxLabelPadding', 'labelPadding'];
+
+        describe.each(tagCases)('%s', (tag) => {
+            numericalTagValueTests(0, (given, expected) => {
+                const bot = createBot('test', {
+                    [tag]: given,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getBotLabelPadding(calc, bot)).toEqual(expected);
+            });
+
+            const outOfBoundsTests = [
+                ['Infinity', Infinity],
+                ['Negative Infinity', -Infinity],
+                ['NaN', NaN],
+            ];
+
+            it.each(outOfBoundsTests)(
+                'should map %s to 0',
+                (desc: string, value: number) => {
+                    const bot = createBot('test', {
+                        [tag]: value,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+
+                    expect(getBotLabelPadding(calc, bot)).toEqual(0);
+                }
+            );
+
+            it('should return 1 by default', () => {
+                const bot = createBot('test', {
+                    [tag]: null,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getBotLabelPadding(calc, bot)).toEqual(0);
+            });
         });
     });
 

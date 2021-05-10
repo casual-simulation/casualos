@@ -1573,6 +1573,7 @@ export const KNOWN_TAGS: string[] = [
     'labelFontSize',
     'labelSize',
     'labelSizeMode',
+    'labelPadding',
     'labelPosition',
     'labelAlignment',
     'labelWordWrapMode',
