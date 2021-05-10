@@ -62,6 +62,7 @@ import {
     calculatePortalCameraControlsMode,
     getMenuBotHoverStyle,
     getCameraType,
+    getBotCursor,
 } from '../BotCalculations';
 import {
     Bot,
@@ -1281,6 +1282,68 @@ export function botCalculationContextTests(
                 right: '0px',
                 top: '0px',
             });
+        });
+    });
+
+    describe('getBotCursor()', () => {
+        const tagCases = ['auxCursor', 'cursor'];
+        const cursorCases = [
+            ['auto', 'auto'],
+            ['default', 'default'],
+            ['none', 'none'],
+            ['context-menu', 'context-menu'],
+            ['help', 'help'],
+            ['pointer', 'pointer'],
+            ['progress', 'progress'],
+            ['wait', 'wait'],
+            ['cell', 'cell'],
+            ['crosshair', 'crosshair'],
+            ['text', 'text'],
+            ['vertical-text', 'vertical-text'],
+            ['alias', 'alias'],
+            ['copy', 'copy'],
+            ['move', 'move'],
+            ['no-drop', 'no-drop'],
+            ['not-allowed', 'not-allowed'],
+            ['grab', 'grab'],
+            ['grabbing', 'grabbing'],
+            ['all-scroll', 'all-scroll'],
+            ['col-resize', 'col-resize'],
+            ['row-resize', 'row-resize'],
+            ['n-resize', 'n-resize'],
+            ['e-resize', 'e-resize'],
+            ['s-resize', 's-resize'],
+            ['w-resize', 'w-resize'],
+            ['ne-resize', 'ne-resize'],
+            ['nw-resize', 'nw-resize'],
+            ['se-resize', 'se-resize'],
+            ['sw-resize', 'sw-resize'],
+            ['ew-resize', 'ew-resize'],
+            ['ns-resize', 'ns-resize'],
+            ['nesw-resize', 'nesw-resize'],
+            ['nwse-resize', 'nwse-resize'],
+            ['zoom-in', 'zoom-in'],
+            ['zoom-out', 'zoom-out'],
+
+            ['missing', 'auto'],
+            ['', null],
+            [123, null],
+            [true, null],
+        ];
+
+        describe.each(tagCases)('%s', (tag) => {
+            it.each(cursorCases)(
+                'should support %s',
+                (value: any, expected: any) => {
+                    const bot = createBot('test', {
+                        [tag]: value,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+
+                    expect(getBotCursor(calc, bot)).toBe(expected);
+                }
+            );
         });
     });
 

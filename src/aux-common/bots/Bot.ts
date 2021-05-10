@@ -573,6 +573,52 @@ export type PortalCameraControlsMode = 'player' | false;
 export type PortalCameraType = 'orthographic' | 'perspective';
 
 /**
+ * The possible bot cursors.
+ */
+export type BotCursorType =
+    | 'auto'
+    | 'default'
+    | 'none'
+    | 'context-menu'
+    | 'help'
+    | 'pointer'
+    | 'progress'
+    | 'wait'
+    | 'cell'
+    | 'crosshair'
+    | 'text'
+    | 'vertical-text'
+    | 'alias'
+    | 'copy'
+    | 'move'
+    | 'no-drop'
+    | 'not-allowed'
+    | 'grab'
+    | 'grabbing'
+    | 'all-scroll'
+    | 'col-resize'
+    | 'row-resize'
+    | 'n-resize'
+    | 'e-resize'
+    | 's-resize'
+    | 'w-resize'
+    | 'ne-resize'
+    | 'nw-resize'
+    | 'se-resize'
+    | 'sw-resize'
+    | 'ew-resize'
+    | 'ns-resize'
+    | 'nesw-resize'
+    | 'nwse-resize'
+    | 'zoom-in'
+    | 'zoom-out';
+
+/**
+ * The default bot cursor.
+ */
+export const DEFAULT_BOT_CURSOR: BotCursorType = 'auto';
+
+/**
  * The default bot shape.
  */
 export const DEFAULT_BOT_SHAPE: BotShape = 'cube';
@@ -1511,6 +1557,7 @@ export const KNOWN_TAGS: string[] = [
 
     'color',
     'creator',
+    'cursor',
     'draggable',
     'destroyable',
     'editable',

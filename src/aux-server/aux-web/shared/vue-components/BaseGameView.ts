@@ -8,6 +8,10 @@ import { Game } from '../scene/Game';
 import { SubscriptionLike } from 'rxjs';
 import { EventBus } from '../EventBus';
 import { debounce } from 'lodash';
+import {
+    BotCursorType,
+    DEFAULT_BOT_CURSOR,
+} from '@casual-simulation/aux-common';
 
 export interface SidebarItem {
     id: string;
@@ -26,6 +30,8 @@ export interface SidebarItem {
 export default class BaseGameView extends Vue implements IGameView {
     private _resizeObserver: import('@juggle/resize-observer').ResizeObserver;
     protected _subscriptions: SubscriptionLike[] = [];
+
+    cursor: BotCursorType = null;
 
     _game: Game = null;
 
@@ -87,6 +93,10 @@ export default class BaseGameView extends Vue implements IGameView {
         this._game = this.createGame();
         this._game.setup();
         this.resize();
+    }
+
+    setCursor(cursor: BotCursorType): void {
+        this.cursor = cursor;
     }
 
     beforeDestroy() {

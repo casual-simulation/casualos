@@ -53,6 +53,8 @@ import {
     MenuBotResolvedHoverStyle,
     DEFAULT_MENU_BOT_HOVER_STYLE,
     PortalCameraType,
+    BotCursorType,
+    DEFAULT_BOT_CURSOR,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -1592,6 +1594,68 @@ export function getBotMeetPortalAnchorPointOffset(
 } {
     const point = getBotMeetPortalAnchorPoint(calc, bot);
     return calculateMeetPortalAnchorPointOffset(point);
+}
+
+const botCursors = [
+    'auto',
+    'default',
+    'none',
+    'context-menu',
+    'help',
+    'pointer',
+    'progress',
+    'wait',
+    'cell',
+    'crosshair',
+    'text',
+    'vertical-text',
+    'alias',
+    'copy',
+    'move',
+    'no-drop',
+    'not-allowed',
+    'grab',
+    'grabbing',
+    'all-scroll',
+    'col-resize',
+    'row-resize',
+    'n-resize',
+    'e-resize',
+    's-resize',
+    'w-resize',
+    'ne-resize',
+    'nw-resize',
+    'se-resize',
+    'sw-resize',
+    'ew-resize',
+    'ns-resize',
+    'nesw-resize',
+    'nwse-resize',
+    'zoom-in',
+    'zoom-out',
+];
+
+/**
+ * Gets the cursor that has been configured on the given bot.
+ * Returns null if the bot does not have a valid string value.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotCursor(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotCursorType {
+    const value = calculateStringTagValue(calc, bot, 'auxCursor', null);
+
+    if (!hasValue(value)) {
+        return null;
+    }
+
+    if (botCursors.indexOf(value) >= 0) {
+        return value as BotCursorType;
+    }
+
+    return DEFAULT_BOT_CURSOR;
 }
 
 /**

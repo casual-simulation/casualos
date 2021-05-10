@@ -35,6 +35,7 @@ import {
     ON_POINTER_UP,
     ON_ANY_POINTER_DOWN,
     ON_ANY_POINTER_UP,
+    getBotCursor,
 } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
@@ -122,6 +123,25 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     keys: keysUp,
                 });
             }
+        }
+    }
+
+    protected _updateHoveredBots(): void {
+        super._updateHoveredBots();
+
+        let hasCursor = false;
+        for (let bot of this._hoveredBots) {
+            const cursor = getBotCursor(null, bot.bot);
+            if (hasValue(cursor)) {
+                // TODO: rework to do a better job of handling
+                this._game.botCursor = cursor;
+                hasCursor = true;
+                break;
+            }
+        }
+
+        if (!hasCursor) {
+            this._game.botCursor = null;
         }
     }
 
