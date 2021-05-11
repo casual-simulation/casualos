@@ -211,6 +211,7 @@ describe('AuxLibrary', () => {
             supportsAR: true,
             supportsVR: false,
             isCollaborative: true,
+            ab1BootstrapUrl: 'bootstrapURL',
         };
         notifier = {
             notifyChange: jest.fn(),
@@ -1830,6 +1831,7 @@ describe('AuxLibrary', () => {
                     supportsAR: null,
                     supportsVR: null,
                     isCollaborative: null,
+                    ab1BootstrapUrl: null,
                 });
             });
         });
@@ -1869,6 +1871,38 @@ describe('AuxLibrary', () => {
 
                 const d = library.api.os.isCollaborative();
                 expect(d).toEqual(true);
+            });
+        });
+
+        describe('os.getAB1BootstrapURL()', () => {
+            it('should return the device bootstrap URL', () => {
+                device.ab1BootstrapUrl = 'bootstrap';
+                const d = library.api.os.getAB1BootstrapURL();
+                expect(d).toEqual('bootstrap');
+            });
+
+            it('should return https://bootstrap.casualos.com/ab1.aux when no device is available', () => {
+                version = {
+                    hash: 'hash',
+                    version: 'v1.2.3',
+                    major: 1,
+                    minor: 2,
+                    patch: 3,
+                };
+                device = null;
+                notifier = {
+                    notifyChange: jest.fn(),
+                };
+                context = new MemoryGlobalContext(
+                    version,
+                    device,
+                    new TestScriptBotFactory(),
+                    notifier
+                );
+                library = createDefaultLibrary(context);
+
+                const d = library.api.os.getAB1BootstrapURL();
+                expect(d).toEqual('https://bootstrap.casualos.com/ab1.aux');
             });
         });
 

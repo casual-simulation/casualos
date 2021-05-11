@@ -24,6 +24,7 @@ const config: ClientConfig = {
             (DEVELOPMENT === true ? 'v2' : 'v1'),
         vmOrigin: process.env.VM_ORIGIN || null,
         disableCollaboration: process.env.DISABLE_COLLABORATION === 'true',
+        ab1BootstrapURL: process.env.AB1_BOOTSTRAP_URL || null,
     },
 };
 

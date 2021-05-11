@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.5.18
+
+#### Date: 5/11/2021
+
+### :rocket: Improvements
+
+-   Added the `AB1_BOOTSTRAP_URL` environment variable to control the URL that ab-1 gets loaded from.
+
 ## V1.5.17
 
 #### Date: 5/10/2021
