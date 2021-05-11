@@ -12,6 +12,7 @@ const webConfig = {
     sharedPartitionsVersion: process.env.SHARED_PARTITIONS_VERSION || 'v1',
     vmOrigin: process.env.VM_ORIGIN || null,
     disableCollaboration: process.env.DISABLE_COLLABORATION === 'true',
+    ab1BootstrapURL: process.env.AB1_BOOTSTRAP_URL || null,
 };
 
 // Creates /tmp/a/apple, regardless of whether `/tmp` and /tmp/a exist.

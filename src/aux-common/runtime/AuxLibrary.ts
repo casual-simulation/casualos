@@ -661,6 +661,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 version,
                 device,
                 isCollaborative,
+                getAB1BootstrapURL,
                 enableAR,
                 disableAR,
                 enableVR,
@@ -1552,6 +1553,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             supportsAR: null as boolean,
             supportsVR: null as boolean,
             isCollaborative: null as boolean,
+            ab1BootstrapUrl: null as string,
         };
     }
 
@@ -1564,6 +1566,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return true;
+    }
+
+    /**
+     * Gets the URL that AB1 should be bootstrapped from.
+     */
+    function getAB1BootstrapURL(): string {
+        if (context.device) {
+            return context.device.ab1BootstrapUrl;
+        }
+
+        return 'https://bootstrap.casualos.com/ab1.aux';
     }
 
     /**

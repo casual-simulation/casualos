@@ -3191,6 +3191,12 @@ declare global {
          * Gets whether this device has enabled collaborative features.
          */
         isCollaborative(): boolean;
+
+        /**
+         * Gets the URL that AB1 should be bootstrapped from.
+         */
+        getAB1BootstrapURL(): string;
+
         /**
          * Gets whether the player is in the sheet dimension.
          */

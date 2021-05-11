@@ -9,6 +9,7 @@ import {
     remapProgressPercent,
 } from '@casual-simulation/causal-trees';
 import {
+    hasValue,
     KNOWN_PORTALS,
     normalizeAUXBotURL,
 } from '@casual-simulation/aux-common';
@@ -21,6 +22,7 @@ import {
     StoredAux,
     getBotsStateFromStoredAux,
     AuxConfig,
+    parseVersionNumber,
 } from '@casual-simulation/aux-vm';
 import {
     BotManager,
@@ -255,10 +257,30 @@ export class AppManager {
                 .catch(() => false);
         }
 
+        let ab1Bootstrap: string;
+        if (hasValue(this._config.ab1BootstrapURL)) {
+            console.log('[AppManager] Using configured AB-1');
+            ab1Bootstrap = this._config.ab1BootstrapURL;
+        } else {
+            const version = parseVersionNumber(
+                this.version.latestTaggedVersion
+            );
+            if (version.alpha) {
+                console.log('[AppManager] Using alpha AB-1');
+                ab1Bootstrap = 'https://bootstrap.casualos.com/staging/ab1.aux';
+            } else {
+                console.log('[AppManager] Using production AB-1');
+                ab1Bootstrap = 'https://bootstrap.casualos.com/ab1.aux';
+            }
+        }
+
+        console.log('[AppManager] AB-1 URL: ' + ab1Bootstrap);
+
         this._deviceConfig = {
             supportsAR: arSupported,
             supportsVR: vrSupported,
             isCollaborative: !this._config.disableCollaboration,
+            ab1BootstrapUrl: ab1Bootstrap,
         };
     }
 

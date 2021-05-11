@@ -128,6 +128,7 @@ describe('AuxRuntime', () => {
             supportsAR: false,
             supportsVR: false,
             isCollaborative: true,
+            ab1BootstrapUrl: 'bootstrap',
         };
         runtime = new AuxRuntime(
             version,
@@ -9925,6 +9926,7 @@ describe('original action tests', () => {
                 supportsAR: true,
                 supportsVR: false,
                 isCollaborative: true,
+                ab1BootstrapUrl: 'bootstrap',
             });
 
             expect(result.actions).toEqual([
@@ -9934,6 +9936,7 @@ describe('original action tests', () => {
                             supportsAR: true,
                             supportsVR: false,
                             isCollaborative: true,
+                            ab1BootstrapUrl: 'bootstrap',
                         },
                     },
                 }),
@@ -9962,6 +9965,7 @@ describe('original action tests', () => {
                             supportsAR: null,
                             supportsVR: null,
                             isCollaborative: null,
+                            ab1BootstrapUrl: null,
                         },
                     },
                 }),
