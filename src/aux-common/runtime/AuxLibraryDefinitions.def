@@ -3188,6 +3188,10 @@ declare global {
         device(): AuxDevice;
 
         /**
+         * Gets whether this device has enabled collaborative features.
+         */
+        isCollaborative(): boolean;
+        /**
          * Gets whether the player is in the sheet dimension.
          */
         inSheet(): boolean;
