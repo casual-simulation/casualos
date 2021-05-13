@@ -244,10 +244,47 @@ The color of the bot.
 
 The cursor that should be used when the mouse pointer is hovering over the bot in the page and menu portals.
 
+Note that when using a custom cursor image, the image should be 32x32 pixels or smaller.
+This is because that is the largest cursor image size that some operating systems support.
+
 #### Possible values are:
 
 <PossibleValuesTable>
   <AnyCursorValues/>
+</PossibleValuesTable>
+
+### `cursorHotspotX`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The X position of the pixel in the cursor image that is the "hotspot".
+That is, the pixel which represents the point or tip of the cursor.
+
+The top left of the image is (0, 0).
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>(default)</PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>The X position that the cursor hotspot should be at.</PossibleValue>
+</PossibleValuesTable>
+
+### `cursorHotspotY`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The Y position of the pixel in the cursor image that is the "hotspot".
+That is, the pixel which represents the point or tip of the cursor.
+
+The top left of the image is (0, 0).
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>(default)</PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>The Y position that the cursor hotspot should be at.</PossibleValue>
 </PossibleValuesTable>
 
 ### `strokeColor`
@@ -1085,9 +1122,46 @@ The color of the background of the portal.
 The cursor that should be used when the mouse is hovered over the portal.
 The portal cursor is overriden when a bot with a <TagLink tag='cursor'/> tag is hovered.
 
+Note that when using a custom cursor image, the image should be 32x32 pixels or smaller.
+This is because that is the largest cursor image size that some operating systems support.
+
 #### Possible values are:
 <PossibleValuesTable>
   <AnyCursorValues/>
+</PossibleValuesTable>
+
+### `portalCursorHotspotX`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The X position of the pixel in the cursor image that is the "hotspot".
+That is, the pixel which represents the point or tip of the cursor.
+
+The top left of the image is (0, 0).
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>(default)</PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>The Y position that the cursor hotspot should be at.</PossibleValue>
+</PossibleValuesTable>
+
+### `portalCursorHotspotY`
+<Badges>
+    <PagePortalBadge/>
+    <InventoryPortalBadge/>
+</Badges>
+
+The Y position of the pixel in the cursor image that is the "hotspot".
+That is, the pixel which represents the point or tip of the cursor.
+
+The top left of the image is (0, 0).
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>(default)</PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>The Y position that the cursor hotspot should be at.</PossibleValue>
 </PossibleValuesTable>
 
 ### `portalBackgroundAddress`

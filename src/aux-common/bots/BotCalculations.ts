@@ -1667,10 +1667,31 @@ const botCursors = [
 ];
 
 /**
+ * Gets the CSS that should be used for the given cursor value.
+ * @param cursor The cursor.
+ */
+export function getCursorCSS(cursor: BotCursorType): string {
+    if (!hasValue(cursor)) {
+        return null;
+    }
+    if (typeof cursor === 'string') {
+        return cursor;
+    } else if (cursor.type === 'link') {
+        return `url("${cursor.url}") ${cursor.x} ${cursor.y}, auto`;
+    }
+}
+
+/**
  * Finds and returns the bot cursor type that matches the given value.
  * @param value The value.
  */
-export function calculateBotCursorType(value: string): BotCursorType {
+function calculateBotCursor(
+    calc: BotCalculationContext,
+    bot: Bot,
+    tag: string
+): BotCursorType {
+    const value = calculateStringTagValue(calc, bot, tag, null);
+
     if (!hasValue(value)) {
         return null;
     }
@@ -1678,6 +1699,17 @@ export function calculateBotCursorType(value: string): BotCursorType {
     if (botCursors.indexOf(value) >= 0) {
         return value as BotCursorType;
     }
+
+    try {
+        // try parsing the value as a URL
+        const url = new URL(value);
+        return {
+            type: 'link',
+            url: value,
+            x: calculateNumericalTagValue(calc, bot, tag + 'HotspotX', 0),
+            y: calculateNumericalTagValue(calc, bot, tag + 'HotspotY', 0),
+        };
+    } catch {}
 
     return DEFAULT_BOT_CURSOR;
 }
@@ -1692,8 +1724,7 @@ export function getBotCursor(
     calc: BotCalculationContext,
     bot: Bot
 ): BotCursorType {
-    const value = calculateStringTagValue(calc, bot, 'auxCursor', null);
-    return calculateBotCursorType(value);
+    return calculateBotCursor(calc, bot, 'auxCursor');
 }
 
 /**
@@ -1706,8 +1737,7 @@ export function getPortalCursor(
     calc: BotCalculationContext,
     bot: Bot
 ): BotCursorType {
-    const value = calculateStringTagValue(calc, bot, 'auxPortalCursor', null);
-    return calculateBotCursorType(value);
+    return calculateBotCursor(calc, bot, 'auxPortalCursor');
 }
 
 /**

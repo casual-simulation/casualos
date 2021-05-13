@@ -39,6 +39,7 @@ import {
     ON_ANY_POINTER_UP,
     ON_ANY_POINTER_DOWN,
     getBotCursor,
+    getCursorCSS,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
@@ -414,7 +415,7 @@ export default class MenuBot extends Vue {
     }
 
     private _updateCursor(calc: BotCalculationContext, bot: Bot) {
-        this.cursor = getBotCursor(calc, bot);
+        this.cursor = getCursorCSS(getBotCursor(calc, bot));
     }
 
     private async _ignoreTextUpdates(action: (text: string) => Promise<void>) {
