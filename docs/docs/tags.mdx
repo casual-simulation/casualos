@@ -375,11 +375,44 @@ Otherwise, it only affects the width.
   <PossibleValue value='Any Number > 0'>
     The label is sized so that it fits in the space provided by the bot minus the padding.
   </PossibleValue>
-  <PossibleValueCode value='<vertical> <horizontal>'>
-    The label is sized taking into account the vertical padding (first number) and horizontal padding (second number) when two numbers are separated by a space.
-  </PossibleValueCode>
 </PossibleValuesTable>
 
+### `labelPaddingX`
+
+The amount of space that should be between the side of the bot and the side of the label.
+Units are in grid spaces.
+
+This tag is similar to <TagLink tag='labelPadding'/> except that it only affects the width of the label.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>
+    There is no space between the edge of the bot and the edge of the label. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>
+    The label is sized so that it fits in the space provided by the bot minus the padding.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `labelPaddingY`
+
+The amount of space that should be between the top of the bot and the top of the label.
+Units are in grid spaces.
+
+This tag is similar to <TagLink tag='labelPadding'/> except that it only affects the height of the label.
+As such, this tag only has an effect when <TagLink tag='labelFontSize'/> is set to `auto`.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>
+    There is no space between the edge of the bot and the edge of the label. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>
+    The label is sized so that it fits in the space provided by the bot minus the padding.
+  </PossibleValue>
+</PossibleValuesTable>
 
 ### `labelSize`
 

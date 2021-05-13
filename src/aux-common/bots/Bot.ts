@@ -1589,6 +1589,8 @@ export const KNOWN_TAGS: string[] = [
     'labelSize',
     'labelSizeMode',
     'labelPadding',
+    'labelPaddingX',
+    'labelPaddingY',
     'labelPosition',
     'labelAlignment',
     'labelWordWrapMode',

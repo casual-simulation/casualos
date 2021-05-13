@@ -1360,50 +1360,16 @@ export function getBotLabelPadding(
     calc: BotCalculationContext,
     bot: Bot
 ): BotLabelPadding {
-    const tag = 'auxLabelPadding';
-    const val = calculateNumericalTagValue(calc, bot, tag, null);
+    const padding = calculateNumericalTagValue(calc, bot, 'auxLabelPadding', 0);
+    const x = calculateNumericalTagValue(calc, bot, 'auxLabelPaddingX', 0);
+    const y = calculateNumericalTagValue(calc, bot, 'auxLabelPaddingY', 0);
 
-    if (!hasValue(val)) {
-        const str = calculateStringTagValue(calc, bot, tag, '0 0');
-        const split = str
-            .trim()
-            .split(' ')
-            .filter((segment) => segment.length > 0);
-
-        if (split.length === 0) {
-            return {
-                vertical: 0,
-                horizontal: 0,
-            };
-        } else if (split.length === 1) {
-            const padding = parseFloat(split[0]);
-            const value = isIrrational(padding) ? 0 : padding;
-            return {
-                horizontal: value,
-                vertical: value,
-            };
-        } else if (split.length >= 2) {
-            const [verticalStr, horizontalStr] = split;
-            const vertical = parseFloat(verticalStr);
-            const horizontal = parseFloat(horizontalStr);
-
-            return {
-                horizontal: isIrrational(horizontal) ? 0 : horizontal,
-                vertical: isIrrational(vertical) ? 0 : vertical,
-            };
-        }
-    }
-
-    if (isIrrational(val)) {
-        return {
-            horizontal: 0,
-            vertical: 0,
-        };
-    }
+    const horizontal = padding + x;
+    const vertical = padding + y;
 
     return {
-        horizontal: val,
-        vertical: val,
+        horizontal: isIrrational(horizontal) ? 0 : horizontal,
+        vertical: isIrrational(vertical) ? 0 : vertical,
     };
 }
 

@@ -2322,25 +2322,37 @@ export function botCalculationContextTests(
                 });
             });
 
+            it('should add the builtin and vertical/horizontal paddings together', () => {
+                const bot = createBot('test', {
+                    [tag]: 2,
+                    [tag + 'Y']: 1,
+                    [tag + 'X']: 3,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getBotLabelPadding(calc, bot)).toEqual({
+                    horizontal: 5,
+                    vertical: 3,
+                });
+            });
+
             const separatePaddingValuesTests = [
-                ['13 21', { vertical: 13, horizontal: 21 }],
-                ['3.14159 .2', { vertical: 3.14159, horizontal: 0.2 }],
-                ['3.14159', { vertical: 3.14159, horizontal: 3.14159 }],
-                ['0.123 1000', { vertical: 0.123, horizontal: 1000 }],
-                ['0 1000', { vertical: 0, horizontal: 1000 }],
-                ['1000 0', { vertical: 1000, horizontal: 0 }],
-                ['1000 ', { vertical: 1000, horizontal: 1000 }],
-                [' 1000 ', { vertical: 1000, horizontal: 1000 }],
-                [' 1000', { vertical: 1000, horizontal: 1000 }],
-                ['1000  123', { vertical: 1000, horizontal: 123 }],
-                ['broken', { vertical: 0, horizontal: 0 }],
+                [13, 21, { vertical: 13, horizontal: 21 }],
+                [3.14159, 0.2, { vertical: 3.14159, horizontal: 0.2 }],
+                [3.14159, null, { vertical: 3.14159, horizontal: 0 }],
+                [0.123, 1000, { vertical: 0.123, horizontal: 1000 }],
+                [null, 1000, { vertical: 0, horizontal: 1000 }],
+                [1000, 0, { vertical: 1000, horizontal: 0 }],
+                [1000, 123, { vertical: 1000, horizontal: 123 }],
             ];
 
             it.each(separatePaddingValuesTests)(
                 'should support %s',
-                (given: string, expected: any) => {
+                (vertical: number, horizontal: number, expected: any) => {
                     const bot = createBot('test', {
-                        [tag]: given,
+                        [tag + 'Y']: vertical,
+                        [tag + 'X']: horizontal,
                     });
 
                     const calc = createPrecalculatedContext([bot]);
