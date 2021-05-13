@@ -7,6 +7,8 @@
 ### :rocket: Improvements
 
 -   Added the `labelPaddingX` and `labelPaddingY` tags to allow controlling the padding along the width and height of labels separately.
+-   Added the ability to use a URL for the `cursor` and `portalCursor` tags.
+-   Added the `cursorHotspotX`, `cursorHotspotY`, `portalCursorHotspotX`, and `portalCursorHotspotY` tags to allow specifying the location that clicks should happen at in the custom cursor image. For example, a cursor that is a circle would have the hotspot in the middle but the default cursor has the hotspot at the top left.
 
 ## V1.5.18
 
