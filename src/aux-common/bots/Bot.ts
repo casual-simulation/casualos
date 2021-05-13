@@ -614,6 +614,21 @@ export type BotCursorType =
     | 'zoom-out';
 
 /**
+ * Defines an interface that represents the padding that a bot label should have.
+ */
+export interface BotLabelPadding {
+    /**
+     * The horizontal padding that the label should have.
+     */
+    horizontal: number;
+
+    /**
+     * The vertical padding that the label should have.
+     */
+    vertical: number;
+}
+
+/**
  * The default bot cursor.
  */
 export const DEFAULT_BOT_CURSOR: BotCursorType = 'auto';

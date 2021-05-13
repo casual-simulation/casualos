@@ -55,6 +55,7 @@ import {
     PortalCameraType,
     BotCursorType,
     DEFAULT_BOT_CURSOR,
+    BotLabelPadding,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -1358,14 +1359,60 @@ export function getBotLabelAlignment(
 export function getBotLabelPadding(
     calc: BotCalculationContext,
     bot: Bot
-): number {
-    const val = calculateNumericalTagValue(calc, bot, 'auxLabelPadding', 0);
+): BotLabelPadding {
+    const tag = 'auxLabelPadding';
+    const val = calculateNumericalTagValue(calc, bot, tag, null);
 
-    if (isNaN(val) || val === Infinity || val === -Infinity) {
-        return 0;
+    if (!hasValue(val)) {
+        const str = calculateStringTagValue(calc, bot, tag, '0 0');
+        const split = str
+            .trim()
+            .split(' ')
+            .filter((segment) => segment.length > 0);
+
+        if (split.length === 0) {
+            return {
+                vertical: 0,
+                horizontal: 0,
+            };
+        } else if (split.length === 1) {
+            const padding = parseFloat(split[0]);
+            const value = isIrrational(padding) ? 0 : padding;
+            return {
+                horizontal: value,
+                vertical: value,
+            };
+        } else if (split.length >= 2) {
+            const [verticalStr, horizontalStr] = split;
+            const vertical = parseFloat(verticalStr);
+            const horizontal = parseFloat(horizontalStr);
+
+            return {
+                horizontal: isIrrational(horizontal) ? 0 : horizontal,
+                vertical: isIrrational(vertical) ? 0 : vertical,
+            };
+        }
     }
 
-    return val;
+    if (isIrrational(val)) {
+        return {
+            horizontal: 0,
+            vertical: 0,
+        };
+    }
+
+    return {
+        horizontal: val,
+        vertical: val,
+    };
+}
+
+/**
+ * Determines if the given value is NaN, or +/- infinity.
+ * @param val
+ */
+function isIrrational(val: number): boolean {
+    return isNaN(val) || val === Infinity || val === -Infinity;
 }
 
 /**

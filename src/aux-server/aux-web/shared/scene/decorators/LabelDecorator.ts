@@ -95,7 +95,9 @@ export class LabelDecorator
 
             const labelPadding = getBotLabelPadding(calc, this.bot3D.bot);
 
-            let updateNeeded = this.text3D.setWidth(botWidth - labelPadding);
+            let updateNeeded = this.text3D.setWidth(
+                botWidth - labelPadding.horizontal
+            );
             updateNeeded =
                 this.text3D.setText(label, alignment) || updateNeeded;
 
@@ -158,7 +160,7 @@ export class LabelDecorator
                 }
                 this.text3D
                     .calculateFontSizeToFit(
-                        botHeight - labelPadding,
+                        botHeight - labelPadding.vertical,
                         0.1 * Text3D.defaultFontSize,
                         2 * Text3D.defaultFontSize,
                         0.025

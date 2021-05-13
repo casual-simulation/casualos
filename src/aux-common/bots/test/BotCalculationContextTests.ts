@@ -2281,7 +2281,10 @@ export function botCalculationContextTests(
 
                 const calc = createPrecalculatedContext([bot]);
 
-                expect(getBotLabelPadding(calc, bot)).toEqual(expected);
+                expect(getBotLabelPadding(calc, bot)).toEqual({
+                    horizontal: expected,
+                    vertical: expected,
+                });
             });
 
             const outOfBoundsTests = [
@@ -2299,7 +2302,10 @@ export function botCalculationContextTests(
 
                     const calc = createPrecalculatedContext([bot]);
 
-                    expect(getBotLabelPadding(calc, bot)).toEqual(0);
+                    expect(getBotLabelPadding(calc, bot)).toEqual({
+                        horizontal: 0,
+                        vertical: 0,
+                    });
                 }
             );
 
@@ -2310,8 +2316,38 @@ export function botCalculationContextTests(
 
                 const calc = createPrecalculatedContext([bot]);
 
-                expect(getBotLabelPadding(calc, bot)).toEqual(0);
+                expect(getBotLabelPadding(calc, bot)).toEqual({
+                    horizontal: 0,
+                    vertical: 0,
+                });
             });
+
+            const separatePaddingValuesTests = [
+                ['13 21', { vertical: 13, horizontal: 21 }],
+                ['3.14159 .2', { vertical: 3.14159, horizontal: 0.2 }],
+                ['3.14159', { vertical: 3.14159, horizontal: 3.14159 }],
+                ['0.123 1000', { vertical: 0.123, horizontal: 1000 }],
+                ['0 1000', { vertical: 0, horizontal: 1000 }],
+                ['1000 0', { vertical: 1000, horizontal: 0 }],
+                ['1000 ', { vertical: 1000, horizontal: 1000 }],
+                [' 1000 ', { vertical: 1000, horizontal: 1000 }],
+                [' 1000', { vertical: 1000, horizontal: 1000 }],
+                ['1000  123', { vertical: 1000, horizontal: 123 }],
+                ['broken', { vertical: 0, horizontal: 0 }],
+            ];
+
+            it.each(separatePaddingValuesTests)(
+                'should support %s',
+                (given: string, expected: any) => {
+                    const bot = createBot('test', {
+                        [tag]: given,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+
+                    expect(getBotLabelPadding(calc, bot)).toEqual(expected);
+                }
+            );
         });
     });
 
