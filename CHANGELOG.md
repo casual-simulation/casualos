@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.5.19
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `labelPaddingX` and `labelPaddingY` tags to allow controlling the padding along the width and height of labels separately.
+
 ## V1.5.18
 
 #### Date: 5/11/2021
