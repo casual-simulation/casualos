@@ -116,6 +116,7 @@ describe('AuxHelper', () => {
                 supportsAR: false,
                 supportsVR: false,
                 isCollaborative: true,
+                ab1BootstrapUrl: 'ab1Bootstrap',
             }
         );
         const helper = new AuxHelper(partitions, runtime);

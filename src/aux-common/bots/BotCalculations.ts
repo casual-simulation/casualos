@@ -55,6 +55,7 @@ import {
     PortalCameraType,
     BotCursorType,
     DEFAULT_BOT_CURSOR,
+    BotLabelPadding,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -1358,14 +1359,26 @@ export function getBotLabelAlignment(
 export function getBotLabelPadding(
     calc: BotCalculationContext,
     bot: Bot
-): number {
-    const val = calculateNumericalTagValue(calc, bot, 'auxLabelPadding', 0);
+): BotLabelPadding {
+    const padding = calculateNumericalTagValue(calc, bot, 'auxLabelPadding', 0);
+    const x = calculateNumericalTagValue(calc, bot, 'auxLabelPaddingX', 0);
+    const y = calculateNumericalTagValue(calc, bot, 'auxLabelPaddingY', 0);
 
-    if (isNaN(val) || val === Infinity || val === -Infinity) {
-        return 0;
-    }
+    const horizontal = padding + x;
+    const vertical = padding + y;
 
-    return val;
+    return {
+        horizontal: isIrrational(horizontal) ? 0 : horizontal,
+        vertical: isIrrational(vertical) ? 0 : vertical,
+    };
+}
+
+/**
+ * Determines if the given value is NaN, or +/- infinity.
+ * @param val
+ */
+function isIrrational(val: number): boolean {
+    return isNaN(val) || val === Infinity || val === -Infinity;
 }
 
 /**
@@ -1654,10 +1667,31 @@ const botCursors = [
 ];
 
 /**
+ * Gets the CSS that should be used for the given cursor value.
+ * @param cursor The cursor.
+ */
+export function getCursorCSS(cursor: BotCursorType): string {
+    if (!hasValue(cursor)) {
+        return null;
+    }
+    if (typeof cursor === 'string') {
+        return cursor;
+    } else if (cursor.type === 'link') {
+        return `url("${cursor.url}") ${cursor.x} ${cursor.y}, auto`;
+    }
+}
+
+/**
  * Finds and returns the bot cursor type that matches the given value.
  * @param value The value.
  */
-export function calculateBotCursorType(value: string): BotCursorType {
+function calculateBotCursor(
+    calc: BotCalculationContext,
+    bot: Bot,
+    tag: string
+): BotCursorType {
+    const value = calculateStringTagValue(calc, bot, tag, null);
+
     if (!hasValue(value)) {
         return null;
     }
@@ -1665,6 +1699,17 @@ export function calculateBotCursorType(value: string): BotCursorType {
     if (botCursors.indexOf(value) >= 0) {
         return value as BotCursorType;
     }
+
+    try {
+        // try parsing the value as a URL
+        const url = new URL(value);
+        return {
+            type: 'link',
+            url: value,
+            x: calculateNumericalTagValue(calc, bot, tag + 'HotspotX', 0),
+            y: calculateNumericalTagValue(calc, bot, tag + 'HotspotY', 0),
+        };
+    } catch {}
 
     return DEFAULT_BOT_CURSOR;
 }
@@ -1679,8 +1724,7 @@ export function getBotCursor(
     calc: BotCalculationContext,
     bot: Bot
 ): BotCursorType {
-    const value = calculateStringTagValue(calc, bot, 'auxCursor', null);
-    return calculateBotCursorType(value);
+    return calculateBotCursor(calc, bot, 'auxCursor');
 }
 
 /**
@@ -1693,8 +1737,7 @@ export function getPortalCursor(
     calc: BotCalculationContext,
     bot: Bot
 ): BotCursorType {
-    const value = calculateStringTagValue(calc, bot, 'auxPortalCursor', null);
-    return calculateBotCursorType(value);
+    return calculateBotCursor(calc, bot, 'auxPortalCursor');
 }
 
 /**

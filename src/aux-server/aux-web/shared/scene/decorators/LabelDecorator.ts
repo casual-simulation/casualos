@@ -95,7 +95,9 @@ export class LabelDecorator
 
             const labelPadding = getBotLabelPadding(calc, this.bot3D.bot);
 
-            let updateNeeded = this.text3D.setWidth(botWidth - labelPadding);
+            let updateNeeded = this.text3D.setWidth(
+                botWidth - labelPadding.horizontal
+            );
             updateNeeded =
                 this.text3D.setText(label, alignment) || updateNeeded;
 
@@ -130,8 +132,10 @@ export class LabelDecorator
 
             let fontSize = calculateLabelFontSize(calc, this.bot3D.bot);
 
+            const height = botHeight - labelPadding.vertical;
+
             updateNeeded = updateNeeded || fontSize !== this._lastFontSize;
-            updateNeeded = updateNeeded || botHeight !== this._lastHeight;
+            updateNeeded = updateNeeded || height !== this._lastHeight;
             updateNeeded = updateNeeded || botLength !== this._lastLength;
 
             if (typeof fontSize === 'number') {
@@ -158,7 +162,7 @@ export class LabelDecorator
                 }
                 this.text3D
                     .calculateFontSizeToFit(
-                        botHeight - labelPadding,
+                        height,
                         0.1 * Text3D.defaultFontSize,
                         2 * Text3D.defaultFontSize,
                         0.025
@@ -181,7 +185,7 @@ export class LabelDecorator
             }
 
             this._lastFontSize = fontSize;
-            this._lastHeight = botHeight;
+            this._lastHeight = height;
             this._lastLength = botLength;
         } else {
             this.disposeText3D();

@@ -611,7 +611,30 @@ export type BotCursorType =
     | 'nesw-resize'
     | 'nwse-resize'
     | 'zoom-in'
-    | 'zoom-out';
+    | 'zoom-out'
+    | BotCursorLink;
+
+export interface BotCursorLink {
+    type: 'link';
+    url: string;
+    x: number;
+    y: number;
+}
+
+/**
+ * Defines an interface that represents the padding that a bot label should have.
+ */
+export interface BotLabelPadding {
+    /**
+     * The horizontal padding that the label should have.
+     */
+    horizontal: number;
+
+    /**
+     * The vertical padding that the label should have.
+     */
+    vertical: number;
+}
 
 /**
  * The default bot cursor.
@@ -1516,6 +1539,8 @@ export const KNOWN_TAGS: string[] = [
 
     'portalColor',
     'portalCursor',
+    'portalCursorHotspotX',
+    'portalCursorHotspotY',
     'portalBackgroundAddress',
     'portalLocked',
     'portalPannable',
@@ -1559,6 +1584,8 @@ export const KNOWN_TAGS: string[] = [
     'color',
     'creator',
     'cursor',
+    'cursorHotspotX',
+    'cursorHotspotY',
     'draggable',
     'destroyable',
     'editable',
@@ -1574,6 +1601,8 @@ export const KNOWN_TAGS: string[] = [
     'labelSize',
     'labelSizeMode',
     'labelPadding',
+    'labelPaddingX',
+    'labelPaddingY',
     'labelPosition',
     'labelAlignment',
     'labelWordWrapMode',
