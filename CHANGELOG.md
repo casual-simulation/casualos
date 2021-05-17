@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.5.20
+
+#### Date: 5/17/2021
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `@onInputTyping` was incorrectly shouted instead of whispered.
+
 ## V1.5.19
 
 #### Date: 5/13/2021

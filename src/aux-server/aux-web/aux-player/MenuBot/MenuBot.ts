@@ -301,7 +301,7 @@ export default class MenuBot extends Vue {
             );
             await simulation.helper.action(
                 ON_INPUT_TYPING_ACTION_NAME,
-                null,
+                [this.item.bot],
                 onSubmitArg(this.text)
             );
         }
