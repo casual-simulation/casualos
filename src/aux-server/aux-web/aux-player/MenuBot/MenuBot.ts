@@ -465,13 +465,19 @@ export default class MenuBot extends Vue {
                             if (input) {
                                 try {
                                     input.$el.focus();
-                                    if (hasValue(e.taskId)) {
+                                    if (
+                                        hasValue(e.taskId) &&
+                                        hasValue(e.portal)
+                                    ) {
                                         simulation.helper.transaction(
                                             asyncResult(e.taskId, null)
                                         );
                                     }
                                 } catch (err) {
-                                    if (hasValue(e.taskId)) {
+                                    if (
+                                        hasValue(e.taskId) &&
+                                        hasValue(e.portal)
+                                    ) {
                                         simulation.helper.transaction(
                                             asyncError(
                                                 e.taskId,
@@ -481,7 +487,7 @@ export default class MenuBot extends Vue {
                                     }
                                 }
                             } else {
-                                if (hasValue(e.taskId)) {
+                                if (hasValue(e.taskId) && hasValue(e.portal)) {
                                     simulation.helper.transaction(
                                         asyncError(
                                             e.taskId,
