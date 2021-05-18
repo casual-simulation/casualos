@@ -2639,13 +2639,40 @@ export interface SnapPoint {
 }
 
 /**
+ * Defines an interface that represents a snap axis.
+ * That is, a ray in 3D space with an associated snap distance.
+ */
+export interface SnapAxis {
+    /**
+     * The 3D direction that the axis ray travels along.
+     */
+    direction: { x: number; y: number; z: number };
+
+    /**
+     * The 3D position that the ray starts at.
+     */
+    origin: { x: number; y: number; z: number };
+
+    /**
+     * The distance from the ray line that the snap point should take effect at.
+     */
+    distance: number;
+}
+
+/**
  * The list of possible snap targets.
  * - "ground" means that the dragged bot should snap to the ground plane. This option is overriden by "grid".
  * - "grid" means that the dragged bot should snap to grid tiles.
  * - "face" means that the dragged bot should snap to other bot faces.
  * - "bots" means that the dragged bot will snap to other bots.
  */
-export type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint;
+export type SnapTarget =
+    | 'ground'
+    | 'grid'
+    | 'face'
+    | 'bots'
+    | SnapPoint
+    | SnapAxis;
 
 /**
  * An event that is used to start audio recording.
