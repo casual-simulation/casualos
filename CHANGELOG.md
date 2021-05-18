@@ -1,5 +1,17 @@
 # CasualOS Changelog
 
+## V1.5.21
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved `os.focusOn()` to support focusing on menu bots that have `#form` set to `input`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the "tag has already been added" dialog displayed behind the sheet portal.
+
 ## V1.5.20
 
 #### Date: 5/17/2021
