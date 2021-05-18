@@ -13,8 +13,8 @@ import {
     Bot,
     DEFAULT_SCENE_BACKGROUND_COLOR,
     hasValue,
-    AnimateToBotAction,
-    AnimateToOptions,
+    FocusOnBotAction,
+    FocusOnOptions,
     DEFAULT_WORKSPACE_GRID_SCALE,
     BotCursorType,
 } from '@casual-simulation/aux-common';
@@ -350,7 +350,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
      * @param cameraRig The camera rig to tween.
      * @param action The action to use for tweening.
      */
-    tweenCameraToBot(action: AnimateToBotAction) {
+    tweenCameraToBot(action: FocusOnBotAction) {
         // find the bot with the given ID
         const matches = this.findBotsById(action.botId);
         console.log(
@@ -384,7 +384,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
     tweenCameraToPosition(
         cameraRig: CameraRig,
         position: Vector3,
-        options: AnimateToOptions,
+        options: FocusOnOptions,
         simulation: Simulation,
         taskId: string | number
     ) {

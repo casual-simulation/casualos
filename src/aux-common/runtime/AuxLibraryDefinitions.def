@@ -232,8 +232,8 @@ declare type AsyncActions =
     | CancelSoundAction
     | OpenCustomPortalAction
     | RegisterPrefixAction
-    | AnimateToBotAction
-    | AnimateToPositionAction
+    | FocusOnBotAction
+    | FocusOnPositionAction
     | BeginRecordingAction
     | EndRecordingAction
     | SpeakTextAction
@@ -680,7 +680,7 @@ declare interface HideHtmlAction extends Action {
 /**
  * Options for the os.tweenTo(), os.moveTo(), and os.focusOn() actions.
  */
- export interface AnimateToOptions {
+ export interface FocusOnOptions {
     /*
      * The zoom value to use.
      */
@@ -708,10 +708,10 @@ declare interface HideHtmlAction extends Action {
 }
 
 /**
- * An event that is used to tween the camera to the given bot's location.
+ * An event that is used to focus on a given bot.
  */
-export interface AnimateToBotAction extends AsyncAction, AnimateToOptions {
-    type: 'animate_to_bot';
+export interface FocusOnBotAction extends AsyncAction, FocusOnOptions {
+    type: 'focus_on';
 
     /**
      * The ID of the bot to tween to.
@@ -720,10 +720,10 @@ export interface AnimateToBotAction extends AsyncAction, AnimateToOptions {
 }
 
 /**
- * An event that is used to animate the camera to the given bot's location.
+ * An event that is used to focus the camera on a specific position.
  */
- export interface AnimateToPositionAction extends AsyncAction, AnimateToOptions {
-    type: 'animate_to_position';
+ export interface FocusOnPositionAction extends AsyncAction, FocusOnOptions {
+    type: 'focus_on_position';
 
     /**
      * The position to animate to.
@@ -3402,7 +3402,7 @@ declare global {
          */
         focusOn(
             botOrPosition: Bot | string | { x: number, y: number },
-            options: AnimateToOptions
+            options: FocusOnOptions
         ): Promise<void>;
 
         /**

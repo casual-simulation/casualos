@@ -9678,7 +9678,7 @@ describe('original action tests', () => {
     });
 
     describe('os.tweenTo()', () => {
-        it('should emit a AnimateToBotAction', () => {
+        it('should emit a FocusOnBotAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -9739,7 +9739,7 @@ describe('original action tests', () => {
     });
 
     describe('os.moveTo()', () => {
-        it('should emit a AnimateToBotAction with the duration set to 0', () => {
+        it('should emit a FocusOnBotAction with the duration set to 0', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',

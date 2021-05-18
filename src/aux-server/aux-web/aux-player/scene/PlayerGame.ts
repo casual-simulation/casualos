@@ -472,9 +472,9 @@ export class PlayerGame extends Game {
                     }
                 } else if (e.type === 'replace_drag_bot') {
                     this.dragBot(playerSim3D, inventorySim3D, e.bot);
-                } else if (e.type === 'animate_to_bot') {
+                } else if (e.type === 'focus_on') {
                     this.tweenCameraToBot(e);
-                } else if (e.type === 'animate_to_position') {
+                } else if (e.type === 'focus_on_position') {
                     const gridScale = playerSim3D.getDefaultGridScale();
                     const convertedPosition = new Vector3(
                         e.position.x * gridScale,

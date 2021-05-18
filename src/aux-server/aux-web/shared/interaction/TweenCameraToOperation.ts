@@ -7,7 +7,7 @@ import {
     BotCalculationContext,
     getEasing,
     hasValue,
-    AnimateToOptions,
+    FocusOnOptions,
 } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { CameraRig } from '../scene/CameraRigFactory';
@@ -56,7 +56,7 @@ export class TweenCameraToOperation implements IOperation {
         time: Time,
         interaction: BaseInteractionManager,
         target: Vector3,
-        options: AnimateToOptions,
+        options: FocusOnOptions,
         simulation: Simulation,
         taskId: string | number
     ) {
