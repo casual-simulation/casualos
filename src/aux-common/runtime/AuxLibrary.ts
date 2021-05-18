@@ -181,7 +181,7 @@ import {
     ShowHtmlAction,
     HideHtmlAction,
     SetClipboardAction,
-    AnimateToBotAction,
+    FocusOnBotAction,
     ShowChatBarAction,
     EnableARAction,
     EnableVRAction,
@@ -205,7 +205,7 @@ import {
     ShowUploadFilesAction,
     ApplyStateAction,
     RejectAction,
-    AnimateToOptions,
+    FocusOnOptions,
     animateToPosition,
     AsyncAction,
     beginAudioRecording as calcBeginAudioRecording,
@@ -1430,7 +1430,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         rotX?: number,
         rotY?: number,
         duration?: number
-    ): AnimateToBotAction {
+    ): FocusOnBotAction {
         return addAction(
             calcTweenTo(getID(bot), {
                 zoom: zoomValue,
@@ -1458,7 +1458,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         zoomValue?: number,
         rotX?: number,
         rotY?: number
-    ): AnimateToBotAction {
+    ): FocusOnBotAction {
         return tweenTo(bot, zoomValue, rotX, rotY, 0);
     }
 
@@ -1470,10 +1470,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function focusOn(
         botOrPosition: Bot | string | { x: number; y: number },
-        options: AnimateToOptions = {}
+        options: FocusOnOptions = {}
     ): Promise<void> {
         const task = context.createTask();
-        const finalOptions: AnimateToOptions = {
+        const finalOptions: FocusOnOptions = {
             duration: 1,
             easing: 'quadratic',
             ...(options ?? {}),

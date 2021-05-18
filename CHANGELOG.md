@@ -1,5 +1,40 @@
 # CasualOS Changelog
 
+## V1.5.21
+
+#### Date: 5/18/2021
+
+### :rocket: Improvements
+
+-   Improved `os.focusOn()` to support focusing on menu bots that have `#form` set to `input`.
+-   Added the ability to snap dragged to a specific axis.
+
+    -   These are special snap target objects that have the following form:
+
+    ```typescript
+    let snapAxis: {
+        /**
+         * The direction that the axis travels along.
+         */
+        direction: { x: number; y: number; z: number };
+
+        /**
+         * The center point that the axis travels through.
+         */
+        origin: { x: number; y: number; z: number };
+
+        /**
+         * The distance that the bot should be from any point along the
+         * axis in order to snap to it.
+         */
+        distance: number;
+    };
+    ```
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the "tag has already been added" dialog displayed behind the sheet portal.
+
 ## V1.5.20
 
 #### Date: 5/17/2021

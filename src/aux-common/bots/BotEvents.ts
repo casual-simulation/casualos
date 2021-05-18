@@ -5,6 +5,7 @@ import {
     BotTags,
     BotSpace,
     BotTagMasks,
+    PortalType,
 } from './Bot';
 import {
     Action,
@@ -185,8 +186,8 @@ export type AsyncActions =
     | LocalRotationTweenAction
     | ShowUploadFilesAction
     | OpenCircleWipeAction
-    | AnimateToBotAction
-    | AnimateToPositionAction
+    | FocusOnBotAction
+    | FocusOnPositionAction
     | BeginAudioRecordingAction
     | EndAudioRecordingAction
     | CancelAnimationAction
@@ -653,7 +654,7 @@ export interface HideHtmlAction extends Action {
 /**
  * Options for the os.tweenTo(), os.moveTo(), and os.focusOn() actions.
  */
-export interface AnimateToOptions {
+export interface FocusOnOptions {
     /*
      * The zoom value to use.
      */
@@ -677,25 +678,31 @@ export interface AnimateToOptions {
      * If not specified then "linear" "inout" will be used.
      */
     easing?: EaseType | Easing;
+
+    /**
+     * The portal that the bot is in.
+     * If not specified, then the bot will be focused in all portals.
+     */
+    portal?: PortalType;
 }
 
 /**
- * An event that is used to animate the camera to the given bot's location.
+ * An event that is used to focus on a given bot.
  */
-export interface AnimateToBotAction extends AsyncAction, AnimateToOptions {
-    type: 'animate_to_bot';
+export interface FocusOnBotAction extends AsyncAction, FocusOnOptions {
+    type: 'focus_on';
 
     /**
-     * The ID of the bot to tween to.
+     * The ID of the bot to focus on.
      */
     botId: string;
 }
 
 /**
- * An event that is used to animate the camera to the given bot's location.
+ * An event that is used to focus on a given position.
  */
-export interface AnimateToPositionAction extends AsyncAction, AnimateToOptions {
-    type: 'animate_to_position';
+export interface FocusOnPositionAction extends AsyncAction, FocusOnOptions {
+    type: 'focus_on_position';
 
     /**
      * The position to animate to.
@@ -1916,8 +1923,7 @@ export interface SerialStreamAction extends AsyncAction {
     /**
      * A friendly device name. Example: Brush01
      */
-     name: string;
-
+    name: string;
 }
 /**
  * Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
@@ -1928,7 +1934,6 @@ export interface SerialOpenAction extends AsyncAction {
      * A friendly device name. Example: Brush01
      */
     name: string;
-
 }
 /**
  * Updates the SerialPort object with a new baudRate.
@@ -1939,7 +1944,6 @@ export interface SerialUpdateAction extends AsyncAction {
      * A friendly device name. Example: Brush01
      */
     name: string;
-
 
     /**
      * {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
@@ -1960,7 +1964,6 @@ export interface SerialWriteAction extends AsyncAction {
      * A friendly device name. Example: Brush01
      */
     name: string;
-
 
     /**
      * The data/command to send.
@@ -1987,7 +1990,6 @@ export interface SerialReadAction extends AsyncAction {
      */
     name: string;
 
-
     /**
      * Specify how many bytes of data to return, if available
      */
@@ -2003,11 +2005,10 @@ export interface SerialCloseAction extends AsyncAction {
      */
     name: string;
 
-
     /**
      * The device path. Example: /dev/rfcomm0
      */
-     device: string;
+    device: string;
 
     /**
      *
@@ -2023,7 +2024,6 @@ export interface SerialFlushAction extends AsyncAction {
      * A friendly device name. Example: Brush01
      */
     name: string;
-
 }
 /**
  * Waits until all output data is transmitted to the serial port. After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device.
@@ -2034,7 +2034,6 @@ export interface SerialDrainAction extends AsyncAction {
      * A friendly device name. Example: Brush01
      */
     name: string;
-
 }
 /**
  * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
@@ -2045,7 +2044,6 @@ export interface SerialPauseAction extends AsyncAction {
      * A friendly device name. Example: Brush01
      */
     name: string;
-
 }
 /**
  * Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
@@ -2056,7 +2054,6 @@ export interface SerialResumeAction extends AsyncAction {
      * A friendly device name. Example: Brush01
      */
     name: string;
-
 }
 /**
  * Defines an event that sets some text on the user's clipboard.
@@ -2642,13 +2639,40 @@ export interface SnapPoint {
 }
 
 /**
+ * Defines an interface that represents a snap axis.
+ * That is, a ray in 3D space with an associated snap distance.
+ */
+export interface SnapAxis {
+    /**
+     * The 3D direction that the axis ray travels along.
+     */
+    direction: { x: number; y: number; z: number };
+
+    /**
+     * The 3D position that the ray starts at.
+     */
+    origin: { x: number; y: number; z: number };
+
+    /**
+     * The distance from the ray line that the snap point should take effect at.
+     */
+    distance: number;
+}
+
+/**
  * The list of possible snap targets.
  * - "ground" means that the dragged bot should snap to the ground plane. This option is overriden by "grid".
  * - "grid" means that the dragged bot should snap to grid tiles.
  * - "face" means that the dragged bot should snap to other bot faces.
  * - "bots" means that the dragged bot will snap to other bots.
  */
-export type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint;
+export type SnapTarget =
+    | 'ground'
+    | 'grid'
+    | 'face'
+    | 'bots'
+    | SnapPoint
+    | SnapAxis;
 
 /**
  * An event that is used to start audio recording.
@@ -3043,7 +3067,7 @@ export function hideHtml(): HideHtmlAction {
 }
 
 /**
- * Creates a new AnimateToBotAction.
+ * Creates a new FocusOnBotAction.
  * @param botId The ID of the bot to tween to.
  * @param zoomValue The zoom value to use.
  * @param rotX The X rotation value.
@@ -3052,11 +3076,11 @@ export function hideHtml(): HideHtmlAction {
  */
 export function tweenTo(
     botId: string,
-    options: AnimateToOptions = {},
+    options: FocusOnOptions = {},
     taskId?: string | number
-): AnimateToBotAction {
+): FocusOnBotAction {
     return {
-        type: 'animate_to_bot',
+        type: 'focus_on',
         botId: botId,
         taskId,
         ...options,
@@ -3064,18 +3088,18 @@ export function tweenTo(
 }
 
 /**
- * Creates a new AnimateToPositionAction.
+ * Creates a new FocusOnPositionAction.
  * @param position The position that the camera should move to.
  * @param options The options to use.
  * @param taskId The ID of the task.
  */
 export function animateToPosition(
     position: { x: number; y: number },
-    options: AnimateToOptions = {},
+    options: FocusOnOptions = {},
     taskId?: string | number
-): AnimateToPositionAction {
+): FocusOnPositionAction {
     return {
-        type: 'animate_to_position',
+        type: 'focus_on_position',
         position,
         taskId,
         ...options,

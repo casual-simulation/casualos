@@ -533,6 +533,10 @@ export abstract class Simulation3D
         }
     }
 
+    get portalTags(): string[] {
+        return this._getDimensionTags();
+    }
+
     /**
      * Gets the list of tags that should be watched for dimension values.
      */

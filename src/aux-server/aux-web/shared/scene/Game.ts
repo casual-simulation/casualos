@@ -13,10 +13,11 @@ import {
     Bot,
     DEFAULT_SCENE_BACKGROUND_COLOR,
     hasValue,
-    AnimateToBotAction,
-    AnimateToOptions,
+    FocusOnBotAction,
+    FocusOnOptions,
     DEFAULT_WORKSPACE_GRID_SCALE,
     BotCursorType,
+    getPortalTag,
 } from '@casual-simulation/aux-common';
 import {
     CameraRig,
@@ -37,7 +38,7 @@ import { map } from 'rxjs/operators';
 import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
 import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
-import { flatMap, merge } from 'lodash';
+import { flatMap, merge, union } from 'lodash';
 import { EventBus } from '../EventBus';
 import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
@@ -350,7 +351,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
      * @param cameraRig The camera rig to tween.
      * @param action The action to use for tweening.
      */
-    tweenCameraToBot(action: AnimateToBotAction) {
+    tweenCameraToBot(action: FocusOnBotAction) {
         // find the bot with the given ID
         const matches = this.findBotsById(action.botId);
         console.log(
@@ -360,9 +361,19 @@ export abstract class Game implements AuxBotVisualizerFinder {
         );
         if (matches.length > 0) {
             const bot = matches[0];
+
             const targetPosition = new Vector3();
             if (bot instanceof AuxBot3D) {
                 bot.display.getWorldPosition(targetPosition);
+
+                if (
+                    !this._shouldHandleFocus(
+                        action,
+                        bot.dimensionGroup.simulation3D.portalTags
+                    )
+                ) {
+                    return;
+                }
 
                 this.tweenCameraToPosition(
                     bot.dimensionGroup.simulation3D.getMainCameraRig(),
@@ -375,6 +386,20 @@ export abstract class Game implements AuxBotVisualizerFinder {
         }
     }
 
+    private _shouldHandleFocus(
+        options: FocusOnOptions,
+        possiblePortals: string[]
+    ) {
+        if (hasValue(options.portal)) {
+            const targetPortal = getPortalTag(options.portal);
+            if (possiblePortals.every((p) => p !== targetPortal)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /**
      * Animates the main camera to view the given position.
      * @param cameraRig The camera rig to tween.
@@ -384,10 +409,17 @@ export abstract class Game implements AuxBotVisualizerFinder {
     tweenCameraToPosition(
         cameraRig: CameraRig,
         position: Vector3,
-        options: AnimateToOptions,
+        options: FocusOnOptions,
         simulation: Simulation,
         taskId: string | number
     ) {
+        const portalTags = union(
+            ...this.getSimulations().map((sim) => sim.portalTags)
+        );
+        if (!this._shouldHandleFocus(options, portalTags)) {
+            return;
+        }
+
         this.interaction.clearOperationsOfType(TweenCameraToOperation);
         this.interaction.addOperation(
             new TweenCameraToOperation(

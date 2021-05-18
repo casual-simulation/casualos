@@ -18,6 +18,7 @@ import {
     getAnchorPointOffset,
     createBot,
     getBotRotation,
+    SnapAxis,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
@@ -319,6 +320,20 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             }
         }
 
+        if (options.snapAxes.length > 0) {
+            if (
+                this._dragWithSnapAxes(
+                    calc,
+                    inputRay,
+                    grid3D,
+                    snapPointGrid,
+                    options.snapAxes
+                )
+            ) {
+                return true;
+            }
+        }
+
         if (options.snapFace) {
             if (hit && target) {
                 if (this._dragInFaceSpace(calc, hit, target)) {
@@ -613,6 +628,103 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                     point.position.x,
                     point.position.y,
                     point.position.z
+                );
+                closestSqrDistance = sqrDistance;
+            }
+        }
+
+        if (closestPoint) {
+            const nextContext = this._calculateNextDimension(grid);
+            this._updateCurrentDimension(nextContext);
+            this._updateGridOffset(calc);
+
+            closestPoint.applyMatrix4(this._gridOffset);
+            this._toCoord = new Vector2(closestPoint.x, closestPoint.y);
+
+            this._updateBotsPositions(this._bots, closestPoint);
+            return true;
+        }
+
+        return false;
+    }
+
+    private _dragWithSnapAxes(
+        calc: BotCalculationContext,
+        inputRay: Ray,
+        grid3D: Grid3D,
+        snapPointGrid: Grid3D,
+        snapAxes: SnapAxis[]
+    ): boolean {
+        const grid = snapPointGrid ?? grid3D;
+        let closestPoint: Vector3 = null;
+        let closestSqrDistance = Infinity;
+        let snapRay = new Ray();
+        for (let axis of snapAxes) {
+            snapRay.origin.set(axis.origin.x, axis.origin.y, axis.origin.z);
+            snapRay.direction.set(
+                axis.direction.x,
+                axis.direction.y,
+                axis.direction.z
+            );
+
+            // snapPoint.set(point.position.x, point.position.y, point.position.z);
+            const targetDistance = axis.distance * axis.distance;
+
+            // use world space for comparing the snap point to the ray
+            const convertedOrigin = grid.getWorldPosition(snapRay.origin);
+            const convertedDirection = grid
+                .getWorldPosition(snapRay.direction)
+                .normalize();
+
+            // https://stackoverflow.com/questions/58151978/threejs-how-to-calculate-the-closest-point-on-a-three-ray-to-another-three-ray
+            let inputToConvertedDirection = inputRay.direction
+                .clone()
+                .cross(convertedDirection);
+
+            let Na = inputRay.direction
+                .clone()
+                .cross(inputToConvertedDirection)
+                .normalize();
+            let Nb = convertedDirection
+                .clone()
+                .cross(inputToConvertedDirection)
+                .normalize();
+
+            let inputDirection = inputRay.direction.clone().normalize();
+            let axisDirection = convertedDirection.clone().normalize();
+
+            let da =
+                convertedOrigin.clone().sub(inputRay.origin).dot(Nb) /
+                inputDirection.dot(Nb);
+            let db =
+                inputRay.origin.clone().sub(convertedOrigin).dot(Na) /
+                axisDirection.dot(Na);
+
+            // point on inputRay
+            let inputPoint = inputRay.origin
+                .clone()
+                .add(inputDirection.multiplyScalar(da));
+
+            // point on axis
+            let targetPoint = convertedOrigin
+                .clone()
+                .add(convertedDirection.multiplyScalar(db));
+
+            // convert back to grid space for comparing distances
+            const closestGridPoint = grid.getGridPosition(targetPoint);
+            const closestInputPoint = grid.getGridPosition(inputPoint);
+            const sqrDistance = closestGridPoint.distanceToSquared(
+                closestInputPoint
+            );
+
+            if (sqrDistance > targetDistance) {
+                continue;
+            }
+            if (sqrDistance < closestSqrDistance) {
+                closestPoint = new Vector3(
+                    closestGridPoint.x,
+                    closestGridPoint.y,
+                    closestGridPoint.z
                 );
                 closestSqrDistance = sqrDistance;
             }
