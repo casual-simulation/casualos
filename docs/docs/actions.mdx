@@ -1728,6 +1728,9 @@ If called when the user is not dragging anything, then this function does nothin
   <PossibleValue value='A snap point object'>
     The bot will snap to the specified position when dragged within the specified distance.
   </PossibleValue>
+  <PossibleValue value='A snap axis object'>
+    The bot will snap to the specified axis when dragged within the specified distance.
+  </PossibleValue>
 </PossibleValuesTable>
 
 Snap point objects should have the following form:
@@ -1740,6 +1743,27 @@ let snapPoint: {
 
     /**
      * The distance that the bot should be from the position in order to snap to it.
+     */
+    distance: number;
+};
+```
+
+Snap axis objects should have the following form:
+```typescript
+let snapAxis: {
+    /**
+     * The direction that the axis travels along.
+     */
+    direction: { x: number, y: number, z: number };
+
+    /**
+     * The center point that the axis travels through.
+     */
+    origin: { x: number, y: number, z: number };
+
+    /**
+     * The distance that the bot should be from any 
+     * point along the axis in order to snap to it.
      */
     distance: number;
 };
@@ -1769,7 +1793,24 @@ os.addDropSnap({
 });
 ```
 
-4. Snap the dragged bot to the center or bot faces.
+4. Snap the dragged bot to the global X axis.
+```typescript
+os.addDropSnap({
+    direction: {
+        x: 1,
+        y: 0,
+        z: 0,
+    },
+    origin: {
+        x: 0,
+        y: 0,
+        z: 0
+    },
+    distance: 2
+});
+```
+
+5. Snap the dragged bot to the center or bot faces.
 ```typescript
 os.addDropSnap({
     position: {
