@@ -2135,10 +2135,15 @@ os.toast("this is the code", 5);
 
 ### `os.focusOn(botOrPosition, options?)`
 
-Animates the camera such that the portal focus point is placed on the given bot or position.
-Returns a promise which resolves when the animation finishes and rejects if the user takes control of the camera during the animation.
+Focuses on the given bot or position.
+For bots in the page or inventory portals, this animates the camera such that the portal focus point is placed on the given bot or position.
+For input bots in menu portal, this gives keyboard focus to them.
 
-The **first parameter** is the bot, bot ID, or position that the player's view should be moved to. If null, then the current focus animation will be canceled.
+Returns a promise which resolves when the bot has been focused.
+For the page and inventory portals this is when the animation finishes and rejects if the user takes control of the camera during the animation.
+For menu bots this is when the input field is focused and rejects if the bot is not a input bot.
+
+The **first parameter** is the bot, bot ID, or position that should be focused. If null, then the current focus animation will be canceled.
 
 The **second parameter** is optional and can be used to specify additional details about how the camera should be animated.
 It should be an object with the following properties:
@@ -2167,6 +2172,13 @@ let options: {
      * Defaults to 1.
      */
     duration?: number;
+
+    /**
+     * The portal that the bot should be focused in.
+     * If not specified, then the bot will be focused in all the portals it is in. (page, inventory and menu)
+     * Useful if a bot is in two portals but you only want to focus it in one portal.
+     */
+    portal?: string;
 
     /**
      * The options for easing.
@@ -2237,6 +2249,13 @@ await os.focusOn(thisBot, {
 await os.focusOn({
     x: 15,
     y: 9.5
+});
+```
+
+5. Focus on this bot in the menu portal
+```typescript
+await os.focusOn(thisBot, {
+    portal: 'menu'
 });
 ```
 
