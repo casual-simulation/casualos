@@ -32,15 +32,13 @@ If an array of mods is used for a parameter, then one bot will be created for _e
 
 #### Examples:
 
-1. Create a red bot:
-```typescript
+```typescript title="Create a red bot"
 let myRedBot = create({
     color: "red"
 });
 ```
 
-2. Create a parent and a child bot:
-```typescript
+```typescript title="Create a parent and a child bot"
 let myParentBot = create({
     creator: null,
     label: "Parent"
@@ -51,21 +49,18 @@ let myChildBot = create({
 });
 ```
 
-3. Create a red bot in the `tempLocal` space:
-```typescript
+```typescript title="Create a red bot in the tempLocal space"
 let myBot = create({ space: "tempLocal", color: "red" });
 ```
 
-4. Create a bot from multiple mods:
-```typescript
+```typescript title="Create a bot from multiple mods"
 // myBot is placed in the "myDimension" dimension and is colored green
 let myBot = create({ myDimension: true }, {
     color: "green"
 });
 ```
 
-5. Create a red bot and a blue bot:
-```typescript
+```typescript title="Create a red bot and a blue bot"
 let [myRedBot, myBlueBot] = create({ creator: null}, [
     {
         "color": "red"
@@ -89,20 +84,17 @@ This happens recursively until there are no more bots to destroy.
 
 #### Examples:
 
-1. Destroying a single bot:
-```typescript
+```typescript title="Destroying a single bot"
 // Destroy a single bot that has #name set to "bob"
 destroy(getBot("#name", "bob"));
 ```
 
-2. Destroying a list of bots:
-```typescript
+```typescript title="Destroying a list of bots"
 // Destroy all the bots that have #color set to "red"
 destroy(getBots("#color", "red"));
 ```
 
-3. Destroying a bot by its id
-```typescript
+```typescript title="Destroying a bot by its id"
 // Destroy the bot with the #id: "config"
 destroy("config");
 ```
@@ -118,8 +110,7 @@ The **other parameters** are the mods that should be applied to the bot. If two 
 
 #### Examples
 
-1. Set the "test" tag and "name" tag on a bot.
-```typescript
+```typescript title='Set the "test" tag and "name" tag on a bot'
 applyMod(bot, {
     test: true,
     name: "bob"
@@ -137,8 +128,7 @@ The **other parameters** are the bots or mods that contain the tags which should
 
 #### Examples:
 
-1. Remove a mod from this bot.
-```typescript
+```typescript title="Remove a mod from this bot"
 const mod = {
     color: 'red',
     name: 'bob'
@@ -147,8 +137,7 @@ const mod = {
 subtractMods(this, mod);
 ```
 
-2. Remove multiple mods from this bot.
-```typescript
+```typescript title="Remove multiple mods from this bot"
 subtractMods(this, {
     color: 'red'
 }, {
@@ -169,13 +158,11 @@ If given a regex, then all the tags which match the regex will be removed.
 
 #### Examples:
 
-1. Remove tags started with `abc` from the `this` bot.
-```typescript
+```typescript title='Remove tags starting with "abc" from this bot'
 removeTags(this, "abc");
 ```
 
-2. Remove tags named `hello` using a case-insensitive regex from the `this` bot.
-```typescript
+```typescript title='Remove tags named "hello" using a case-insensitive regex from this bot'
 removeTags(this, /^hello$/gi)
 ```
 
@@ -193,8 +180,7 @@ The **third parameter** is the new name that the tag should have.
 
 #### Examples:
 
-1. Rename the `auxColor` tag to `color`.
-```typescript
+```typescript title='Rename the "auxColor" tag to "color"'
 renameTag(this, "auxColor", "color");
 ```
 
@@ -212,14 +198,12 @@ The **third parameter** is the name of the tag that should be changed on the bot
 
 #### Examples:
 
-1. Change the `#state` of the bot to "Running".
-```typescript
+```typescript title='Change the #state of the bot to "Running"'
 // Triggers @stateRunningOnEnter
 changeState(bot, "Running");
 ```
 
-2. Change the `#playbackState` of the bot to "Playing".
-```typescript
+```typescript title='Change the #playbackState of the bot to "Playing"'
 // Triggers @playbackStatePlayingOnEnter
 changeState(bot, "Playing", "playbackState");
 ```
@@ -234,13 +218,11 @@ If multiple filters are specified, then only the bots that match all of the filt
 
 #### Examples
 
-1. Find all bots with the "test" tag.
-```typescript
+```typescript title='Find all bots with the "test" tag'
 let bots = getBots(byTag("#test"));
 ```
 
-2. Find all bots with `#name` set to "bob" _and_ in the "people" dimension.
-```typescript
+```typescript title='Find all bots with #name set to "bob" and in the #people dimension'
 let bots = getBots(byTag("#name", "bob"), inDimension("people"));
 ```
 
@@ -260,18 +242,15 @@ If specified, then only bots that have the same tag and value will be included. 
 
 #### Examples
 
-1. Find all the bots with `#name` set to "bob".
-```typescript
+```typescript title='Find all the bots with #name set to "bob"'
 let bots = getBots("#name", "bob");
 ```
 
-2. Find all bots with a height larger than 2.
-```typescript
+```typescript title='Find all bots with a #height larger than 2'
 let bots = getBots("#height", height => height > 2);
 ```
 
-3. Find all bots with the "test" tag.
-```typescript
+```typescript title='Find all bots with the #test tag'
 let bots = getBots("#test");
 ```
 
@@ -285,13 +264,11 @@ If multiple filters are specified, then the first bot that matches all of the fi
 
 #### Examples
 
-1. Find a bot with the "test" tag.
-```typescript
+```typescript title='Find a bot with the #test tag'
 let foundBot = getBot(byTag("#test"));
 ```
 
-2. Find a bot with `#name` set to "bob" _and_ in the "people" dimension.
-```typescript
+```typescript title='Find a bot with #name set to "bob" and in the #people dimension'
 let foundBot = getBot(byTag("#name", "bob"), inDimension("people"));
 ```
 
@@ -311,18 +288,15 @@ If specified, then the first bot that has the same tag and value will be returne
 
 #### Examples
 
-1. Find the first bot with `#name` set to "bob".
-```typescript
+```typescript title='Find the first bot with #name set to "bob"'
 let foundBot = getBot("#name", "bob");
 ```
 
-2. Find the first bot with a height larger than 2.
-```typescript
+```typescript title='Find the first bot with a #height larger than 2'
 let foundBot = getBot("#height", height => height > 2);
 ```
 
-3. Find the first bot with the "test" tag.
-```typescript
+```typescript title='Find the first bot with the #test tag'
 let foundBot = getBot("#test");
 ```
 
@@ -338,14 +312,12 @@ If it is a function, then it will be used to match values. Otherwise, only tags 
 
 #### Examples:
 
-1. Find the number of bots named bot and print it.
-```typescript
+```typescript title='Find the number of bots named bob and print it'
 const numberOfBobs = getBotTagValues("#name", "bob").length;
 os.toast(numberOfBobs);
 ```
 
-2. Find all the bot ages above `10`.
-```typescript
+```typescript title='Find all the bot ages above 10'
 const agesOver10 = getBotTagValues("#age", age => age > 10);
 ```
 
@@ -359,13 +331,11 @@ If given a bot ID, then it will be returned. If given `null` or something that i
 
 #### Examples
 
-1. Get the ID of the current bot.
-```typescript
+```typescript title='Get the ID of the current bot'
 let id = getID(bot);
 ```
 
-2. Get the ID of a bot with `#name` set to "bob".
-```typescript
+```typescript title='Get the ID of a bot with #name set to "bob"'
 let id = getID(getBot("#name", "bob"));
 ```
 
@@ -379,8 +349,7 @@ If given a bot, then the returned JSON will be able to be able to be converted b
 
 #### Examples
 
-1. Store a copy of a bot in a tag.
-```typescript
+```typescript title='Store a copy of a bot in a tag'
 let bob = getBot("#name", "bob");
 tags.savedBot = getJSON(bob);
 ```
@@ -398,18 +367,15 @@ If a parameter is a RegEx ([Regular Expression](https://developer.mozilla.org/en
 
 #### Examples
 
-1. Get a mod with the current bot's tags.
-```typescript
+```typescript title='Get a mod with the current bot's tags'
 let mod = getMod(bot);
 ```
 
-2. Get a mod with only the <TagLink tag='color'/> and <TagLink tag='label'/> tags.
-```typescript
+```typescript title='Get a mod with only the #color and #label tags'
 let mod = getMod(bot, "color", "label");
 ```
 
-3. Get a mod with every tag that starts with "on".
-```typescript
+```typescript title='Get a mod with every tag that starts with "on"'
 let mod = getMod(bot, /^on/g);
 ```
 
@@ -423,8 +389,7 @@ The **second parameter** is the dimension that the position should be retrieved 
 
 #### Examples:
 
-1. Get the position of this bot in the `home` dimension.
-```typescript
+```typescript title='Get the position of this bot in the #home dimension'
 let position = getBotPosition(thisBot, "home");
 ```
 
@@ -434,8 +399,7 @@ Creates a new UUID. Useful for generating a random identifier that is guaranteed
 
 #### Examples:
 
-1. Generate a new UUID and toast it:
-```typescript
+```typescript title='Generate a new UUID and toast it'
 const id = uuid();
 
 os.toast(id);
