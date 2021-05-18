@@ -82,7 +82,7 @@ export abstract class PlayerSimulation3D extends Simulation3D {
         return this.dimensions.length > 0;
     }
 
-    get portalTag() {
+    get portalTags() {
         return this._portalTags;
     }
 
