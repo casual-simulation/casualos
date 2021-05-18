@@ -7,6 +7,29 @@
 ### :rocket: Improvements
 
 -   Improved `os.focusOn()` to support focusing on menu bots that have `#form` set to `input`.
+-   Added the ability to snap dragged to a specific axis.
+
+    -   These are special snap target objects that have the following form:
+
+    ```typescript
+    let snapAxis: {
+        /**
+         * The direction that the axis travels along.
+         */
+        direction: { x: number; y: number; z: number };
+
+        /**
+         * The center point that the axis travels through.
+         */
+        origin: { x: number; y: number; z: number };
+
+        /**
+         * The distance that the bot should be from any point along the
+         * axis in order to snap to it.
+         */
+        distance: number;
+    };
+    ```
 
 ### :bug: Bug Fixes
 
