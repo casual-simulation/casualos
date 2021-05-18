@@ -104,6 +104,7 @@
             />
 
             <md-dialog-alert
+                class="alert-dialog"
                 :md-active.sync="showAlertDialog"
                 v-bind:md-content="alertDialogOptions.body"
                 v-bind:md-confirm-text="alertDialogOptions.confirmText"
