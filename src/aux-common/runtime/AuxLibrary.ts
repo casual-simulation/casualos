@@ -225,6 +225,8 @@ import {
     EnablePOVAction,
     disablePOV,
     enablePOV,
+    EnableCustomDraggingAction,
+    enableCustomDragging as calcEnableCustomDragging,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -708,6 +710,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 openCircleWipe,
                 addDropSnap,
                 addBotDropSnap,
+                enableCustomDragging,
                 log,
                 getGeolocation,
                 inSheet,
@@ -2208,6 +2211,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         ...targets: SnapTarget[]
     ): AddDropSnapTargetsAction {
         return addAction(calcAddDropSnap(getID(bot), targets));
+    }
+
+    /**
+     * Enables custom dragging for the current drag operation.
+     * This will disable the built-in logic that moves the bot(s) and
+     * enables the "onDragging" and "onAnyBotDragging" listen tags.
+     */
+    function enableCustomDragging(): EnableCustomDraggingAction {
+        return addAction(calcEnableCustomDragging());
     }
 
     /**

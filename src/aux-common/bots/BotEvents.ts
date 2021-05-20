@@ -97,6 +97,7 @@ export type ExtraActions =
     | LocalFormAnimationAction
     | GetRemoteCountAction
     | AddDropSnapTargetsAction
+    | EnableCustomDraggingAction
     | EnablePOVAction
     | GoToTagAction;
 
@@ -2675,6 +2676,14 @@ export type SnapTarget =
     | SnapAxis;
 
 /**
+ * An event that is used to disable the default dragging logic (moving the bot) and enable
+ * "onDragging" shouts and whispers.
+ */
+export interface EnableCustomDraggingAction extends Action {
+    type: 'enable_custom_dragging';
+}
+
+/**
  * An event that is used to start audio recording.
  */
 export interface BeginAudioRecordingAction extends AsyncAction {
@@ -5182,6 +5191,15 @@ export function addDropSnap(
         type: 'add_drop_snap_targets',
         botId,
         targets,
+    };
+}
+
+/**
+ * Creates a EnableCustomDraggingAction.
+ */
+export function enableCustomDragging(): EnableCustomDraggingAction {
+    return {
+        type: 'enable_custom_dragging',
     };
 }
 

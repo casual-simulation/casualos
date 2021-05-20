@@ -212,6 +212,7 @@ declare type ExtraActions =
     | ClearSpaceAction
     | LocalFormAnimationAction
     | AddDropSnapTargetsAction
+    | EnableCustomDraggingAction
     | EnablePOVAction;
 
 /**
@@ -1827,13 +1828,42 @@ declare interface ShareAction extends AsyncAction, ShareOptions {
 }
 
 /**
+ * Defines an interface that represents a snap axis.
+ * That is, a ray in 3D space with an associated snap distance.
+ */
+ export interface SnapAxis {
+    /**
+     * The 3D direction that the axis ray travels along.
+     */
+    direction: { x: number; y: number; z: number };
+
+    /**
+     * The 3D position that the ray starts at.
+     */
+    origin: { x: number; y: number; z: number };
+
+    /**
+     * The distance from the ray line that the snap point should take effect at.
+     */
+    distance: number;
+}
+
+/**
  * The list of possible snap targets.
  * - "ground" means that the dragged bot should snap to the ground plane. This option is overriden by "grid".
  * - "grid" means that the dragged bot should snap to grid tiles.
  * - "face" means that the dragged bot should snap to other bot faces.
  * - "bots" means that the dragged bot will snap to other bots.
  */
- declare type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint;
+declare type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint | SnapAxis;
+
+/**
+ * An event that is used to disable the default dragging logic (moving the bot) and enable
+ * "onDragging" shouts and whispers.
+ */
+ export interface EnableCustomDraggingAction extends Action {
+    type: 'enable_custom_dragging';
+}
 
 /**
  * The possible options for a custom portal.
@@ -3376,6 +3406,13 @@ declare global {
          * @param targets The targets that should be enabled when the bot is being dropped on.
          */
         addBotDropSnap(bot: Bot | string, ...targets: SnapTarget[]): AddDropSnapTargetsAction;
+
+        /**
+         * Enables custom dragging for the current drag operation.
+         * This will disable the built-in logic that moves the bot(s) and
+         * enables the "onDragging" and "onAnyBotDragging" listen tags.
+         */
+        enableCustomDragging(): EnableCustomDraggingAction;
 
         /**
          * Logs the given data to the developer console.
