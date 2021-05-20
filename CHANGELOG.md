@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V1.5.22
+
+#### Date: 5/20/2021
+
+### :rocket: Improvements
+
+-   Added the `os.enableCustomDragging()` function to disable the default dragging behavior for the current drag operation.
+    -   This is useful for custom dragging behavior that is associated with a bot like scaling the bot or rotating it.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.focusOn()` would not work with bots in the inventory portal.
+
 ## V1.5.21
 
 #### Date: 5/18/2021

@@ -157,6 +157,29 @@ let that: {
 };
 ```
 
+### `@onDragging`
+
+A whisper that is sent whenever a bot would be moved while dragging.
+Note that this whisper is only sent for drag operations that have called <ActionLink action='os.enableCustomDragging()'/>.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  to: {
+    x: number,
+    y: number,
+    bot: Bot,
+    dimension: string
+  },
+  from: {
+    x: number,
+    y: number,
+    dimension: string
+  }
+};
+```
+
 ### `@onDrop`
 
 A whisper that is sent whenever a bot has been dropped after being dragged.
@@ -165,7 +188,7 @@ The whisper is sent to both the bot that was dropped and the bot that was droppe
 #### Arguments
 ```typescript
 let that: {
-  dragBot: Bot,
+  bot: Bot,
   to: {
     bot: Bot,
     x: number,
@@ -816,6 +839,29 @@ let that: {
 };
 ```
 
+### `@onAnyBotDragging`
+
+A shout that is sent whenever a bot would be moved while dragging.
+Note that this whisper is only sent for drag operations that have called <ActionLink action='os.enableCustomDragging()'/>.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  to: {
+    bot: Bot,
+    x: number,
+    y: number,
+    dimension: string
+  },
+  from: {
+    x: number,
+    y: number,
+    dimension: string
+  }
+};
+```
+
 ### `@onAnyBotDrop`
 
 A shout that is sent whenever a bot is dropped after being dragged.
@@ -823,7 +869,7 @@ A shout that is sent whenever a bot is dropped after being dragged.
 #### Arguments:
 ```typescript
 let that: {
-  dragBot: Bot,
+  bot: Bot,
   to: {
     bot: Bot,
     x: number,

@@ -1668,6 +1668,21 @@ os.replaceDragBot({
 });
 ```
 
+### `os.enableCustomDragging()`
+
+Enables "custom dragging" for the current bot drag operation.
+
+Custom dragging tells CasualOS to not move the bot to the dragged position.
+Instead, it will calculate where the bot would be dragged and send that information in the <TagLink tag='@onDragging'/> and <TagLink tag='@onAnyBotDragging'/> listeners.
+
+This is useful for custom bot dragging behavior like choosing to scale or rotate a bot instead of moving it.
+
+#### Examples:
+
+```typescript title='Enable custom dragging for the current drag operation'
+os.enableCustomDragging();
+```
+
 ### `os.addDropSnap(...targets)`
 
 Specifies a list of snap targets that can be used to position the currently dragged bot.

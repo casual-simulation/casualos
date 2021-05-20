@@ -1013,6 +1013,16 @@ export const DRAG_ACTION_NAME: string = 'onDrag';
 export const DRAG_ANY_ACTION_NAME: string = 'onAnyBotDrag';
 
 /**
+ * The name of the event that represents a bot being dragged.
+ */
+export const DRAGGING_ACTION_NAME: string = 'onDragging';
+
+/**
+ * The name of the event that represents any bot being dragged.
+ */
+export const DRAGGING_ANY_ACTION_NAME: string = 'onAnyBotDragging';
+
+/**
  * The name of the event that represents a mod entering over a bot.
  */
 export const MOD_DROP_ENTER_ACTION_NAME: string = 'onModDropEnter';
@@ -1684,6 +1694,8 @@ export const KNOWN_TAGS: string[] = [
     DROP_ANY_ACTION_NAME,
     DRAG_ACTION_NAME,
     DRAG_ANY_ACTION_NAME,
+    DRAGGING_ACTION_NAME,
+    DRAGGING_ANY_ACTION_NAME,
     'onTapCode',
     'onQRCodeScanned',
     'onQRCodeScannerClosed',
@@ -1777,6 +1789,18 @@ export function onDragArg(bot: Bot, from: BotDropDestination, face: string) {
     };
 }
 
+export function onDraggingArg(
+    bot: Bot,
+    to: BotDropToDestination,
+    from: BotDropDestination
+) {
+    return {
+        bot,
+        to,
+        from,
+    };
+}
+
 export function onModDropArg(mod: BotTags, dimension: string) {
     return {
         mod,
@@ -1791,6 +1815,7 @@ export function onDropArg(
 ) {
     return {
         dragBot,
+        bot: dragBot,
         to,
         from,
     };

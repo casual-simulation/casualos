@@ -325,10 +325,11 @@ export class PlayerGame extends Game {
     getInventoryCameraRig(): CameraRig {
         return this.inventoryCameraRig;
     }
-    findBotsById(id: string): AuxBotVisualizer[] {
-        return flatMap(this.playerSimulations, (s) => s.bots).filter(
-            (b) => b.bot.id === id
-        );
+    findAllBotsById(id: string): AuxBotVisualizer[] {
+        return [
+            ...flatMap(this.playerSimulations, (s) => s.findBotsById(id)),
+            ...flatMap(this.inventorySimulations, (s) => s.findBotsById(id)),
+        ];
     }
     setGridsVisible(visible: boolean): void {
         // This currently does nothing for AUX Player, we dont really show any grids right now.

@@ -153,6 +153,7 @@ import {
     enablePOV,
     disablePOV,
     botUpdated,
+    enableCustomDragging,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -3026,6 +3027,15 @@ describe('AuxLibrary', () => {
                         distance: 1,
                     },
                 ]);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.enableCustomDragging()', () => {
+            it('should return a EnableCustomDraggingAction', () => {
+                const action = library.api.os.enableCustomDragging();
+                const expected = enableCustomDragging();
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
