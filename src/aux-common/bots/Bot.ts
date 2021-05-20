@@ -1815,6 +1815,7 @@ export function onDropArg(
 ) {
     return {
         dragBot,
+        bot: dragBot,
         to,
         from,
     };
