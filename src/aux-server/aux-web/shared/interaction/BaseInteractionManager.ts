@@ -178,6 +178,20 @@ export abstract class BaseInteractionManager {
         });
     }
 
+    /**
+     * Removes and disposes of any operations that the given filter returns true for.
+     * @param filter
+     */
+    clearOperations(filter: (operation: IOperation) => boolean) {
+        this._operations = this._operations.filter((o) => {
+            if (filter(o)) {
+                o.dispose();
+                return false;
+            }
+            return true;
+        });
+    }
+
     update(): void {
         // const calc = appManager.simulationManager.primary.helper.createContext();
         // Update active operations and dispose of any that are finished.

@@ -53,7 +53,7 @@ export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
  * It houses all the core systems for interacting with AUX Web, such as rendering 3d elements to the canvas,
  * handling input, tracking time, and enabling VR and AR.
  */
-export abstract class Game implements AuxBotVisualizerFinder {
+export abstract class Game {
     /**
      * The game view component that this game is parented to.
      */
@@ -241,7 +241,14 @@ export abstract class Game implements AuxBotVisualizerFinder {
      */
     abstract getUIHtmlElements(): HTMLElement[];
 
-    abstract findBotsById(id: string): AuxBotVisualizer[];
+    /**
+     * Finds the list of bot visualizers for the given bot ID.
+     * First tries to match bots that have an exact match to the given ID.
+     * If no bots are found, then it will search again but this time searching for bots
+     * that have IDs that start with the given ID.
+     * @param id The ID of the bot to find.
+     */
+    abstract findAllBotsById(id: string): AuxBotVisualizer[];
 
     /**
      * Sets the visibility of the bot grids.
@@ -353,35 +360,43 @@ export abstract class Game implements AuxBotVisualizerFinder {
      */
     tweenCameraToBot(action: FocusOnBotAction) {
         // find the bot with the given ID
-        const matches = this.findBotsById(action.botId);
+        const matches = this.findAllBotsById(action.botId);
         console.log(
             this.constructor.name,
             'tweenCameraToBot matching bots:',
             matches
         );
         if (matches.length > 0) {
-            const bot = matches[0];
-
-            const targetPosition = new Vector3();
-            if (bot instanceof AuxBot3D) {
-                bot.display.getWorldPosition(targetPosition);
-
-                if (
-                    !this._shouldHandleFocus(
+            const bots = matches.filter(
+                (b) =>
+                    b instanceof AuxBot3D &&
+                    this._shouldHandleFocus(
                         action,
-                        bot.dimensionGroup.simulation3D.portalTags
+                        b.dimensionGroup.simulation3D.portalTags
                     )
-                ) {
-                    return;
-                }
+            ) as AuxBot3D[];
 
-                this.tweenCameraToPosition(
-                    bot.dimensionGroup.simulation3D.getMainCameraRig(),
-                    targetPosition,
-                    action,
-                    bot.dimensionGroup.simulation3D.simulation,
-                    action.taskId
-                );
+            if (bots.length > 0) {
+                let animatingCameraRigs = new Set<CameraRig>();
+
+                for (let bot of bots) {
+                    const rig = bot.dimensionGroup.simulation3D.getMainCameraRig();
+                    if (animatingCameraRigs.has(rig)) {
+                        continue;
+                    }
+                    animatingCameraRigs.add(rig);
+
+                    const targetPosition = new Vector3();
+                    bot.display.getWorldPosition(targetPosition);
+
+                    this.tweenCameraToPosition(
+                        rig,
+                        targetPosition,
+                        action,
+                        bot.dimensionGroup.simulation3D.simulation,
+                        action.taskId
+                    );
+                }
             }
         }
     }
@@ -420,7 +435,12 @@ export abstract class Game implements AuxBotVisualizerFinder {
             return;
         }
 
-        this.interaction.clearOperationsOfType(TweenCameraToOperation);
+        // Cancel the operations for the same camera rig
+        this.interaction.clearOperations(
+            (op) =>
+                op instanceof TweenCameraToOperation &&
+                op.cameraRig === cameraRig
+        );
         this.interaction.addOperation(
             new TweenCameraToOperation(
                 cameraRig,

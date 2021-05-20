@@ -889,7 +889,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         let hasTransformer = false;
         if (transformer) {
             // TODO: Figure out how to support cases where there are multiple bots for the parent.
-            const parents = this.game.findBotsById(transformer);
+            const parents = this._simulation3D.findBotsById(transformer);
             if (parents.length > 0) {
                 const parent = parents[0];
                 if (parent instanceof AuxBot3D) {
