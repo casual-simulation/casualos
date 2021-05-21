@@ -11,7 +11,7 @@ import {
     calculateBooleanTagValue,
     calculateNumericalTagValue,
     BotIndexEvent,
-    DEFAULT_INVENTORY_VISIBLE,
+    DEFAULT_MINI_PORTAL_VISIBLE,
     getPortalConfigBotID,
     DEFAULT_PORTAL_ROTATABLE,
     DEFAULT_PORTAL_PANNABLE,

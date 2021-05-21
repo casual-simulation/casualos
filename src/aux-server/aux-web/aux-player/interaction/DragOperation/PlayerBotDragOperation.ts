@@ -36,7 +36,7 @@ import {
 import { Physics } from '../../../shared/scene/Physics';
 import { Input, InputMethod } from '../../../shared/scene/Input';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
-import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
+import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { take, drop } from 'lodash';
 import { IOperation } from '../../../shared/interaction/IOperation';
@@ -60,13 +60,13 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class Simulation3D
     protected _simulation3D: PlayerPageSimulation3D;
 
-    protected _inventorySimulation3D: InventorySimulation3D;
+    protected _miniSimulation3D: MiniSimulation3D;
 
-    // Determines if the bot is in the inventory currently
-    protected _inInventory: boolean;
+    // Determines if the bot is in the mini portal currently
+    protected _inMiniPortal: boolean;
 
-    // Determines if the bot was in the inventory at the beginning of the drag operation
-    protected _originallyInInventory: boolean;
+    // Determines if the bot was in the mini portal at the beginning of the drag operation
+    protected _originallyInMiniPortal: boolean;
 
     protected _originalDimension: string;
 
@@ -94,7 +94,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
      */
     constructor(
         playerPageSimulation3D: PlayerPageSimulation3D,
-        inventorySimulation3D: InventorySimulation3D,
+        miniSimulation3D: MiniSimulation3D,
         interaction: PlayerInteractionManager,
         bots: Bot[],
         dimension: string,
@@ -119,11 +119,10 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         );
 
         this._botsInStack = drop(bots, 1);
-        this._inventorySimulation3D = inventorySimulation3D;
+        this._miniSimulation3D = miniSimulation3D;
         this._originalDimension = dimension;
-        this._originallyInInventory = this._inInventory =
-            dimension &&
-            this._inventorySimulation3D.inventoryDimension === dimension;
+        this._originallyInMiniPortal = this._inMiniPortal =
+            dimension && this._miniSimulation3D.miniDimension === dimension;
 
         if (this._hit) {
             const obj = this._interaction.findGameObjectForHit(this._hit);
@@ -136,7 +135,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     protected _createBotDragOperation(bot: Bot): IOperation {
         return new PlayerBotDragOperation(
             this._simulation3D,
-            this._inventorySimulation3D,
+            this._miniSimulation3D,
             this._interaction,
             [bot],
             this._dimension,
@@ -152,7 +151,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     protected _createModDragOperation(mod: BotTags): IOperation {
         return new PlayerModDragOperation(
             this._simulation3D,
-            this._inventorySimulation3D,
+            this._miniSimulation3D,
             this._interaction,
             mod,
             this._inputMethod,
@@ -166,8 +165,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         // Get input ray for grid ray cast.
         let inputRay: Ray = this._getInputRay();
 
-        const grid3D = this._inInventory
-            ? this._inventorySimulation3D.grid3D
+        const grid3D = this._inMiniPortal
+            ? this._miniSimulation3D.grid3D
             : this._simulation3D.grid3D;
 
         const canDrag = this._canDrag(calc);
@@ -246,8 +245,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     }
 
     private _raycastOtherBots(inputRay: Ray) {
-        const viewport = (this._inInventory
-            ? this._inventorySimulation3D.getMainCameraRig()
+        const viewport = (this._inMiniPortal
+            ? this._miniSimulation3D.getMainCameraRig()
             : this._simulation3D.getMainCameraRig()
         ).viewport;
         const {
@@ -768,15 +767,15 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
     private _updateCurrentViewport() {
         if (!this._controller) {
-            // Test to see if we are hovering over the inventory simulation view.
+            // Test to see if we are hovering over the mini simulation view.
             const pagePos = this.game.getInput().getMousePagePos();
-            const inventoryViewport = this.game.getInventoryViewport();
-            this._inInventory = Input.pagePositionOnViewport(
+            const miniViewport = this.game.getMiniPortalViewport();
+            this._inMiniPortal = Input.pagePositionOnViewport(
                 pagePos,
-                inventoryViewport
+                miniViewport
             );
         } else {
-            this._inInventory = false;
+            this._inMiniPortal = false;
         }
     }
 
@@ -835,7 +834,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     private _calculateNextDimension(grid: Grid3D) {
         const dimension =
             this._simulation3D.getDimensionForGrid(grid) ||
-            this._inventorySimulation3D.getDimensionForGrid(grid);
+            this._miniSimulation3D.getDimensionForGrid(grid);
         return dimension;
     }
 
@@ -846,11 +845,11 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         } else {
             // Get input ray from correct camera based on which dimension we are in.
             const pagePos = this.game.getInput().getMousePagePos();
-            const inventoryViewport = this.game.getInventoryViewport();
-            if (this._inInventory) {
+            const miniViewport = this.game.getMiniPortalViewport();
+            if (this._inMiniPortal) {
                 inputRay = Physics.screenPosToRay(
-                    Input.screenPositionForViewport(pagePos, inventoryViewport),
-                    this._inventorySimulation3D.getMainCameraRig().mainCamera
+                    Input.screenPositionForViewport(pagePos, miniViewport),
+                    this._miniSimulation3D.getMainCameraRig().mainCamera
                 );
             } else {
                 inputRay = Physics.screenPosToRay(

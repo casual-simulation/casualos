@@ -5,13 +5,13 @@ import {
     BotCalculationContext,
 } from '@casual-simulation/aux-common';
 import { AuxBot3DDecoratorFactory } from '../../shared/scene/decorators/AuxBot3DDecoratorFactory';
-import { InventorySimulation3D } from './InventorySimulation3D';
+import { MiniSimulation3D } from './MiniSimulation3D';
 
-export class InventoryContextGroup3D extends DimensionGroup3D {
-    simulation3D: InventorySimulation3D; // Override base class type.
+export class MiniPortalContextGroup3D extends DimensionGroup3D {
+    simulation3D: MiniSimulation3D; // Override base class type.
 
     constructor(
-        simulation: InventorySimulation3D,
+        simulation: MiniSimulation3D,
         bot: Bot,
         domain: AuxDomain,
         decoratorFactory: AuxBot3DDecoratorFactory,

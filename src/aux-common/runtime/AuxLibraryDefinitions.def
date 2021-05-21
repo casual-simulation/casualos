@@ -709,7 +709,7 @@ declare interface HideHtmlAction extends Action {
 
      /**
       * The portal that the bot should be focused in.
-      * If not specified, then the bot will be focused in all supported portals. (page, inventory and menu)
+      * If not specified, then the bot will be focused in all supported portals. (page, mini and menu)
       */
      portal?: PortalType;
 }
@@ -2336,7 +2336,7 @@ declare type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history' | 'admin' |
  */
 declare type PortalType =
     | 'page'
-    | 'inventory'
+    | 'mini'
     | 'menu'
     | 'sheet'
     | string;
@@ -3242,19 +3242,19 @@ declare global {
          * Gets the 3D position of the player's camera.
          * @param portal The portal that the camera position should be retrieved for.
          */
-        getCameraPosition(portal?: 'page' | 'inventory'): Point3D;
+        getCameraPosition(portal?: 'page' | 'mini'): Point3D;
 
         /**
          * Gets the 3D rotation of the player's camera.
          * @param portal The portal that the camera rotation should be retrieved for.
          */
-        getCameraRotation(portal?: 'page' | 'inventory'): Point3D;
+        getCameraRotation(portal?: 'page' | 'mini'): Point3D;
 
         /**
          * Gets the 3D point that the player's camera is focusing on.
          * @param portal The portal that the camera focus point should be retrieved for.
          */
-        getFocusPoint(portal?: 'page' | 'inventory'): Point3D;
+        getFocusPoint(portal?: 'page' | 'mini'): Point3D;
 
         /**
          * Gets the 3D position of the player's pointer.
@@ -3699,10 +3699,10 @@ declare global {
         getDimensionalDepth(dimension: string): number;
 
         /**
-         * Determines whether the player has the given bot in their inventory.
+         * Determines whether the player has the given bot in their mini portal.
          * @param bots The bot or bots to check.
          */
-        hasBotInInventory(bots: Bot | Bot[]): boolean;
+        hasBotInMiniPortal(bots: Bot | Bot[]): boolean;
 
         /**
          * Gets the current user's bot.
@@ -3715,9 +3715,9 @@ declare global {
         getMenuDimension(): string;
 
         /**
-         * Gets the name of the dimension that is used for the current user's inventory.
+         * Gets the name of the dimension that is used for the current user's mini portal.
          */
-        getInventoryDimension(): string;
+        getMiniPortalDimension(): string;
     };
 
     /**

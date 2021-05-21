@@ -13,7 +13,7 @@ import {
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { PlayerBotDragOperation } from './PlayerBotDragOperation';
-import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
+import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import { InputMethod } from '../../../shared/scene/Input';
 
 export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
@@ -24,7 +24,7 @@ export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
      */
     constructor(
         playerSimulation: PlayerPageSimulation3D,
-        inventorySimulation: InventorySimulation3D,
+        miniSimulation: MiniSimulation3D,
         interaction: PlayerInteractionManager,
         bot: Bot,
         dimension: string,
@@ -32,7 +32,7 @@ export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
     ) {
         super(
             playerSimulation,
-            inventorySimulation,
+            miniSimulation,
             interaction,
             [bot],
             dimension,

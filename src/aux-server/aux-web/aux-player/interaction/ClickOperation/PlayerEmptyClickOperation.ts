@@ -2,7 +2,7 @@ import { Input, InputMethod } from '../../../shared/scene/Input';
 import { Ray } from '@casual-simulation/three';
 import { appManager } from '../../../shared/AppManager';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
+import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { Physics } from '../../../shared/scene/Physics';
 import { PlayerGame } from '../../scene/PlayerGame';
@@ -82,24 +82,24 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
                     inputDimension = sim3D.dimension;
                 } else {
                     const pagePos = this._game.getInput().getMousePagePos();
-                    const inventoryViewport = this._game.getInventoryViewport();
-                    const isInventory = Input.pagePositionOnViewport(
+                    const miniViewport = this._game.getMiniPortalViewport();
+                    const isMiniPortal = Input.pagePositionOnViewport(
                         pagePos,
-                        inventoryViewport
+                        miniViewport
                     );
 
-                    if (isInventory) {
-                        const inventory = this._game.findInventorySimulation3D(
+                    if (isMiniPortal) {
+                        const mini = this._game.findMiniSimulation3D(
                             sim3D.simulation
                         );
                         inputRay = Physics.screenPosToRay(
                             Input.screenPositionForViewport(
                                 pagePos,
-                                inventoryViewport
+                                miniViewport
                             ),
-                            inventory.getMainCameraRig().mainCamera
+                            mini.getMainCameraRig().mainCamera
                         );
-                        inputDimension = inventory.inventoryDimension;
+                        inputDimension = mini.miniDimension;
                     } else {
                         inputRay = Physics.screenPosToRay(
                             this._game.getInput().getMouseScreenPos(),

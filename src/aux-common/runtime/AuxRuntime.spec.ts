@@ -10824,6 +10824,8 @@ describe('original action tests', () => {
             ['pagePortal', 'pageDimension'],
             ['inventory', 'inventoryDimension'],
             ['inventoryPortal', 'inventoryDimension'],
+            ['mini', 'miniDimension'],
+            ['miniPortal', 'miniDimension'],
             ['menu', 'menuDimension'],
             ['menuPortal', 'menuDimension'],
             ['sheet', 'sheetDimension'],
@@ -10847,6 +10849,7 @@ describe('original action tests', () => {
                         tags: {
                             pagePortal: 'pageDimension',
                             inventoryPortal: 'inventoryDimension',
+                            miniPortal: 'miniDimension',
                             menuPortal: 'menuDimension',
                             sheetPortal: 'sheetDimension',
                             falsy: false,

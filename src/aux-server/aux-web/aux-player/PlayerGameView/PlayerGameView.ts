@@ -23,12 +23,12 @@ import { hasValue } from '@casual-simulation/aux-common';
 export default class PlayerGameView extends BaseGameView implements IGameView {
     _game: PlayerGame = null;
     menuExpanded: boolean = false;
-    showInventoryCameraHome: boolean = false;
-    inventoryViewportStyle: any = {};
+    showMiniPortalCameraHome: boolean = false;
+    miniViewportStyle: any = {};
     mainViewportStyle: any = {};
 
     hasMainViewport: boolean = false;
-    hasInventoryViewport: boolean = false;
+    hasMiniViewport: boolean = false;
     menu: DimensionItem[] = [];
     extraMenuStyle: Partial<HTMLElement['style']> = {};
     menuStyle: Partial<HTMLElement['style']> = {};
@@ -72,10 +72,10 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         this.extraMenuStyle = {};
         this._subscriptions.push(
             this._game
-                .watchCameraRigDistanceSquared(this._game.inventoryCameraRig)
+                .watchCameraRigDistanceSquared(this._game.miniCameraRig)
                 .pipe(
                     map((distSqr) => distSqr >= 75),
-                    tap((visible) => (this.showInventoryCameraHome = visible))
+                    tap((visible) => (this.showMiniPortalCameraHome = visible))
                 )
                 .subscribe()
         );
@@ -107,20 +107,20 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             })
         );
 
-        if (this._game.inventoryViewport) {
-            this.hasInventoryViewport = true;
+        if (this._game.miniViewport) {
+            this.hasMiniViewport = true;
 
             let style = {
-                bottom: this._game.inventoryViewport.y + 'px',
-                left: this._game.inventoryViewport.x + 'px',
-                width: this._game.inventoryViewport.width + 'px',
-                height: this._game.inventoryViewport.height + 'px',
+                bottom: this._game.miniViewport.y + 'px',
+                left: this._game.miniViewport.x + 'px',
+                width: this._game.miniViewport.width + 'px',
+                height: this._game.miniViewport.height + 'px',
             };
 
-            this.inventoryViewportStyle = style;
+            this.miniViewportStyle = style;
 
             this._subscriptions.push(
-                this._game.inventoryViewport.onUpdated
+                this._game.miniViewport.onUpdated
                     .pipe(
                         map((viewport) => ({
                             bottom: viewport.y + 'px',
@@ -129,30 +129,30 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                             height: viewport.height + 'px',
                         })),
                         tap((style) => {
-                            this.inventoryViewportStyle = style;
+                            this.miniViewportStyle = style;
                         })
                     )
                     .subscribe()
             );
         }
 
-        if (this._game.mainViewport && this._game.inventoryViewport) {
+        if (this._game.mainViewport && this._game.miniViewport) {
             this.hasMainViewport = true;
             this._subscriptions.push(
                 this._game.mainViewport.onUpdated
                     .pipe(
                         combineLatest(
-                            this._game.inventoryViewport.onUpdated,
+                            this._game.miniViewport.onUpdated,
                             (first, second) => ({
                                 main: first,
-                                inventory: second,
+                                mini: second,
                             })
                         ),
-                        map(({ main, inventory }) => ({
-                            bottom: inventory.height + 'px',
+                        map(({ main, mini }) => ({
+                            bottom: mini.height + 'px',
                             left: main.x + 'px',
                             width: main.width + 'px',
-                            height: main.height - inventory.height + 'px',
+                            height: main.height - mini.height + 'px',
                         })),
                         tap((style) => {
                             this.mainViewportStyle = style;
@@ -163,8 +163,8 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         }
     }
 
-    centerInventoryCamera() {
-        this._game.onCenterCamera(this._game.inventoryCameraRig);
+    centerMiniCamera() {
+        this._game.onCenterCamera(this._game.miniCameraRig);
     }
 
     setMenuStyle(style: Partial<HTMLElement['style']>) {

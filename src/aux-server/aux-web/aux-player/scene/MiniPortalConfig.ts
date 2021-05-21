@@ -10,8 +10,8 @@ import {
     calculateBooleanTagValue,
     calculateNumericalTagValue,
     DEFAULT_PORTAL_ROTATABLE,
-    DEFAULT_INVENTORY_PORTAL_RESIZABLE,
-    DEFAULT_INVENTORY_PORTAL_HEIGHT,
+    DEFAULT_MINI_PORTAL_RESIZABLE,
+    DEFAULT_MINI_PORTAL_HEIGHT,
 } from '@casual-simulation/aux-common';
 import { Color } from '@casual-simulation/three';
 import {
@@ -25,7 +25,7 @@ import { PortalConfig } from './PortalConfig';
 /**
  * Defines a class that is able to watch dimension confic bots and update values.
  */
-export class InventoryPortalConfig extends PortalConfig {
+export class MiniPortalConfig extends PortalConfig {
     private _resizable: boolean;
     private _height: number;
 
@@ -36,7 +36,7 @@ export class InventoryPortalConfig extends PortalConfig {
         if (this._resizable != null) {
             return this._resizable;
         } else {
-            return DEFAULT_INVENTORY_PORTAL_RESIZABLE;
+            return DEFAULT_MINI_PORTAL_RESIZABLE;
         }
     }
 
@@ -47,7 +47,7 @@ export class InventoryPortalConfig extends PortalConfig {
         if (this._height != null) {
             return this._height;
         } else {
-            return DEFAULT_INVENTORY_PORTAL_HEIGHT;
+            return DEFAULT_MINI_PORTAL_HEIGHT;
         }
     }
 
@@ -70,14 +70,14 @@ export class InventoryPortalConfig extends PortalConfig {
         this._resizable = calculateBooleanTagValue(
             calc,
             bot,
-            `auxInventoryPortalResizable`,
-            DEFAULT_INVENTORY_PORTAL_RESIZABLE
+            `auxMiniPortalResizable`,
+            DEFAULT_MINI_PORTAL_RESIZABLE
         );
         this._height = calculateNumericalTagValue(
             calc,
             bot,
-            `auxInventoryPortalHeight`,
-            DEFAULT_INVENTORY_PORTAL_HEIGHT
+            `auxMiniPortalHeight`,
+            DEFAULT_MINI_PORTAL_HEIGHT
         );
     }
 }

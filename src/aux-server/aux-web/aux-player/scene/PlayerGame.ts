@@ -15,7 +15,7 @@ import {
     Mesh,
 } from '@casual-simulation/three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
-import { InventorySimulation3D } from './InventorySimulation3D';
+import { MiniSimulation3D } from './MiniSimulation3D';
 import { Viewport } from '../../shared/scene/Viewport';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
@@ -29,7 +29,7 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import {
     clamp,
-    DEFAULT_INVENTORY_VISIBLE,
+    DEFAULT_MINI_PORTAL_VISIBLE,
     DEFAULT_PORTAL_SHOW_FOCUS_POINT,
     DEFAULT_PORTAL_DISABLE_CANVAS_TRANSPARENCY,
     BufferSoundAction,
@@ -72,18 +72,18 @@ export class PlayerGame extends Game {
     gameView: PlayerGameView;
 
     playerSimulations: PlayerPageSimulation3D[] = [];
-    inventorySimulations: InventorySimulation3D[] = [];
-    inventoryCameraRig: CameraRig = null;
-    inventoryViewport: Viewport = null;
-    showInventoryCameraRigHome: boolean = false;
+    miniSimulations: MiniSimulation3D[] = [];
+    miniCameraRig: CameraRig = null;
+    miniViewport: Viewport = null;
+    showMiniPortalCameraRigHome: boolean = false;
     disableCanvasTransparency: boolean = DEFAULT_PORTAL_DISABLE_CANVAS_TRANSPARENCY;
 
     startZoom: number;
     startAspect: number;
 
-    private inventoryScene: Scene;
+    private miniScene: Scene;
 
-    inventoryHeightOverride: number = null;
+    miniPortalHeightOverride: number = null;
 
     private _sliderLeft: Element;
     private _sliderRight: Element;
@@ -106,7 +106,7 @@ export class PlayerGame extends Game {
 
     setupDelay: boolean = false;
 
-    invVisibleCurrent: boolean = DEFAULT_INVENTORY_VISIBLE;
+    invVisibleCurrent: boolean = DEFAULT_MINI_PORTAL_VISIBLE;
     defaultHeightCurrent: number = 0;
 
     defaultZoom: number = null;
@@ -124,7 +124,7 @@ export class PlayerGame extends Game {
 
     audio: GameAudio;
 
-    inventoryFocusPoint: Mesh;
+    miniPortalFocusPoint: Mesh;
     mainFocusPoint: Mesh;
 
     constructor(gameView: PlayerGameView) {
@@ -193,52 +193,52 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(this.playerSimulations, 'cursor');
     }
 
-    getInventoryVisible(): boolean {
+    getMiniPortalVisible(): boolean {
         return this._getSimulationValue(
-            this.inventorySimulations,
+            this.miniSimulations,
             'hasDimension',
-            DEFAULT_INVENTORY_VISIBLE
+            DEFAULT_MINI_PORTAL_VISIBLE
         );
     }
 
-    getInventoryHeight(): number {
-        return this._getSimulationValue(this.inventorySimulations, 'height', 1);
+    getMiniPortalHeight(): number {
+        return this._getSimulationValue(this.miniSimulations, 'height', 1);
     }
 
-    getInventoryPannable(): boolean {
-        return this._getSimulationValue(this.inventorySimulations, 'pannable');
+    getMiniPortalPannable(): boolean {
+        return this._getSimulationValue(this.miniSimulations, 'pannable');
     }
 
-    getInventoryPanMinX(): number {
-        return this._getSimulationValue(this.inventorySimulations, 'panMinX');
+    getMiniPortalPanMinX(): number {
+        return this._getSimulationValue(this.miniSimulations, 'panMinX');
     }
 
-    getInventoryPanMaxX(): number {
-        return this._getSimulationValue(this.inventorySimulations, 'panMaxX');
+    getMiniPortalPanMaxX(): number {
+        return this._getSimulationValue(this.miniSimulations, 'panMaxX');
     }
 
-    getInventoryPanMinY(): number {
-        return this._getSimulationValue(this.inventorySimulations, 'panMinY');
+    getMiniPortalPanMinY(): number {
+        return this._getSimulationValue(this.miniSimulations, 'panMinY');
     }
 
-    getInventoryPanMaxY(): number {
-        return this._getSimulationValue(this.inventorySimulations, 'panMaxY');
+    getMiniPortalPanMaxY(): number {
+        return this._getSimulationValue(this.miniSimulations, 'panMaxY');
     }
 
-    getInventoryZoomable(): boolean {
-        return this._getSimulationValue(this.inventorySimulations, 'zoomable');
+    getMiniPortalZoomable(): boolean {
+        return this._getSimulationValue(this.miniSimulations, 'zoomable');
     }
 
-    getInventoryRotatable(): boolean {
-        return this._getSimulationValue(this.inventorySimulations, 'rotatable');
+    getMiniPortalRotatable(): boolean {
+        return this._getSimulationValue(this.miniSimulations, 'rotatable');
     }
 
-    getInventoryResizable(): boolean {
-        return this._getSimulationValue(this.inventorySimulations, 'resizable');
+    getMiniPortalResizable(): boolean {
+        return this._getSimulationValue(this.miniSimulations, 'resizable');
     }
 
-    getInventoryCursor(): BotCursorType {
-        return this._getSimulationValue(this.inventorySimulations, 'cursor');
+    getMiniPortalCursor(): BotCursorType {
+        return this._getSimulationValue(this.miniSimulations, 'cursor');
     }
 
     getPlayerZoom(): number {
@@ -267,16 +267,16 @@ export class PlayerGame extends Game {
         );
     }
 
-    getInventoryColor(): Color | Texture {
+    getMiniPortalColor(): Color | Texture {
         return this._getSimulationValue(
-            this.inventorySimulations,
+            this.miniSimulations,
             'backgroundColor'
         );
     }
 
-    getInventoryShowFocusPoint(): boolean {
+    getMiniPortalShowFocusPoint(): boolean {
         return this._getSimulationValue(
-            this.inventorySimulations,
+            this.miniSimulations,
             'showFocusPoint',
             DEFAULT_PORTAL_SHOW_FOCUS_POINT
         );
@@ -306,29 +306,29 @@ export class PlayerGame extends Game {
     }
 
     getViewports(): Viewport[] {
-        return [this.mainViewport, this.inventoryViewport];
+        return [this.mainViewport, this.miniViewport];
     }
     getCameraRigs(): CameraRig[] {
-        return [this.mainCameraRig, this.inventoryCameraRig];
+        return [this.mainCameraRig, this.miniCameraRig];
     }
     getSimulations(): Simulation3D[] {
-        return [...this.playerSimulations, ...this.inventorySimulations];
+        return [...this.playerSimulations, ...this.miniSimulations];
         // return [...this.playerSimulations];
-        // return [...this.inventorySimulations];
+        // return [...this.miniSimulations];
     }
     getUIHtmlElements(): HTMLElement[] {
-        return [<HTMLElement>this.gameView.$refs.inventory];
+        return [<HTMLElement>this.gameView.$refs.miniPortal];
     }
-    getInventoryViewport(): Viewport {
-        return this.inventoryViewport;
+    getMiniPortalViewport(): Viewport {
+        return this.miniViewport;
     }
-    getInventoryCameraRig(): CameraRig {
-        return this.inventoryCameraRig;
+    getMiniPortalCameraRig(): CameraRig {
+        return this.miniCameraRig;
     }
     findAllBotsById(id: string): AuxBotVisualizer[] {
         return [
             ...flatMap(this.playerSimulations, (s) => s.findBotsById(id)),
-            ...flatMap(this.inventorySimulations, (s) => s.findBotsById(id)),
+            ...flatMap(this.miniSimulations, (s) => s.findBotsById(id)),
         ];
     }
     setGridsVisible(visible: boolean): void {
@@ -357,11 +357,11 @@ export class PlayerGame extends Game {
     }
 
     /**
-     * Find Inventory Simulation 3D object that is displaying for the given Simulation.
+     * Find MiniPortal Simulation 3D object that is displaying for the given Simulation.
      * @param sim The simulation to find a simulation 3d for.
      */
-    findInventorySimulation3D(sim: Simulation): InventorySimulation3D {
-        return this.inventorySimulations.find((s) => s.simulation === sim);
+    findMiniSimulation3D(sim: Simulation): MiniSimulation3D {
+        return this.miniSimulations.find((s) => s.simulation === sim);
     }
 
     /**
@@ -428,16 +428,16 @@ export class PlayerGame extends Game {
         this.mainScene.add(playerSim3D);
 
         //
-        // Create Inventory Simulation
+        // Create mini portal Simulation
         //
-        const inventorySim3D = new InventorySimulation3D(this, sim);
-        inventorySim3D.init();
-        inventorySim3D.onBotAdded.addListener(this.onBotAdded.invoke);
-        inventorySim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
-        inventorySim3D.onBotUpdated.addListener(this.onBotUpdated.invoke);
+        const miniPortalSim3D = new MiniSimulation3D(this, sim);
+        miniPortalSim3D.init();
+        miniPortalSim3D.onBotAdded.addListener(this.onBotAdded.invoke);
+        miniPortalSim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
+        miniPortalSim3D.onBotUpdated.addListener(this.onBotUpdated.invoke);
 
-        this.inventorySimulations.push(inventorySim3D);
-        this.inventoryScene.add(inventorySim3D);
+        this.miniSimulations.push(miniPortalSim3D);
+        this.miniScene.add(miniPortalSim3D);
 
         this.subs.push(
             playerSim3D.simulation.localEvents.subscribe((e) => {
@@ -472,7 +472,7 @@ export class PlayerGame extends Game {
                         this.stopVR();
                     }
                 } else if (e.type === 'replace_drag_bot') {
-                    this.dragBot(playerSim3D, inventorySim3D, e.bot);
+                    this.dragBot(playerSim3D, miniPortalSim3D, e.bot);
                 } else if (e.type === 'focus_on') {
                     this.tweenCameraToBot(e);
                 } else if (e.type === 'focus_on_position') {
@@ -508,19 +508,19 @@ export class PlayerGame extends Game {
 
     dragBot(
         pageSim: PlayerPageSimulation3D,
-        inventorySim: InventorySimulation3D,
+        miniSim: MiniSimulation3D,
         bot: Bot | BotTags
     ) {
         let dimension: string;
         if (isBot(bot)) {
-            // Try to find the dimension that the bot is already in from the page and inventory simulations.
+            // Try to find the dimension that the bot is already in from the page and mini simulations.
             const pageBots = pageSim.findBotsById(bot.id);
             if (pageBots.length > 0) {
                 dimension = pageSim.dimension;
             } else {
-                const inventoryBots = inventorySim.findBotsById(bot.id);
-                if (inventoryBots.length > 0) {
-                    dimension = inventorySim.dimension;
+                const miniBots = miniSim.findBotsById(bot.id);
+                if (miniBots.length > 0) {
+                    dimension = miniSim.dimension;
                 }
             }
         }
@@ -593,20 +593,20 @@ export class PlayerGame extends Game {
         }
 
         //
-        // Remove Inventory Simulation
+        // Remove mini portal Simulation
         //
-        const invSimIndex = this.inventorySimulations.findIndex(
+        const invSimIndex = this.miniSimulations.findIndex(
             (s) => s.simulation.id == sim.id
         );
 
         if (invSimIndex >= 0) {
-            const removed = this.inventorySimulations.splice(invSimIndex, 1);
+            const removed = this.miniSimulations.splice(invSimIndex, 1);
             removed.forEach((s) => {
                 s.onBotAdded.removeListener(this.onBotAdded.invoke);
                 s.onBotRemoved.removeListener(this.onBotRemoved.invoke);
                 s.onBotUpdated.removeListener(this.onBotUpdated.invoke);
                 s.unsubscribe();
-                this.inventoryScene.remove(s);
+                this.miniScene.remove(s);
             });
         }
     }
@@ -614,7 +614,8 @@ export class PlayerGame extends Game {
     resetCameras() {
         this.interaction.clearOperationsOfType(TweenCameraToOperation);
         this.interaction.cameraRigControllers.forEach((controller) => {
-            if (controller.rig.name != 'inventory') controller.controls.reset();
+            if (controller.rig.name != 'miniPortal')
+                controller.controls.reset();
         });
     }
 
@@ -630,36 +631,33 @@ export class PlayerGame extends Game {
     protected renderBrowser() {
         super.renderBrowser();
 
-        this.inventoryCameraRig.mainCamera.updateMatrixWorld(true);
+        this.miniCameraRig.mainCamera.updateMatrixWorld(true);
 
         //
-        // [Inventory scene]
+        // [mini portal scene]
         //
 
-        this.renderer.clearDepth(); // Clear depth buffer so that inventory scene always appears above the main scene.
+        this.renderer.clearDepth(); // Clear depth buffer so that mini portal scene always appears above the main scene.
 
-        this.inventorySceneBackgroundUpdate();
+        this.miniSceneBackgroundUpdate();
 
         this.renderer.setViewport(
-            this.inventoryViewport.x,
-            this.inventoryViewport.y,
-            this.inventoryViewport.width,
-            this.inventoryViewport.height
+            this.miniViewport.x,
+            this.miniViewport.y,
+            this.miniViewport.width,
+            this.miniViewport.height
         );
         this.renderer.setScissor(
-            this.inventoryViewport.x,
-            this.inventoryViewport.y,
-            this.inventoryViewport.width,
-            this.inventoryViewport.height
+            this.miniViewport.x,
+            this.miniViewport.y,
+            this.miniViewport.width,
+            this.miniViewport.height
         );
 
         this.renderer.setScissorTest(true);
 
-        // Render the inventory scene with the inventory main camera.
-        this.renderer.render(
-            this.inventoryScene,
-            this.inventoryCameraRig.mainCamera
-        );
+        // Render the mini portal scene with the mini portal main camera.
+        this.renderer.render(this.miniScene, this.miniCameraRig.mainCamera);
     }
 
     /**
@@ -678,11 +676,11 @@ export class PlayerGame extends Game {
         this.renderer.setScissorTest(false);
     }
 
-    private inventorySceneBackgroundUpdate() {
-        let tagColor = this.getInventoryColor();
+    private miniSceneBackgroundUpdate() {
+        let tagColor = this.getMiniPortalColor();
 
         if (tagColor) {
-            this.inventoryScene.background = tagColor;
+            this.miniScene.background = tagColor;
         } else {
             let sceneColor =
                 this.mainScene.background instanceof Color
@@ -696,45 +694,43 @@ export class PlayerGame extends Game {
                     : new Color(DEFAULT_SCENE_BACKGROUND_COLOR));
             let invColor: Color | Texture = currentColor.clone();
             invColor.offsetHSL(0, -0.02, -0.04);
-            this.inventoryScene.background = invColor;
+            this.miniScene.background = invColor;
         }
     }
 
     protected setupRendering() {
         super.setupRendering();
 
-        this.inventoryViewport = new Viewport('inventory', this.mainViewport);
-        console.log(
-            'Set height initial value: ' + this.inventoryViewport.height
-        );
-        this.inventoryViewport.layer = 1;
+        this.miniViewport = new Viewport('miniPortal', this.mainViewport);
+        console.log('Set height initial value: ' + this.miniViewport.height);
+        this.miniViewport.layer = 1;
     }
 
     protected setupScenes() {
         super.setupScenes();
 
         //
-        // [Inventory scene]
+        // [mini portal scene]
         //
-        this.inventoryScene = new Scene();
-        this.inventoryScene.autoUpdate = false;
+        this.miniScene = new Scene();
+        this.miniScene.autoUpdate = false;
 
-        // Inventory camera.
-        this.inventoryCameraRig = createCameraRig(
-            'inventory',
+        // mini portal camera.
+        this.miniCameraRig = createCameraRig(
+            'miniPortal',
             'orthographic',
-            this.inventoryScene,
-            this.inventoryViewport
+            this.miniScene,
+            this.miniViewport
         );
-        this.inventoryCameraRig.mainCamera.zoom = 50;
+        this.miniCameraRig.mainCamera.zoom = 50;
 
-        // Inventory ambient light.
+        // mini portal ambient light.
         const invAmbient = baseAuxAmbientLight();
-        this.inventoryScene.add(invAmbient);
+        this.miniScene.add(invAmbient);
 
-        // Inventory direction light.
+        // mini portal direction light.
         const invDirectional = baseAuxDirectionalLight();
-        this.inventoryScene.add(invDirectional);
+        this.miniScene.add(invDirectional);
 
         this.setupDelay = true;
 
@@ -745,21 +741,21 @@ export class PlayerGame extends Game {
         super.onWindowResize(width, height);
 
         this.firstPan = true;
-        if (this.inventoryHeightOverride === null) {
-            this.setupInventory(height);
+        if (this.miniPortalHeightOverride === null) {
+            this.setupMiniPortal(height);
         }
 
-        this.setupInventory(height);
+        this.setupMiniPortal(height);
     }
 
-    setupInventory(height: number) {
+    setupMiniPortal(height: number) {
         let invHeightScale = 1;
 
-        let defaultHeight = this.getInventoryHeight();
+        let defaultHeight = this.getMiniPortalHeight();
 
-        if (this.defaultHeightCurrent != this.getInventoryHeight()) {
-            this.inventoryHeightOverride = null;
-            this.defaultHeightCurrent = this.getInventoryHeight();
+        if (this.defaultHeightCurrent != this.getMiniPortalHeight()) {
+            this.miniPortalHeightOverride = null;
+            this.defaultHeightCurrent = this.getMiniPortalHeight();
         }
 
         if (defaultHeight != null && defaultHeight != 0) {
@@ -772,12 +768,12 @@ export class PlayerGame extends Game {
             }
         }
 
-        this.invVisibleCurrent = this.getInventoryVisible();
+        this.invVisibleCurrent = this.getMiniPortalVisible();
 
         if (this.invVisibleCurrent === true) {
-            this._showInventory();
+            this._showMiniPortal();
         } else {
-            this._hideInventory();
+            this._hideMiniPortal();
             return;
         }
 
@@ -797,45 +793,44 @@ export class PlayerGame extends Game {
         this.invOffsetDelta = (49 - 18 * ((700 - w) / 200)) * (unitNum - 1);
 
         // if there is no existing height set by the slider then
-        if (this.inventoryHeightOverride === null) {
+        if (this.miniPortalHeightOverride === null) {
             let invOffsetHeight = 40;
 
             if (window.innerWidth <= 700) {
                 invOffsetHeight = window.innerWidth * 0.05;
-                this.inventoryViewport.setScale(0.9, invHeightScale);
+                this.miniViewport.setScale(0.9, invHeightScale);
             } else {
-                this.inventoryViewport.setScale(0.8, invHeightScale);
+                this.miniViewport.setScale(0.8, invHeightScale);
             }
 
-            if (this.inventoryViewport.getSize().x > 700) {
+            if (this.miniViewport.getSize().x > 700) {
                 let num = 700 / window.innerWidth;
-                this.inventoryViewport.setScale(num, invHeightScale);
+                this.miniViewport.setScale(num, invHeightScale);
             }
 
-            this.inventoryViewport.setOrigin(
-                window.innerWidth / 2 - this.inventoryViewport.getSize().x / 2,
+            this.miniViewport.setOrigin(
+                window.innerWidth / 2 - this.miniViewport.getSize().x / 2,
                 invOffsetHeight
             );
 
-            // set the new slider's top position to the top of the inventory viewport
+            // set the new slider's top position to the top of the mini portal viewport
             let sliderTop =
-                height - this.inventoryViewport.height - (invOffsetHeight - 10);
+                height - this.miniViewport.height - (invOffsetHeight - 10);
             (<HTMLElement>this.sliderLeft).style.top =
                 sliderTop.toString() + 'px';
 
             (<HTMLElement>this.sliderRight).style.top =
                 sliderTop.toString() + 'px';
 
-            this.inventoryHeightOverride =
-                this.inventoryViewport.getSize().y - 5;
+            this.miniPortalHeightOverride = this.miniViewport.getSize().y - 5;
 
             (<HTMLElement>this.sliderLeft).style.left =
-                (this.inventoryViewport.x - 15).toString() + 'px';
+                (this.miniViewport.x - 15).toString() + 'px';
 
             (<HTMLElement>this.sliderRight).style.left =
                 (
-                    this.inventoryViewport.x +
-                    this.inventoryViewport.getSize().x -
+                    this.miniViewport.x +
+                    this.miniViewport.getSize().x -
                     15
                 ).toString() + 'px';
 
@@ -846,31 +841,31 @@ export class PlayerGame extends Game {
                         sliderTop +
                         this.menuOffset
                     ).toString() + 'px',
-                left: this.inventoryViewport.x.toString() + 'px',
-                width: this.inventoryViewport.width.toString() + 'px',
+                left: this.miniViewport.x.toString() + 'px',
+                width: this.miniViewport.width.toString() + 'px',
             });
         } else {
             let invOffsetHeight = 40;
 
             if (window.innerWidth < 700) {
                 invOffsetHeight = window.innerWidth * 0.05;
-                this.inventoryViewport.setScale(0.9, invHeightScale);
+                this.miniViewport.setScale(0.9, invHeightScale);
             } else {
-                this.inventoryViewport.setScale(0.8, invHeightScale);
+                this.miniViewport.setScale(0.8, invHeightScale);
             }
 
-            if (this.inventoryViewport.getSize().x > 700) {
+            if (this.miniViewport.getSize().x > 700) {
                 let num = 700 / window.innerWidth;
-                this.inventoryViewport.setScale(num, invHeightScale);
+                this.miniViewport.setScale(num, invHeightScale);
             }
 
-            this.inventoryViewport.setOrigin(
-                window.innerWidth / 2 - this.inventoryViewport.getSize().x / 2,
+            this.miniViewport.setOrigin(
+                window.innerWidth / 2 - this.miniViewport.getSize().x / 2,
                 invOffsetHeight
             );
 
             let sliderTop =
-                height - this.inventoryViewport.height - invOffsetHeight - 10;
+                height - this.miniViewport.height - invOffsetHeight - 10;
             (<HTMLElement>this.sliderLeft).style.top =
                 sliderTop.toString() + 'px';
 
@@ -878,12 +873,12 @@ export class PlayerGame extends Game {
                 sliderTop.toString() + 'px';
 
             (<HTMLElement>this.sliderLeft).style.left =
-                (this.inventoryViewport.x - 12).toString() + 'px';
+                (this.miniViewport.x - 12).toString() + 'px';
 
             (<HTMLElement>this.sliderRight).style.left =
                 (
-                    this.inventoryViewport.x +
-                    this.inventoryViewport.getSize().x -
+                    this.miniViewport.x +
+                    this.miniViewport.getSize().x -
                     12
                 ).toString() + 'px';
 
@@ -894,19 +889,19 @@ export class PlayerGame extends Game {
                         sliderTop +
                         this.menuOffset
                     ).toString() + 'px',
-                left: this.inventoryViewport.x.toString() + 'px',
-                width: this.inventoryViewport.width.toString() + 'px',
+                left: this.miniViewport.x.toString() + 'px',
+                width: this.miniViewport.width.toString() + 'px',
             });
         }
 
-        if (this.inventoryCameraRig) {
-            this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
-            resizeCameraRig(this.inventoryCameraRig);
+        if (this.miniCameraRig) {
+            this.overrideOrthographicViewportZoom(this.miniCameraRig);
+            resizeCameraRig(this.miniCameraRig);
         }
     }
 
-    private _hideInventory() {
-        this.inventoryViewport.setScale(null, 0);
+    private _hideMiniPortal() {
+        this.miniViewport.setScale(null, 0);
         (<HTMLElement>this.sliderLeft).style.display = 'none';
         (<HTMLElement>this.sliderRight).style.display = 'none';
         this.gameView.setMenuStyle({
@@ -914,21 +909,21 @@ export class PlayerGame extends Game {
         });
     }
 
-    private _showInventory() {
+    private _showMiniPortal() {
         (<HTMLElement>this.sliderLeft).style.display = 'block';
         (<HTMLElement>this.sliderRight).style.display = 'block';
     }
 
     async mouseDownSlider() {
-        if (!this.getInventoryResizable()) return;
+        if (!this.getMiniPortalResizable()) return;
 
         this.sliderPressed = true;
 
-        if (this.inventoryCameraRig.mainCamera instanceof OrthographicCamera) {
+        if (this.miniCameraRig.mainCamera instanceof OrthographicCamera) {
             this.startAspect =
-                this.inventoryCameraRig.viewport.width /
-                this.inventoryCameraRig.viewport.height;
-            this.startZoom = this.inventoryCameraRig.mainCamera.zoom;
+                this.miniCameraRig.viewport.width /
+                this.miniCameraRig.viewport.height;
+            this.startZoom = this.miniCameraRig.mainCamera.zoom;
             this.startOffset = this.panValueCurr;
         }
     }
@@ -942,9 +937,7 @@ export class PlayerGame extends Game {
 
         this.sliderPressed = false;
         let sliderTop =
-            window.innerHeight -
-            this.inventoryViewport.height -
-            invOffsetHeight;
+            window.innerHeight - this.miniViewport.height - invOffsetHeight;
         (<HTMLElement>this.sliderLeft).style.top = sliderTop.toString() + 'px';
 
         (<HTMLElement>this.sliderRight).style.top = sliderTop.toString() + 'px';
@@ -966,11 +959,11 @@ export class PlayerGame extends Game {
         TWEEN.update(this.time.timeSinceStart * 1000);
 
         if (this.setupDelay) {
-            this.onCenterCamera(this.inventoryCameraRig);
+            this.onCenterCamera(this.miniCameraRig);
             this.setupDelay = false;
         } else if (this.firstPan) {
             this.firstPan = false;
-            this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
+            this.overrideOrthographicViewportZoom(this.miniCameraRig);
         }
 
         if (
@@ -1011,51 +1004,51 @@ export class PlayerGame extends Game {
         }
 
         if (
-            this.invVisibleCurrent != this.getInventoryVisible() ||
-            this.defaultHeightCurrent != this.getInventoryHeight()
+            this.invVisibleCurrent != this.getMiniPortalVisible() ||
+            this.defaultHeightCurrent != this.getMiniPortalHeight()
         ) {
-            this.setupInventory(window.innerHeight);
+            this.setupMiniPortal(window.innerHeight);
         }
 
         if (this.invController != null) {
-            this.invController.controls.enablePan = this.getInventoryPannable();
-            this.invController.controls.enableRotate = this.getInventoryRotatable();
-            this.invController.controls.enableZoom = this.getInventoryZoomable();
+            this.invController.controls.enablePan = this.getMiniPortalPannable();
+            this.invController.controls.enableRotate = this.getMiniPortalRotatable();
+            this.invController.controls.enableZoom = this.getMiniPortalZoomable();
 
-            this.invController.controls.minPanX = this.getInventoryPanMinX();
-            this.invController.controls.maxPanX = this.getInventoryPanMaxX();
+            this.invController.controls.minPanX = this.getMiniPortalPanMinX();
+            this.invController.controls.maxPanX = this.getMiniPortalPanMaxX();
 
             //this.invController.controls.minPanY = this.getPanMinY();
 
-            if (this.getInventoryPanMinY() != null) {
+            if (this.getMiniPortalPanMinY() != null) {
                 this.invController.controls.minPanY =
-                    this.getInventoryPanMinY() * -1;
+                    this.getMiniPortalPanMinY() * -1;
             } else {
                 this.invController.controls.minPanY = null;
             }
 
-            if (this.getInventoryPanMaxY() != null) {
+            if (this.getMiniPortalPanMaxY() != null) {
                 this.invController.controls.maxPanY =
-                    this.getInventoryPanMaxY() * -1;
+                    this.getMiniPortalPanMaxY() * -1;
             } else {
                 this.invController.controls.maxPanY = null;
             }
 
-            const showFocus = this.getInventoryShowFocusPoint();
+            const showFocus = this.getMiniPortalShowFocusPoint();
             if (showFocus && !this.xrSession) {
-                if (!this.inventoryFocusPoint) {
-                    this.inventoryFocusPoint = createFocusPointSphere();
-                    this.inventoryScene.add(this.inventoryFocusPoint);
+                if (!this.miniPortalFocusPoint) {
+                    this.miniPortalFocusPoint = createFocusPointSphere();
+                    this.miniScene.add(this.miniPortalFocusPoint);
                 }
-                this.inventoryFocusPoint.visible = true;
+                this.miniPortalFocusPoint.visible = true;
                 let targetWorld: Vector3 = this.invController.controls.target.clone();
                 this.invController.rig.cameraParent.localToWorld(targetWorld);
-                this.inventoryFocusPoint.position.copy(targetWorld);
-                this.inventoryFocusPoint.updateMatrixWorld(true);
+                this.miniPortalFocusPoint.position.copy(targetWorld);
+                this.miniPortalFocusPoint.updateMatrixWorld(true);
             } else {
-                if (this.inventoryFocusPoint) {
-                    this.inventoryFocusPoint.visible = false;
-                    this.inventoryFocusPoint.updateMatrixWorld(true);
+                if (this.miniPortalFocusPoint) {
+                    this.miniPortalFocusPoint.visible = false;
+                    this.miniPortalFocusPoint.updateMatrixWorld(true);
                 }
             }
         }
@@ -1109,7 +1102,7 @@ export class PlayerGame extends Game {
             }
         }
 
-        if (!this.getInventoryResizable() || !this.invVisibleCurrent) {
+        if (!this.getMiniPortalResizable() || !this.invVisibleCurrent) {
             if (this.sliderPressed) {
                 this.mouseUpSlider();
                 this.sliderPressed = false;
@@ -1124,7 +1117,7 @@ export class PlayerGame extends Game {
             (<HTMLElement>this.sliderRight).style.display = 'block';
         }
 
-        this._updateInventorySize();
+        this._updateMiniPortalSize();
 
         if (
             this.disableCanvasTransparency !==
@@ -1160,20 +1153,20 @@ export class PlayerGame extends Game {
 
     protected renderCursor() {
         const pagePos = this.getInput().getMousePagePos();
-        const inventoryViewport = this.inventoryViewport;
-        const isInventory = Input.pagePositionOnViewport(
+        const miniViewport = this.miniViewport;
+        const isMiniPortal = Input.pagePositionOnViewport(
             pagePos,
-            inventoryViewport,
+            miniViewport,
             this.getViewports()
         );
-        this.backgroundCursor = isInventory
-            ? this.getInventoryCursor()
+        this.backgroundCursor = isMiniPortal
+            ? this.getMiniPortalCursor()
             : this.getCursor();
 
         super.renderCursor();
     }
 
-    private _updateInventorySize() {
+    private _updateMiniPortalSize() {
         if (!this.sliderPressed) return false;
 
         let invOffsetHeight: number = 40;
@@ -1196,18 +1189,16 @@ export class PlayerGame extends Game {
             sliderPos - invOffsetHeight + 'px';
 
         let sliderTop =
-            window.innerHeight -
-            this.inventoryViewport.height -
-            invOffsetHeight;
+            window.innerHeight - this.miniViewport.height - invOffsetHeight;
 
         this.gameView.setMenuStyle({
             ...this.gameView.menuStyle,
             bottom: window.innerHeight - sliderTop + this.menuOffset - 8 + 'px',
         });
 
-        this.inventoryHeightOverride = window.innerHeight - sliderPos;
+        this.miniPortalHeightOverride = window.innerHeight - sliderPos;
 
-        let invHeightScale = this.inventoryHeightOverride / window.innerHeight;
+        let invHeightScale = this.miniPortalHeightOverride / window.innerHeight;
 
         if (invHeightScale < 0.1) {
             invHeightScale = 0.1;
@@ -1215,11 +1206,11 @@ export class PlayerGame extends Game {
             invHeightScale = 1;
         }
 
-        this.inventoryViewport.setScale(null, invHeightScale);
+        this.miniViewport.setScale(null, invHeightScale);
 
-        if (this.inventoryCameraRig) {
-            this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
-            resizeCameraRig(this.inventoryCameraRig);
+        if (this.miniCameraRig) {
+            this.overrideOrthographicViewportZoom(this.miniCameraRig);
+            resizeCameraRig(this.miniCameraRig);
         }
 
         if (!this.input.getMouseButtonHeld(0)) {

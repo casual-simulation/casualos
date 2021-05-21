@@ -35,12 +35,12 @@
                 @touchmove="moveTouch($event)"
             ></div>
 
-            <!-- Inventory viewport -->
-            <div v-if="hasInventoryViewport" class="viewport" :style="inventoryViewportStyle">
+            <!-- Mini viewport -->
+            <div v-if="hasMiniViewport" class="viewport" :style="miniViewportStyle">
                 <div class="toolbar right">
                     <camera-home
-                        @onCenterCamera="centerInventoryCamera"
-                        :isVisible="showInventoryCameraHome"
+                        @onCenterCamera="centerMiniCamera"
+                        :isVisible="showMiniPortalCameraHome"
                     ></camera-home>
                 </div>
             </div>

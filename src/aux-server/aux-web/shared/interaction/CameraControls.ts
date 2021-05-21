@@ -404,7 +404,7 @@ export class CameraControls {
     }
 
     public clampZoom(zoom: number): number {
-        if (this.viewport.name != 'inventory') {
+        if (this.viewport.name != 'miniPortal') {
             return Math.max(this.minZoom, Math.min(this.maxZoom, zoom));
         } else {
             return Math.max(0.01, Math.min(191, zoom));
