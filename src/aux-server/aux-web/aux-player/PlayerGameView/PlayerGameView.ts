@@ -58,14 +58,6 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         e.preventDefault();
     }
 
-    mouseDownSlider() {
-        this._game.mouseDownSlider();
-    }
-
-    mouseUpSlider() {
-        this._game.mouseUpSlider();
-    }
-
     setupCore() {
         this.menu = [];
         this.menuStyle = {};

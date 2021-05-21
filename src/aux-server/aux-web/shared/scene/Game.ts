@@ -567,7 +567,7 @@ export abstract class Game {
         DebugObjectManager.update();
 
         this.input.update(xrFrame);
-        this.interaction.update();
+        this.updateInteraction();
 
         const simulations = this.getSimulations();
         if (simulations) {
@@ -592,6 +592,10 @@ export abstract class Game {
         this.renderCursor();
 
         this._onUpdate.next();
+    }
+
+    protected updateInteraction() {
+        this.interaction.update();
     }
 
     protected renderCursor() {

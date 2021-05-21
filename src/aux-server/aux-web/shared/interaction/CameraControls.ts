@@ -336,6 +336,11 @@ export class CameraControls {
         this.panOffset.add(delta);
     }
 
+    /**
+     * Moves the camera left and right along the plane defined by the forward facing direction of the camera.
+     * @param deltaX The amount that the camera should move right or left. Units are in client position pixels.
+     * @param deltaY The amount that the camera should move up or down. Units are in client position pixels.
+     */
     public pan(deltaX: number, deltaY: number) {
         let offset = new Vector3();
 

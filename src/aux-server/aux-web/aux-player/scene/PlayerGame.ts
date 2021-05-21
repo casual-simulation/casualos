@@ -66,7 +66,13 @@ import { GameAudio } from '../../shared/scene/GameAudio';
 import TWEEN from '@tweenjs/tween.js';
 import { MathUtils as ThreeMath } from '@casual-simulation/three';
 import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
-import { Input } from '../../shared/scene/Input';
+import { Input, MouseButtonId } from '../../shared/scene/Input';
+
+const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
+const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
+
+const MINI_PORTAL_MAX_PERCENT = 1;
+const MINI_PORTAL_MIN_PERCENT = 0.1;
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -83,40 +89,66 @@ export class PlayerGame extends Game {
 
     private miniScene: Scene;
 
-    miniPortalHeightOverride: number = null;
+    private _sliderLeft: HTMLElement;
+    private _sliderRight: HTMLElement;
+    private _resizingMiniPortal: boolean = false;
 
-    private _sliderLeft: Element;
-    private _sliderRight: Element;
+    /**
+     * The mouse position that the mini portal resize operation started at.
+     * When resizing, we compare this value against the final value to determine how much larger/smaller the mini portal should be.
+     */
+    private _startResizeClientPos: Vector2 = null;
+    private _currentResizeClientPos: Vector2 = null;
+    private _startMiniPortalHeight: number;
 
     private get sliderLeft() {
         if (!this._sliderLeft) {
-            this._sliderLeft = document.querySelector('.slider-hiddenLeft');
+            this._sliderLeft = document.querySelector(
+                '.slider-hiddenLeft'
+            ) as HTMLElement;
         }
         return this._sliderLeft;
     }
 
     private get sliderRight() {
         if (!this._sliderRight) {
-            this._sliderRight = document.querySelector('.slider-hiddenRight');
+            this._sliderRight = document.querySelector(
+                '.slider-hiddenRight'
+            ) as HTMLElement;
         }
         return this._sliderRight;
     }
 
-    private sliderPressed: boolean = false;
-
     setupDelay: boolean = false;
 
-    invVisibleCurrent: boolean = DEFAULT_MINI_PORTAL_VISIBLE;
-    defaultHeightCurrent: number = 0;
+    miniPortalVisible: boolean = DEFAULT_MINI_PORTAL_VISIBLE;
+
+    /**
+     * The height that was last configured for the mini portal. This can be set directly by the user.
+     * Represented as a percentage of the available height that the portal can take.
+     */
+    miniPortalConfiguredHeight: number;
+
+    /**
+     * The current height of the mini portal represented as a percentage of
+     * the available height that the portal can take.
+     * This can be manipulated by the user via resizing the portal.
+     */
+    miniPortalHeight: number;
+
+    /**
+     * The available height that can be used by the mini portal in px.
+     */
+    miniPortalAvailableHeight: number;
 
     defaultZoom: number = null;
     defaultRotationX: number = null;
     defaultRotationY: number = null;
 
-    invController: CameraRigControls;
+    miniPortalControls: CameraRigControls;
     invOffsetCurr: number = 0;
     invOffsetDelta: number = 0;
-    firstPan: boolean = true;
+
     panValueCurr: number = 0;
     startOffset: number = 0;
 
@@ -317,7 +349,11 @@ export class PlayerGame extends Game {
         // return [...this.miniSimulations];
     }
     getUIHtmlElements(): HTMLElement[] {
-        return [<HTMLElement>this.gameView.$refs.miniPortal];
+        return [
+            <HTMLElement>this.gameView.$refs.miniPortal,
+            this.sliderRight,
+            this.sliderLeft,
+        ];
     }
     getMiniPortalViewport(): Viewport {
         return this.miniViewport;
@@ -739,37 +775,26 @@ export class PlayerGame extends Game {
     onWindowResize(width: number, height: number) {
         super.onWindowResize(width, height);
 
-        this.firstPan = true;
-        if (this.miniPortalHeightOverride === null) {
-            this.setupMiniPortal(height);
-        }
-
-        this.setupMiniPortal(height);
+        this._updateMiniPortal();
     }
 
-    setupMiniPortal(height: number) {
-        let invHeightScale = 1;
+    private _updateMiniPortal() {
+        let configuredHeight = this.getMiniPortalHeight();
 
-        let defaultHeight = this.getMiniPortalHeight();
-
-        if (this.defaultHeightCurrent != this.getMiniPortalHeight()) {
-            this.miniPortalHeightOverride = null;
-            this.defaultHeightCurrent = this.getMiniPortalHeight();
+        if (this.miniPortalConfiguredHeight != configuredHeight) {
+            this.miniPortalConfiguredHeight = configuredHeight;
+            this.miniPortalHeight = configuredHeight;
         }
 
-        if (defaultHeight != null && defaultHeight != 0) {
-            if (defaultHeight < 1) {
-                invHeightScale = 1;
-            } else if (defaultHeight > 10) {
-                invHeightScale = 10;
-            } else {
-                invHeightScale = <number>defaultHeight;
-            }
-        }
+        this.miniPortalHeight = clamp(
+            this.miniPortalHeight,
+            MINI_PORTAL_MIN_PERCENT,
+            MINI_PORTAL_MAX_PERCENT
+        );
 
-        this.invVisibleCurrent = this.getMiniPortalVisible();
+        this.miniPortalVisible = this.getMiniPortalVisible();
 
-        if (this.invVisibleCurrent === true) {
+        if (this.miniPortalVisible === true) {
             this._showMiniPortal();
         } else {
             this._hideMiniPortal();
@@ -782,121 +807,77 @@ export class PlayerGame extends Game {
             w = 700;
         }
 
-        let unitNum = invHeightScale;
-        invHeightScale = (0.11 - 0.04 * ((700 - w) / 200)) * unitNum + 0.02;
+        let heightOffset = 40;
+        let widthPercent = 0.8;
 
-        let tempNum = 873 * invHeightScale;
-        tempNum = tempNum / window.innerHeight;
-
-        invHeightScale = tempNum;
-        this.invOffsetDelta = (49 - 18 * ((700 - w) / 200)) * (unitNum - 1);
-
-        // if there is no existing height set by the slider then
-        if (this.miniPortalHeightOverride === null) {
-            let invOffsetHeight = 40;
-
-            if (window.innerWidth <= 700) {
-                invOffsetHeight = window.innerWidth * 0.05;
-                this.miniViewport.setScale(0.9, invHeightScale);
-            } else {
-                this.miniViewport.setScale(0.8, invHeightScale);
-            }
-
-            if (this.miniViewport.getSize().x > 700) {
-                let num = 700 / window.innerWidth;
-                this.miniViewport.setScale(num, invHeightScale);
-            }
-
-            this.miniViewport.setOrigin(
-                window.innerWidth / 2 - this.miniViewport.getSize().x / 2,
-                invOffsetHeight
-            );
-
-            // set the new slider's top position to the top of the mini portal viewport
-            let sliderTop =
-                height - this.miniViewport.height - (invOffsetHeight - 10);
-            (<HTMLElement>this.sliderLeft).style.top =
-                sliderTop.toString() + 'px';
-
-            (<HTMLElement>this.sliderRight).style.top =
-                sliderTop.toString() + 'px';
-
-            this.miniPortalHeightOverride = this.miniViewport.getSize().y - 5;
-
-            (<HTMLElement>this.sliderLeft).style.left =
-                (this.miniViewport.x - 15).toString() + 'px';
-
-            (<HTMLElement>this.sliderRight).style.left =
-                (
-                    this.miniViewport.x +
-                    this.miniViewport.getSize().x -
-                    15
-                ).toString() + 'px';
-
-            this.gameView.setMenuStyle({
-                bottom:
-                    (
-                        window.innerHeight -
-                        sliderTop +
-                        this.menuOffset
-                    ).toString() + 'px',
-                left: this.miniViewport.x.toString() + 'px',
-                width: this.miniViewport.width.toString() + 'px',
-            });
-        } else {
-            let invOffsetHeight = 40;
-
-            if (window.innerWidth < 700) {
-                invOffsetHeight = window.innerWidth * 0.05;
-                this.miniViewport.setScale(0.9, invHeightScale);
-            } else {
-                this.miniViewport.setScale(0.8, invHeightScale);
-            }
-
-            if (this.miniViewport.getSize().x > 700) {
-                let num = 700 / window.innerWidth;
-                this.miniViewport.setScale(num, invHeightScale);
-            }
-
-            this.miniViewport.setOrigin(
-                window.innerWidth / 2 - this.miniViewport.getSize().x / 2,
-                invOffsetHeight
-            );
-
-            let sliderTop =
-                height - this.miniViewport.height - invOffsetHeight - 10;
-            (<HTMLElement>this.sliderLeft).style.top =
-                sliderTop.toString() + 'px';
-
-            (<HTMLElement>this.sliderRight).style.top =
-                sliderTop.toString() + 'px';
-
-            (<HTMLElement>this.sliderLeft).style.left =
-                (this.miniViewport.x - 12).toString() + 'px';
-
-            (<HTMLElement>this.sliderRight).style.left =
-                (
-                    this.miniViewport.x +
-                    this.miniViewport.getSize().x -
-                    12
-                ).toString() + 'px';
-
-            this.gameView.setMenuStyle({
-                bottom:
-                    (
-                        window.innerHeight -
-                        sliderTop +
-                        this.menuOffset
-                    ).toString() + 'px',
-                left: this.miniViewport.x.toString() + 'px',
-                width: this.miniViewport.width.toString() + 'px',
-            });
+        if (window.innerWidth <= 700) {
+            heightOffset = window.innerWidth * 0.05;
+            widthPercent = 0.9;
         }
+
+        const mainViewportSize = this.mainViewport.getSize();
+        const mainViewportWidth = mainViewportSize.x;
+        const mainViewportHeight = mainViewportSize.y;
+        this.miniPortalAvailableHeight = mainViewportHeight - heightOffset * 2;
+        const miniPortalHeight =
+            this.miniPortalHeight * this.miniPortalAvailableHeight;
+        let miniPortalHeightPercent = miniPortalHeight / mainViewportHeight;
+
+        // clamp the width to <= 700px
+        if (widthPercent * mainViewportWidth > 700) {
+            widthPercent = 700 / mainViewportWidth;
+        }
+
+        this.miniViewport.setScale(widthPercent, miniPortalHeightPercent);
+
+        this.miniViewport.setOrigin(
+            mainViewportWidth / 2 - this.miniViewport.getSize().x / 2,
+            heightOffset
+        );
+
+        this._updateMiniPortalSlider();
 
         if (this.miniCameraRig) {
             this.overrideOrthographicViewportZoom(this.miniCameraRig);
             resizeCameraRig(this.miniCameraRig);
         }
+
+        this.miniViewport.updateViewport();
+    }
+
+    /**
+     * Updates the positioning of the resize indicators for the mini portal.
+     */
+    private _updateMiniPortalSlider() {
+        const height = this.mainViewport.height;
+        // set the new slider's top position to the top of the mini portal viewport
+        let sliderTop =
+            height -
+            this.miniViewport.height -
+            this.miniViewport.y -
+            MINI_PORTAL_SLIDER_HALF_HEIGHT;
+        (<HTMLElement>this.sliderLeft).style.top = sliderTop.toString() + 'px';
+
+        (<HTMLElement>this.sliderRight).style.top = sliderTop.toString() + 'px';
+
+        (<HTMLElement>this.sliderLeft).style.left =
+            (this.miniViewport.x - MINI_PORTAL_SLIDER_HALF_WIDTH).toString() +
+            'px';
+
+        (<HTMLElement>this.sliderRight).style.left =
+            (
+                this.miniViewport.x +
+                this.miniViewport.width -
+                MINI_PORTAL_SLIDER_HALF_WIDTH
+            ).toString() + 'px';
+
+        this.gameView.setMenuStyle({
+            bottom:
+                (window.innerHeight - sliderTop + this.menuOffset).toString() +
+                'px',
+            left: this.miniViewport.x.toString() + 'px',
+            width: this.miniViewport.width.toString() + 'px',
+        });
     }
 
     private _hideMiniPortal() {
@@ -913,46 +894,6 @@ export class PlayerGame extends Game {
         (<HTMLElement>this.sliderRight).style.display = 'block';
     }
 
-    async mouseDownSlider() {
-        if (!this.getMiniPortalResizable()) return;
-
-        this.sliderPressed = true;
-
-        if (this.miniCameraRig.mainCamera instanceof OrthographicCamera) {
-            this.startAspect =
-                this.miniCameraRig.viewport.width /
-                this.miniCameraRig.viewport.height;
-            this.startZoom = this.miniCameraRig.mainCamera.zoom;
-            this.startOffset = this.panValueCurr;
-        }
-    }
-
-    async mouseUpSlider() {
-        let invOffsetHeight = 40;
-
-        if (window.innerWidth < 700) {
-            invOffsetHeight = window.innerWidth * 0.05;
-        }
-
-        this.sliderPressed = false;
-        let sliderTop =
-            window.innerHeight - this.miniViewport.height - invOffsetHeight;
-        (<HTMLElement>this.sliderLeft).style.top = sliderTop.toString() + 'px';
-
-        (<HTMLElement>this.sliderRight).style.top = sliderTop.toString() + 'px';
-
-        this.gameView.setMenuStyle({
-            ...this.gameView.menuStyle,
-            bottom:
-                (
-                    window.innerHeight -
-                    sliderTop +
-                    this.menuOffset -
-                    8
-                ).toString() + 'px',
-        });
-    }
-
     protected frameUpdate(xrFrame?: any) {
         super.frameUpdate(xrFrame);
         TWEEN.update(this.time.timeSinceStart * 1000);
@@ -960,9 +901,6 @@ export class PlayerGame extends Game {
         if (this.setupDelay) {
             this.onCenterCamera(this.miniCameraRig);
             this.setupDelay = false;
-        } else if (this.firstPan) {
-            this.firstPan = false;
-            this.overrideOrthographicViewportZoom(this.miniCameraRig);
         }
 
         if (
@@ -1003,34 +941,34 @@ export class PlayerGame extends Game {
         }
 
         if (
-            this.invVisibleCurrent != this.getMiniPortalVisible() ||
-            this.defaultHeightCurrent != this.getMiniPortalHeight()
+            this.miniPortalVisible != this.getMiniPortalVisible() ||
+            this.miniPortalConfiguredHeight != this.getMiniPortalHeight()
         ) {
-            this.setupMiniPortal(window.innerHeight);
+            this._updateMiniPortal();
         }
 
-        if (this.invController != null) {
-            this.invController.controls.enablePan = this.getMiniPortalPannable();
-            this.invController.controls.enableRotate = this.getMiniPortalRotatable();
-            this.invController.controls.enableZoom = this.getMiniPortalZoomable();
+        if (this.miniPortalControls != null) {
+            this.miniPortalControls.controls.enablePan = this.getMiniPortalPannable();
+            this.miniPortalControls.controls.enableRotate = this.getMiniPortalRotatable();
+            this.miniPortalControls.controls.enableZoom = this.getMiniPortalZoomable();
 
-            this.invController.controls.minPanX = this.getMiniPortalPanMinX();
-            this.invController.controls.maxPanX = this.getMiniPortalPanMaxX();
+            this.miniPortalControls.controls.minPanX = this.getMiniPortalPanMinX();
+            this.miniPortalControls.controls.maxPanX = this.getMiniPortalPanMaxX();
 
             //this.invController.controls.minPanY = this.getPanMinY();
 
             if (this.getMiniPortalPanMinY() != null) {
-                this.invController.controls.minPanY =
+                this.miniPortalControls.controls.minPanY =
                     this.getMiniPortalPanMinY() * -1;
             } else {
-                this.invController.controls.minPanY = null;
+                this.miniPortalControls.controls.minPanY = null;
             }
 
             if (this.getMiniPortalPanMaxY() != null) {
-                this.invController.controls.maxPanY =
+                this.miniPortalControls.controls.maxPanY =
                     this.getMiniPortalPanMaxY() * -1;
             } else {
-                this.invController.controls.maxPanY = null;
+                this.miniPortalControls.controls.maxPanY = null;
             }
 
             const showFocus = this.getMiniPortalShowFocusPoint();
@@ -1040,8 +978,10 @@ export class PlayerGame extends Game {
                     this.miniScene.add(this.miniPortalFocusPoint);
                 }
                 this.miniPortalFocusPoint.visible = true;
-                let targetWorld: Vector3 = this.invController.controls.target.clone();
-                this.invController.rig.cameraParent.localToWorld(targetWorld);
+                let targetWorld: Vector3 = this.miniPortalControls.controls.target.clone();
+                this.miniPortalControls.rig.cameraParent.localToWorld(
+                    targetWorld
+                );
                 this.miniPortalFocusPoint.position.copy(targetWorld);
                 this.miniPortalFocusPoint.updateMatrixWorld(true);
             } else {
@@ -1101,12 +1041,7 @@ export class PlayerGame extends Game {
             }
         }
 
-        if (!this.getMiniPortalResizable() || !this.invVisibleCurrent) {
-            if (this.sliderPressed) {
-                this.mouseUpSlider();
-                this.sliderPressed = false;
-            }
-
+        if (!this.getMiniPortalResizable() || !this.miniPortalVisible) {
             // remove dragging areas
             (<HTMLElement>this.sliderLeft).style.display = 'none';
             (<HTMLElement>this.sliderRight).style.display = 'none';
@@ -1115,8 +1050,6 @@ export class PlayerGame extends Game {
             (<HTMLElement>this.sliderLeft).style.display = 'block';
             (<HTMLElement>this.sliderRight).style.display = 'block';
         }
-
-        this._updateMiniPortalSize();
 
         if (
             this.disableCanvasTransparency !==
@@ -1165,83 +1098,69 @@ export class PlayerGame extends Game {
         super.renderCursor();
     }
 
+    protected updateInteraction() {
+        super.updateInteraction();
+        this._updateMiniPortalSize();
+    }
+
     private _updateMiniPortalSize() {
-        if (!this.sliderPressed) return false;
-
-        let invOffsetHeight: number = 40;
-
-        if (window.innerWidth < 700) {
-            invOffsetHeight = window.innerWidth * 0.05;
+        if (!this.getMiniPortalResizable() || !this.miniPortalVisible) {
+            return;
         }
 
-        let sliderPos = this.input.getMousePagePos().y + invOffsetHeight;
+        const clientPos = this.input.getMouseClientPos();
+        if (this.input.getMouseButtonDown(MouseButtonId.Left)) {
+            const overSlider =
+                Input.eventIsDirectlyOverElement(clientPos, this.sliderLeft) ||
+                Input.eventIsDirectlyOverElement(clientPos, this.sliderRight);
 
-        //prevent the slider from being positioned outside the window bounds
-        if (sliderPos < 0) sliderPos = 0;
-        if (sliderPos > window.innerHeight - 40)
-            sliderPos = window.innerHeight - 40;
+            if (overSlider) {
+                this._resizingMiniPortal = true;
+                this._startResizeClientPos = clientPos;
+                this._currentResizeClientPos = clientPos;
+                this._startMiniPortalHeight = this.miniPortalHeight;
 
-        (<HTMLElement>this.sliderLeft).style.top =
-            sliderPos - invOffsetHeight + 'px';
-
-        (<HTMLElement>this.sliderRight).style.top =
-            sliderPos - invOffsetHeight + 'px';
-
-        let sliderTop =
-            window.innerHeight - this.miniViewport.height - invOffsetHeight;
-
-        this.gameView.setMenuStyle({
-            ...this.gameView.menuStyle,
-            bottom: window.innerHeight - sliderTop + this.menuOffset - 8 + 'px',
-        });
-
-        this.miniPortalHeightOverride = window.innerHeight - sliderPos;
-
-        let invHeightScale = this.miniPortalHeightOverride / window.innerHeight;
-
-        if (invHeightScale < 0.1) {
-            invHeightScale = 0.1;
-        } else if (invHeightScale > 1) {
-            invHeightScale = 1;
+                if (
+                    this.miniCameraRig.mainCamera instanceof OrthographicCamera
+                ) {
+                    this.startAspect =
+                        this.miniCameraRig.viewport.width /
+                        this.miniCameraRig.viewport.height;
+                    this.startZoom = this.miniCameraRig.mainCamera.zoom;
+                    this.startOffset = this.panValueCurr;
+                }
+            }
         }
 
-        this.miniViewport.setScale(null, invHeightScale);
-
-        if (this.miniCameraRig) {
-            this.overrideOrthographicViewportZoom(this.miniCameraRig);
-            resizeCameraRig(this.miniCameraRig);
+        if (this.input.getMouseButtonUp(0)) {
+            this._resizingMiniPortal = false;
         }
 
-        if (!this.input.getMouseButtonHeld(0)) {
-            this.sliderPressed = false;
+        if (!this._resizingMiniPortal) {
+            return;
         }
 
-        let w = window.innerWidth;
+        const positionOffset = clientPos
+            .clone()
+            .sub(this._startResizeClientPos);
 
-        if (w > 700) {
-            w = 700;
-        }
+        const deltaHeight = -positionOffset.y;
+        const deltaHeightPercent = deltaHeight / this.miniPortalAvailableHeight;
 
-        let tempNum = invHeightScale * window.innerHeight; // num
-        let nNum = tempNum / 873;
+        this.miniPortalHeight = clamp(
+            this._startMiniPortalHeight + deltaHeightPercent,
+            MINI_PORTAL_MIN_PERCENT,
+            MINI_PORTAL_MAX_PERCENT
+        );
 
-        let tempUnitNum = nNum / (0.11 - 0.04 * ((700 - w) / 200));
+        this._updateMiniPortal();
 
-        if (tempUnitNum <= 1.16) {
-            tempUnitNum = 1.16;
-            this.invOffsetDelta =
-                (49 - 18 * ((700 - w) / 200)) * (tempUnitNum - 1);
-        } else {
-            this.invOffsetDelta =
-                (49 - 18 * ((700 - w) / 200)) * (tempUnitNum - 1) - 8;
-        }
+        // Pan the camera so that the bots stay in the same position
+        // even though the center of the viewport is changing.
+        const panDelta = clientPos.clone().sub(this._currentResizeClientPos);
+        this.miniPortalControls.controls.pan(0, -panDelta.y / 2);
 
-        let num = this.invOffsetDelta - this.invOffsetCurr;
-        this.invController.controls.setPan(-this.panValueCurr);
-        this.panValueCurr += num;
-
-        this.invController.controls.setPan(this.panValueCurr);
-        this.invOffsetCurr = this.invOffsetDelta;
+        this._currentResizeClientPos = clientPos;
     }
 
     /**
@@ -1252,7 +1171,7 @@ export class PlayerGame extends Game {
         if (cameraRig.mainCamera instanceof OrthographicCamera) {
             const aspect = cameraRig.viewport.width / cameraRig.viewport.height;
 
-            if (this.startAspect != null) {
+            if (this._resizingMiniPortal) {
                 let zoomC = this.startZoom / this.startAspect;
                 const newZoom =
                     this.startZoom - (this.startZoom - aspect * zoomC);
@@ -1261,8 +1180,8 @@ export class PlayerGame extends Game {
         }
 
         if (!this.setupDelay) {
-            if (this.invController == null) {
-                this.invController = this.interaction.cameraRigControllers.find(
+            if (this.miniPortalControls == null) {
+                this.miniPortalControls = this.interaction.cameraRigControllers.find(
                     (c) => c.rig.name === cameraRig.name
                 );
             }

@@ -801,7 +801,7 @@ export const DEFAULT_MINI_PORTAL_RESIZABLE = true;
 /**
  * The default height for mini portals.
  */
-export const DEFAULT_MINI_PORTAL_HEIGHT = 0;
+export const DEFAULT_MINI_PORTAL_HEIGHT = 0.2;
 
 /**
  * The default height for wrist portals.
