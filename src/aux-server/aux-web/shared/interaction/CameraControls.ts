@@ -505,9 +505,8 @@ export class CameraControls {
     }
 
     private _dollyPan(currentZoom: number) {
-        const element = this._game.gameView.gameView;
-        const centerX = element.clientWidth / 2;
-        const centerY = element.clientHeight / 2;
+        const centerX = this.viewport.width / 2;
+        const centerY = this.viewport.height / 2;
         const offsetX = this.dollyBegin.x - centerX;
         const offsetY = this.dollyBegin.y - centerY;
         const currentX = offsetX * currentZoom;
@@ -775,9 +774,9 @@ export class CameraControls {
                         (pagePosA.x + pagePosB.x) / 2,
                         (pagePosA.y + pagePosB.y) / 2
                     );
-                    this.dollyBegin = Input.offsetPosition(
+                    this.dollyBegin = Input.offsetPositionForViewport(
                         this.dollyBegin,
-                        this._game.gameView.gameView
+                        this.viewport
                     );
                     this.state = STATE.TOUCH_ROTATE_ZOOM;
                 }
@@ -917,9 +916,9 @@ export class CameraControls {
             }
             this.dollyStart.copy(input.getMouseClientPos());
             this.dollyBegin.copy(this.dollyStart);
-            this.dollyBegin = Input.offsetPosition(
+            this.dollyBegin = Input.offsetPositionForViewport(
                 this.dollyBegin,
-                this._game.gameView.gameView
+                this.viewport
             );
             if (wheelData.delta.y > 0) this.dollyIn(zoomScale);
             else if (wheelData.delta.y < 0) this.dollyOut(zoomScale);
@@ -999,9 +998,9 @@ export class CameraControls {
             // Dolly start.
             this.dollyStart.copy(input.getMouseClientPos());
             this.dollyBegin.copy(this.dollyStart);
-            this.dollyBegin = Input.offsetPosition(
+            this.dollyBegin = Input.offsetPositionForViewport(
                 this.dollyBegin,
-                this._game.gameView.gameView
+                this.viewport
             );
             this.state = STATE.DOLLY;
         } else if (input.getWheelMoved() && this.enableZoom) {

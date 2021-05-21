@@ -151,6 +151,24 @@ export class Input {
     }
 
     /**
+     * Calculates the "offset" coordinates relative to the given viewport using the given page position coordinates.
+     * @param pagePos The page position of the coordinates that we want converted.
+     * @param viewport The viewport that we want the position to be relative to.
+     */
+    public static offsetPositionForViewport(
+        pagePos: Vector2,
+        viewport: Viewport
+    ): Vector2 {
+        const globalPos = new Vector2(pagePos.x, pagePos.y);
+        const viewRect = viewport.getRootElement().getBoundingClientRect();
+        const left = viewRect.left + viewport.x;
+        const top =
+            viewRect.height - (viewport.y + viewport.height) + viewRect.top;
+        const viewPos = globalPos.sub(new Vector2(left, top));
+        return viewPos;
+    }
+
+    /**
      * Calculate a screen position for the given viewport inside of a screen. The screen position will be normalized and relative to the viewport.
      * Screen position is Three.js style where bottom left corner is (-1, -1) and top right corner is (1, 1).
      * @param fullWidth The full width of the screen (pixels).
@@ -165,12 +183,7 @@ export class Input {
         pagePos: Vector2,
         viewport: Viewport
     ): Vector2 {
-        const globalPos = new Vector2(pagePos.x, pagePos.y);
-        const viewRect = viewport.getRootElement().getBoundingClientRect();
-        const left = viewRect.left + viewport.x;
-        const top =
-            viewRect.height - (viewport.y + viewport.height) + viewRect.top;
-        const viewPos = globalPos.sub(new Vector2(left, top));
+        const viewPos = Input.offsetPositionForViewport(pagePos, viewport);
         return new Vector2(
             (viewPos.x / viewport.width) * 2 - 1,
             -(viewPos.y / viewport.height) * 2 + 1

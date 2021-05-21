@@ -722,7 +722,6 @@ export class PlayerGame extends Game {
             this.miniScene,
             this.miniViewport
         );
-        this.miniCameraRig.mainCamera.zoom = 50;
 
         // mini portal ambient light.
         const invAmbient = baseAuxAmbientLight();
@@ -1258,12 +1257,6 @@ export class PlayerGame extends Game {
                 const newZoom =
                     this.startZoom - (this.startZoom - aspect * zoomC);
                 cameraRig.mainCamera.zoom = newZoom;
-            } else {
-                // edit this number to change the initial zoom number
-                let initNum = 240;
-                // found that 50 is the preset zoom of the rig.maincamera.zoom so I am using this as the base zoom
-                const newZoom = initNum - (initNum - aspect * (initNum / 7));
-                cameraRig.mainCamera.zoom = newZoom;
             }
         }
 
@@ -1272,19 +1265,6 @@ export class PlayerGame extends Game {
                 this.invController = this.interaction.cameraRigControllers.find(
                     (c) => c.rig.name === cameraRig.name
                 );
-            }
-
-            if (!this.firstPan) {
-                let num = this.invOffsetDelta - this.invOffsetCurr;
-
-                // try to center it by using the last offset
-                this.invController.controls.setPan(-this.panValueCurr);
-
-                // the final pan movement with the current offset
-                this.panValueCurr += num;
-
-                this.invController.controls.setPan(this.panValueCurr);
-                this.invOffsetCurr = this.invOffsetDelta;
             }
         }
     }
