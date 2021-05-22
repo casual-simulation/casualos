@@ -66,7 +66,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             this._game
                 .watchCameraRigDistanceSquared(this._game.miniCameraRig)
                 .pipe(
-                    map((distSqr) => distSqr >= 75),
+                    map((distSqr) => distSqr >= 500),
                     tap((visible) => (this.showMiniPortalCameraHome = visible))
                 )
                 .subscribe()
