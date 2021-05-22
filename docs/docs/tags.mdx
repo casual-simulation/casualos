@@ -23,7 +23,7 @@ import {
   HistoryBotBadge,
   AutomaticBadge,
   PagePortalBadge,
-  InventoryPortalBadge,
+  MiniPortalBadge,
   MenuPortalBadge,
   MeetPortalBadge,
   LeftWristPortalBadge,
@@ -256,7 +256,7 @@ This is because that is the largest cursor image size that some operating system
 ### `cursorHotspotX`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The X position of the pixel in the cursor image that is the "hotspot".
@@ -273,7 +273,7 @@ The top left of the image is (0, 0).
 ### `cursorHotspotY`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The Y position of the pixel in the cursor image that is the "hotspot".
@@ -884,7 +884,7 @@ When the minimum LOD is exited the <TagLink tag='@onMinLODExit'/> listener is tr
 
 ### `transformer`
 
-The ID of the bot that should transform this bot in the page and inventory portals.
+The ID of the bot that should transform this bot in the page and mini portals.
 When the transformer bot and this bot are in the same dimension, this bot will inherit the position and rotation of the transformer bot.
 
 When set on a portal bot (like `pagePortalBot`), this will transform the portal camera by the specified bot.
@@ -1100,7 +1100,7 @@ Some of them are automatically set by the corresponding portal but most of them 
 ### `portalColor`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The color of the background of the portal.
@@ -1116,7 +1116,7 @@ The color of the background of the portal.
 ### `portalCursor`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The cursor that should be used when the mouse is hovered over the portal.
@@ -1133,7 +1133,7 @@ This is because that is the largest cursor image size that some operating system
 ### `portalCursorHotspotX`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The X position of the pixel in the cursor image that is the "hotspot".
@@ -1150,7 +1150,7 @@ The top left of the image is (0, 0).
 ### `portalCursorHotspotY`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The Y position of the pixel in the cursor image that is the "hotspot".
@@ -1167,7 +1167,7 @@ The top left of the image is (0, 0).
 ### `portalBackgroundAddress`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The URL of the image that should be displayed as the background of the portal.
@@ -1188,7 +1188,7 @@ Additionally, this tag does nothing when in VR.
 ### `portalLocked`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 Determines if the portal can be loaded.
@@ -1206,7 +1206,7 @@ Determines if the portal can be loaded.
 ### `portalPannable`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 Whether the player will be able to pan the camera inside the portal.
@@ -1224,7 +1224,7 @@ Whether the player will be able to pan the camera inside the portal.
 ### `portalPannableMinX`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The minimum X value that the camera can pan to in the portal.
@@ -1239,7 +1239,7 @@ The minimum X value that the camera can pan to in the portal.
 ### `portalPannableMaxX`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The maximum X value that the camera can pan to in the portal.
@@ -1254,7 +1254,7 @@ The maximum X value that the camera can pan to in the portal.
 ### `portalPannableMinY`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The minimum Y value that the camera can pan to in the portal.
@@ -1269,7 +1269,7 @@ The minimum Y value that the camera can pan to in the portal.
 ### `portalPannableMaxY`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The maximum Y value that the camera can pan to in the portal.
@@ -1284,18 +1284,18 @@ The maximum Y value that the camera can pan to in the portal.
 ### `portalRotatable`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
-Whether the player will be able to rotate the camera inside the inventory in this portal.
+Whether the player will be able to rotate the camera inside the mini portal.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValueCode value='true'>
-    The inventory is rotatable in this portal. (Default)
+    The mini portal is rotatable. (Default)
   </PossibleValueCode>
   <PossibleValueCode value='false'>
-    The inventory is not rotatable in this portal.
+    The mini portal is not rotatable.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -1303,12 +1303,12 @@ Whether the player will be able to rotate the camera inside the inventory in thi
 <Badges>
     <Example code='portalCameraRotation'/>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The up and down rotation that the camera starts at in the portal. Unit is in radians.
 
-Because the page and inventory portals use [polar coordinates](https://en.wikipedia.org/wiki/Polar_coordinate_system) to orbit around the focus point, we only need two numbers to specify where the camera should be pointing.
+Because the page and mini portals use [polar coordinates](https://en.wikipedia.org/wiki/Polar_coordinate_system) to orbit around the focus point, we only need two numbers to specify where the camera should be pointing.
 Polar coordinates work by specifying two angles (X and Y - also known as "phi" and "theta") which position the camera around its focus point.
 Therefore, these rotation values actually cause the camera to turn around the focus point and not simply turn the camera itself.
 
@@ -1329,12 +1329,12 @@ The Y angle (theta) is used to rotate the camera left and right. Mathematically,
 <Badges>
     <Example code='portalCameraRotation'/>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The left and right rotation that the camera starts at in the portal. Unit is in radians.
 
-Because the page and inventory portals use [polar coordinates](https://en.wikipedia.org/wiki/Polar_coordinate_system) to orbit around the focus point, we only need two numbers to specify where the camera should be pointing.
+Because the page and mini portals use [polar coordinates](https://en.wikipedia.org/wiki/Polar_coordinate_system) to orbit around the focus point, we only need two numbers to specify where the camera should be pointing.
 Polar coordinates work by specifying two angles (X and Y - also known as "phi" and "theta") which position the camera around its focus point.
 Therefore, these rotation values actually cause the camera to turn around the focus point and not simply turn the camera itself.
 
@@ -1354,7 +1354,7 @@ The Y angle (theta) is used to rotate the camera left and right. Mathematically,
 ### `portalZoomable`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 Whether the player will be able to zoom the camera inside the portal.
@@ -1372,7 +1372,7 @@ Whether the player will be able to zoom the camera inside the portal.
 ### `portalZoomableMin`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The minimum value that the camera can zoom to in the portal.
@@ -1387,7 +1387,7 @@ The minimum value that the camera can zoom to in the portal.
 ### `portalZoomableMax`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The maximum value that the camera can zoom to in the portal.
@@ -1402,7 +1402,7 @@ The maximum value that the camera can zoom to in the portal.
 ### `portalCameraZoom`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The zoom value that the camera starts at in the portal.
@@ -1417,7 +1417,7 @@ The zoom value that the camera starts at in the portal.
 ### `portalGridScale`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The size of bots in the portal.
@@ -1432,7 +1432,7 @@ The size of bots in the portal.
 ### `portalSurfaceScale`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The scale of surfaces.
@@ -1447,7 +1447,7 @@ The scale of surfaces.
 ### `portalCameraControls`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The mode that specifies how the camera controls work in the portal.
@@ -1466,7 +1466,7 @@ The mode that specifies how the camera controls work in the portal.
 ### `portalShowFocusPoint`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 Whether the focus point of the portal camera should be shown as a small sphere.
@@ -1526,34 +1526,54 @@ Note that when this value is `true`, [iframe forms](#iframe-form) will cease to 
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `inventoryPortalHeight`
+### `miniPortalHeight`
 <Badges>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
-Sets the initial height of the inventory viewport for the portal.
+Sets the initial height of the viewport for the mini portal.
+
+This should be the percentage of the "available screen height" that the mini portal should take.
+The "available screen height" is a portion of the full screen calculated such that when there is some space left between the left and right edges of the screen
+there will be some space at the bottom of the mini portal. However, when the <TagLink tag='miniPortalWidth'/> tag is set to 1, there will be no space between the bottom
+of the screen and the bottom of the mini portal.
 
 #### Possible values are:
 <PossibleValuesTable>
-  <PossibleValue value='Numbers >= 1 and <= 10'>
-    The number of bots that the inventory should be able to accommodate vertically. (Default is 1)
+  <PossibleValue value='Numbers >= 0 and <= 1'>
+    The percentage of the screen height that the mini portal should take. (Default is 0.2)
   </PossibleValue>
 </PossibleValuesTable>
 
-### `inventoryPortalResizable`
+### `miniPortalWidth`
 <Badges>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
-Whether the player will be able to resize the viewport for the inventory portal.
+Sets the width of the viewport for the mini portal.
+This should be a percentage between 0 and 1 that specifies how much of the screen width should be taken.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Numbers >= 0 and <= 1'>
+    The percentage of the screen width that the mini portal should take. (Default is 0.8)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `miniPortalResizable`
+<Badges>
+    <MiniPortalBadge/>
+</Badges>
+
+Whether the player will be able to resize the viewport for the mini portal.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValueCode value='true'>
-    The inventory is resizable. (Default)
+    The mini portal is resizable. (Default)
   </PossibleValueCode>
   <PossibleValueCode value='false'>
-    The inventory is not resizable.
+    The mini portal is not resizable.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -1942,7 +1962,7 @@ The list of tags that should be shown in the sheet even if they do not have a va
     <PagePortalBadge/>
 </Badges>
 
-The width of the page portal in pixels. Because the inventory portal is contained by the page portal, this value also applies to the inventory portal.
+The width of the page portal in pixels. Because the mini portal is contained by the page portal, this value also applies to the mini portal.
 
 Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
 Additionally, a device with a larger width than height does not necessarily mean that it is in landscape mode.
@@ -1954,7 +1974,7 @@ Additionally, a device with a larger width than height does not necessarily mean
     <PagePortalBadge/>
 </Badges>
 
-The height of the page portal in pixels. Because the inventory portal is contained by the page portal, this value also applies to the inventory portal.
+The height of the page portal in pixels. Because the mini portal is contained by the page portal, this value also applies to the mini portal.
 
 Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
 Additionally, a device with a larger height than width does not necessarily mean that it is in portrait mode.
@@ -1964,7 +1984,7 @@ Additionally, a device with a larger height than width does not necessarily mean
 <Badges>
     <AutomaticBadge/>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The X position of the player's camera in the page portal.
@@ -1974,7 +1994,7 @@ The X position of the player's camera in the page portal.
 <Badges>
     <AutomaticBadge/>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The Y position of the player's camera in the page portal.
@@ -1984,7 +2004,7 @@ The Y position of the player's camera in the page portal.
 <Badges>
     <AutomaticBadge/>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The Z position of the player's camera in the page portal.
@@ -1993,7 +2013,7 @@ The Z position of the player's camera in the page portal.
 
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The offset that should be applied to the X position of the player's camera in the page portal.
@@ -2004,7 +2024,7 @@ Useful for moving the player around in VR.
 
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The offset that should be applied to the Y position of the player's camera in the page portal.
@@ -2015,7 +2035,7 @@ Useful for moving the player around in VR.
 
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The offset that should be applied to the Z position of the player's camera in the page portal.
@@ -2027,7 +2047,7 @@ Useful for moving the player around in VR.
 <Badges>
     <AutomaticBadge/>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The X rotation of the player's camera in the page portal.
@@ -2038,7 +2058,7 @@ Units are in radians.
 <Badges>
     <AutomaticBadge/>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The Y rotation of the player's camera in the page portal.
@@ -2049,7 +2069,7 @@ Units are in radians.
 <Badges>
     <AutomaticBadge/>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The Z rotation of the player's camera in the page portal.
@@ -2059,7 +2079,7 @@ Units are in radians.
 ### `cameraRotationOffsetX`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The offset that should be applied to the X rotation of the player's camera in the page portal.
@@ -2069,7 +2089,7 @@ Units are in radians.
 ### `cameraRotationOffsetY`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The offset that should be applied to the Y rotation of the player's camera in the page portal.
@@ -2079,7 +2099,7 @@ Units are in radians.
 ### `cameraRotationOffsetZ`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The offset that should be applied to the Z rotation of the player's camera in the page portal.
@@ -2089,7 +2109,7 @@ Units are in radians.
 ### `cameraRotationOffsetW`
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The W value that the camera rotation offset should use.
@@ -2102,7 +2122,7 @@ X, Y, Z axis by `cos(W/2) + sin(W/2)(xi + yj + zk)`.
 <Badges>
     <AutomaticBadge/>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The zoom value that the camera is at. This is an arbitrary value that specifies how far the camera is zoomed in or out.
@@ -2113,7 +2133,7 @@ Larger values indicate that the camera is zoomed in more (objects appear bigger)
 
 <Badges>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The offset that should be applied to the camera zoom. You can use this to change the zoom of the camera.
@@ -2125,7 +2145,7 @@ Larger values indicate that the camera is zoomed in more (objects appear bigger)
 <Badges>
     <AutomaticBadge/>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The X position of the focus point for the player's camera in the page portal.
@@ -2135,7 +2155,7 @@ The X position of the focus point for the player's camera in the page portal.
 <Badges>
     <AutomaticBadge/>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The Y position of the focus point for the player's camera in the page portal.
@@ -2145,7 +2165,7 @@ The Y position of the focus point for the player's camera in the page portal.
 <Badges>
     <AutomaticBadge/>
     <PagePortalBadge/>
-    <InventoryPortalBadge/>
+    <MiniPortalBadge/>
 </Badges>
 
 The Z position of the focus point for the player's camera in the page portal.
@@ -2240,7 +2260,7 @@ The time that the mark was created.
 
 All tags on the config bot will be synced with the URL query parameters.
 This means that setting the `#abc` tag on the config bot to `hello` will update the URL to include `abc=hello`.
-It also means that putting `inventoryPortal=myDimension` into the query string will set the <TagLink tag='inventoryPortal'/> tag to `myDimension`.
+It also means that putting `miniPortal=myDimension` into the query string will set the <TagLink tag='miniPortal'/> tag to `myDimension`.
 
 ### `server`
 
@@ -2277,13 +2297,13 @@ Only available on the config bot.
 The prefix that indicates which tags should be loaded into the "IDE" portal in CasualOS.
 Only available on the config bot.
 
-### `inventoryPortal`
+### `miniPortal`
 
 <Badges>
   <ConfigBotBadge/>
 </Badges>
 
-The dimension that is loaded into the "inventory" portal in CasualOS.
+The dimension that is loaded into the "mini" portal in CasualOS.
 Only available on the config bot.
 
 ### `menuPortal`

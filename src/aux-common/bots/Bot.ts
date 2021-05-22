@@ -225,13 +225,7 @@ export type BotSpace =
 /**
  * The possible portal types.
  */
-export type PortalType =
-    | 'page'
-    | 'inventory'
-    | 'menu'
-    | 'sheet'
-    | 'meet'
-    | string;
+export type PortalType = 'page' | 'mini' | 'menu' | 'sheet' | 'meet' | string;
 
 export interface ScriptTags extends PrecalculatedTags {
     toJSON(): any;
@@ -308,7 +302,7 @@ export interface BotTags {
     ['pagePortal']?: string | boolean;
     ['sheetPortal']?: string | boolean;
     ['server']?: string | string[];
-    ['inventoryPortal']?: string;
+    ['miniPortal']?: string;
     ['menuPortal']?: string;
     ['leftWristPortal']?: string;
     ['rightWristPortal']?: string;
@@ -348,8 +342,8 @@ export interface BotTags {
     ['portalRotatable']?: number | null;
     ['portalShowFocusPoint']?: boolean | null;
     ['portalDisableCanvasTransparency']?: boolean;
-    ['inventoryPortalHeight']?: unknown;
-    ['inventoryPortalResizable']?: boolean;
+    ['miniPortalHeight']?: unknown;
+    ['miniPortalResizable']?: boolean;
     ['wristPortalHeight']?: number;
     ['wristPortalWidth']?: number;
 
@@ -775,9 +769,9 @@ export const DEFAULT_USER_INACTIVE_TIME = 1000 * 60;
 export const DEFAULT_USER_DELETION_TIME = 1000 * 60 * 60;
 
 /**
- * Whether the inventory is visible by default.
+ * Whether the mini portal is visible by default.
  */
-export const DEFAULT_INVENTORY_VISIBLE = false;
+export const DEFAULT_MINI_PORTAL_VISIBLE = false;
 
 /**
  * Whether portals are pannable by default.
@@ -800,14 +794,14 @@ export const DEFAULT_PORTAL_ZOOMABLE = true;
 export const DEFAULT_PORTAL_SHOW_FOCUS_POINT = false;
 
 /**
- * Whether inventory portals are resizable by default.
+ * Whether mini portals are resizable by default.
  */
-export const DEFAULT_INVENTORY_PORTAL_RESIZABLE = true;
+export const DEFAULT_MINI_PORTAL_RESIZABLE = true;
 
 /**
- * The default height for inventory portals.
+ * The default height for mini portals.
  */
-export const DEFAULT_INVENTORY_PORTAL_HEIGHT = 0;
+export const DEFAULT_MINI_PORTAL_HEIGHT = 0.2;
 
 /**
  * The default height for wrist portals.
@@ -1390,6 +1384,11 @@ export const TAG_PORTAL_SPACE: string = 'tagPortalSpace';
 export const AUX_BOT_VERSION: number = 1;
 
 /**
+ * The name of the mini portal.
+ */
+export const MINI_PORTAL: string = 'miniPortal';
+
+/**
  * The name of the meet portal.
  */
 export const MEET_PORTAL: string = 'meetPortal';
@@ -1437,7 +1436,7 @@ export const KNOWN_PORTALS: string[] = [
     SHEET_PORTAL,
     IDE_PORTAL,
     IMU_PORTAL,
-    'inventoryPortal',
+    MINI_PORTAL,
     'menuPortal',
     'leftWristPortal',
     'rightWristPortal',
@@ -1466,7 +1465,7 @@ export const KNOWN_TAGS: string[] = [
     SHEET_PORTAL,
     IDE_PORTAL,
     'server',
-    'inventoryPortal',
+    MINI_PORTAL,
     'menuPortal',
     'leftWristPortal',
     'rightWristPortal',
@@ -1571,8 +1570,9 @@ export const KNOWN_TAGS: string[] = [
     'portalShowFocusPoint',
     'portalDisableCanvasTransparency',
     'portalCameraType',
-    'inventoryPortalHeight',
-    'inventoryPortalResizable',
+    'miniPortalHeight',
+    'miniPortalWidth',
+    'miniPortalResizable',
     'wristPortalHeight',
     'wristPortalWidth',
     'meetPortalAnchorPoint',

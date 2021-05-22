@@ -165,11 +165,13 @@ describe('BotCalculations', () => {
         const cases = [
             ['page', 'pagePortal'],
             ['inventory', 'inventoryPortal'],
+            ['mini', 'miniPortal'],
             ['menu', 'menuPortal'],
             ['sheet', 'sheetPortal'],
             ['other', 'otherPortal'],
             ['page', 'pagePortal'],
             ['inventoryPortal', 'inventoryPortal'],
+            ['miniPortal', 'miniPortal'],
             ['menuPortal', 'menuPortal'],
             ['sheetPortal', 'sheetPortal'],
             ['auxOtherPortal', 'auxOtherPortal'],

@@ -2495,7 +2495,7 @@ describe('AuxLibrary', () => {
             );
         });
 
-        describe('os.getInventoryDimension()', () => {
+        describe('os.getMiniPortalDimension()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
@@ -2504,17 +2504,17 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return the inventoryPortal tag from the user bot', () => {
-                player.tags.inventoryPortal = 'abc';
-                const result = library.api.os.getInventoryDimension();
+            it('should return the miniPortal tag from the user bot', () => {
+                player.tags.miniPortal = 'abc';
+                const result = library.api.os.getMiniPortalDimension();
                 expect(result).toEqual('abc');
             });
 
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.inventoryPortal = given;
-                    const result = library.api.os.getInventoryDimension();
+                    player.tags.miniPortal = given;
+                    const result = library.api.os.getMiniPortalDimension();
                     expect(result).toEqual(expected);
                 }
             );
@@ -2559,6 +2559,8 @@ describe('AuxLibrary', () => {
                 ['pagePortal', 'pageDimension'],
                 ['inventory', 'inventoryDimension'],
                 ['inventoryPortal', 'inventoryDimension'],
+                ['mini', 'miniDimension'],
+                ['miniPortal', 'miniDimension'],
                 ['menu', 'menuDimension'],
                 ['menuPortal', 'menuDimension'],
                 ['sheet', 'sheetDimension'],
@@ -2571,6 +2573,7 @@ describe('AuxLibrary', () => {
                 it(`should get the dimension for the ${portal} portal`, () => {
                     player.tags.pagePortal = 'pageDimension';
                     player.tags.inventoryPortal = 'inventoryDimension';
+                    player.tags.miniPortal = 'miniDimension';
                     player.tags.menuPortal = 'menuDimension';
                     player.tags.sheetPortal = 'sheetDimension';
                     player.tags.falsy = false;
@@ -2584,6 +2587,7 @@ describe('AuxLibrary', () => {
                     (expected, given) => {
                         player.tags.pagePortal = given;
                         player.tags.inventoryPortal = given;
+                        player.tags.miniPortal = given;
                         player.tags.menuPortal = given;
                         player.tags.sheetPortal = given;
                         player.tags.falsy = false;
@@ -2828,7 +2832,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('os.hasBotInInventory()', () => {
+        describe('os.hasBotInMiniPortal()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
@@ -2837,33 +2841,33 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return true if the given bot is in the users inventory dimension', () => {
-                player.tags.inventoryPortal = 'abc';
+            it('should return true if the given bot is in the users mini portal dimension', () => {
+                player.tags.miniPortal = 'abc';
                 bot1.tags.abc = true;
-                const result = library.api.os.hasBotInInventory(bot1);
+                const result = library.api.os.hasBotInMiniPortal(bot1);
                 expect(result).toEqual(true);
             });
 
-            it('should return true if all the given bots are in the users inventory dimension', () => {
-                player.tags.inventoryPortal = 'abc';
+            it('should return true if all the given bots are in the users mini portal dimension', () => {
+                player.tags.miniPortal = 'abc';
                 bot1.tags.abc = true;
                 bot2.tags.abc = true;
-                const result = library.api.os.hasBotInInventory([bot1, bot2]);
+                const result = library.api.os.hasBotInMiniPortal([bot1, bot2]);
                 expect(result).toEqual(true);
             });
 
-            it('should return false if one of the given bots are not in the users inventory dimension', () => {
-                player.tags.inventoryPortal = 'abc';
+            it('should return false if one of the given bots are not in the users mini portal dimension', () => {
+                player.tags.miniPortal = 'abc';
                 bot1.tags.abc = false;
                 bot2.tags.abc = true;
-                const result = library.api.os.hasBotInInventory([bot1, bot2]);
+                const result = library.api.os.hasBotInMiniPortal([bot1, bot2]);
                 expect(result).toEqual(false);
             });
 
-            it('should return false if the player does not have an inventory', () => {
+            it('should return false if the player does not have an mini portal', () => {
                 bot1.tags.abc = true;
                 bot2.tags.abc = true;
-                const result = library.api.os.hasBotInInventory([bot1, bot2]);
+                const result = library.api.os.hasBotInMiniPortal([bot1, bot2]);
                 expect(result).toEqual(false);
             });
         });
@@ -9375,7 +9379,7 @@ describe('AuxLibrary', () => {
 
     describe('os.getCameraPosition()', () => {
         let pagePortal: RuntimeBot;
-        let inventoryPortal: RuntimeBot;
+        let miniPortal: RuntimeBot;
 
         beforeEach(() => {
             pagePortal = createDummyRuntimeBot(
@@ -9387,8 +9391,8 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            inventoryPortal = createDummyRuntimeBot(
-                'inventoryPortal',
+            miniPortal = createDummyRuntimeBot(
+                'miniPortal',
                 {
                     cameraPositionX: 4,
                     cameraPositionY: 5,
@@ -9396,15 +9400,15 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, pagePortal, inventoryPortal);
+            addToContext(context, pagePortal, miniPortal);
 
             (<any>globalThis).pagePortalBot = pagePortal;
-            (<any>globalThis).inventoryPortalBot = inventoryPortal;
+            (<any>globalThis).miniPortalBot = miniPortal;
         });
 
         afterEach(() => {
             delete (<any>globalThis).pagePortalBot;
-            delete (<any>globalThis).inventoryPortalBot;
+            delete (<any>globalThis).miniPortalBot;
         });
 
         it('should return NaN for x, y, and z if the page portal bot is null', () => {
@@ -9428,8 +9432,8 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the inventory camera position', () => {
-            const result = library.api.os.getCameraPosition('inventory');
+        it('should be able to get the mini camera position', () => {
+            const result = library.api.os.getCameraPosition('mini');
 
             expect(result).toEqual({
                 x: 4,
@@ -9451,7 +9455,7 @@ describe('AuxLibrary', () => {
 
     describe('os.getCameraRotation()', () => {
         let pagePortal: RuntimeBot;
-        let inventoryPortal: RuntimeBot;
+        let miniPortal: RuntimeBot;
 
         beforeEach(() => {
             pagePortal = createDummyRuntimeBot(
@@ -9463,8 +9467,8 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            inventoryPortal = createDummyRuntimeBot(
-                'inventoryPortal',
+            miniPortal = createDummyRuntimeBot(
+                'miniPortal',
                 {
                     cameraRotationX: 4,
                     cameraRotationY: 5,
@@ -9472,15 +9476,15 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, pagePortal, inventoryPortal);
+            addToContext(context, pagePortal, miniPortal);
 
             (<any>globalThis).pagePortalBot = pagePortal;
-            (<any>globalThis).inventoryPortalBot = inventoryPortal;
+            (<any>globalThis).miniPortalBot = miniPortal;
         });
 
         afterEach(() => {
             delete (<any>globalThis).pagePortalBot;
-            delete (<any>globalThis).inventoryPortalBot;
+            delete (<any>globalThis).miniPortalBot;
         });
 
         it('should return NaN for x, y, and z if the page portal bot is null', () => {
@@ -9504,8 +9508,8 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the inventory camera rotation', () => {
-            const result = library.api.os.getCameraRotation('inventory');
+        it('should be able to get the mini portal camera rotation', () => {
+            const result = library.api.os.getCameraRotation('mini');
 
             expect(result).toEqual({
                 x: 4,
@@ -9527,7 +9531,7 @@ describe('AuxLibrary', () => {
 
     describe('os.getFocusPoint()', () => {
         let pagePortal: RuntimeBot;
-        let inventoryPortal: RuntimeBot;
+        let miniPortal: RuntimeBot;
 
         beforeEach(() => {
             pagePortal = createDummyRuntimeBot(
@@ -9539,8 +9543,8 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            inventoryPortal = createDummyRuntimeBot(
-                'inventoryPortal',
+            miniPortal = createDummyRuntimeBot(
+                'miniPortal',
                 {
                     cameraFocusX: 4,
                     cameraFocusY: 5,
@@ -9548,15 +9552,15 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, pagePortal, inventoryPortal);
+            addToContext(context, pagePortal, miniPortal);
 
             (<any>globalThis).pagePortalBot = pagePortal;
-            (<any>globalThis).inventoryPortalBot = inventoryPortal;
+            (<any>globalThis).miniPortalBot = miniPortal;
         });
 
         afterEach(() => {
             delete (<any>globalThis).pagePortalBot;
-            delete (<any>globalThis).inventoryPortalBot;
+            delete (<any>globalThis).miniPortalBot;
         });
 
         it('should return NaN for x, y, and z if the page portal bot is null', () => {
@@ -9580,8 +9584,8 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the inventory camera rotation', () => {
-            const result = library.api.os.getFocusPoint('inventory');
+        it('should be able to get the mini portal camera rotation', () => {
+            const result = library.api.os.getFocusPoint('mini');
 
             expect(result).toEqual({
                 x: 4,

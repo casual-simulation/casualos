@@ -227,6 +227,7 @@ import {
     enablePOV,
     EnableCustomDraggingAction,
     enableCustomDragging as calcEnableCustomDragging,
+    MINI_PORTAL,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -691,7 +692,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getCurrentDimension,
                 getCurrentServer,
                 getMenuDimension,
-                getInventoryDimension,
+                getMiniPortalDimension,
                 getPortalDimension,
                 getDimensionalDepth,
                 showInputForTag,
@@ -704,7 +705,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 playSound,
                 bufferSound,
                 cancelSound,
-                hasBotInInventory,
+                hasBotInMiniPortal,
                 share,
                 closeCircleWipe,
                 openCircleWipe,
@@ -1887,14 +1888,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the name of the dimension that is used for the current user's inventory.
+     * Gets the name of the dimension that is used for the current user's mini portal.
      */
-    function getInventoryDimension(): string {
+    function getMiniPortalDimension(): string {
         const user = context.playerBot;
         if (user) {
-            const inventory = getTag(user, 'inventoryPortal');
-            if (hasValue(inventory)) {
-                return inventory.toString();
+            const miniPortal = getTag(user, MINI_PORTAL);
+            if (hasValue(miniPortal)) {
+                return miniPortal.toString();
             }
             return null;
         } else {
@@ -2131,18 +2132,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Determines whether the player has the given bot in their inventory.
+     * Determines whether the player has the given bot in their mini portal.
      * @param bots The bot or bots to check.
      */
-    function hasBotInInventory(bots: Bot | Bot[]): boolean {
+    function hasBotInMiniPortal(bots: Bot | Bot[]): boolean {
         if (!Array.isArray(bots)) {
             bots = [bots];
         }
-        let inventoryDimension = getInventoryDimension();
-        if (!hasValue(inventoryDimension)) {
+        let miniPortal = getMiniPortalDimension();
+        if (!hasValue(miniPortal)) {
             return false;
         }
-        return every(bots, (f) => getTag(f, inventoryDimension) === true);
+        return every(bots, (f) => getTag(f, miniPortal) === true);
     }
 
     /**
@@ -5388,7 +5389,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera position should be retrieved for.
      */
     function getCameraPosition(
-        portal: 'page' | 'inventory' = 'page'
+        portal: 'page' | 'mini' = 'page'
     ): { x: number; y: number; z: number } {
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
@@ -5411,7 +5412,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera rotation should be retrieved for.
      */
     function getCameraRotation(
-        portal: 'page' | 'inventory' = 'page'
+        portal: 'page' | 'mini' = 'page'
     ): { x: number; y: number; z: number } {
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
@@ -5434,7 +5435,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera focus point should be retrieved for.
      */
     function getFocusPoint(
-        portal: 'page' | 'inventory' = 'page'
+        portal: 'page' | 'mini' = 'page'
     ): { x: number; y: number; z: number } {
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {

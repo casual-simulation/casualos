@@ -2156,11 +2156,11 @@ os.toast("this is the code", 5);
 ### `os.focusOn(botOrPosition, options?)`
 
 Focuses on the given bot or position.
-For bots in the page or inventory portals, this animates the camera such that the portal focus point is placed on the given bot or position.
+For bots in the page or mini portals, this animates the camera such that the portal focus point is placed on the given bot or position.
 For input bots in menu portal, this gives keyboard focus to them.
 
 Returns a promise which resolves when the bot has been focused.
-For the page and inventory portals this is when the animation finishes and rejects if the user takes control of the camera during the animation.
+For the page and mini portals this is when the animation finishes and rejects if the user takes control of the camera during the animation.
 For menu bots this is when the input field is focused and rejects if the bot is not a input bot.
 
 The **first parameter** is the bot, bot ID, or position that should be focused. If null, then the current focus animation will be canceled.
@@ -2195,7 +2195,7 @@ let options: {
 
     /**
      * The portal that the bot should be focused in.
-     * If not specified, then the bot will be focused in all the portals it is in. (page, inventory and menu)
+     * If not specified, then the bot will be focused in all the portals it is in. (page, mini and menu)
      * Useful if a bot is in two portals but you only want to focus it in one portal.
      */
     portal?: string;
@@ -2823,37 +2823,37 @@ const dimension = os.getMenuDimension();
 os.toast(dimension);
 ```
 
-### `os.getInventoryDimension()`
+### `os.getMiniPortalDimension()`
 
 
-Gets the dimension that is loaded into the <TagLink tag='inventoryPortal'/> portal.
+Gets the dimension that is loaded into the <TagLink tag='miniPortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "inventoryPortal".
+    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "miniPortal".
 </Alert>
 
 #### Examples:
 
-1. Show a message of the dimension that is currently in the <TagLink tag='inventoryPortal'/> portal.
+1. Show a message of the dimension that is currently in the <TagLink tag='miniPortal'/> portal.
 ```typescript
-const dimension = os.getInventoryDimension();
+const dimension = os.getMiniPortalDimension();
 os.toast(dimension);
 ```
 
-### `os.hasBotInInventory(bot)`
+### `os.hasBotInMiniPortal(bot)`
 
 
-Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='inventoryPortal'/> portal.
+Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='miniPortal'/> portal.
 
 The **first parameter** is the bot that should be checked.
 
 #### Examples:
 
-1. Show a message if a bot named bob is in the inventory.
+1. Show a message if a bot named bob is in the mini portal.
 ```typescript
 const bob = getBot("#name", "bob");
-if (os.hasBotInInventory(bob)) {
-    os.toast("bob is in the inventory!");
+if (os.hasBotInMiniPortal(bob)) {
+    os.toast("bob is in the miniPortal!");
 }
 ```
 
@@ -2872,8 +2872,8 @@ Possible values are:
   <PossibleValueCode value='sheet'>
     The <TagLink tag='sheetPortal'/>.
   </PossibleValueCode>
-  <PossibleValueCode value='inventory'>
-    The <TagLink tag='inventoryPortal'/>.
+  <PossibleValueCode value='mini'>
+    The <TagLink tag='miniPortal'/>.
   </PossibleValueCode>
   <PossibleValueCode value='menu'>
       The <TagLink tag='menuPortal'/>.
@@ -2887,9 +2887,9 @@ Possible values are:
 const dimension = os.getPortalDimension('page');
 ```
 
-2. Get the dimension that is currently showing in the <TagLink tag='inventoryPortal'/>.
+2. Get the dimension that is currently showing in the <TagLink tag='miniPortal'/>.
 ```typescript
-const dimension = os.getPortalDimension('inventory');
+const dimension = os.getPortalDimension('mini');
 ```
 
 3. Get the dimension that is currently showing in the `#auxCustomPortal` tag.
@@ -2959,8 +2959,8 @@ Possible values are:
   <PossibleValueCode value='page'>
     The camera position in the page portal. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='inventory'>
-    The camera position in the inventory portal.
+  <PossibleValueCode value='mini'>
+    The camera position in the mini portal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -2971,9 +2971,9 @@ Possible values are:
 const position = os.getCameraPosition("page");
 ```
 
-2. Get the position of the player in the inventory portal.
+2. Get the position of the player in the mini portal.
 ```typescript
-const position = os.getCameraPosition("inventory");
+const position = os.getCameraPosition("mini");
 ```
 
 ### `os.getCameraRotation(portal?)`
@@ -2987,8 +2987,8 @@ Possible values are:
   <PossibleValueCode value='page'>
     The camera rotation in the page portal. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='inventory'>
-    The camera rotation in the inventory portal.
+  <PossibleValueCode value='mini'>
+    The camera rotation in the mini portal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -2999,9 +2999,9 @@ Possible values are:
 const rotation = os.getCameraRotation("page");
 ```
 
-2. Get the rotation of the player in the inventory portal.
+2. Get the rotation of the player in the mini portal.
 ```typescript
-const rotation = os.getCameraRotation("inventory");
+const rotation = os.getCameraRotation("mini");
 ```
 
 ### `os.getFocusPoint(portal?)`
@@ -3017,8 +3017,8 @@ Possible values are:
   <PossibleValueCode value='page'>
     The camera focus point in the page portal. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='inventory'>
-    The camera focus point in the inventory portal.
+  <PossibleValueCode value='mini'>
+    The camera focus point in the mini portal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -3029,9 +3029,9 @@ Possible values are:
 const focusPoint = os.getFocusPoint("page");
 ```
 
-2. Get the focus point of the player in the inventory portal.
+2. Get the focus point of the player in the mini portal.
 ```typescript
-const focusPoint = os.getFocusPoint("inventory");
+const focusPoint = os.getFocusPoint("mini");
 ```
 
 ### `os.getPointerPosition(pointer?)`
@@ -6041,7 +6041,7 @@ Once the tween is done playing, any change to the bot will reset the position/ro
 The **first parameter** is the bot or ID of the bot that should be tweened.
 
 The **second parameter** is the dimension that the bot should be tweened in.
-Note that the tween will only work if the given dimension is currently in the page portal or inventory portal.
+Note that the tween will only work if the given dimension is currently in the page portal or mini portal.
 
 The **third parameter** is the position that the bot should be tweened to. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
 
@@ -6140,7 +6140,7 @@ Once the tween is done playing, any change to the bot will reset the position/ro
 The **first parameter** is the bot or ID of the bot that should be tweened.
 
 The **second parameter** is the dimension that the bot should be tweened in.
-Note that the tween will only work if the given dimension is currently in the page portal or inventory portal.
+Note that the tween will only work if the given dimension is currently in the page portal or mini portal.
 
 The **third parameter** is the rotation that the bot should be tweened to in radians. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
 
