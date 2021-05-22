@@ -160,6 +160,13 @@ export class MiniSimulation3D extends PlayerSimulation3D {
     }
 
     /**
+     * Gets the width of the portal.
+     */
+    get width() {
+        return this.miniConfig.width;
+    }
+
+    /**
      * Gets whether to show the camera focus point.
      */
     get showFocusPoint() {

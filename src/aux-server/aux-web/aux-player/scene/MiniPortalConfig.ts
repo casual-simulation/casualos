@@ -28,6 +28,7 @@ import { PortalConfig } from './PortalConfig';
 export class MiniPortalConfig extends PortalConfig {
     private _resizable: boolean;
     private _height: number;
+    private _width: number;
 
     /**
      * Gets whether the portal is resizable.
@@ -48,6 +49,17 @@ export class MiniPortalConfig extends PortalConfig {
             return this._height;
         } else {
             return DEFAULT_MINI_PORTAL_HEIGHT;
+        }
+    }
+
+    /**
+     * Gets the width of the portal.
+     */
+    get width() {
+        if (this._width != null) {
+            return this._width;
+        } else {
+            return null;
         }
     }
 
@@ -78,6 +90,12 @@ export class MiniPortalConfig extends PortalConfig {
             bot,
             `auxMiniPortalHeight`,
             DEFAULT_MINI_PORTAL_HEIGHT
+        );
+        this._width = calculateNumericalTagValue(
+            calc,
+            bot,
+            `auxMiniPortalWidth`,
+            null
         );
     }
 }

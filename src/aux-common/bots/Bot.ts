@@ -1571,6 +1571,7 @@ export const KNOWN_TAGS: string[] = [
     'portalDisableCanvasTransparency',
     'portalCameraType',
     'miniPortalHeight',
+    'miniPortalWidth',
     'miniPortalResizable',
     'wristPortalHeight',
     'wristPortalWidth',

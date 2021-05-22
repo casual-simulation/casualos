@@ -24,6 +24,11 @@ html.ar-app .webxr-sessions canvas {
     pointer-events: none;
 }
 
+.game-container {
+    position: relative;
+    overflow: hidden;
+}
+
 .toolbar.right {
     left: auto;
     right: 8px;

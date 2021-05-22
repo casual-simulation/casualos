@@ -74,6 +74,22 @@ const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
 const MINI_PORTAL_MAX_PERCENT = 1;
 const MINI_PORTAL_MIN_PERCENT = 0.1;
 
+const MINI_PORTAL_WIDTH_BREAKPOINT = 700;
+/**
+ * The default width percentage of the mini portal.
+ */
+const MINI_PORTAL_DEFAULT_WIDTH = 0.8;
+
+/**
+ * The default width percentage that the mini portal should use on small devices (< breakpoint).
+ */
+const MINI_PORTAL_SMALL_WIDTH = 0.9;
+
+/**
+ * The default padding needed for the available height padding.
+ */
+const MINI_PORTAL_DEFAULT_HEIGHT_PADDING = 40;
+
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
 
@@ -127,19 +143,24 @@ export class PlayerGame extends Game {
      * The height that was last configured for the mini portal. This can be set directly by the user.
      * Represented as a percentage of the available height that the portal can take.
      */
-    miniPortalConfiguredHeight: number;
+    private _miniPortalConfiguredHeight: number;
 
     /**
      * The current height of the mini portal represented as a percentage of
      * the available height that the portal can take.
      * This can be manipulated by the user via resizing the portal.
      */
-    miniPortalHeight: number;
+    private _miniPortalHeight: number;
 
     /**
      * The available height that can be used by the mini portal in px.
      */
-    miniPortalAvailableHeight: number;
+    private _miniPortalAvailableHeight: number;
+
+    /**
+     * The maximum width of the mini portal in px.
+     */
+    private _miniPortalMaxWidth: number = 700;
 
     defaultZoom: number = null;
     defaultRotationX: number = null;
@@ -235,6 +256,18 @@ export class PlayerGame extends Game {
 
     getMiniPortalHeight(): number {
         return this._getSimulationValue(this.miniSimulations, 'height', 1);
+    }
+
+    getMiniPortalHeightPadding(): number {
+        const width = this.getMiniPortalWidth();
+        if (width >= 1) {
+            return 0;
+        }
+        return MINI_PORTAL_DEFAULT_HEIGHT_PADDING;
+    }
+
+    getMiniPortalWidth(): number {
+        return this._getSimulationValue(this.miniSimulations, 'width', null);
     }
 
     getMiniPortalPannable(): boolean {
@@ -781,13 +814,13 @@ export class PlayerGame extends Game {
     private _updateMiniPortal() {
         let configuredHeight = this.getMiniPortalHeight();
 
-        if (this.miniPortalConfiguredHeight != configuredHeight) {
-            this.miniPortalConfiguredHeight = configuredHeight;
-            this.miniPortalHeight = configuredHeight;
+        if (this._miniPortalConfiguredHeight != configuredHeight) {
+            this._miniPortalConfiguredHeight = configuredHeight;
+            this._miniPortalHeight = configuredHeight;
         }
 
-        this.miniPortalHeight = clamp(
-            this.miniPortalHeight,
+        this._miniPortalHeight = clamp(
+            this._miniPortalHeight,
             MINI_PORTAL_MIN_PERCENT,
             MINI_PORTAL_MAX_PERCENT
         );
@@ -801,31 +834,33 @@ export class PlayerGame extends Game {
             return;
         }
 
-        let w = window.innerWidth;
-
-        if (w > 700) {
-            w = 700;
-        }
-
-        let heightOffset = 40;
-        let widthPercent = 0.8;
-
-        if (window.innerWidth <= 700) {
-            heightOffset = window.innerWidth * 0.05;
-            widthPercent = 0.9;
-        }
+        let heightOffset = this.getMiniPortalHeightPadding();
+        let widthPercent = this.getMiniPortalWidth();
+        const hasCustomWidth = widthPercent !== null;
+        widthPercent ??= MINI_PORTAL_DEFAULT_WIDTH;
 
         const mainViewportSize = this.mainViewport.getSize();
         const mainViewportWidth = mainViewportSize.x;
         const mainViewportHeight = mainViewportSize.y;
-        this.miniPortalAvailableHeight = mainViewportHeight - heightOffset * 2;
+
+        if (
+            !hasCustomWidth &&
+            mainViewportWidth <= MINI_PORTAL_WIDTH_BREAKPOINT
+        ) {
+            heightOffset = mainViewportWidth * 0.05;
+            widthPercent = MINI_PORTAL_SMALL_WIDTH;
+        }
+        this._miniPortalAvailableHeight = mainViewportHeight - heightOffset * 2;
         const miniPortalHeight =
-            this.miniPortalHeight * this.miniPortalAvailableHeight;
+            this._miniPortalHeight * this._miniPortalAvailableHeight;
         let miniPortalHeightPercent = miniPortalHeight / mainViewportHeight;
 
         // clamp the width to <= 700px
-        if (widthPercent * mainViewportWidth > 700) {
-            widthPercent = 700 / mainViewportWidth;
+        const miniViewportWidth = widthPercent * mainViewportWidth;
+        if (!hasCustomWidth && miniViewportWidth > this._miniPortalMaxWidth) {
+            widthPercent = this._miniPortalMaxWidth / mainViewportWidth;
+        } else if (miniViewportWidth > mainViewportWidth) {
+            widthPercent = 1;
         }
 
         this.miniViewport.setScale(widthPercent, miniPortalHeightPercent);
@@ -942,7 +977,7 @@ export class PlayerGame extends Game {
 
         if (
             this.miniPortalVisible != this.getMiniPortalVisible() ||
-            this.miniPortalConfiguredHeight != this.getMiniPortalHeight()
+            this._miniPortalConfiguredHeight != this.getMiniPortalHeight()
         ) {
             this._updateMiniPortal();
         }
@@ -1118,7 +1153,7 @@ export class PlayerGame extends Game {
                 this._resizingMiniPortal = true;
                 this._startResizeClientPos = clientPos;
                 this._currentResizeClientPos = clientPos;
-                this._startMiniPortalHeight = this.miniPortalHeight;
+                this._startMiniPortalHeight = this._miniPortalHeight;
 
                 if (
                     this.miniCameraRig.mainCamera instanceof OrthographicCamera
@@ -1145,9 +1180,10 @@ export class PlayerGame extends Game {
             .sub(this._startResizeClientPos);
 
         const deltaHeight = -positionOffset.y;
-        const deltaHeightPercent = deltaHeight / this.miniPortalAvailableHeight;
+        const deltaHeightPercent =
+            deltaHeight / this._miniPortalAvailableHeight;
 
-        this.miniPortalHeight = clamp(
+        this._miniPortalHeight = clamp(
             this._startMiniPortalHeight + deltaHeightPercent,
             MINI_PORTAL_MIN_PERCENT,
             MINI_PORTAL_MAX_PERCENT
