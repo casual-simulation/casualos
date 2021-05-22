@@ -1,5 +1,34 @@
 # CasualOS Changelog
 
+## V1.5.23
+
+#### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Renamed the `inventoryPortal` to `miniPortal`.
+    -   The following were also renamed:
+        -   `#inventoryPortalHeight` -> `#miniPortalHeight`
+        -   `#inventoryPortalResizable` -> `#miniPortalResizable`
+        -   `os.getInventoryPortalDimension()` -> `os.getMiniPortalDimension()`
+        -   `os.hasBotInInventory()` -> `os.hasBotInMiniPortal()`
+        -   `os.getPortalDimension("inventory")` -> `os.getPortalDimension("mini")`
+        -   `os.getCameraPosition("inventory")` -> `os.getCameraPosition("mini")`
+        -   `os.getCameraRotation("inventory")` -> `os.getCameraRotation("mini")`
+        -   `os.getFocusPoint("inventory")` -> `os.getFocusPoint("mini")`
+-   The `miniPortalHeight` tag was changed from being a number between 1 and 10 that represented the number of bots that should fit in the portal. Now it is a number between 0 and 1 that represents the percentage of the screen height it should take. Note that when `#miniPortalWidth` is less than 1 the height of the portal will be more like 80% of the screen height when set to 1. This is because of the mandatory spacing from the bottom of the screen to be somewhat consistent with the spacing on the sides.
+
+### :rocket: Improvements
+
+-   Added the `#miniPortalWidth` tag.
+    -   Possible values are between 0 and 1.
+    -   Represents the percentage of the screen width that the mini portal should take.
+    -   When set to 1, the mini portal will appear docked and there will be no spacing between the bottom of the screen and the mini portal.
+
+### :bug: Bug Fixes
+
+-   Fixed a bunch of issues with zooming, rotating, and resizing the mini portal.
+
 ## V1.5.22
 
 #### Date: 5/20/2021
