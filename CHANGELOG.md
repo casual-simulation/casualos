@@ -1,5 +1,17 @@
 # CasualOS Changelog
 
+## V1.5.24
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved the miniPortal to enable resizing it by dragging the top of the miniPortal instead of just at the corners.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where events in some asynchronous scripts would be incorrectly reordered and potentially cause logic issues.
+
 ## V1.5.23
 
 #### Date: 5/22/2021
