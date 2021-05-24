@@ -7,6 +7,7 @@
 ### :rocket: Improvements
 
 -   Improved the miniPortal to enable resizing it by dragging the top of the miniPortal instead of just at the corners.
+-   Added the `math.normalizeVector()` and `math.vectorLength()` functions.
 
 ### :bug: Bug Fixes
 
