@@ -842,6 +842,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 addVectors,
                 subtractVectors,
                 negateVector,
+                normalizeVector,
+                vectorLength,
                 scaleVector,
                 areClose,
             },
@@ -4305,6 +4307,49 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return result;
+    }
+
+    /**
+     * Normalizes the given vector and returns the result.
+     * @param vector The vector that should be normalized.
+     */
+    function normalizeVector<T>(vector: T): T {
+        if (!hasValue(vector)) {
+            return vector;
+        }
+        let result = {} as any;
+        const length = vectorLength(vector);
+
+        if (length === 0) {
+            return vector;
+        }
+
+        const keys = Object.keys(vector);
+        for (let key of keys) {
+            const val = (vector as any)[key];
+            result[key] = val / length;
+        }
+
+        return result;
+    }
+
+    /**
+     * Calculates the length of the given vector.
+     * @param vector The vector to calculate the length of.
+     */
+    function vectorLength<T>(vector: T): number {
+        if (!hasValue(vector)) {
+            return null;
+        }
+        let result = 0;
+
+        const keys = Object.keys(vector);
+        for (let key of keys) {
+            const val = (vector as any)[key];
+            result += val * val;
+        }
+
+        return Math.sqrt(result);
     }
 
     /**
