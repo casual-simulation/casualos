@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V2.0.0
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where trying to focus on a position in the miniPortal would not work.
+
 ## V1.5.24
 
 #### Date: 5/24/2021
