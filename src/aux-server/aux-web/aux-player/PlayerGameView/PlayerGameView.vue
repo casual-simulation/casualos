@@ -17,9 +17,7 @@
                 </div>
             </div>
 
-            <div class="slider-hiddenLeft" @touchmove="moveTouch($event)"></div>
-
-            <div class="slider-hiddenRight" @touchmove="moveTouch($event)"></div>
+            <div class="slider-hidden" @touchmove="moveTouch($event)"></div>
 
             <!-- Mini viewport -->
             <div v-if="hasMiniViewport" class="viewport" :style="miniViewportStyle">
