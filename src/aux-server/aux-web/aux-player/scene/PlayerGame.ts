@@ -46,6 +46,7 @@ import {
     getPortalConfigBotID,
     asyncResult,
     BotCursorType,
+    getPortalTag,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -538,8 +539,16 @@ export class PlayerGame extends Game {
                         e.position.y * -gridScale
                     );
 
+                    const targetPortal = hasValue(e.portal)
+                        ? getPortalTag(e.portal)
+                        : null;
+                    const cameraRig =
+                        !hasValue(targetPortal) || targetPortal === 'pagePortal'
+                            ? playerSim3D.getMainCameraRig()
+                            : miniPortalSim3D.getMainCameraRig();
+
                     this.tweenCameraToPosition(
-                        playerSim3D.getMainCameraRig(),
+                        cameraRig,
                         convertedPosition,
                         e,
                         sim,
