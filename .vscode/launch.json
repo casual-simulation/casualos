@@ -33,6 +33,16 @@
         },
         {
             "type": "node",
+            "request": "launch",
+            "name": "Jest current file",
+            "program": "${workspaceFolder}/node_modules/jest/bin/jest",
+            "args": ["${fileBasename}", "--verbose", "-i", "--no-cache"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "node",
             "request": "attach",
             "name": "Attach by Process ID",
             "processId": "${command:PickProcess}"
