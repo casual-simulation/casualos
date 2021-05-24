@@ -5135,6 +5135,53 @@ const result = math.negateVector(
 os.toast(result); // { x: -5, y: -6, z: -7 }
 ```
 
+### `math.normalizeVector(vector)`
+
+Normalizes the given vector. The result is a vector that has the same direction as the given vector but
+has a length/magnitude of 1.
+
+Mathemematically, this is the same as finding the <ActionLink action='math.vectorLength(vector)'/> and dividing each component in the vector by it.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+The **first parameter** is the object whose mathematical properties should be normalized.
+
+#### Examples:
+
+```typescript title='Normalize a 3D point'
+const result = math.normalizeVector(
+    { x: 1, y: 2, z: 3 }
+);
+
+os.toast(result);
+// x: 0.2672612419124244
+// y: 0.5345224838248488
+// z: 0.8017837257372732
+```
+
+### `math.vectorLength(vector)`
+
+Calculates the length (i.e. magnitude) of the given vector. 
+
+Mathemematically, this is equivalent to `length = sqrt(sum(components.map(c => c * c)))`.
+As a consequence, vectors that are normalized always have a length of 1.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+The **first parameter** is the object whose mathematical properties should be normalized.
+
+#### Examples:
+
+```typescript title='Calculate the length of a 3D point'
+const result = math.vectorLength(
+    { x: 1, y: 2, z: 3 }
+);
+
+os.toast(result); // 3.7416573867739413
+```
+
 ### `math.scaleVector(vector, scale)`
 
 Multiplies each property of the given vector by the given scale and returns the result.
