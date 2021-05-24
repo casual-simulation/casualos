@@ -10150,6 +10150,73 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('math.normalizeVector()', () => {
+        const cases = [
+            ['zeroes', { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }] as const,
+
+            [
+                'already normalized',
+                { x: 1, y: 0, z: 0 },
+                { x: 1, y: 0, z: 0 },
+            ] as const,
+            [
+                'normalized',
+                { x: 1, y: 2, z: 3 },
+                {
+                    x: 0.2672612419124244,
+                    y: 0.5345224838248488,
+                    z: 0.8017837257372732,
+                },
+            ] as const,
+
+            [
+                'strings',
+                { x: 'a', y: 'b', z: 'c' },
+                { x: NaN, y: NaN, z: NaN },
+            ] as const,
+
+            ['empty objects', {}, {}] as const,
+
+            ['null objects', null as any, null as any] as const,
+        ];
+
+        it.each(cases)('should normalize %s', (desc, first, expected) => {
+            expect(library.api.math.normalizeVector(first)).toEqual(expected);
+        });
+    });
+
+    describe('math.vectorLength()', () => {
+        const cases = [
+            ['zeroes', { x: 0, y: 0, z: 0 }, 0] as const,
+
+            ['already normalized', { x: 1, y: 0, z: 0 }, 1] as const,
+            [
+                'not normalized',
+                { x: 1, y: 2, z: 3 },
+                3.7416573867739413,
+            ] as const,
+            [
+                'normalized',
+                {
+                    x: 0.2672612419124244,
+                    y: 0.5345224838248488,
+                    z: 0.8017837257372732,
+                },
+                1,
+            ] as const,
+
+            ['strings', { x: 'a', y: 'b', z: 'c' }, NaN] as const,
+
+            ['empty objects', {}, 0] as const,
+
+            ['null objects', null as any, null as any] as const,
+        ];
+
+        it.each(cases)('should calculate %s', (desc, first, expected) => {
+            expect(library.api.math.vectorLength(first)).toEqual(expected);
+        });
+    });
+
     describe('math.scaleVector()', () => {
         const cases = [
             ['zeroes', { x: 0, y: 0, z: 0 }, 5, { x: 0, y: 0, z: 0 }] as const,

@@ -4395,6 +4395,18 @@ declare global {
         negateVector<T>(vector: T): T;
 
         /**
+         * Normalizes the given vector and returns the result.
+         * @param vector The vector that should be normalized.
+         */
+        normalizeVector<T>(vector: T): T;
+
+        /**
+         * Calculates the length of the given vector.
+         * @param vector The vector to calculate the length of.
+         */
+        vectorLength<T>(vector: T): number;
+
+        /**
          * Multiplies each component of the given vector by the given scale and returns the result.
          * @param vector The vector that should be scaled.
          * @param scale The number that the vector should be multiplied by.

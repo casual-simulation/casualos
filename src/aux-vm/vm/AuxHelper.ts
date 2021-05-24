@@ -46,7 +46,7 @@ import { BaseHelper } from '../managers/BaseHelper';
 import { AuxUser } from '../AuxUser';
 import { StoredAux, getBotsStateFromStoredAux } from '../StoredAux';
 import { CompiledBot } from '@casual-simulation/aux-common/runtime/CompiledBot';
-import { tap } from 'rxjs/operators';
+import { concatMap, tap } from 'rxjs/operators';
 
 /**
  * Definesa a class that contains a set of functions to help an AuxChannel
@@ -79,8 +79,8 @@ export class AuxHelper extends BaseHelper<Bot> {
 
         this._runtime.onActions
             .pipe(
-                tap((e) => {
-                    this._sendEvents(e);
+                concatMap(async (e) => {
+                    await this._sendEvents(e);
                 })
             )
             .subscribe(null, (e: any) => console.error(e));

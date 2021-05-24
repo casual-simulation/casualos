@@ -105,8 +105,7 @@ export class PlayerGame extends Game {
 
     private miniScene: Scene;
 
-    private _sliderLeft: HTMLElement;
-    private _sliderRight: HTMLElement;
+    private _slider: HTMLElement;
     private _resizingMiniPortal: boolean = false;
 
     /**
@@ -117,22 +116,13 @@ export class PlayerGame extends Game {
     private _currentResizeClientPos: Vector2 = null;
     private _startMiniPortalHeight: number;
 
-    private get sliderLeft() {
-        if (!this._sliderLeft) {
-            this._sliderLeft = document.querySelector(
-                '.slider-hiddenLeft'
+    private get slider() {
+        if (!this._slider) {
+            this._slider = document.querySelector(
+                '.slider-hidden'
             ) as HTMLElement;
         }
-        return this._sliderLeft;
-    }
-
-    private get sliderRight() {
-        if (!this._sliderRight) {
-            this._sliderRight = document.querySelector(
-                '.slider-hiddenRight'
-            ) as HTMLElement;
-        }
-        return this._sliderRight;
+        return this._slider;
     }
 
     setupDelay: boolean = false;
@@ -382,11 +372,7 @@ export class PlayerGame extends Game {
         // return [...this.miniSimulations];
     }
     getUIHtmlElements(): HTMLElement[] {
-        return [
-            <HTMLElement>this.gameView.$refs.miniPortal,
-            this.sliderRight,
-            this.sliderLeft,
-        ];
+        return [<HTMLElement>this.gameView.$refs.miniPortal, this.slider];
     }
     getMiniPortalViewport(): Viewport {
         return this.miniViewport;
@@ -891,20 +877,20 @@ export class PlayerGame extends Game {
             this.miniViewport.height -
             this.miniViewport.y -
             MINI_PORTAL_SLIDER_HALF_HEIGHT;
-        (<HTMLElement>this.sliderLeft).style.top = sliderTop.toString() + 'px';
+        (<HTMLElement>this.slider).style.top = sliderTop.toString() + 'px';
 
-        (<HTMLElement>this.sliderRight).style.top = sliderTop.toString() + 'px';
+        let left = this.miniViewport.x - MINI_PORTAL_SLIDER_HALF_WIDTH;
 
-        (<HTMLElement>this.sliderLeft).style.left =
-            (this.miniViewport.x - MINI_PORTAL_SLIDER_HALF_WIDTH).toString() +
-            'px';
+        (<HTMLElement>this.slider).style.left = left.toString() + 'px';
 
-        (<HTMLElement>this.sliderRight).style.left =
-            (
-                this.miniViewport.x +
-                this.miniViewport.width -
-                MINI_PORTAL_SLIDER_HALF_WIDTH
-            ).toString() + 'px';
+        let right =
+            this.miniViewport.x +
+            this.miniViewport.width +
+            MINI_PORTAL_SLIDER_HALF_WIDTH;
+
+        let width = right - left;
+
+        (<HTMLElement>this.slider).style.width = width.toString() + 'px';
 
         this.gameView.setMenuStyle({
             bottom:
@@ -917,16 +903,14 @@ export class PlayerGame extends Game {
 
     private _hideMiniPortal() {
         this.miniViewport.setScale(null, 0);
-        (<HTMLElement>this.sliderLeft).style.display = 'none';
-        (<HTMLElement>this.sliderRight).style.display = 'none';
+        (<HTMLElement>this.slider).style.display = 'none';
         this.gameView.setMenuStyle({
             bottom: this.menuOffset.toString() + 'px',
         });
     }
 
     private _showMiniPortal() {
-        (<HTMLElement>this.sliderLeft).style.display = 'block';
-        (<HTMLElement>this.sliderRight).style.display = 'block';
+        (<HTMLElement>this.slider).style.display = 'block';
     }
 
     protected frameUpdate(xrFrame?: any) {
@@ -1078,12 +1062,10 @@ export class PlayerGame extends Game {
 
         if (!this.getMiniPortalResizable() || !this.miniPortalVisible) {
             // remove dragging areas
-            (<HTMLElement>this.sliderLeft).style.display = 'none';
-            (<HTMLElement>this.sliderRight).style.display = 'none';
+            (<HTMLElement>this.slider).style.display = 'none';
         } else {
             // make sure dragging areas are active
-            (<HTMLElement>this.sliderLeft).style.display = 'block';
-            (<HTMLElement>this.sliderRight).style.display = 'block';
+            (<HTMLElement>this.slider).style.display = 'block';
         }
 
         if (
@@ -1145,9 +1127,10 @@ export class PlayerGame extends Game {
 
         const clientPos = this.input.getMouseClientPos();
         if (this.input.getMouseButtonDown(MouseButtonId.Left)) {
-            const overSlider =
-                Input.eventIsDirectlyOverElement(clientPos, this.sliderLeft) ||
-                Input.eventIsDirectlyOverElement(clientPos, this.sliderRight);
+            const overSlider = Input.eventIsDirectlyOverElement(
+                clientPos,
+                this.slider
+            );
 
             if (overSlider) {
                 this._resizingMiniPortal = true;

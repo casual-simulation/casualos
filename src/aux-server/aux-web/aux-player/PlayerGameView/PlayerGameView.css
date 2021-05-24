@@ -69,63 +69,13 @@ html.ar-app .webxr-sessions canvas {
     overflow-y: auto;
 }
 
-.slider-hiddenLeft {
+.slider-hidden {
     position: absolute;
     cursor: ns-resize;
     width: 30px;
     height: 36px;
     background-color: purple;
     opacity: 0;
-    top: 50%;
-    overscroll-behavior: none;
-    overflow-y: hidden;
-    touch-action: none;
-}
-
-.slider-hiddenRight {
-    position: absolute;
-    cursor: ns-resize;
-    width: 30px;
-    height: 36px;
-    background-color: purple;
-    opacity: 0;
-    top: 50%;
-    overscroll-behavior: none;
-    overflow-y: hidden;
-    touch-action: none;
-}
-
-.slider-visible {
-    position: absolute;
-    cursor: ns-resize;
-    width: 100%;
-    height: 2px;
-    background-color: #000000;
-    opacity: 0.2;
-    top: 50%;
-    overscroll-behavior: none;
-    overflow-y: hidden;
-    touch-action: none;
-}
-
-.side-visible {
-    position: absolute;
-    width: 2px;
-    height: 100%;
-    background-color: #000000;
-    opacity: 0.2;
-    top: 50%;
-    overscroll-behavior: none;
-    overflow-y: hidden;
-    touch-action: none;
-}
-
-.sideRight-visible {
-    position: absolute;
-    width: 2px;
-    height: 100%;
-    background-color: #000000;
-    opacity: 0.2;
     top: 50%;
     overscroll-behavior: none;
     overflow-y: hidden;
