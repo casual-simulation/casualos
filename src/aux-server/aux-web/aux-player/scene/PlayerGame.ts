@@ -752,7 +752,8 @@ export class PlayerGame extends Game {
             this.mainScene.background = null;
             this.renderer.setClearColor('#000', 0);
 
-            super.renderMainViewport(false);
+            this.renderer.clear();
+            // super.renderMainViewport(false);
             // this.renderer.clear();
             // this.renderMapToMainViewport();
         }
