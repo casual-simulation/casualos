@@ -71,6 +71,7 @@ export class MiniPortalConfig extends PortalConfig {
         super._clearPortalValues();
         this._resizable = null;
         this._height = null;
+        this._width = null;
     }
 
     protected _updatePortalValues(
