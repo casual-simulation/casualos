@@ -600,25 +600,45 @@ export class CameraControls {
                     clientPos.y
                 );
 
-                for (let element of elements) {
-                    if (Input.isElementContainedByOrEqual(element, dom)) {
-                        continue;
-                    }
-                    if (
-                        element !== container &&
-                        Input.isElementContainedByOrEqual(element, container)
-                    ) {
-                        for (let event of input.events) {
-                            const copy = cloneEvent(event, {
-                                target: element,
-                                defaultPrevented: false,
+                let state = PassthroughStates.Start;
 
-                                // Hack to get Input to ignore the event
-                                __ignoreForInput: true,
-                            });
-                            element.dispatchEvent(copy);
+                for (let element of elements) {
+                    if (
+                        state === PassthroughStates.Start ||
+                        state === PassthroughStates.SkippingViewport
+                    ) {
+                        if (Input.isElementContainedByOrEqual(element, dom)) {
+                            if (element === dom) {
+                                state = PassthroughStates.End;
+                            } else {
+                                state = PassthroughStates.SkippingViewport;
+                            }
+                            continue;
+                        } else if (state === PassthroughStates.Start) {
+                            // first element is not the viewport
+                            break;
                         }
-                        break;
+                    } else {
+                        // we've skipped the viewport and are onto an element that is behind it
+                        if (
+                            element !== container &&
+                            Input.isElementContainedByOrEqual(
+                                element,
+                                container
+                            )
+                        ) {
+                            for (let event of input.events) {
+                                const copy = cloneEvent(event, {
+                                    target: element,
+                                    defaultPrevented: false,
+
+                                    // Hack to get Input to ignore the event
+                                    __ignoreForInput: true,
+                                });
+                                element.dispatchEvent(copy);
+                            }
+                            break;
+                        }
                     }
                 }
             }
@@ -1421,4 +1441,10 @@ function cloneEvent<T extends Event>(event: T, overrides: any): T {
     }
     let clone = new ClonedEvent(event.type, event);
     return clone as T;
+}
+
+enum PassthroughStates {
+    Start,
+    SkippingViewport,
+    End,
 }
