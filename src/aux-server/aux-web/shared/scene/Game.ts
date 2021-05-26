@@ -161,7 +161,15 @@ export abstract class Game {
         await this.onBeforeSetupComplete();
 
         this.frameUpdate = this.frameUpdate.bind(this);
+        this.startBrowserAnimationLoop();
+    }
+
+    protected startBrowserAnimationLoop() {
         this.renderer.setAnimationLoop(this.frameUpdate);
+    }
+
+    protected stopBrowserAnimationLoop() {
+        this.renderer.setAnimationLoop(null);
     }
 
     protected async onBeforeSetupComplete() {}
@@ -173,7 +181,7 @@ export abstract class Game {
         console.log('[Game] Dispose');
         this.disposed = true;
 
-        this.renderer.setAnimationLoop(null);
+        this.stopBrowserAnimationLoop();
         disposeHtmlMixerContext(this.htmlMixerContext, this.gameView.gameView);
         this.removeSidebarItem('enable_xr');
         this.removeSidebarItem('disable_xr');
@@ -590,6 +598,7 @@ export abstract class Game {
         }
 
         this.renderCursor();
+        this.input.resetEvents();
 
         this._onUpdate.next();
     }
@@ -602,7 +611,7 @@ export abstract class Game {
         this.gameView.setCursor(this.cursor);
     }
 
-    private renderUpdate(xrFrame?: any) {
+    protected renderUpdate(xrFrame?: any) {
         if (this.xrSession && xrFrame) {
             if (this.xrMode === 'immersive-ar') {
                 this.mainScene.background = null;
@@ -627,13 +636,23 @@ export abstract class Game {
             this.mainViewport.height
         );
 
+        this.renderMainViewport(true);
+    }
+
+    /**
+     * Renders the main camera to the main viewport.
+     * @param renderBackground Whether to render the background color.
+     */
+    protected renderMainViewport(renderBackground: boolean) {
         this.mainCameraRig.mainCamera.updateMatrixWorld(true);
 
         this.renderer.setScissorTest(false);
 
         // Render the main scene with the main camera.
         this.renderer.clear();
-        this.mainSceneBackgroundUpdate();
+        if (renderBackground) {
+            this.mainSceneBackgroundUpdate();
+        }
         this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
 
         // Render debug object manager if it's enabled.
@@ -652,22 +671,7 @@ export abstract class Game {
         //
         // [Main scene]
         //
-
-        this.mainCameraRig.mainCamera.updateMatrixWorld(true);
-
-        this.renderer.setScissorTest(false);
-
-        // Render the main scene with the main camera.
-        this.renderer.clear();
-        this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
-
-        // Render debug object manager if it's enabled.
-        if (DebugObjectManager.enabled) {
-            DebugObjectManager.render(
-                this.renderer,
-                this.mainCameraRig.mainCamera
-            );
-        }
+        this.renderMainViewport(false);
     }
 
     /**
@@ -677,21 +681,7 @@ export abstract class Game {
         //
         // [Main scene]
         //
-
-        this.mainCameraRig.mainCamera.updateMatrixWorld(true);
-
-        // Render the main scene with the main camera.
-        this.renderer.clear();
-        this.mainSceneBackgroundUpdate();
-        this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
-
-        // Render debug object manager if it's enabled.
-        if (DebugObjectManager.enabled) {
-            DebugObjectManager.render(
-                this.renderer,
-                this.mainCameraRig.mainCamera
-            );
-        }
+        this.renderMainViewport(true);
     }
 
     watchCameraRigDistanceSquared(cameraRig: CameraRig): Observable<number> {
@@ -782,7 +772,7 @@ export abstract class Game {
         }
 
         // Stop regular animation update loop and use the one from the xr session.
-        this.renderer.setAnimationLoop(null);
+        this.stopBrowserAnimationLoop();
         this.xrSession.requestAnimationFrame((time: any, nextXRFrame: any) =>
             this.frameUpdate(nextXRFrame)
         );

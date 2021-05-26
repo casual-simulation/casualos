@@ -392,7 +392,32 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             invCameraRigControls.controls.screenSpacePanning = true;
         }
 
-        return [mainCameraRigControls, invCameraRigControls];
+        // map portal camera
+        let mapPortalCameraRigControls: CameraRigControls = {
+            rig: this._game.getMapPortalCameraRig(),
+            controls: new CameraControls(
+                this._game.getMapPortalCameraRig().mainCamera,
+                this._game,
+                this._game.getMapPortalCameraRig().viewport
+            ),
+        };
+
+        mapPortalCameraRigControls.controls.passthroughEvents = true;
+        mapPortalCameraRigControls.controls.minZoom = Orthographic_MinZoom;
+        mapPortalCameraRigControls.controls.maxZoom = Orthographic_MaxZoom;
+
+        if (
+            mapPortalCameraRigControls.rig.mainCamera instanceof
+            OrthographicCamera
+        ) {
+            mapPortalCameraRigControls.controls.screenSpacePanning = true;
+        }
+
+        return [
+            mainCameraRigControls,
+            invCameraRigControls,
+            mapPortalCameraRigControls,
+        ];
     }
 
     protected _updateCameraOffsets() {

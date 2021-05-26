@@ -49,11 +49,12 @@ export default class BaseGameView extends Vue implements IGameView {
 
     async created() {
         this._subscriptions = [];
-        this.resize = debounce(this.resize.bind(this), 100);
+        const resize = this.resize.bind(this);
+        this.resize = debounce(resize, 100);
 
-        EventBus.$on('resize', this.resize);
+        EventBus.$on('resize', () => this.resize());
         // window.addEventListener('resize', this.resize);
-        window.addEventListener('vrdisplaypresentchange', this.resize);
+        window.addEventListener('vrdisplaypresentchange', () => this.resize());
 
         this._game = this.createGame();
 
@@ -149,10 +150,13 @@ export default class BaseGameView extends Vue implements IGameView {
         this._setWidthAndHeight(width, height);
     }
 
+    protected setWidthAndHeightCore(width: number, height: number) {}
+
     private _setWidthAndHeight(width: number, height: number) {
         this._game.onWindowResize(width, height);
 
         this.container.style.height = this.gameView.style.height = this._game.getRenderer().domElement.style.height;
         this.container.style.width = this.gameView.style.width = this._game.getRenderer().domElement.style.width;
+        this.setWidthAndHeightCore(width, height);
     }
 }
