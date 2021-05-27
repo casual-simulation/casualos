@@ -28,16 +28,22 @@ import { MiniPortalContextGroup3D } from './MiniPortalContextGroup3D';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { BotDimensionEvent } from '@casual-simulation/aux-vm';
-import { Color, Texture } from '@casual-simulation/three';
+import { Color, Matrix4, Texture } from '@casual-simulation/three';
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { MapPortalConfig } from './MapPortalConfig';
+import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 
 export class MapSimulation3D extends PlayerSimulation3D {
     /**
      * The mini portal dimension that this simulation is for.
      */
     mapDimension: string;
+
+    /**
+     * The matrix that should be used to transform 3D coordinates from AUX space to Three.js space.
+     */
+    coordinateTransform: Matrix4;
 
     getDefaultGridScale(): number {
         return this.mapConfig.gridScale;
@@ -188,6 +194,10 @@ export class MapSimulation3D extends PlayerSimulation3D {
                 .subscribe()
         );
         super.init();
+    }
+
+    getGridScale(bot: AuxBot3D): number {
+        return 1;
     }
 
     protected _constructDimensionGroup(portalTag: string, bot: Bot) {

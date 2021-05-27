@@ -15,6 +15,8 @@ import {
     Mesh,
     WebGLRenderer,
     sRGBEncoding,
+    DirectionalLight,
+    AmbientLight,
 } from '@casual-simulation/three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 import { MiniSimulation3D } from './MiniSimulation3D';
@@ -114,7 +116,15 @@ export class PlayerGame extends Game {
     private miniScene: Scene;
     private mapScene: Scene;
 
+    // /**
+    //  * A scene that is used to allow the main scene to render
+    //  * without drawing anything to the screen
+    //  */
+    // private emptyScene: Scene;
+
     private mapRenderer: WebGLRenderer;
+    private mapDirectionalLight: DirectionalLight;
+    private mapAmbientLight: AmbientLight;
 
     private mapPortalVisible: boolean = DEFAULT_MAP_PORTAL_VISIBLE;
 
@@ -535,6 +545,7 @@ export class PlayerGame extends Game {
         this.miniScene.add(miniPortalSim3D);
 
         const mapPortalSim3D = new MapSimulation3D(this, sim);
+        mapPortalSim3D.coordinateTransform = this.gameView.getMapCoordinateTransform();
         mapPortalSim3D.init();
         mapPortalSim3D.onBotAdded.addListener(this.onBotAdded.invoke);
         mapPortalSim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
@@ -749,10 +760,7 @@ export class PlayerGame extends Game {
         if (!this.gameView.hasMap) {
             super.renderMainViewport(true);
         } else {
-            this.mainScene.background = null;
-            this.renderer.setClearColor('#000', 0);
-
-            this.renderer.clear();
+            this.renderMapViewport();
             // super.renderMainViewport(false);
             // this.renderer.clear();
             // this.renderMapToMainViewport();
@@ -797,7 +805,18 @@ export class PlayerGame extends Game {
     /**
      * Renders the map scene to the main viewport.
      */
-    protected renderMapToMainViewport() {}
+    protected renderMapViewport() {
+        this.mapScene.background = null;
+        this.renderer.setClearColor('#000', 0);
+        this.renderer.setScissorTest(false);
+
+        this.renderer.clear();
+        // this.renderer.clearDepth();
+
+        // Render the map portal scene with the map portal main camera.
+        // this.mapRenderer
+        this.renderer.render(this.mapScene, this.mapCameraRig.mainCamera);
+    }
 
     /**
      * Render the current frame for XR (AR mode).
@@ -900,12 +919,12 @@ export class PlayerGame extends Game {
         );
 
         // mini portal ambient light.
-        const invAmbient = baseAuxAmbientLight();
-        this.mapScene.add(invAmbient);
+        this.mapAmbientLight = baseAuxAmbientLight();
+        this.mapScene.add(this.mapAmbientLight);
 
         // mini portal direction light.
-        const invDirectional = baseAuxDirectionalLight();
-        this.mapScene.add(invDirectional);
+        this.mapDirectionalLight = baseAuxDirectionalLight();
+        this.mapScene.add(this.mapDirectionalLight);
     }
 
     onWindowResize(width: number, height: number) {
@@ -1060,12 +1079,23 @@ export class PlayerGame extends Game {
         if (visible) {
             this.gameView.enableMapView({
                 setup: (context) => {
+                    const coordinateTransform = this.gameView.getMapCoordinateTransform();
+                    for (let sim of this.mapSimulations) {
+                        sim.coordinateTransform = coordinateTransform;
+                    }
+
+                    const view = this.gameView.getMapView();
                     this.mapRenderer = new WebGLRenderer({
                         context: context.gl,
                         premultipliedAlpha: false,
                         antialias: true,
                     });
+                    // this.mapRenderer.setPixelRatio()
+                    this.mapRenderer.setViewport(0, 0, view.width, view.height);
                     this.mapRenderer.autoClear = false;
+                    // this.mapRenderer.autoClearDepth = false;
+                    // this.mapRenderer.autoClearStencil = false;
+                    // this.mapRenderer.autoClearColor = false;
                     this.mapRenderer.shadowMap.enabled = false;
                     this.mapRenderer.outputEncoding = sRGBEncoding;
                     this.mapViewport.layer = 0.5;
@@ -1084,7 +1114,42 @@ export class PlayerGame extends Game {
                     };
                 },
                 render: (context) => {
-                    this.mapRenderer.state.reset();
+                    let contextCam = context.camera;
+                    let camera = this.mapCameraRig.mainCamera;
+                    camera.position.fromArray(contextCam.eye);
+                    camera.up.fromArray(contextCam.up);
+                    camera.lookAt(
+                        new Vector3(
+                            contextCam.center[0],
+                            contextCam.center[1],
+                            contextCam.center[2]
+                        )
+                    );
+                    camera.projectionMatrix.fromArray(
+                        contextCam.projectionMatrix
+                    );
+                    camera.near = contextCam.near;
+                    camera.far = contextCam.far;
+                    camera.updateMatrixWorld(true);
+
+                    this.mapDirectionalLight.position.fromArray(
+                        context.sunLight.direction
+                    );
+                    this.mapDirectionalLight.intensity =
+                        context.sunLight.diffuse.intensity;
+                    this.mapDirectionalLight.color = new Color().fromArray(
+                        context.sunLight.diffuse.color
+                    );
+                    this.mapDirectionalLight.updateMatrixWorld(true);
+
+                    this.mapAmbientLight.intensity =
+                        context.sunLight.ambient.intensity;
+                    this.mapAmbientLight.color = new Color().fromArray(
+                        context.sunLight.ambient.color
+                    );
+                    this.mapAmbientLight.updateMatrixWorld(true);
+
+                    // this.renderMapViewport();
                 },
                 dispose: (context) => {},
             });

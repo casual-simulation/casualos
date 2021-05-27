@@ -184,7 +184,6 @@ export abstract class Simulation3D
         this.simulation = simulation;
         this.dimensions = [];
         this._subs = [];
-        this._decoratorFactory = new AuxBot3DDecoratorFactory(game, this);
         this._dimensionMap = new Map();
         this._dimensionGroups = new Map();
         this._dimensionTagsMap = new Map();
@@ -196,6 +195,8 @@ export abstract class Simulation3D
      */
     init() {
         this.isLoaded = false;
+
+        this._decoratorFactory = this.createDecoratorFactory();
 
         this._subs.push(
             this.simulation.dimensions
@@ -227,6 +228,10 @@ export abstract class Simulation3D
                 .pipe(tap((e) => this._localEvent(e)))
                 .subscribe()
         );
+    }
+
+    createDecoratorFactory(): AuxBot3DDecoratorFactory {
+        return new AuxBot3DDecoratorFactory(this.game, this);
     }
 
     /**

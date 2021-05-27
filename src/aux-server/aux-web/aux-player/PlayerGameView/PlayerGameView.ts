@@ -15,8 +15,10 @@ import CircleWipe from '../../shared/vue-components/CircleWipe/CircleWipe';
 import { hasValue } from '@casual-simulation/aux-common';
 import type EsriSceneView from 'esri/views/SceneView';
 import type EsriExternalRenderers from 'esri/views/3d/externalRenderers';
+import type EsriSpatialReference from 'esri/geometry/SpatialReference';
 import type EsriMap from 'esri/Map';
 import { loadModules as loadEsriModules } from 'esri-loader';
+import { Matrix4 } from '@casual-simulation/three';
 
 @Component({
     components: {
@@ -43,6 +45,8 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     @Inject() removeSidebarGroup: PlayerApp['removeSidebarGroup'];
 
     lastMenuCount: number = null;
+    private _mapView: EsriSceneView;
+    private _coordinateTransform: Matrix4;
 
     constructor() {
         super();
@@ -65,6 +69,20 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
     protected createGame(): Game {
         return new PlayerGame(this);
+    }
+
+    getMapView() {
+        return this._mapView;
+    }
+
+    /**
+     * Gets the matrix that should be used to transform AUX coordinates into Three.js coordinates
+     * for the map view.
+     *
+     * See https://developers.arcgis.com/javascript/latest/api-reference/esri-views-3d-externalRenderers.html#renderCoordinateTransformAt
+     */
+    getMapCoordinateTransform() {
+        return this._coordinateTransform;
     }
 
     moveTouch(e: TouchEvent) {
@@ -189,24 +207,34 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             basemap: 'hybrid',
         });
 
-        const view = new SceneView({
+        this._mapView = new SceneView({
             map: map,
             container: this.mapViewId,
         });
 
         try {
             // wait for the map to load
-            await view.when();
+            await this._mapView.when();
             this.hasMap = true;
             if (externalRenderer) {
-                ExternalRenderers.add(view, {
+                const matrix = new Matrix4();
+                ExternalRenderers.renderCoordinateTransformAt(
+                    this._mapView,
+                    [0, 0, 0],
+                    SpatialReference.WGS84,
+                    matrix.elements
+                );
+
+                this._coordinateTransform = matrix;
+
+                ExternalRenderers.add(this._mapView, {
                     setup: (context) => {
                         externalRenderer.setup(context);
                         context.resetWebGLState();
                     },
                     render: (context) => {
                         externalRenderer.render(context);
-                        ExternalRenderers.requestRender(view);
+                        ExternalRenderers.requestRender(this._mapView);
                         context.resetWebGLState();
                     },
                     dispose: (context) => externalRenderer.dispose(context),
@@ -234,21 +262,34 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 let GeoMap: typeof EsriMap;
 let SceneView: typeof EsriSceneView;
 let ExternalRenderers: typeof EsriExternalRenderers;
+let SpatialReference: typeof EsriSpatialReference;
 let mapLibrariesLoaded = false;
 
 async function loadMapModules() {
     if (mapLibrariesLoaded) {
         return;
     }
-    const [map, sceneView, externalRenderers] = await (loadEsriModules([
+    const [
+        map,
+        sceneView,
+        externalRenderers,
+        spatialReference,
+    ] = await (loadEsriModules([
         'esri/Map',
         'esri/views/SceneView',
         'esri/views/3d/externalRenderers',
+        'esri/geometry/SpatialReference',
     ]) as Promise<
-        [typeof EsriMap, typeof EsriSceneView, typeof EsriExternalRenderers]
+        [
+            typeof EsriMap,
+            typeof EsriSceneView,
+            typeof EsriExternalRenderers,
+            typeof EsriSpatialReference
+        ]
     >);
     mapLibrariesLoaded = true;
     GeoMap = map;
     SceneView = sceneView;
     ExternalRenderers = externalRenderers;
+    SpatialReference = spatialReference;
 }
