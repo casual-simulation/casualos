@@ -48,6 +48,7 @@ import { calculateScale, objectForwardRay } from '../SceneUtils';
 import { Game } from '../Game';
 import TWEEN, { Tween } from '@tweenjs/tween.js';
 import { MapSimulation3D } from '../../../aux-player/scene/MapSimulation3D';
+import { CoordinateSystem } from '../CoordinateSystem';
 
 /**
  * Defines an interface that contains possible options for DimensionPositionDecorator objects.
@@ -76,18 +77,6 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
     private _game: Game;
     private _tween: any;
 
-    /**
-     * A matrix that should be used to transform the bot's position from AUX coordinates to Three.js coordinates.
-     * If null, then the default process will be used. (swap Y and Z axes)
-     */
-    private get _coordinateTransform(): Matrix4 {
-        const sim = this.bot3D.dimensionGroup?.simulation3D;
-        if (sim && sim instanceof MapSimulation3D) {
-            return sim.coordinateTransform;
-        }
-        return null;
-    }
-
     constructor(
         bot3D: AuxBot3D,
         game: Game,
@@ -112,11 +101,19 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
         // Update the offset for the display container
         // so that it rotates around the specified
         // point
-        this.bot3D.display.position.set(
-            anchorPointOffset.x,
-            anchorPointOffset.z,
-            anchorPointOffset.y
-        );
+        if (this.bot3D.targetCoordinateSystem === CoordinateSystem.Y_UP) {
+            this.bot3D.display.position.set(
+                anchorPointOffset.x,
+                anchorPointOffset.z,
+                anchorPointOffset.y
+            );
+        } else {
+            this.bot3D.display.position.set(
+                anchorPointOffset.x,
+                anchorPointOffset.y,
+                anchorPointOffset.z
+            );
+        }
 
         // The transform container gets the same position as the display but
         // with the anchor point multiplied by 2.
@@ -144,11 +141,15 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 this.bot3D.bot,
                 this.bot3D.dimension
             );
+            const coordinateTransform = this.bot3D.coordinateTransformer
+                ? this.bot3D.coordinateTransformer(currentGridPos)
+                : null;
             this._nextPos = calculateObjectPositionInGrid(
                 calc,
+                currentGridPos,
                 this.bot3D,
                 gridScale,
-                this._coordinateTransform
+                coordinateTransform
             );
 
             if (
@@ -190,7 +191,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 this.bot3D.position.copy(this._nextPos);
 
                 if (this._orientationMode === 'absolute') {
-                    if (this._coordinateTransform) {
+                    if (coordinateTransform) {
                         const rot = new Matrix4().makeRotationFromEuler(
                             new Euler(
                                 this._nextRot.x,
@@ -198,8 +199,14 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                                 this._nextRot.z
                             )
                         );
-                        rot.premultiply(this._coordinateTransform);
+                        rot.premultiply(coordinateTransform);
                         const q = new Quaternion().setFromRotationMatrix(rot);
+
+                        // const adjustment = new Quaternion().setFromAxisAngle(
+                        //     new Vector3(1, 0, 0),
+                        //     Math.PI
+                        // );
+                        // q.multiply(adjustment);
 
                         this._rotationObj.quaternion.set(q.x, q.y, q.z, q.w);
                     } else {
@@ -426,12 +433,11 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
  */
 export function calculateObjectPositionInGrid(
     context: BotCalculationContext,
+    position: { x: number; y: number; z: number },
     bot: AuxBot3D,
     gridScale: number,
     coordinateTransform: Matrix4
 ): Vector3 {
-    let position = getBotPosition(context, bot.bot, bot.dimension);
-
     if (coordinateTransform) {
         const pos = new Vector3(position.x, position.y, position.z);
         pos.applyMatrix4(coordinateTransform);

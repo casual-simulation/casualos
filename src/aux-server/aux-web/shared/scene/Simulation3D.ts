@@ -5,6 +5,7 @@ import {
     Vector2,
     Scene,
     Vector3,
+    Matrix4,
 } from '@casual-simulation/three';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
@@ -40,6 +41,7 @@ import { DimensionGroup } from './DimensionGroup';
 import { DimensionGroup3D } from './DimensionGroup3D';
 import { AuxBot3D } from './AuxBot3D';
 import { Grid3D } from './Grid3D';
+import { CoordinateSystem } from './CoordinateSystem';
 
 /**
  * Defines a class that is able to render a simulation.
@@ -55,6 +57,21 @@ export abstract class Simulation3D
     protected _game: Game;
 
     closed: boolean;
+
+    /**
+     * The coordinate system that object positions and rotations should be in.
+     */
+    targetCoordinateSystem: CoordinateSystem = CoordinateSystem.Y_UP;
+
+    /**
+     * The function that should be used to transform 3D coordinates from AUX space to the target coordinate system.
+     * Returns a matrix that represents the transformation from the given position and identity rotation to the target coordinate system.
+     */
+    coordinateTransformer: (pos: {
+        x: number;
+        y: number;
+        z: number;
+    }) => Matrix4;
 
     /**
      * Gets an observable that resolves whenever a dimension group is added.

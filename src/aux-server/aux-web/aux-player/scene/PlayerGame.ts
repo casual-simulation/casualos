@@ -74,6 +74,7 @@ import { MathUtils as ThreeMath } from '@casual-simulation/three';
 import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
 import { Input, MouseButtonId } from '../../shared/scene/Input';
 import { MapSimulation3D } from './MapSimulation3D';
+import { CoordinateSystem } from '../../shared/scene/CoordinateSystem';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -545,7 +546,8 @@ export class PlayerGame extends Game {
         this.miniScene.add(miniPortalSim3D);
 
         const mapPortalSim3D = new MapSimulation3D(this, sim);
-        mapPortalSim3D.coordinateTransform = this.gameView.getMapCoordinateTransform();
+        mapPortalSim3D.coordinateTransformer = this.gameView.getMapCoordinateTransformer();
+        mapPortalSim3D.targetCoordinateSystem = CoordinateSystem.Z_UP;
         mapPortalSim3D.init();
         mapPortalSim3D.onBotAdded.addListener(this.onBotAdded.invoke);
         mapPortalSim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
@@ -809,6 +811,12 @@ export class PlayerGame extends Game {
         this.mapScene.background = null;
         this.renderer.setClearColor('#000', 0);
         this.renderer.setScissorTest(false);
+        this.renderer.setViewport(
+            this.mapViewport.x,
+            this.mapViewport.y,
+            this.mapViewport.width,
+            this.mapViewport.height
+        );
 
         this.renderer.clear();
         // this.renderer.clearDepth();
@@ -1079,9 +1087,9 @@ export class PlayerGame extends Game {
         if (visible) {
             this.gameView.enableMapView({
                 setup: (context) => {
-                    const coordinateTransform = this.gameView.getMapCoordinateTransform();
+                    const coordinateTransform = this.gameView.getMapCoordinateTransformer();
                     for (let sim of this.mapSimulations) {
-                        sim.coordinateTransform = coordinateTransform;
+                        sim.coordinateTransformer = coordinateTransform;
                     }
 
                     const view = this.gameView.getMapView();

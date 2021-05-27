@@ -40,11 +40,6 @@ export class MapSimulation3D extends PlayerSimulation3D {
      */
     mapDimension: string;
 
-    /**
-     * The matrix that should be used to transform 3D coordinates from AUX space to Three.js space.
-     */
-    coordinateTransform: Matrix4;
-
     getDefaultGridScale(): number {
         return this.mapConfig.gridScale;
     }

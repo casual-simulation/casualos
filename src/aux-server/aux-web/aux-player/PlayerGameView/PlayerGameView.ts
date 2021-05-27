@@ -46,7 +46,11 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
     lastMenuCount: number = null;
     private _mapView: EsriSceneView;
-    private _coordinateTransform: Matrix4;
+    private _coordinateTransformer: (pos: {
+        x: number;
+        y: number;
+        z: number;
+    }) => Matrix4;
 
     constructor() {
         super();
@@ -81,8 +85,8 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
      *
      * See https://developers.arcgis.com/javascript/latest/api-reference/esri-views-3d-externalRenderers.html#renderCoordinateTransformAt
      */
-    getMapCoordinateTransform() {
-        return this._coordinateTransform;
+    getMapCoordinateTransformer() {
+        return this._coordinateTransformer;
     }
 
     moveTouch(e: TouchEvent) {
@@ -217,15 +221,16 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             await this._mapView.when();
             this.hasMap = true;
             if (externalRenderer) {
-                const matrix = new Matrix4();
-                ExternalRenderers.renderCoordinateTransformAt(
-                    this._mapView,
-                    [0, 0, 0],
-                    SpatialReference.WGS84,
-                    matrix.elements
-                );
-
-                this._coordinateTransform = matrix;
+                this._coordinateTransformer = (pos) => {
+                    const matrix = new Matrix4();
+                    ExternalRenderers.renderCoordinateTransformAt(
+                        this._mapView,
+                        [pos.x, pos.y, pos.z],
+                        SpatialReference.WGS84,
+                        matrix.elements
+                    );
+                    return matrix;
+                };
 
                 ExternalRenderers.add(this._mapView, {
                     setup: (context) => {
