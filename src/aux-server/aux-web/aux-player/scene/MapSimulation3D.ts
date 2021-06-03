@@ -209,10 +209,6 @@ export class MapSimulation3D extends PlayerSimulation3D {
         super.init();
     }
 
-    getGridScale(bot: AuxBot3D): number {
-        return 1;
-    }
-
     protected _constructDimensionGroup(portalTag: string, bot: Bot) {
         return new MapPortalDimensionGroup3D(
             this,

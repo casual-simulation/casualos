@@ -779,6 +779,16 @@ export const DEFAULT_MINI_PORTAL_VISIBLE = false;
 export const DEFAULT_MAP_PORTAL_VISIBLE = false;
 
 /**
+ * The default scale for the map portal grid.
+ */
+export const DEFAULT_MAP_PORTAL_SCALE = 1;
+
+/**
+ * The default grid scale for the map portal.
+ */
+export const DEFAULT_MAP_PORTAL_GRID_SCALE = 10;
+
+/**
  * Whether portals are pannable by default.
  */
 export const DEFAULT_PORTAL_PANNABLE = true;

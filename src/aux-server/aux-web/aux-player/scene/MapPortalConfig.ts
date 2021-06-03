@@ -12,6 +12,8 @@ import {
     DEFAULT_PORTAL_ROTATABLE,
     DEFAULT_MINI_PORTAL_RESIZABLE,
     DEFAULT_MINI_PORTAL_HEIGHT,
+    DEFAULT_MAP_PORTAL_GRID_SCALE,
+    DEFAULT_MAP_PORTAL_SCALE,
 } from '@casual-simulation/aux-common';
 import { Color } from '@casual-simulation/three';
 import {
@@ -46,5 +48,20 @@ export class MapPortalConfig extends PortalConfig {
         portalTag: string
     ) {
         super._updatePortalValues(calc, bot, portalTag);
+        this.gridScale = calculateGridScale(
+            calc,
+            bot,
+            DEFAULT_MAP_PORTAL_SCALE,
+            DEFAULT_MAP_PORTAL_GRID_SCALE
+        );
+    }
+
+    protected _getDefaultGridScale() {
+        return calculateGridScale(
+            null,
+            null,
+            DEFAULT_MAP_PORTAL_SCALE,
+            DEFAULT_MAP_PORTAL_GRID_SCALE
+        );
     }
 }
