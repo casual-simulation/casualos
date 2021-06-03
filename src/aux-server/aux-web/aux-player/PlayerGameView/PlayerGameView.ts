@@ -17,7 +17,16 @@ import type EsriSceneView from 'esri/views/SceneView';
 import type EsriExternalRenderers from 'esri/views/3d/externalRenderers';
 import type EsriSpatialReference from 'esri/geometry/SpatialReference';
 import type EsriMap from 'esri/Map';
+import type EsriWebMercatorUtils from 'esri/geometry/support/webMercatorUtils';
 import { loadModules as loadEsriModules } from 'esri-loader';
+import {
+    ExternalRenderers,
+    GeoMap,
+    loadMapModules,
+    SceneView,
+    SpatialReference,
+    WebMercatorUtils,
+} from '../MapUtils';
 import { Matrix4 } from '@casual-simulation/three';
 
 @Component({
@@ -87,6 +96,10 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
      */
     getMapCoordinateTransformer() {
         return this._coordinateTransformer;
+    }
+
+    getWebMercatorUtils() {
+        return WebMercatorUtils;
     }
 
     moveTouch(e: TouchEvent) {
@@ -262,39 +275,4 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         this.mapView.style.height = this._game.getRenderer().domElement.style.height;
         this.mapView.style.width = this._game.getRenderer().domElement.style.width;
     }
-}
-
-let GeoMap: typeof EsriMap;
-let SceneView: typeof EsriSceneView;
-let ExternalRenderers: typeof EsriExternalRenderers;
-let SpatialReference: typeof EsriSpatialReference;
-let mapLibrariesLoaded = false;
-
-async function loadMapModules() {
-    if (mapLibrariesLoaded) {
-        return;
-    }
-    const [
-        map,
-        sceneView,
-        externalRenderers,
-        spatialReference,
-    ] = await (loadEsriModules([
-        'esri/Map',
-        'esri/views/SceneView',
-        'esri/views/3d/externalRenderers',
-        'esri/geometry/SpatialReference',
-    ]) as Promise<
-        [
-            typeof EsriMap,
-            typeof EsriSceneView,
-            typeof EsriExternalRenderers,
-            typeof EsriSpatialReference
-        ]
-    >);
-    mapLibrariesLoaded = true;
-    GeoMap = map;
-    SceneView = sceneView;
-    ExternalRenderers = externalRenderers;
-    SpatialReference = spatialReference;
 }

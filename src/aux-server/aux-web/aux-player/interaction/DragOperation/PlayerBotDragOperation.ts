@@ -53,6 +53,7 @@ import {
     SnapBotsInterface,
     SnapOptions,
 } from '../../../shared/interaction/DragOperation/SnapInterface';
+import { MapSimulation3D } from '../../scene/MapSimulation3D';
 
 export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -61,12 +62,19 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     protected _simulation3D: PlayerPageSimulation3D;
 
     protected _miniSimulation3D: MiniSimulation3D;
+    protected _mapSimulation3D: MapSimulation3D;
 
     // Determines if the bot is in the mini portal currently
     protected _inMiniPortal: boolean;
 
     // Determines if the bot was in the mini portal at the beginning of the drag operation
     protected _originallyInMiniPortal: boolean;
+
+    // Determines if the bot is in the map portal currently
+    protected _inMapPortal: boolean;
+
+    // Determines if the bot was in the map portal at the beginning of the drag operation
+    protected _originallyInMapPortal: boolean;
 
     protected _originalDimension: string;
 
@@ -95,6 +103,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     constructor(
         playerPageSimulation3D: PlayerPageSimulation3D,
         miniSimulation3D: MiniSimulation3D,
+        mapSimulation3D: MapSimulation3D,
         interaction: PlayerInteractionManager,
         bots: Bot[],
         dimension: string,
@@ -120,9 +129,12 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
         this._botsInStack = drop(bots, 1);
         this._miniSimulation3D = miniSimulation3D;
+        this._mapSimulation3D = mapSimulation3D;
         this._originalDimension = dimension;
         this._originallyInMiniPortal = this._inMiniPortal =
             dimension && this._miniSimulation3D.miniDimension === dimension;
+        this._originallyInMapPortal = this._inMapPortal =
+            dimension && this._mapSimulation3D.mapDimension === dimension;
 
         if (this._hit) {
             const obj = this._interaction.findGameObjectForHit(this._hit);
@@ -136,6 +148,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         return new PlayerBotDragOperation(
             this._simulation3D,
             this._miniSimulation3D,
+            this._mapSimulation3D,
             this._interaction,
             [bot],
             this._dimension,
@@ -167,6 +180,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
         const grid3D = this._inMiniPortal
             ? this._miniSimulation3D.grid3D
+            : this._inMapPortal
+            ? this._mapSimulation3D.grid3D
             : this._simulation3D.grid3D;
 
         const canDrag = this._canDrag(calc);
@@ -247,6 +262,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     private _raycastOtherBots(inputRay: Ray) {
         const viewport = (this._inMiniPortal
             ? this._miniSimulation3D.getMainCameraRig()
+            : this._inMapPortal
+            ? this._mapSimulation3D.getMainCameraRig()
             : this._simulation3D.getMainCameraRig()
         ).viewport;
         const {
@@ -770,12 +787,21 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             // Test to see if we are hovering over the mini simulation view.
             const pagePos = this.game.getInput().getMousePagePos();
             const miniViewport = this.game.getMiniPortalViewport();
+            const mapViewport = this.game.getMapPortalViewport();
+            const viewports = this.game.getViewports();
             this._inMiniPortal = Input.pagePositionOnViewport(
                 pagePos,
-                miniViewport
+                miniViewport,
+                viewports
+            );
+            this._inMapPortal = Input.pagePositionOnViewport(
+                pagePos,
+                mapViewport,
+                viewports
             );
         } else {
             this._inMiniPortal = false;
+            this._inMapPortal = false;
         }
     }
 
@@ -834,7 +860,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     private _calculateNextDimension(grid: Grid3D) {
         const dimension =
             this._simulation3D.getDimensionForGrid(grid) ||
-            this._miniSimulation3D.getDimensionForGrid(grid);
+            this._miniSimulation3D.getDimensionForGrid(grid) ||
+            this._mapSimulation3D.getDimensionForGrid(grid);
         return dimension;
     }
 
@@ -846,10 +873,16 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             // Get input ray from correct camera based on which dimension we are in.
             const pagePos = this.game.getInput().getMousePagePos();
             const miniViewport = this.game.getMiniPortalViewport();
+            const mapViewport = this.game.getMapPortalViewport();
             if (this._inMiniPortal) {
                 inputRay = Physics.screenPosToRay(
                     Input.screenPositionForViewport(pagePos, miniViewport),
                     this._miniSimulation3D.getMainCameraRig().mainCamera
+                );
+            } else if (this._inMapPortal) {
+                inputRay = Physics.screenPosToRay(
+                    Input.screenPositionForViewport(pagePos, mapViewport),
+                    this._mapSimulation3D.getMainCameraRig().mainCamera
                 );
             } else {
                 inputRay = Physics.screenPosToRay(

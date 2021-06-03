@@ -547,6 +547,7 @@ export class PlayerGame extends Game {
 
         const mapPortalSim3D = new MapSimulation3D(this, sim);
         mapPortalSim3D.coordinateTransformer = this.gameView.getMapCoordinateTransformer();
+        mapPortalSim3D.mapView = this.gameView.getMapView();
         mapPortalSim3D.targetCoordinateSystem = CoordinateSystem.Z_UP;
         mapPortalSim3D.init();
         mapPortalSim3D.onBotAdded.addListener(this.onBotAdded.invoke);
@@ -1087,12 +1088,13 @@ export class PlayerGame extends Game {
         if (visible) {
             this.gameView.enableMapView({
                 setup: (context) => {
+                    const view = this.gameView.getMapView();
                     const coordinateTransform = this.gameView.getMapCoordinateTransformer();
                     for (let sim of this.mapSimulations) {
                         sim.coordinateTransformer = coordinateTransform;
+                        sim.mapView = view;
                     }
 
-                    const view = this.gameView.getMapView();
                     this.mapRenderer = new WebGLRenderer({
                         context: context.gl,
                         premultipliedAlpha: false,

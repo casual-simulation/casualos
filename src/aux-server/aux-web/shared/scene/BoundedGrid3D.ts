@@ -144,8 +144,16 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
         }
 
         // Snap position to a grid center.
-        let tileX = this._snapToTileCoord(localPos.x, roundToWholeNumber);
-        let tileY = this._snapToTileCoord(localPos.z, roundToWholeNumber);
+        let tileX = snapToTileCoord(
+            localPos.x,
+            roundToWholeNumber,
+            this.tileScale
+        );
+        let tileY = snapToTileCoord(
+            localPos.z,
+            roundToWholeNumber,
+            this.tileScale
+        );
 
         if (
             tileX < this.minX ||
@@ -301,34 +309,38 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
         this._gridLines.visible = this._showGrid && this._enabled;
         this.add(this._gridLines);
     }
+}
 
-    private _snapToTileCoord(num: number, roundToWholeNumber: boolean): number {
-        // We need to snap the number to a tile coordinate.
-        let normalized = num / this.tileScale;
-        if (roundToWholeNumber) {
-            let remaining = normalized % 1;
-            let whole = normalized - remaining;
+export function snapToTileCoord(
+    num: number,
+    roundToWholeNumber: boolean,
+    tileScale: number
+): number {
+    // We need to snap the number to a tile coordinate.
+    let normalized = num / tileScale;
+    if (roundToWholeNumber) {
+        let remaining = normalized % 1;
+        let whole = normalized - remaining;
 
-            if (remaining >= 0) {
-                // Positive side
-                if (remaining <= 0.5) {
-                    num = whole;
-                } else {
-                    num = whole + 1;
-                }
+        if (remaining >= 0) {
+            // Positive side
+            if (remaining <= 0.5) {
+                num = whole;
             } else {
-                // Negative side
-                if (remaining >= -0.5) {
-                    num = whole;
-                } else {
-                    num = whole - 1;
-                }
+                num = whole + 1;
             }
         } else {
-            num = normalized;
+            // Negative side
+            if (remaining >= -0.5) {
+                num = whole;
+            } else {
+                num = whole - 1;
+            }
         }
-        return num;
+    } else {
+        num = normalized;
     }
+    return num;
 }
 
 /**

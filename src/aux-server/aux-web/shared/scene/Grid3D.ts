@@ -42,6 +42,10 @@ export interface Grid3D {
     }): Vector3;
 }
 
+export interface TileableGrid3D extends Grid3D {
+    tileScale: number;
+}
+
 /**
  * Defines an interface for a tile in a 3D grid.
  */

@@ -27,6 +27,7 @@ import { tap } from 'rxjs/operators';
 import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
 import { BoundedGrid3D } from '../../shared/scene/BoundedGrid3D';
 import { AuxTextureLoader } from '../../shared/scene/AuxTextureLoader';
+import { Grid3D, TileableGrid3D } from '../../shared/scene/Grid3D';
 
 /**
  * Defines a class that is able to watch dimension confic bots and update values.
@@ -52,7 +53,8 @@ export class PortalConfig implements SubscriptionLike {
     private _cameraControlsMode: PortalCameraControlsMode = null;
     private _gridScale: number;
     private _disableCanvasTransparency: boolean = null;
-    private _grid3D: BoundedGrid3D;
+    private _grid3D: TileableGrid3D;
+    private _defaultGrid3D: BoundedGrid3D;
     private _cameraType: PortalCameraType;
     private _cursor: BotCursorType;
 
@@ -249,8 +251,16 @@ export class PortalConfig implements SubscriptionLike {
         }
     }
 
+    protected get defaultGrid(): BoundedGrid3D {
+        return this._defaultGrid3D;
+    }
+
     get grid3D() {
         return this._grid3D;
+    }
+
+    set grid3D(value: TileableGrid3D) {
+        this._grid3D = value;
     }
 
     get cameraType() {
@@ -280,8 +290,10 @@ export class PortalConfig implements SubscriptionLike {
     constructor(portalTag: string, simulation: BrowserSimulation) {
         this._portalTag = portalTag;
         this._onGridScaleUpdated = new Subject();
-        this._grid3D = new BoundedGrid3D().showGrid(false);
-        this._grid3D.useAuxCoordinates = true;
+        this._defaultGrid3D = this._grid3D = new BoundedGrid3D().showGrid(
+            false
+        );
+        this._defaultGrid3D.useAuxCoordinates = true;
         this._sub = watchPortalConfigBot(simulation, portalTag)
             .pipe(
                 tap((update) => {

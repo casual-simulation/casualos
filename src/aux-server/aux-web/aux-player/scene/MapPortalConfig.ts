@@ -21,13 +21,19 @@ import {
 import { tap } from 'rxjs/operators';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import { PortalConfig } from './PortalConfig';
+import { TileableGrid3D } from '../../shared/scene/Grid3D';
 
 /**
  * Defines a class that is able to watch dimension confic bots and update values.
  */
 export class MapPortalConfig extends PortalConfig {
-    constructor(portalTag: string, simulation: BrowserSimulation) {
+    constructor(
+        portalTag: string,
+        simulation: BrowserSimulation,
+        grid3D: TileableGrid3D
+    ) {
         super(portalTag, simulation);
+        this.grid3D = grid3D;
     }
 
     protected _clearPortalValues() {

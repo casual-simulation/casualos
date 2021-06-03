@@ -78,6 +78,7 @@ import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { PlayerBotDragOperation } from './DragOperation/PlayerBotDragOperation';
 import { PlayerModDragOperation } from './DragOperation/PlayerModDragOperation';
 import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';
+import { MapPortalDimensionGroup3D } from '../scene/MapPortalDimensionGroup3D';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -134,6 +135,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     ): IOperation {
         const pageSimulation = this._game.findPlayerSimulation3D(simulation);
         const miniSimulation = this._game.findMiniSimulation3D(simulation);
+        const mapSimulation = this._game.findMapSimulation3D(simulation);
         if (isBot(bot)) {
             let tempPos = getBotPosition(null, bot, dimension);
             let startBotPos = new Vector2(
@@ -143,6 +145,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             let botDragOp = new PlayerBotDragOperation(
                 pageSimulation,
                 miniSimulation,
+                mapSimulation,
                 this,
                 [bot],
                 dimension,
@@ -193,6 +196,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             // Sort between mini portal colliders and other colliders.
             let miniPortalColliders: Object3D[] = [];
             let otherColliders: Object3D[] = [];
+            let mapPortalColliders: Object3D[] = [];
             if (contexts && contexts.length > 0) {
                 for (let i = 0; i < contexts.length; i++) {
                     const dimension = contexts[i];
@@ -203,6 +207,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
                     if (dimension instanceof MiniPortalContextGroup3D) {
                         miniPortalColliders.push(...colliders);
+                    } else if (dimension instanceof MapPortalDimensionGroup3D) {
+                        mapPortalColliders.push(...colliders);
                     } else {
                         otherColliders.push(...colliders);
                     }
@@ -215,6 +221,11 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     objects: miniPortalColliders,
                     camera: this._game.getMiniPortalCameraRig().mainCamera,
                     viewport: this._game.getMiniPortalCameraRig().viewport,
+                },
+                {
+                    objects: mapPortalColliders,
+                    camera: this._game.getMapPortalCameraRig().mainCamera,
+                    viewport: this._game.getMapPortalCameraRig().viewport,
                 },
                 {
                     objects: otherColliders,

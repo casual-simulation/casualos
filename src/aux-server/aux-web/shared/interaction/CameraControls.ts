@@ -579,6 +579,8 @@ export class CameraControls {
         if (this.viewport && this.state == STATE.PASSTHROUGH) {
             this.updatePassthrough();
             return;
+        } else if (this.passthroughEvents) {
+            return;
         }
 
         this.updateInput();

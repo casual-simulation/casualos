@@ -33,6 +33,12 @@ import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { MapPortalConfig } from './MapPortalConfig';
 import { AuxBot3D } from '../../shared/scene/AuxBot3D';
+import { MapPortalDimensionGroup3D } from './MapPortalDimensionGroup3D';
+import type EsriSceneView from 'esri/views/SceneView';
+import type EsriExternalRenderers from 'esri/views/3d/externalRenderers';
+import type EsriSpatialReference from 'esri/geometry/SpatialReference';
+import type EsriMap from 'esri/Map';
+import { MapPortalGrid3D } from './MapPortalGrid3D';
 
 export class MapSimulation3D extends PlayerSimulation3D {
     /**
@@ -40,12 +46,19 @@ export class MapSimulation3D extends PlayerSimulation3D {
      */
     mapDimension: string;
 
+    /**
+     * The map view that this simulation should use.
+     */
+    mapView: EsriSceneView;
+
+    private _mapGrid: MapPortalGrid3D;
+
     getDefaultGridScale(): number {
         return this.mapConfig.gridScale;
     }
 
     get mapConfig() {
-        return <MapPortalConfig>this.getPortalConfig(MINI_PORTAL);
+        return <MapPortalConfig>this.getPortalConfig(MAP_PORTAL);
     }
 
     get cameraControlsMode() {
@@ -161,12 +174,17 @@ export class MapSimulation3D extends PlayerSimulation3D {
         return this.mapConfig.cursor;
     }
 
+    get grid3D() {
+        return this._mapGrid;
+    }
+
     constructor(game: Game, simulation: BrowserSimulation) {
         super(MAP_PORTAL, game, simulation);
+        this._mapGrid = new MapPortalGrid3D(this);
     }
 
     getMainCameraRig(): CameraRig {
-        return this._game.getMiniPortalCameraRig();
+        return this._game.getMapPortalCameraRig();
     }
 
     init() {
@@ -196,7 +214,7 @@ export class MapSimulation3D extends PlayerSimulation3D {
     }
 
     protected _constructDimensionGroup(portalTag: string, bot: Bot) {
-        return new DimensionGroup3D(
+        return new MapPortalDimensionGroup3D(
             this,
             bot,
             'player',
@@ -207,7 +225,7 @@ export class MapSimulation3D extends PlayerSimulation3D {
 
     protected _createPortalConfig(portalTag: string) {
         if (portalTag === MAP_PORTAL) {
-            return new MapPortalConfig(portalTag, this.simulation);
+            return new MapPortalConfig(portalTag, this.simulation, this.grid3D);
         } else {
             return super._createPortalConfig(portalTag);
         }
