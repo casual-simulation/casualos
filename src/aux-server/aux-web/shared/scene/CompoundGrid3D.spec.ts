@@ -18,8 +18,8 @@ describe('CompoundGrid3D', () => {
             compoundGrid.grids.push(grid1, grid2);
 
             const ray = new Ray(new Vector3(0, 10, 0), new Vector3(0, -1, 0));
-            const actual = compoundGrid.getTileFromRay(ray);
-            const expected = grid2.getTileFromRay(ray);
+            const actual = compoundGrid.getTileFromRay(ray, true);
+            const expected = grid2.getTileFromRay(ray, true);
 
             expect(actual.tileCoordinate).toEqual(expected.tileCoordinate);
             expect(actual.center).toEqual(expected.center);
@@ -42,8 +42,8 @@ describe('CompoundGrid3D', () => {
             compoundGrid.grids.push(grid1, grid2);
 
             const ray = new Ray(new Vector3(0, 10, 0), new Vector3(0, -1, 0));
-            const actual = compoundGrid.getTileFromRay(ray);
-            const expected = grid1.getTileFromRay(ray);
+            const actual = compoundGrid.getTileFromRay(ray, true);
+            const expected = grid1.getTileFromRay(ray, true);
 
             expect(actual.tileCoordinate).toEqual(expected.tileCoordinate);
             expect(actual.center).toEqual(expected.center);
@@ -54,7 +54,7 @@ describe('CompoundGrid3D', () => {
         it('should return null if there is no grid', () => {
             const compoundGrid = new CompoundGrid3D();
             const ray = new Ray(new Vector3(0, 10, 0), new Vector3(0, -1, 0));
-            const actual = compoundGrid.getTileFromRay(ray);
+            const actual = compoundGrid.getTileFromRay(ray, true);
 
             expect(actual).toBe(null);
         });

@@ -766,7 +766,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         grid3D: Grid3D,
         inputRay: Ray
     ) {
-        const gridTile = grid3D.getTileFromRay(inputRay);
+        const gridTile = grid3D.getTileFromRay(inputRay, true);
         if (gridTile) {
             // Update the next context
             const nextContext = this._calculateNextDimension(gridTile.grid);

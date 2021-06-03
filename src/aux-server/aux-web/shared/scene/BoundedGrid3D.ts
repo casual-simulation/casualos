@@ -206,7 +206,7 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
      * Will return null if the ray does not interesect with the grid.
      * @param ray The ray to test.
      */
-    getTileFromRay(ray: Ray, roundToWholeNumber: boolean = true): GridTile {
+    getTileFromRay(ray: Ray, roundToWholeNumber: boolean): GridTile {
         let planeHit = Physics.pointOnPlane(ray, this.plane);
 
         if (planeHit) {

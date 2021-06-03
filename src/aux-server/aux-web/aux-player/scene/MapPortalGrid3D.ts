@@ -9,6 +9,16 @@ import {
 import { SpatialReference, ExternalRenderers } from '../MapUtils';
 
 /**
+ * The number of meters in a single degree of latitude.
+ */
+const METERS_PER_DEGREE_OF_LAT = 111000;
+
+/**
+ * The number of meters in a single degree of longitude.
+ */
+const METERS_PER_DEGREE_OF_LON = 111321;
+
+/**
  * Defines a class that implements a 3D grid for the map portal.
  */
 export class MapPortalGrid3D implements Grid3D {
@@ -88,7 +98,7 @@ export class MapPortalGrid3D implements Grid3D {
         // return null;
     }
 
-    getTileFromRay(ray: Ray, roundToWholeNumber?: boolean): GridTile {
+    getTileFromRay(ray: Ray, roundToWholeNumber: boolean): GridTile {
         const pos = this.getPointFromRay(ray);
         if (pos) {
             return this.getTileFromPosition(pos, roundToWholeNumber);
@@ -125,17 +135,24 @@ export class MapPortalGrid3D implements Grid3D {
     ): GridTile {
         const localPos = position.clone();
 
+        // 10 meter grid spaces
+        const lonScale = METERS_PER_DEGREE_OF_LON / 10;
+
         // Snap position to a grid center.
-        let tileX = snapToTileCoord(
-            localPos.x,
-            roundToWholeNumber,
-            this.tileScale
-        );
-        let tileY = snapToTileCoord(
-            localPos.z,
-            roundToWholeNumber,
-            this.tileScale
-        );
+        let tileX =
+            snapToTileCoord(
+                localPos.x * lonScale,
+                roundToWholeNumber,
+                this.tileScale
+            ) / lonScale;
+
+        const latScale = METERS_PER_DEGREE_OF_LAT / 10;
+        let tileY =
+            snapToTileCoord(
+                localPos.z * latScale,
+                roundToWholeNumber,
+                this.tileScale
+            ) / latScale;
 
         // if (
         //     tileX < this.minX ||

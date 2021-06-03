@@ -110,7 +110,7 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
                 }
 
                 // Get grid tile that intersects with input ray.
-                const gridTile = sim3D.grid3D.getTileFromRay(inputRay);
+                const gridTile = sim3D.grid3D.getTileFromRay(inputRay, true);
 
                 let position: any = {
                     x: Infinity,
