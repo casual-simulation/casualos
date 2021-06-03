@@ -439,7 +439,7 @@ export function calculateObjectPositionInGrid(
     coordinateTransform: Matrix4
 ): Vector3 {
     if (coordinateTransform) {
-        const pos = new Vector3(position.x, position.y, position.z);
+        const pos = new Vector3();
         pos.applyMatrix4(coordinateTransform);
         return pos;
     }
