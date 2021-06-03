@@ -1136,6 +1136,9 @@ export class PlayerGame extends Game {
                     camera.projectionMatrix.fromArray(
                         contextCam.projectionMatrix
                     );
+                    camera.projectionMatrixInverse
+                        .copy(camera.projectionMatrix)
+                        .invert();
                     camera.near = contextCam.near;
                     camera.far = contextCam.far;
                     camera.updateMatrixWorld(true);
