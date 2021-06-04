@@ -56,6 +56,12 @@ export abstract class Simulation3D
      */
     protected _game: Game;
 
+    private _coordinateTransformer: (pos: {
+        x: number;
+        y: number;
+        z: number;
+    }) => Matrix4;
+
     closed: boolean;
 
     /**
@@ -67,11 +73,20 @@ export abstract class Simulation3D
      * The function that should be used to transform 3D coordinates from AUX space to the target coordinate system.
      * Returns a matrix that represents the transformation from the given position and identity rotation to the target coordinate system.
      */
-    coordinateTransformer: (pos: {
+    get coordinateTransformer(): (pos: {
         x: number;
         y: number;
         z: number;
-    }) => Matrix4;
+    }) => Matrix4 {
+        return this._coordinateTransformer;
+    }
+
+    set coordinateTransformer(
+        value: (pos: { x: number; y: number; z: number }) => Matrix4
+    ) {
+        this._coordinateTransformer = value;
+        this.ensureUpdate(this.bots.map((b) => b.bot.id));
+    }
 
     /**
      * Gets an observable that resolves whenever a dimension group is added.
