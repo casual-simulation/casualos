@@ -2172,7 +2172,9 @@ It should be an object with the following properties:
 let options: {
     /*
     * The zoom value to use.
-    * Possible values are between `0` and `80`. `1` is the default.
+    * For the page and mini portals, possible values are between `0` and `80`. `1` is the default.
+    * For the map portal, this is the scale that the focused point should appear at.
+    * For example, 24000 would indicate that the scale is 1:24,000.
     * If no value is specified, then the zoom will remain at its current value.
     */
     zoom?: number;
@@ -2276,6 +2278,17 @@ await os.focusOn({
 ```typescript
 await os.focusOn(thisBot, {
     portal: 'menu'
+});
+```
+
+6. Focus on Buckingham Palace in the map portal
+```typescript
+await os.focusOn({
+    x: -0.141329,
+    y: 51.501541
+}, {
+    portal: 'map',
+    zoom: 10000
 });
 ```
 
