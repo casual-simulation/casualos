@@ -1,3 +1,4 @@
+import type EsriConfig from 'esri/config';
 import type EsriSceneView from 'esri/views/SceneView';
 import type EsriExternalRenderers from 'esri/views/3d/externalRenderers';
 import type EsriSpatialReference from 'esri/geometry/SpatialReference';
@@ -12,6 +13,7 @@ let ExternalRenderers: typeof EsriExternalRenderers;
 let SpatialReference: typeof EsriSpatialReference;
 let WebMercatorUtils: typeof EsriWebMercatorUtils;
 let Basemap: typeof EsriBasemap;
+let Config: typeof EsriConfig;
 let mapLibrariesLoaded = false;
 
 export async function loadMapModules() {
@@ -19,6 +21,7 @@ export async function loadMapModules() {
         return;
     }
     const [
+        config,
         map,
         basemap,
         sceneView,
@@ -26,6 +29,7 @@ export async function loadMapModules() {
         spatialReference,
         webMercatorUtils,
     ] = await (loadEsriModules([
+        'esri/config',
         'esri/Map',
         'esri/Basemap',
         'esri/views/SceneView',
@@ -34,6 +38,7 @@ export async function loadMapModules() {
         'esri/geometry/support/webMercatorUtils',
     ]) as Promise<
         [
+            typeof EsriConfig,
             typeof EsriMap,
             typeof EsriBasemap,
             typeof EsriSceneView,
@@ -43,6 +48,7 @@ export async function loadMapModules() {
         ]
     >);
     mapLibrariesLoaded = true;
+    Config = config;
     GeoMap = map;
     Basemap = basemap;
     SceneView = sceneView;
@@ -52,6 +58,7 @@ export async function loadMapModules() {
 }
 
 export {
+    Config,
     GeoMap,
     Basemap,
     SceneView,

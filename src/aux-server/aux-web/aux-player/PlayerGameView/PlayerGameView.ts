@@ -23,6 +23,7 @@ import type EsriMap from 'esri/Map';
 import type EsriWebMercatorUtils from 'esri/geometry/support/webMercatorUtils';
 import { loadModules as loadEsriModules } from 'esri-loader';
 import {
+    Config,
     ExternalRenderers,
     GeoMap,
     loadMapModules,
@@ -235,6 +236,10 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         await loadMapModules();
 
         console.log('[PlayerGameView] Enable Map');
+        if (hasValue(appManager.config.arcGisApiKey)) {
+            Config.apiKey = appManager.config.arcGisApiKey;
+        }
+
         const map = new GeoMap({
             basemap: DEFAULT_MAP_PORTAL_BASEMAP,
         });

@@ -48,4 +48,9 @@ export interface WebConfig {
      * The URL that should be used to bootstrap AB1.
      */
     ab1BootstrapURL?: string;
+
+    /**
+     * The API key that should be used for the ArcGIS mapping API.
+     */
+    arcGisApiKey?: string;
 }

@@ -13,6 +13,7 @@ const webConfig = {
     vmOrigin: process.env.VM_ORIGIN || null,
     disableCollaboration: process.env.DISABLE_COLLABORATION === 'true',
     ab1BootstrapURL: process.env.AB1_BOOTSTRAP_URL || null,
+    arcGisApiKey: process.env.ARC_GIS_API_KEY || null,
 };
 
 // Creates /tmp/a/apple, regardless of whether `/tmp` and /tmp/a exist.
