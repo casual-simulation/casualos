@@ -18,6 +18,8 @@ import {
     DEFAULT_WORKSPACE_GRID_SCALE,
     BotCursorType,
     getPortalTag,
+    asyncResult,
+    asyncError,
 } from '@casual-simulation/aux-common';
 import {
     CameraRig,
@@ -45,6 +47,7 @@ import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { AuxBot3D } from './AuxBot3D';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { convertCasualOSPositionToThreePosition } from './grid/Grid';
+import { FocusCameraRigOnOperation } from '../interaction/FocusCameraRigOnOperation';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -446,21 +449,38 @@ export abstract class Game {
         // Cancel the operations for the same camera rig
         this.interaction.clearOperations(
             (op) =>
-                op instanceof TweenCameraToOperation &&
+                (op instanceof TweenCameraToOperation ||
+                    op instanceof FocusCameraRigOnOperation) &&
                 op.cameraRig === cameraRig
         );
-        this.interaction.addOperation(
-            new TweenCameraToOperation(
-                cameraRig,
-                this.time,
-                this.interaction,
-                position,
-                options,
-                simulation,
-                taskId
-            ),
-            false
-        );
+
+        if (cameraRig.cancelFocus && cameraRig.focusOnPosition) {
+            this.interaction.addOperation(
+                new FocusCameraRigOnOperation(
+                    cameraRig,
+                    this.time,
+                    this.interaction,
+                    position,
+                    options,
+                    simulation,
+                    taskId
+                ),
+                false
+            );
+        } else {
+            this.interaction.addOperation(
+                new TweenCameraToOperation(
+                    cameraRig,
+                    this.time,
+                    this.interaction,
+                    position,
+                    options,
+                    simulation,
+                    taskId
+                ),
+                false
+            );
+        }
     }
 
     /**
@@ -475,19 +495,45 @@ export abstract class Game {
         zoomValue?: number,
         rotationValue?: Vector2
     ) {
-        this.interaction.clearOperationsOfType(TweenCameraToOperation);
-        this.interaction.addOperation(
-            new TweenCameraToOperation(
-                cameraRig,
-                this.time,
-                this.interaction,
-                position,
-                { zoom: zoomValue, rotation: rotationValue, duration: 0 },
-                null,
-                null
-            ),
-            false
+        // Cancel the operations for the same camera rig
+        this.interaction.clearOperations(
+            (op) =>
+                (op instanceof TweenCameraToOperation ||
+                    op instanceof FocusCameraRigOnOperation) &&
+                op.cameraRig === cameraRig
         );
+        const options = {
+            zoom: zoomValue,
+            rotation: rotationValue,
+            duration: 0,
+        };
+        if (cameraRig.cancelFocus && cameraRig.focusOnPosition) {
+            this.interaction.addOperation(
+                new FocusCameraRigOnOperation(
+                    cameraRig,
+                    this.time,
+                    this.interaction,
+                    position,
+                    options,
+                    null,
+                    null
+                ),
+                false
+            );
+        } else {
+            this.interaction.addOperation(
+                new TweenCameraToOperation(
+                    cameraRig,
+                    this.time,
+                    this.interaction,
+                    position,
+                    options,
+                    null,
+                    null
+                ),
+                false
+            );
+        }
     }
 
     /**

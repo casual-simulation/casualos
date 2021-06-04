@@ -2,6 +2,7 @@ import { Game } from '../../shared/scene/Game';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import {
     CameraRig,
+    CameraType,
     createCameraRig,
     resizeCameraRig,
 } from '../../shared/scene/CameraRigFactory';
@@ -53,6 +54,9 @@ import {
     getPortalTag,
     DEFAULT_MAP_PORTAL_VISIBLE,
     DEFAULT_MAP_PORTAL_BASEMAP,
+    Easing,
+    getEasing,
+    getDefaultEasing,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -76,6 +80,7 @@ import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOp
 import { Input, MouseButtonId } from '../../shared/scene/Input';
 import { MapSimulation3D } from './MapSimulation3D';
 import { CoordinateSystem } from '../../shared/scene/CoordinateSystem';
+import { ExternalRenderers, SpatialReference } from '../MapUtils';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -603,26 +608,41 @@ export class PlayerGame extends Game {
                 } else if (e.type === 'focus_on') {
                     this.tweenCameraToBot(e);
                 } else if (e.type === 'focus_on_position') {
-                    const gridScale = playerSim3D.getDefaultGridScale();
-                    const convertedPosition = new Vector3(
-                        e.position.x * gridScale,
-                        0,
-                        e.position.y * -gridScale
-                    );
-
                     const targetPortal = hasValue(e.portal)
                         ? getPortalTag(e.portal)
                         : null;
-                    const cameraRig =
-                        !hasValue(targetPortal) || targetPortal === 'pagePortal'
-                            ? playerSim3D.getMainCameraRig()
-                            : miniPortalSim3D.getMainCameraRig();
+                    const sim =
+                        !hasValue(targetPortal) || targetPortal === 'mapPortal'
+                            ? mapPortalSim3D
+                            : targetPortal === 'miniPortal'
+                            ? miniPortalSim3D
+                            : playerSim3D;
+
+                    let convertedPosition = new Vector3();
+
+                    if (sim.coordinateTransformer) {
+                        const matrix = sim.coordinateTransformer({
+                            x: e.position.x,
+                            y: e.position.y,
+                            z: 0,
+                        });
+                        convertedPosition.setFromMatrixPosition(matrix);
+                    } else {
+                        const gridScale = sim.getDefaultGridScale();
+                        convertedPosition.set(
+                            e.position.x * gridScale,
+                            0,
+                            e.position.y * -gridScale
+                        );
+                    }
+
+                    const cameraRig = sim.getMainCameraRig();
 
                     this.tweenCameraToPosition(
                         cameraRig,
                         convertedPosition,
                         e,
-                        sim,
+                        sim.simulation,
                         e.taskId
                     );
                 } else if (e.type === 'cancel_animation') {
@@ -929,7 +949,7 @@ export class PlayerGame extends Game {
         this.mapScene.autoUpdate = false;
 
         // mini portal camera.
-        this.mapCameraRig = createCameraRig(
+        this.mapCameraRig = this._createMapCameraRig(
             'mapPortal',
             'perspective',
             this.mapScene,
@@ -1484,7 +1504,103 @@ export class PlayerGame extends Game {
             }
         }
     }
+
+    /**
+     * Creates a camera rig that is specialized for ArcGIS camera controls.
+     * @param name The name of the camera rig.
+     * @param type The type of the camera.
+     * @param scene The scene the camera should be added to.
+     * @param viewport The viewport that the camera rig uses.
+     * @returns
+     */
+    private _createMapCameraRig(
+        name: string,
+        type: CameraType,
+        scene: Scene,
+        viewport: Viewport
+    ): CameraRig {
+        const rig = createCameraRig(name, type, scene, viewport);
+
+        let currentOperations = [] as AbortController[];
+
+        rig.cancelFocus = () => {
+            let ops = currentOperations;
+            currentOperations = [];
+            for (let op of ops) {
+                op.abort();
+            }
+        };
+        rig.focusOnPosition = (position, options) => {
+            const mapView = this.gameView.getMapView();
+            if (mapView) {
+                const instant = options.duration <= 0;
+                const [lon, lat] = ExternalRenderers.fromRenderCoordinates(
+                    mapView,
+                    [position.x, position.y, position.z],
+                    0,
+                    [0, 0, 0],
+                    0,
+                    SpatialReference.WGS84,
+                    1
+                );
+
+                let target: any = {
+                    center: [lon, lat],
+                };
+
+                if (hasValue(options.zoom)) {
+                    target.scale = options.zoom;
+                }
+
+                const controller = new AbortController();
+                currentOperations.push(controller);
+
+                let goToOptions: any = {
+                    animate: !instant,
+                    signal: controller.signal,
+                };
+
+                if (hasValue(options.duration)) {
+                    goToOptions.duration = options.duration * 1000;
+                }
+
+                if (hasValue(options.easing)) {
+                    goToOptions.easing = esriEasing(
+                        getDefaultEasing(options.easing)
+                    );
+                }
+
+                return mapView.goTo(target, goToOptions);
+            }
+        };
+
+        return rig;
+    }
 }
 function createFocusPointSphere(): Mesh {
     return createSphere(new Vector3(), 0x4ebdbf, 0.05);
+}
+
+function esriEasing(easing: Easing): string {
+    if (easing.type === 'linear') {
+        return 'linear';
+    } else if (easing.type === 'cubic') {
+        if (easing.mode === 'in') {
+            return 'in-cubic';
+        } else if (easing.mode === 'out') {
+            return 'out-cubic';
+        } else if (easing.mode === 'inout') {
+            return 'in-out-cubic';
+        }
+    } else if (easing.type === 'exponential') {
+        if (easing.mode === 'in') {
+            return 'in-expo';
+        } else if (easing.mode === 'out') {
+            return 'out-expo';
+        } else if (easing.mode === 'inout') {
+            return 'in-out-expo';
+        }
+    }
+
+    return null;
 }
