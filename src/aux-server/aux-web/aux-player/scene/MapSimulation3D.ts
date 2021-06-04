@@ -16,6 +16,8 @@ import {
     Bot,
     MINI_PORTAL,
     MAP_PORTAL,
+    DEFAULT_MAP_PORTAL_SCALE,
+    DEFAULT_MAP_PORTAL_GRID_SCALE,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import {
@@ -184,7 +186,15 @@ export class MapSimulation3D extends PlayerSimulation3D {
 
     constructor(game: Game, simulation: BrowserSimulation) {
         super(MAP_PORTAL, game, simulation);
-        this._mapGrid = new MapPortalGrid3D(this);
+        this._mapGrid = new MapPortalGrid3D(
+            this,
+            calculateGridScale(
+                null,
+                null,
+                DEFAULT_MAP_PORTAL_SCALE,
+                DEFAULT_MAP_PORTAL_GRID_SCALE
+            )
+        );
     }
 
     getMainCameraRig(): CameraRig {

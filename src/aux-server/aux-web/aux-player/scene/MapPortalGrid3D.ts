@@ -1,5 +1,11 @@
 import { Grid3D, GridTile } from '../../shared/scene/Grid3D';
-import { Ray, Sphere, Vector2, Vector3 } from '@casual-simulation/three';
+import {
+    MathUtils,
+    Ray,
+    Sphere,
+    Vector2,
+    Vector3,
+} from '@casual-simulation/three';
 import { MapSimulation3D } from './MapSimulation3D';
 import { Input } from '../../shared/scene/Input';
 import {
@@ -13,10 +19,8 @@ import { SpatialReference, ExternalRenderers } from '../MapUtils';
  */
 const METERS_PER_DEGREE_OF_LAT = 111000;
 
-/**
- * The number of meters in a single degree of longitude.
- */
-const METERS_PER_DEGREE_OF_LON = 111321;
+// See https://developers.arcgis.com/javascript/latest/api-reference/esri-views-3d-externalRenderers.html#
+const EARTH_RADIUS = 6378137;
 
 /**
  * Defines a class that implements a 3D grid for the map portal.
@@ -49,11 +53,10 @@ export class MapPortalGrid3D implements Grid3D {
         return this._mapSimulation.mapView;
     }
 
-    constructor(mapSimulation: MapSimulation3D) {
+    constructor(mapSimulation: MapSimulation3D, tileScale?: number) {
         this._mapSimulation = mapSimulation;
-
-        // See https://developers.arcgis.com/javascript/latest/api-reference/esri-views-3d-externalRenderers.html#
-        this._globe = new Sphere(new Vector3(), 6378137);
+        this._globe = new Sphere(new Vector3(), EARTH_RADIUS);
+        this._tileScale = tileScale ?? 1;
     }
 
     getPointFromRay(ray: Ray): Vector3 {
@@ -108,20 +111,12 @@ export class MapPortalGrid3D implements Grid3D {
     }
 
     getGridPosition(position: { x: number; y: number; z: number }): Vector3 {
-        const result = new Vector3(
-            position.x,
-            position.y,
-            position.z
-        ).divideScalar(this.tileScale);
+        const result = new Vector3(position.x, position.y, position.z);
         return new Vector3(result.x, -result.z, result.y);
     }
 
     getWorldPosition(position: { x: number; y: number; z: number }): Vector3 {
-        const result = new Vector3(
-            position.x,
-            position.z,
-            -position.y
-        ).multiplyScalar(this.tileScale);
+        const result = new Vector3(position.x, position.z, -position.y);
         return result;
     }
 
@@ -135,24 +130,25 @@ export class MapPortalGrid3D implements Grid3D {
     ): GridTile {
         const localPos = position.clone();
 
+        const latScale = METERS_PER_DEGREE_OF_LAT / this.tileScale;
+        let tileY =
+            snapToTileCoord(localPos.z * latScale, roundToWholeNumber, 1) /
+            latScale;
+
         // 10 meter grid spaces
-        const lonScale = METERS_PER_DEGREE_OF_LON / 10;
+        // Because the earth is a sphere(ish), we need to calculate the circumference
+        // at the specific latitude so that our spacing can be correct.
+        // We do this calculation at the rounded latitude so that they match up when rounding
+        const radiusAtLatitude =
+            EARTH_RADIUS * Math.cos(MathUtils.DEG2RAD * tileY);
+        const circumferenceAtLatitude = 2 * Math.PI * radiusAtLatitude;
+        const metersPerDegreeOfLongitude = circumferenceAtLatitude / 360;
+        const lonScale = metersPerDegreeOfLongitude / this.tileScale;
 
         // Snap position to a grid center.
         let tileX =
-            snapToTileCoord(
-                localPos.x * lonScale,
-                roundToWholeNumber,
-                this.tileScale
-            ) / lonScale;
-
-        const latScale = METERS_PER_DEGREE_OF_LAT / 10;
-        let tileY =
-            snapToTileCoord(
-                localPos.z * latScale,
-                roundToWholeNumber,
-                this.tileScale
-            ) / latScale;
+            snapToTileCoord(localPos.x * lonScale, roundToWholeNumber, 1) /
+            lonScale;
 
         // if (
         //     tileX < this.minX ||
@@ -163,7 +159,7 @@ export class MapPortalGrid3D implements Grid3D {
         //     return null;
         // }
 
-        let tilePoints = calculateGridTilePoints(tileX, tileY, this.tileScale);
+        let tilePoints = calculateGridTilePoints(tileX, tileY, 1);
 
         let tile: GridTile = {
             center: tilePoints.center,
