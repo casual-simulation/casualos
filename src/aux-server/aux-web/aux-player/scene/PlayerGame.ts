@@ -52,6 +52,7 @@ import {
     BotCursorType,
     getPortalTag,
     DEFAULT_MAP_PORTAL_VISIBLE,
+    DEFAULT_MAP_PORTAL_BASEMAP,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -374,6 +375,14 @@ export class PlayerGame extends Game {
             this.mapSimulations,
             'hasDimension',
             DEFAULT_MAP_PORTAL_VISIBLE
+        );
+    }
+
+    getMapPortalBasemap(): string {
+        return this._getSimulationValue(
+            this.mapSimulations,
+            'basemap',
+            DEFAULT_MAP_PORTAL_BASEMAP
         );
     }
 
@@ -1079,6 +1088,18 @@ export class PlayerGame extends Game {
     }
 
     private _updateMapPortal() {
+        this._updateMapPortalVisibility();
+        this._updateMapPortalBasemap();
+    }
+
+    private _updateMapPortalBasemap() {
+        const view = this.gameView.getMapView();
+        if (view) {
+            this.gameView.setBasemap(this.getMapPortalBasemap());
+        }
+    }
+
+    private _updateMapPortalVisibility() {
         const visible = this.getMapPortalVisible();
         if (this.mapPortalVisible == visible) {
             return;

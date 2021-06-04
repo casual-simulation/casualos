@@ -12,7 +12,10 @@ import { DimensionItem } from '../DimensionItem';
 import { MenuPortal } from '../MenuPortal';
 import { appManager } from '../../shared/AppManager';
 import CircleWipe from '../../shared/vue-components/CircleWipe/CircleWipe';
-import { hasValue } from '@casual-simulation/aux-common';
+import {
+    DEFAULT_MAP_PORTAL_BASEMAP,
+    hasValue,
+} from '@casual-simulation/aux-common';
 import type EsriSceneView from 'esri/views/SceneView';
 import type EsriExternalRenderers from 'esri/views/3d/externalRenderers';
 import type EsriSpatialReference from 'esri/geometry/SpatialReference';
@@ -26,6 +29,7 @@ import {
     SceneView,
     SpatialReference,
     WebMercatorUtils,
+    Basemap,
 } from '../MapUtils';
 import { Matrix4 } from '@casual-simulation/three';
 
@@ -100,6 +104,17 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
     getWebMercatorUtils() {
         return WebMercatorUtils;
+    }
+
+    setBasemap(basemapId: string) {
+        if (this._mapView) {
+            const basemap = Basemap.fromId(basemapId);
+            if (basemap && this._mapView) {
+                if (this._mapView.map.basemap.id !== basemap.id) {
+                    this._mapView.map.basemap = basemap;
+                }
+            }
+        }
     }
 
     moveTouch(e: TouchEvent) {
@@ -221,7 +236,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
         console.log('[PlayerGameView] Enable Map');
         const map = new GeoMap({
-            basemap: 'hybrid',
+            basemap: DEFAULT_MAP_PORTAL_BASEMAP,
         });
 
         this._mapView = new SceneView({

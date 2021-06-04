@@ -14,6 +14,8 @@ import {
     DEFAULT_MINI_PORTAL_HEIGHT,
     DEFAULT_MAP_PORTAL_GRID_SCALE,
     DEFAULT_MAP_PORTAL_SCALE,
+    DEFAULT_MAP_PORTAL_BASEMAP,
+    calculateStringTagValue,
 } from '@casual-simulation/aux-common';
 import { Color } from '@casual-simulation/three';
 import {
@@ -29,6 +31,12 @@ import { TileableGrid3D } from '../../shared/scene/Grid3D';
  * Defines a class that is able to watch dimension confic bots and update values.
  */
 export class MapPortalConfig extends PortalConfig {
+    private _basemap: string;
+
+    get basemap() {
+        return this._basemap ?? DEFAULT_MAP_PORTAL_BASEMAP;
+    }
+
     constructor(
         portalTag: string,
         simulation: BrowserSimulation,
@@ -40,6 +48,7 @@ export class MapPortalConfig extends PortalConfig {
 
     protected _clearPortalValues() {
         super._clearPortalValues();
+        this._basemap = null;
     }
 
     protected _updatePortalValues(
@@ -53,6 +62,12 @@ export class MapPortalConfig extends PortalConfig {
             bot,
             DEFAULT_MAP_PORTAL_SCALE,
             DEFAULT_MAP_PORTAL_GRID_SCALE
+        );
+        this._basemap = calculateStringTagValue(
+            calc,
+            bot,
+            'auxMapPortalBasemap',
+            null
         );
     }
 

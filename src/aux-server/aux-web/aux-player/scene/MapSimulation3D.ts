@@ -178,6 +178,10 @@ export class MapSimulation3D extends PlayerSimulation3D {
         return this._mapGrid;
     }
 
+    get basemap() {
+        return this.mapConfig.basemap;
+    }
+
     constructor(game: Game, simulation: BrowserSimulation) {
         super(MAP_PORTAL, game, simulation);
         this._mapGrid = new MapPortalGrid3D(this);
