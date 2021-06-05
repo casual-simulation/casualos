@@ -20,7 +20,7 @@ export class ScaleDecorator extends AuxBot3DDecoratorBase {
 
         const scale = calculateScale(calc, this.bot3D.bot, gridScale);
         if (this.bot3D.targetCoordinateSystem === CoordinateSystem.Z_UP) {
-            this.bot3D.scaleContainer.scale.set(scale.x, scale.z, scale.y);
+            this.bot3D.scaleContainer.scale.set(scale.x, scale.y, scale.z);
         } else {
             this.bot3D.scaleContainer.scale.set(scale.x, scale.y, scale.z);
         }

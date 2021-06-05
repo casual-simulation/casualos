@@ -5,6 +5,7 @@ import type EsriSpatialReference from 'esri/geometry/SpatialReference';
 import type EsriMap from 'esri/Map';
 import type EsriBasemap from 'esri/Basemap';
 import type EsriWebMercatorUtils from 'esri/geometry/support/webMercatorUtils';
+import type EsriProjection from 'esri/geometry/projection';
 import { loadModules as loadEsriModules } from 'esri-loader';
 
 let GeoMap: typeof EsriMap;
@@ -14,6 +15,7 @@ let SpatialReference: typeof EsriSpatialReference;
 let WebMercatorUtils: typeof EsriWebMercatorUtils;
 let Basemap: typeof EsriBasemap;
 let Config: typeof EsriConfig;
+let Projection: typeof EsriProjection;
 let mapLibrariesLoaded = false;
 
 export async function loadMapModules() {
@@ -28,6 +30,7 @@ export async function loadMapModules() {
         externalRenderers,
         spatialReference,
         webMercatorUtils,
+        projection,
     ] = await (loadEsriModules([
         'esri/config',
         'esri/Map',
@@ -36,6 +39,7 @@ export async function loadMapModules() {
         'esri/views/3d/externalRenderers',
         'esri/geometry/SpatialReference',
         'esri/geometry/support/webMercatorUtils',
+        'esri/geometry/projection',
     ]) as Promise<
         [
             typeof EsriConfig,
@@ -44,7 +48,8 @@ export async function loadMapModules() {
             typeof EsriSceneView,
             typeof EsriExternalRenderers,
             typeof EsriSpatialReference,
-            typeof EsriWebMercatorUtils
+            typeof EsriWebMercatorUtils,
+            typeof EsriProjection
         ]
     >);
     mapLibrariesLoaded = true;
@@ -55,6 +60,7 @@ export async function loadMapModules() {
     ExternalRenderers = externalRenderers;
     SpatialReference = spatialReference;
     WebMercatorUtils = webMercatorUtils;
+    Projection = projection;
 }
 
 export {
@@ -66,4 +72,5 @@ export {
     WebMercatorUtils,
     mapLibrariesLoaded,
     ExternalRenderers,
+    Projection,
 };

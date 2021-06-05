@@ -499,6 +499,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 globalGridScale
             );
 
+            // if (!snapPointTarget.inverseCoordinateTransformer) {
             // 4.
             if (snapPointTarget.isOnGrid) {
                 // 5.
@@ -512,6 +513,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 // 7.
                 targetMatrix.multiply(gridScaleMatrix);
             }
+            // }
 
             // 8.
             const snapPointWorld = snapPointTarget.container.matrixWorld.clone();
@@ -525,8 +527,10 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             // 10.
             targetMatrix.premultiply(dimensionMatrix);
 
-            // 11.
-            targetMatrix.premultiply(gridScaleMatrix);
+            if (!snapPointTarget.inverseCoordinateTransformer) {
+                // 11.
+                targetMatrix.premultiply(gridScaleMatrix);
+            }
 
             // 12.
             const position = new Vector3();
@@ -535,35 +539,80 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
             targetMatrix.decompose(position, rotation, worldScale);
 
-            const auxPosition = new Matrix4().makeTranslation(
-                position.x,
-                -position.z,
-                position.y
-            );
+            let auxMatrix: Matrix4;
 
-            const auxRotation = new Matrix4().makeRotationFromQuaternion(
-                rotation
-            );
-            convertRotationToAuxCoordinates(auxRotation);
+            if (!snapPointTarget.inverseCoordinateTransformer) {
+                const auxPosition = new Matrix4().makeTranslation(
+                    position.x,
+                    -position.z,
+                    position.y
+                );
 
-            const auxScale = new Matrix4().makeScale(
-                worldScale.x,
-                worldScale.z,
-                worldScale.y
-            );
+                const auxRotation = new Matrix4().makeRotationFromQuaternion(
+                    rotation
+                );
+                convertRotationToAuxCoordinates(auxRotation);
+
+                const auxScale = new Matrix4().makeScale(
+                    worldScale.x,
+                    worldScale.z,
+                    worldScale.y
+                );
+
+                auxMatrix = new Matrix4()
+                    .multiply(auxPosition)
+                    .multiply(auxRotation)
+                    .multiply(auxScale);
+            } else {
+                auxMatrix = snapPointTarget.inverseCoordinateTransformer(
+                    position
+                );
+
+                const auxPosition = new Vector3();
+                const auxRotation = new Quaternion();
+                const auxScale = new Vector3();
+                auxMatrix.decompose(auxPosition, auxRotation, auxScale);
+
+                auxPosition.add(position);
+                rotation.invert();
+                auxRotation.premultiply(rotation);
+
+                const adjustment = new Quaternion().setFromAxisAngle(
+                    new Vector3(1, 0, 0),
+                    Math.PI / 2
+                );
+
+                auxRotation.premultiply(adjustment);
+
+                auxScale.multiply(worldScale);
+
+                const translationMatrix = new Matrix4().makeTranslation(
+                    auxPosition.x,
+                    auxPosition.y,
+                    auxPosition.z
+                );
+                const rotationMatrix = new Matrix4().makeRotationFromQuaternion(
+                    auxRotation
+                );
+                const scaleMatrix = new Matrix4().makeScale(
+                    auxScale.x,
+                    auxScale.y,
+                    auxScale.z
+                );
+
+                auxMatrix = new Matrix4()
+                    .multiply(translationMatrix)
+                    .multiply(rotationMatrix)
+                    .multiply(scaleMatrix);
+            }
 
             const nextContext = snapPointTarget.dimension;
-
             this._updateCurrentDimension(nextContext);
 
             // update the grid offset for the current bot
             this._updateGridOffset(calc);
 
-            const auxMatrix = new Matrix4()
-                .multiply(auxPosition)
-                .multiply(auxRotation)
-                .multiply(auxScale)
-                .premultiply(this._gridOffset);
+            auxMatrix.premultiply(this._gridOffset);
 
             const finalPosition = new Vector3();
             const finalRotation = new Quaternion();

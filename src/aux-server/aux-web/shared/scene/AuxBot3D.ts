@@ -165,6 +165,21 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
     }
 
     /**
+     * A matrix that should be used to transform the bot's position from world coordinates to AUX coordinates.
+     */
+    get inverseCoordinateTransformer(): (pos: {
+        x: number;
+        y: number;
+        z: number;
+    }) => Matrix4 {
+        const sim = this.dimensionGroup?.simulation3D;
+        if (sim.inverseCoordinateTransformer) {
+            return sim.inverseCoordinateTransformer;
+        }
+        return null;
+    }
+
+    /**
      * Calculates the grid scale that this bot would have if it was on the grid.
      * @returns
      */

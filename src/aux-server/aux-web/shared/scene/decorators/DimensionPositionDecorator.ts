@@ -101,19 +101,19 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
         // Update the offset for the display container
         // so that it rotates around the specified
         // point
-        if (this.bot3D.targetCoordinateSystem === CoordinateSystem.Y_UP) {
-            this.bot3D.display.position.set(
-                anchorPointOffset.x,
-                anchorPointOffset.z,
-                anchorPointOffset.y
-            );
-        } else {
-            this.bot3D.display.position.set(
-                anchorPointOffset.x,
-                anchorPointOffset.y,
-                anchorPointOffset.z
-            );
-        }
+        // if (this.bot3D.targetCoordinateSystem === CoordinateSystem.Y_UP) {
+        this.bot3D.display.position.set(
+            anchorPointOffset.x,
+            anchorPointOffset.z,
+            anchorPointOffset.y
+        );
+        // } else {
+        // this.bot3D.display.position.set(
+        //     anchorPointOffset.x,
+        //     anchorPointOffset.y,
+        //     anchorPointOffset.z
+        // );
+        // }
 
         // The transform container gets the same position as the display but
         // with the anchor point multiplied by 2.
@@ -199,13 +199,15 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                                 this._nextRot.z
                             )
                         );
-                        rot.premultiply(coordinateTransform);
-                        const q = new Quaternion().setFromRotationMatrix(rot);
+                        const adjustment = new Matrix4().makeRotationAxis(
+                            new Vector3(1, 0, 0),
+                            Math.PI / 2
+                        );
 
-                        // const adjustment = new Quaternion().setFromAxisAngle(
-                        //     new Vector3(1, 0, 0),
-                        //     Math.PI
-                        // );
+                        adjustment.premultiply(coordinateTransform);
+
+                        rot.premultiply(adjustment);
+                        const q = new Quaternion().setFromRotationMatrix(rot);
                         // q.multiply(adjustment);
 
                         this._rotationObj.quaternion.set(q.x, q.y, q.z, q.w);
