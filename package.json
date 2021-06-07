@@ -97,6 +97,7 @@
         "@types/compression": "1.7.0",
         "@types/dom-mediacapture-record": "1.0.7",
         "@types/arcgis-js-api": "4.19.0",
+        "@types/webpack": "5.28.0",
         "babel-loader": "^8.2.2",
         "braces": "^2.3.2",
         "chai": "^4.2.0",
