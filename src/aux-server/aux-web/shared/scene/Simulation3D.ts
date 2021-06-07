@@ -66,16 +66,6 @@ export abstract class Simulation3D
         z: number;
     }) => Matrix4;
 
-    /**
-     * Takes a position in world coordinates and produces a transformation matrix
-     * in AUX coordinates.
-     */
-    private _inverseCoordinateTransformer: (pos: {
-        x: number;
-        y: number;
-        z: number;
-    }) => Matrix4;
-
     closed: boolean;
 
     /**
@@ -100,23 +90,6 @@ export abstract class Simulation3D
     ) {
         this._coordinateTransformer = value;
         this.ensureUpdate(this.bots.map((b) => b.bot.id));
-    }
-
-    /**
-     * The function that should be used to transform 3D coordinates from world space to the AUX coordinate system.
-     */
-    get inverseCoordinateTransformer(): (pos: {
-        x: number;
-        y: number;
-        z: number;
-    }) => Matrix4 {
-        return this._inverseCoordinateTransformer;
-    }
-
-    set inverseCoordinateTransformer(
-        value: (pos: { x: number; y: number; z: number }) => Matrix4
-    ) {
-        this._inverseCoordinateTransformer = value;
     }
 
     /**

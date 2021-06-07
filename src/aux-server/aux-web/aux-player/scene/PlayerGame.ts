@@ -561,7 +561,6 @@ export class PlayerGame extends Game {
 
         const mapPortalSim3D = new MapSimulation3D(this, sim);
         mapPortalSim3D.coordinateTransformer = this.gameView.getMapCoordinateTransformer();
-        mapPortalSim3D.inverseCoordinateTransformer = this.gameView.getMapInverseCoordinateTransformer();
         mapPortalSim3D.mapView = this.gameView.getMapView();
         mapPortalSim3D.targetCoordinateSystem = CoordinateSystem.Z_UP;
         mapPortalSim3D.init();
@@ -1132,10 +1131,8 @@ export class PlayerGame extends Game {
                 setup: (context) => {
                     const view = this.gameView.getMapView();
                     const coordinateTransform = this.gameView.getMapCoordinateTransformer();
-                    const inverseCoordinateTransformer = this.gameView.getMapInverseCoordinateTransformer();
                     for (let sim of this.mapSimulations) {
                         sim.coordinateTransformer = coordinateTransform;
-                        sim.inverseCoordinateTransformer = inverseCoordinateTransformer;
                         sim.mapView = view;
                     }
 

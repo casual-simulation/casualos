@@ -66,11 +66,6 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         y: number;
         z: number;
     }) => Matrix4;
-    private _inverseCoordinateTransformer: (pos: {
-        x: number;
-        y: number;
-        z: number;
-    }) => Matrix4;
 
     constructor() {
         super();
@@ -107,16 +102,6 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
      */
     getMapCoordinateTransformer() {
         return this._coordinateTransformer;
-    }
-
-    /**
-     * Gets the matrix that should be used to transform three.js coordinates into AUX coordinates
-     * for the map view.
-     *
-     * See https://developers.arcgis.com/javascript/latest/api-reference/esri-views-3d-externalRenderers.html#renderCoordinateTransformAt
-     */
-    getMapInverseCoordinateTransformer() {
-        return this._inverseCoordinateTransformer;
     }
 
     getWebMercatorUtils() {
@@ -280,65 +265,6 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                     );
                     return matrix;
                 };
-                this._inverseCoordinateTransformer = (pos) => {
-                    const [
-                        lon,
-                        lat,
-                        elevation,
-                    ] = ExternalRenderers.fromRenderCoordinates(
-                        this._mapView,
-                        [pos.x, pos.y, pos.z],
-                        0,
-                        [0, 0, 0],
-                        0,
-                        SpatialReference.WGS84,
-                        1
-                    );
-
-                    const matrix = this._coordinateTransformer({
-                        x: lon,
-                        y: lat,
-                        z: elevation,
-                    });
-
-                    // 33179 -> 85.17 // lon
-                    const renderedPosition = new Vector3().setFromMatrixPosition(
-                        matrix
-                    );
-
-                    const offset = new Matrix4().makeTranslation(
-                        lon - renderedPosition.x * 2,
-                        lat - renderedPosition.y * 2,
-                        elevation - renderedPosition.z * 2
-                    );
-
-                    matrix.premultiply(offset);
-
-                    return matrix;
-
-                    // const matrix = new Matrix4();
-                    // console.log(Projection);
-                    // (<any>Projection).computeLinearTransformation(
-                    //     (<any>this._mapView).renderCoordsHelper.spatialReference,
-                    //     [pos.x, pos.y, pos.z],
-                    //     matrix.elements,
-                    //     SpatialReference.WGS84,
-                    // );
-                    // return matrix;
-
-                    // const matrix = new Matrix4();
-                    // ExternalRenderers.renderCoordinateTransformAt(
-                    //     this._mapView,
-                    //     coords,
-                    //     SpatialReference.WGS84,
-                    //     matrix.elements
-                    // );
-
-                    // matrix.invert();
-                    // matrix.premultiply(offset);
-                    // return matrix;
-                };
-
                 ExternalRenderers.add(this._mapView, {
                     setup: (context) => {
                         externalRenderer.setup(context);

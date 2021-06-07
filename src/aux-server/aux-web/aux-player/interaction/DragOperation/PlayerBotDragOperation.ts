@@ -54,6 +54,7 @@ import {
     SnapOptions,
 } from '../../../shared/interaction/DragOperation/SnapInterface';
 import { MapSimulation3D } from '../../scene/MapSimulation3D';
+import { ExternalRenderers, SpatialReference } from '../../MapUtils';
 
 export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -499,7 +500,6 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 globalGridScale
             );
 
-            // if (!snapPointTarget.inverseCoordinateTransformer) {
             // 4.
             if (snapPointTarget.isOnGrid) {
                 // 5.
@@ -513,7 +513,6 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 // 7.
                 targetMatrix.multiply(gridScaleMatrix);
             }
-            // }
 
             // 8.
             const snapPointWorld = snapPointTarget.container.matrixWorld.clone();
@@ -527,7 +526,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             // 10.
             targetMatrix.premultiply(dimensionMatrix);
 
-            if (!snapPointTarget.inverseCoordinateTransformer) {
+            if (!this._inMapPortal) {
                 // 11.
                 targetMatrix.premultiply(gridScaleMatrix);
             }
@@ -541,7 +540,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
             let auxMatrix: Matrix4;
 
-            if (!snapPointTarget.inverseCoordinateTransformer) {
+            if (!this._inMapPortal) {
                 const auxPosition = new Matrix4().makeTranslation(
                     position.x,
                     -position.z,
@@ -564,35 +563,87 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                     .multiply(auxRotation)
                     .multiply(auxScale);
             } else {
-                auxMatrix = snapPointTarget.inverseCoordinateTransformer(
-                    position
+                // For maps, we have to find the 3D rotation that the bot would be rendered at for the given position.
+                // then we can calculate the final rotation by doing the opposite that the DimensionPositionDecorator is doing.
+
+                // In the DimensionPositionDecorator:
+                // coordinate transform * adjustment * rot = final
+
+                // We already have the final position/rotation in targetMatrix.
+                // So to find the answer we substitude final for rot and multiply by adjustment^-1 * coordinate transform^-1
+                // e.g. coordinate transform * adjustment * adjustment^-1 * coordinate transform^-1 * final = rot
+
+                // for the position, we know that the fromRenderCoordinates() gives us the target lat and lon so we
+                // simply need to remove the transformed coordinates from the target matrix to get our final position.
+
+                const [
+                    lon,
+                    lat,
+                    elevation,
+                ] = ExternalRenderers.fromRenderCoordinates(
+                    this.game.gameView.getMapView(),
+                    [position.x, position.y, position.z],
+                    0,
+                    [0, 0, 0],
+                    0,
+                    SpatialReference.WGS84,
+                    1
                 );
+
+                const coordinateMatrix = this.game.gameView.getMapCoordinateTransformer()(
+                    {
+                        x: lon,
+                        y: lat,
+                        z: elevation,
+                    }
+                );
+
+                const renderedPosition = new Vector3().setFromMatrixPosition(
+                    coordinateMatrix
+                );
+
+                const offset = new Matrix4().makeTranslation(
+                    lon - renderedPosition.x * 2,
+                    lat - renderedPosition.y * 2,
+                    elevation - renderedPosition.z * 2
+                );
+
+                coordinateMatrix.premultiply(offset);
 
                 const auxPosition = new Vector3();
-                const auxRotation = new Quaternion();
+                const coordinateRotation = new Quaternion();
                 const auxScale = new Vector3();
-                auxMatrix.decompose(auxPosition, auxRotation, auxScale);
-
-                auxPosition.add(position);
-                rotation.invert();
-                auxRotation.premultiply(rotation);
-
-                const adjustment = new Quaternion().setFromAxisAngle(
-                    new Vector3(1, 0, 0),
-                    Math.PI / 2
+                coordinateMatrix.decompose(
+                    auxPosition,
+                    coordinateRotation,
+                    auxScale
                 );
 
-                auxRotation.premultiply(adjustment);
+                // adjustment^-1
+                const adjustment = new Quaternion()
+                    .setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2)
+                    .invert();
 
+                // coordinate transform^-1
+                coordinateRotation.invert();
+
+                // adjustment^-1 * coordinate transform^-1
+                adjustment.multiply(coordinateRotation);
+
+                // adjustment^-1 * coordinate transform^-1 * final
+                rotation.premultiply(adjustment);
+
+                const rotationMatrix = new Matrix4().makeRotationFromQuaternion(
+                    rotation
+                );
+
+                auxPosition.add(position);
                 auxScale.multiply(worldScale);
 
                 const translationMatrix = new Matrix4().makeTranslation(
                     auxPosition.x,
                     auxPosition.y,
                     auxPosition.z
-                );
-                const rotationMatrix = new Matrix4().makeRotationFromQuaternion(
-                    auxRotation
                 );
                 const scaleMatrix = new Matrix4().makeScale(
                     auxScale.x,
