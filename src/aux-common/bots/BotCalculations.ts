@@ -987,26 +987,28 @@ export function createPrecalculatedBot(
  */
 export function calculateGridScale(
     calc: BotCalculationContext,
-    workspace: Bot
+    workspace: Bot,
+    defaultSurfaceScale: number = DEFAULT_WORKSPACE_SCALE,
+    defaultGridScale: number = DEFAULT_WORKSPACE_GRID_SCALE
 ): number {
     if (workspace) {
         const scale = calculateNumericalTagValue(
             calc,
             workspace,
             `auxPortalSurfaceScale`,
-            DEFAULT_WORKSPACE_SCALE
+            defaultSurfaceScale
         );
         const gridScale = calculateNumericalTagValue(
             calc,
             workspace,
             `auxPortalGridScale`,
-            DEFAULT_WORKSPACE_GRID_SCALE
+            defaultGridScale
         );
         return calculateGridScaleFromConstants(scale, gridScale);
     } else {
         return calculateGridScaleFromConstants(
-            DEFAULT_WORKSPACE_SCALE,
-            DEFAULT_WORKSPACE_GRID_SCALE
+            defaultSurfaceScale,
+            defaultGridScale
         );
     }
 }

@@ -1577,6 +1577,23 @@ Whether the player will be able to resize the viewport for the mini portal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
+### `mapPortalBasemap`
+<Badges>
+    <MapPortalBadge/>
+</Badges>
+
+Sets the style of the bottom layer of the map in the map portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='topo-vector'>
+    (Default)
+  </PossibleValueCode>
+  <PossibleValue value="Any Basemap">
+      See https://developers.arcgis.com/javascript/latest/api-reference/esri-Map.html#basemap for a full list.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `wristPortalHeight`
 <Badges>
     <LeftWristPortalBadge/>
@@ -2304,6 +2321,18 @@ Only available on the config bot.
 </Badges>
 
 The dimension that is loaded into the "mini" portal in CasualOS.
+Only available on the config bot.
+
+### `mapPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The dimension that is loaded into the "map" portal in CasualOS.
+
+The map portal displays a 3D globe representing earth. Bots represented in the map portal use longitude for X and latitude for Y and are 10 meters by 10 meters large by default.
+
 Only available on the config bot.
 
 ### `menuPortal`

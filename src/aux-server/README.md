@@ -102,6 +102,7 @@ The AUX Server Docker image can be configured using the following environment va
 -   `EXECUTE_LOADED_STORIES`: Whether to let the server instantiate server-side runtimes to execute story code. Setting this to `true` will cause a sandbox to be created for every story that gets loaded. Note that for compatibility reasons this does not affect server-side execution for webhooks. The benefit of this flag is that fewer stories will be loaded when using the `none` option for `SANDBOX_TYPE` thereby making it less likely that the server will get locked up. Defaults to `true`.
 -   `DISABLE_COLLABORATION`: Set this to true to disable networking in the shared space. When true, the `shared` space will actually use a `tempLocal` partition.
 -   `AB1_BOOTSTRAP_URL`: The URL that ab-1 should be loaded from. If this is not specified, then ab-1 will be loaded from `https://bootstrap.casualos.com/ab1.aux` in production and `https://bootstrap.casualos.com/staging/ab1.aux` in staging.
+-   `ARC_GIS_API_KEY`: The API Key that should be used to access the [ArcGIS API](https://developers.arcgis.com/).
 
 ## Build Configuration
 

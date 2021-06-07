@@ -12,7 +12,28 @@ import { DimensionItem } from '../DimensionItem';
 import { MenuPortal } from '../MenuPortal';
 import { appManager } from '../../shared/AppManager';
 import CircleWipe from '../../shared/vue-components/CircleWipe/CircleWipe';
-import { hasValue } from '@casual-simulation/aux-common';
+import {
+    DEFAULT_MAP_PORTAL_BASEMAP,
+    hasValue,
+} from '@casual-simulation/aux-common';
+import type EsriSceneView from 'esri/views/SceneView';
+import type EsriExternalRenderers from 'esri/views/3d/externalRenderers';
+import type EsriSpatialReference from 'esri/geometry/SpatialReference';
+import type EsriMap from 'esri/Map';
+import type EsriWebMercatorUtils from 'esri/geometry/support/webMercatorUtils';
+import { loadModules as loadEsriModules } from 'esri-loader';
+import {
+    Config,
+    ExternalRenderers,
+    GeoMap,
+    loadMapModules,
+    SceneView,
+    SpatialReference,
+    WebMercatorUtils,
+    Basemap,
+    Projection,
+} from '../MapUtils';
+import { Matrix4, Vector3 } from '@casual-simulation/three';
 
 @Component({
     components: {
@@ -29,6 +50,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
     hasMainViewport: boolean = false;
     hasMiniViewport: boolean = false;
+    hasMap: boolean = false;
     menu: DimensionItem[] = [];
     extraMenuStyle: Partial<HTMLElement['style']> = {};
     menuStyle: Partial<HTMLElement['style']> = {};
@@ -38,9 +60,23 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     @Inject() removeSidebarGroup: PlayerApp['removeSidebarGroup'];
 
     lastMenuCount: number = null;
+    private _mapView: EsriSceneView;
+    private _coordinateTransformer: (pos: {
+        x: number;
+        y: number;
+        z: number;
+    }) => Matrix4;
 
     constructor() {
         super();
+    }
+
+    get mapViewId() {
+        return 'map-portal';
+    }
+
+    get mapView(): HTMLElement {
+        return <HTMLElement>this.$refs.mapView;
     }
 
     get finalMenuStyle() {
@@ -52,6 +88,35 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
     protected createGame(): Game {
         return new PlayerGame(this);
+    }
+
+    getMapView() {
+        return this._mapView;
+    }
+
+    /**
+     * Gets the matrix that should be used to transform AUX coordinates into Three.js coordinates
+     * for the map view.
+     *
+     * See https://developers.arcgis.com/javascript/latest/api-reference/esri-views-3d-externalRenderers.html#renderCoordinateTransformAt
+     */
+    getMapCoordinateTransformer() {
+        return this._coordinateTransformer;
+    }
+
+    getWebMercatorUtils() {
+        return WebMercatorUtils;
+    }
+
+    setBasemap(basemapId: string) {
+        if (this._mapView) {
+            const basemap = Basemap.fromId(basemapId);
+            if (basemap && this._mapView) {
+                if (this._mapView.map.basemap.id !== basemap.id) {
+                    this._mapView.map.basemap = basemap;
+                }
+            }
+        }
     }
 
     moveTouch(e: TouchEvent) {
@@ -161,5 +226,73 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
     setMenuStyle(style: Partial<HTMLElement['style']>) {
         this.menuStyle = style;
+    }
+
+    /**
+     * Enables and displays the map view.
+     * Optionally adds the given external renderer to the view.
+     * @param externalRenderer The external renderer that should be used to integrate with the map's rendering system.
+     */
+    async enableMapView(externalRenderer?: __esri.ExternalRenderer) {
+        await loadMapModules();
+
+        console.log('[PlayerGameView] Enable Map');
+        if (hasValue(appManager.config.arcGisApiKey)) {
+            Config.apiKey = appManager.config.arcGisApiKey;
+        }
+
+        const map = new GeoMap({
+            basemap: DEFAULT_MAP_PORTAL_BASEMAP,
+        });
+
+        this._mapView = new SceneView({
+            map: map,
+            container: this.mapViewId,
+        });
+
+        try {
+            // wait for the map to load
+            await this._mapView.when();
+            this.hasMap = true;
+            if (externalRenderer) {
+                this._coordinateTransformer = (pos) => {
+                    const matrix = new Matrix4();
+                    ExternalRenderers.renderCoordinateTransformAt(
+                        this._mapView,
+                        [pos.x, pos.y, pos.z],
+                        SpatialReference.WGS84,
+                        matrix.elements
+                    );
+                    return matrix;
+                };
+                ExternalRenderers.add(this._mapView, {
+                    setup: (context) => {
+                        externalRenderer.setup(context);
+                        context.resetWebGLState();
+                    },
+                    render: (context) => {
+                        externalRenderer.render(context);
+                        ExternalRenderers.requestRender(this._mapView);
+                        context.resetWebGLState();
+                    },
+                    dispose: (context) => externalRenderer.dispose(context),
+                });
+            }
+        } catch (err) {
+            console.warn('[PlayerGameView] Failed to load the map view.', err);
+            this.hasMap = false;
+        }
+    }
+
+    /**
+     * Disables and destroys the map view.
+     */
+    disableMapView() {
+        // TODO:
+    }
+
+    protected setWidthAndHeightCore(width: number, height: number) {
+        this.mapView.style.height = this._game.getRenderer().domElement.style.height;
+        this.mapView.style.width = this._game.getRenderer().domElement.style.width;
     }
 }

@@ -774,6 +774,27 @@ export const DEFAULT_USER_DELETION_TIME = 1000 * 60 * 60;
 export const DEFAULT_MINI_PORTAL_VISIBLE = false;
 
 /**
+ * Whether the map portal is visible by default.
+ */
+export const DEFAULT_MAP_PORTAL_VISIBLE = false;
+
+/**
+ * The default scale for the map portal grid.
+ */
+export const DEFAULT_MAP_PORTAL_SCALE = 1;
+
+/**
+ * The default grid scale for the map portal.
+ */
+export const DEFAULT_MAP_PORTAL_GRID_SCALE = 10;
+
+/**
+ * The default basemap that should be used for the map portal.
+ * See https://developers.arcgis.com/javascript/latest/api-reference/esri-Map.html#basemap
+ */
+export const DEFAULT_MAP_PORTAL_BASEMAP = 'topo-vector';
+
+/**
  * Whether portals are pannable by default.
  */
 export const DEFAULT_PORTAL_PANNABLE = true;
@@ -1389,6 +1410,11 @@ export const AUX_BOT_VERSION: number = 1;
 export const MINI_PORTAL: string = 'miniPortal';
 
 /**
+ * The name of the map portal.
+ */
+export const MAP_PORTAL: string = 'mapPortal';
+
+/**
  * The name of the meet portal.
  */
 export const MEET_PORTAL: string = 'meetPortal';
@@ -1442,6 +1468,7 @@ export const KNOWN_PORTALS: string[] = [
     'rightWristPortal',
     MEET_PORTAL,
     TAG_PORTAL,
+    MAP_PORTAL,
 ];
 
 /**
@@ -1454,6 +1481,7 @@ export const QUERY_PORTALS: string[] = [
     MEET_PORTAL,
     TAG_PORTAL,
     TAG_PORTAL_SPACE,
+    MAP_PORTAL,
 ];
 
 /*
@@ -1467,6 +1495,7 @@ export const KNOWN_TAGS: string[] = [
     'server',
     MINI_PORTAL,
     'menuPortal',
+    MAP_PORTAL,
     'leftWristPortal',
     'rightWristPortal',
 
@@ -1578,6 +1607,7 @@ export const KNOWN_TAGS: string[] = [
     'meetPortalAnchorPoint',
     'meetPortalVisible',
     'meetPortalStyle',
+    'mapPortalBasemap',
 
     'tagPortalAnchorPoint',
     'tagPortalStyle',

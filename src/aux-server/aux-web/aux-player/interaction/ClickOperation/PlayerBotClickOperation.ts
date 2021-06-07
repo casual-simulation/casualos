@@ -25,6 +25,7 @@ import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { ControllerData, InputMethod } from '../../../shared/scene/Input';
+import { MapSimulation3D } from '../../scene/MapSimulation3D';
 
 export class PlayerBotClickOperation extends BaseBotClickOperation {
     // This overrides the base class.
@@ -84,11 +85,13 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
             const {
                 playerSimulation3D,
                 miniSimulation3D,
+                mapSimulation3D,
             } = this._getSimulationsForDragOp();
 
             return new PlayerBotDragOperation(
                 playerSimulation3D,
                 miniSimulation3D,
+                mapSimulation3D,
                 this._interaction,
                 draggedObjects,
                 bot3D.dimension,
@@ -106,10 +109,14 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
     private _getSimulationsForDragOp() {
         let playerSimulation3D: PlayerPageSimulation3D;
         let miniSimulation3D: MiniSimulation3D;
+        let mapSimulation3D: MapSimulation3D;
 
         if (this._simulation3D instanceof PlayerPageSimulation3D) {
             playerSimulation3D = this._simulation3D;
             miniSimulation3D = (<PlayerGame>this.game).findMiniSimulation3D(
+                this._simulation3D.simulation
+            );
+            mapSimulation3D = (<PlayerGame>this.game).findMapSimulation3D(
                 this._simulation3D.simulation
             );
         } else if (this._simulation3D instanceof MiniSimulation3D) {
@@ -117,12 +124,23 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
                 this._simulation3D.simulation
             );
             miniSimulation3D = this._simulation3D;
+            mapSimulation3D = (<PlayerGame>this.game).findMapSimulation3D(
+                this._simulation3D.simulation
+            );
+        } else if (this._simulation3D instanceof MapSimulation3D) {
+            playerSimulation3D = (<PlayerGame>this.game).findPlayerSimulation3D(
+                this._simulation3D.simulation
+            );
+            miniSimulation3D = (<PlayerGame>this.game).findMiniSimulation3D(
+                this._simulation3D.simulation
+            );
+            mapSimulation3D = this._simulation3D;
         } else {
             console.error(
                 '[PlayerBotClickOperation] Unsupported Simulation3D type for drag operation.'
             );
         }
 
-        return { playerSimulation3D, miniSimulation3D };
+        return { playerSimulation3D, miniSimulation3D, mapSimulation3D };
     }
 }

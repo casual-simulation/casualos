@@ -5,8 +5,10 @@ import {
     calculateGridScale,
     getBuilderDimensionGrid,
     DEFAULT_WORKSPACE_GRID_SCALE,
+    getBotScale,
 } from '@casual-simulation/aux-common';
 import { calculateScale } from '../SceneUtils';
+import { CoordinateSystem } from '../CoordinateSystem';
 
 export class ScaleDecorator extends AuxBot3DDecoratorBase {
     constructor(bot3D: AuxBot3D) {
@@ -15,8 +17,13 @@ export class ScaleDecorator extends AuxBot3DDecoratorBase {
 
     botUpdated(calc: BotCalculationContext): void {
         const gridScale = this.bot3D.gridScale;
+
         const scale = calculateScale(calc, this.bot3D.bot, gridScale);
-        this.bot3D.scaleContainer.scale.set(scale.x, scale.y, scale.z);
+        if (this.bot3D.targetCoordinateSystem === CoordinateSystem.Z_UP) {
+            this.bot3D.scaleContainer.scale.set(scale.x, scale.y, scale.z);
+        } else {
+            this.bot3D.scaleContainer.scale.set(scale.x, scale.y, scale.z);
+        }
     }
 
     dispose(): void {}

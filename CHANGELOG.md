@@ -1,5 +1,21 @@
 # CasualOS Changelog
 
+## V2.0.0
+
+#### Date: 6/7/2021
+
+### :bug: Improvements
+
+-   Added the `mapPortal`.
+    -   The map portal provides a 3D representation of the entire Earth and allows placing bots anywhere on it.
+    -   Bots that are in the map portal use Longitude and Latitude for their X and Y coordinates.
+    -   The map can additionally be customized by setting the `mapPortalBasemap` tag on the `mapPortalBot`. See the documentation for more information.
+    -   Based upon [ArcGIS](https://www.arcgis.com/index.html).
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where trying to focus on a position in the miniPortal would not work.
+
 ## V1.5.24
 
 #### Date: 5/24/2021

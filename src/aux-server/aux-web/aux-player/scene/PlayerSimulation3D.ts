@@ -45,6 +45,7 @@ import { PortalConfig } from './PortalConfig';
 import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { CompoundGrid3D } from '../../shared/scene/CompoundGrid3D';
 import { Grid3D } from '../../shared/scene/Grid3D';
+import { Object3D } from '@casual-simulation/three';
 
 export abstract class PlayerSimulation3D extends Simulation3D {
     /**
@@ -59,7 +60,7 @@ export abstract class PlayerSimulation3D extends Simulation3D {
 
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
-    get grid3D() {
+    get grid3D(): Grid3D {
         return this._grid;
     }
 
@@ -235,7 +236,9 @@ export abstract class PlayerSimulation3D extends Simulation3D {
     }
 
     protected _bindPortalConfig(config: PortalConfig) {
-        this.add(config.grid3D);
+        if (config.grid3D instanceof Object3D) {
+            this.add(config.grid3D);
+        }
     }
 
     protected _createPortalConfig(portalTag: string) {
