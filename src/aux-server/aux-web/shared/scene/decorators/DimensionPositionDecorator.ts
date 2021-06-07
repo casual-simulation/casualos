@@ -47,6 +47,8 @@ import { BuilderGroup3D } from '../BuilderGroup3D';
 import { calculateScale, objectForwardRay } from '../SceneUtils';
 import { Game } from '../Game';
 import TWEEN, { Tween } from '@tweenjs/tween.js';
+import { MapSimulation3D } from '../../../aux-player/scene/MapSimulation3D';
+import { CoordinateSystem } from '../CoordinateSystem';
 
 /**
  * Defines an interface that contains possible options for DimensionPositionDecorator objects.
@@ -99,11 +101,19 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
         // Update the offset for the display container
         // so that it rotates around the specified
         // point
+        // if (this.bot3D.targetCoordinateSystem === CoordinateSystem.Y_UP) {
         this.bot3D.display.position.set(
             anchorPointOffset.x,
             anchorPointOffset.z,
             anchorPointOffset.y
         );
+        // } else {
+        // this.bot3D.display.position.set(
+        //     anchorPointOffset.x,
+        //     anchorPointOffset.y,
+        //     anchorPointOffset.z
+        // );
+        // }
 
         // The transform container gets the same position as the display but
         // with the anchor point multiplied by 2.
@@ -131,10 +141,15 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 this.bot3D.bot,
                 this.bot3D.dimension
             );
+            const coordinateTransform = this.bot3D.coordinateTransformer
+                ? this.bot3D.coordinateTransformer(currentGridPos)
+                : null;
             this._nextPos = calculateObjectPositionInGrid(
                 calc,
+                currentGridPos,
                 this.bot3D,
-                gridScale
+                gridScale,
+                coordinateTransform
             );
 
             if (
@@ -176,11 +191,33 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 this.bot3D.position.copy(this._nextPos);
 
                 if (this._orientationMode === 'absolute') {
-                    this._rotationObj.rotation.set(
-                        this._nextRot.x,
-                        this._nextRot.z,
-                        this._nextRot.y
-                    );
+                    if (coordinateTransform) {
+                        const rot = new Matrix4().makeRotationFromEuler(
+                            new Euler(
+                                this._nextRot.x,
+                                this._nextRot.y,
+                                this._nextRot.z
+                            )
+                        );
+                        const adjustment = new Matrix4().makeRotationAxis(
+                            new Vector3(1, 0, 0),
+                            Math.PI / 2
+                        );
+
+                        adjustment.premultiply(coordinateTransform);
+
+                        rot.premultiply(adjustment);
+                        const q = new Quaternion().setFromRotationMatrix(rot);
+                        // q.multiply(adjustment);
+
+                        this._rotationObj.quaternion.set(q.x, q.y, q.z, q.w);
+                    } else {
+                        this._rotationObj.rotation.set(
+                            this._nextRot.x,
+                            this._nextRot.z,
+                            this._nextRot.y
+                        );
+                    }
                 }
             }
         }
@@ -394,25 +431,27 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
  * @param context The bot calculation context to use to calculate forumula values.
  * @param bot The bot to calculate position for.
  * @param gridScale The scale of the grid.
+ * @param coordinateTransform If specified, the matrix that should be used to determine the final grid position of the given bot.
  */
 export function calculateObjectPositionInGrid(
     context: BotCalculationContext,
+    position: { x: number; y: number; z: number },
     bot: AuxBot3D,
-    gridScale: number
+    gridScale: number,
+    coordinateTransform: Matrix4
 ): Vector3 {
-    let position = getBotPosition(context, bot.bot, bot.dimension);
+    if (coordinateTransform) {
+        const pos = new Vector3();
+        pos.applyMatrix4(coordinateTransform);
+        return pos;
+    }
+
     let localPosition = calculateGridTileLocalCenter(
         position.x,
         position.y,
         position.z,
         gridScale
     );
-
-    let totalScales = 0;
-
-    const indexOffset = new Vector3(0, totalScales, 0);
-
-    localPosition.add(indexOffset);
 
     if (bot.dimensionGroup instanceof BuilderGroup3D) {
         // Offset local position with hex grid height.

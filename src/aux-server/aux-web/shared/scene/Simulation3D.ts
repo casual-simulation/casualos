@@ -5,6 +5,7 @@ import {
     Vector2,
     Scene,
     Vector3,
+    Matrix4,
 } from '@casual-simulation/three';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
@@ -40,6 +41,7 @@ import { DimensionGroup } from './DimensionGroup';
 import { DimensionGroup3D } from './DimensionGroup3D';
 import { AuxBot3D } from './AuxBot3D';
 import { Grid3D } from './Grid3D';
+import { CoordinateSystem } from './CoordinateSystem';
 
 /**
  * Defines a class that is able to render a simulation.
@@ -54,7 +56,41 @@ export abstract class Simulation3D
      */
     protected _game: Game;
 
+    /**
+     * Takes a position in AUX coordinates and produces a transformation matrix
+     * in world coordinates.
+     */
+    private _coordinateTransformer: (pos: {
+        x: number;
+        y: number;
+        z: number;
+    }) => Matrix4;
+
     closed: boolean;
+
+    /**
+     * The coordinate system that object positions and rotations should be in.
+     */
+    targetCoordinateSystem: CoordinateSystem = CoordinateSystem.Y_UP;
+
+    /**
+     * The function that should be used to transform 3D coordinates from AUX space to the target coordinate system.
+     * Returns a matrix that represents the transformation from the given position and identity rotation to the target coordinate system.
+     */
+    get coordinateTransformer(): (pos: {
+        x: number;
+        y: number;
+        z: number;
+    }) => Matrix4 {
+        return this._coordinateTransformer;
+    }
+
+    set coordinateTransformer(
+        value: (pos: { x: number; y: number; z: number }) => Matrix4
+    ) {
+        this._coordinateTransformer = value;
+        this.ensureUpdate(this.bots.map((b) => b.bot.id));
+    }
 
     /**
      * Gets an observable that resolves whenever a dimension group is added.
@@ -184,7 +220,6 @@ export abstract class Simulation3D
         this.simulation = simulation;
         this.dimensions = [];
         this._subs = [];
-        this._decoratorFactory = new AuxBot3DDecoratorFactory(game, this);
         this._dimensionMap = new Map();
         this._dimensionGroups = new Map();
         this._dimensionTagsMap = new Map();
@@ -196,6 +231,8 @@ export abstract class Simulation3D
      */
     init() {
         this.isLoaded = false;
+
+        this._decoratorFactory = this.createDecoratorFactory();
 
         this._subs.push(
             this.simulation.dimensions
@@ -227,6 +264,10 @@ export abstract class Simulation3D
                 .pipe(tap((e) => this._localEvent(e)))
                 .subscribe()
         );
+    }
+
+    createDecoratorFactory(): AuxBot3DDecoratorFactory {
+        return new AuxBot3DDecoratorFactory(this.game, this);
     }
 
     /**

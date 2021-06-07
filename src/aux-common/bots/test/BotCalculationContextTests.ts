@@ -66,6 +66,7 @@ import {
     getPortalCursor,
     getBotLabelPadding,
     getCursorCSS,
+    calculateGridScale,
 } from '../BotCalculations';
 import {
     Bot,
@@ -192,6 +193,68 @@ export function botCalculationContextTests(
             );
 
             expect(result).toEqual([bot1]);
+        });
+    });
+
+    describe('calculateGridScale()', () => {
+        it('should return the default grid scale', () => {
+            const bot = createBot('test');
+            const context = createPrecalculatedContext([bot]);
+
+            const result = calculateGridScale(context, bot);
+
+            expect(result).toBe(0.4);
+        });
+
+        it('should portalSurfaceScale', () => {
+            const bot = createBot('test', {
+                portalSurfaceScale: 4,
+            });
+            const context = createPrecalculatedContext([bot]);
+
+            const result = calculateGridScale(context, bot);
+
+            expect(result).toBe(0.8);
+        });
+
+        it('should support portalGridScale', () => {
+            const bot = createBot('test', {
+                portalGridScale: 1,
+            });
+            const context = createPrecalculatedContext([bot]);
+
+            const result = calculateGridScale(context, bot);
+
+            expect(result).toBe(2);
+        });
+
+        it('should support both portalSurfaceScale and portalGridScale', () => {
+            const bot = createBot('test', {
+                portalGridScale: 1,
+                portalSurfaceScale: 4,
+            });
+            const context = createPrecalculatedContext([bot]);
+
+            const result = calculateGridScale(context, bot);
+
+            expect(result).toBe(4);
+        });
+
+        it('should support custom defaults', () => {
+            const bot = createBot('test', {});
+            const context = createPrecalculatedContext([bot]);
+
+            const result = calculateGridScale(context, bot, 1, 4);
+
+            expect(result).toBe(4);
+        });
+
+        it('should support null bots', () => {
+            const context = createPrecalculatedContext([]);
+
+            const result = calculateGridScale(context, null, 1, 4);
+
+            expect(result).toBe(4);
         });
     });
 

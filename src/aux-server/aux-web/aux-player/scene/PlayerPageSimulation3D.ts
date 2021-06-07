@@ -247,7 +247,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
             }
             const gridRay = objectWorldDirectionRay(
                 new Vector3(0, 1, 0),
-                config.grid3D
+                <Object3D>(<unknown>config.grid3D)
             );
 
             const cameraRig = this.getMainCameraRig();
@@ -299,15 +299,16 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         );
         const controllerRemoved = input.controllerRemoved;
 
+        const gridObj = <Object3D>(<unknown>config.grid3D);
         const sub = bindToController(
             controllerAdded,
             controllerRemoved,
             (controller) => {
-                controller.mesh.mesh.add(config.grid3D);
-                applyWristControllerOffset(hand, config.grid3D);
+                controller.mesh.mesh.add(gridObj);
+                applyWristControllerOffset(hand, gridObj);
 
                 return new Subscription(() => {
-                    controller.mesh.mesh.remove(config.grid3D);
+                    controller.mesh.mesh.remove(gridObj);
                 });
             }
         );

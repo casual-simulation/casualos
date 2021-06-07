@@ -89,8 +89,8 @@ export class DeepObjectError extends Error {
     }
 }
 
-export function getEasing(easing: Easing | EaseType) {
-    const value = hasValue(easing)
+export function getDefaultEasing(easing: Easing | EaseType): Easing {
+    return hasValue(easing)
         ? typeof easing === 'string'
             ? {
                   mode: 'inout',
@@ -101,6 +101,10 @@ export function getEasing(easing: Easing | EaseType) {
               mode: 'inout',
               type: 'linear',
           };
+}
+
+export function getEasing(easing: Easing | EaseType) {
+    const value = getDefaultEasing(easing);
     return getTweenEasing(value as Easing);
 }
 

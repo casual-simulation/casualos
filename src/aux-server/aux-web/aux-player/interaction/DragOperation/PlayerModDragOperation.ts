@@ -90,7 +90,7 @@ export class PlayerModDragOperation extends BaseModDragOperation {
         const grid3D = this._inMiniPortal
             ? this._miniSimulation3D.grid3D
             : this._simulation3D.grid3D;
-        const gridTile = grid3D.getTileFromRay(inputRay);
+        const gridTile = grid3D.getTileFromRay(inputRay, true);
 
         if (!gridTile) {
             return;

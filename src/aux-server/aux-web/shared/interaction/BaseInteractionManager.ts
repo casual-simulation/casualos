@@ -245,9 +245,6 @@ export abstract class BaseInteractionManager {
             this.setCameraControlsEnabled(this._cameraControlsEnabled);
         }
 
-        this._updateCameraOffsets();
-        this._updateCameraControls();
-
         // Detect left click.
         this._handleMouseInput(input);
         this._handleControllerInput(input);
@@ -260,6 +257,11 @@ export abstract class BaseInteractionManager {
         this._updateFocusedBots();
         this._updatePlayerBotTags();
         this._updateCursors();
+
+        // Update camera controls after handing other inputs so that
+        // we can enable/disable the controls before it tries using the input.
+        this._updateCameraOffsets();
+        this._updateCameraControls();
     }
 
     protected _updatePlayerBotTags() {}

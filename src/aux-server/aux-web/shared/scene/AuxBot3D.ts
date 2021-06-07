@@ -24,6 +24,8 @@ import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory'
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { AuxBotVisualizer } from './AuxBotVisualizer';
 import { buildSRGBColor, safeSetParent } from './SceneUtils';
+import { MapSimulation3D } from 'aux-web/aux-player/scene/MapSimulation3D';
+import { CoordinateSystem } from './CoordinateSystem';
 
 /**
  * Defines a class that is able to display Aux bots.
@@ -134,6 +136,32 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
      */
     get isOnGrid(): boolean {
         return this._isOnGrid;
+    }
+
+    /**
+     * Gets the coordinate system that positions and rotations should be output in.
+     */
+    get targetCoordinateSystem(): CoordinateSystem {
+        return (
+            this.dimensionGroup?.simulation3D?.targetCoordinateSystem ??
+            CoordinateSystem.Y_UP
+        );
+    }
+
+    /**
+     * A matrix that should be used to transform the bot's position from AUX coordinates to Three.js coordinates.
+     * If null, then the default process will be used. (swap Y and Z axes)
+     */
+    get coordinateTransformer(): (pos: {
+        x: number;
+        y: number;
+        z: number;
+    }) => Matrix4 {
+        const sim = this.dimensionGroup?.simulation3D;
+        if (sim.coordinateTransformer) {
+            return sim.coordinateTransformer;
+        }
+        return null;
     }
 
     /**
