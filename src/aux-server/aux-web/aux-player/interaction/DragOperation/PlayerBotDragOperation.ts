@@ -771,6 +771,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         snapPointGrid: Grid3D,
         snapAxes: SnapAxis[]
     ): boolean {
+        if (this._inMapPortal) {
+            return false;
+        }
         const grid = snapPointGrid ?? grid3D;
         let closestPoint: Vector3 = null;
         let closestSqrDistance = Infinity;
