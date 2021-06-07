@@ -111,12 +111,31 @@ export class MapPortalGrid3D implements Grid3D {
     }
 
     getGridPosition(position: { x: number; y: number; z: number }): Vector3 {
-        const result = new Vector3(position.x, position.y, position.z);
-        return new Vector3(result.x, -result.z, result.y);
+        const [x, y, z] = ExternalRenderers.fromRenderCoordinates(
+            this.mapView,
+            [position.x, position.y, position.z],
+            0,
+            [0, 0, 0],
+            0,
+            SpatialReference.WGS84,
+            1
+        );
+        return new Vector3(x, y, z);
     }
 
     getWorldPosition(position: { x: number; y: number; z: number }): Vector3 {
-        const result = new Vector3(position.x, position.z, -position.y);
+        const [x, y, z] = ExternalRenderers.toRenderCoordinates(
+            this.mapView,
+            [position.x, position.y, position.z],
+            0,
+            SpatialReference.WGS84,
+            [0, 0, 0],
+            0,
+            1
+        );
+
+        const result = new Vector3(x, y, z);
+
         return result;
     }
 
