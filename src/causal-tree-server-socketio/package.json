@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-server-socketio",
-    "version": "1.5.17",
+    "version": "2.0.0",
     "description": "Casual trees served over socket.io.",
     "keywords": [
         "socket.io",
@@ -43,10 +43,10 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/causal-tree-server": "^1.5.17",
-        "@casual-simulation/causal-trees": "^1.5.17",
-        "@casual-simulation/crypto": "^1.5.7",
-        "@casual-simulation/crypto-node": "^1.5.7",
+        "@casual-simulation/causal-tree-server": "^2.0.0",
+        "@casual-simulation/causal-trees": "^2.0.0",
+        "@casual-simulation/crypto": "^2.0.0",
+        "@casual-simulation/crypto-node": "^2.0.0",
         "@types/lodash": "^4.14.123",
         "@types/socket.io": "^2.1.2",
         "lodash": "4.17.21",
