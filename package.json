@@ -55,9 +55,9 @@
         }
     },
     "devDependencies": {
-        "@babel/core": "^7.2.0",
-        "@babel/plugin-syntax-dynamic-import": "^7.2.0",
-        "@babel/preset-env": "^7.2.0",
+        "@babel/core": "^7.14.3",
+        "@babel/plugin-syntax-dynamic-import": "^7.8.3",
+        "@babel/preset-env": "^7.14.4",
         "@types/base64-js": "^1.2.5",
         "@types/bcryptjs": "2.4.1",
         "@types/benchmark": "1.0.31",
@@ -140,10 +140,10 @@
         "vue-loader": "^15.9.5",
         "vue-svg-loader": "^0.16.0",
         "vue-template-compiler": "^2.5.17",
-        "webpack": "^5.10.0",
-        "webpack-bundle-analyzer": "^3.3.2",
-        "webpack-cli": "^4.2.0",
-        "webpack-merge": "^5.4.0",
+        "webpack": "^5.38.1",
+        "webpack-bundle-analyzer": "^4.4.2",
+        "webpack-cli": "^4.7.2",
+        "webpack-merge": "^5.8.0",
         "webpack-node-externals": "^2.5.2",
         "worker-loader": "^3.0.6",
         "@types/mock-fs": "4.10.0",
@@ -153,7 +153,8 @@
         "webpack-assets-manifest": "5.0.1",
         "@testing-library/vue": "5.6.1",
         "@testing-library/jest-dom": "5.11.9",
-        "@casual-simulation/typescript": "^4.2.7"
+        "@casual-simulation/typescript": "^4.2.7",
+        "browserslist": ">=4.16.5"
     },
     "dependencies": {}
 }
