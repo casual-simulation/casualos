@@ -612,7 +612,7 @@ export class PlayerGame extends Game {
                         ? getPortalTag(e.portal)
                         : null;
                     const sim =
-                        !hasValue(targetPortal) || targetPortal === 'mapPortal'
+                        targetPortal === 'mapPortal'
                             ? mapPortalSim3D
                             : targetPortal === 'miniPortal'
                             ? miniPortalSim3D
