@@ -257,7 +257,7 @@ export class CameraControls {
     }
 
     public isEmptyState(): Boolean {
-        return this.state === STATE.NONE;
+        return this.state === STATE.NONE || this.state === STATE.PASSTHROUGH;
     }
 
     public rotateLeft(angle: number) {

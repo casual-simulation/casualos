@@ -8,6 +8,8 @@ import {
     getEasing,
     hasValue,
     FocusOnOptions,
+    Easing,
+    EaseType,
 } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { CameraRig } from '../scene/CameraRigFactory';
@@ -33,6 +35,9 @@ export class FocusCameraRigOnOperation implements IOperation {
     private _taskId: string | number;
     private _simulation: Simulation;
     private _canceled: boolean;
+    private _errorMessage: string;
+    private _easing: EaseType | Easing;
+    private _focusing: boolean;
 
     get cameraRig() {
         return this._cameraRig;
@@ -78,8 +83,10 @@ export class FocusCameraRigOnOperation implements IOperation {
               }
             : null;
         this._duration = options.duration ?? 1;
+        this._easing = options.easing;
         this._target = target;
         this._simulation = simulation;
+        this._focusing = false;
         this._taskId = taskId;
 
         // TODO: Implement proper duration
@@ -98,23 +105,7 @@ export class FocusCameraRigOnOperation implements IOperation {
             return;
         }
 
-        const easing = getEasing(options.easing);
-        this._cameraRig
-            .focusOnPosition(target, {
-                duration: this._duration,
-                easing,
-                rotation: this._rotValue,
-                zoom: this._zoomValue,
-            })
-            .then(
-                () => {
-                    this._finished = true;
-                },
-                (err) => {
-                    this._finished = true;
-                    this._canceled = true;
-                }
-            );
+        this._tryFocus();
     }
 
     update(calc: BotCalculationContext): void {
@@ -124,6 +115,10 @@ export class FocusCameraRigOnOperation implements IOperation {
         }
 
         if (this._finished) return;
+
+        if (!this._focusing) {
+            this._tryFocus();
+        }
     }
 
     isFinished(): boolean {
@@ -140,7 +135,8 @@ export class FocusCameraRigOnOperation implements IOperation {
                 this._simulation.helper.transaction(
                     asyncError(
                         this._taskId,
-                        'The user canceled the camera focus operation.'
+                        this._errorMessage ??
+                            'The user canceled the camera focus operation.'
                     )
                 );
             } else {
@@ -148,6 +144,34 @@ export class FocusCameraRigOnOperation implements IOperation {
                     asyncResult(this._taskId, null)
                 );
             }
+        }
+    }
+
+    private _tryFocus() {
+        const easing = getEasing(this._easing);
+        try {
+            const promise = this._cameraRig.focusOnPosition(this._target, {
+                duration: this._duration,
+                easing,
+                rotation: this._rotValue,
+                zoom: this._zoomValue,
+            });
+            if (promise) {
+                this._focusing = true;
+                promise.then(
+                    () => {
+                        this._finished = true;
+                    },
+                    (err) => {
+                        this._finished = true;
+                        this._canceled = true;
+                    }
+                );
+            }
+        } catch (err) {
+            this._finished = true;
+            this._canceled = true;
+            this._errorMessage = 'Unable to focus on the given position/bot.';
         }
     }
 }
