@@ -14,6 +14,9 @@ import { appManager } from '../../shared/AppManager';
 import CircleWipe from '../../shared/vue-components/CircleWipe/CircleWipe';
 import {
     DEFAULT_MAP_PORTAL_BASEMAP,
+    DEFAULT_MAP_PORTAL_LATITUDE,
+    DEFAULT_MAP_PORTAL_LONGITUDE,
+    DEFAULT_MAP_PORTAL_ZOOM,
     hasValue,
 } from '@casual-simulation/aux-common';
 import type EsriSceneView from 'esri/views/SceneView';
@@ -247,6 +250,8 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
         this._mapView = new SceneView({
             map: map,
+            center: [DEFAULT_MAP_PORTAL_LONGITUDE, DEFAULT_MAP_PORTAL_LATITUDE],
+            zoom: DEFAULT_MAP_PORTAL_ZOOM,
             container: this.mapViewId,
         });
 

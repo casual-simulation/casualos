@@ -795,6 +795,21 @@ export const DEFAULT_MAP_PORTAL_GRID_SCALE = 10;
 export const DEFAULT_MAP_PORTAL_BASEMAP = 'topo-vector';
 
 /**
+ * The default longitude that the map portal should show.
+ */
+export const DEFAULT_MAP_PORTAL_LONGITUDE = -85.66645;
+
+/**
+ * The default latitude that the map portal should show.
+ */
+export const DEFAULT_MAP_PORTAL_LATITUDE = 42.963745;
+
+/**
+ * The default zoom that the map portal should show.
+ */
+export const DEFAULT_MAP_PORTAL_ZOOM = 17;
+
+/**
  * Whether portals are pannable by default.
  */
 export const DEFAULT_PORTAL_PANNABLE = true;
