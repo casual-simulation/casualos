@@ -792,7 +792,22 @@ export const DEFAULT_MAP_PORTAL_GRID_SCALE = 10;
  * The default basemap that should be used for the map portal.
  * See https://developers.arcgis.com/javascript/latest/api-reference/esri-Map.html#basemap
  */
-export const DEFAULT_MAP_PORTAL_BASEMAP = 'topo-vector';
+export const DEFAULT_MAP_PORTAL_BASEMAP = 'dark-gray';
+
+/**
+ * The default longitude that the map portal should show.
+ */
+export const DEFAULT_MAP_PORTAL_LONGITUDE = -85.66645;
+
+/**
+ * The default latitude that the map portal should show.
+ */
+export const DEFAULT_MAP_PORTAL_LATITUDE = 42.963745;
+
+/**
+ * The default zoom that the map portal should show.
+ */
+export const DEFAULT_MAP_PORTAL_ZOOM = 17;
 
 /**
  * Whether portals are pannable by default.

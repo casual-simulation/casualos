@@ -1,5 +1,20 @@
 # CasualOS Changelog
 
+## V2.0.1
+
+#### Date: 6/9/2021
+
+### :rocket: Improvements
+
+-   Changed the default mapPortal basemap to `dark-gray`.
+-   Changed the mapPortal to default to viewing Veterans Memorial Park in Grand Rapids.
+    -   This makes it easier to start using AB-1 once the map portal is loaded.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where calling `os.focusOn()` with a position and no portal would default to the map portal.
+-   Fixed an issue where calling `os.focusOn()` for the map portal before it was finished loading would error.
+
 ## V2.0.0
 
 #### Date: 6/7/2021

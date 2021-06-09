@@ -36,6 +36,7 @@ export interface CameraRig {
     /**
      * Focuses on the given 3D position and uses the given options to animate the camera.
      * Returns a promise that resolves when the camera is done animating.
+     * Returns null when focusing is supported but the camera rig is not ready to start the operation.
      *
      * Used to override builtin camera focus operations for rigs that do not use the default camera controls.
      */

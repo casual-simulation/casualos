@@ -612,7 +612,7 @@ export class PlayerGame extends Game {
                         ? getPortalTag(e.portal)
                         : null;
                     const sim =
-                        !hasValue(targetPortal) || targetPortal === 'mapPortal'
+                        targetPortal === 'mapPortal'
                             ? mapPortalSim3D
                             : targetPortal === 'miniPortal'
                             ? miniPortalSim3D
@@ -1532,7 +1532,7 @@ export class PlayerGame extends Game {
         };
         rig.focusOnPosition = (position, options) => {
             const mapView = this.gameView.getMapView();
-            if (mapView) {
+            if (mapView && mapView.ready) {
                 const instant = options.duration <= 0;
                 const [lon, lat] = ExternalRenderers.fromRenderCoordinates(
                     mapView,
