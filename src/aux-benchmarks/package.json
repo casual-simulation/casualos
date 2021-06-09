@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-benchmarks",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "description": "The package for AUX-related benchmarks.",
     "main": "dist/index.js",
     "private": true,
@@ -29,7 +29,7 @@
         "/LICENSE.txt"
     ],
     "dependencies": {
-        "@casual-simulation/aux-common": "^2.0.0",
+        "@casual-simulation/aux-common": "^2.0.1",
         "@casual-simulation/causal-trees": "^2.0.0",
         "benchmark": "2.1.4",
         "lodash": "4.17.21",
