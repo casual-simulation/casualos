@@ -77,3 +77,7 @@
     > .md-list-item-content {
     cursor: auto;
 }
+
+.menu-bot {
+    touch-action: none;
+}
