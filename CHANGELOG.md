@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V2.0.2
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where camera position offsets would continuously be applied to the camera.
+
 ## V2.0.1
 
 #### Date: 6/9/2021
