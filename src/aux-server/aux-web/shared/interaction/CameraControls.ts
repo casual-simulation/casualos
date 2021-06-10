@@ -1311,10 +1311,6 @@ export class CameraControls {
 
         position.copy(rotationTarget).add(offset);
 
-        if (this._camera.parent) {
-            this._camera.parent.localToWorld(rotationTarget);
-        }
-
         if (this.usingImmersiveControls) {
             if (this.immersiveLookPosition) {
                 this._camera.lookAt(this.immersiveLookPosition);
