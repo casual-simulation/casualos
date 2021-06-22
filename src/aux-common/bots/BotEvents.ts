@@ -2556,6 +2556,52 @@ export interface OpenCustomPortalAction extends AsyncAction {
 }
 
 /**
+ * The list of types of output that custom portals support.
+ */
+export type CustomPortalOutputType = 'html';
+
+/**
+ * Defines an event that registers a custom portal.
+ * This functions similarly to OpenCustomPortalAction except that it is more
+ * tightly integrated into CasualOS.
+ */
+export interface RegisterCustomPortalAction extends AsyncAction {
+    type: 'register_custom_portal';
+
+    /**
+     * The ID of the portal.
+     */
+    portalId: string;
+
+    /**
+     * The ID of the bot that should be used to configure the portal.
+     */
+    botId: string;
+
+    /**
+     * Options that should be used to configure the custom portal.
+     */
+    options: RegisterCustomPortalOptions;
+}
+
+/**
+ * The options for a register custom portal action.
+ */
+export interface RegisterCustomPortalOptions {
+    /**
+     * The type of the custom portal.
+     * Used by CasualOS to determine how CasualOS should consume the rendered output and display it.
+     */
+    type: CustomPortalOutputType;
+
+    /**
+     * The kind of the custom portal.
+     * Used to make it easy to register multiple custom portals that rely on the same kind of renderers.
+     */
+    kind?: string;
+}
+
+/**
  * Defines an event that builds a bundle from a specified tag.
  */
 export interface BuildBundleAction extends AsyncAction {
