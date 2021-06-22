@@ -1321,6 +1321,29 @@ whisper(bots, "reset");
 whisper(this, "setColor", "red");
 ```
 
+### `priorityShout(events, arg?)`
+
+Shouts to all bots that are <TagLink tag='listening'/> and have a [listen tag][listen-tag] for the specified events until one of the bots returns a value.
+Optionally includes a custom `that` argument. Also triggers <TagLink tag='@onListen'/> and <TagLink tag='@onAnyListen'/> for the bots that the shout was sent to.
+
+This function is useful when you want to shout but only want one bot to process the shout.
+
+The **first parameter** is the array of event names that should be shouted. e.g. Using `onClick` for the name will trigger the <TagLink tag='@onClick'/> listener until a bot returns a value.
+
+#### Examples:
+
+```typescript title='Shout to the first bot that handles @onClick'
+priorityShout(['onClick']);
+```
+
+```typescript title='Shout to the first bot that handles @myTest or @mySecondTest'
+priorityShout(['myTest', 'mySecondTest']);
+```
+
+```typescript title='Priority shout with a color'
+priorityShout(['myTest', 'mySecondTest'], "blue");
+```
+
 ### `superShout(name, arg?)`
 
 

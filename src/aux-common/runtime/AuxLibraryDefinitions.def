@@ -2592,6 +2592,14 @@ declare global {
     function getJSON(data: any): string;
 
     /**
+     * Shouts the given events in order until a bot returns a result.
+     * Returns the result that was produced or undefined if no result was produced.
+     * @param eventNames The names of the events to shout.
+     * @param arg The argument to shout.
+     */
+     function priorityShout(eventNames: string[], arg?: any): any;
+
+    /**
      * Asks every bot in the server to run the given action.
      * In effect, this is like shouting to a bunch of people in a room.
      *

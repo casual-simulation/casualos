@@ -8429,6 +8429,130 @@ describe('AuxLibrary', () => {
         );
     });
 
+    describe('priorityShout()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+        let bot3: RuntimeBot;
+        let bot4: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+            bot3 = createDummyRuntimeBot('test3');
+            bot4 = createDummyRuntimeBot('test4');
+
+            addToContext(context, bot1, bot2, bot3, bot4);
+        });
+
+        function recordListeners() {
+            for (let bot of [bot1, bot2, bot3, bot4]) {
+                for (let key in bot.listeners) {
+                    context.recordListenerPresense(bot.id, key, true);
+                }
+            }
+        }
+
+        it('should run the event on every bot', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+
+            recordListeners();
+
+            library.api.priorityShout(['sayHello']);
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).toBeCalled();
+        });
+
+        it('should not run the event on the second bot if the first bot returns a value', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest
+                .fn()
+                .mockImplementation(() => 123));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+
+            recordListeners();
+
+            library.api.priorityShout(['sayHello']);
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).not.toBeCalled();
+        });
+
+        it('should run the next shout if nothing returns a value', () => {
+            const abc1 = (bot1.listeners.abc = jest.fn());
+            const abc2 = (bot2.listeners.abc = jest.fn());
+
+            const def1 = (bot1.listeners.def = jest.fn());
+            const def2 = (bot2.listeners.def = jest.fn());
+
+            recordListeners();
+
+            library.api.priorityShout(['abc', 'def']);
+            expect(abc1).toBeCalled();
+            expect(abc2).toBeCalled();
+
+            expect(def1).toBeCalled();
+            expect(def2).toBeCalled();
+        });
+
+        it('should return undefined if there are no listeners', () => {
+            recordListeners();
+
+            expect(library.api.priorityShout(['abc', 'def'])).toBeUndefined();
+        });
+
+        it('should return the first returned value', () => {
+            const abc1 = (bot1.listeners.abc = jest.fn(() => 123));
+            const abc2 = (bot2.listeners.abc = jest.fn(() => 456));
+
+            const def1 = (bot1.listeners.def = jest.fn(() => 789));
+            const def2 = (bot2.listeners.def = jest.fn(() => 10));
+
+            recordListeners();
+
+            let result = library.api.priorityShout(['abc', 'def']);
+            expect(result).toBe(123);
+            expect(abc1).toBeCalled();
+            expect(abc2).not.toBeCalled();
+
+            expect(def1).not.toBeCalled();
+            expect(def2).not.toBeCalled();
+        });
+
+        it('should short circuit when null is returned', () => {
+            const abc1 = (bot1.listeners.abc = jest.fn(() => null));
+            const abc2 = (bot2.listeners.abc = jest.fn(() => 456));
+
+            const def1 = (bot1.listeners.def = jest.fn(() => 789));
+            const def2 = (bot2.listeners.def = jest.fn(() => 10));
+
+            recordListeners();
+
+            let result = library.api.priorityShout(['abc', 'def']);
+            expect(result).toBe(null);
+            expect(abc1).toBeCalled();
+            expect(abc2).not.toBeCalled();
+
+            expect(def1).not.toBeCalled();
+            expect(def2).not.toBeCalled();
+        });
+
+        it('should use the given argument', () => {
+            const abc1 = (bot1.listeners.abc = jest.fn());
+            const abc2 = (bot2.listeners.abc = jest.fn());
+
+            const def1 = (bot1.listeners.def = jest.fn());
+            const def2 = (bot2.listeners.def = jest.fn());
+
+            recordListeners();
+
+            let arg = {};
+            library.api.priorityShout(['abc', 'def'], arg);
+            expect(abc1).toBeCalledWith(arg);
+            expect(abc2).toBeCalledWith(arg);
+            expect(def1).toBeCalledWith(arg);
+            expect(def2).toBeCalledWith(arg);
+        });
+    });
+
     describe('shout()', () => {
         let bot1: RuntimeBot;
         let bot2: RuntimeBot;
