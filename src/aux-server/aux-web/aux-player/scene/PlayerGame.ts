@@ -1069,8 +1069,11 @@ export class PlayerGame extends Game {
 
         this.gameView.setMenuStyle({
             bottom:
-                (window.innerHeight - sliderTop + this.menuOffset).toString() +
-                'px',
+                (
+                    this.mainViewport.height -
+                    sliderTop +
+                    this.menuOffset
+                ).toString() + 'px',
             left: this.miniViewport.x.toString() + 'px',
             width: this.miniViewport.width.toString() + 'px',
         });
