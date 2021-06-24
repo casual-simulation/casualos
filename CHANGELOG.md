@@ -7,6 +7,7 @@
 ### :rocket: Improvements
 
 -   Improved the miniPortal to support the `portalCameraZoom`, `portalCameraRotationX` and `portalCameraRotationY` tags.
+-   Added the `priorityShout()` function to make it easy to run a set of shouts until a bot returns a value.
 
 ### :bug: Bug Fixes
 
