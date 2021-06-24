@@ -12,6 +12,8 @@
 
 -   Fixed an issue where camera position offsets would continuously be applied to the camera.
 -   Fixed an issue where the menu would be positioned incorrectly if the meet portal was anchored to the top of the screen.
+-   Fixed an issue where clicking on the grid with a controller in XR would crash CasualOS.
+-   Fixed an issue where the transformer tag did not work correctly for bots in the mapPortal.
 
 ## V2.0.1
 
