@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Improved the miniPortal to support the `portalCameraZoom`, `portalCameraRotationX` and `portalCameraRotationY` tags.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where camera position offsets would continuously be applied to the camera.
