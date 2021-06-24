@@ -76,7 +76,7 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
             if (sim3D instanceof PlayerPageSimulation3D) {
                 let inputDimension: string;
                 let inputRay: Ray;
-                let grid: Grid3D;
+                let grid: Grid3D = sim3D.grid3D;
 
                 // Calculate input ray.
                 if (this._controller) {
