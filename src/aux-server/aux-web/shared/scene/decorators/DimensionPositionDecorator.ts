@@ -31,6 +31,7 @@ import {
     LocalPositionTweenAction,
     enqueueAsyncError,
     getEasing,
+    getBotTransformer,
 } from '@casual-simulation/aux-common';
 import {
     Vector3,
@@ -141,9 +142,11 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 this.bot3D.bot,
                 this.bot3D.dimension
             );
-            const coordinateTransform = this.bot3D.coordinateTransformer
-                ? this.bot3D.coordinateTransformer(currentGridPos)
-                : null;
+            const transformer = getBotTransformer(calc, this.bot3D.bot);
+            const coordinateTransform =
+                this.bot3D.coordinateTransformer && !hasValue(transformer)
+                    ? this.bot3D.coordinateTransformer(currentGridPos)
+                    : null;
             this._nextPos = calculateObjectPositionInGrid(
                 calc,
                 currentGridPos,
