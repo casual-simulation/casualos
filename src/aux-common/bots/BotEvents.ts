@@ -2093,6 +2093,16 @@ export interface ShowChatBarAction {
      * The color to use for the placeholder.
      */
     placeholderColor?: string;
+
+    /**
+     * The color to use for the background.
+     */
+    backgroundColor?: string;
+
+    /**
+     * The color to use for the foreground (text).
+     */
+    foregroundColor?: string;
 }
 
 /**
@@ -2113,6 +2123,16 @@ export interface ShowChatOptions {
      * The color to use for the placeholder.
      */
     placeholderColor?: string;
+
+    /**
+     * The color to use for the background.
+     */
+    backgroundColor?: string;
+
+    /**
+     * The color to use for the foreground (text).
+     */
+    foregroundColor?: string;
 }
 
 /**

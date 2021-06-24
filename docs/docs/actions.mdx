@@ -1937,36 +1937,48 @@ It should be an object with the following properties:
 - `placeholder` - The text that should be shown as a placeholder. (optional)
 - `prefill` - The text that should be filled into the chat bar. If the chat bar already has text in it, then setting this property does nothing.
 - `placeholderColor` - The color that the placeholder text should be. Defaults to `#448aff`.
+- `backgroundColor` - The color that the background of the chat bar should be. Defaults to `#fff`.
+- `foregroundColor` - The color that the foreground (text) of the chat bar should be. Defaults to `#000`.
 
 #### Examples:
 
-1. Show the chat bar with a placeholder.
-```typescript
+```typescript title='Show the chat bar with a placeholder.'
 os.showChat({
     placeholder: "hello"
 });
 ```
 
-2. Show the chat bar with some prefilled text.
-```typescript
+```typescript title='Show the chat bar with some prefilled text.'
 os.showChat({
     prefill: "this is prefilled"
 });
 ```
 
-3. Show the chat bar with some prefilled text and a placeholder.
-```typescript
+```typescript title='Show the chat bar with some prefilled text and a placeholder.'
 os.showChat({
     prefill: "this is prefilled",
     placeholder: "hello"
 });
 ```
 
-4. Show the chat bar with a custom placeholder color.
-```typescript
+```typescript title='Show the chat bar with a custom placeholder color.'
 os.showChat({
     placeholder: "hello",
     placeholderColor: '#44a471'
+});
+```
+
+```typescript title='Show the chat bar with a custom background color.'
+os.showChat({
+    placeholder: "hello",
+    backgroundColor: '#f1abe2'
+});
+```
+
+```typescript title='Show the chat bar with a custom foreground color.'
+os.showChat({
+    placeholder: "hello",
+    foregroundColor: '#531234'
 });
 ```
 
