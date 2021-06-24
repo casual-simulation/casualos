@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where camera position offsets would continuously be applied to the camera.
+-   Fixed an issue where the menu would be positioned incorrectly if the meet portal was anchored to the top of the screen.
 
 ## V2.0.1
 
