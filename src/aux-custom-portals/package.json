@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-custom-portals",
-    "version": "2.0.2-alpha.972817819",
+    "version": "2.0.2-alpha.972872148",
     "description": "A set of utilities that can be used to help custom portals interface with CasualOS.",
     "keywords": [
         "aux"
@@ -38,14 +38,14 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^2.0.2-alpha.972817819",
-        "@casual-simulation/aux-vm": "^2.0.2-alpha.972817819",
-        "@casual-simulation/aux-vm-browser": "^2.0.2-alpha.972817819",
-        "@casual-simulation/aux-vm-client": "^2.0.2-alpha.972817819",
-        "@casual-simulation/causal-tree-client-socketio": "^2.0.2-alpha.972817819",
-        "@casual-simulation/causal-trees": "^2.0.2-alpha.972817819",
-        "@casual-simulation/crypto": "^2.0.2-alpha.972817819",
-        "@casual-simulation/crypto-browser": "^2.0.2-alpha.972817819",
+        "@casual-simulation/aux-common": "^2.0.2-alpha.972872148",
+        "@casual-simulation/aux-vm": "^2.0.2-alpha.972872148",
+        "@casual-simulation/aux-vm-browser": "^2.0.2-alpha.972872148",
+        "@casual-simulation/aux-vm-client": "^2.0.2-alpha.972872148",
+        "@casual-simulation/causal-tree-client-socketio": "^2.0.2-alpha.972872148",
+        "@casual-simulation/causal-trees": "^2.0.2-alpha.972872148",
+        "@casual-simulation/crypto": "^2.0.2-alpha.972872148",
+        "@casual-simulation/crypto-browser": "^2.0.2-alpha.972872148",
         "comlink": "^4.0.1",
         "lodash": "4.17.21",
         "rxjs": "^6.5.2",
