@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-trees",
-    "version": "2.0.2-alpha.972727854",
+    "version": "2.0.2-alpha.972783436",
     "description": "Create persistent, distributed, realtime, and conflict-free data types.",
     "keywords": [
         "crdt",
@@ -41,7 +41,7 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/crypto": "^2.0.2-alpha.972727854",
+        "@casual-simulation/crypto": "^2.0.2-alpha.972783436",
         "@types/base64-js": "^1.2.5",
         "@types/lodash": "^4.14.123",
         "base64-js": "^1.3.0",
