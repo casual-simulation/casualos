@@ -27,7 +27,7 @@ jobs:
                   CURRENT_DATE="$(date +%-m\/%-d\/%Y)"
                   pwd
                   ls -la
-                  sed -i '' -e "s!#### Date: TBD!#### Date: ${CURRENT_DATE}!g" ./CHANGELOG.md
+                  sed -i -e "s!#### Date: TBD!#### Date: ${CURRENT_DATE}!g" ./CHANGELOG.md
             - name: Commit CHANGELOG
               run: |
                   git add ./CHANGELOG.md
