@@ -39,7 +39,10 @@ jobs:
                   npm run build
             - name: Publish NPM Packages
               run: |
-                  npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
+                  echo "@casual-simulation:registry=http://registry.npmjs.org/" > .npmrc
+                  echo "registry=http://registry.npmjs.org/" >> .npmrc
+                  echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> .npmrc
+                  npm whoami
                   echo "Publishing NPM Packages..."
                   ls -la
                   npx lerna publish from-package --yes
