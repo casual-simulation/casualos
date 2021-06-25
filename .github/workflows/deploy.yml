@@ -42,7 +42,7 @@ jobs:
                   git merge -X theirs --no-ff develop
             - name: Update package versions
               run: |
-                  VERSION=$("${./script/next_version.sh" "${GITHUB_RUN_ID}")
+                  VERSION=$("./script/next_version.sh" "${GITHUB_RUN_ID}")
                   lerna version "$VERSION" --yes --no-push
             - name: Push changes with tags
               run: |
