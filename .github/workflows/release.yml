@@ -123,9 +123,9 @@ jobs:
                   docker tag casualsimulation/aux-proxy $PROXY_IMAGE_ID:${{ env.GIT_TAG }}
                   docker tag casualsimulation/aux-redirector $REDIRECTOR_IMAGE_ID:${{ env.GIT_TAG }}
 
-                  echo "$CASUALOS_IMAGE_ID" >> $GITHUB_ENV
-                  echo "$PROXY_IMAGE_ID" >> $GITHUB_ENV
-                  echo "$REDIRECTOR_IMAGE_ID" >> $GITHUB_ENV
+                  echo "CASUALOS_IMAGE_ID=$CASUALOS_IMAGE_ID" >> $GITHUB_ENV
+                  echo "PROXY_IMAGE_ID=$PROXY_IMAGE_ID" >> $GITHUB_ENV
+                  echo "REDIRECTOR_IMAGE_ID=$REDIRECTOR_IMAGE_ID" >> $GITHUB_ENV
             - name: Publish GHCR
               run: |
                   docker push $CASUALOS_IMAGE_ID:${{ env.GIT_TAG }}
