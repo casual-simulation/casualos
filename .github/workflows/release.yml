@@ -5,11 +5,18 @@ on:
         branches:
             - master
             - staging
+    workflow_run:
+        workflows: ['Deploy']
+        branches:
+            - master
+            - staging
+        types: [completed]
 
 jobs:
     build:
         name: Build and Release
         runs-on: ubuntu-latest
+        if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
         env:
             CI: true
             IS_MASTER: ${{ github.ref == "refs/heads/master" }}
