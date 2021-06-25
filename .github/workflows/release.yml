@@ -12,7 +12,7 @@ jobs:
         runs-on: ubuntu-latest
         env:
             CI: true
-            IS_MASTER: ${{ ( github.event_name == 'push' && github.ref == "refs/heads/master" ) || ( github.event_name == 'workflow_dispatch' && github.event.inputs.branch == 'master' ) }}
+            IS_MASTER: ${{ ( github.event_name == 'push' && github.ref == 'refs/heads/master' ) || ( github.event_name == 'workflow_dispatch' && github.event.inputs.branch == 'master' ) }}
         steps:
             - uses: actions/checkout@v1
             - name: Use Node.js 14.x
