@@ -30,6 +30,8 @@ jobs:
                   sed -i -e "s!#### Date: TBD!#### Date: ${CURRENT_DATE}!g" ./CHANGELOG.md
             - name: Commit CHANGELOG
               run: |
+                  git config --global user.name DevOps
+                  git config --global user.email devops@casualsimulation.org
                   git add ./CHANGELOG.md
                   git commit -m "chore: Update CHANGELOG Date"
             - name: Merge develop into target branch
@@ -40,7 +42,7 @@ jobs:
                   git merge -X theirs --no-ff develop
             - name: Update package versions
               run: |
-                  VERSION=$("${SCRIPTPATH}/next_version.sh" "${BUILD_NUMBER}")
+                  VERSION=$("${./script/next_version.sh" "${GITHUB_RUN_ID}")
                   lerna version "$VERSION" --yes --no-push
             - name: Push changes with tags
               run: |
