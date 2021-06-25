@@ -39,8 +39,9 @@ jobs:
                   npm run build
             - name: Publish NPM Packages
               run: |
-                  echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+                  npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
                   echo "Publishing NPM Packages..."
+                  ls -la
                   npx lerna publish from-package --yes
 
                   echo "Updating package-lock.json..."
@@ -51,6 +52,8 @@ jobs:
                   for i in {1..5}; do 
                       npm install --package-lock-only && break || sleep 5;
                   done
+              env:
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
             - name: Publish Docs
               if: ${{ env.IS_MASTER == true }}
               run: |
