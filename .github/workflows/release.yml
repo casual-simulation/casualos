@@ -27,10 +27,10 @@ jobs:
               run: |
                   echo "GIT_TAG=$(git describe --abbrev=0 --tags)" >> $GITHUB_ENV
             - name: Make GitHub Release
-              if: ${{ env.IS_MASTER }}
+              if: ${{ env.IS_MASTER == true }}
               run: |
                   CHANGELOG=$(./script/most_recent_changelog.sh)
-                  node ./src/make-github-release/bin/make-github-release.js release --owner "${{ github.repository_owner }}" --repo ${{ github.repository }} --text \"${CHANGELOG}\" --auth ${{ secrets.GITHUB_TOKEN }}
+                  node ./src/make-github-release/bin/make-github-release.js release --owner "${{ github.repository_owner }}" --repo ${{ github.event.repository.name }} --text \"${CHANGELOG}\" --auth ${{ secrets.GITHUB_TOKEN }}
             - name: Test
               run: |
                   npx jest --detectOpenHandles --forceExit --no-cache
@@ -91,14 +91,14 @@ jobs:
                   docker push casualsimulation/aux-proxy:${{ env.GIT_TAG }}
                   docker push casualsimulation/aux-redirector:${{ env.GIT_TAG }}
             - name: Publish DockerHub Latest
-              if: ${{ env.IS_MASTER }}
+              if: ${{ env.IS_MASTER == true }}
               run: |
                   echo "Publishing the latest tags...."
                   docker push casualsimulation/aux:latest
                   docker push casualsimulation/aux-proxy:latest
                   docker push casualsimulation/aux-redirector:latest
             - name: Publish DockerHub Alpha
-              if: ${{ !env.IS_MASTER }}
+              if: ${{ env.IS_MASTER == false }}
               run: |
                   echo "Publishing the alpha tags...."
                   docker push casualsimulation/aux:alpha
@@ -123,6 +123,14 @@ jobs:
                   docker tag casualsimulation/aux-proxy $PROXY_IMAGE_ID:${{ env.GIT_TAG }}
                   docker tag casualsimulation/aux-redirector $REDIRECTOR_IMAGE_ID:${{ env.GIT_TAG }}
 
+                  docker tag casualsimulation/aux $CASUALOS_IMAGE_ID:latest
+                  docker tag casualsimulation/aux-proxy $PROXY_IMAGE_ID:latest
+                  docker tag casualsimulation/aux-redirector $REDIRECTOR_IMAGE_ID:latest
+
+                  docker tag casualsimulation/aux $CASUALOS_IMAGE_ID:alpha
+                  docker tag casualsimulation/aux-proxy $PROXY_IMAGE_ID:alpha
+                  docker tag casualsimulation/aux-redirector $REDIRECTOR_IMAGE_ID:alpha
+
                   echo "CASUALOS_IMAGE_ID=$CASUALOS_IMAGE_ID" >> $GITHUB_ENV
                   echo "PROXY_IMAGE_ID=$PROXY_IMAGE_ID" >> $GITHUB_ENV
                   echo "REDIRECTOR_IMAGE_ID=$REDIRECTOR_IMAGE_ID" >> $GITHUB_ENV
@@ -132,7 +140,7 @@ jobs:
                   docker push $PROXY_IMAGE_ID:${{ env.GIT_TAG }}
                   docker push $REDIRECTOR_IMAGE_ID:${{ env.GIT_TAG }}
             - name: Publish GHCR Latest
-              if: ${{ env.IS_MASTER }}
+              if: ${{ env.IS_MASTER == true }}
               run: |
                   echo "Publishing the latest tags...."
                   docker push $CASUALOS_IMAGE_ID:latest
