@@ -27,7 +27,7 @@ jobs:
               run: |
                   echo "GIT_TAG=$(git describe --abbrev=0 --tags)" >> $GITHUB_ENV
             - name: Make GitHub Release
-              if: ${{ env.IS_MASTER == true }}
+              if: ${{ env.IS_MASTER }}
               run: |
                   CHANGELOG=$(./script/most_recent_changelog.sh)
                   node ./src/make-github-release/bin/make-github-release.js release --owner "${{ github.repository_owner }}" --repo ${{ github.repository }} --text \"${CHANGELOG}\" --auth ${{ secrets.GITHUB_TOKEN }}
@@ -91,14 +91,14 @@ jobs:
                   docker push casualsimulation/aux-proxy:${{ env.GIT_TAG }}
                   docker push casualsimulation/aux-redirector:${{ env.GIT_TAG }}
             - name: Publish DockerHub Latest
-              if: ${{ env.IS_MASTER == true }}
+              if: ${{ env.IS_MASTER }}
               run: |
                   echo "Publishing the latest tags...."
                   docker push casualsimulation/aux:latest
                   docker push casualsimulation/aux-proxy:latest
                   docker push casualsimulation/aux-redirector:latest
             - name: Publish DockerHub Alpha
-              if: ${{ env.IS_MASTER == false }}
+              if: ${{ !env.IS_MASTER }}
               run: |
                   echo "Publishing the alpha tags...."
                   docker push casualsimulation/aux:alpha
