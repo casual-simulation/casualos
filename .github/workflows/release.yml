@@ -5,21 +5,14 @@ on:
         branches:
             - master
             - staging
-    workflow_run:
-        workflows: ['Deploy']
-        branches:
-            - master
-            - staging
-        types: [completed]
 
 jobs:
     build:
         name: Build and Release
         runs-on: ubuntu-latest
-        if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
         env:
             CI: true
-            IS_MASTER: ${{ github.ref == "refs/heads/master" }}
+            IS_MASTER: ${{ ( github.event_name == 'push' && github.ref == "refs/heads/master" ) || ( github.event_name == 'workflow_dispatch' && github.event.inputs.branch == 'master' ) }}
         steps:
             - uses: actions/checkout@v1
             - name: Use Node.js 14.x
