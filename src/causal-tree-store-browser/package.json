@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-store-browser",
-    "version": "2.0.2-alpha.972678076",
+    "version": "2.0.2-alpha.972720883",
     "description": "A causal tree store that supports browser environments",
     "keywords": [
         "crdt",
@@ -41,7 +41,7 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/causal-trees": "^2.0.2-alpha.972678076",
+        "@casual-simulation/causal-trees": "^2.0.2-alpha.972720883",
         "dexie": "^2.0.4"
     }
 }

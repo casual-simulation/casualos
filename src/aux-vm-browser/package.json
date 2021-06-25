@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm-browser",
-    "version": "2.0.2-alpha.972678076",
+    "version": "2.0.2-alpha.972720883",
     "description": "A set of utilities required to securely run an AUX in a web browser.",
     "keywords": [
         "aux"
@@ -40,13 +40,13 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^2.0.2-alpha.972678076",
-        "@casual-simulation/aux-vm": "^2.0.2-alpha.972678076",
-        "@casual-simulation/aux-vm-client": "^2.0.2-alpha.972678076",
-        "@casual-simulation/causal-tree-client-socketio": "^2.0.2-alpha.972678076",
-        "@casual-simulation/causal-trees": "^2.0.2-alpha.972678076",
-        "@casual-simulation/crypto": "^2.0.2-alpha.972678076",
-        "@casual-simulation/crypto-browser": "^2.0.2-alpha.972678076",
+        "@casual-simulation/aux-common": "^2.0.2-alpha.972720883",
+        "@casual-simulation/aux-vm": "^2.0.2-alpha.972720883",
+        "@casual-simulation/aux-vm-client": "^2.0.2-alpha.972720883",
+        "@casual-simulation/causal-tree-client-socketio": "^2.0.2-alpha.972720883",
+        "@casual-simulation/causal-trees": "^2.0.2-alpha.972720883",
+        "@casual-simulation/crypto": "^2.0.2-alpha.972720883",
+        "@casual-simulation/crypto-browser": "^2.0.2-alpha.972720883",
         "comlink": "^4.0.1",
         "lodash": "4.17.21",
         "rxjs": "^6.5.2",
