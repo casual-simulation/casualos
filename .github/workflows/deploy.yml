@@ -46,7 +46,7 @@ jobs:
                   lerna version "$VERSION" --yes --no-push
             - name: Push changes with tags
               run: |
-                  git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+                  git remote set-url origin https://x-access-token:${{ secrets.DEPLOY_SECRET }}@github.com/${{ github.repository }}
                   git push origin --follow-tags
               env:
                   CI: true
