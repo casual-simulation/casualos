@@ -25,10 +25,12 @@ jobs:
             - name: Update CHANGELOG
               run: |
                   CURRENT_DATE="$(date +%-m\/%-d\/%Y)"
-                  sed -i '' -e "s!#### Date: TBD!#### Date: ${CURRENT_DATE}!g" "CHANGELOG.md"
+                  pwd
+                  ls -la
+                  sed -i '' -e "s!#### Date: TBD!#### Date: ${CURRENT_DATE}!g" ./CHANGELOG.md
             - name: Commit CHANGELOG
               run: |
-                  git add "CHANGELOG.md"
+                  git add ./CHANGELOG.md
                   git commit -m "chore: Update CHANGELOG Date"
             - name: Merge develop into target branch
               run: |
