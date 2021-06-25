@@ -21,10 +21,11 @@ import { PlayerBotDragOperation } from '../DragOperation/PlayerBotDragOperation'
 import { dropWhile } from 'lodash';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { PlayerNewBotDragOperation } from '../DragOperation/PlayerNewBotDragOperation';
-import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
+import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { ControllerData, InputMethod } from '../../../shared/scene/Input';
+import { MapSimulation3D } from '../../scene/MapSimulation3D';
 
 export class PlayerBotClickOperation extends BaseBotClickOperation {
     // This overrides the base class.
@@ -83,12 +84,14 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
             const draggedObjects = dropWhile(objects, (o) => o.id !== bot.id);
             const {
                 playerSimulation3D,
-                inventorySimulation3D,
+                miniSimulation3D,
+                mapSimulation3D,
             } = this._getSimulationsForDragOp();
 
             return new PlayerBotDragOperation(
                 playerSimulation3D,
-                inventorySimulation3D,
+                miniSimulation3D,
+                mapSimulation3D,
                 this._interaction,
                 draggedObjects,
                 bot3D.dimension,
@@ -105,24 +108,39 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
 
     private _getSimulationsForDragOp() {
         let playerSimulation3D: PlayerPageSimulation3D;
-        let inventorySimulation3D: InventorySimulation3D;
+        let miniSimulation3D: MiniSimulation3D;
+        let mapSimulation3D: MapSimulation3D;
 
         if (this._simulation3D instanceof PlayerPageSimulation3D) {
             playerSimulation3D = this._simulation3D;
-            inventorySimulation3D = (<PlayerGame>(
-                this.game
-            )).findInventorySimulation3D(this._simulation3D.simulation);
-        } else if (this._simulation3D instanceof InventorySimulation3D) {
+            miniSimulation3D = (<PlayerGame>this.game).findMiniSimulation3D(
+                this._simulation3D.simulation
+            );
+            mapSimulation3D = (<PlayerGame>this.game).findMapSimulation3D(
+                this._simulation3D.simulation
+            );
+        } else if (this._simulation3D instanceof MiniSimulation3D) {
             playerSimulation3D = (<PlayerGame>this.game).findPlayerSimulation3D(
                 this._simulation3D.simulation
             );
-            inventorySimulation3D = this._simulation3D;
+            miniSimulation3D = this._simulation3D;
+            mapSimulation3D = (<PlayerGame>this.game).findMapSimulation3D(
+                this._simulation3D.simulation
+            );
+        } else if (this._simulation3D instanceof MapSimulation3D) {
+            playerSimulation3D = (<PlayerGame>this.game).findPlayerSimulation3D(
+                this._simulation3D.simulation
+            );
+            miniSimulation3D = (<PlayerGame>this.game).findMiniSimulation3D(
+                this._simulation3D.simulation
+            );
+            mapSimulation3D = this._simulation3D;
         } else {
             console.error(
                 '[PlayerBotClickOperation] Unsupported Simulation3D type for drag operation.'
             );
         }
 
-        return { playerSimulation3D, inventorySimulation3D };
+        return { playerSimulation3D, miniSimulation3D, mapSimulation3D };
     }
 }

@@ -39,6 +39,7 @@ describe('AuxGlobalContext', () => {
                 supportsAR: false,
                 supportsVR: false,
                 isCollaborative: true,
+                ab1BootstrapUrl: 'ab1Bootstrap',
             },
             factory,
             notifier

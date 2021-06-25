@@ -20,7 +20,7 @@ import { BaseModDragOperation } from '../../../shared/interaction/DragOperation/
 import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import { Vector2, Ray } from '@casual-simulation/three';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
+import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { Input, InputMethod } from '../../../shared/scene/Input';
@@ -38,13 +38,13 @@ export class PlayerModDragOperation extends BaseModDragOperation {
 
     protected _interaction: PlayerInteractionManager;
     protected _simulation3D: PlayerPageSimulation3D;
-    protected _inventorySimulation3D: InventorySimulation3D;
+    protected _miniSimulation3D: MiniSimulation3D;
 
-    // Determines if the bot is in the inventory currently
-    protected _inInventory: boolean;
+    // Determines if the bot is in the mini portal currently
+    protected _inMiniPortal: boolean;
 
-    // Determines if the bot was in the inventory at the beginning of the drag operation
-    protected _originallyInInventory: boolean;
+    // Determines if the bot was in the mini portal at the beginning of the drag operation
+    protected _originallyInMiniPortal: boolean;
 
     protected _originalContext: string;
 
@@ -60,7 +60,7 @@ export class PlayerModDragOperation extends BaseModDragOperation {
      */
     constructor(
         simulation3D: PlayerPageSimulation3D,
-        inventorySimulation3D: InventorySimulation3D,
+        miniSimulation3D: MiniSimulation3D,
         interaction: PlayerInteractionManager,
         mod: BotTags,
         inputMethod: InputMethod,
@@ -74,7 +74,7 @@ export class PlayerModDragOperation extends BaseModDragOperation {
             undefined,
             snapInterface
         );
-        this._inventorySimulation3D = inventorySimulation3D;
+        this._miniSimulation3D = miniSimulation3D;
     }
 
     _onDrag(calc: BotCalculationContext) {
@@ -87,17 +87,17 @@ export class PlayerModDragOperation extends BaseModDragOperation {
         let inputRay: Ray = this._getInputRay();
 
         // Get grid tile from correct simulation grid.
-        const grid3D = this._inInventory
-            ? this._inventorySimulation3D.grid3D
+        const grid3D = this._inMiniPortal
+            ? this._miniSimulation3D.grid3D
             : this._simulation3D.grid3D;
-        const gridTile = grid3D.getTileFromRay(inputRay);
+        const gridTile = grid3D.getTileFromRay(inputRay, true);
 
         if (!gridTile) {
             return;
         }
 
-        const viewport = (this._inInventory
-            ? this._inventorySimulation3D.getMainCameraRig()
+        const viewport = (this._inMiniPortal
+            ? this._miniSimulation3D.getMainCameraRig()
             : this._simulation3D.getMainCameraRig()
         ).viewport;
         const {
@@ -158,15 +158,15 @@ export class PlayerModDragOperation extends BaseModDragOperation {
         if (nextContext !== this._dimension) {
             this._previousDimension = this._dimension;
             this._dimension = nextContext;
-            this._inInventory =
-                nextContext === this._inventorySimulation3D.inventoryDimension;
+            this._inMiniPortal =
+                nextContext === this._miniSimulation3D.miniDimension;
         }
     }
 
     private _calculateNextDimensionGroup(tile: GridTile) {
         const dimension =
             this._simulation3D.getDimensionGroupForGrid(tile.grid) ||
-            this._inventorySimulation3D.getDimensionGroupForGrid(tile.grid);
+            this._miniSimulation3D.getDimensionGroupForGrid(tile.grid);
         return dimension;
     }
 
@@ -177,11 +177,11 @@ export class PlayerModDragOperation extends BaseModDragOperation {
         } else {
             // Get input ray from correct camera based on which dimension we are in.
             const pagePos = this.game.getInput().getMousePagePos();
-            const inventoryViewport = this.game.getInventoryViewport();
-            if (this._inInventory) {
+            const miniViewport = this.game.getMiniPortalViewport();
+            if (this._inMiniPortal) {
                 inputRay = Physics.screenPosToRay(
-                    Input.screenPositionForViewport(pagePos, inventoryViewport),
-                    this._inventorySimulation3D.getMainCameraRig().mainCamera
+                    Input.screenPositionForViewport(pagePos, miniViewport),
+                    this._miniSimulation3D.getMainCameraRig().mainCamera
                 );
             } else {
                 inputRay = Physics.screenPosToRay(
@@ -195,15 +195,15 @@ export class PlayerModDragOperation extends BaseModDragOperation {
 
     private _updateCurrentViewport() {
         if (!this._controller) {
-            // Test to see if we are hovering over the inventory simulation view.
+            // Test to see if we are hovering over the mini simulation view.
             const pagePos = this.game.getInput().getMousePagePos();
-            const inventoryViewport = this.game.getInventoryViewport();
-            this._inInventory = Input.pagePositionOnViewport(
+            const miniViewport = this.game.getMiniPortalViewport();
+            this._inMiniPortal = Input.pagePositionOnViewport(
                 pagePos,
-                inventoryViewport
+                miniViewport
             );
         } else {
-            this._inInventory = false;
+            this._inMiniPortal = false;
         }
     }
 }

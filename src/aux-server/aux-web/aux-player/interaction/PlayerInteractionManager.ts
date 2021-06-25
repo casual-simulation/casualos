@@ -35,6 +35,7 @@ import {
     ON_POINTER_UP,
     ON_ANY_POINTER_DOWN,
     ON_ANY_POINTER_UP,
+    getBotCursor,
 } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
@@ -52,7 +53,7 @@ import { appManager } from '../../shared/AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
 import { flatMap, isEqual } from 'lodash';
-import { InventoryContextGroup3D } from '../scene/InventoryContextGroup3D';
+import { MiniPortalContextGroup3D } from '../scene/MiniPortalContextGroup3D';
 import {
     calculateHitFace,
     isObjectVisible,
@@ -71,12 +72,13 @@ import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import { Grid3D } from '../../shared/scene/Grid3D';
 import { PlayerPageSimulation3D } from '../scene/PlayerPageSimulation3D';
 import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
-import { InventorySimulation3D } from '../scene/InventorySimulation3D';
+import { MiniSimulation3D } from '../scene/MiniSimulation3D';
 import { Physics } from '../../shared/scene/Physics';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { PlayerBotDragOperation } from './DragOperation/PlayerBotDragOperation';
 import { PlayerModDragOperation } from './DragOperation/PlayerModDragOperation';
 import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';
+import { MapPortalDimensionGroup3D } from '../scene/MapPortalDimensionGroup3D';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -132,9 +134,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         controller: InputMethod
     ): IOperation {
         const pageSimulation = this._game.findPlayerSimulation3D(simulation);
-        const inventorySimulation = this._game.findInventorySimulation3D(
-            simulation
-        );
+        const miniSimulation = this._game.findMiniSimulation3D(simulation);
+        const mapSimulation = this._game.findMapSimulation3D(simulation);
         if (isBot(bot)) {
             let tempPos = getBotPosition(null, bot, dimension);
             let startBotPos = new Vector2(
@@ -143,7 +144,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             );
             let botDragOp = new PlayerBotDragOperation(
                 pageSimulation,
-                inventorySimulation,
+                miniSimulation,
+                mapSimulation,
                 this,
                 [bot],
                 dimension,
@@ -154,7 +156,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         } else {
             let modDragOp = new PlayerModDragOperation(
                 pageSimulation,
-                inventorySimulation,
+                miniSimulation,
                 this,
                 bot,
                 controller
@@ -191,9 +193,10 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 this._game.getSimulations(),
                 (s) => s.dimensions
             );
-            // Sort between inventory colliders and other colliders.
-            let inventoryColliders: Object3D[] = [];
+            // Sort between mini portal colliders and other colliders.
+            let miniPortalColliders: Object3D[] = [];
             let otherColliders: Object3D[] = [];
+            let mapPortalColliders: Object3D[] = [];
             if (contexts && contexts.length > 0) {
                 for (let i = 0; i < contexts.length; i++) {
                     const dimension = contexts[i];
@@ -202,20 +205,27 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                         : []
                     ).filter((c) => !!c);
 
-                    if (dimension instanceof InventoryContextGroup3D) {
-                        inventoryColliders.push(...colliders);
+                    if (dimension instanceof MiniPortalContextGroup3D) {
+                        miniPortalColliders.push(...colliders);
+                    } else if (dimension instanceof MapPortalDimensionGroup3D) {
+                        mapPortalColliders.push(...colliders);
                     } else {
                         otherColliders.push(...colliders);
                     }
                 }
             }
 
-            // Put inventory colliders in front of other colliders so that they take priority in input testing.
+            // Put mini portal colliders in front of other colliders so that they take priority in input testing.
             this._draggableGroups = [
                 {
-                    objects: inventoryColliders,
-                    camera: this._game.getInventoryCameraRig().mainCamera,
-                    viewport: this._game.getInventoryCameraRig().viewport,
+                    objects: miniPortalColliders,
+                    camera: this._game.getMiniPortalCameraRig().mainCamera,
+                    viewport: this._game.getMiniPortalCameraRig().viewport,
+                },
+                {
+                    objects: mapPortalColliders,
+                    camera: this._game.getMapPortalCameraRig().mainCamera,
+                    viewport: this._game.getMapPortalCameraRig().viewport,
                 },
                 {
                     objects: otherColliders,
@@ -376,13 +386,13 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             mainCameraRigControls.controls.screenSpacePanning = true;
         }
 
-        // Inventory camera
+        // mini portal camera
         let invCameraRigControls: CameraRigControls = {
-            rig: this._game.getInventoryCameraRig(),
+            rig: this._game.getMiniPortalCameraRig(),
             controls: new CameraControls(
-                this._game.getInventoryCameraRig().mainCamera,
+                this._game.getMiniPortalCameraRig().mainCamera,
                 this._game,
-                this._game.getInventoryCameraRig().viewport
+                this._game.getMiniPortalCameraRig().viewport
             ),
         };
 
@@ -393,7 +403,32 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             invCameraRigControls.controls.screenSpacePanning = true;
         }
 
-        return [mainCameraRigControls, invCameraRigControls];
+        // map portal camera
+        let mapPortalCameraRigControls: CameraRigControls = {
+            rig: this._game.getMapPortalCameraRig(),
+            controls: new CameraControls(
+                this._game.getMapPortalCameraRig().mainCamera,
+                this._game,
+                this._game.getMapPortalCameraRig().viewport
+            ),
+        };
+
+        mapPortalCameraRigControls.controls.passthroughEvents = true;
+        mapPortalCameraRigControls.controls.minZoom = Orthographic_MinZoom;
+        mapPortalCameraRigControls.controls.maxZoom = Orthographic_MaxZoom;
+
+        if (
+            mapPortalCameraRigControls.rig.mainCamera instanceof
+            OrthographicCamera
+        ) {
+            mapPortalCameraRigControls.controls.screenSpacePanning = true;
+        }
+
+        return [
+            mainCameraRigControls,
+            invCameraRigControls,
+            mapPortalCameraRigControls,
+        ];
     }
 
     protected _updateCameraOffsets() {
@@ -492,6 +527,22 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 rig.cameraParent.rotation.y !== targetYRot ||
                 rig.cameraParent.rotation.z !== targetZRot
             ) {
+                const deltaX = targetXPos - rig.cameraParent.position.x;
+                const deltaY = targetYPos - rig.cameraParent.position.y;
+                const deltaZ = targetZPos - rig.cameraParent.position.z;
+
+                const controls = this.cameraRigControllers.find(
+                    (c) => c.rig === rig
+                );
+
+                if (controls) {
+                    controls.controls.cameraFrameOffset.set(
+                        deltaX,
+                        deltaY,
+                        deltaZ
+                    );
+                }
+
                 rig.cameraParent.position.set(
                     targetXPos,
                     targetYPos,
@@ -696,7 +747,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             }
 
             // We have to postfix with "Portal" because the portal names are "pagePortal"
-            // and "inventoryPortal" but are abbreviated to "page" and "inventory".
+            // and "miniPortal" but are abbreviated to "page" and "mini".
             const portalBot = getPortalConfigBot(
                 sim.simulation,
                 `${portal}Portal`
@@ -740,14 +791,14 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 }
 
 function portalInfoForSim(sim: Simulation3D) {
-    let portal: 'page' | 'inventory';
+    let portal: 'page' | 'mini';
     let gridScale: number;
     if (sim instanceof PlayerPageSimulation3D) {
         portal = 'page';
         gridScale = sim.pageConfig.gridScale;
-    } else if (sim instanceof InventorySimulation3D) {
-        portal = 'inventory';
-        gridScale = sim.inventoryConfig.gridScale;
+    } else if (sim instanceof MiniSimulation3D) {
+        portal = 'mini';
+        gridScale = sim.miniConfig.gridScale;
     }
     let inverseScale = 1 / gridScale;
 

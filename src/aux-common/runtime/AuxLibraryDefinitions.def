@@ -212,6 +212,7 @@ declare type ExtraActions =
     | ClearSpaceAction
     | LocalFormAnimationAction
     | AddDropSnapTargetsAction
+    | EnableCustomDraggingAction
     | EnablePOVAction;
 
 /**
@@ -232,8 +233,8 @@ declare type AsyncActions =
     | CancelSoundAction
     | OpenCustomPortalAction
     | RegisterPrefixAction
-    | AnimateToBotAction
-    | AnimateToPositionAction
+    | FocusOnBotAction
+    | FocusOnPositionAction
     | BeginRecordingAction
     | EndRecordingAction
     | SpeakTextAction
@@ -680,7 +681,7 @@ declare interface HideHtmlAction extends Action {
 /**
  * Options for the os.tweenTo(), os.moveTo(), and os.focusOn() actions.
  */
- export interface AnimateToOptions {
+ export interface FocusOnOptions {
     /*
      * The zoom value to use.
      */
@@ -705,13 +706,19 @@ declare interface HideHtmlAction extends Action {
      * If not specified then "quadratic" "inout" will be used.
      */
      easing?: EaseType | Easing;
+
+     /**
+      * The portal that the bot should be focused in.
+      * If not specified, then the bot will be focused in all supported portals. (page, mini and menu)
+      */
+     portal?: PortalType;
 }
 
 /**
- * An event that is used to tween the camera to the given bot's location.
+ * An event that is used to focus on a given bot.
  */
-export interface AnimateToBotAction extends AsyncAction, AnimateToOptions {
-    type: 'animate_to_bot';
+export interface FocusOnBotAction extends AsyncAction, FocusOnOptions {
+    type: 'focus_on';
 
     /**
      * The ID of the bot to tween to.
@@ -720,10 +727,10 @@ export interface AnimateToBotAction extends AsyncAction, AnimateToOptions {
 }
 
 /**
- * An event that is used to animate the camera to the given bot's location.
+ * An event that is used to focus the camera on a specific position.
  */
- export interface AnimateToPositionAction extends AsyncAction, AnimateToOptions {
-    type: 'animate_to_position';
+ export interface FocusOnPositionAction extends AsyncAction, FocusOnOptions {
+    type: 'focus_on_position';
 
     /**
      * The position to animate to.
@@ -1352,6 +1359,16 @@ declare interface ShowChatBarAction {
      * The color to use for the placeholder.
      */
     placeholderColor?: string;
+
+    /**
+     * The color to use for the background.
+     */
+    backgroundColor?: string;
+
+    /**
+     * The color to use for the foreground (text).
+     */
+     foregroundColor?: string;
 }
 
 /**
@@ -1372,6 +1389,16 @@ declare interface ShowChatOptions {
      * The color to use for the placeholder.
      */
     placeholderColor?: string;
+
+    /**
+     * The color to use for the background.
+     */
+     backgroundColor?: string;
+
+     /**
+     * The color to use for the foreground (text).
+     */
+      foregroundColor?: string;
 }
 
 /**
@@ -1821,13 +1848,42 @@ declare interface ShareAction extends AsyncAction, ShareOptions {
 }
 
 /**
+ * Defines an interface that represents a snap axis.
+ * That is, a ray in 3D space with an associated snap distance.
+ */
+ export interface SnapAxis {
+    /**
+     * The 3D direction that the axis ray travels along.
+     */
+    direction: { x: number; y: number; z: number };
+
+    /**
+     * The 3D position that the ray starts at.
+     */
+    origin: { x: number; y: number; z: number };
+
+    /**
+     * The distance from the ray line that the snap point should take effect at.
+     */
+    distance: number;
+}
+
+/**
  * The list of possible snap targets.
  * - "ground" means that the dragged bot should snap to the ground plane. This option is overriden by "grid".
  * - "grid" means that the dragged bot should snap to grid tiles.
  * - "face" means that the dragged bot should snap to other bot faces.
  * - "bots" means that the dragged bot will snap to other bots.
  */
- declare type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint;
+declare type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint | SnapAxis;
+
+/**
+ * An event that is used to disable the default dragging logic (moving the bot) and enable
+ * "onDragging" shouts and whispers.
+ */
+ export interface EnableCustomDraggingAction extends Action {
+    type: 'enable_custom_dragging';
+}
 
 /**
  * The possible options for a custom portal.
@@ -2300,7 +2356,7 @@ declare type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history' | 'admin' |
  */
 declare type PortalType =
     | 'page'
-    | 'inventory'
+    | 'mini'
     | 'menu'
     | 'sheet'
     | string;
@@ -2554,6 +2610,14 @@ declare global {
      * @param data The data.
      */
     function getJSON(data: any): string;
+
+    /**
+     * Shouts the given events in order until a bot returns a result.
+     * Returns the result that was produced or undefined if no result was produced.
+     * @param eventNames The names of the events to shout.
+     * @param arg The argument to shout.
+     */
+     function priorityShout(eventNames: string[], arg?: any): any;
 
     /**
      * Asks every bot in the server to run the given action.
@@ -3188,6 +3252,16 @@ declare global {
         device(): AuxDevice;
 
         /**
+         * Gets whether this device has enabled collaborative features.
+         */
+        isCollaborative(): boolean;
+
+        /**
+         * Gets the URL that AB1 should be bootstrapped from.
+         */
+        getAB1BootstrapURL(): string;
+
+        /**
          * Gets whether the player is in the sheet dimension.
          */
         inSheet(): boolean;
@@ -3196,19 +3270,19 @@ declare global {
          * Gets the 3D position of the player's camera.
          * @param portal The portal that the camera position should be retrieved for.
          */
-        getCameraPosition(portal?: 'page' | 'inventory'): Point3D;
+        getCameraPosition(portal?: 'page' | 'mini'): Point3D;
 
         /**
          * Gets the 3D rotation of the player's camera.
          * @param portal The portal that the camera rotation should be retrieved for.
          */
-        getCameraRotation(portal?: 'page' | 'inventory'): Point3D;
+        getCameraRotation(portal?: 'page' | 'mini'): Point3D;
 
         /**
          * Gets the 3D point that the player's camera is focusing on.
          * @param portal The portal that the camera focus point should be retrieved for.
          */
-        getFocusPoint(portal?: 'page' | 'inventory'): Point3D;
+        getFocusPoint(portal?: 'page' | 'mini'): Point3D;
 
         /**
          * Gets the 3D position of the player's pointer.
@@ -3362,6 +3436,13 @@ declare global {
         addBotDropSnap(bot: Bot | string, ...targets: SnapTarget[]): AddDropSnapTargetsAction;
 
         /**
+         * Enables custom dragging for the current drag operation.
+         * This will disable the built-in logic that moves the bot(s) and
+         * enables the "onDragging" and "onAnyBotDragging" listen tags.
+         */
+        enableCustomDragging(): EnableCustomDraggingAction;
+
+        /**
          * Logs the given data to the developer console.
          * @param args The data to log.
          */
@@ -3392,7 +3473,7 @@ declare global {
          */
         focusOn(
             botOrPosition: Bot | string | { x: number, y: number },
-            options: AnimateToOptions
+            options: FocusOnOptions
         ): Promise<void>;
 
         /**
@@ -3646,10 +3727,10 @@ declare global {
         getDimensionalDepth(dimension: string): number;
 
         /**
-         * Determines whether the player has the given bot in their inventory.
+         * Determines whether the player has the given bot in their mini portal.
          * @param bots The bot or bots to check.
          */
-        hasBotInInventory(bots: Bot | Bot[]): boolean;
+        hasBotInMiniPortal(bots: Bot | Bot[]): boolean;
 
         /**
          * Gets the current user's bot.
@@ -3662,9 +3743,9 @@ declare global {
         getMenuDimension(): string;
 
         /**
-         * Gets the name of the dimension that is used for the current user's inventory.
+         * Gets the name of the dimension that is used for the current user's mini portal.
          */
-        getInventoryDimension(): string;
+        getMiniPortalDimension(): string;
     };
 
     /**
@@ -4340,6 +4421,18 @@ declare global {
          * @param vector The vector that should be negated.
          */
         negateVector<T>(vector: T): T;
+
+        /**
+         * Normalizes the given vector and returns the result.
+         * @param vector The vector that should be normalized.
+         */
+        normalizeVector<T>(vector: T): T;
+
+        /**
+         * Calculates the length of the given vector.
+         * @param vector The vector to calculate the length of.
+         */
+        vectorLength<T>(vector: T): number;
 
         /**
          * Multiplies each component of the given vector by the given scale and returns the result.

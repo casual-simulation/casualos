@@ -4,13 +4,14 @@
             <custom-portals :vmOrigin="vmOrigin()"></custom-portals>
             <meet-portal>
                 <tag-portal>
-                    <md-toolbar v-if="showChatBar">
+                    <md-toolbar v-if="showChatBar" :style="chatBarBackgroundStyle">
                         <div class="md-toolbar-section-start">
                             <bot-chat
                                 ref="chatBar"
                                 :prefill="chatBarPrefill"
                                 :placeholder="chatBarPlaceholder"
                                 :placeholderColor="chatBarPlaceholderColor"
+                                :foregroundColor="chatBarForegroundColor"
                             ></bot-chat>
                         </div>
                     </md-toolbar>
@@ -104,6 +105,7 @@
             />
 
             <md-dialog-alert
+                class="alert-dialog"
                 :md-active.sync="showAlertDialog"
                 v-bind:md-content="alertDialogOptions.body"
                 v-bind:md-confirm-text="alertDialogOptions.confirmText"

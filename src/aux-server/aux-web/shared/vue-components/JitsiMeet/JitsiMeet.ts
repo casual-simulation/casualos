@@ -26,11 +26,16 @@ export default class JitsiMeet extends Vue {
     options: JitsiMeetExternalAPIOptions;
 
     private _jitsiApi: JitsiApi;
+    private _removedJitsi: boolean;
 
     mounted() {
         this._loadScript('https://meet.jit.si/external_api.js', () => {
-            if (!JitsiMeetExternalAPI)
+            if (!JitsiMeetExternalAPI) {
                 throw new Error('Jitsi Meet API not loaded');
+            }
+            if (this._removedJitsi) {
+                return;
+            }
             this._embedJitsiWidget();
         });
     }
@@ -59,7 +64,10 @@ export default class JitsiMeet extends Vue {
     }
 
     private _removeJitsiWidget() {
-        if (this._jitsiApi) this._jitsiApi.dispose();
+        if (this._jitsiApi) {
+            this._jitsiApi.dispose();
+        }
+        this._removedJitsi = true;
     }
 
     private _loadScript(src: string, cb: () => any) {

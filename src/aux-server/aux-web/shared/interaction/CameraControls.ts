@@ -112,6 +112,12 @@ export class CameraControls {
     private _game: Game;
     private _enabled = true;
 
+    /**
+     * Whether these camera controls should make the DOM element for its
+     * viewport ignore pointer events instead of calculating camera movement.
+     */
+    private _passthroughEvents = false;
+
     private state: STATE;
 
     private EPS = 0.000001;
@@ -198,6 +204,24 @@ export class CameraControls {
         return this._game.isImmersive && this.enableImmersive;
     }
 
+    /**
+     * Gets whether these camera controls should cause events to be passed through to the DOM element
+     * that is behind the viewport instead of manually calculating and updating the camera.
+     * Useful for merging simulations with external rendering systems.
+     */
+    get passthroughEvents(): boolean {
+        return this._passthroughEvents;
+    }
+
+    /**
+     * Sets whether these camera controls should cause events to be passed through to the DOM element
+     * that is behind the viewport instead of manually calculating and updating the camera.
+     * Useful for merging simulations with external rendering systems.
+     */
+    set passthroughEvents(value: boolean) {
+        this._passthroughEvents = value;
+    }
+
     constructor(
         camera: PerspectiveCamera | OrthographicCamera,
         game: Game,
@@ -233,7 +257,7 @@ export class CameraControls {
     }
 
     public isEmptyState(): Boolean {
-        return this.state === STATE.NONE;
+        return this.state === STATE.NONE || this.state === STATE.PASSTHROUGH;
     }
 
     public rotateLeft(angle: number) {
@@ -336,6 +360,11 @@ export class CameraControls {
         this.panOffset.add(delta);
     }
 
+    /**
+     * Moves the camera left and right along the plane defined by the forward facing direction of the camera.
+     * @param deltaX The amount that the camera should move right or left. Units are in client position pixels.
+     * @param deltaY The amount that the camera should move up or down. Units are in client position pixels.
+     */
     public pan(deltaX: number, deltaY: number) {
         let offset = new Vector3();
 
@@ -404,7 +433,7 @@ export class CameraControls {
     }
 
     public clampZoom(zoom: number): number {
-        if (this.viewport.name != 'inventory') {
+        if (this.viewport.name != 'miniPortal') {
             return Math.max(this.minZoom, Math.min(this.maxZoom, zoom));
         } else {
             return Math.max(0.01, Math.min(191, zoom));
@@ -505,9 +534,8 @@ export class CameraControls {
     }
 
     private _dollyPan(currentZoom: number) {
-        const element = this._game.gameView.gameView;
-        const centerX = element.clientWidth / 2;
-        const centerY = element.clientHeight / 2;
+        const centerX = this.viewport.width / 2;
+        const centerY = this.viewport.height / 2;
         const offsetX = this.dollyBegin.x - centerX;
         const offsetY = this.dollyBegin.y - centerY;
         const currentX = offsetX * currentZoom;
@@ -547,14 +575,95 @@ export class CameraControls {
         if (!this._enabled) return;
         if (this._game.xrSession && !this.updateInARMode) return;
         if (this._game.isImmersive && !this.enableImmersive) return;
+
+        if (this.viewport && this.state == STATE.PASSTHROUGH) {
+            this.updatePassthrough();
+            return;
+        } else if (this.passthroughEvents) {
+            return;
+        }
+
         this.updateInput();
         this.updateCamera();
     }
 
     public dispose() {}
 
+    private updatePassthrough() {
+        const input = this._game.getInput();
+        const dom = this.viewport.getRootElement();
+
+        if (dom) {
+            const container = dom.parentElement;
+            const clientPos = input.getMouseClientPos();
+            if (clientPos) {
+                const elements = document.elementsFromPoint(
+                    clientPos.x,
+                    clientPos.y
+                );
+
+                let state = PassthroughStates.Start;
+
+                for (let element of elements) {
+                    if (
+                        state === PassthroughStates.Start ||
+                        state === PassthroughStates.SkippingViewport
+                    ) {
+                        if (Input.isElementContainedByOrEqual(element, dom)) {
+                            if (element === dom) {
+                                state = PassthroughStates.End;
+                            } else {
+                                state = PassthroughStates.SkippingViewport;
+                            }
+                            continue;
+                        } else if (state === PassthroughStates.Start) {
+                            // first element is not the viewport
+                            break;
+                        }
+                    } else {
+                        // we've skipped the viewport and are onto an element that is behind it
+                        if (
+                            element !== container &&
+                            Input.isElementContainedByOrEqual(
+                                element,
+                                container
+                            )
+                        ) {
+                            for (let event of input.events) {
+                                const copy = cloneEvent(event, {
+                                    target: element,
+                                    defaultPrevented: false,
+
+                                    // Hack to get Input to ignore the event
+                                    __ignoreForInput: true,
+                                });
+                                element.dispatchEvent(copy);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        } else {
+            console.warn(
+                '[CameraControls] Trying to passthrough events but the viewport does not have a root element.'
+            );
+        }
+    }
+
     private updateStates() {
         const input = this._game.getInput();
+
+        if (this.viewport && this.passthroughEvents) {
+            const over = input.isMouseOnViewport(this.viewport);
+
+            if (over) {
+                this.state = STATE.PASSTHROUGH;
+            } else {
+                this.state = STATE.NONE;
+            }
+            return;
+        }
 
         if (this.viewport && this.state === STATE.NONE) {
             // Check to make sure we are over the viewport before allowing input to begin.
@@ -775,9 +884,9 @@ export class CameraControls {
                         (pagePosA.x + pagePosB.x) / 2,
                         (pagePosA.y + pagePosB.y) / 2
                     );
-                    this.dollyBegin = Input.offsetPosition(
+                    this.dollyBegin = Input.offsetPositionForViewport(
                         this.dollyBegin,
-                        this._game.gameView.gameView
+                        this.viewport
                     );
                     this.state = STATE.TOUCH_ROTATE_ZOOM;
                 }
@@ -917,9 +1026,9 @@ export class CameraControls {
             }
             this.dollyStart.copy(input.getMouseClientPos());
             this.dollyBegin.copy(this.dollyStart);
-            this.dollyBegin = Input.offsetPosition(
+            this.dollyBegin = Input.offsetPositionForViewport(
                 this.dollyBegin,
-                this._game.gameView.gameView
+                this.viewport
             );
             if (wheelData.delta.y > 0) this.dollyIn(zoomScale);
             else if (wheelData.delta.y < 0) this.dollyOut(zoomScale);
@@ -999,9 +1108,9 @@ export class CameraControls {
             // Dolly start.
             this.dollyStart.copy(input.getMouseClientPos());
             this.dollyBegin.copy(this.dollyStart);
-            this.dollyBegin = Input.offsetPosition(
+            this.dollyBegin = Input.offsetPositionForViewport(
                 this.dollyBegin,
-                this._game.gameView.gameView
+                this.viewport
             );
             this.state = STATE.DOLLY;
         } else if (input.getWheelMoved() && this.enableZoom) {
@@ -1202,10 +1311,6 @@ export class CameraControls {
 
         position.copy(rotationTarget).add(offset);
 
-        if (this._camera.parent) {
-            this._camera.parent.localToWorld(rotationTarget);
-        }
-
         if (this.usingImmersiveControls) {
             if (this.immersiveLookPosition) {
                 this._camera.lookAt(this.immersiveLookPosition);
@@ -1273,6 +1378,7 @@ enum STATE {
     PINCH_DOLLY = 2,
     PAN = 3,
     TOUCH_ROTATE_ZOOM = 4,
+    PASSTHROUGH = 5,
 }
 
 interface TouchRotate {
@@ -1308,4 +1414,35 @@ function calculatePlaneDelta(
     originalPlanePoint.sub(nextPlanePoint);
 
     return originalPlanePoint;
+}
+
+/**
+ * Clones the given event and returns a new Event object with the same type as the given value.
+ * @param event The event to clone.
+ * @param overrides The object containing all the properties that should override the event properties.
+ */
+// https://stackoverflow.com/a/39669794/1832856
+function cloneEvent<T extends Event>(event: T, overrides: any): T {
+    if (event === undefined || event === null) return undefined;
+    class ClonedEvent extends Object.getPrototypeOf(event).constructor {
+        constructor(type: string, options: any) {
+            super(type, options);
+        }
+    }
+    for (let key in overrides) {
+        const prop = key;
+        Object.defineProperty(ClonedEvent.prototype, prop, {
+            get() {
+                return overrides[prop];
+            },
+        });
+    }
+    let clone = new ClonedEvent(event.type, event);
+    return clone as T;
+}
+
+enum PassthroughStates {
+    Start,
+    SkippingViewport,
+    End,
 }

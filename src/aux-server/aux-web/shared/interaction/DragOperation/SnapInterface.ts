@@ -1,4 +1,4 @@
-import { SnapPoint, SnapTarget } from '@casual-simulation/aux-common';
+import { SnapAxis, SnapPoint, SnapTarget } from '@casual-simulation/aux-common';
 
 export interface SnapOptions {
     snapGround: boolean;
@@ -6,6 +6,7 @@ export interface SnapOptions {
     snapFace: boolean;
     snapBots: boolean;
     snapPoints: SnapPoint[];
+    snapAxes: SnapAxis[];
     botId: string;
 }
 
@@ -42,8 +43,14 @@ export class SnapBotsHelper implements SnapBotsInterface {
                 snapFace: targets.some((t) => t === 'face'),
                 snapBots: targets.some((t) => t === 'bots'),
                 snapPoints: targets.filter(
-                    (t) => typeof t === 'object'
+                    (t) => typeof t === 'object' && 'position' in t
                 ) as SnapOptions['snapPoints'],
+                snapAxes: targets.filter(
+                    (t) =>
+                        typeof t === 'object' &&
+                        'direction' in t &&
+                        'origin' in t
+                ) as SnapOptions['snapAxes'],
                 botId: botId,
             };
             this._snapOptions.set(botId ?? null, options);
@@ -58,7 +65,11 @@ export class SnapBotsHelper implements SnapBotsInterface {
                 } else if (target === 'bots') {
                     options.snapBots = true;
                 } else {
-                    options.snapPoints.push(target);
+                    if ('direction' in target) {
+                        options.snapAxes.push(target);
+                    } else {
+                        options.snapPoints.push(target);
+                    }
                 }
             }
         }

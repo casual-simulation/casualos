@@ -2,7 +2,7 @@ import { Input, InputMethod } from '../../../shared/scene/Input';
 import { Ray } from '@casual-simulation/three';
 import { appManager } from '../../../shared/AppManager';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
+import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { Physics } from '../../../shared/scene/Physics';
 import { PlayerGame } from '../../scene/PlayerGame';
@@ -15,6 +15,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
 import { Simulation } from '@casual-simulation/aux-vm';
+import { Grid3D } from '../../../shared/scene/Grid3D';
 
 /**
  * Empty Click Operation handles clicking of empty space for mouse and touch input with the primary (left/first finger) interaction button.
@@ -75,6 +76,7 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
             if (sim3D instanceof PlayerPageSimulation3D) {
                 let inputDimension: string;
                 let inputRay: Ray;
+                let grid: Grid3D = sim3D.grid3D;
 
                 // Calculate input ray.
                 if (this._controller) {
@@ -82,35 +84,58 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
                     inputDimension = sim3D.dimension;
                 } else {
                     const pagePos = this._game.getInput().getMousePagePos();
-                    const inventoryViewport = this._game.getInventoryViewport();
-                    const isInventory = Input.pagePositionOnViewport(
+                    const viewports = this._game.getViewports();
+                    const miniViewport = this._game.getMiniPortalViewport();
+                    const mapViewport = this._game.getMapPortalViewport();
+                    const isMiniPortal = Input.pagePositionOnViewport(
                         pagePos,
-                        inventoryViewport
+                        miniViewport,
+                        viewports
+                    );
+                    const isMapPortal = Input.pagePositionOnViewport(
+                        pagePos,
+                        mapViewport,
+                        viewports
                     );
 
-                    if (isInventory) {
-                        const inventory = this._game.findInventorySimulation3D(
+                    if (isMiniPortal) {
+                        const mini = this._game.findMiniSimulation3D(
                             sim3D.simulation
                         );
                         inputRay = Physics.screenPosToRay(
                             Input.screenPositionForViewport(
                                 pagePos,
-                                inventoryViewport
+                                miniViewport
                             ),
-                            inventory.getMainCameraRig().mainCamera
+                            mini.getMainCameraRig().mainCamera
                         );
-                        inputDimension = inventory.inventoryDimension;
+                        inputDimension = mini.miniDimension;
+                        grid = mini.grid3D;
+                    } else if (isMapPortal) {
+                        const map = this._game.findMapSimulation3D(
+                            sim3D.simulation
+                        );
+                        inputRay = Physics.screenPosToRay(
+                            Input.screenPositionForViewport(
+                                pagePos,
+                                mapViewport
+                            ),
+                            map.getMainCameraRig().mainCamera
+                        );
+                        inputDimension = map.mapDimension;
+                        grid = map.grid3D;
                     } else {
                         inputRay = Physics.screenPosToRay(
                             this._game.getInput().getMouseScreenPos(),
                             sim3D.getMainCameraRig().mainCamera
                         );
                         inputDimension = sim3D.dimension;
+                        grid = sim3D.grid3D;
                     }
                 }
 
                 // Get grid tile that intersects with input ray.
-                const gridTile = sim3D.grid3D.getTileFromRay(inputRay);
+                const gridTile = grid.getTileFromRay(inputRay, true);
 
                 let position: any = {
                     x: Infinity,

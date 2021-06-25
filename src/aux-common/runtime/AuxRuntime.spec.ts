@@ -128,6 +128,7 @@ describe('AuxRuntime', () => {
             supportsAR: false,
             supportsVR: false,
             isCollaborative: true,
+            ab1BootstrapUrl: 'bootstrap',
         };
         runtime = new AuxRuntime(
             version,
@@ -3935,6 +3936,26 @@ describe('AuxRuntime', () => {
                 expect(events).toEqual([[toast('abc')], [toast('abc')]]);
             });
 
+            it('should cancel setInterval() timers with clearInterval()', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello:
+                                '@const abc = setInterval(() => os.toast("abc"), 100); clearInterval(abc);',
+                        }),
+                    })
+                );
+                runtime.shout('hello');
+                jest.runAllTicks();
+
+                expect(events).toEqual([]);
+
+                jest.advanceTimersByTime(200);
+                jest.runAllTicks();
+
+                expect(events).toEqual([]);
+            });
+
             it('should dispatch events from setTimeout() callbacks', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
@@ -3954,6 +3975,28 @@ describe('AuxRuntime', () => {
                 jest.runAllTicks();
 
                 expect(events).toEqual([[toast('abc')]]);
+            });
+
+            it('should be able to cancel setTimeout() timers with clearTimeout()', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello:
+                                '@let abc = setTimeout(() => os.toast("abc"), 100); clearTimeout(abc);',
+                        }),
+                    })
+                );
+                runtime.shout('hello');
+
+                jest.runAllTicks();
+
+                expect(events).toEqual([]);
+
+                jest.advanceTimersByTime(200);
+
+                jest.runAllTicks();
+
+                expect(events).toEqual([]);
             });
 
             it('should handle a bot getting destroyed twice due to a setTimeout() callback', () => {
@@ -9635,7 +9678,7 @@ describe('original action tests', () => {
     });
 
     describe('os.tweenTo()', () => {
-        it('should emit a AnimateToBotAction', () => {
+        it('should emit a FocusOnBotAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -9696,7 +9739,7 @@ describe('original action tests', () => {
     });
 
     describe('os.moveTo()', () => {
-        it('should emit a AnimateToBotAction with the duration set to 0', () => {
+        it('should emit a FocusOnBotAction with the duration set to 0', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -9883,6 +9926,7 @@ describe('original action tests', () => {
                 supportsAR: true,
                 supportsVR: false,
                 isCollaborative: true,
+                ab1BootstrapUrl: 'bootstrap',
             });
 
             expect(result.actions).toEqual([
@@ -9892,6 +9936,7 @@ describe('original action tests', () => {
                             supportsAR: true,
                             supportsVR: false,
                             isCollaborative: true,
+                            ab1BootstrapUrl: 'bootstrap',
                         },
                     },
                 }),
@@ -9920,6 +9965,7 @@ describe('original action tests', () => {
                             supportsAR: null,
                             supportsVR: null,
                             isCollaborative: null,
+                            ab1BootstrapUrl: null,
                         },
                     },
                 }),
@@ -10778,6 +10824,8 @@ describe('original action tests', () => {
             ['pagePortal', 'pageDimension'],
             ['inventory', 'inventoryDimension'],
             ['inventoryPortal', 'inventoryDimension'],
+            ['mini', 'miniDimension'],
+            ['miniPortal', 'miniDimension'],
             ['menu', 'menuDimension'],
             ['menuPortal', 'menuDimension'],
             ['sheet', 'sheetDimension'],
@@ -10801,6 +10849,7 @@ describe('original action tests', () => {
                         tags: {
                             pagePortal: 'pageDimension',
                             inventoryPortal: 'inventoryDimension',
+                            miniPortal: 'miniDimension',
                             menuPortal: 'menuDimension',
                             sheetPortal: 'sheetDimension',
                             falsy: false,

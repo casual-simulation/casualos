@@ -15,6 +15,8 @@ import {
     calculatePortalCameraControlsMode,
     PortalCameraType,
     getCameraType,
+    BotCursorType,
+    getPortalCursor,
 } from '@casual-simulation/aux-common';
 import { Color, Texture } from '@casual-simulation/three';
 import {
@@ -25,6 +27,7 @@ import { tap } from 'rxjs/operators';
 import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
 import { BoundedGrid3D } from '../../shared/scene/BoundedGrid3D';
 import { AuxTextureLoader } from '../../shared/scene/AuxTextureLoader';
+import { Grid3D, TileableGrid3D } from '../../shared/scene/Grid3D';
 
 /**
  * Defines a class that is able to watch dimension confic bots and update values.
@@ -50,8 +53,10 @@ export class PortalConfig implements SubscriptionLike {
     private _cameraControlsMode: PortalCameraControlsMode = null;
     private _gridScale: number;
     private _disableCanvasTransparency: boolean = null;
-    private _grid3D: BoundedGrid3D;
+    private _grid3D: TileableGrid3D;
+    private _defaultGrid3D: BoundedGrid3D;
     private _cameraType: PortalCameraType;
+    private _cursor: BotCursorType;
 
     private _onGridScaleUpdated: Subject<void>;
 
@@ -75,7 +80,7 @@ export class PortalConfig implements SubscriptionLike {
     }
 
     /**
-     * Gets the pannability of the inventory camera that the simulation defines.
+     * Gets the pannability of the mini portal camera that the simulation defines.
      */
     get pannable() {
         if (this._pannable != null) {
@@ -130,7 +135,7 @@ export class PortalConfig implements SubscriptionLike {
     }
 
     /**
-     * Gets if rotation is allowed in the inventory that the simulation defines.
+     * Gets if rotation is allowed in the mini portal that the simulation defines.
      */
     get rotatable() {
         if (this._rotatable != null) {
@@ -141,7 +146,7 @@ export class PortalConfig implements SubscriptionLike {
     }
 
     /**
-     * Gets if zooming is allowed in the inventory that the simulation defines.
+     * Gets if zooming is allowed in the mini portal that the simulation defines.
      */
     get zoomable() {
         if (this._zoomable != null) {
@@ -246,12 +251,24 @@ export class PortalConfig implements SubscriptionLike {
         }
     }
 
+    protected get defaultGrid(): BoundedGrid3D {
+        return this._defaultGrid3D;
+    }
+
     get grid3D() {
         return this._grid3D;
     }
 
+    set grid3D(value: TileableGrid3D) {
+        this._grid3D = value;
+    }
+
     get cameraType() {
         return this._cameraType;
+    }
+
+    get cursor() {
+        return this._cursor;
     }
 
     unsubscribe(): void {
@@ -273,8 +290,10 @@ export class PortalConfig implements SubscriptionLike {
     constructor(portalTag: string, simulation: BrowserSimulation) {
         this._portalTag = portalTag;
         this._onGridScaleUpdated = new Subject();
-        this._grid3D = new BoundedGrid3D().showGrid(false);
-        this._grid3D.useAuxCoordinates = true;
+        this._defaultGrid3D = this._grid3D = new BoundedGrid3D().showGrid(
+            false
+        );
+        this._defaultGrid3D.useAuxCoordinates = true;
         this._sub = watchPortalConfigBot(simulation, portalTag)
             .pipe(
                 tap((update) => {
@@ -316,6 +335,7 @@ export class PortalConfig implements SubscriptionLike {
         this._cameraControlsMode = null;
         this._disableCanvasTransparency = null;
         this._cameraType = null;
+        this._cursor = null;
         this.gridScale = this._getDefaultGridScale();
     }
 
@@ -427,6 +447,7 @@ export class PortalConfig implements SubscriptionLike {
             null
         );
         this._cameraType = getCameraType(calc, bot);
+        this._cursor = getPortalCursor(calc, bot);
         this.gridScale = calculateGridScale(calc, bot);
 
         // TODO:

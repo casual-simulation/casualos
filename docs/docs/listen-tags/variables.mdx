@@ -34,7 +34,7 @@ export const DataTagLink = ({tag}) => (
 );
 
 export const ListenTagLink = ({tag}) => (
-  <a href={useBaseUrl('docs/listen-tags') + '#' + tag.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}>
+  <a href={useBaseUrl('docs/listen-tags/tags') + '#' + tag.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}>
     <NormalCode>{tag}</NormalCode>
   </a>
 );
@@ -257,9 +257,9 @@ The bot that should be used to configure the <TagLink tag='sheetPortal'>sheet po
 
 It can be replaced by using <ActionLink action='portal.open(portalId, bot, tag?, options?)'/>.
 
-### `inventoryPortalBot`
+### `miniPortalBot`
 
-The bot that should be used to configure the <TagLink tag='inventoryPortal'>inventory portal</TagLink>.
+The bot that should be used to configure the <TagLink tag='miniPortal'>mini portal</TagLink>.
 
 It can be replaced by using <ActionLink action='portal.open(portalId, bot, tag?, options?)'/>.
 
@@ -278,8 +278,18 @@ Supports the following tags:
 - <TagLink tag='portalZoomable'/>
 - <TagLink tag='portalGridScale'/>
 - <TagLink tag='portalSurfaceScale'/>
-- <TagLink tag='inventoryPortalHeight'/>
-- <TagLink tag='inventoryPortalResizable'/>
+- <TagLink tag='miniPortalHeight'/>
+- <TagLink tag='miniPortalResizable'/>
+
+### `mapPortalBot`
+
+The bot that should be used to configure the <TagLink tag='mapPortal'>map portal</TagLink>.
+
+It can be replaced by using <ActionLink action='portal.open(portalId, bot, tag?, options?)'/>.
+
+Supports the following tags:
+
+- <TagLink tag='mapPortalBasemap'/>
 
 ### `menuPortalBot`
 

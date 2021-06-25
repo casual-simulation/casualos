@@ -53,6 +53,9 @@ import {
     MenuBotResolvedHoverStyle,
     DEFAULT_MENU_BOT_HOVER_STYLE,
     PortalCameraType,
+    BotCursorType,
+    DEFAULT_BOT_CURSOR,
+    BotLabelPadding,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -984,26 +987,28 @@ export function createPrecalculatedBot(
  */
 export function calculateGridScale(
     calc: BotCalculationContext,
-    workspace: Bot
+    workspace: Bot,
+    defaultSurfaceScale: number = DEFAULT_WORKSPACE_SCALE,
+    defaultGridScale: number = DEFAULT_WORKSPACE_GRID_SCALE
 ): number {
     if (workspace) {
         const scale = calculateNumericalTagValue(
             calc,
             workspace,
             `auxPortalSurfaceScale`,
-            DEFAULT_WORKSPACE_SCALE
+            defaultSurfaceScale
         );
         const gridScale = calculateNumericalTagValue(
             calc,
             workspace,
             `auxPortalGridScale`,
-            DEFAULT_WORKSPACE_GRID_SCALE
+            defaultGridScale
         );
         return calculateGridScaleFromConstants(scale, gridScale);
     } else {
         return calculateGridScaleFromConstants(
-            DEFAULT_WORKSPACE_SCALE,
-            DEFAULT_WORKSPACE_GRID_SCALE
+            defaultSurfaceScale,
+            defaultGridScale
         );
     }
 }
@@ -1349,6 +1354,36 @@ export function getBotLabelAlignment(
 }
 
 /**
+ * Gets the amount of padding that should be used to auto-sized labels.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotLabelPadding(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotLabelPadding {
+    const padding = calculateNumericalTagValue(calc, bot, 'auxLabelPadding', 0);
+    const x = calculateNumericalTagValue(calc, bot, 'auxLabelPaddingX', 0);
+    const y = calculateNumericalTagValue(calc, bot, 'auxLabelPaddingY', 0);
+
+    const horizontal = padding + x;
+    const vertical = padding + y;
+
+    return {
+        horizontal: isIrrational(horizontal) ? 0 : horizontal,
+        vertical: isIrrational(vertical) ? 0 : vertical,
+    };
+}
+
+/**
+ * Determines if the given value is NaN, or +/- infinity.
+ * @param val
+ */
+function isIrrational(val: number): boolean {
+    return isNaN(val) || val === Infinity || val === -Infinity;
+}
+
+/**
  * Gets the text alignment for the bot's label.
  * @param calc The calculation context.
  * @param bot The bot.
@@ -1592,6 +1627,119 @@ export function getBotMeetPortalAnchorPointOffset(
 } {
     const point = getBotMeetPortalAnchorPoint(calc, bot);
     return calculateMeetPortalAnchorPointOffset(point);
+}
+
+const botCursors = [
+    'auto',
+    'default',
+    'none',
+    'context-menu',
+    'help',
+    'pointer',
+    'progress',
+    'wait',
+    'cell',
+    'crosshair',
+    'text',
+    'vertical-text',
+    'alias',
+    'copy',
+    'move',
+    'no-drop',
+    'not-allowed',
+    'grab',
+    'grabbing',
+    'all-scroll',
+    'col-resize',
+    'row-resize',
+    'n-resize',
+    'e-resize',
+    's-resize',
+    'w-resize',
+    'ne-resize',
+    'nw-resize',
+    'se-resize',
+    'sw-resize',
+    'ew-resize',
+    'ns-resize',
+    'nesw-resize',
+    'nwse-resize',
+    'zoom-in',
+    'zoom-out',
+];
+
+/**
+ * Gets the CSS that should be used for the given cursor value.
+ * @param cursor The cursor.
+ */
+export function getCursorCSS(cursor: BotCursorType): string {
+    if (!hasValue(cursor)) {
+        return null;
+    }
+    if (typeof cursor === 'string') {
+        return cursor;
+    } else if (cursor.type === 'link') {
+        return `url("${cursor.url}") ${cursor.x} ${cursor.y}, auto`;
+    }
+}
+
+/**
+ * Finds and returns the bot cursor type that matches the given value.
+ * @param value The value.
+ */
+function calculateBotCursor(
+    calc: BotCalculationContext,
+    bot: Bot,
+    tag: string
+): BotCursorType {
+    const value = calculateStringTagValue(calc, bot, tag, null);
+
+    if (!hasValue(value)) {
+        return null;
+    }
+
+    if (botCursors.indexOf(value) >= 0) {
+        return value as BotCursorType;
+    }
+
+    try {
+        // try parsing the value as a URL
+        const url = new URL(value);
+        return {
+            type: 'link',
+            url: value,
+            x: calculateNumericalTagValue(calc, bot, tag + 'HotspotX', 0),
+            y: calculateNumericalTagValue(calc, bot, tag + 'HotspotY', 0),
+        };
+    } catch {}
+
+    return DEFAULT_BOT_CURSOR;
+}
+
+/**
+ * Gets the cursor that has been configured on the given bot.
+ * Returns null if the bot does not have a valid string value.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotCursor(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotCursorType {
+    return calculateBotCursor(calc, bot, 'auxCursor');
+}
+
+/**
+ * Gets the cursor that has been configured as the portal cursor for the given bot.
+ * Returns null if the bot does not have a valid string value.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getPortalCursor(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotCursorType {
+    return calculateBotCursor(calc, bot, 'auxPortalCursor');
 }
 
 /**
@@ -1923,7 +2071,7 @@ export function getBotTransformer(
  * @param bot The bot to check.
  */
 export function isBotMovable(calc: BotCalculationContext, bot: Bot): boolean {
-    // checks if bot is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
+    // checks if bot is movable, but we should also allow it if it is pickupable so we can drag it into mini portal if movable is false
     return calculateBooleanTagValue(calc, bot, 'auxDraggable', true);
 }
 
@@ -1933,7 +2081,6 @@ export function isBotMovable(calc: BotCalculationContext, bot: Bot): boolean {
  * @param bot The bot to check.
  */
 export function isBotListening(calc: BotCalculationContext, bot: Bot): boolean {
-    // checks if bot is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
     return calculateBooleanTagValue(calc, bot, 'auxListening', true);
 }
 

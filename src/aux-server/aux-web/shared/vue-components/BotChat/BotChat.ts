@@ -23,6 +23,7 @@ export default class BotChat extends Vue {
 
     @Prop({ default: null }) placeholder: string;
     @Prop({ default: null }) placeholderColor: string;
+    @Prop({ default: null }) foregroundColor: string;
     @Prop({ default: null }) prefill: string;
 
     private _updatingText: boolean = false;
@@ -30,6 +31,7 @@ export default class BotChat extends Vue {
     get styleVariables() {
         return {
             '--chat-placeholder-color': this.placeholderColor || '#448aff',
+            '--chat-foreground-color': this.foregroundColor || '#000',
         };
     }
 

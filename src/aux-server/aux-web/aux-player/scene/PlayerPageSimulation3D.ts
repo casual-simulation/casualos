@@ -11,7 +11,7 @@ import {
     calculateBooleanTagValue,
     calculateNumericalTagValue,
     BotIndexEvent,
-    DEFAULT_INVENTORY_VISIBLE,
+    DEFAULT_MINI_PORTAL_VISIBLE,
     getPortalConfigBotID,
     DEFAULT_PORTAL_ROTATABLE,
     DEFAULT_PORTAL_PANNABLE,
@@ -131,7 +131,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
     }
 
     /**
-     * Gets the pannability of the inventory camera that the simulation defines.
+     * Gets the pannability of the mini portal camera that the simulation defines.
      */
     get pannable() {
         return this.pageConfig.pannable;
@@ -166,14 +166,14 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
     }
 
     /**
-     * Gets if rotation is allowed in the inventory that the simulation defines.
+     * Gets if rotation is allowed in the mini portal that the simulation defines.
      */
     get rotatable() {
         return this.pageConfig.rotatable;
     }
 
     /**
-     * Gets if zooming is allowed in the inventory that the simulation defines.
+     * Gets if zooming is allowed in the mini portal that the simulation defines.
      */
     get zoomable() {
         return this.pageConfig.zoomable;
@@ -228,6 +228,13 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         return this.pageConfig.disableCanvasTransparency;
     }
 
+    /**
+     * Gets the style the cursor should have for this portal.
+     */
+    get cursor() {
+        return this.pageConfig.cursor;
+    }
+
     protected _frameUpdateCore(calc: BotCalculationContext) {
         super._frameUpdateCore(calc);
         const input = this.game.getInput();
@@ -240,7 +247,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
             }
             const gridRay = objectWorldDirectionRay(
                 new Vector3(0, 1, 0),
-                config.grid3D
+                <Object3D>(<unknown>config.grid3D)
             );
 
             const cameraRig = this.getMainCameraRig();
@@ -292,15 +299,16 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         );
         const controllerRemoved = input.controllerRemoved;
 
+        const gridObj = <Object3D>(<unknown>config.grid3D);
         const sub = bindToController(
             controllerAdded,
             controllerRemoved,
             (controller) => {
-                controller.mesh.mesh.add(config.grid3D);
-                applyWristControllerOffset(hand, config.grid3D);
+                controller.mesh.mesh.add(gridObj);
+                applyWristControllerOffset(hand, gridObj);
 
                 return new Subscription(() => {
-                    controller.mesh.mesh.remove(config.grid3D);
+                    controller.mesh.mesh.remove(gridObj);
                 });
             }
         );

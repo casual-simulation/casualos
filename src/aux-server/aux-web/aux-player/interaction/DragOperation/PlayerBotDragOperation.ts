@@ -18,6 +18,7 @@ import {
     getAnchorPointOffset,
     createBot,
     getBotRotation,
+    SnapAxis,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
@@ -35,7 +36,7 @@ import {
 import { Physics } from '../../../shared/scene/Physics';
 import { Input, InputMethod } from '../../../shared/scene/Input';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
-import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
+import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { take, drop } from 'lodash';
 import { IOperation } from '../../../shared/interaction/IOperation';
@@ -52,6 +53,8 @@ import {
     SnapBotsInterface,
     SnapOptions,
 } from '../../../shared/interaction/DragOperation/SnapInterface';
+import { MapSimulation3D } from '../../scene/MapSimulation3D';
+import { ExternalRenderers, SpatialReference } from '../../MapUtils';
 
 export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -59,13 +62,20 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class Simulation3D
     protected _simulation3D: PlayerPageSimulation3D;
 
-    protected _inventorySimulation3D: InventorySimulation3D;
+    protected _miniSimulation3D: MiniSimulation3D;
+    protected _mapSimulation3D: MapSimulation3D;
 
-    // Determines if the bot is in the inventory currently
-    protected _inInventory: boolean;
+    // Determines if the bot is in the mini portal currently
+    protected _inMiniPortal: boolean;
 
-    // Determines if the bot was in the inventory at the beginning of the drag operation
-    protected _originallyInInventory: boolean;
+    // Determines if the bot was in the mini portal at the beginning of the drag operation
+    protected _originallyInMiniPortal: boolean;
+
+    // Determines if the bot is in the map portal currently
+    protected _inMapPortal: boolean;
+
+    // Determines if the bot was in the map portal at the beginning of the drag operation
+    protected _originallyInMapPortal: boolean;
 
     protected _originalDimension: string;
 
@@ -93,7 +103,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
      */
     constructor(
         playerPageSimulation3D: PlayerPageSimulation3D,
-        inventorySimulation3D: InventorySimulation3D,
+        miniSimulation3D: MiniSimulation3D,
+        mapSimulation3D: MapSimulation3D,
         interaction: PlayerInteractionManager,
         bots: Bot[],
         dimension: string,
@@ -118,11 +129,13 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         );
 
         this._botsInStack = drop(bots, 1);
-        this._inventorySimulation3D = inventorySimulation3D;
+        this._miniSimulation3D = miniSimulation3D;
+        this._mapSimulation3D = mapSimulation3D;
         this._originalDimension = dimension;
-        this._originallyInInventory = this._inInventory =
-            dimension &&
-            this._inventorySimulation3D.inventoryDimension === dimension;
+        this._originallyInMiniPortal = this._inMiniPortal =
+            dimension && this._miniSimulation3D.miniDimension === dimension;
+        this._originallyInMapPortal = this._inMapPortal =
+            dimension && this._mapSimulation3D.mapDimension === dimension;
 
         if (this._hit) {
             const obj = this._interaction.findGameObjectForHit(this._hit);
@@ -135,7 +148,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     protected _createBotDragOperation(bot: Bot): IOperation {
         return new PlayerBotDragOperation(
             this._simulation3D,
-            this._inventorySimulation3D,
+            this._miniSimulation3D,
+            this._mapSimulation3D,
             this._interaction,
             [bot],
             this._dimension,
@@ -151,7 +165,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     protected _createModDragOperation(mod: BotTags): IOperation {
         return new PlayerModDragOperation(
             this._simulation3D,
-            this._inventorySimulation3D,
+            this._miniSimulation3D,
             this._interaction,
             mod,
             this._inputMethod,
@@ -165,8 +179,10 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         // Get input ray for grid ray cast.
         let inputRay: Ray = this._getInputRay();
 
-        const grid3D = this._inInventory
-            ? this._inventorySimulation3D.grid3D
+        const grid3D = this._inMiniPortal
+            ? this._miniSimulation3D.grid3D
+            : this._inMapPortal
+            ? this._mapSimulation3D.grid3D
             : this._simulation3D.grid3D;
 
         const canDrag = this._canDrag(calc);
@@ -245,8 +261,10 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     }
 
     private _raycastOtherBots(inputRay: Ray) {
-        const viewport = (this._inInventory
-            ? this._inventorySimulation3D.getMainCameraRig()
+        const viewport = (this._inMiniPortal
+            ? this._miniSimulation3D.getMainCameraRig()
+            : this._inMapPortal
+            ? this._mapSimulation3D.getMainCameraRig()
             : this._simulation3D.getMainCameraRig()
         ).viewport;
         const {
@@ -313,6 +331,20 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                     grid3D,
                     snapPointGrid,
                     options.snapPoints
+                )
+            ) {
+                return true;
+            }
+        }
+
+        if (options.snapAxes.length > 0) {
+            if (
+                this._dragWithSnapAxes(
+                    calc,
+                    inputRay,
+                    grid3D,
+                    snapPointGrid,
+                    options.snapAxes
                 )
             ) {
                 return true;
@@ -494,8 +526,10 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             // 10.
             targetMatrix.premultiply(dimensionMatrix);
 
-            // 11.
-            targetMatrix.premultiply(gridScaleMatrix);
+            if (!this._inMapPortal) {
+                // 11.
+                targetMatrix.premultiply(gridScaleMatrix);
+            }
 
             // 12.
             const position = new Vector3();
@@ -504,35 +538,132 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
             targetMatrix.decompose(position, rotation, worldScale);
 
-            const auxPosition = new Matrix4().makeTranslation(
-                position.x,
-                -position.z,
-                position.y
-            );
+            let auxMatrix: Matrix4;
 
-            const auxRotation = new Matrix4().makeRotationFromQuaternion(
-                rotation
-            );
-            convertRotationToAuxCoordinates(auxRotation);
+            if (!this._inMapPortal) {
+                const auxPosition = new Matrix4().makeTranslation(
+                    position.x,
+                    -position.z,
+                    position.y
+                );
 
-            const auxScale = new Matrix4().makeScale(
-                worldScale.x,
-                worldScale.z,
-                worldScale.y
-            );
+                const auxRotation = new Matrix4().makeRotationFromQuaternion(
+                    rotation
+                );
+                convertRotationToAuxCoordinates(auxRotation);
+
+                const auxScale = new Matrix4().makeScale(
+                    worldScale.x,
+                    worldScale.z,
+                    worldScale.y
+                );
+
+                auxMatrix = new Matrix4()
+                    .multiply(auxPosition)
+                    .multiply(auxRotation)
+                    .multiply(auxScale);
+            } else {
+                // For maps, we have to find the 3D rotation that the bot would be rendered at for the given position.
+                // then we can calculate the final rotation by doing the opposite that the DimensionPositionDecorator is doing.
+
+                // In the DimensionPositionDecorator:
+                // coordinate transform * adjustment * rot = final
+
+                // We already have the final position/rotation in targetMatrix.
+                // So to find the answer we substitude final for rot and multiply by adjustment^-1 * coordinate transform^-1
+                // e.g. coordinate transform * adjustment * adjustment^-1 * coordinate transform^-1 * final = rot
+
+                // for the position, we know that the fromRenderCoordinates() gives us the target lat and lon so we
+                // simply need to remove the transformed coordinates from the target matrix to get our final position.
+
+                const [
+                    lon,
+                    lat,
+                    elevation,
+                ] = ExternalRenderers.fromRenderCoordinates(
+                    this.game.gameView.getMapView(),
+                    [position.x, position.y, position.z],
+                    0,
+                    [0, 0, 0],
+                    0,
+                    SpatialReference.WGS84,
+                    1
+                );
+
+                const coordinateMatrix = this.game.gameView.getMapCoordinateTransformer()(
+                    {
+                        x: lon,
+                        y: lat,
+                        z: elevation,
+                    }
+                );
+
+                const renderedPosition = new Vector3().setFromMatrixPosition(
+                    coordinateMatrix
+                );
+
+                const offset = new Matrix4().makeTranslation(
+                    lon - renderedPosition.x * 2,
+                    lat - renderedPosition.y * 2,
+                    elevation - renderedPosition.z * 2
+                );
+
+                coordinateMatrix.premultiply(offset);
+
+                const auxPosition = new Vector3();
+                const coordinateRotation = new Quaternion();
+                const auxScale = new Vector3();
+                coordinateMatrix.decompose(
+                    auxPosition,
+                    coordinateRotation,
+                    auxScale
+                );
+
+                // adjustment^-1
+                const adjustment = new Quaternion()
+                    .setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2)
+                    .invert();
+
+                // coordinate transform^-1
+                coordinateRotation.invert();
+
+                // adjustment^-1 * coordinate transform^-1
+                adjustment.multiply(coordinateRotation);
+
+                // adjustment^-1 * coordinate transform^-1 * final
+                rotation.premultiply(adjustment);
+
+                const rotationMatrix = new Matrix4().makeRotationFromQuaternion(
+                    rotation
+                );
+
+                auxPosition.add(position);
+                auxScale.multiply(worldScale);
+
+                const translationMatrix = new Matrix4().makeTranslation(
+                    auxPosition.x,
+                    auxPosition.y,
+                    auxPosition.z
+                );
+                const scaleMatrix = new Matrix4().makeScale(
+                    auxScale.x,
+                    auxScale.y,
+                    auxScale.z
+                );
+
+                auxMatrix = new Matrix4()
+                    .multiply(translationMatrix)
+                    .multiply(rotationMatrix)
+                    .multiply(scaleMatrix);
+            }
 
             const nextContext = snapPointTarget.dimension;
-
             this._updateCurrentDimension(nextContext);
 
             // update the grid offset for the current bot
             this._updateGridOffset(calc);
 
-            const auxMatrix = new Matrix4()
-                .multiply(auxPosition)
-                .multiply(auxRotation)
-                .multiply(auxScale)
-                .premultiply(this._gridOffset);
+            auxMatrix.premultiply(this._gridOffset);
 
             const finalPosition = new Vector3();
             const finalRotation = new Quaternion();
@@ -633,12 +764,112 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         return false;
     }
 
+    private _dragWithSnapAxes(
+        calc: BotCalculationContext,
+        inputRay: Ray,
+        grid3D: Grid3D,
+        snapPointGrid: Grid3D,
+        snapAxes: SnapAxis[]
+    ): boolean {
+        if (this._inMapPortal) {
+            return false;
+        }
+        const grid = snapPointGrid ?? grid3D;
+        let closestPoint: Vector3 = null;
+        let closestSqrDistance = Infinity;
+        let snapRay = new Ray();
+        for (let axis of snapAxes) {
+            snapRay.origin.set(axis.origin.x, axis.origin.y, axis.origin.z);
+            snapRay.direction.set(
+                axis.direction.x,
+                axis.direction.y,
+                axis.direction.z
+            );
+
+            // snapPoint.set(point.position.x, point.position.y, point.position.z);
+            const targetDistance = axis.distance * axis.distance;
+
+            // use world space for comparing the snap point to the ray
+            const convertedOrigin = grid.getWorldPosition(snapRay.origin);
+            const convertedDirection = grid
+                .getWorldPosition(snapRay.direction)
+                .normalize();
+
+            // https://stackoverflow.com/questions/58151978/threejs-how-to-calculate-the-closest-point-on-a-three-ray-to-another-three-ray
+            let inputToConvertedDirection = inputRay.direction
+                .clone()
+                .cross(convertedDirection);
+
+            let Na = inputRay.direction
+                .clone()
+                .cross(inputToConvertedDirection)
+                .normalize();
+            let Nb = convertedDirection
+                .clone()
+                .cross(inputToConvertedDirection)
+                .normalize();
+
+            let inputDirection = inputRay.direction.clone().normalize();
+            let axisDirection = convertedDirection.clone().normalize();
+
+            let da =
+                convertedOrigin.clone().sub(inputRay.origin).dot(Nb) /
+                inputDirection.dot(Nb);
+            let db =
+                inputRay.origin.clone().sub(convertedOrigin).dot(Na) /
+                axisDirection.dot(Na);
+
+            // point on inputRay
+            let inputPoint = inputRay.origin
+                .clone()
+                .add(inputDirection.multiplyScalar(da));
+
+            // point on axis
+            let targetPoint = convertedOrigin
+                .clone()
+                .add(convertedDirection.multiplyScalar(db));
+
+            // convert back to grid space for comparing distances
+            const closestGridPoint = grid.getGridPosition(targetPoint);
+            const closestInputPoint = grid.getGridPosition(inputPoint);
+            const sqrDistance = closestGridPoint.distanceToSquared(
+                closestInputPoint
+            );
+
+            if (sqrDistance > targetDistance) {
+                continue;
+            }
+            if (sqrDistance < closestSqrDistance) {
+                closestPoint = new Vector3(
+                    closestGridPoint.x,
+                    closestGridPoint.y,
+                    closestGridPoint.z
+                );
+                closestSqrDistance = sqrDistance;
+            }
+        }
+
+        if (closestPoint) {
+            const nextContext = this._calculateNextDimension(grid);
+            this._updateCurrentDimension(nextContext);
+            this._updateGridOffset(calc);
+
+            closestPoint.applyMatrix4(this._gridOffset);
+            this._toCoord = new Vector2(closestPoint.x, closestPoint.y);
+
+            this._updateBotsPositions(this._bots, closestPoint);
+            return true;
+        }
+
+        return false;
+    }
+
     private _dragOnGrid(
         calc: BotCalculationContext,
         grid3D: Grid3D,
         inputRay: Ray
     ) {
-        const gridTile = grid3D.getTileFromRay(inputRay);
+        const gridTile = grid3D.getTileFromRay(inputRay, true);
         if (gridTile) {
             // Update the next context
             const nextContext = this._calculateNextDimension(gridTile.grid);
@@ -656,15 +887,24 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
     private _updateCurrentViewport() {
         if (!this._controller) {
-            // Test to see if we are hovering over the inventory simulation view.
+            // Test to see if we are hovering over the mini simulation view.
             const pagePos = this.game.getInput().getMousePagePos();
-            const inventoryViewport = this.game.getInventoryViewport();
-            this._inInventory = Input.pagePositionOnViewport(
+            const miniViewport = this.game.getMiniPortalViewport();
+            const mapViewport = this.game.getMapPortalViewport();
+            const viewports = this.game.getViewports();
+            this._inMiniPortal = Input.pagePositionOnViewport(
                 pagePos,
-                inventoryViewport
+                miniViewport,
+                viewports
+            );
+            this._inMapPortal = Input.pagePositionOnViewport(
+                pagePos,
+                mapViewport,
+                viewports
             );
         } else {
-            this._inInventory = false;
+            this._inMiniPortal = false;
+            this._inMapPortal = false;
         }
     }
 
@@ -723,7 +963,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     private _calculateNextDimension(grid: Grid3D) {
         const dimension =
             this._simulation3D.getDimensionForGrid(grid) ||
-            this._inventorySimulation3D.getDimensionForGrid(grid);
+            this._miniSimulation3D.getDimensionForGrid(grid) ||
+            this._mapSimulation3D.getDimensionForGrid(grid);
         return dimension;
     }
 
@@ -734,11 +975,17 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         } else {
             // Get input ray from correct camera based on which dimension we are in.
             const pagePos = this.game.getInput().getMousePagePos();
-            const inventoryViewport = this.game.getInventoryViewport();
-            if (this._inInventory) {
+            const miniViewport = this.game.getMiniPortalViewport();
+            const mapViewport = this.game.getMapPortalViewport();
+            if (this._inMiniPortal) {
                 inputRay = Physics.screenPosToRay(
-                    Input.screenPositionForViewport(pagePos, inventoryViewport),
-                    this._inventorySimulation3D.getMainCameraRig().mainCamera
+                    Input.screenPositionForViewport(pagePos, miniViewport),
+                    this._miniSimulation3D.getMainCameraRig().mainCamera
+                );
+            } else if (this._inMapPortal) {
+                inputRay = Physics.screenPosToRay(
+                    Input.screenPositionForViewport(pagePos, mapViewport),
+                    this._mapSimulation3D.getMainCameraRig().mainCamera
                 );
             } else {
                 inputRay = Physics.screenPosToRay(
@@ -777,7 +1024,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         let hasTransformer = false;
         if (transformer) {
             // TODO: Figure out how to support cases where there are multiple bots for the parent.
-            const parents = this.game.findBotsById(transformer);
+            const parents = this._simulation3D.findBotsById(transformer);
             if (parents.length > 0) {
                 const parent = parents[0];
                 if (parent instanceof AuxBot3D) {

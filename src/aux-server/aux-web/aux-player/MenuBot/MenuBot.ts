@@ -38,6 +38,11 @@ import {
     ON_POINTER_UP,
     ON_ANY_POINTER_UP,
     ON_ANY_POINTER_DOWN,
+    getBotCursor,
+    getCursorCSS,
+    getPortalTag,
+    asyncResult,
+    asyncError,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
@@ -48,6 +53,8 @@ import { Input } from '../../shared/scene/Input';
 import CubeIcon from '../../shared/public/icons/MenuCube.svg';
 import EggIcon from '../../shared/public/icons/MenuEgg.svg';
 import HelixIcon from '../../shared/public/icons/MenuHelix.svg';
+import { Subscription } from 'rxjs';
+import { BotManager } from '@casual-simulation/aux-vm-browser';
 
 @Component({
     components: {
@@ -77,10 +84,13 @@ export default class MenuBot extends Vue {
     text: string = null;
     form: MenuBotForm = 'button';
     hoverStyle: MenuBotResolvedHoverStyle = 'hover';
+    cursor: string = null;
 
     private _down: boolean = false;
     private _hover: boolean = false;
     private _updatingText: boolean = false;
+    private _sub: Subscription;
+    private _currentSimId: string;
 
     get hasProgress() {
         return hasValue(this.progress);
@@ -126,6 +136,9 @@ export default class MenuBot extends Vue {
             this._updateProgress(calc, item.bot);
             this._updateForm(calc, item.bot);
             this._updateText(calc, item.bot);
+            this._updateCursor(calc, item.bot);
+
+            this._updateSim(simulation);
         } else {
             this.label = '';
             this.labelColor = '#000';
@@ -137,6 +150,7 @@ export default class MenuBot extends Vue {
             this.progress = null;
             this.form = 'button';
             this.text = '';
+            this.cursor = null;
         }
     }
 
@@ -157,6 +171,11 @@ export default class MenuBot extends Vue {
     beforeDestroy() {
         window.removeEventListener('mouseup', this.mouseUp);
         window.removeEventListener('touchstart', this.touchStart);
+
+        if (this._sub) {
+            this._sub.unsubscribe();
+            this._sub = null;
+        }
     }
 
     async click() {
@@ -296,7 +315,7 @@ export default class MenuBot extends Vue {
             );
             await simulation.helper.action(
                 ON_INPUT_TYPING_ACTION_NAME,
-                null,
+                [this.item.bot],
                 onSubmitArg(this.text)
             );
         }
@@ -312,7 +331,7 @@ export default class MenuBot extends Vue {
         const simulation = _simulation(this.item);
         await simulation.helper.action(
             ON_SUBMIT_ACTION_NAME,
-            null,
+            [this.item.bot],
             onSubmitArg(this.text)
         );
     }
@@ -409,12 +428,78 @@ export default class MenuBot extends Vue {
         }
     }
 
+    private _updateCursor(calc: BotCalculationContext, bot: Bot) {
+        this.cursor = getCursorCSS(getBotCursor(calc, bot));
+    }
+
     private async _ignoreTextUpdates(action: (text: string) => Promise<void>) {
         try {
             this._updatingText = true;
             await action(this.text);
         } finally {
             this._updatingText = false;
+        }
+    }
+
+    private _updateSim(simulation: BotManager) {
+        if (this._currentSimId !== simulation.id) {
+            this._currentSimId = simulation.id;
+
+            if (this._sub) {
+                this._sub.unsubscribe();
+            }
+            this._sub = new Subscription();
+
+            this._sub.add(
+                simulation.localEvents.subscribe((e) => {
+                    if (e.type === 'focus_on') {
+                        if (hasValue(e.portal)) {
+                            const targetPortal = getPortalTag(e.portal);
+                            if (targetPortal !== 'menuPortal') {
+                                return;
+                            }
+                        }
+                        if (e.botId === this.item.bot.id) {
+                            // focus this input
+                            const input = <Vue>this.$refs.textInput;
+                            if (input) {
+                                try {
+                                    input.$el.focus();
+                                    if (
+                                        hasValue(e.taskId) &&
+                                        hasValue(e.portal)
+                                    ) {
+                                        simulation.helper.transaction(
+                                            asyncResult(e.taskId, null)
+                                        );
+                                    }
+                                } catch (err) {
+                                    if (
+                                        hasValue(e.taskId) &&
+                                        hasValue(e.portal)
+                                    ) {
+                                        simulation.helper.transaction(
+                                            asyncError(
+                                                e.taskId,
+                                                `Could not focus the bot. ${err}`
+                                            )
+                                        );
+                                    }
+                                }
+                            } else {
+                                if (hasValue(e.taskId) && hasValue(e.portal)) {
+                                    simulation.helper.transaction(
+                                        asyncError(
+                                            e.taskId,
+                                            `Could not focus the bot because it is not an input bot.`
+                                        )
+                                    );
+                                }
+                            }
+                        }
+                    }
+                })
+            );
         }
     }
 }

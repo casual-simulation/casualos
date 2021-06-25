@@ -32,15 +32,13 @@ If an array of mods is used for a parameter, then one bot will be created for _e
 
 #### Examples:
 
-1. Create a red bot:
-```typescript
+```typescript title="Create a red bot"
 let myRedBot = create({
     color: "red"
 });
 ```
 
-2. Create a parent and a child bot:
-```typescript
+```typescript title="Create a parent and a child bot"
 let myParentBot = create({
     creator: null,
     label: "Parent"
@@ -51,21 +49,18 @@ let myChildBot = create({
 });
 ```
 
-3. Create a red bot in the `tempLocal` space:
-```typescript
+```typescript title="Create a red bot in the tempLocal space"
 let myBot = create({ space: "tempLocal", color: "red" });
 ```
 
-4. Create a bot from multiple mods:
-```typescript
+```typescript title="Create a bot from multiple mods"
 // myBot is placed in the "myDimension" dimension and is colored green
 let myBot = create({ myDimension: true }, {
     color: "green"
 });
 ```
 
-5. Create a red bot and a blue bot:
-```typescript
+```typescript title="Create a red bot and a blue bot"
 let [myRedBot, myBlueBot] = create({ creator: null}, [
     {
         "color": "red"
@@ -89,20 +84,17 @@ This happens recursively until there are no more bots to destroy.
 
 #### Examples:
 
-1. Destroying a single bot:
-```typescript
+```typescript title="Destroying a single bot"
 // Destroy a single bot that has #name set to "bob"
 destroy(getBot("#name", "bob"));
 ```
 
-2. Destroying a list of bots:
-```typescript
+```typescript title="Destroying a list of bots"
 // Destroy all the bots that have #color set to "red"
 destroy(getBots("#color", "red"));
 ```
 
-3. Destroying a bot by its id
-```typescript
+```typescript title="Destroying a bot by its id"
 // Destroy the bot with the #id: "config"
 destroy("config");
 ```
@@ -118,8 +110,7 @@ The **other parameters** are the mods that should be applied to the bot. If two 
 
 #### Examples
 
-1. Set the "test" tag and "name" tag on a bot.
-```typescript
+```typescript title='Set the "test" tag and "name" tag on a bot'
 applyMod(bot, {
     test: true,
     name: "bob"
@@ -137,8 +128,7 @@ The **other parameters** are the bots or mods that contain the tags which should
 
 #### Examples:
 
-1. Remove a mod from this bot.
-```typescript
+```typescript title="Remove a mod from this bot"
 const mod = {
     color: 'red',
     name: 'bob'
@@ -147,8 +137,7 @@ const mod = {
 subtractMods(this, mod);
 ```
 
-2. Remove multiple mods from this bot.
-```typescript
+```typescript title="Remove multiple mods from this bot"
 subtractMods(this, {
     color: 'red'
 }, {
@@ -169,13 +158,11 @@ If given a regex, then all the tags which match the regex will be removed.
 
 #### Examples:
 
-1. Remove tags started with `abc` from the `this` bot.
-```typescript
+```typescript title='Remove tags starting with "abc" from this bot'
 removeTags(this, "abc");
 ```
 
-2. Remove tags named `hello` using a case-insensitive regex from the `this` bot.
-```typescript
+```typescript title='Remove tags named "hello" using a case-insensitive regex from this bot'
 removeTags(this, /^hello$/gi)
 ```
 
@@ -193,8 +180,7 @@ The **third parameter** is the new name that the tag should have.
 
 #### Examples:
 
-1. Rename the `auxColor` tag to `color`.
-```typescript
+```typescript title='Rename the "auxColor" tag to "color"'
 renameTag(this, "auxColor", "color");
 ```
 
@@ -212,14 +198,12 @@ The **third parameter** is the name of the tag that should be changed on the bot
 
 #### Examples:
 
-1. Change the `#state` of the bot to "Running".
-```typescript
+```typescript title='Change the #state of the bot to "Running"'
 // Triggers @stateRunningOnEnter
 changeState(bot, "Running");
 ```
 
-2. Change the `#playbackState` of the bot to "Playing".
-```typescript
+```typescript title='Change the #playbackState of the bot to "Playing"'
 // Triggers @playbackStatePlayingOnEnter
 changeState(bot, "Playing", "playbackState");
 ```
@@ -234,13 +218,11 @@ If multiple filters are specified, then only the bots that match all of the filt
 
 #### Examples
 
-1. Find all bots with the "test" tag.
-```typescript
+```typescript title='Find all bots with the "test" tag'
 let bots = getBots(byTag("#test"));
 ```
 
-2. Find all bots with `#name` set to "bob" _and_ in the "people" dimension.
-```typescript
+```typescript title='Find all bots with #name set to "bob" and in the #people dimension'
 let bots = getBots(byTag("#name", "bob"), inDimension("people"));
 ```
 
@@ -260,18 +242,15 @@ If specified, then only bots that have the same tag and value will be included. 
 
 #### Examples
 
-1. Find all the bots with `#name` set to "bob".
-```typescript
+```typescript title='Find all the bots with #name set to "bob"'
 let bots = getBots("#name", "bob");
 ```
 
-2. Find all bots with a height larger than 2.
-```typescript
+```typescript title='Find all bots with a #height larger than 2'
 let bots = getBots("#height", height => height > 2);
 ```
 
-3. Find all bots with the "test" tag.
-```typescript
+```typescript title='Find all bots with the #test tag'
 let bots = getBots("#test");
 ```
 
@@ -285,13 +264,11 @@ If multiple filters are specified, then the first bot that matches all of the fi
 
 #### Examples
 
-1. Find a bot with the "test" tag.
-```typescript
+```typescript title='Find a bot with the #test tag'
 let foundBot = getBot(byTag("#test"));
 ```
 
-2. Find a bot with `#name` set to "bob" _and_ in the "people" dimension.
-```typescript
+```typescript title='Find a bot with #name set to "bob" and in the #people dimension'
 let foundBot = getBot(byTag("#name", "bob"), inDimension("people"));
 ```
 
@@ -311,18 +288,15 @@ If specified, then the first bot that has the same tag and value will be returne
 
 #### Examples
 
-1. Find the first bot with `#name` set to "bob".
-```typescript
+```typescript title='Find the first bot with #name set to "bob"'
 let foundBot = getBot("#name", "bob");
 ```
 
-2. Find the first bot with a height larger than 2.
-```typescript
+```typescript title='Find the first bot with a #height larger than 2'
 let foundBot = getBot("#height", height => height > 2);
 ```
 
-3. Find the first bot with the "test" tag.
-```typescript
+```typescript title='Find the first bot with the #test tag'
 let foundBot = getBot("#test");
 ```
 
@@ -338,14 +312,12 @@ If it is a function, then it will be used to match values. Otherwise, only tags 
 
 #### Examples:
 
-1. Find the number of bots named bot and print it.
-```typescript
+```typescript title='Find the number of bots named bob and print it'
 const numberOfBobs = getBotTagValues("#name", "bob").length;
 os.toast(numberOfBobs);
 ```
 
-2. Find all the bot ages above `10`.
-```typescript
+```typescript title='Find all the bot ages above 10'
 const agesOver10 = getBotTagValues("#age", age => age > 10);
 ```
 
@@ -359,13 +331,11 @@ If given a bot ID, then it will be returned. If given `null` or something that i
 
 #### Examples
 
-1. Get the ID of the current bot.
-```typescript
+```typescript title='Get the ID of the current bot'
 let id = getID(bot);
 ```
 
-2. Get the ID of a bot with `#name` set to "bob".
-```typescript
+```typescript title='Get the ID of a bot with #name set to "bob"'
 let id = getID(getBot("#name", "bob"));
 ```
 
@@ -379,8 +349,7 @@ If given a bot, then the returned JSON will be able to be able to be converted b
 
 #### Examples
 
-1. Store a copy of a bot in a tag.
-```typescript
+```typescript title='Store a copy of a bot in a tag'
 let bob = getBot("#name", "bob");
 tags.savedBot = getJSON(bob);
 ```
@@ -398,18 +367,15 @@ If a parameter is a RegEx ([Regular Expression](https://developer.mozilla.org/en
 
 #### Examples
 
-1. Get a mod with the current bot's tags.
-```typescript
+```typescript title='Get a mod with the current bot's tags'
 let mod = getMod(bot);
 ```
 
-2. Get a mod with only the <TagLink tag='color'/> and <TagLink tag='label'/> tags.
-```typescript
+```typescript title='Get a mod with only the #color and #label tags'
 let mod = getMod(bot, "color", "label");
 ```
 
-3. Get a mod with every tag that starts with "on".
-```typescript
+```typescript title='Get a mod with every tag that starts with "on"'
 let mod = getMod(bot, /^on/g);
 ```
 
@@ -423,8 +389,7 @@ The **second parameter** is the dimension that the position should be retrieved 
 
 #### Examples:
 
-1. Get the position of this bot in the `home` dimension.
-```typescript
+```typescript title='Get the position of this bot in the #home dimension'
 let position = getBotPosition(thisBot, "home");
 ```
 
@@ -434,8 +399,7 @@ Creates a new UUID. Useful for generating a random identifier that is guaranteed
 
 #### Examples:
 
-1. Generate a new UUID and toast it:
-```typescript
+```typescript title='Generate a new UUID and toast it'
 const id = uuid();
 
 os.toast(id);
@@ -737,8 +701,8 @@ await animateTag(bot, "homeX", {
     toValue: 5,
     duration: 2,
     easing: {
-        mode: "elastic",
-        type: "out"
+        type: "elastic",
+        mode: "out"
     }
 });
 ```
@@ -1357,6 +1321,29 @@ whisper(bots, "reset");
 whisper(this, "setColor", "red");
 ```
 
+### `priorityShout(events, arg?)`
+
+Shouts to all bots that are <TagLink tag='listening'/> and have a [listen tag][listen-tag] for the specified events until one of the bots returns a value.
+Optionally includes a custom `that` argument. Also triggers <TagLink tag='@onListen'/> and <TagLink tag='@onAnyListen'/> for the bots that the shout was sent to.
+
+This function is useful when you want to shout but only want one bot to process the shout.
+
+The **first parameter** is the array of event names that should be shouted. e.g. Using `onClick` for the name will trigger the <TagLink tag='@onClick'/> listener until a bot returns a value.
+
+#### Examples:
+
+```typescript title='Shout to the first bot that handles @onClick'
+priorityShout(['onClick']);
+```
+
+```typescript title='Shout to the first bot that handles @myTest or @mySecondTest'
+priorityShout(['myTest', 'mySecondTest']);
+```
+
+```typescript title='Priority shout with a color'
+priorityShout(['myTest', 'mySecondTest'], "blue");
+```
+
 ### `superShout(name, arg?)`
 
 
@@ -1704,6 +1691,21 @@ os.replaceDragBot({
 });
 ```
 
+### `os.enableCustomDragging()`
+
+Enables "custom dragging" for the current bot drag operation.
+
+Custom dragging tells CasualOS to not move the bot to the dragged position.
+Instead, it will calculate where the bot would be dragged and send that information in the <TagLink tag='@onDragging'/> and <TagLink tag='@onAnyBotDragging'/> listeners.
+
+This is useful for custom bot dragging behavior like choosing to scale or rotate a bot instead of moving it.
+
+#### Examples:
+
+```typescript title='Enable custom dragging for the current drag operation'
+os.enableCustomDragging();
+```
+
 ### `os.addDropSnap(...targets)`
 
 Specifies a list of snap targets that can be used to position the currently dragged bot.
@@ -1728,6 +1730,10 @@ If called when the user is not dragging anything, then this function does nothin
   <PossibleValue value='A snap point object'>
     The bot will snap to the specified position when dragged within the specified distance.
   </PossibleValue>
+  <PossibleValue value='A snap axis object'>
+    The bot will snap to the specified axis when dragged within the specified distance.
+    Currently not supported on the map portal.
+  </PossibleValue>
 </PossibleValuesTable>
 
 Snap point objects should have the following form:
@@ -1740,6 +1746,27 @@ let snapPoint: {
 
     /**
      * The distance that the bot should be from the position in order to snap to it.
+     */
+    distance: number;
+};
+```
+
+Snap axis objects should have the following form:
+```typescript
+let snapAxis: {
+    /**
+     * The direction that the axis travels along.
+     */
+    direction: { x: number, y: number, z: number };
+
+    /**
+     * The center point that the axis travels through.
+     */
+    origin: { x: number, y: number, z: number };
+
+    /**
+     * The distance that the bot should be from any 
+     * point along the axis in order to snap to it.
      */
     distance: number;
 };
@@ -1769,7 +1796,24 @@ os.addDropSnap({
 });
 ```
 
-4. Snap the dragged bot to the center or bot faces.
+4. Snap the dragged bot to the global X axis.
+```typescript
+os.addDropSnap({
+    direction: {
+        x: 1,
+        y: 0,
+        z: 0,
+    },
+    origin: {
+        x: 0,
+        y: 0,
+        z: 0
+    },
+    distance: 2
+});
+```
+
+5. Snap the dragged bot to the center or bot faces.
 ```typescript
 os.addDropSnap({
     position: {
@@ -1893,36 +1937,48 @@ It should be an object with the following properties:
 - `placeholder` - The text that should be shown as a placeholder. (optional)
 - `prefill` - The text that should be filled into the chat bar. If the chat bar already has text in it, then setting this property does nothing.
 - `placeholderColor` - The color that the placeholder text should be. Defaults to `#448aff`.
+- `backgroundColor` - The color that the background of the chat bar should be. Defaults to `#fff`.
+- `foregroundColor` - The color that the foreground (text) of the chat bar should be. Defaults to `#000`.
 
 #### Examples:
 
-1. Show the chat bar with a placeholder.
-```typescript
+```typescript title='Show the chat bar with a placeholder.'
 os.showChat({
     placeholder: "hello"
 });
 ```
 
-2. Show the chat bar with some prefilled text.
-```typescript
+```typescript title='Show the chat bar with some prefilled text.'
 os.showChat({
     prefill: "this is prefilled"
 });
 ```
 
-3. Show the chat bar with some prefilled text and a placeholder.
-```typescript
+```typescript title='Show the chat bar with some prefilled text and a placeholder.'
 os.showChat({
     prefill: "this is prefilled",
     placeholder: "hello"
 });
 ```
 
-4. Show the chat bar with a custom placeholder color.
-```typescript
+```typescript title='Show the chat bar with a custom placeholder color.'
 os.showChat({
     placeholder: "hello",
     placeholderColor: '#44a471'
+});
+```
+
+```typescript title='Show the chat bar with a custom background color.'
+os.showChat({
+    placeholder: "hello",
+    backgroundColor: '#f1abe2'
+});
+```
+
+```typescript title='Show the chat bar with a custom foreground color.'
+os.showChat({
+    placeholder: "hello",
+    foregroundColor: '#531234'
 });
 ```
 
@@ -2135,10 +2191,15 @@ os.toast("this is the code", 5);
 
 ### `os.focusOn(botOrPosition, options?)`
 
-Animates the camera such that the portal focus point is placed on the given bot or position.
-Returns a promise which resolves when the animation finishes and rejects if the user takes control of the camera during the animation.
+Focuses on the given bot or position.
+For bots in the page or mini portals, this animates the camera such that the portal focus point is placed on the given bot or position.
+For input bots in menu portal, this gives keyboard focus to them.
 
-The **first parameter** is the bot, bot ID, or position that the player's view should be moved to. If null, then the current focus animation will be canceled.
+Returns a promise which resolves when the bot has been focused.
+For the page and mini portals this is when the animation finishes and rejects if the user takes control of the camera during the animation.
+For menu bots this is when the input field is focused and rejects if the bot is not a input bot.
+
+The **first parameter** is the bot, bot ID, or position that should be focused. If null, then the current focus animation will be canceled.
 
 The **second parameter** is optional and can be used to specify additional details about how the camera should be animated.
 It should be an object with the following properties:
@@ -2147,7 +2208,9 @@ It should be an object with the following properties:
 let options: {
     /*
     * The zoom value to use.
-    * Possible values are between `0` and `80`. `1` is the default.
+    * For the page and mini portals, possible values are between `0` and `80`. `1` is the default.
+    * For the map portal, this is the scale that the focused point should appear at.
+    * For example, 24000 would indicate that the scale is 1:24,000.
     * If no value is specified, then the zoom will remain at its current value.
     */
     zoom?: number;
@@ -2167,6 +2230,13 @@ let options: {
      * Defaults to 1.
      */
     duration?: number;
+
+    /**
+     * The portal that the bot should be focused in.
+     * If not specified, then the bot will be focused in all the portals it is in. (page, mini and menu)
+     * Useful if a bot is in two portals but you only want to focus it in one portal.
+     */
+    portal?: string;
 
     /**
      * The options for easing.
@@ -2237,6 +2307,24 @@ await os.focusOn(thisBot, {
 await os.focusOn({
     x: 15,
     y: 9.5
+});
+```
+
+5. Focus on this bot in the menu portal
+```typescript
+await os.focusOn(thisBot, {
+    portal: 'menu'
+});
+```
+
+6. Focus on Buckingham Palace in the map portal
+```typescript
+await os.focusOn({
+    x: -0.141329,
+    y: 51.501541
+}, {
+    portal: 'map',
+    zoom: 10000
 });
 ```
 
@@ -2784,37 +2872,37 @@ const dimension = os.getMenuDimension();
 os.toast(dimension);
 ```
 
-### `os.getInventoryDimension()`
+### `os.getMiniPortalDimension()`
 
 
-Gets the dimension that is loaded into the <TagLink tag='inventoryPortal'/> portal.
+Gets the dimension that is loaded into the <TagLink tag='miniPortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "inventoryPortal".
+    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "miniPortal".
 </Alert>
 
 #### Examples:
 
-1. Show a message of the dimension that is currently in the <TagLink tag='inventoryPortal'/> portal.
+1. Show a message of the dimension that is currently in the <TagLink tag='miniPortal'/> portal.
 ```typescript
-const dimension = os.getInventoryDimension();
+const dimension = os.getMiniPortalDimension();
 os.toast(dimension);
 ```
 
-### `os.hasBotInInventory(bot)`
+### `os.hasBotInMiniPortal(bot)`
 
 
-Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='inventoryPortal'/> portal.
+Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='miniPortal'/> portal.
 
 The **first parameter** is the bot that should be checked.
 
 #### Examples:
 
-1. Show a message if a bot named bob is in the inventory.
+1. Show a message if a bot named bob is in the mini portal.
 ```typescript
 const bob = getBot("#name", "bob");
-if (os.hasBotInInventory(bob)) {
-    os.toast("bob is in the inventory!");
+if (os.hasBotInMiniPortal(bob)) {
+    os.toast("bob is in the miniPortal!");
 }
 ```
 
@@ -2833,8 +2921,8 @@ Possible values are:
   <PossibleValueCode value='sheet'>
     The <TagLink tag='sheetPortal'/>.
   </PossibleValueCode>
-  <PossibleValueCode value='inventory'>
-    The <TagLink tag='inventoryPortal'/>.
+  <PossibleValueCode value='mini'>
+    The <TagLink tag='miniPortal'/>.
   </PossibleValueCode>
   <PossibleValueCode value='menu'>
       The <TagLink tag='menuPortal'/>.
@@ -2848,9 +2936,9 @@ Possible values are:
 const dimension = os.getPortalDimension('page');
 ```
 
-2. Get the dimension that is currently showing in the <TagLink tag='inventoryPortal'/>.
+2. Get the dimension that is currently showing in the <TagLink tag='miniPortal'/>.
 ```typescript
-const dimension = os.getPortalDimension('inventory');
+const dimension = os.getPortalDimension('mini');
 ```
 
 3. Get the dimension that is currently showing in the `#auxCustomPortal` tag.
@@ -2920,8 +3008,8 @@ Possible values are:
   <PossibleValueCode value='page'>
     The camera position in the page portal. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='inventory'>
-    The camera position in the inventory portal.
+  <PossibleValueCode value='mini'>
+    The camera position in the mini portal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -2932,9 +3020,9 @@ Possible values are:
 const position = os.getCameraPosition("page");
 ```
 
-2. Get the position of the player in the inventory portal.
+2. Get the position of the player in the mini portal.
 ```typescript
-const position = os.getCameraPosition("inventory");
+const position = os.getCameraPosition("mini");
 ```
 
 ### `os.getCameraRotation(portal?)`
@@ -2948,8 +3036,8 @@ Possible values are:
   <PossibleValueCode value='page'>
     The camera rotation in the page portal. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='inventory'>
-    The camera rotation in the inventory portal.
+  <PossibleValueCode value='mini'>
+    The camera rotation in the mini portal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -2960,9 +3048,9 @@ Possible values are:
 const rotation = os.getCameraRotation("page");
 ```
 
-2. Get the rotation of the player in the inventory portal.
+2. Get the rotation of the player in the mini portal.
 ```typescript
-const rotation = os.getCameraRotation("inventory");
+const rotation = os.getCameraRotation("mini");
 ```
 
 ### `os.getFocusPoint(portal?)`
@@ -2978,8 +3066,8 @@ Possible values are:
   <PossibleValueCode value='page'>
     The camera focus point in the page portal. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='inventory'>
-    The camera focus point in the inventory portal.
+  <PossibleValueCode value='mini'>
+    The camera focus point in the mini portal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -2990,9 +3078,9 @@ Possible values are:
 const focusPoint = os.getFocusPoint("page");
 ```
 
-2. Get the focus point of the player in the inventory portal.
+2. Get the focus point of the player in the mini portal.
 ```typescript
-const focusPoint = os.getFocusPoint("inventory");
+const focusPoint = os.getFocusPoint("mini");
 ```
 
 ### `os.getPointerPosition(pointer?)`
@@ -5096,6 +5184,53 @@ const result = math.negateVector(
 os.toast(result); // { x: -5, y: -6, z: -7 }
 ```
 
+### `math.normalizeVector(vector)`
+
+Normalizes the given vector. The result is a vector that has the same direction as the given vector but
+has a length/magnitude of 1.
+
+Mathemematically, this is the same as finding the <ActionLink action='math.vectorLength(vector)'/> and dividing each component in the vector by it.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+The **first parameter** is the object whose mathematical properties should be normalized.
+
+#### Examples:
+
+```typescript title='Normalize a 3D point'
+const result = math.normalizeVector(
+    { x: 1, y: 2, z: 3 }
+);
+
+os.toast(result);
+// x: 0.2672612419124244
+// y: 0.5345224838248488
+// z: 0.8017837257372732
+```
+
+### `math.vectorLength(vector)`
+
+Calculates the length (i.e. magnitude) of the given vector. 
+
+Mathemematically, this is equivalent to `length = sqrt(sum(components.map(c => c * c)))`.
+As a consequence, vectors that are normalized always have a length of 1.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+The **first parameter** is the object whose mathematical properties should be normalized.
+
+#### Examples:
+
+```typescript title='Calculate the length of a 3D point'
+const result = math.vectorLength(
+    { x: 1, y: 2, z: 3 }
+);
+
+os.toast(result); // 3.7416573867739413
+```
+
 ### `math.scaleVector(vector, scale)`
 
 Multiplies each property of the given vector by the given scale and returns the result.
@@ -6002,7 +6137,7 @@ Once the tween is done playing, any change to the bot will reset the position/ro
 The **first parameter** is the bot or ID of the bot that should be tweened.
 
 The **second parameter** is the dimension that the bot should be tweened in.
-Note that the tween will only work if the given dimension is currently in the page portal or inventory portal.
+Note that the tween will only work if the given dimension is currently in the page portal or mini portal.
 
 The **third parameter** is the position that the bot should be tweened to. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
 
@@ -6101,7 +6236,7 @@ Once the tween is done playing, any change to the bot will reset the position/ro
 The **first parameter** is the bot or ID of the bot that should be tweened.
 
 The **second parameter** is the dimension that the bot should be tweened in.
-Note that the tween will only work if the given dimension is currently in the page portal or inventory portal.
+Note that the tween will only work if the given dimension is currently in the page portal or mini portal.
 
 The **third parameter** is the rotation that the bot should be tweened to in radians. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
 
@@ -6488,4 +6623,4 @@ const slowestTags = stats.shoutTimers.slice(0, 5).map(timer => timer.tag)
 os.toast(slowestTags.join());
 ```
 
-[listen-tag]: docs/listen-tags
+[listen-tag]: listen-tags/tags

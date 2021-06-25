@@ -68,6 +68,10 @@ svg {
     color: var(--chat-placeholder-color);
 }
 
-.md-field.chat-input.md-focused .md-field {
+.md-field.chat-input.md-focused .md-input {
     color: var(--chat-placeholder-color);
+}
+
+.md-field.chat-input .md-input {
+    -webkit-text-fill-color: var(--chat-foreground-color);
 }

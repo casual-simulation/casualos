@@ -208,6 +208,8 @@ export default class PlayerApp extends Vue {
 
     showChatBar: boolean = false;
     chatBarPrefill: string = null;
+    chatBarForegroundColor: string = null;
+    chatBarBackgroundStyle: any = null;
     chatBarPlaceholder: string = null;
     chatBarPlaceholderColor: string = null;
 
@@ -322,6 +324,7 @@ export default class PlayerApp extends Vue {
         this._subs = [];
         this._simulationSubs = new Map();
         this.camera = null;
+        this.chatBarBackgroundStyle = null;
         this._audioRecorder = new AudioRecorder();
         this._recorder = new Recorder();
         this._subs.push(
@@ -668,6 +671,10 @@ export default class PlayerApp extends Vue {
                     this.chatBarPrefill = e.prefill;
                     this.chatBarPlaceholder = e.placeholder;
                     this.chatBarPlaceholderColor = e.placeholderColor;
+                    this.chatBarForegroundColor = e.foregroundColor;
+                    this.chatBarBackgroundStyle = {
+                        backgroundColor: e.backgroundColor || '#fff',
+                    };
                     const chatBar = this.$refs.chatBar as BotChat;
                     if (chatBar) {
                         await chatBar.setPrefill(e.prefill);

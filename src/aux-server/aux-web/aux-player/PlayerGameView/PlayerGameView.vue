@@ -1,6 +1,7 @@
 <template>
     <div ref="container" class="game-container">
-        <div class="game-canvas" ref="gameView"></div>
+        <div :id="mapViewId" class="map-canvas" ref="mapView"></div>
+        <div class="game-canvas" :style="{ cursor: cursor }" ref="gameView"></div>
         <slot></slot>
         <div class="ui-container">
             <div ref="menuElement" class="toolbar menu" :style="finalMenuStyle">
@@ -17,30 +18,14 @@
                 </div>
             </div>
 
-            <div
-                class="slider-hiddenLeft"
-                @mousedown="mouseDownSlider()"
-                @mouseup="mouseUpSlider()"
-                @touchstart="mouseDownSlider()"
-                @touchend="mouseUpSlider()"
-                @touchmove="moveTouch($event)"
-            ></div>
+            <div class="slider-hidden" @touchmove="moveTouch($event)"></div>
 
-            <div
-                class="slider-hiddenRight"
-                @mousedown="mouseDownSlider()"
-                @mouseup="mouseUpSlider()"
-                @touchstart="mouseDownSlider()"
-                @touchend="mouseUpSlider()"
-                @touchmove="moveTouch($event)"
-            ></div>
-
-            <!-- Inventory viewport -->
-            <div v-if="hasInventoryViewport" class="viewport" :style="inventoryViewportStyle">
+            <!-- Mini viewport -->
+            <div v-if="hasMiniViewport" class="viewport" :style="miniViewportStyle">
                 <div class="toolbar right">
                     <camera-home
-                        @onCenterCamera="centerInventoryCamera"
-                        :isVisible="showInventoryCameraHome"
+                        @onCenterCamera="centerMiniCamera"
+                        :isVisible="showMiniPortalCameraHome"
                     ></camera-home>
                 </div>
             </div>

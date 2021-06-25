@@ -181,7 +181,7 @@ import {
     ShowHtmlAction,
     HideHtmlAction,
     SetClipboardAction,
-    AnimateToBotAction,
+    FocusOnBotAction,
     ShowChatBarAction,
     EnableARAction,
     EnableVRAction,
@@ -205,7 +205,7 @@ import {
     ShowUploadFilesAction,
     ApplyStateAction,
     RejectAction,
-    AnimateToOptions,
+    FocusOnOptions,
     animateToPosition,
     AsyncAction,
     beginAudioRecording as calcBeginAudioRecording,
@@ -225,6 +225,9 @@ import {
     EnablePOVAction,
     disablePOV,
     enablePOV,
+    EnableCustomDraggingAction,
+    enableCustomDragging as calcEnableCustomDragging,
+    MINI_PORTAL,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -613,6 +616,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             destroy,
             changeState,
             superShout,
+            priorityShout,
             shout,
             whisper,
 
@@ -640,6 +644,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             sleep,
 
             __energyCheck,
+            clearTimeout,
+            clearInterval,
 
             os: {
                 sleep,
@@ -659,6 +665,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 version,
                 device,
                 isCollaborative,
+                getAB1BootstrapURL,
                 enableAR,
                 disableAR,
                 enableVR,
@@ -686,7 +693,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getCurrentDimension,
                 getCurrentServer,
                 getMenuDimension,
-                getInventoryDimension,
+                getMiniPortalDimension,
                 getPortalDimension,
                 getDimensionalDepth,
                 showInputForTag,
@@ -699,12 +706,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 playSound,
                 bufferSound,
                 cancelSound,
-                hasBotInInventory,
+                hasBotInMiniPortal,
                 share,
                 closeCircleWipe,
                 openCircleWipe,
                 addDropSnap,
                 addBotDropSnap,
+                enableCustomDragging,
                 log,
                 getGeolocation,
                 inSheet,
@@ -835,6 +843,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 addVectors,
                 subtractVectors,
                 negateVector,
+                normalizeVector,
+                vectorLength,
                 scaleVector,
                 areClose,
             },
@@ -927,6 +937,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 return timer;
             };
+    }
+
+    function clearTimeout(id: number) {
+        context.cancelAndRemoveTimers(id);
+    }
+
+    function clearInterval(id: number) {
+        context.cancelAndRemoveTimers(id);
     }
 
     /**
@@ -1419,7 +1437,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         rotX?: number,
         rotY?: number,
         duration?: number
-    ): AnimateToBotAction {
+    ): FocusOnBotAction {
         return addAction(
             calcTweenTo(getID(bot), {
                 zoom: zoomValue,
@@ -1447,7 +1465,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         zoomValue?: number,
         rotX?: number,
         rotY?: number
-    ): AnimateToBotAction {
+    ): FocusOnBotAction {
         return tweenTo(bot, zoomValue, rotX, rotY, 0);
     }
 
@@ -1459,10 +1477,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function focusOn(
         botOrPosition: Bot | string | { x: number; y: number },
-        options: AnimateToOptions = {}
+        options: FocusOnOptions = {}
     ): Promise<void> {
         const task = context.createTask();
-        const finalOptions: AnimateToOptions = {
+        const finalOptions: FocusOnOptions = {
             duration: 1,
             easing: 'quadratic',
             ...(options ?? {}),
@@ -1542,6 +1560,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             supportsAR: null as boolean,
             supportsVR: null as boolean,
             isCollaborative: null as boolean,
+            ab1BootstrapUrl: null as string,
         };
     }
 
@@ -1554,6 +1573,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return true;
+    }
+
+    /**
+     * Gets the URL that AB1 should be bootstrapped from.
+     */
+    function getAB1BootstrapURL(): string {
+        if (context.device) {
+            return context.device.ab1BootstrapUrl;
+        }
+
+        return 'https://bootstrap.casualos.com/ab1.aux';
     }
 
     /**
@@ -1861,14 +1891,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the name of the dimension that is used for the current user's inventory.
+     * Gets the name of the dimension that is used for the current user's mini portal.
      */
-    function getInventoryDimension(): string {
+    function getMiniPortalDimension(): string {
         const user = context.playerBot;
         if (user) {
-            const inventory = getTag(user, 'inventoryPortal');
-            if (hasValue(inventory)) {
-                return inventory.toString();
+            const miniPortal = getTag(user, MINI_PORTAL);
+            if (hasValue(miniPortal)) {
+                return miniPortal.toString();
             }
             return null;
         } else {
@@ -2105,18 +2135,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Determines whether the player has the given bot in their inventory.
+     * Determines whether the player has the given bot in their mini portal.
      * @param bots The bot or bots to check.
      */
-    function hasBotInInventory(bots: Bot | Bot[]): boolean {
+    function hasBotInMiniPortal(bots: Bot | Bot[]): boolean {
         if (!Array.isArray(bots)) {
             bots = [bots];
         }
-        let inventoryDimension = getInventoryDimension();
-        if (!hasValue(inventoryDimension)) {
+        let miniPortal = getMiniPortalDimension();
+        if (!hasValue(miniPortal)) {
             return false;
         }
-        return every(bots, (f) => getTag(f, inventoryDimension) === true);
+        return every(bots, (f) => getTag(f, miniPortal) === true);
     }
 
     /**
@@ -2185,6 +2215,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         ...targets: SnapTarget[]
     ): AddDropSnapTargetsAction {
         return addAction(calcAddDropSnap(getID(bot), targets));
+    }
+
+    /**
+     * Enables custom dragging for the current drag operation.
+     * This will disable the built-in logic that moves the bot(s) and
+     * enables the "onDragging" and "onAnyBotDragging" listen tags.
+     */
+    function enableCustomDragging(): EnableCustomDraggingAction {
+        return addAction(calcEnableCustomDragging());
     }
 
     /**
@@ -4272,6 +4311,49 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Normalizes the given vector and returns the result.
+     * @param vector The vector that should be normalized.
+     */
+    function normalizeVector<T>(vector: T): T {
+        if (!hasValue(vector)) {
+            return vector;
+        }
+        let result = {} as any;
+        const length = vectorLength(vector);
+
+        if (length === 0) {
+            return vector;
+        }
+
+        const keys = Object.keys(vector);
+        for (let key of keys) {
+            const val = (vector as any)[key];
+            result[key] = val / length;
+        }
+
+        return result;
+    }
+
+    /**
+     * Calculates the length of the given vector.
+     * @param vector The vector to calculate the length of.
+     */
+    function vectorLength<T>(vector: T): number {
+        if (!hasValue(vector)) {
+            return null;
+        }
+        let result = 0;
+
+        const keys = Object.keys(vector);
+        for (let key of keys) {
+            const val = (vector as any)[key];
+            result += val * val;
+        }
+
+        return Math.sqrt(result);
+    }
+
+    /**
      * Multiplies each component of the given vector by the given scale and returns the result.
      * @param vector The vector that should be scaled.
      * @param scale The number that the vector should be multiplied by.
@@ -5280,6 +5362,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Shouts the given events in order until a bot returns a result.
+     * Returns the result that was produced or undefined if no result was produced.
+     * @param eventNames The names of the events to shout.
+     * @param arg The argument to shout.
+     */
+    function priorityShout(eventNames: string[], arg?: any) {
+        for (let name of eventNames) {
+            let results: any = event(name, null, arg, undefined, true);
+
+            if (results.hasResult) {
+                return results[results.length - 1];
+            }
+        }
+
+        return undefined;
+    }
+
+    /**
      * Asks every bot in the server to run the given action.
      * In effect, this is like shouting to a bunch of people in a room.
      *
@@ -5353,7 +5453,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera position should be retrieved for.
      */
     function getCameraPosition(
-        portal: 'page' | 'inventory' = 'page'
+        portal: 'page' | 'mini' = 'page'
     ): { x: number; y: number; z: number } {
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
@@ -5376,7 +5476,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera rotation should be retrieved for.
      */
     function getCameraRotation(
-        portal: 'page' | 'inventory' = 'page'
+        portal: 'page' | 'mini' = 'page'
     ): { x: number; y: number; z: number } {
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
@@ -5399,7 +5499,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera focus point should be retrieved for.
      */
     function getFocusPoint(
-        portal: 'page' | 'inventory' = 'page'
+        portal: 'page' | 'mini' = 'page'
     ): { x: number; y: number; z: number } {
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
@@ -5516,12 +5616,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bots The bots that the event should be executed on. If null, then the event will be run on every bot.
      * @param arg The argument to pass.
      * @param sort Whether to sort the Bots before processing. Defaults to true.
+     * @param shortCircuit Whether to stop processing bots when one returns a value.
      */
     function event(
         name: string,
         bots: (Bot | string)[],
         arg?: any,
-        sendListenEvents: boolean = true
+        sendListenEvents: boolean = true,
+        shortCircuit: boolean = false
     ): any[] {
         const startTime = globalThis.performance.now();
         let tag = trimEvent(name);
@@ -5541,8 +5643,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let targets = [] as RuntimeBot[];
         let listeners = [] as RuntimeBot[];
         let checkedEnergy = false;
+        let stop = false;
 
         for (let id of ids) {
+            if (stop) {
+                break;
+            }
             if (!id) {
                 continue;
             }
@@ -5573,6 +5679,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                         });
                     }
                     results.push(result);
+
+                    if (shortCircuit && result !== undefined) {
+                        stop = true;
+                    }
                 } catch (ex) {
                     context.enqueueError(ex);
                     results.push(undefined);
@@ -5595,6 +5705,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             };
             event('onListen', listeners, listenArg, false);
             event('onAnyListen', null, listenArg, false);
+        }
+
+        if (shortCircuit && stop) {
+            (<any>results).hasResult = true;
         }
 
         return results;

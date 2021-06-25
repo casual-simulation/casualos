@@ -22,6 +22,10 @@ html:not([data-theme="dark"]) .badge.badge--normal {
     --ifm-badge-border-color: var(--ifm-color-black);
     --ifm-badge-color: var(--ifm-color-black);
 }
+html[data-theme="dark"] .badge.badge--normal {
+    --ifm-badge-border-color: var(--ifm-color-white);
+    --ifm-badge-color: var(--ifm-color-white);
+}
 
   .hero.hero--primary {
     --ifm-hero-background-color: #1c1c1c;

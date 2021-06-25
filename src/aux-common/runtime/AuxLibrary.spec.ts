@@ -153,6 +153,7 @@ import {
     enablePOV,
     disablePOV,
     botUpdated,
+    enableCustomDragging,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -211,6 +212,7 @@ describe('AuxLibrary', () => {
             supportsAR: true,
             supportsVR: false,
             isCollaborative: true,
+            ab1BootstrapUrl: 'bootstrapURL',
         };
         notifier = {
             notifyChange: jest.fn(),
@@ -1609,7 +1611,7 @@ describe('AuxLibrary', () => {
         });
 
         describe('os.tweenTo()', () => {
-            it('should emit a AnimateToBotAction', () => {
+            it('should emit a FocusOnBotAction', () => {
                 const action = library.api.os.tweenTo('test');
                 expect(action).toEqual(tweenTo('test'));
                 expect(context.actions).toEqual([tweenTo('test')]);
@@ -1656,7 +1658,7 @@ describe('AuxLibrary', () => {
         });
 
         describe('os.moveTo()', () => {
-            it('should emit a AnimateToBotAction with the duration set to 0', () => {
+            it('should emit a FocusOnBotAction with the duration set to 0', () => {
                 const action = library.api.os.moveTo('test');
                 expect(action).toEqual(tweenTo('test', { duration: 0 }));
                 expect(context.actions).toEqual([
@@ -1666,7 +1668,7 @@ describe('AuxLibrary', () => {
         });
 
         describe('os.focusOn()', () => {
-            it('should emit a AnimateToBotAction', () => {
+            it('should emit a FocusOnBotAction', () => {
                 const action: any = library.api.os.focusOn('test');
                 const expected = tweenTo(
                     'test',
@@ -1721,7 +1723,7 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should emit a AnimateToPositionAction if given a position', () => {
+            it('should emit a FocusOnPositionAction if given a position', () => {
                 const action: any = library.api.os.focusOn({
                     x: 20,
                     y: 10,
@@ -1830,6 +1832,7 @@ describe('AuxLibrary', () => {
                     supportsAR: null,
                     supportsVR: null,
                     isCollaborative: null,
+                    ab1BootstrapUrl: null,
                 });
             });
         });
@@ -1869,6 +1872,38 @@ describe('AuxLibrary', () => {
 
                 const d = library.api.os.isCollaborative();
                 expect(d).toEqual(true);
+            });
+        });
+
+        describe('os.getAB1BootstrapURL()', () => {
+            it('should return the device bootstrap URL', () => {
+                device.ab1BootstrapUrl = 'bootstrap';
+                const d = library.api.os.getAB1BootstrapURL();
+                expect(d).toEqual('bootstrap');
+            });
+
+            it('should return https://bootstrap.casualos.com/ab1.aux when no device is available', () => {
+                version = {
+                    hash: 'hash',
+                    version: 'v1.2.3',
+                    major: 1,
+                    minor: 2,
+                    patch: 3,
+                };
+                device = null;
+                notifier = {
+                    notifyChange: jest.fn(),
+                };
+                context = new MemoryGlobalContext(
+                    version,
+                    device,
+                    new TestScriptBotFactory(),
+                    notifier
+                );
+                library = createDefaultLibrary(context);
+
+                const d = library.api.os.getAB1BootstrapURL();
+                expect(d).toEqual('https://bootstrap.casualos.com/ab1.aux');
             });
         });
 
@@ -2460,7 +2495,7 @@ describe('AuxLibrary', () => {
             );
         });
 
-        describe('os.getInventoryDimension()', () => {
+        describe('os.getMiniPortalDimension()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
@@ -2469,17 +2504,17 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return the inventoryPortal tag from the user bot', () => {
-                player.tags.inventoryPortal = 'abc';
-                const result = library.api.os.getInventoryDimension();
+            it('should return the miniPortal tag from the user bot', () => {
+                player.tags.miniPortal = 'abc';
+                const result = library.api.os.getMiniPortalDimension();
                 expect(result).toEqual('abc');
             });
 
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.inventoryPortal = given;
-                    const result = library.api.os.getInventoryDimension();
+                    player.tags.miniPortal = given;
+                    const result = library.api.os.getMiniPortalDimension();
                     expect(result).toEqual(expected);
                 }
             );
@@ -2524,6 +2559,8 @@ describe('AuxLibrary', () => {
                 ['pagePortal', 'pageDimension'],
                 ['inventory', 'inventoryDimension'],
                 ['inventoryPortal', 'inventoryDimension'],
+                ['mini', 'miniDimension'],
+                ['miniPortal', 'miniDimension'],
                 ['menu', 'menuDimension'],
                 ['menuPortal', 'menuDimension'],
                 ['sheet', 'sheetDimension'],
@@ -2536,6 +2573,7 @@ describe('AuxLibrary', () => {
                 it(`should get the dimension for the ${portal} portal`, () => {
                     player.tags.pagePortal = 'pageDimension';
                     player.tags.inventoryPortal = 'inventoryDimension';
+                    player.tags.miniPortal = 'miniDimension';
                     player.tags.menuPortal = 'menuDimension';
                     player.tags.sheetPortal = 'sheetDimension';
                     player.tags.falsy = false;
@@ -2549,6 +2587,7 @@ describe('AuxLibrary', () => {
                     (expected, given) => {
                         player.tags.pagePortal = given;
                         player.tags.inventoryPortal = given;
+                        player.tags.miniPortal = given;
                         player.tags.menuPortal = given;
                         player.tags.sheetPortal = given;
                         player.tags.falsy = false;
@@ -2793,7 +2832,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('os.hasBotInInventory()', () => {
+        describe('os.hasBotInMiniPortal()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
@@ -2802,33 +2841,33 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return true if the given bot is in the users inventory dimension', () => {
-                player.tags.inventoryPortal = 'abc';
+            it('should return true if the given bot is in the users mini portal dimension', () => {
+                player.tags.miniPortal = 'abc';
                 bot1.tags.abc = true;
-                const result = library.api.os.hasBotInInventory(bot1);
+                const result = library.api.os.hasBotInMiniPortal(bot1);
                 expect(result).toEqual(true);
             });
 
-            it('should return true if all the given bots are in the users inventory dimension', () => {
-                player.tags.inventoryPortal = 'abc';
+            it('should return true if all the given bots are in the users mini portal dimension', () => {
+                player.tags.miniPortal = 'abc';
                 bot1.tags.abc = true;
                 bot2.tags.abc = true;
-                const result = library.api.os.hasBotInInventory([bot1, bot2]);
+                const result = library.api.os.hasBotInMiniPortal([bot1, bot2]);
                 expect(result).toEqual(true);
             });
 
-            it('should return false if one of the given bots are not in the users inventory dimension', () => {
-                player.tags.inventoryPortal = 'abc';
+            it('should return false if one of the given bots are not in the users mini portal dimension', () => {
+                player.tags.miniPortal = 'abc';
                 bot1.tags.abc = false;
                 bot2.tags.abc = true;
-                const result = library.api.os.hasBotInInventory([bot1, bot2]);
+                const result = library.api.os.hasBotInMiniPortal([bot1, bot2]);
                 expect(result).toEqual(false);
             });
 
-            it('should return false if the player does not have an inventory', () => {
+            it('should return false if the player does not have an mini portal', () => {
                 bot1.tags.abc = true;
                 bot2.tags.abc = true;
-                const result = library.api.os.hasBotInInventory([bot1, bot2]);
+                const result = library.api.os.hasBotInMiniPortal([bot1, bot2]);
                 expect(result).toEqual(false);
             });
         });
@@ -2992,6 +3031,15 @@ describe('AuxLibrary', () => {
                         distance: 1,
                     },
                 ]);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.enableCustomDragging()', () => {
+            it('should return a EnableCustomDraggingAction', () => {
+                const action = library.api.os.enableCustomDragging();
+                const expected = enableCustomDragging();
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
@@ -8381,6 +8429,130 @@ describe('AuxLibrary', () => {
         );
     });
 
+    describe('priorityShout()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+        let bot3: RuntimeBot;
+        let bot4: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+            bot3 = createDummyRuntimeBot('test3');
+            bot4 = createDummyRuntimeBot('test4');
+
+            addToContext(context, bot1, bot2, bot3, bot4);
+        });
+
+        function recordListeners() {
+            for (let bot of [bot1, bot2, bot3, bot4]) {
+                for (let key in bot.listeners) {
+                    context.recordListenerPresense(bot.id, key, true);
+                }
+            }
+        }
+
+        it('should run the event on every bot', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+
+            recordListeners();
+
+            library.api.priorityShout(['sayHello']);
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).toBeCalled();
+        });
+
+        it('should not run the event on the second bot if the first bot returns a value', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest
+                .fn()
+                .mockImplementation(() => 123));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+
+            recordListeners();
+
+            library.api.priorityShout(['sayHello']);
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).not.toBeCalled();
+        });
+
+        it('should run the next shout if nothing returns a value', () => {
+            const abc1 = (bot1.listeners.abc = jest.fn());
+            const abc2 = (bot2.listeners.abc = jest.fn());
+
+            const def1 = (bot1.listeners.def = jest.fn());
+            const def2 = (bot2.listeners.def = jest.fn());
+
+            recordListeners();
+
+            library.api.priorityShout(['abc', 'def']);
+            expect(abc1).toBeCalled();
+            expect(abc2).toBeCalled();
+
+            expect(def1).toBeCalled();
+            expect(def2).toBeCalled();
+        });
+
+        it('should return undefined if there are no listeners', () => {
+            recordListeners();
+
+            expect(library.api.priorityShout(['abc', 'def'])).toBeUndefined();
+        });
+
+        it('should return the first returned value', () => {
+            const abc1 = (bot1.listeners.abc = jest.fn(() => 123));
+            const abc2 = (bot2.listeners.abc = jest.fn(() => 456));
+
+            const def1 = (bot1.listeners.def = jest.fn(() => 789));
+            const def2 = (bot2.listeners.def = jest.fn(() => 10));
+
+            recordListeners();
+
+            let result = library.api.priorityShout(['abc', 'def']);
+            expect(result).toBe(123);
+            expect(abc1).toBeCalled();
+            expect(abc2).not.toBeCalled();
+
+            expect(def1).not.toBeCalled();
+            expect(def2).not.toBeCalled();
+        });
+
+        it('should short circuit when null is returned', () => {
+            const abc1 = (bot1.listeners.abc = jest.fn(() => null));
+            const abc2 = (bot2.listeners.abc = jest.fn(() => 456));
+
+            const def1 = (bot1.listeners.def = jest.fn(() => 789));
+            const def2 = (bot2.listeners.def = jest.fn(() => 10));
+
+            recordListeners();
+
+            let result = library.api.priorityShout(['abc', 'def']);
+            expect(result).toBe(null);
+            expect(abc1).toBeCalled();
+            expect(abc2).not.toBeCalled();
+
+            expect(def1).not.toBeCalled();
+            expect(def2).not.toBeCalled();
+        });
+
+        it('should use the given argument', () => {
+            const abc1 = (bot1.listeners.abc = jest.fn());
+            const abc2 = (bot2.listeners.abc = jest.fn());
+
+            const def1 = (bot1.listeners.def = jest.fn());
+            const def2 = (bot2.listeners.def = jest.fn());
+
+            recordListeners();
+
+            let arg = {};
+            library.api.priorityShout(['abc', 'def'], arg);
+            expect(abc1).toBeCalledWith(arg);
+            expect(abc2).toBeCalledWith(arg);
+            expect(def1).toBeCalledWith(arg);
+            expect(def2).toBeCalledWith(arg);
+        });
+    });
+
     describe('shout()', () => {
         let bot1: RuntimeBot;
         let bot2: RuntimeBot;
@@ -9103,6 +9275,58 @@ describe('AuxLibrary', () => {
             expect(fn).toBeCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
+
+        it('should be able to clear the timer with clearTimeout()', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setTimeout(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'timeout',
+                },
+            ]);
+
+            library.api.clearTimeout(timeoutId);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(0);
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('should be able to clear the timer with clearInterval()', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setTimeout(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'timeout',
+                },
+            ]);
+
+            library.api.clearInterval(timeoutId);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(0);
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('clearTimeout() should not error if there are no timers for the bot', () => {
+            library.api.clearTimeout(99);
+        });
     });
 
     describe('setInterval()', () => {
@@ -9179,6 +9403,82 @@ describe('AuxLibrary', () => {
             jest.advanceTimersByTime(500);
             expect(fn).toBeCalledTimes(2);
         });
+
+        it('should clear the timer when the bot is destroyed', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setInterval(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'interval',
+                },
+            ]);
+
+            library.api.destroy(bot1);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(0);
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('should clear the timer with clearInterval()', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setInterval(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'interval',
+                },
+            ]);
+
+            library.api.clearInterval(timeoutId);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(0);
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('should clear the timer with clearTimeout()', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.setInterval(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'interval',
+                },
+            ]);
+
+            library.api.clearTimeout(timeoutId);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(0);
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('clearInterval() should not error if there are no timers for the bot', () => {
+            library.api.clearInterval(99);
+        });
     });
 
     describe('os.inSheet()', () => {
@@ -9203,7 +9503,7 @@ describe('AuxLibrary', () => {
 
     describe('os.getCameraPosition()', () => {
         let pagePortal: RuntimeBot;
-        let inventoryPortal: RuntimeBot;
+        let miniPortal: RuntimeBot;
 
         beforeEach(() => {
             pagePortal = createDummyRuntimeBot(
@@ -9215,8 +9515,8 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            inventoryPortal = createDummyRuntimeBot(
-                'inventoryPortal',
+            miniPortal = createDummyRuntimeBot(
+                'miniPortal',
                 {
                     cameraPositionX: 4,
                     cameraPositionY: 5,
@@ -9224,15 +9524,15 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, pagePortal, inventoryPortal);
+            addToContext(context, pagePortal, miniPortal);
 
             (<any>globalThis).pagePortalBot = pagePortal;
-            (<any>globalThis).inventoryPortalBot = inventoryPortal;
+            (<any>globalThis).miniPortalBot = miniPortal;
         });
 
         afterEach(() => {
             delete (<any>globalThis).pagePortalBot;
-            delete (<any>globalThis).inventoryPortalBot;
+            delete (<any>globalThis).miniPortalBot;
         });
 
         it('should return NaN for x, y, and z if the page portal bot is null', () => {
@@ -9256,8 +9556,8 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the inventory camera position', () => {
-            const result = library.api.os.getCameraPosition('inventory');
+        it('should be able to get the mini camera position', () => {
+            const result = library.api.os.getCameraPosition('mini');
 
             expect(result).toEqual({
                 x: 4,
@@ -9279,7 +9579,7 @@ describe('AuxLibrary', () => {
 
     describe('os.getCameraRotation()', () => {
         let pagePortal: RuntimeBot;
-        let inventoryPortal: RuntimeBot;
+        let miniPortal: RuntimeBot;
 
         beforeEach(() => {
             pagePortal = createDummyRuntimeBot(
@@ -9291,8 +9591,8 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            inventoryPortal = createDummyRuntimeBot(
-                'inventoryPortal',
+            miniPortal = createDummyRuntimeBot(
+                'miniPortal',
                 {
                     cameraRotationX: 4,
                     cameraRotationY: 5,
@@ -9300,15 +9600,15 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, pagePortal, inventoryPortal);
+            addToContext(context, pagePortal, miniPortal);
 
             (<any>globalThis).pagePortalBot = pagePortal;
-            (<any>globalThis).inventoryPortalBot = inventoryPortal;
+            (<any>globalThis).miniPortalBot = miniPortal;
         });
 
         afterEach(() => {
             delete (<any>globalThis).pagePortalBot;
-            delete (<any>globalThis).inventoryPortalBot;
+            delete (<any>globalThis).miniPortalBot;
         });
 
         it('should return NaN for x, y, and z if the page portal bot is null', () => {
@@ -9332,8 +9632,8 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the inventory camera rotation', () => {
-            const result = library.api.os.getCameraRotation('inventory');
+        it('should be able to get the mini portal camera rotation', () => {
+            const result = library.api.os.getCameraRotation('mini');
 
             expect(result).toEqual({
                 x: 4,
@@ -9355,7 +9655,7 @@ describe('AuxLibrary', () => {
 
     describe('os.getFocusPoint()', () => {
         let pagePortal: RuntimeBot;
-        let inventoryPortal: RuntimeBot;
+        let miniPortal: RuntimeBot;
 
         beforeEach(() => {
             pagePortal = createDummyRuntimeBot(
@@ -9367,8 +9667,8 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            inventoryPortal = createDummyRuntimeBot(
-                'inventoryPortal',
+            miniPortal = createDummyRuntimeBot(
+                'miniPortal',
                 {
                     cameraFocusX: 4,
                     cameraFocusY: 5,
@@ -9376,15 +9676,15 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, pagePortal, inventoryPortal);
+            addToContext(context, pagePortal, miniPortal);
 
             (<any>globalThis).pagePortalBot = pagePortal;
-            (<any>globalThis).inventoryPortalBot = inventoryPortal;
+            (<any>globalThis).miniPortalBot = miniPortal;
         });
 
         afterEach(() => {
             delete (<any>globalThis).pagePortalBot;
-            delete (<any>globalThis).inventoryPortalBot;
+            delete (<any>globalThis).miniPortalBot;
         });
 
         it('should return NaN for x, y, and z if the page portal bot is null', () => {
@@ -9408,8 +9708,8 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the inventory camera rotation', () => {
-            const result = library.api.os.getFocusPoint('inventory');
+        it('should be able to get the mini portal camera rotation', () => {
+            const result = library.api.os.getFocusPoint('mini');
 
             expect(result).toEqual({
                 x: 4,
@@ -9971,6 +10271,73 @@ describe('AuxLibrary', () => {
 
         it.each(cases)('should negate %s', (desc, first, expected) => {
             expect(library.api.math.negateVector(first)).toEqual(expected);
+        });
+    });
+
+    describe('math.normalizeVector()', () => {
+        const cases = [
+            ['zeroes', { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }] as const,
+
+            [
+                'already normalized',
+                { x: 1, y: 0, z: 0 },
+                { x: 1, y: 0, z: 0 },
+            ] as const,
+            [
+                'normalized',
+                { x: 1, y: 2, z: 3 },
+                {
+                    x: 0.2672612419124244,
+                    y: 0.5345224838248488,
+                    z: 0.8017837257372732,
+                },
+            ] as const,
+
+            [
+                'strings',
+                { x: 'a', y: 'b', z: 'c' },
+                { x: NaN, y: NaN, z: NaN },
+            ] as const,
+
+            ['empty objects', {}, {}] as const,
+
+            ['null objects', null as any, null as any] as const,
+        ];
+
+        it.each(cases)('should normalize %s', (desc, first, expected) => {
+            expect(library.api.math.normalizeVector(first)).toEqual(expected);
+        });
+    });
+
+    describe('math.vectorLength()', () => {
+        const cases = [
+            ['zeroes', { x: 0, y: 0, z: 0 }, 0] as const,
+
+            ['already normalized', { x: 1, y: 0, z: 0 }, 1] as const,
+            [
+                'not normalized',
+                { x: 1, y: 2, z: 3 },
+                3.7416573867739413,
+            ] as const,
+            [
+                'normalized',
+                {
+                    x: 0.2672612419124244,
+                    y: 0.5345224838248488,
+                    z: 0.8017837257372732,
+                },
+                1,
+            ] as const,
+
+            ['strings', { x: 'a', y: 'b', z: 'c' }, NaN] as const,
+
+            ['empty objects', {}, 0] as const,
+
+            ['null objects', null as any, null as any] as const,
+        ];
+
+        it.each(cases)('should calculate %s', (desc, first, expected) => {
+            expect(library.api.math.vectorLength(first)).toEqual(expected);
         });
     });
 

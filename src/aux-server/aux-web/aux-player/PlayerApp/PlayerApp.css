@@ -143,3 +143,11 @@
 .user-info {
     display: flex;
 }
+
+.md-dialog.alert-dialog {
+    z-index: 15;
+}
+
+.md-dialog.alert-dialog + .md-overlay.md-dialog-overlay {
+    z-index: 14;
+}

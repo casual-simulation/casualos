@@ -1,8 +1,227 @@
 # CasualOS Changelog
 
+## V2.0.2
+
+#### Date: 6/25/2021
+
+### :rocket: Improvements
+
+-   Improved the miniPortal to support the `portalCameraZoom`, `portalCameraRotationX` and `portalCameraRotationY` tags.
+-   Added the `priorityShout()` function to make it easy to run a set of shouts until a bot returns a value.
+-   Added the ability to control the foreground and background colors of the chat bar via the `foregroundColor` and `backgroundColor` options in `os.showChat()`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where camera position offsets would continuously be applied to the camera.
+-   Fixed an issue where the menu would be positioned incorrectly if the meet portal was anchored to the top of the screen.
+-   Fixed an issue where clicking on the grid with a controller in XR would crash CasualOS.
+-   Fixed an issue where the transformer tag did not work correctly for bots in the mapPortal.
+
+## V2.0.1
+
+#### Date: 6/9/2021
+
+### :rocket: Improvements
+
+-   Changed the default mapPortal basemap to `dark-gray`.
+-   Changed the mapPortal to default to viewing Veterans Memorial Park in Grand Rapids.
+    -   This makes it easier to start using AB-1 once the map portal is loaded.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where calling `os.focusOn()` with a position and no portal would default to the map portal.
+-   Fixed an issue where calling `os.focusOn()` for the map portal before it was finished loading would error.
+
+## V2.0.0
+
+#### Date: 6/7/2021
+
+### :bug: Improvements
+
+-   Added the `mapPortal`.
+    -   The map portal provides a 3D representation of the entire Earth and allows placing bots anywhere on it.
+    -   Bots that are in the map portal use Longitude and Latitude for their X and Y coordinates.
+    -   The map can additionally be customized by setting the `mapPortalBasemap` tag on the `mapPortalBot`. See the documentation for more information.
+    -   Based upon [ArcGIS](https://www.arcgis.com/index.html).
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where trying to focus on a position in the miniPortal would not work.
+
+## V1.5.24
+
+#### Date: 5/24/2021
+
+### :rocket: Improvements
+
+-   Improved the miniPortal to enable resizing it by dragging the top of the miniPortal instead of just at the corners.
+-   Added the `math.normalizeVector()` and `math.vectorLength()` functions.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where events in some asynchronous scripts would be incorrectly reordered and potentially cause logic issues.
+
+## V1.5.23
+
+#### Date: 5/22/2021
+
+### :boom: Breaking Changes
+
+-   Renamed the `inventoryPortal` to `miniPortal`.
+    -   The following were also renamed:
+        -   `#inventoryPortalHeight` -> `#miniPortalHeight`
+        -   `#inventoryPortalResizable` -> `#miniPortalResizable`
+        -   `os.getInventoryPortalDimension()` -> `os.getMiniPortalDimension()`
+        -   `os.hasBotInInventory()` -> `os.hasBotInMiniPortal()`
+        -   `os.getPortalDimension("inventory")` -> `os.getPortalDimension("mini")`
+        -   `os.getCameraPosition("inventory")` -> `os.getCameraPosition("mini")`
+        -   `os.getCameraRotation("inventory")` -> `os.getCameraRotation("mini")`
+        -   `os.getFocusPoint("inventory")` -> `os.getFocusPoint("mini")`
+-   The `miniPortalHeight` tag was changed from being a number between 1 and 10 that represented the number of bots that should fit in the portal. Now it is a number between 0 and 1 that represents the percentage of the screen height it should take. Note that when `#miniPortalWidth` is less than 1 the height of the portal will be more like 80% of the screen height when set to 1. This is because of the mandatory spacing from the bottom of the screen to be somewhat consistent with the spacing on the sides.
+
+### :rocket: Improvements
+
+-   Added the `#miniPortalWidth` tag.
+    -   Possible values are between 0 and 1.
+    -   Represents the percentage of the screen width that the mini portal should take.
+    -   When set to 1, the mini portal will appear docked and there will be no spacing between the bottom of the screen and the mini portal.
+
+### :bug: Bug Fixes
+
+-   Fixed a bunch of issues with zooming, rotating, and resizing the mini portal.
+
+## V1.5.22
+
+#### Date: 5/20/2021
+
+### :rocket: Improvements
+
+-   Added the `os.enableCustomDragging()` function to disable the default dragging behavior for the current drag operation.
+    -   This is useful for custom dragging behavior that is associated with a bot like scaling the bot or rotating it.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.focusOn()` would not work with bots in the inventory portal.
+
+## V1.5.21
+
+#### Date: 5/18/2021
+
+### :rocket: Improvements
+
+-   Improved `os.focusOn()` to support focusing on menu bots that have `#form` set to `input`.
+-   Added the ability to snap dragged to a specific axis.
+
+    -   These are special snap target objects that have the following form:
+
+    ```typescript
+    let snapAxis: {
+        /**
+         * The direction that the axis travels along.
+         */
+        direction: { x: number; y: number; z: number };
+
+        /**
+         * The center point that the axis travels through.
+         */
+        origin: { x: number; y: number; z: number };
+
+        /**
+         * The distance that the bot should be from any point along the
+         * axis in order to snap to it.
+         */
+        distance: number;
+    };
+    ```
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the "tag has already been added" dialog displayed behind the sheet portal.
+
+## V1.5.20
+
+#### Date: 5/17/2021
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `@onInputTyping` was incorrectly shouted instead of whispered.
+
+## V1.5.19
+
+#### Date: 5/13/2021
+
+### :rocket: Improvements
+
+-   Added the `labelPaddingX` and `labelPaddingY` tags to allow controlling the padding along the width and height of labels separately.
+-   Added the ability to use a URL for the `cursor` and `portalCursor` tags.
+-   Added the `cursorHotspotX`, `cursorHotspotY`, `portalCursorHotspotX`, and `portalCursorHotspotY` tags to allow specifying the location that clicks should happen at in the custom cursor image. For example, a cursor that is a circle would have the hotspot in the middle but the default cursor has the hotspot at the top left.
+
+## V1.5.18
+
+#### Date: 5/11/2021
+
+### :rocket: Improvements
+
+-   Added the `AB1_BOOTSTRAP_URL` environment variable to control the URL that ab-1 gets loaded from.
+
+## V1.5.17
+
+#### Date: 5/10/2021
+
+### :rocket: Improvements
+
+-   Added the `cursor` and `portalCursor` tags.
+    -   The `cursor` tag specifies the mouse cursor that should be shown when the bot is being hovered.
+    -   The `portalCursor` tag specifies the mouse cursor that should be used by default for the page portal.
+    -   See the documentation for a list of possible options.
+-   Added the `labelPadding` tag to control how much space is between the edge of the bot and edge of the label.
+
+## V1.5.16
+
+#### Date: 5/7/2021
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was no longer possible to cancel `setInterval()` with `clearTimeout()` and cancel `setTimeout()` with `clearInterval()`.
+    -   They are not meant to be used together but because of an artifact of web browsers it needs to be supported.
+
+## V1.5.15
+
+#### Date: 5/7/2021
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was impossible to clear intervals/timeouts from a bot other than the one it was created from.
+
+## V1.5.14
+
+#### Date: 5/7/2021
+
+### :rocket: Improvements
+
+-   Added the ability to clear bot timers using `clearInterval()` and `clearTimeout()`.
+    -   `clearInterval(timerId)` is useful for clearing intervals created by `setInterval()`.
+    -   `clearTimeout(timerId)` is useful for clearing timeouts created by `setTimeout()`
+
+## V1.5.13
+
+#### Date: 5/3/2021
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the meet portal could stay open if the portal was cleared before it was fully loaded.
+
+## V1.5.12
+
+#### Date: 5/2/2021
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `@onSubmit` was shouted to every bot instead of whispered to the bot that the input was submitted on.
+
 ## V1.5.11
 
-#### Date: 4/26/2021
+#### Date: 4/27/2021
 
 ### :rocket: Improvements
 

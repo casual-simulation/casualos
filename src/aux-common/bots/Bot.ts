@@ -225,13 +225,7 @@ export type BotSpace =
 /**
  * The possible portal types.
  */
-export type PortalType =
-    | 'page'
-    | 'inventory'
-    | 'menu'
-    | 'sheet'
-    | 'meet'
-    | string;
+export type PortalType = 'page' | 'mini' | 'menu' | 'sheet' | 'meet' | string;
 
 export interface ScriptTags extends PrecalculatedTags {
     toJSON(): any;
@@ -308,7 +302,7 @@ export interface BotTags {
     ['pagePortal']?: string | boolean;
     ['sheetPortal']?: string | boolean;
     ['server']?: string | string[];
-    ['inventoryPortal']?: string;
+    ['miniPortal']?: string;
     ['menuPortal']?: string;
     ['leftWristPortal']?: string;
     ['rightWristPortal']?: string;
@@ -348,8 +342,8 @@ export interface BotTags {
     ['portalRotatable']?: number | null;
     ['portalShowFocusPoint']?: boolean | null;
     ['portalDisableCanvasTransparency']?: boolean;
-    ['inventoryPortalHeight']?: unknown;
-    ['inventoryPortalResizable']?: boolean;
+    ['miniPortalHeight']?: unknown;
+    ['miniPortalResizable']?: boolean;
     ['wristPortalHeight']?: number;
     ['wristPortalWidth']?: number;
 
@@ -573,6 +567,75 @@ export type PortalCameraControlsMode = 'player' | false;
 export type PortalCameraType = 'orthographic' | 'perspective';
 
 /**
+ * The possible bot cursors.
+ */
+export type BotCursorType =
+    | 'auto'
+    | 'default'
+    | 'none'
+    | 'context-menu'
+    | 'help'
+    | 'pointer'
+    | 'progress'
+    | 'wait'
+    | 'cell'
+    | 'crosshair'
+    | 'text'
+    | 'vertical-text'
+    | 'alias'
+    | 'copy'
+    | 'move'
+    | 'no-drop'
+    | 'not-allowed'
+    | 'grab'
+    | 'grabbing'
+    | 'all-scroll'
+    | 'col-resize'
+    | 'row-resize'
+    | 'n-resize'
+    | 'e-resize'
+    | 's-resize'
+    | 'w-resize'
+    | 'ne-resize'
+    | 'nw-resize'
+    | 'se-resize'
+    | 'sw-resize'
+    | 'ew-resize'
+    | 'ns-resize'
+    | 'nesw-resize'
+    | 'nwse-resize'
+    | 'zoom-in'
+    | 'zoom-out'
+    | BotCursorLink;
+
+export interface BotCursorLink {
+    type: 'link';
+    url: string;
+    x: number;
+    y: number;
+}
+
+/**
+ * Defines an interface that represents the padding that a bot label should have.
+ */
+export interface BotLabelPadding {
+    /**
+     * The horizontal padding that the label should have.
+     */
+    horizontal: number;
+
+    /**
+     * The vertical padding that the label should have.
+     */
+    vertical: number;
+}
+
+/**
+ * The default bot cursor.
+ */
+export const DEFAULT_BOT_CURSOR: BotCursorType = 'auto';
+
+/**
  * The default bot shape.
  */
 export const DEFAULT_BOT_SHAPE: BotShape = 'cube';
@@ -706,9 +769,45 @@ export const DEFAULT_USER_INACTIVE_TIME = 1000 * 60;
 export const DEFAULT_USER_DELETION_TIME = 1000 * 60 * 60;
 
 /**
- * Whether the inventory is visible by default.
+ * Whether the mini portal is visible by default.
  */
-export const DEFAULT_INVENTORY_VISIBLE = false;
+export const DEFAULT_MINI_PORTAL_VISIBLE = false;
+
+/**
+ * Whether the map portal is visible by default.
+ */
+export const DEFAULT_MAP_PORTAL_VISIBLE = false;
+
+/**
+ * The default scale for the map portal grid.
+ */
+export const DEFAULT_MAP_PORTAL_SCALE = 1;
+
+/**
+ * The default grid scale for the map portal.
+ */
+export const DEFAULT_MAP_PORTAL_GRID_SCALE = 10;
+
+/**
+ * The default basemap that should be used for the map portal.
+ * See https://developers.arcgis.com/javascript/latest/api-reference/esri-Map.html#basemap
+ */
+export const DEFAULT_MAP_PORTAL_BASEMAP = 'dark-gray';
+
+/**
+ * The default longitude that the map portal should show.
+ */
+export const DEFAULT_MAP_PORTAL_LONGITUDE = -84.71112905478944;
+
+/**
+ * The default latitude that the map portal should show.
+ */
+export const DEFAULT_MAP_PORTAL_LATITUDE = 43.152972972972975;
+
+/**
+ * The default zoom that the map portal should show.
+ */
+export const DEFAULT_MAP_PORTAL_ZOOM = 7;
 
 /**
  * Whether portals are pannable by default.
@@ -731,14 +830,14 @@ export const DEFAULT_PORTAL_ZOOMABLE = true;
 export const DEFAULT_PORTAL_SHOW_FOCUS_POINT = false;
 
 /**
- * Whether inventory portals are resizable by default.
+ * Whether mini portals are resizable by default.
  */
-export const DEFAULT_INVENTORY_PORTAL_RESIZABLE = true;
+export const DEFAULT_MINI_PORTAL_RESIZABLE = true;
 
 /**
- * The default height for inventory portals.
+ * The default height for mini portals.
  */
-export const DEFAULT_INVENTORY_PORTAL_HEIGHT = 0;
+export const DEFAULT_MINI_PORTAL_HEIGHT = 0.2;
 
 /**
  * The default height for wrist portals.
@@ -942,6 +1041,16 @@ export const DRAG_ACTION_NAME: string = 'onDrag';
  * The name of the event that represents any bot starting to be dragged.
  */
 export const DRAG_ANY_ACTION_NAME: string = 'onAnyBotDrag';
+
+/**
+ * The name of the event that represents a bot being dragged.
+ */
+export const DRAGGING_ACTION_NAME: string = 'onDragging';
+
+/**
+ * The name of the event that represents any bot being dragged.
+ */
+export const DRAGGING_ANY_ACTION_NAME: string = 'onAnyBotDragging';
 
 /**
  * The name of the event that represents a mod entering over a bot.
@@ -1311,6 +1420,16 @@ export const TAG_PORTAL_SPACE: string = 'tagPortalSpace';
 export const AUX_BOT_VERSION: number = 1;
 
 /**
+ * The name of the mini portal.
+ */
+export const MINI_PORTAL: string = 'miniPortal';
+
+/**
+ * The name of the map portal.
+ */
+export const MAP_PORTAL: string = 'mapPortal';
+
+/**
  * The name of the meet portal.
  */
 export const MEET_PORTAL: string = 'meetPortal';
@@ -1358,12 +1477,13 @@ export const KNOWN_PORTALS: string[] = [
     SHEET_PORTAL,
     IDE_PORTAL,
     IMU_PORTAL,
-    'inventoryPortal',
+    MINI_PORTAL,
     'menuPortal',
     'leftWristPortal',
     'rightWristPortal',
     MEET_PORTAL,
     TAG_PORTAL,
+    MAP_PORTAL,
 ];
 
 /**
@@ -1376,6 +1496,7 @@ export const QUERY_PORTALS: string[] = [
     MEET_PORTAL,
     TAG_PORTAL,
     TAG_PORTAL_SPACE,
+    MAP_PORTAL,
 ];
 
 /*
@@ -1387,8 +1508,9 @@ export const KNOWN_TAGS: string[] = [
     SHEET_PORTAL,
     IDE_PORTAL,
     'server',
-    'inventoryPortal',
+    MINI_PORTAL,
     'menuPortal',
+    MAP_PORTAL,
     'leftWristPortal',
     'rightWristPortal',
 
@@ -1469,6 +1591,9 @@ export const KNOWN_TAGS: string[] = [
     'cursorEndIndex',
 
     'portalColor',
+    'portalCursor',
+    'portalCursorHotspotX',
+    'portalCursorHotspotY',
     'portalBackgroundAddress',
     'portalLocked',
     'portalPannable',
@@ -1489,13 +1614,15 @@ export const KNOWN_TAGS: string[] = [
     'portalShowFocusPoint',
     'portalDisableCanvasTransparency',
     'portalCameraType',
-    'inventoryPortalHeight',
-    'inventoryPortalResizable',
+    'miniPortalHeight',
+    'miniPortalWidth',
+    'miniPortalResizable',
     'wristPortalHeight',
     'wristPortalWidth',
     'meetPortalAnchorPoint',
     'meetPortalVisible',
     'meetPortalStyle',
+    'mapPortalBasemap',
 
     'tagPortalAnchorPoint',
     'tagPortalStyle',
@@ -1511,6 +1638,9 @@ export const KNOWN_TAGS: string[] = [
 
     'color',
     'creator',
+    'cursor',
+    'cursorHotspotX',
+    'cursorHotspotY',
     'draggable',
     'destroyable',
     'editable',
@@ -1525,6 +1655,9 @@ export const KNOWN_TAGS: string[] = [
     'labelFontSize',
     'labelSize',
     'labelSizeMode',
+    'labelPadding',
+    'labelPaddingX',
+    'labelPaddingY',
     'labelPosition',
     'labelAlignment',
     'labelWordWrapMode',
@@ -1606,6 +1739,8 @@ export const KNOWN_TAGS: string[] = [
     DROP_ANY_ACTION_NAME,
     DRAG_ACTION_NAME,
     DRAG_ANY_ACTION_NAME,
+    DRAGGING_ACTION_NAME,
+    DRAGGING_ANY_ACTION_NAME,
     'onTapCode',
     'onQRCodeScanned',
     'onQRCodeScannerClosed',
@@ -1699,6 +1834,18 @@ export function onDragArg(bot: Bot, from: BotDropDestination, face: string) {
     };
 }
 
+export function onDraggingArg(
+    bot: Bot,
+    to: BotDropToDestination,
+    from: BotDropDestination
+) {
+    return {
+        bot,
+        to,
+        from,
+    };
+}
+
 export function onModDropArg(mod: BotTags, dimension: string) {
     return {
         mod,
@@ -1713,6 +1860,7 @@ export function onDropArg(
 ) {
     return {
         dragBot,
+        bot: dragBot,
         to,
         from,
     };

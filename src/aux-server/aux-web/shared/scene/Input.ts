@@ -61,6 +61,11 @@ export class Input {
     private _controllerAdded = new Subject<ControllerData>();
     private _controllerRemoved = new Subject<ControllerData>();
 
+    /**
+     * The events that have occurred during this frame.
+     */
+    events: Set<Event> = new Set();
+
     private _htmlElements: () => HTMLElement[];
 
     get time() {
@@ -151,6 +156,42 @@ export class Input {
     }
 
     /**
+     * Calculates the "offset" coordinates relative to the given viewport using the given page position coordinates.
+     * @param pagePos The page position of the coordinates that we want converted.
+     * @param viewport The viewport that we want the position to be relative to.
+     */
+    public static offsetPositionForViewport(
+        pagePos: Vector2,
+        viewport: Viewport
+    ): Vector2 {
+        const globalPos = new Vector2(pagePos.x, pagePos.y);
+        const viewRect = viewport.getRootElement().getBoundingClientRect();
+        const left = viewRect.left + viewport.x;
+        const top =
+            viewRect.height - (viewport.y + viewport.height) + viewRect.top;
+        const viewPos = globalPos.sub(new Vector2(left, top));
+        return viewPos;
+    }
+
+    /**
+     * Calculates the page position coordinates using the given "offset" relative to the given viewport.
+     * @param viewPos The offset position of the coordinates that we want converted.
+     * @param viewport The viewport that we want the position to be relative to.
+     */
+    public static unoffsetPositionForViewport(
+        viewPos: Vector2,
+        viewport: Viewport
+    ): Vector2 {
+        viewPos = viewPos.clone();
+        const viewRect = viewport.getRootElement().getBoundingClientRect();
+        const left = viewRect.left + viewport.x;
+        const top =
+            viewRect.height - (viewport.y + viewport.height) + viewRect.top;
+        const globalPos = viewPos.add(new Vector2(left, top));
+        return globalPos;
+    }
+
+    /**
      * Calculate a screen position for the given viewport inside of a screen. The screen position will be normalized and relative to the viewport.
      * Screen position is Three.js style where bottom left corner is (-1, -1) and top right corner is (1, 1).
      * @param fullWidth The full width of the screen (pixels).
@@ -165,16 +206,28 @@ export class Input {
         pagePos: Vector2,
         viewport: Viewport
     ): Vector2 {
-        const globalPos = new Vector2(pagePos.x, pagePos.y);
-        const viewRect = viewport.getRootElement().getBoundingClientRect();
-        const left = viewRect.left + viewport.x;
-        const top =
-            viewRect.height - (viewport.y + viewport.height) + viewRect.top;
-        const viewPos = globalPos.sub(new Vector2(left, top));
+        const viewPos = Input.offsetPositionForViewport(pagePos, viewport);
         return new Vector2(
             (viewPos.x / viewport.width) * 2 - 1,
             -(viewPos.y / viewport.height) * 2 + 1
         );
+    }
+
+    /**
+     * Calculate a page position for the given viewport and three.js screen position.
+     * Screen position is Three.js style where bottom left corner is (-1, -1) and top right corner is (1, 1).
+     * @param screenPosition The screen position.
+     * @param viewport The viewport.
+     */
+    public static pagePositionForViewport(
+        screenPosition: Vector2,
+        viewport: Viewport
+    ): Vector2 {
+        const viewPos = new Vector2(
+            ((screenPosition.x + 1) / 2) * viewport.width,
+            (-(screenPosition.y - 1) / 2) * viewport.height
+        );
+        return Input.unoffsetPositionForViewport(viewPos, viewport);
     }
 
     /**
@@ -296,27 +349,56 @@ export class Input {
             ray: new Group(),
         };
 
-        this._handleFocus = this._handleFocus.bind(this);
-        this._handleBlur = this._handleBlur.bind(this);
-        this._handleMouseDown = this._handleMouseDown.bind(this);
-        this._handleMouseMove = this._handleMouseMove.bind(this);
-        this._handleMouseUp = this._handleMouseUp.bind(this);
-        this._handleMouseLeave = this._handleMouseLeave.bind(this);
-        this._handleWheel = this._handleWheel.bind(this);
-        this._handleTouchStart = this._handleTouchStart.bind(this);
-        this._handleTouchMove = this._handleTouchMove.bind(this);
-        this._handleTouchEnd = this._handleTouchEnd.bind(this);
-        this._handleTouchCancel = this._handleTouchCancel.bind(this);
-        this._handleContextMenu = this._handleContextMenu.bind(this);
-        this._handleKeyDown = this._handleKeyDown.bind(this);
-        this._handleKeyUp = this._handleKeyUp.bind(this);
-        this._handleInputSourcesUpdated = this._handleInputSourcesUpdated.bind(
-            this
+        this._handleFocus = this._bind(this._handleFocus.bind(this));
+        this._handleBlur = this._bind(this._handleBlur.bind(this));
+        this._handleMouseDown = this._bind(this._handleMouseDown.bind(this));
+        this._handleMouseMove = this._bind(this._handleMouseMove.bind(this));
+        this._handleMouseUp = this._bind(this._handleMouseUp.bind(this));
+        this._handleMouseLeave = this._bind(this._handleMouseLeave.bind(this));
+        this._handleWheel = this._bind(this._handleWheel.bind(this));
+        this._handleTouchStart = this._bind(this._handleTouchStart.bind(this));
+        this._handleTouchMove = this._bind(this._handleTouchMove.bind(this));
+        this._handleTouchEnd = this._bind(this._handleTouchEnd.bind(this));
+        this._handleTouchCancel = this._bind(
+            this._handleTouchCancel.bind(this)
         );
-        this._handleXRSelectStart = this._handleXRSelectStart.bind(this);
-        this._handleXRSelectEnd = this._handleXRSelectEnd.bind(this);
-        this._handleXRSqueezeStart = this._handleXRSqueezeStart.bind(this);
-        this._handleXRSqueezeEnd = this._handleXRSqueezeEnd.bind(this);
+        this._handleContextMenu = this._bind(
+            this._handleContextMenu.bind(this)
+        );
+        this._handleKeyDown = this._bind(this._handleKeyDown.bind(this));
+        this._handleKeyUp = this._bind(this._handleKeyUp.bind(this));
+        this._handleInputSourcesUpdated = this._bind(
+            this._handleInputSourcesUpdated.bind(this)
+        );
+        this._handleXRSelectStart = this._bind(
+            this._handleXRSelectStart.bind(this)
+        );
+        this._handleXRSelectEnd = this._bind(
+            this._handleXRSelectEnd.bind(this)
+        );
+        this._handleXRSqueezeStart = this._bind(
+            this._handleXRSqueezeStart.bind(this)
+        );
+        this._handleXRSqueezeEnd = this._bind(
+            this._handleXRSqueezeEnd.bind(this)
+        );
+
+        this._handlePointerCancel = this._bind(
+            this._handlePointerCancel.bind(this)
+        );
+        this._handlePointerDown = this._bind(
+            this._handlePointerDown.bind(this)
+        );
+        this._handlePointerEnter = this._bind(
+            this._handlePointerEnter.bind(this)
+        );
+        this._handlePointerLeave = this._bind(
+            this._handlePointerLeave.bind(this)
+        );
+        this._handlePointerMove = this._bind(
+            this._handlePointerMove.bind(this)
+        );
+        this._handlePointerUp = this._bind(this._handlePointerUp.bind(this));
 
         let element = document.getElementById('app');
         element.addEventListener('mousedown', this._handleMouseDown);
@@ -329,6 +411,12 @@ export class Input {
         document.addEventListener('keyup', this._handleKeyUp);
         window.addEventListener('focus', this._handleFocus);
         window.addEventListener('blur', this._handleBlur);
+        window.addEventListener('pointercancel', this._handlePointerCancel);
+        window.addEventListener('pointerdown', this._handlePointerDown);
+        window.addEventListener('pointerenter', this._handlePointerEnter);
+        window.addEventListener('pointerleave', this._handlePointerLeave);
+        window.addEventListener('pointermove', this._handlePointerMove);
+        window.addEventListener('pointerup', this._handlePointerUp);
 
         // Context menu is only important on the game view
         this._game.gameView.gameView.addEventListener(
@@ -830,6 +918,10 @@ export class Input {
         this._cullTouchData();
         this._wheelData.removeOldFrames(this.time.frameCount);
         this._updateControllers(xrFrame);
+    }
+
+    public resetEvents() {
+        this.events.clear();
     }
 
     private _updateControllers(xrFrame: XRFrame) {
@@ -1546,6 +1638,20 @@ export class Input {
         }
     }
 
+    // Empty because pointer events are not currently used to track input
+    // states. Instead, they are used to pass through events to other components.
+    private _handlePointerCancel(event: TouchEvent) {}
+
+    private _handlePointerDown(event: TouchEvent) {}
+
+    private _handlePointerEnter(event: TouchEvent) {}
+
+    private _handlePointerLeave(event: PointerEvent) {}
+
+    private _handlePointerMove(event: PointerEvent) {}
+
+    private _handlePointerUp(event: PointerEvent) {}
+
     private _handleInputSourcesUpdated(event: XRInputSourcesChangeEvent) {
         for (let source of event.added) {
             let controller = this._controllerData.find(
@@ -1735,6 +1841,16 @@ export class Input {
         // Prevent context menu from triggering.
         event.preventDefault();
         event.stopPropagation();
+    }
+
+    private _bind(func: Function): any {
+        return (event: any) => {
+            if (this.events.has(event) || event.__ignoreForInput) {
+                return;
+            }
+            this.events.add(event);
+            return func(event);
+        };
     }
 }
 

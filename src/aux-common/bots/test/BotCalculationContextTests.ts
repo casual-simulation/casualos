@@ -62,6 +62,11 @@ import {
     calculatePortalCameraControlsMode,
     getMenuBotHoverStyle,
     getCameraType,
+    getBotCursor,
+    getPortalCursor,
+    getBotLabelPadding,
+    getCursorCSS,
+    calculateGridScale,
 } from '../BotCalculations';
 import {
     Bot,
@@ -69,6 +74,7 @@ import {
     DEFAULT_PLAYER_USER_COLOR,
     AuxDomain,
     DEFAULT_WORKSPACE_SCALE,
+    BotCursorType,
 } from '../Bot';
 import { buildLookupTable } from '../BotLookupTable';
 import { BotLookupTableHelper } from '../BotLookupTableHelper';
@@ -187,6 +193,68 @@ export function botCalculationContextTests(
             );
 
             expect(result).toEqual([bot1]);
+        });
+    });
+
+    describe('calculateGridScale()', () => {
+        it('should return the default grid scale', () => {
+            const bot = createBot('test');
+            const context = createPrecalculatedContext([bot]);
+
+            const result = calculateGridScale(context, bot);
+
+            expect(result).toBe(0.4);
+        });
+
+        it('should portalSurfaceScale', () => {
+            const bot = createBot('test', {
+                portalSurfaceScale: 4,
+            });
+            const context = createPrecalculatedContext([bot]);
+
+            const result = calculateGridScale(context, bot);
+
+            expect(result).toBe(0.8);
+        });
+
+        it('should support portalGridScale', () => {
+            const bot = createBot('test', {
+                portalGridScale: 1,
+            });
+            const context = createPrecalculatedContext([bot]);
+
+            const result = calculateGridScale(context, bot);
+
+            expect(result).toBe(2);
+        });
+
+        it('should support both portalSurfaceScale and portalGridScale', () => {
+            const bot = createBot('test', {
+                portalGridScale: 1,
+                portalSurfaceScale: 4,
+            });
+            const context = createPrecalculatedContext([bot]);
+
+            const result = calculateGridScale(context, bot);
+
+            expect(result).toBe(4);
+        });
+
+        it('should support custom defaults', () => {
+            const bot = createBot('test', {});
+            const context = createPrecalculatedContext([bot]);
+
+            const result = calculateGridScale(context, bot, 1, 4);
+
+            expect(result).toBe(4);
+        });
+
+        it('should support null bots', () => {
+            const context = createPrecalculatedContext([]);
+
+            const result = calculateGridScale(context, null, 1, 4);
+
+            expect(result).toBe(4);
         });
     });
 
@@ -1284,6 +1352,177 @@ export function botCalculationContextTests(
         });
     });
 
+    const cursorCases = [
+        ['auto', 'auto'],
+        ['default', 'default'],
+        ['none', 'none'],
+        ['context-menu', 'context-menu'],
+        ['help', 'help'],
+        ['pointer', 'pointer'],
+        ['progress', 'progress'],
+        ['wait', 'wait'],
+        ['cell', 'cell'],
+        ['crosshair', 'crosshair'],
+        ['text', 'text'],
+        ['vertical-text', 'vertical-text'],
+        ['alias', 'alias'],
+        ['copy', 'copy'],
+        ['move', 'move'],
+        ['no-drop', 'no-drop'],
+        ['not-allowed', 'not-allowed'],
+        ['grab', 'grab'],
+        ['grabbing', 'grabbing'],
+        ['all-scroll', 'all-scroll'],
+        ['col-resize', 'col-resize'],
+        ['row-resize', 'row-resize'],
+        ['n-resize', 'n-resize'],
+        ['e-resize', 'e-resize'],
+        ['s-resize', 's-resize'],
+        ['w-resize', 'w-resize'],
+        ['ne-resize', 'ne-resize'],
+        ['nw-resize', 'nw-resize'],
+        ['se-resize', 'se-resize'],
+        ['sw-resize', 'sw-resize'],
+        ['ew-resize', 'ew-resize'],
+        ['ns-resize', 'ns-resize'],
+        ['nesw-resize', 'nesw-resize'],
+        ['nwse-resize', 'nwse-resize'],
+        ['zoom-in', 'zoom-in'],
+        ['zoom-out', 'zoom-out'],
+
+        ['missing', 'auto'],
+        ['', null],
+        [123, null],
+        [true, null],
+        [
+            'http://example.com',
+            { type: 'link', url: 'http://example.com', x: 0, y: 0 },
+        ],
+    ];
+
+    describe('getBotCursor()', () => {
+        const tagCases = ['auxCursor', 'cursor'];
+
+        describe.each(tagCases)('%s', (tag) => {
+            it.each(cursorCases)(
+                'should support %s',
+                (value: any, expected: any) => {
+                    const bot = createBot('test', {
+                        [tag]: value,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+
+                    expect(getBotCursor(calc, bot)).toEqual(expected);
+                }
+            );
+
+            it('should support X and Y offsets for cursors', () => {
+                const bot = createBot('test', {
+                    [tag]: 'http://example.com',
+                    cursorHotspotX: 5,
+                    cursorHotspotY: 1,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getBotCursor(calc, bot)).toEqual({
+                    type: 'link',
+                    url: 'http://example.com',
+                    x: 5,
+                    y: 1,
+                });
+            });
+        });
+    });
+
+    describe('getPortalCursor()', () => {
+        const tagCases = ['auxPortalCursor', 'portalCursor'];
+
+        describe.each(tagCases)('%s', (tag) => {
+            it.each(cursorCases)(
+                'should support %s',
+                (value: any, expected: any) => {
+                    const bot = createBot('test', {
+                        [tag]: value,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+
+                    expect(getPortalCursor(calc, bot)).toEqual(expected);
+                }
+            );
+
+            it('should support X and Y offsets for cursors', () => {
+                const bot = createBot('test', {
+                    [tag]: 'http://example.com',
+                    portalCursorHotspotX: 5,
+                    portalCursorHotspotY: 1,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getPortalCursor(calc, bot)).toEqual({
+                    type: 'link',
+                    url: 'http://example.com',
+                    x: 5,
+                    y: 1,
+                });
+            });
+        });
+    });
+
+    describe('getCursorCSS()', () => {
+        const cursorCases: [BotCursorType, string][] = [
+            ['auto', 'auto'],
+            ['default', 'default'],
+            ['none', 'none'],
+            ['context-menu', 'context-menu'],
+            ['help', 'help'],
+            ['pointer', 'pointer'],
+            ['progress', 'progress'],
+            ['wait', 'wait'],
+            ['cell', 'cell'],
+            ['crosshair', 'crosshair'],
+            ['text', 'text'],
+            ['vertical-text', 'vertical-text'],
+            ['alias', 'alias'],
+            ['copy', 'copy'],
+            ['move', 'move'],
+            ['no-drop', 'no-drop'],
+            ['not-allowed', 'not-allowed'],
+            ['grab', 'grab'],
+            ['grabbing', 'grabbing'],
+            ['all-scroll', 'all-scroll'],
+            ['col-resize', 'col-resize'],
+            ['row-resize', 'row-resize'],
+            ['n-resize', 'n-resize'],
+            ['e-resize', 'e-resize'],
+            ['s-resize', 's-resize'],
+            ['w-resize', 'w-resize'],
+            ['ne-resize', 'ne-resize'],
+            ['nw-resize', 'nw-resize'],
+            ['se-resize', 'se-resize'],
+            ['sw-resize', 'sw-resize'],
+            ['ew-resize', 'ew-resize'],
+            ['ns-resize', 'ns-resize'],
+            ['nesw-resize', 'nesw-resize'],
+            ['nwse-resize', 'nwse-resize'],
+            ['zoom-in', 'zoom-in'],
+            ['zoom-out', 'zoom-out'],
+            [
+                { type: 'link', url: 'myUrl', x: 0, y: 0 },
+                'url("myUrl") 0 0, auto',
+            ],
+        ];
+        it.each(cursorCases)(
+            'should support %s',
+            (value: any, expected: any) => {
+                expect(getCursorCSS(value)).toEqual(expected);
+            }
+        );
+    });
+
     describe('getTagPortalAnchorPointOffset()', () => {
         const tagCases = ['auxTagPortalAnchorPoint', 'tagPortalAnchorPoint'];
 
@@ -2180,6 +2419,99 @@ export function botCalculationContextTests(
                     const a = getBotLabelAlignment(calc, bot);
 
                     expect(a).toBe(expected);
+                }
+            );
+        });
+    });
+
+    describe('getBotLabelPadding()', () => {
+        const tagCases = ['auxLabelPadding', 'labelPadding'];
+
+        describe.each(tagCases)('%s', (tag) => {
+            numericalTagValueTests(0, (given, expected) => {
+                const bot = createBot('test', {
+                    [tag]: given,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getBotLabelPadding(calc, bot)).toEqual({
+                    horizontal: expected,
+                    vertical: expected,
+                });
+            });
+
+            const outOfBoundsTests = [
+                ['Infinity', Infinity],
+                ['Negative Infinity', -Infinity],
+                ['NaN', NaN],
+            ];
+
+            it.each(outOfBoundsTests)(
+                'should map %s to 0',
+                (desc: string, value: number) => {
+                    const bot = createBot('test', {
+                        [tag]: value,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+
+                    expect(getBotLabelPadding(calc, bot)).toEqual({
+                        horizontal: 0,
+                        vertical: 0,
+                    });
+                }
+            );
+
+            it('should return 1 by default', () => {
+                const bot = createBot('test', {
+                    [tag]: null,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getBotLabelPadding(calc, bot)).toEqual({
+                    horizontal: 0,
+                    vertical: 0,
+                });
+            });
+
+            it('should add the builtin and vertical/horizontal paddings together', () => {
+                const bot = createBot('test', {
+                    [tag]: 2,
+                    [tag + 'Y']: 1,
+                    [tag + 'X']: 3,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getBotLabelPadding(calc, bot)).toEqual({
+                    horizontal: 5,
+                    vertical: 3,
+                });
+            });
+
+            const separatePaddingValuesTests = [
+                [13, 21, { vertical: 13, horizontal: 21 }],
+                [3.14159, 0.2, { vertical: 3.14159, horizontal: 0.2 }],
+                [3.14159, null, { vertical: 3.14159, horizontal: 0 }],
+                [0.123, 1000, { vertical: 0.123, horizontal: 1000 }],
+                [null, 1000, { vertical: 0, horizontal: 1000 }],
+                [1000, 0, { vertical: 1000, horizontal: 0 }],
+                [1000, 123, { vertical: 1000, horizontal: 123 }],
+            ];
+
+            it.each(separatePaddingValuesTests)(
+                'should support %s',
+                (vertical: number, horizontal: number, expected: any) => {
+                    const bot = createBot('test', {
+                        [tag + 'Y']: vertical,
+                        [tag + 'X']: horizontal,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+
+                    expect(getBotLabelPadding(calc, bot)).toEqual(expected);
                 }
             );
         });

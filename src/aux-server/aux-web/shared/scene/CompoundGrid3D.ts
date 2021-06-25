@@ -35,7 +35,7 @@ export class CompoundGrid3D implements Grid3D {
         return closestPoint;
     }
 
-    getTileFromRay(ray: Ray, roundToWholeNumber?: boolean): GridTile {
+    getTileFromRay(ray: Ray, roundToWholeNumber: boolean): GridTile {
         let closestTile: GridTile = null;
         let closestDist: number = Infinity;
         for (let grid of this.grids) {

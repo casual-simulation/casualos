@@ -21,7 +21,7 @@ module.exports = {
         alt: 'My Site Logo',
         src: 'img/logo.png',
       },
-      links: [
+      items: [
         { to: 'docs/tags', label: 'Docs', position: 'left' },
         {
           href: 'https://github.com/casual-simulation/casualos',
@@ -64,8 +64,6 @@ module.exports = {
       '@docusaurus/preset-classic',
       {
         docs: {
-          // It is recommended to set document id as docs home page (`docs/` path).
-          homePageId: 'tags',
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
           editUrl:

@@ -37,6 +37,9 @@ import {
     ANY_DROP_EXIT_ACTION_NAME,
     SnapTarget,
     SnapPoint,
+    onDraggingArg,
+    DRAGGING_ACTION_NAME,
+    DRAGGING_ANY_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -86,6 +89,11 @@ export abstract class BaseBotDragOperation implements IOperation {
 
     protected _toCoord: Vector2;
     protected _fromCoord: Vector2;
+
+    /**
+     * Whether custom drag events should be sent instead of changing the bot position.
+     */
+    protected _customDrag: boolean;
     protected _sub: Subscription;
 
     protected get game() {
@@ -128,6 +136,7 @@ export abstract class BaseBotDragOperation implements IOperation {
         this._fromCoord = fromCoord;
         this._clickedFace = clickedFace;
         this._hit = hit;
+        this._customDrag = false;
         this._dragStartFrame = this.game.getTime().frameCount;
         this._sub = new Subscription();
         this._snapInterface = snapInterface;
@@ -168,6 +177,8 @@ export abstract class BaseBotDragOperation implements IOperation {
                             sub.unsubscribe();
                         }
                         this._replaceDragBot(action.bot);
+                    } else if (action.type === 'enable_custom_dragging') {
+                        this._customDrag = true;
                     }
                 }
             );
@@ -209,6 +220,55 @@ export abstract class BaseBotDragOperation implements IOperation {
             },
             {
                 eventName: DRAG_ANY_ACTION_NAME,
+                bots: null,
+                arg: arg,
+            },
+        ]);
+        events.push(...result);
+        return this.simulation.helper.transaction(...events);
+    }
+
+    private _sendOnDraggingEvents(
+        toCoord: Vector2,
+        fromCoord: Vector2,
+        bots: Bot[]
+    ) {
+        let fromX: number = null;
+        let fromY: number = null;
+        if (!!fromCoord) {
+            fromX = fromCoord.x;
+            fromY = fromCoord.y;
+        }
+        let toX: number = null;
+        let toY: number = null;
+        if (!!toCoord) {
+            toX = toCoord.x;
+            toY = toCoord.y;
+        }
+        let events: BotAction[] = [];
+
+        const arg = onDraggingArg(
+            bots[0],
+            {
+                x: toX,
+                y: toY,
+                bot: this._other,
+                dimension: this._dimension,
+            },
+            {
+                x: fromX,
+                y: fromY,
+                dimension: this._originalDimension,
+            }
+        );
+        let result = this.simulation.helper.actions([
+            {
+                eventName: DRAGGING_ACTION_NAME,
+                bots: this._bots,
+                arg: arg,
+            },
+            {
+                eventName: DRAGGING_ANY_ACTION_NAME,
                 bots: null,
                 arg: arg,
             },
@@ -344,6 +404,15 @@ export abstract class BaseBotDragOperation implements IOperation {
     ) {
         this._lastGridPos = null;
 
+        if (this._customDrag) {
+            this._sendOnDraggingEvents(
+                this._toCoord,
+                this._fromCoord,
+                this._bots
+            );
+            return;
+        }
+
         let events: BotAction[] = [];
         for (let i = 0; i < bots.length; i++) {
             let tags;
@@ -387,6 +456,15 @@ export abstract class BaseBotDragOperation implements IOperation {
         this._toCoord = gridPosition;
         this._lastGridPos = gridPosition.clone();
 
+        if (this._customDrag) {
+            this._sendOnDraggingEvents(
+                this._toCoord,
+                this._fromCoord,
+                this._bots
+            );
+            return;
+        }
+
         let events: BotAction[] = [];
         for (let i = 0; i < bots.length; i++) {
             let tags;
@@ -405,24 +483,6 @@ export abstract class BaseBotDragOperation implements IOperation {
         }
 
         await this.simulation.helper.transaction(...events);
-    }
-
-    protected _updateBotDimensions(bots: Bot[], inDimension: boolean) {
-        this._inDimension = inDimension;
-        if (!this._dimension) {
-            return;
-        }
-        let events: BotAction[] = [];
-        for (let i = 0; i < bots.length; i++) {
-            let tags = {
-                tags: {
-                    [this._dimension]: inDimension,
-                },
-            };
-            events.push(this._updateBot(bots[i], tags));
-        }
-
-        this.simulation.helper.transaction(...events);
     }
 
     protected _updateBot(bot: Bot, data: PartialBot): BotAction {

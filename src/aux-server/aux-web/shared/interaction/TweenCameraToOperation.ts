@@ -7,7 +7,7 @@ import {
     BotCalculationContext,
     getEasing,
     hasValue,
-    AnimateToOptions,
+    FocusOnOptions,
 } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { CameraRig } from '../scene/CameraRigFactory';
@@ -21,6 +21,7 @@ import { objectForwardRay } from '../scene/SceneUtils';
  */
 export class TweenCameraToOperation implements IOperation {
     private _rigControls: CameraRigControls;
+    private _cameraRig: CameraRig;
     private _interaction: BaseInteractionManager;
     private _target: Vector3;
     private _cameraTarget: Vector3;
@@ -36,6 +37,10 @@ export class TweenCameraToOperation implements IOperation {
     private _zoomTween: any;
     private _lookTween: any;
     private _canceled: boolean;
+
+    get cameraRig() {
+        return this._cameraRig;
+    }
 
     get simulation(): Simulation {
         return this._simulation;
@@ -56,11 +61,12 @@ export class TweenCameraToOperation implements IOperation {
         time: Time,
         interaction: BaseInteractionManager,
         target: Vector3,
-        options: AnimateToOptions,
+        options: FocusOnOptions,
         simulation: Simulation,
         taskId: string | number
     ) {
         this._interaction = interaction;
+        this._cameraRig = cameraRig;
         this._finished = false;
         this._zoomValue = options.zoom;
         this._rotValue = hasValue(options.rotation)

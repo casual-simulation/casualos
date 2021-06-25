@@ -2,6 +2,7 @@ import { Game } from '../../shared/scene/Game';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import {
     CameraRig,
+    CameraType,
     createCameraRig,
     resizeCameraRig,
 } from '../../shared/scene/CameraRigFactory';
@@ -13,9 +14,13 @@ import {
     Vector3,
     Vector2,
     Mesh,
+    WebGLRenderer,
+    sRGBEncoding,
+    DirectionalLight,
+    AmbientLight,
 } from '@casual-simulation/three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
-import { InventorySimulation3D } from './InventorySimulation3D';
+import { MiniSimulation3D } from './MiniSimulation3D';
 import { Viewport } from '../../shared/scene/Viewport';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
@@ -29,7 +34,7 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import {
     clamp,
-    DEFAULT_INVENTORY_VISIBLE,
+    DEFAULT_MINI_PORTAL_VISIBLE,
     DEFAULT_PORTAL_SHOW_FOCUS_POINT,
     DEFAULT_PORTAL_DISABLE_CANVAS_TRANSPARENCY,
     BufferSoundAction,
@@ -45,6 +50,13 @@ import {
     DEFAULT_SCENE_BACKGROUND_COLOR,
     getPortalConfigBotID,
     asyncResult,
+    BotCursorType,
+    getPortalTag,
+    DEFAULT_MAP_PORTAL_VISIBLE,
+    DEFAULT_MAP_PORTAL_BASEMAP,
+    Easing,
+    getEasing,
+    getDefaultEasing,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -65,56 +77,123 @@ import { GameAudio } from '../../shared/scene/GameAudio';
 import TWEEN from '@tweenjs/tween.js';
 import { MathUtils as ThreeMath } from '@casual-simulation/three';
 import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
+import { Input, MouseButtonId } from '../../shared/scene/Input';
+import { MapSimulation3D } from './MapSimulation3D';
+import { CoordinateSystem } from '../../shared/scene/CoordinateSystem';
+import { ExternalRenderers, SpatialReference } from '../MapUtils';
+
+const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
+const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
+
+const MINI_PORTAL_MAX_PERCENT = 1;
+const MINI_PORTAL_MIN_PERCENT = 0.1;
+
+const MINI_PORTAL_WIDTH_BREAKPOINT = 700;
+/**
+ * The default width percentage of the mini portal.
+ */
+const MINI_PORTAL_DEFAULT_WIDTH = 0.8;
+
+/**
+ * The default width percentage that the mini portal should use on small devices (< breakpoint).
+ */
+const MINI_PORTAL_SMALL_WIDTH = 0.9;
+
+/**
+ * The default padding needed for the available height padding.
+ */
+const MINI_PORTAL_DEFAULT_HEIGHT_PADDING = 40;
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
 
     playerSimulations: PlayerPageSimulation3D[] = [];
-    inventorySimulations: InventorySimulation3D[] = [];
-    inventoryCameraRig: CameraRig = null;
-    inventoryViewport: Viewport = null;
-    showInventoryCameraRigHome: boolean = false;
+    miniSimulations: MiniSimulation3D[] = [];
+    mapSimulations: MapSimulation3D[] = [];
+    miniCameraRig: CameraRig = null;
+    miniViewport: Viewport = null;
+    mapViewport: Viewport = null;
+    mapCameraRig: CameraRig = null;
+    showMiniPortalCameraRigHome: boolean = false;
     disableCanvasTransparency: boolean = DEFAULT_PORTAL_DISABLE_CANVAS_TRANSPARENCY;
 
     startZoom: number;
     startAspect: number;
 
-    private inventoryScene: Scene;
+    private miniScene: Scene;
+    private mapScene: Scene;
 
-    inventoryHeightOverride: number = null;
+    // /**
+    //  * A scene that is used to allow the main scene to render
+    //  * without drawing anything to the screen
+    //  */
+    // private emptyScene: Scene;
 
-    private _sliderLeft: Element;
-    private _sliderRight: Element;
+    private mapRenderer: WebGLRenderer;
+    private mapDirectionalLight: DirectionalLight;
+    private mapAmbientLight: AmbientLight;
 
-    private get sliderLeft() {
-        if (!this._sliderLeft) {
-            this._sliderLeft = document.querySelector('.slider-hiddenLeft');
+    private mapPortalVisible: boolean = DEFAULT_MAP_PORTAL_VISIBLE;
+
+    private _slider: HTMLElement;
+    private _resizingMiniPortal: boolean = false;
+
+    /**
+     * The mouse position that the mini portal resize operation started at.
+     * When resizing, we compare this value against the final value to determine how much larger/smaller the mini portal should be.
+     */
+    private _startResizeClientPos: Vector2 = null;
+    private _currentResizeClientPos: Vector2 = null;
+    private _startMiniPortalHeight: number;
+
+    private get slider() {
+        if (!this._slider) {
+            this._slider = document.querySelector(
+                '.slider-hidden'
+            ) as HTMLElement;
         }
-        return this._sliderLeft;
+        return this._slider;
     }
-
-    private get sliderRight() {
-        if (!this._sliderRight) {
-            this._sliderRight = document.querySelector('.slider-hiddenRight');
-        }
-        return this._sliderRight;
-    }
-
-    private sliderPressed: boolean = false;
 
     setupDelay: boolean = false;
 
-    invVisibleCurrent: boolean = DEFAULT_INVENTORY_VISIBLE;
-    defaultHeightCurrent: number = 0;
+    miniPortalVisible: boolean = DEFAULT_MINI_PORTAL_VISIBLE;
 
-    defaultZoom: number = null;
-    defaultRotationX: number = null;
-    defaultRotationY: number = null;
+    /**
+     * The height that was last configured for the mini portal. This can be set directly by the user.
+     * Represented as a percentage of the available height that the portal can take.
+     */
+    private _miniPortalConfiguredHeight: number;
 
-    invController: CameraRigControls;
+    /**
+     * The current height of the mini portal represented as a percentage of
+     * the available height that the portal can take.
+     * This can be manipulated by the user via resizing the portal.
+     */
+    private _miniPortalHeight: number;
+
+    /**
+     * The available height that can be used by the mini portal in px.
+     */
+    private _miniPortalAvailableHeight: number;
+
+    /**
+     * The maximum width of the mini portal in px.
+     */
+    private _miniPortalMaxWidth: number = 700;
+
+    defaultPlayerZoom: number = null;
+    defaultPlayerRotationX: number = null;
+    defaultPlayerRotationY: number = null;
+
+    defaultMiniZoom: number = null;
+    defaultMiniRotationX: number = null;
+    defaultMiniRotationY: number = null;
+
+    miniPortalControls: CameraRigControls;
     invOffsetCurr: number = 0;
     invOffsetDelta: number = 0;
-    firstPan: boolean = true;
+
     panValueCurr: number = 0;
     startOffset: number = 0;
 
@@ -122,7 +201,7 @@ export class PlayerGame extends Game {
 
     audio: GameAudio;
 
-    inventoryFocusPoint: Mesh;
+    miniPortalFocusPoint: Mesh;
     mainFocusPoint: Mesh;
 
     constructor(gameView: PlayerGameView) {
@@ -187,48 +266,68 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(this.playerSimulations, 'rotatable');
     }
 
-    getInventoryVisible(): boolean {
+    getCursor(): BotCursorType {
+        return this._getSimulationValue(this.playerSimulations, 'cursor');
+    }
+
+    getMiniPortalVisible(): boolean {
         return this._getSimulationValue(
-            this.inventorySimulations,
+            this.miniSimulations,
             'hasDimension',
-            DEFAULT_INVENTORY_VISIBLE
+            DEFAULT_MINI_PORTAL_VISIBLE
         );
     }
 
-    getInventoryHeight(): number {
-        return this._getSimulationValue(this.inventorySimulations, 'height', 1);
+    getMiniPortalHeight(): number {
+        return this._getSimulationValue(this.miniSimulations, 'height', 1);
     }
 
-    getInventoryPannable(): boolean {
-        return this._getSimulationValue(this.inventorySimulations, 'pannable');
+    getMiniPortalHeightPadding(): number {
+        const width = this.getMiniPortalWidth();
+        if (width >= 1) {
+            return 0;
+        }
+        return MINI_PORTAL_DEFAULT_HEIGHT_PADDING;
     }
 
-    getInventoryPanMinX(): number {
-        return this._getSimulationValue(this.inventorySimulations, 'panMinX');
+    getMiniPortalWidth(): number {
+        return this._getSimulationValue(this.miniSimulations, 'width', null);
     }
 
-    getInventoryPanMaxX(): number {
-        return this._getSimulationValue(this.inventorySimulations, 'panMaxX');
+    getMiniPortalPannable(): boolean {
+        return this._getSimulationValue(this.miniSimulations, 'pannable');
     }
 
-    getInventoryPanMinY(): number {
-        return this._getSimulationValue(this.inventorySimulations, 'panMinY');
+    getMiniPortalPanMinX(): number {
+        return this._getSimulationValue(this.miniSimulations, 'panMinX');
     }
 
-    getInventoryPanMaxY(): number {
-        return this._getSimulationValue(this.inventorySimulations, 'panMaxY');
+    getMiniPortalPanMaxX(): number {
+        return this._getSimulationValue(this.miniSimulations, 'panMaxX');
     }
 
-    getInventoryZoomable(): boolean {
-        return this._getSimulationValue(this.inventorySimulations, 'zoomable');
+    getMiniPortalPanMinY(): number {
+        return this._getSimulationValue(this.miniSimulations, 'panMinY');
     }
 
-    getInventoryRotatable(): boolean {
-        return this._getSimulationValue(this.inventorySimulations, 'rotatable');
+    getMiniPortalPanMaxY(): number {
+        return this._getSimulationValue(this.miniSimulations, 'panMaxY');
     }
 
-    getInventoryResizable(): boolean {
-        return this._getSimulationValue(this.inventorySimulations, 'resizable');
+    getMiniPortalZoomable(): boolean {
+        return this._getSimulationValue(this.miniSimulations, 'zoomable');
+    }
+
+    getMiniPortalRotatable(): boolean {
+        return this._getSimulationValue(this.miniSimulations, 'rotatable');
+    }
+
+    getMiniPortalResizable(): boolean {
+        return this._getSimulationValue(this.miniSimulations, 'resizable');
+    }
+
+    getMiniPortalCursor(): BotCursorType {
+        return this._getSimulationValue(this.miniSimulations, 'cursor');
     }
 
     getPlayerZoom(): number {
@@ -257,16 +356,34 @@ export class PlayerGame extends Game {
         );
     }
 
-    getInventoryColor(): Color | Texture {
+    getMiniPortalZoom(): number {
+        return this._getSimulationValue(this.miniSimulations, 'playerZoom');
+    }
+
+    getMiniPortalRotationX(): number {
         return this._getSimulationValue(
-            this.inventorySimulations,
+            this.miniSimulations,
+            'playerRotationX'
+        );
+    }
+
+    getMiniPortalRotationY(): number {
+        return this._getSimulationValue(
+            this.miniSimulations,
+            'playerRotationY'
+        );
+    }
+
+    getMiniPortalColor(): Color | Texture {
+        return this._getSimulationValue(
+            this.miniSimulations,
             'backgroundColor'
         );
     }
 
-    getInventoryShowFocusPoint(): boolean {
+    getMiniPortalShowFocusPoint(): boolean {
         return this._getSimulationValue(
-            this.inventorySimulations,
+            this.miniSimulations,
             'showFocusPoint',
             DEFAULT_PORTAL_SHOW_FOCUS_POINT
         );
@@ -277,6 +394,22 @@ export class PlayerGame extends Game {
             this.playerSimulations,
             'disableCanvasTransparency',
             DEFAULT_PORTAL_DISABLE_CANVAS_TRANSPARENCY
+        );
+    }
+
+    getMapPortalVisible(): boolean {
+        return this._getSimulationValue(
+            this.mapSimulations,
+            'hasDimension',
+            DEFAULT_MAP_PORTAL_VISIBLE
+        );
+    }
+
+    getMapPortalBasemap(): string {
+        return this._getSimulationValue(
+            this.mapSimulations,
+            'basemap',
+            DEFAULT_MAP_PORTAL_BASEMAP
         );
     }
 
@@ -296,29 +429,41 @@ export class PlayerGame extends Game {
     }
 
     getViewports(): Viewport[] {
-        return [this.mainViewport, this.inventoryViewport];
+        return [this.mainViewport, this.miniViewport, this.mapViewport];
     }
     getCameraRigs(): CameraRig[] {
-        return [this.mainCameraRig, this.inventoryCameraRig];
+        return [this.mainCameraRig, this.miniCameraRig, this.mapCameraRig];
     }
     getSimulations(): Simulation3D[] {
-        return [...this.playerSimulations, ...this.inventorySimulations];
+        return [
+            ...this.playerSimulations,
+            ...this.miniSimulations,
+            ...this.mapSimulations,
+        ];
         // return [...this.playerSimulations];
-        // return [...this.inventorySimulations];
+        // return [...this.miniSimulations];
     }
     getUIHtmlElements(): HTMLElement[] {
-        return [<HTMLElement>this.gameView.$refs.inventory];
+        return [<HTMLElement>this.gameView.$refs.miniPortal, this.slider];
     }
-    getInventoryViewport(): Viewport {
-        return this.inventoryViewport;
+    getMiniPortalViewport(): Viewport {
+        return this.miniViewport;
     }
-    getInventoryCameraRig(): CameraRig {
-        return this.inventoryCameraRig;
+    getMiniPortalCameraRig(): CameraRig {
+        return this.miniCameraRig;
     }
-    findBotsById(id: string): AuxBotVisualizer[] {
-        return flatMap(this.playerSimulations, (s) => s.bots).filter(
-            (b) => b.bot.id === id
-        );
+    getMapPortalViewport(): Viewport {
+        return this.mapViewport;
+    }
+    getMapPortalCameraRig(): CameraRig {
+        return this.mapCameraRig;
+    }
+    findAllBotsById(id: string): AuxBotVisualizer[] {
+        return [
+            ...flatMap(this.playerSimulations, (s) => s.findBotsById(id)),
+            ...flatMap(this.miniSimulations, (s) => s.findBotsById(id)),
+            ...flatMap(this.mapSimulations, (s) => s.findBotsById(id)),
+        ];
     }
     setGridsVisible(visible: boolean): void {
         // This currently does nothing for AUX Player, we dont really show any grids right now.
@@ -346,11 +491,11 @@ export class PlayerGame extends Game {
     }
 
     /**
-     * Find Inventory Simulation 3D object that is displaying for the given Simulation.
+     * Find MiniPortal Simulation 3D object that is displaying for the given Simulation.
      * @param sim The simulation to find a simulation 3d for.
      */
-    findInventorySimulation3D(sim: Simulation): InventorySimulation3D {
-        return this.inventorySimulations.find((s) => s.simulation === sim);
+    findMiniSimulation3D(sim: Simulation): MiniSimulation3D {
+        return this.miniSimulations.find((s) => s.simulation === sim);
     }
 
     /**
@@ -359,6 +504,14 @@ export class PlayerGame extends Game {
      */
     findPlayerSimulation3D(sim: Simulation): PlayerPageSimulation3D {
         return this.playerSimulations.find((s) => s.simulation === sim);
+    }
+
+    /**
+     * Find Map Simulation 3D object that is displaying for the given Simulation.
+     * @param sim The simulation to find a simulation 3d for.
+     */
+    findMapSimulation3D(sim: Simulation): MapSimulation3D {
+        return this.mapSimulations.find((s) => s.simulation === sim);
     }
 
     dispose(): void {
@@ -417,16 +570,28 @@ export class PlayerGame extends Game {
         this.mainScene.add(playerSim3D);
 
         //
-        // Create Inventory Simulation
+        // Create mini portal Simulation
         //
-        const inventorySim3D = new InventorySimulation3D(this, sim);
-        inventorySim3D.init();
-        inventorySim3D.onBotAdded.addListener(this.onBotAdded.invoke);
-        inventorySim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
-        inventorySim3D.onBotUpdated.addListener(this.onBotUpdated.invoke);
+        const miniPortalSim3D = new MiniSimulation3D(this, sim);
+        miniPortalSim3D.init();
+        miniPortalSim3D.onBotAdded.addListener(this.onBotAdded.invoke);
+        miniPortalSim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
+        miniPortalSim3D.onBotUpdated.addListener(this.onBotUpdated.invoke);
 
-        this.inventorySimulations.push(inventorySim3D);
-        this.inventoryScene.add(inventorySim3D);
+        this.miniSimulations.push(miniPortalSim3D);
+        this.miniScene.add(miniPortalSim3D);
+
+        const mapPortalSim3D = new MapSimulation3D(this, sim);
+        mapPortalSim3D.coordinateTransformer = this.gameView.getMapCoordinateTransformer();
+        mapPortalSim3D.mapView = this.gameView.getMapView();
+        mapPortalSim3D.targetCoordinateSystem = CoordinateSystem.Z_UP;
+        mapPortalSim3D.init();
+        mapPortalSim3D.onBotAdded.addListener(this.onBotAdded.invoke);
+        mapPortalSim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
+        mapPortalSim3D.onBotUpdated.addListener(this.onBotUpdated.invoke);
+
+        this.mapSimulations.push(mapPortalSim3D);
+        this.mapScene.add(mapPortalSim3D);
 
         this.subs.push(
             playerSim3D.simulation.localEvents.subscribe((e) => {
@@ -461,22 +626,45 @@ export class PlayerGame extends Game {
                         this.stopVR();
                     }
                 } else if (e.type === 'replace_drag_bot') {
-                    this.dragBot(playerSim3D, inventorySim3D, e.bot);
-                } else if (e.type === 'animate_to_bot') {
+                    this.dragBot(playerSim3D, miniPortalSim3D, e.bot);
+                } else if (e.type === 'focus_on') {
                     this.tweenCameraToBot(e);
-                } else if (e.type === 'animate_to_position') {
-                    const gridScale = playerSim3D.getDefaultGridScale();
-                    const convertedPosition = new Vector3(
-                        e.position.x * gridScale,
-                        0,
-                        e.position.y * -gridScale
-                    );
+                } else if (e.type === 'focus_on_position') {
+                    const targetPortal = hasValue(e.portal)
+                        ? getPortalTag(e.portal)
+                        : null;
+                    const sim =
+                        targetPortal === 'mapPortal'
+                            ? mapPortalSim3D
+                            : targetPortal === 'miniPortal'
+                            ? miniPortalSim3D
+                            : playerSim3D;
+
+                    let convertedPosition = new Vector3();
+
+                    if (sim.coordinateTransformer) {
+                        const matrix = sim.coordinateTransformer({
+                            x: e.position.x,
+                            y: e.position.y,
+                            z: 0,
+                        });
+                        convertedPosition.setFromMatrixPosition(matrix);
+                    } else {
+                        const gridScale = sim.getDefaultGridScale();
+                        convertedPosition.set(
+                            e.position.x * gridScale,
+                            0,
+                            e.position.y * -gridScale
+                        );
+                    }
+
+                    const cameraRig = sim.getMainCameraRig();
 
                     this.tweenCameraToPosition(
-                        playerSim3D.getMainCameraRig(),
+                        cameraRig,
                         convertedPosition,
                         e,
-                        sim,
+                        sim.simulation,
                         e.taskId
                     );
                 } else if (e.type === 'cancel_animation') {
@@ -497,19 +685,19 @@ export class PlayerGame extends Game {
 
     dragBot(
         pageSim: PlayerPageSimulation3D,
-        inventorySim: InventorySimulation3D,
+        miniSim: MiniSimulation3D,
         bot: Bot | BotTags
     ) {
         let dimension: string;
         if (isBot(bot)) {
-            // Try to find the dimension that the bot is already in from the page and inventory simulations.
+            // Try to find the dimension that the bot is already in from the page and mini simulations.
             const pageBots = pageSim.findBotsById(bot.id);
             if (pageBots.length > 0) {
                 dimension = pageSim.dimension;
             } else {
-                const inventoryBots = inventorySim.findBotsById(bot.id);
-                if (inventoryBots.length > 0) {
-                    dimension = inventorySim.dimension;
+                const miniBots = miniSim.findBotsById(bot.id);
+                if (miniBots.length > 0) {
+                    dimension = miniSim.dimension;
                 }
             }
         }
@@ -582,20 +770,20 @@ export class PlayerGame extends Game {
         }
 
         //
-        // Remove Inventory Simulation
+        // Remove mini portal Simulation
         //
-        const invSimIndex = this.inventorySimulations.findIndex(
+        const invSimIndex = this.miniSimulations.findIndex(
             (s) => s.simulation.id == sim.id
         );
 
         if (invSimIndex >= 0) {
-            const removed = this.inventorySimulations.splice(invSimIndex, 1);
+            const removed = this.miniSimulations.splice(invSimIndex, 1);
             removed.forEach((s) => {
                 s.onBotAdded.removeListener(this.onBotAdded.invoke);
                 s.onBotRemoved.removeListener(this.onBotRemoved.invoke);
                 s.onBotUpdated.removeListener(this.onBotUpdated.invoke);
                 s.unsubscribe();
-                this.inventoryScene.remove(s);
+                this.miniScene.remove(s);
             });
         }
     }
@@ -603,7 +791,8 @@ export class PlayerGame extends Game {
     resetCameras() {
         this.interaction.clearOperationsOfType(TweenCameraToOperation);
         this.interaction.cameraRigControllers.forEach((controller) => {
-            if (controller.rig.name != 'inventory') controller.controls.reset();
+            if (controller.rig.name != 'miniPortal')
+                controller.controls.reset();
         });
     }
 
@@ -617,38 +806,76 @@ export class PlayerGame extends Game {
      * Render the current frame for the default browser mode.
      */
     protected renderBrowser() {
-        super.renderBrowser();
+        this.renderer.setSize(
+            this.mainViewport.width,
+            this.mainViewport.height
+        );
 
-        this.inventoryCameraRig.mainCamera.updateMatrixWorld(true);
+        if (!this.gameView.hasMap) {
+            super.renderMainViewport(true);
+        } else {
+            this.renderMapViewport();
+            // super.renderMainViewport(false);
+            // this.renderer.clear();
+            // this.renderMapToMainViewport();
+        }
 
         //
-        // [Inventory scene]
+        // [mini portal scene]
         //
+        this.renderMiniViewport();
+    }
 
-        this.renderer.clearDepth(); // Clear depth buffer so that inventory scene always appears above the main scene.
+    /**
+     * Renders the mini scene to the mini viewport.
+     */
+    protected renderMiniViewport() {
+        this.miniCameraRig.mainCamera.updateMatrixWorld(true);
 
-        this.inventorySceneBackgroundUpdate();
+        // if (!this.gameView.hasMap) {
+        this.renderer.clearDepth(); // Clear depth buffer so that mini portal scene always appears above the main scene.
+        // }
+        this.miniSceneBackgroundUpdate();
 
         this.renderer.setViewport(
-            this.inventoryViewport.x,
-            this.inventoryViewport.y,
-            this.inventoryViewport.width,
-            this.inventoryViewport.height
+            this.miniViewport.x,
+            this.miniViewport.y,
+            this.miniViewport.width,
+            this.miniViewport.height
         );
         this.renderer.setScissor(
-            this.inventoryViewport.x,
-            this.inventoryViewport.y,
-            this.inventoryViewport.width,
-            this.inventoryViewport.height
+            this.miniViewport.x,
+            this.miniViewport.y,
+            this.miniViewport.width,
+            this.miniViewport.height
         );
 
         this.renderer.setScissorTest(true);
 
-        // Render the inventory scene with the inventory main camera.
-        this.renderer.render(
-            this.inventoryScene,
-            this.inventoryCameraRig.mainCamera
+        // Render the mini portal scene with the mini portal main camera.
+        this.renderer.render(this.miniScene, this.miniCameraRig.mainCamera);
+    }
+
+    /**
+     * Renders the map scene to the main viewport.
+     */
+    protected renderMapViewport() {
+        this.mapScene.background = null;
+        this.renderer.setClearColor('#000', 0);
+        this.renderer.setScissorTest(false);
+        this.renderer.setViewport(
+            this.mapViewport.x,
+            this.mapViewport.y,
+            this.mapViewport.width,
+            this.mapViewport.height
         );
+
+        this.renderer.clear();
+        // this.renderer.clearDepth();
+
+        // Render the map portal scene with the map portal main camera.
+        // this.mapRenderer
+        this.renderer.render(this.mapScene, this.mapCameraRig.mainCamera);
     }
 
     /**
@@ -667,11 +894,11 @@ export class PlayerGame extends Game {
         this.renderer.setScissorTest(false);
     }
 
-    private inventorySceneBackgroundUpdate() {
-        let tagColor = this.getInventoryColor();
+    private miniSceneBackgroundUpdate() {
+        let tagColor = this.getMiniPortalColor();
 
         if (tagColor) {
-            this.inventoryScene.background = tagColor;
+            this.miniScene.background = tagColor;
         } else {
             let sceneColor =
                 this.mainScene.background instanceof Color
@@ -685,269 +912,205 @@ export class PlayerGame extends Game {
                     : new Color(DEFAULT_SCENE_BACKGROUND_COLOR));
             let invColor: Color | Texture = currentColor.clone();
             invColor.offsetHSL(0, -0.02, -0.04);
-            this.inventoryScene.background = invColor;
+            this.miniScene.background = invColor;
         }
     }
 
     protected setupRendering() {
         super.setupRendering();
 
-        this.inventoryViewport = new Viewport('inventory', this.mainViewport);
-        console.log(
-            'Set height initial value: ' + this.inventoryViewport.height
+        this.miniViewport = new Viewport('miniPortal', this.mainViewport);
+        console.log('Set height initial value: ' + this.miniViewport.height);
+        this.miniViewport.layer = 1;
+
+        this.mapViewport = new Viewport(
+            'mapPortal',
+            null,
+            this.gameView.gameView
         );
-        this.inventoryViewport.layer = 1;
+        this.mapViewport.layer = -1;
     }
 
     protected setupScenes() {
         super.setupScenes();
 
         //
-        // [Inventory scene]
+        // [mini portal scene]
         //
-        this.inventoryScene = new Scene();
-        this.inventoryScene.autoUpdate = false;
-
-        // Inventory camera.
-        this.inventoryCameraRig = createCameraRig(
-            'inventory',
-            'orthographic',
-            this.inventoryScene,
-            this.inventoryViewport
-        );
-        this.inventoryCameraRig.mainCamera.zoom = 50;
-
-        // Inventory ambient light.
-        const invAmbient = baseAuxAmbientLight();
-        this.inventoryScene.add(invAmbient);
-
-        // Inventory direction light.
-        const invDirectional = baseAuxDirectionalLight();
-        this.inventoryScene.add(invDirectional);
+        this.setupMiniScene();
+        this.setupMapScene();
 
         this.setupDelay = true;
 
         this.audio = new GameAudio();
     }
 
+    protected setupMiniScene() {
+        this.miniScene = new Scene();
+        this.miniScene.autoUpdate = false;
+
+        // mini portal camera.
+        this.miniCameraRig = createCameraRig(
+            'miniPortal',
+            'orthographic',
+            this.miniScene,
+            this.miniViewport
+        );
+
+        // mini portal ambient light.
+        const invAmbient = baseAuxAmbientLight();
+        this.miniScene.add(invAmbient);
+
+        // mini portal direction light.
+        const invDirectional = baseAuxDirectionalLight();
+        this.miniScene.add(invDirectional);
+    }
+
+    protected setupMapScene() {
+        this.mapScene = new Scene();
+        this.mapScene.autoUpdate = false;
+
+        // mini portal camera.
+        this.mapCameraRig = this._createMapCameraRig(
+            'mapPortal',
+            'perspective',
+            this.mapScene,
+            this.mapViewport
+        );
+
+        // mini portal ambient light.
+        this.mapAmbientLight = baseAuxAmbientLight();
+        this.mapScene.add(this.mapAmbientLight);
+
+        // mini portal direction light.
+        this.mapDirectionalLight = baseAuxDirectionalLight();
+        this.mapScene.add(this.mapDirectionalLight);
+    }
+
     onWindowResize(width: number, height: number) {
         super.onWindowResize(width, height);
 
-        this.firstPan = true;
-        if (this.inventoryHeightOverride === null) {
-            this.setupInventory(height);
-        }
-
-        this.setupInventory(height);
+        this._updateMiniPortal();
+        this.mapViewport.setSize(width, height);
     }
 
-    setupInventory(height: number) {
-        let invHeightScale = 1;
+    private _updateMiniPortal() {
+        let configuredHeight = this.getMiniPortalHeight();
 
-        let defaultHeight = this.getInventoryHeight();
-
-        if (this.defaultHeightCurrent != this.getInventoryHeight()) {
-            this.inventoryHeightOverride = null;
-            this.defaultHeightCurrent = this.getInventoryHeight();
+        if (this._miniPortalConfiguredHeight != configuredHeight) {
+            this._miniPortalConfiguredHeight = configuredHeight;
+            this._miniPortalHeight = configuredHeight;
         }
 
-        if (defaultHeight != null && defaultHeight != 0) {
-            if (defaultHeight < 1) {
-                invHeightScale = 1;
-            } else if (defaultHeight > 10) {
-                invHeightScale = 10;
-            } else {
-                invHeightScale = <number>defaultHeight;
-            }
-        }
+        this._miniPortalHeight = clamp(
+            this._miniPortalHeight,
+            MINI_PORTAL_MIN_PERCENT,
+            MINI_PORTAL_MAX_PERCENT
+        );
 
-        this.invVisibleCurrent = this.getInventoryVisible();
+        this.miniPortalVisible = this.getMiniPortalVisible();
 
-        if (this.invVisibleCurrent === true) {
-            this._showInventory();
+        if (this.miniPortalVisible === true) {
+            this._showMiniPortal();
         } else {
-            this._hideInventory();
+            this._hideMiniPortal();
             return;
         }
 
-        let w = window.innerWidth;
+        let heightOffset = this.getMiniPortalHeightPadding();
+        let widthPercent = this.getMiniPortalWidth();
+        const hasCustomWidth = widthPercent !== null;
+        widthPercent ??= MINI_PORTAL_DEFAULT_WIDTH;
 
-        if (w > 700) {
-            w = 700;
+        const mainViewportSize = this.mainViewport.getSize();
+        const mainViewportWidth = mainViewportSize.x;
+        const mainViewportHeight = mainViewportSize.y;
+
+        if (
+            !hasCustomWidth &&
+            mainViewportWidth <= MINI_PORTAL_WIDTH_BREAKPOINT
+        ) {
+            heightOffset = mainViewportWidth * 0.05;
+            widthPercent = MINI_PORTAL_SMALL_WIDTH;
+        }
+        this._miniPortalAvailableHeight = mainViewportHeight - heightOffset * 2;
+        const miniPortalHeight =
+            this._miniPortalHeight * this._miniPortalAvailableHeight;
+        let miniPortalHeightPercent = miniPortalHeight / mainViewportHeight;
+
+        // clamp the width to <= 700px
+        const miniViewportWidth = widthPercent * mainViewportWidth;
+        if (!hasCustomWidth && miniViewportWidth > this._miniPortalMaxWidth) {
+            widthPercent = this._miniPortalMaxWidth / mainViewportWidth;
+        } else if (miniViewportWidth > mainViewportWidth) {
+            widthPercent = 1;
         }
 
-        let unitNum = invHeightScale;
-        invHeightScale = (0.11 - 0.04 * ((700 - w) / 200)) * unitNum + 0.02;
+        this.miniViewport.setScale(widthPercent, miniPortalHeightPercent);
 
-        let tempNum = 873 * invHeightScale;
-        tempNum = tempNum / window.innerHeight;
+        this.miniViewport.setOrigin(
+            mainViewportWidth / 2 - this.miniViewport.getSize().x / 2,
+            heightOffset
+        );
 
-        invHeightScale = tempNum;
-        this.invOffsetDelta = (49 - 18 * ((700 - w) / 200)) * (unitNum - 1);
+        this._updateMiniPortalSlider();
 
-        // if there is no existing height set by the slider then
-        if (this.inventoryHeightOverride === null) {
-            let invOffsetHeight = 40;
-
-            if (window.innerWidth <= 700) {
-                invOffsetHeight = window.innerWidth * 0.05;
-                this.inventoryViewport.setScale(0.9, invHeightScale);
-            } else {
-                this.inventoryViewport.setScale(0.8, invHeightScale);
-            }
-
-            if (this.inventoryViewport.getSize().x > 700) {
-                let num = 700 / window.innerWidth;
-                this.inventoryViewport.setScale(num, invHeightScale);
-            }
-
-            this.inventoryViewport.setOrigin(
-                window.innerWidth / 2 - this.inventoryViewport.getSize().x / 2,
-                invOffsetHeight
-            );
-
-            // set the new slider's top position to the top of the inventory viewport
-            let sliderTop =
-                height - this.inventoryViewport.height - (invOffsetHeight - 10);
-            (<HTMLElement>this.sliderLeft).style.top =
-                sliderTop.toString() + 'px';
-
-            (<HTMLElement>this.sliderRight).style.top =
-                sliderTop.toString() + 'px';
-
-            this.inventoryHeightOverride =
-                this.inventoryViewport.getSize().y - 5;
-
-            (<HTMLElement>this.sliderLeft).style.left =
-                (this.inventoryViewport.x - 15).toString() + 'px';
-
-            (<HTMLElement>this.sliderRight).style.left =
-                (
-                    this.inventoryViewport.x +
-                    this.inventoryViewport.getSize().x -
-                    15
-                ).toString() + 'px';
-
-            this.gameView.setMenuStyle({
-                bottom:
-                    (
-                        window.innerHeight -
-                        sliderTop +
-                        this.menuOffset
-                    ).toString() + 'px',
-                left: this.inventoryViewport.x.toString() + 'px',
-                width: this.inventoryViewport.width.toString() + 'px',
-            });
-        } else {
-            let invOffsetHeight = 40;
-
-            if (window.innerWidth < 700) {
-                invOffsetHeight = window.innerWidth * 0.05;
-                this.inventoryViewport.setScale(0.9, invHeightScale);
-            } else {
-                this.inventoryViewport.setScale(0.8, invHeightScale);
-            }
-
-            if (this.inventoryViewport.getSize().x > 700) {
-                let num = 700 / window.innerWidth;
-                this.inventoryViewport.setScale(num, invHeightScale);
-            }
-
-            this.inventoryViewport.setOrigin(
-                window.innerWidth / 2 - this.inventoryViewport.getSize().x / 2,
-                invOffsetHeight
-            );
-
-            let sliderTop =
-                height - this.inventoryViewport.height - invOffsetHeight - 10;
-            (<HTMLElement>this.sliderLeft).style.top =
-                sliderTop.toString() + 'px';
-
-            (<HTMLElement>this.sliderRight).style.top =
-                sliderTop.toString() + 'px';
-
-            (<HTMLElement>this.sliderLeft).style.left =
-                (this.inventoryViewport.x - 12).toString() + 'px';
-
-            (<HTMLElement>this.sliderRight).style.left =
-                (
-                    this.inventoryViewport.x +
-                    this.inventoryViewport.getSize().x -
-                    12
-                ).toString() + 'px';
-
-            this.gameView.setMenuStyle({
-                bottom:
-                    (
-                        window.innerHeight -
-                        sliderTop +
-                        this.menuOffset
-                    ).toString() + 'px',
-                left: this.inventoryViewport.x.toString() + 'px',
-                width: this.inventoryViewport.width.toString() + 'px',
-            });
+        if (this.miniCameraRig) {
+            this.overrideOrthographicViewportZoom(this.miniCameraRig);
+            resizeCameraRig(this.miniCameraRig);
         }
 
-        if (this.inventoryCameraRig) {
-            this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
-            resizeCameraRig(this.inventoryCameraRig);
-        }
+        this.miniViewport.updateViewport();
     }
 
-    private _hideInventory() {
-        this.inventoryViewport.setScale(null, 0);
-        (<HTMLElement>this.sliderLeft).style.display = 'none';
-        (<HTMLElement>this.sliderRight).style.display = 'none';
+    /**
+     * Updates the positioning of the resize indicators for the mini portal.
+     */
+    private _updateMiniPortalSlider() {
+        const height = this.mainViewport.height;
+        // set the new slider's top position to the top of the mini portal viewport
+        let sliderTop =
+            height -
+            this.miniViewport.height -
+            this.miniViewport.y -
+            MINI_PORTAL_SLIDER_HALF_HEIGHT;
+        (<HTMLElement>this.slider).style.top = sliderTop.toString() + 'px';
+
+        let left = this.miniViewport.x - MINI_PORTAL_SLIDER_HALF_WIDTH;
+
+        (<HTMLElement>this.slider).style.left = left.toString() + 'px';
+
+        let right =
+            this.miniViewport.x +
+            this.miniViewport.width +
+            MINI_PORTAL_SLIDER_HALF_WIDTH;
+
+        let width = right - left;
+
+        (<HTMLElement>this.slider).style.width = width.toString() + 'px';
+
+        this.gameView.setMenuStyle({
+            bottom:
+                (
+                    this.mainViewport.height -
+                    sliderTop +
+                    this.menuOffset
+                ).toString() + 'px',
+            left: this.miniViewport.x.toString() + 'px',
+            width: this.miniViewport.width.toString() + 'px',
+        });
+    }
+
+    private _hideMiniPortal() {
+        this.miniViewport.setScale(null, 0);
+        (<HTMLElement>this.slider).style.display = 'none';
         this.gameView.setMenuStyle({
             bottom: this.menuOffset.toString() + 'px',
         });
     }
 
-    private _showInventory() {
-        (<HTMLElement>this.sliderLeft).style.display = 'block';
-        (<HTMLElement>this.sliderRight).style.display = 'block';
-    }
-
-    async mouseDownSlider() {
-        if (!this.getInventoryResizable()) return;
-
-        this.sliderPressed = true;
-
-        if (this.inventoryCameraRig.mainCamera instanceof OrthographicCamera) {
-            this.startAspect =
-                this.inventoryCameraRig.viewport.width /
-                this.inventoryCameraRig.viewport.height;
-            this.startZoom = this.inventoryCameraRig.mainCamera.zoom;
-            this.startOffset = this.panValueCurr;
-        }
-    }
-
-    async mouseUpSlider() {
-        let invOffsetHeight = 40;
-
-        if (window.innerWidth < 700) {
-            invOffsetHeight = window.innerWidth * 0.05;
-        }
-
-        this.sliderPressed = false;
-        let sliderTop =
-            window.innerHeight -
-            this.inventoryViewport.height -
-            invOffsetHeight;
-        (<HTMLElement>this.sliderLeft).style.top = sliderTop.toString() + 'px';
-
-        (<HTMLElement>this.sliderRight).style.top = sliderTop.toString() + 'px';
-
-        this.gameView.setMenuStyle({
-            ...this.gameView.menuStyle,
-            bottom:
-                (
-                    window.innerHeight -
-                    sliderTop +
-                    this.menuOffset -
-                    8
-                ).toString() + 'px',
-        });
+    private _showMiniPortal() {
+        (<HTMLElement>this.slider).style.display = 'block';
     }
 
     protected frameUpdate(xrFrame?: any) {
@@ -955,100 +1118,159 @@ export class PlayerGame extends Game {
         TWEEN.update(this.time.timeSinceStart * 1000);
 
         if (this.setupDelay) {
-            this.onCenterCamera(this.inventoryCameraRig);
+            this.onCenterCamera(this.miniCameraRig);
             this.setupDelay = false;
-        } else if (this.firstPan) {
-            this.firstPan = false;
-            this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
         }
 
-        if (
-            this.defaultZoom === null &&
-            this.defaultRotationX === null &&
-            this.defaultRotationY === null
-        ) {
-            const zoomNum = this.getPlayerZoom();
-            const rotX = this.getPlayerRotationX();
-            const rotY = this.getPlayerRotationY();
+        this._updateDefaultZoomAndRotation();
+        this._updateMiniPortalVisibility();
+        this._updateMiniPortalControls();
+        this._updateMainControls();
+        this._updateCanvasTransparency();
+        this._updatePixelWidthAndHeight();
 
+        this._updateMapPortal();
+    }
+
+    private _updateMapPortal() {
+        this._updateMapPortalVisibility();
+        this._updateMapPortalBasemap();
+    }
+
+    private _updateMapPortalBasemap() {
+        const view = this.gameView.getMapView();
+        if (view) {
+            this.gameView.setBasemap(this.getMapPortalBasemap());
+        }
+    }
+
+    private _updateMapPortalVisibility() {
+        const visible = this.getMapPortalVisible();
+        if (this.mapPortalVisible == visible) {
+            return;
+        }
+
+        this.mapPortalVisible = visible;
+        if (visible) {
+            this.gameView.enableMapView({
+                setup: (context) => {
+                    const view = this.gameView.getMapView();
+                    const coordinateTransform = this.gameView.getMapCoordinateTransformer();
+                    for (let sim of this.mapSimulations) {
+                        sim.coordinateTransformer = coordinateTransform;
+                        sim.mapView = view;
+                    }
+
+                    this.mapRenderer = new WebGLRenderer({
+                        context: context.gl,
+                        premultipliedAlpha: false,
+                        antialias: true,
+                    });
+                    // this.mapRenderer.setPixelRatio()
+                    this.mapRenderer.setViewport(0, 0, view.width, view.height);
+                    this.mapRenderer.autoClear = false;
+                    // this.mapRenderer.autoClearDepth = false;
+                    // this.mapRenderer.autoClearStencil = false;
+                    // this.mapRenderer.autoClearColor = false;
+                    this.mapRenderer.shadowMap.enabled = false;
+                    this.mapRenderer.outputEncoding = sRGBEncoding;
+                    this.mapViewport.layer = 0.5;
+
+                    // The ArcGIS API for JavaScript renders to custom offscreen buffers, and not to the default framebuffers.
+                    // We have to inject this bit of code into the three.js runtime in order for it to bind those
+                    // buffers instead of the default ones.
+                    let originalSetRenderTarget = this.mapRenderer.setRenderTarget.bind(
+                        this.mapRenderer
+                    );
+                    this.mapRenderer.setRenderTarget = (target) => {
+                        originalSetRenderTarget(target);
+                        if (target == null) {
+                            context.bindRenderTarget();
+                        }
+                    };
+                },
+                render: (context) => {
+                    let contextCam = context.camera;
+                    let camera = this.mapCameraRig.mainCamera;
+                    camera.position.fromArray(contextCam.eye);
+                    camera.up.fromArray(contextCam.up);
+                    camera.lookAt(
+                        new Vector3(
+                            contextCam.center[0],
+                            contextCam.center[1],
+                            contextCam.center[2]
+                        )
+                    );
+                    camera.projectionMatrix.fromArray(
+                        contextCam.projectionMatrix
+                    );
+                    camera.projectionMatrixInverse
+                        .copy(camera.projectionMatrix)
+                        .invert();
+                    camera.near = contextCam.near;
+                    camera.far = contextCam.far;
+                    camera.updateMatrixWorld(true);
+
+                    this.mapDirectionalLight.position.fromArray(
+                        context.sunLight.direction
+                    );
+                    this.mapDirectionalLight.intensity =
+                        context.sunLight.diffuse.intensity;
+                    this.mapDirectionalLight.color = new Color().fromArray(
+                        context.sunLight.diffuse.color
+                    );
+                    this.mapDirectionalLight.updateMatrixWorld(true);
+
+                    this.mapAmbientLight.intensity =
+                        context.sunLight.ambient.intensity;
+                    this.mapAmbientLight.color = new Color().fromArray(
+                        context.sunLight.ambient.color
+                    );
+                    this.mapAmbientLight.updateMatrixWorld(true);
+
+                    // this.renderMapViewport();
+                },
+                dispose: (context) => {},
+            });
+        }
+    }
+
+    private _updatePixelWidthAndHeight() {
+        const renderingSize = new Vector2();
+        this.renderer.getSize(renderingSize);
+
+        for (let [id, sim] of appManager.simulationManager.simulations) {
+            const portalConfig = getPortalConfigBot(sim, 'pagePortal');
             if (
-                (zoomNum != undefined && zoomNum != this.defaultZoom) ||
-                (rotX != undefined && rotX != this.defaultRotationX) ||
-                (rotY != undefined && rotY != this.defaultRotationY)
+                portalConfig &&
+                (portalConfig.tags['pixelWidth'] !== renderingSize.x ||
+                    portalConfig.tags['pixelHeight'] !== renderingSize.y)
             ) {
-                if (rotX != null && rotY != null) {
-                    this.setCameraToPosition(
-                        this.mainCameraRig,
-                        new Vector3(0, 0, 0),
-                        zoomNum,
-
-                        // The player rotation X and Y values
-                        new Vector2(rotX, rotY)
-                    );
-                } else {
-                    this.setCameraToPosition(
-                        this.mainCameraRig,
-                        new Vector3(0, 0, 0),
-                        zoomNum
-                    );
-                }
+                sim.helper.updateBot(portalConfig, {
+                    tags: {
+                        pixelWidth: renderingSize.x,
+                        pixelHeight: renderingSize.y,
+                    },
+                });
             }
-
-            this.defaultZoom = zoomNum;
-            this.defaultRotationX = rotX;
-            this.defaultRotationY = rotY;
         }
+    }
 
+    private _updateCanvasTransparency() {
         if (
-            this.invVisibleCurrent != this.getInventoryVisible() ||
-            this.defaultHeightCurrent != this.getInventoryHeight()
+            this.disableCanvasTransparency !==
+            this.getDisableCanvasTransparency()
         ) {
-            this.setupInventory(window.innerHeight);
-        }
-
-        if (this.invController != null) {
-            this.invController.controls.enablePan = this.getInventoryPannable();
-            this.invController.controls.enableRotate = this.getInventoryRotatable();
-            this.invController.controls.enableZoom = this.getInventoryZoomable();
-
-            this.invController.controls.minPanX = this.getInventoryPanMinX();
-            this.invController.controls.maxPanX = this.getInventoryPanMaxX();
-
-            //this.invController.controls.minPanY = this.getPanMinY();
-
-            if (this.getInventoryPanMinY() != null) {
-                this.invController.controls.minPanY =
-                    this.getInventoryPanMinY() * -1;
+            this.disableCanvasTransparency = this.getDisableCanvasTransparency();
+            if (this.disableCanvasTransparency) {
+                this.renderer.domElement.style.backgroundColor = '#000';
             } else {
-                this.invController.controls.minPanY = null;
-            }
-
-            if (this.getInventoryPanMaxY() != null) {
-                this.invController.controls.maxPanY =
-                    this.getInventoryPanMaxY() * -1;
-            } else {
-                this.invController.controls.maxPanY = null;
-            }
-
-            const showFocus = this.getInventoryShowFocusPoint();
-            if (showFocus && !this.xrSession) {
-                if (!this.inventoryFocusPoint) {
-                    this.inventoryFocusPoint = createFocusPointSphere();
-                    this.inventoryScene.add(this.inventoryFocusPoint);
-                }
-                this.inventoryFocusPoint.visible = true;
-                let targetWorld: Vector3 = this.invController.controls.target.clone();
-                this.invController.rig.cameraParent.localToWorld(targetWorld);
-                this.inventoryFocusPoint.position.copy(targetWorld);
-                this.inventoryFocusPoint.updateMatrixWorld(true);
-            } else {
-                if (this.inventoryFocusPoint) {
-                    this.inventoryFocusPoint.visible = false;
-                    this.inventoryFocusPoint.updateMatrixWorld(true);
-                }
+                this.renderer.domElement.style.backgroundColor = null;
             }
         }
+    }
 
+    private _updateMainControls() {
         const mainControls = this.interaction.cameraRigControllers.find(
             (c) => c.rig.name === this.mainCameraRig.name
         );
@@ -1097,135 +1319,227 @@ export class PlayerGame extends Game {
                 }
             }
         }
+    }
 
-        if (!this.getInventoryResizable() || !this.invVisibleCurrent) {
-            if (this.sliderPressed) {
-                this.mouseUpSlider();
-                this.sliderPressed = false;
-            }
+    private _updateMiniPortalVisibility() {
+        if (
+            this.miniPortalVisible != this.getMiniPortalVisible() ||
+            this._miniPortalConfiguredHeight != this.getMiniPortalHeight()
+        ) {
+            this._updateMiniPortal();
+        }
 
+        if (!this.getMiniPortalResizable() || !this.miniPortalVisible) {
             // remove dragging areas
-            (<HTMLElement>this.sliderLeft).style.display = 'none';
-            (<HTMLElement>this.sliderRight).style.display = 'none';
+            (<HTMLElement>this.slider).style.display = 'none';
         } else {
             // make sure dragging areas are active
-            (<HTMLElement>this.sliderLeft).style.display = 'block';
-            (<HTMLElement>this.sliderRight).style.display = 'block';
+            (<HTMLElement>this.slider).style.display = 'block';
         }
+    }
 
-        this._updateInventorySize();
+    private _updateMiniPortalControls() {
+        if (this.miniPortalControls != null) {
+            this.miniPortalControls.controls.enablePan = this.getMiniPortalPannable();
+            this.miniPortalControls.controls.enableRotate = this.getMiniPortalRotatable();
+            this.miniPortalControls.controls.enableZoom = this.getMiniPortalZoomable();
 
-        if (
-            this.disableCanvasTransparency !==
-            this.getDisableCanvasTransparency()
-        ) {
-            this.disableCanvasTransparency = this.getDisableCanvasTransparency();
-            if (this.disableCanvasTransparency) {
-                this.renderer.domElement.style.backgroundColor = '#000';
+            this.miniPortalControls.controls.minPanX = this.getMiniPortalPanMinX();
+            this.miniPortalControls.controls.maxPanX = this.getMiniPortalPanMaxX();
+
+            //this.invController.controls.minPanY = this.getPanMinY();
+            if (this.getMiniPortalPanMinY() != null) {
+                this.miniPortalControls.controls.minPanY =
+                    this.getMiniPortalPanMinY() * -1;
             } else {
-                this.renderer.domElement.style.backgroundColor = null;
+                this.miniPortalControls.controls.minPanY = null;
             }
-        }
 
-        const renderingSize = new Vector2();
-        this.renderer.getSize(renderingSize);
+            if (this.getMiniPortalPanMaxY() != null) {
+                this.miniPortalControls.controls.maxPanY =
+                    this.getMiniPortalPanMaxY() * -1;
+            } else {
+                this.miniPortalControls.controls.maxPanY = null;
+            }
 
-        for (let [id, sim] of appManager.simulationManager.simulations) {
-            const portalConfig = getPortalConfigBot(sim, 'pagePortal');
-            if (
-                portalConfig &&
-                (portalConfig.tags['pixelWidth'] !== renderingSize.x ||
-                    portalConfig.tags['pixelHeight'] !== renderingSize.y)
-            ) {
-                sim.helper.updateBot(portalConfig, {
-                    tags: {
-                        pixelWidth: renderingSize.x,
-                        pixelHeight: renderingSize.y,
-                    },
-                });
+            const showFocus = this.getMiniPortalShowFocusPoint();
+            if (showFocus && !this.xrSession) {
+                if (!this.miniPortalFocusPoint) {
+                    this.miniPortalFocusPoint = createFocusPointSphere();
+                    this.miniScene.add(this.miniPortalFocusPoint);
+                }
+                this.miniPortalFocusPoint.visible = true;
+                let targetWorld: Vector3 = this.miniPortalControls.controls.target.clone();
+                this.miniPortalControls.rig.cameraParent.localToWorld(
+                    targetWorld
+                );
+                this.miniPortalFocusPoint.position.copy(targetWorld);
+                this.miniPortalFocusPoint.updateMatrixWorld(true);
+            } else {
+                if (this.miniPortalFocusPoint) {
+                    this.miniPortalFocusPoint.visible = false;
+                    this.miniPortalFocusPoint.updateMatrixWorld(true);
+                }
             }
         }
     }
 
-    private _updateInventorySize() {
-        if (!this.sliderPressed) return false;
+    private _updateDefaultZoomAndRotation() {
+        if (
+            this.defaultPlayerZoom === null &&
+            this.defaultPlayerRotationX === null &&
+            this.defaultPlayerRotationY === null
+        ) {
+            const zoomNum = this.getPlayerZoom();
+            const rotX = this.getPlayerRotationX();
+            const rotY = this.getPlayerRotationY();
 
-        let invOffsetHeight: number = 40;
+            if (
+                (zoomNum != undefined && zoomNum != this.defaultPlayerZoom) ||
+                (rotX != undefined && rotX != this.defaultPlayerRotationX) ||
+                (rotY != undefined && rotY != this.defaultPlayerRotationY)
+            ) {
+                this._setCameraRotationAndZoom(
+                    rotX,
+                    rotY,
+                    zoomNum,
+                    this.mainCameraRig
+                );
+            }
 
-        if (window.innerWidth < 700) {
-            invOffsetHeight = window.innerWidth * 0.05;
+            this.defaultPlayerZoom = zoomNum;
+            this.defaultPlayerRotationX = rotX;
+            this.defaultPlayerRotationY = rotY;
         }
 
-        let sliderPos = this.input.getMousePagePos().y + invOffsetHeight;
+        if (
+            this.defaultMiniZoom === null &&
+            this.defaultMiniRotationX === null &&
+            this.defaultMiniRotationY === null
+        ) {
+            const zoomNum = this.getMiniPortalZoom();
+            const rotX = this.getMiniPortalRotationX();
+            const rotY = this.getMiniPortalRotationY();
 
-        //prevent the slider from being positioned outside the window bounds
-        if (sliderPos < 0) sliderPos = 0;
-        if (sliderPos > window.innerHeight - 40)
-            sliderPos = window.innerHeight - 40;
+            if (
+                (zoomNum != undefined && zoomNum != this.defaultMiniZoom) ||
+                (rotX != undefined && rotX != this.defaultMiniRotationX) ||
+                (rotY != undefined && rotY != this.defaultMiniRotationY)
+            ) {
+                this._setCameraRotationAndZoom(
+                    rotX,
+                    rotY,
+                    zoomNum,
+                    this.miniCameraRig
+                );
+            }
 
-        (<HTMLElement>this.sliderLeft).style.top =
-            sliderPos - invOffsetHeight + 'px';
-
-        (<HTMLElement>this.sliderRight).style.top =
-            sliderPos - invOffsetHeight + 'px';
-
-        let sliderTop =
-            window.innerHeight -
-            this.inventoryViewport.height -
-            invOffsetHeight;
-
-        this.gameView.setMenuStyle({
-            ...this.gameView.menuStyle,
-            bottom: window.innerHeight - sliderTop + this.menuOffset - 8 + 'px',
-        });
-
-        this.inventoryHeightOverride = window.innerHeight - sliderPos;
-
-        let invHeightScale = this.inventoryHeightOverride / window.innerHeight;
-
-        if (invHeightScale < 0.1) {
-            invHeightScale = 0.1;
-        } else if (invHeightScale > 1) {
-            invHeightScale = 1;
+            this.defaultMiniZoom = zoomNum;
+            this.defaultMiniRotationX = rotX;
+            this.defaultMiniRotationY = rotY;
         }
+    }
 
-        this.inventoryViewport.setScale(null, invHeightScale);
+    private _setCameraRotationAndZoom(
+        rotX: number,
+        rotY: number,
+        zoomNum: number,
+        rig: CameraRig
+    ) {
+        if (rotX != null && rotY != null) {
+            this.setCameraToPosition(
+                rig,
+                new Vector3(0, 0, 0),
+                zoomNum,
 
-        if (this.inventoryCameraRig) {
-            this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
-            resizeCameraRig(this.inventoryCameraRig);
-        }
-
-        if (!this.input.getMouseButtonHeld(0)) {
-            this.sliderPressed = false;
-        }
-
-        let w = window.innerWidth;
-
-        if (w > 700) {
-            w = 700;
-        }
-
-        let tempNum = invHeightScale * window.innerHeight; // num
-        let nNum = tempNum / 873;
-
-        let tempUnitNum = nNum / (0.11 - 0.04 * ((700 - w) / 200));
-
-        if (tempUnitNum <= 1.16) {
-            tempUnitNum = 1.16;
-            this.invOffsetDelta =
-                (49 - 18 * ((700 - w) / 200)) * (tempUnitNum - 1);
+                // The player rotation X and Y values
+                new Vector2(rotX, rotY)
+            );
         } else {
-            this.invOffsetDelta =
-                (49 - 18 * ((700 - w) / 200)) * (tempUnitNum - 1) - 8;
+            this.setCameraToPosition(rig, new Vector3(0, 0, 0), zoomNum);
+        }
+    }
+
+    protected renderCursor() {
+        const pagePos = this.getInput().getMousePagePos();
+        const miniViewport = this.miniViewport;
+        const isMiniPortal = Input.pagePositionOnViewport(
+            pagePos,
+            miniViewport,
+            this.getViewports()
+        );
+        this.backgroundCursor = isMiniPortal
+            ? this.getMiniPortalCursor()
+            : this.getCursor();
+
+        super.renderCursor();
+    }
+
+    protected updateInteraction() {
+        super.updateInteraction();
+        this._updateMiniPortalSize();
+    }
+
+    private _updateMiniPortalSize() {
+        if (!this.getMiniPortalResizable() || !this.miniPortalVisible) {
+            return;
         }
 
-        let num = this.invOffsetDelta - this.invOffsetCurr;
-        this.invController.controls.setPan(-this.panValueCurr);
-        this.panValueCurr += num;
+        const clientPos = this.input.getMouseClientPos();
+        if (this.input.getMouseButtonDown(MouseButtonId.Left)) {
+            const overSlider = Input.eventIsDirectlyOverElement(
+                clientPos,
+                this.slider
+            );
 
-        this.invController.controls.setPan(this.panValueCurr);
-        this.invOffsetCurr = this.invOffsetDelta;
+            if (overSlider) {
+                this._resizingMiniPortal = true;
+                this._startResizeClientPos = clientPos;
+                this._currentResizeClientPos = clientPos;
+                this._startMiniPortalHeight = this._miniPortalHeight;
+
+                if (
+                    this.miniCameraRig.mainCamera instanceof OrthographicCamera
+                ) {
+                    this.startAspect =
+                        this.miniCameraRig.viewport.width /
+                        this.miniCameraRig.viewport.height;
+                    this.startZoom = this.miniCameraRig.mainCamera.zoom;
+                    this.startOffset = this.panValueCurr;
+                }
+            }
+        }
+
+        if (this.input.getMouseButtonUp(0)) {
+            this._resizingMiniPortal = false;
+        }
+
+        if (!this._resizingMiniPortal) {
+            return;
+        }
+
+        const positionOffset = clientPos
+            .clone()
+            .sub(this._startResizeClientPos);
+
+        const deltaHeight = -positionOffset.y;
+        const deltaHeightPercent =
+            deltaHeight / this._miniPortalAvailableHeight;
+
+        this._miniPortalHeight = clamp(
+            this._startMiniPortalHeight + deltaHeightPercent,
+            MINI_PORTAL_MIN_PERCENT,
+            MINI_PORTAL_MAX_PERCENT
+        );
+
+        this._updateMiniPortal();
+
+        // Pan the camera so that the bots stay in the same position
+        // even though the center of the viewport is changing.
+        const panDelta = clientPos.clone().sub(this._currentResizeClientPos);
+        this.miniPortalControls.controls.pan(0, -panDelta.y / 2);
+
+        this._currentResizeClientPos = clientPos;
     }
 
     /**
@@ -1236,42 +1550,119 @@ export class PlayerGame extends Game {
         if (cameraRig.mainCamera instanceof OrthographicCamera) {
             const aspect = cameraRig.viewport.width / cameraRig.viewport.height;
 
-            if (this.startAspect != null) {
+            if (this._resizingMiniPortal) {
                 let zoomC = this.startZoom / this.startAspect;
                 const newZoom =
                     this.startZoom - (this.startZoom - aspect * zoomC);
-                cameraRig.mainCamera.zoom = newZoom;
-            } else {
-                // edit this number to change the initial zoom number
-                let initNum = 240;
-                // found that 50 is the preset zoom of the rig.maincamera.zoom so I am using this as the base zoom
-                const newZoom = initNum - (initNum - aspect * (initNum / 7));
                 cameraRig.mainCamera.zoom = newZoom;
             }
         }
 
         if (!this.setupDelay) {
-            if (this.invController == null) {
-                this.invController = this.interaction.cameraRigControllers.find(
+            if (this.miniPortalControls == null) {
+                this.miniPortalControls = this.interaction.cameraRigControllers.find(
                     (c) => c.rig.name === cameraRig.name
                 );
             }
-
-            if (!this.firstPan) {
-                let num = this.invOffsetDelta - this.invOffsetCurr;
-
-                // try to center it by using the last offset
-                this.invController.controls.setPan(-this.panValueCurr);
-
-                // the final pan movement with the current offset
-                this.panValueCurr += num;
-
-                this.invController.controls.setPan(this.panValueCurr);
-                this.invOffsetCurr = this.invOffsetDelta;
-            }
         }
+    }
+
+    /**
+     * Creates a camera rig that is specialized for ArcGIS camera controls.
+     * @param name The name of the camera rig.
+     * @param type The type of the camera.
+     * @param scene The scene the camera should be added to.
+     * @param viewport The viewport that the camera rig uses.
+     * @returns
+     */
+    private _createMapCameraRig(
+        name: string,
+        type: CameraType,
+        scene: Scene,
+        viewport: Viewport
+    ): CameraRig {
+        const rig = createCameraRig(name, type, scene, viewport);
+
+        let currentOperations = [] as AbortController[];
+
+        rig.cancelFocus = () => {
+            let ops = currentOperations;
+            currentOperations = [];
+            for (let op of ops) {
+                op.abort();
+            }
+        };
+        rig.focusOnPosition = (position, options) => {
+            const mapView = this.gameView.getMapView();
+            if (mapView && mapView.ready) {
+                const instant = options.duration <= 0;
+                const [lon, lat] = ExternalRenderers.fromRenderCoordinates(
+                    mapView,
+                    [position.x, position.y, position.z],
+                    0,
+                    [0, 0, 0],
+                    0,
+                    SpatialReference.WGS84,
+                    1
+                );
+
+                let target: any = {
+                    center: [lon, lat],
+                };
+
+                if (hasValue(options.zoom)) {
+                    target.scale = options.zoom;
+                }
+
+                const controller = new AbortController();
+                currentOperations.push(controller);
+
+                let goToOptions: any = {
+                    animate: !instant,
+                    signal: controller.signal,
+                };
+
+                if (hasValue(options.duration)) {
+                    goToOptions.duration = options.duration * 1000;
+                }
+
+                if (hasValue(options.easing)) {
+                    goToOptions.easing = esriEasing(
+                        getDefaultEasing(options.easing)
+                    );
+                }
+
+                return mapView.goTo(target, goToOptions);
+            }
+        };
+
+        return rig;
     }
 }
 function createFocusPointSphere(): Mesh {
     return createSphere(new Vector3(), 0x4ebdbf, 0.05);
+}
+
+function esriEasing(easing: Easing): string {
+    if (easing.type === 'linear') {
+        return 'linear';
+    } else if (easing.type === 'cubic') {
+        if (easing.mode === 'in') {
+            return 'in-cubic';
+        } else if (easing.mode === 'out') {
+            return 'out-cubic';
+        } else if (easing.mode === 'inout') {
+            return 'in-out-cubic';
+        }
+    } else if (easing.type === 'exponential') {
+        if (easing.mode === 'in') {
+            return 'in-expo';
+        } else if (easing.mode === 'out') {
+            return 'out-expo';
+        } else if (easing.mode === 'inout') {
+            return 'in-out-expo';
+        }
+    }
+
+    return null;
 }

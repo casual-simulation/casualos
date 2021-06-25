@@ -13,9 +13,13 @@ import {
     Bot,
     DEFAULT_SCENE_BACKGROUND_COLOR,
     hasValue,
-    AnimateToBotAction,
-    AnimateToOptions,
+    FocusOnBotAction,
+    FocusOnOptions,
     DEFAULT_WORKSPACE_GRID_SCALE,
+    BotCursorType,
+    getPortalTag,
+    asyncResult,
+    asyncError,
 } from '@casual-simulation/aux-common';
 import {
     CameraRig,
@@ -36,13 +40,14 @@ import { map } from 'rxjs/operators';
 import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
 import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
-import { flatMap, merge } from 'lodash';
+import { flatMap, merge, union } from 'lodash';
 import { EventBus } from '../EventBus';
 import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { AuxBot3D } from './AuxBot3D';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { convertCasualOSPositionToThreePosition } from './grid/Grid';
+import { FocusCameraRigOnOperation } from '../interaction/FocusCameraRigOnOperation';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -51,7 +56,7 @@ export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
  * It houses all the core systems for interacting with AUX Web, such as rendering 3d elements to the canvas,
  * handling input, tracking time, and enabling VR and AR.
  */
-export abstract class Game implements AuxBotVisualizerFinder {
+export abstract class Game {
     /**
      * The game view component that this game is parented to.
      */
@@ -83,6 +88,23 @@ export abstract class Game implements AuxBotVisualizerFinder {
     onBotUpdated: ArgEvent<Bot> = new ArgEvent<Bot>();
     onBotRemoved: ArgEvent<Bot> = new ArgEvent<Bot>();
     onCameraRigTypeChanged: ArgEvent<CameraRig> = new ArgEvent<CameraRig>();
+
+    /**
+     * The cursor value that should be used to override the background cursor value.
+     */
+    botCursor: BotCursorType;
+
+    /**
+     * The cursor value that should be used as the default cursor when none is available.
+     */
+    backgroundCursor: BotCursorType;
+
+    /**
+     * The cursor value that is currently used.
+     */
+    get cursor(): BotCursorType {
+        return this.botCursor || this.backgroundCursor;
+    }
 
     private _isPOV: boolean = false;
 
@@ -142,7 +164,15 @@ export abstract class Game implements AuxBotVisualizerFinder {
         await this.onBeforeSetupComplete();
 
         this.frameUpdate = this.frameUpdate.bind(this);
+        this.startBrowserAnimationLoop();
+    }
+
+    protected startBrowserAnimationLoop() {
         this.renderer.setAnimationLoop(this.frameUpdate);
+    }
+
+    protected stopBrowserAnimationLoop() {
+        this.renderer.setAnimationLoop(null);
     }
 
     protected async onBeforeSetupComplete() {}
@@ -154,7 +184,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
         console.log('[Game] Dispose');
         this.disposed = true;
 
-        this.renderer.setAnimationLoop(null);
+        this.stopBrowserAnimationLoop();
         disposeHtmlMixerContext(this.htmlMixerContext, this.gameView.gameView);
         this.removeSidebarItem('enable_xr');
         this.removeSidebarItem('disable_xr');
@@ -222,7 +252,14 @@ export abstract class Game implements AuxBotVisualizerFinder {
      */
     abstract getUIHtmlElements(): HTMLElement[];
 
-    abstract findBotsById(id: string): AuxBotVisualizer[];
+    /**
+     * Finds the list of bot visualizers for the given bot ID.
+     * First tries to match bots that have an exact match to the given ID.
+     * If no bots are found, then it will search again but this time searching for bots
+     * that have IDs that start with the given ID.
+     * @param id The ID of the bot to find.
+     */
+    abstract findAllBotsById(id: string): AuxBotVisualizer[];
 
     /**
      * Sets the visibility of the bot grids.
@@ -332,29 +369,61 @@ export abstract class Game implements AuxBotVisualizerFinder {
      * @param cameraRig The camera rig to tween.
      * @param action The action to use for tweening.
      */
-    tweenCameraToBot(action: AnimateToBotAction) {
+    tweenCameraToBot(action: FocusOnBotAction) {
         // find the bot with the given ID
-        const matches = this.findBotsById(action.botId);
+        const matches = this.findAllBotsById(action.botId);
         console.log(
             this.constructor.name,
             'tweenCameraToBot matching bots:',
             matches
         );
         if (matches.length > 0) {
-            const bot = matches[0];
-            const targetPosition = new Vector3();
-            if (bot instanceof AuxBot3D) {
-                bot.display.getWorldPosition(targetPosition);
+            const bots = matches.filter(
+                (b) =>
+                    b instanceof AuxBot3D &&
+                    this._shouldHandleFocus(
+                        action,
+                        b.dimensionGroup.simulation3D.portalTags
+                    )
+            ) as AuxBot3D[];
 
-                this.tweenCameraToPosition(
-                    bot.dimensionGroup.simulation3D.getMainCameraRig(),
-                    targetPosition,
-                    action,
-                    bot.dimensionGroup.simulation3D.simulation,
-                    action.taskId
-                );
+            if (bots.length > 0) {
+                let animatingCameraRigs = new Set<CameraRig>();
+
+                for (let bot of bots) {
+                    const rig = bot.dimensionGroup.simulation3D.getMainCameraRig();
+                    if (animatingCameraRigs.has(rig)) {
+                        continue;
+                    }
+                    animatingCameraRigs.add(rig);
+
+                    const targetPosition = new Vector3();
+                    bot.display.getWorldPosition(targetPosition);
+
+                    this.tweenCameraToPosition(
+                        rig,
+                        targetPosition,
+                        action,
+                        bot.dimensionGroup.simulation3D.simulation,
+                        action.taskId
+                    );
+                }
             }
         }
+    }
+
+    private _shouldHandleFocus(
+        options: FocusOnOptions,
+        possiblePortals: string[]
+    ) {
+        if (hasValue(options.portal)) {
+            const targetPortal = getPortalTag(options.portal);
+            if (possiblePortals.every((p) => p !== targetPortal)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -366,23 +435,52 @@ export abstract class Game implements AuxBotVisualizerFinder {
     tweenCameraToPosition(
         cameraRig: CameraRig,
         position: Vector3,
-        options: AnimateToOptions,
+        options: FocusOnOptions,
         simulation: Simulation,
         taskId: string | number
     ) {
-        this.interaction.clearOperationsOfType(TweenCameraToOperation);
-        this.interaction.addOperation(
-            new TweenCameraToOperation(
-                cameraRig,
-                this.time,
-                this.interaction,
-                position,
-                options,
-                simulation,
-                taskId
-            ),
-            false
+        const portalTags = union(
+            ...this.getSimulations().map((sim) => sim.portalTags)
         );
+        if (!this._shouldHandleFocus(options, portalTags)) {
+            return;
+        }
+
+        // Cancel the operations for the same camera rig
+        this.interaction.clearOperations(
+            (op) =>
+                (op instanceof TweenCameraToOperation ||
+                    op instanceof FocusCameraRigOnOperation) &&
+                op.cameraRig === cameraRig
+        );
+
+        if (cameraRig.cancelFocus && cameraRig.focusOnPosition) {
+            this.interaction.addOperation(
+                new FocusCameraRigOnOperation(
+                    cameraRig,
+                    this.time,
+                    this.interaction,
+                    position,
+                    options,
+                    simulation,
+                    taskId
+                ),
+                false
+            );
+        } else {
+            this.interaction.addOperation(
+                new TweenCameraToOperation(
+                    cameraRig,
+                    this.time,
+                    this.interaction,
+                    position,
+                    options,
+                    simulation,
+                    taskId
+                ),
+                false
+            );
+        }
     }
 
     /**
@@ -397,19 +495,45 @@ export abstract class Game implements AuxBotVisualizerFinder {
         zoomValue?: number,
         rotationValue?: Vector2
     ) {
-        this.interaction.clearOperationsOfType(TweenCameraToOperation);
-        this.interaction.addOperation(
-            new TweenCameraToOperation(
-                cameraRig,
-                this.time,
-                this.interaction,
-                position,
-                { zoom: zoomValue, rotation: rotationValue, duration: 0 },
-                null,
-                null
-            ),
-            false
+        // Cancel the operations for the same camera rig
+        this.interaction.clearOperations(
+            (op) =>
+                (op instanceof TweenCameraToOperation ||
+                    op instanceof FocusCameraRigOnOperation) &&
+                op.cameraRig === cameraRig
         );
+        const options = {
+            zoom: zoomValue,
+            rotation: rotationValue,
+            duration: 0,
+        };
+        if (cameraRig.cancelFocus && cameraRig.focusOnPosition) {
+            this.interaction.addOperation(
+                new FocusCameraRigOnOperation(
+                    cameraRig,
+                    this.time,
+                    this.interaction,
+                    position,
+                    options,
+                    null,
+                    null
+                ),
+                false
+            );
+        } else {
+            this.interaction.addOperation(
+                new TweenCameraToOperation(
+                    cameraRig,
+                    this.time,
+                    this.interaction,
+                    position,
+                    options,
+                    null,
+                    null
+                ),
+                false
+            );
+        }
     }
 
     /**
@@ -497,7 +621,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
         DebugObjectManager.update();
 
         this.input.update(xrFrame);
-        this.interaction.update();
+        this.updateInteraction();
 
         const simulations = this.getSimulations();
         if (simulations) {
@@ -519,10 +643,21 @@ export abstract class Game implements AuxBotVisualizerFinder {
             );
         }
 
+        this.renderCursor();
+        this.input.resetEvents();
+
         this._onUpdate.next();
     }
 
-    private renderUpdate(xrFrame?: any) {
+    protected updateInteraction() {
+        this.interaction.update();
+    }
+
+    protected renderCursor() {
+        this.gameView.setCursor(this.cursor);
+    }
+
+    protected renderUpdate(xrFrame?: any) {
         if (this.xrSession && xrFrame) {
             if (this.xrMode === 'immersive-ar') {
                 this.mainScene.background = null;
@@ -547,13 +682,23 @@ export abstract class Game implements AuxBotVisualizerFinder {
             this.mainViewport.height
         );
 
+        this.renderMainViewport(true);
+    }
+
+    /**
+     * Renders the main camera to the main viewport.
+     * @param renderBackground Whether to render the background color.
+     */
+    protected renderMainViewport(renderBackground: boolean) {
         this.mainCameraRig.mainCamera.updateMatrixWorld(true);
 
         this.renderer.setScissorTest(false);
 
         // Render the main scene with the main camera.
         this.renderer.clear();
-        this.mainSceneBackgroundUpdate();
+        if (renderBackground) {
+            this.mainSceneBackgroundUpdate();
+        }
         this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
 
         // Render debug object manager if it's enabled.
@@ -572,22 +717,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
         //
         // [Main scene]
         //
-
-        this.mainCameraRig.mainCamera.updateMatrixWorld(true);
-
-        this.renderer.setScissorTest(false);
-
-        // Render the main scene with the main camera.
-        this.renderer.clear();
-        this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
-
-        // Render debug object manager if it's enabled.
-        if (DebugObjectManager.enabled) {
-            DebugObjectManager.render(
-                this.renderer,
-                this.mainCameraRig.mainCamera
-            );
-        }
+        this.renderMainViewport(false);
     }
 
     /**
@@ -597,21 +727,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
         //
         // [Main scene]
         //
-
-        this.mainCameraRig.mainCamera.updateMatrixWorld(true);
-
-        // Render the main scene with the main camera.
-        this.renderer.clear();
-        this.mainSceneBackgroundUpdate();
-        this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
-
-        // Render debug object manager if it's enabled.
-        if (DebugObjectManager.enabled) {
-            DebugObjectManager.render(
-                this.renderer,
-                this.mainCameraRig.mainCamera
-            );
-        }
+        this.renderMainViewport(true);
     }
 
     watchCameraRigDistanceSquared(cameraRig: CameraRig): Observable<number> {
@@ -702,7 +818,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
         }
 
         // Stop regular animation update loop and use the one from the xr session.
-        this.renderer.setAnimationLoop(null);
+        this.stopBrowserAnimationLoop();
         this.xrSession.requestAnimationFrame((time: any, nextXRFrame: any) =>
             this.frameUpdate(nextXRFrame)
         );

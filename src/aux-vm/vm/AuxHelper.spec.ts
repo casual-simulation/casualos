@@ -28,6 +28,7 @@ import {
     setSpacePassword,
     updatedBot,
     Bot,
+    ScriptError,
 } from '@casual-simulation/aux-common';
 import { bot, tag, value } from '@casual-simulation/aux-common/aux-format-2';
 import { AuxHelper } from './AuxHelper';
@@ -71,7 +72,7 @@ describe('AuxHelper', () => {
     let userId: string = 'user';
     let memory: MemoryPartition;
     let error: MemoryPartition;
-    // let runtime: AuxRuntime;
+    let runtime: AuxRuntime;
     let helper: AuxHelper;
     let subs: SubscriptionLike[];
 
@@ -104,7 +105,7 @@ describe('AuxHelper', () => {
     });
 
     function createHelper(partitions: AuxPartitions) {
-        const runtime = new AuxRuntime(
+        runtime = new AuxRuntime(
             {
                 hash: 'hash',
                 major: 1,
@@ -116,6 +117,7 @@ describe('AuxHelper', () => {
                 supportsAR: false,
                 supportsVR: false,
                 isCollaborative: true,
+                ab1BootstrapUrl: 'ab1Bootstrap',
             }
         );
         const helper = new AuxHelper(partitions, runtime);
@@ -873,6 +875,92 @@ describe('AuxHelper', () => {
                     ),
                 });
             });
+        });
+
+        it('should ensure that bot updates from the runtime are executed on partitions in sequence', async () => {
+            (<any>globalThis).getBotsState = () => helper.botsState;
+            helper = createHelper({
+                space1: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        bot1: createBot('bot1'),
+                    },
+                }),
+                space2: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        bot2: createBot('bot2', {}),
+                    },
+                }),
+                shared: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        bot3: createBot('bot3', {
+                            // This script tests that updates are executed in order.
+                            // The key is that because partition updates are async they can be run
+                            // concurrently if the caller is not careful to ensure that they are ordered.
+                            // It works by creating 2 sets of updates (separated by an async barrier Promise.resolve()).
+                            // The first set goes to 3 different partitions and the second set
+                            // goes to a tag that is already being updated.
+                            // Because bot1 and bot2 will have their events sent to their partitions first,
+                            // bot3's first update won't have executed by the time the second update set is being created.
+                            // If the code that routes AuxRuntime events to partitions is faulty, then it is possible it will
+                            // relay the second update before the first which would cause the "hit" tag to save 3
+                            // when it should have saved 0.
+                            test: `@let bot1 = getBot('id', 'bot1');
+                                    let bot2 = getBot('id', 'bot2');
+                                    bot1.tags.hit = 1;
+                                    bot2.tags.hit = 2;
+                                    tags.hit = 3;
+                                    await Promise.resolve();
+                                    tags.hit = 0;`,
+                        }),
+                    },
+                }),
+            });
+
+            let errors = [] as ScriptError[];
+            runtime.onErrors.subscribe((e) => errors.push(...e));
+
+            await helper.transaction(action('test'));
+            await waitAsync();
+
+            expect(errors).toEqual([]);
+            expect(helper.botsState).toEqual({
+                bot3: createBot(
+                    'bot3',
+                    {
+                        test: `@let bot1 = getBot('id', 'bot1');
+                                    let bot2 = getBot('id', 'bot2');
+                                    bot1.tags.hit = 1;
+                                    bot2.tags.hit = 2;
+                                    tags.hit = 3;
+                                    await Promise.resolve();
+                                    tags.hit = 0;`,
+                        hit: 0,
+                    },
+                    'shared'
+                ),
+                bot1: createBot(
+                    'bot1',
+                    {
+                        hit: 1,
+                    },
+                    'space1' as any
+                ),
+                bot2: createBot(
+                    'bot2',
+                    {
+                        hit: 2,
+                    },
+                    'space2' as any
+                ),
+            });
+            expect(Object.keys(helper.botsState)).toEqual([
+                'bot1',
+                'bot2',
+                'bot3',
+            ]);
         });
     });
 

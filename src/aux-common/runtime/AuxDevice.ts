@@ -19,4 +19,9 @@ export interface AuxDevice {
      * For example, setting isCollaborative to false would make the shared partition act like a tempLocal partition.
      */
     isCollaborative: boolean;
+
+    /**
+     * The URL that AB-1 should be bootstraped from.
+     */
+    ab1BootstrapUrl: string;
 }

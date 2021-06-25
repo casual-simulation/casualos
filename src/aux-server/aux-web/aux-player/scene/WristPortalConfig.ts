@@ -10,8 +10,8 @@ import {
     calculateBooleanTagValue,
     calculateNumericalTagValue,
     DEFAULT_PORTAL_ROTATABLE,
-    DEFAULT_INVENTORY_PORTAL_RESIZABLE,
-    DEFAULT_INVENTORY_PORTAL_HEIGHT,
+    DEFAULT_MINI_PORTAL_RESIZABLE,
+    DEFAULT_MINI_PORTAL_HEIGHT,
     DEFAULT_WRIST_PORTAL_WIDTH,
     DEFAULT_WRIST_PORTAL_HEIGHT,
     DEFAULT_WORKSPACE_GRID_SCALE,
@@ -59,7 +59,7 @@ export class WristPortalConfig extends PortalConfig {
 
     constructor(portalTag: string, simulation: BrowserSimulation) {
         super(portalTag, simulation);
-        this.grid3D.showGrid(true);
+        this.defaultGrid.showGrid(true);
         this._updateGridBounds();
     }
 
@@ -99,10 +99,10 @@ export class WristPortalConfig extends PortalConfig {
     }
 
     private _updateGridBounds() {
-        this.grid3D.minX = -(this.width / 2);
-        this.grid3D.maxX = this.width / 2;
-        this.grid3D.minY = -(this.height / 2);
-        this.grid3D.maxY = this.height / 2;
-        this.grid3D.showGrid(true, true);
+        this.defaultGrid.minX = -(this.width / 2);
+        this.defaultGrid.maxX = this.width / 2;
+        this.defaultGrid.minY = -(this.height / 2);
+        this.defaultGrid.maxY = this.height / 2;
+        this.defaultGrid.showGrid(true, true);
     }
 }

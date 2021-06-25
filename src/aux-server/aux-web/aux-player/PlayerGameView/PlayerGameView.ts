@@ -12,7 +12,31 @@ import { DimensionItem } from '../DimensionItem';
 import { MenuPortal } from '../MenuPortal';
 import { appManager } from '../../shared/AppManager';
 import CircleWipe from '../../shared/vue-components/CircleWipe/CircleWipe';
-import { hasValue } from '@casual-simulation/aux-common';
+import {
+    DEFAULT_MAP_PORTAL_BASEMAP,
+    DEFAULT_MAP_PORTAL_LATITUDE,
+    DEFAULT_MAP_PORTAL_LONGITUDE,
+    DEFAULT_MAP_PORTAL_ZOOM,
+    hasValue,
+} from '@casual-simulation/aux-common';
+import type EsriSceneView from 'esri/views/SceneView';
+import type EsriExternalRenderers from 'esri/views/3d/externalRenderers';
+import type EsriSpatialReference from 'esri/geometry/SpatialReference';
+import type EsriMap from 'esri/Map';
+import type EsriWebMercatorUtils from 'esri/geometry/support/webMercatorUtils';
+import { loadModules as loadEsriModules } from 'esri-loader';
+import {
+    Config,
+    ExternalRenderers,
+    GeoMap,
+    loadMapModules,
+    SceneView,
+    SpatialReference,
+    WebMercatorUtils,
+    Basemap,
+    Projection,
+} from '../MapUtils';
+import { Matrix4, Vector3 } from '@casual-simulation/three';
 
 @Component({
     components: {
@@ -23,12 +47,13 @@ import { hasValue } from '@casual-simulation/aux-common';
 export default class PlayerGameView extends BaseGameView implements IGameView {
     _game: PlayerGame = null;
     menuExpanded: boolean = false;
-    showInventoryCameraHome: boolean = false;
-    inventoryViewportStyle: any = {};
+    showMiniPortalCameraHome: boolean = false;
+    miniViewportStyle: any = {};
     mainViewportStyle: any = {};
 
     hasMainViewport: boolean = false;
-    hasInventoryViewport: boolean = false;
+    hasMiniViewport: boolean = false;
+    hasMap: boolean = false;
     menu: DimensionItem[] = [];
     extraMenuStyle: Partial<HTMLElement['style']> = {};
     menuStyle: Partial<HTMLElement['style']> = {};
@@ -38,9 +63,23 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     @Inject() removeSidebarGroup: PlayerApp['removeSidebarGroup'];
 
     lastMenuCount: number = null;
+    private _mapView: EsriSceneView;
+    private _coordinateTransformer: (pos: {
+        x: number;
+        y: number;
+        z: number;
+    }) => Matrix4;
 
     constructor() {
         super();
+    }
+
+    get mapViewId() {
+        return 'map-portal';
+    }
+
+    get mapView(): HTMLElement {
+        return <HTMLElement>this.$refs.mapView;
     }
 
     get finalMenuStyle() {
@@ -54,16 +93,37 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         return new PlayerGame(this);
     }
 
+    getMapView() {
+        return this._mapView;
+    }
+
+    /**
+     * Gets the matrix that should be used to transform AUX coordinates into Three.js coordinates
+     * for the map view.
+     *
+     * See https://developers.arcgis.com/javascript/latest/api-reference/esri-views-3d-externalRenderers.html#renderCoordinateTransformAt
+     */
+    getMapCoordinateTransformer() {
+        return this._coordinateTransformer;
+    }
+
+    getWebMercatorUtils() {
+        return WebMercatorUtils;
+    }
+
+    setBasemap(basemapId: string) {
+        if (this._mapView) {
+            const basemap = Basemap.fromId(basemapId);
+            if (basemap && this._mapView) {
+                if (this._mapView.map.basemap.id !== basemap.id) {
+                    this._mapView.map.basemap = basemap;
+                }
+            }
+        }
+    }
+
     moveTouch(e: TouchEvent) {
         e.preventDefault();
-    }
-
-    mouseDownSlider() {
-        this._game.mouseDownSlider();
-    }
-
-    mouseUpSlider() {
-        this._game.mouseUpSlider();
     }
 
     setupCore() {
@@ -72,10 +132,10 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         this.extraMenuStyle = {};
         this._subscriptions.push(
             this._game
-                .watchCameraRigDistanceSquared(this._game.inventoryCameraRig)
+                .watchCameraRigDistanceSquared(this._game.miniCameraRig)
                 .pipe(
-                    map((distSqr) => distSqr >= 75),
-                    tap((visible) => (this.showInventoryCameraHome = visible))
+                    map((distSqr) => distSqr >= 500),
+                    tap((visible) => (this.showMiniPortalCameraHome = visible))
                 )
                 .subscribe()
         );
@@ -107,20 +167,20 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             })
         );
 
-        if (this._game.inventoryViewport) {
-            this.hasInventoryViewport = true;
+        if (this._game.miniViewport) {
+            this.hasMiniViewport = true;
 
             let style = {
-                bottom: this._game.inventoryViewport.y + 'px',
-                left: this._game.inventoryViewport.x + 'px',
-                width: this._game.inventoryViewport.width + 'px',
-                height: this._game.inventoryViewport.height + 'px',
+                bottom: this._game.miniViewport.y + 'px',
+                left: this._game.miniViewport.x + 'px',
+                width: this._game.miniViewport.width + 'px',
+                height: this._game.miniViewport.height + 'px',
             };
 
-            this.inventoryViewportStyle = style;
+            this.miniViewportStyle = style;
 
             this._subscriptions.push(
-                this._game.inventoryViewport.onUpdated
+                this._game.miniViewport.onUpdated
                     .pipe(
                         map((viewport) => ({
                             bottom: viewport.y + 'px',
@@ -129,30 +189,30 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                             height: viewport.height + 'px',
                         })),
                         tap((style) => {
-                            this.inventoryViewportStyle = style;
+                            this.miniViewportStyle = style;
                         })
                     )
                     .subscribe()
             );
         }
 
-        if (this._game.mainViewport && this._game.inventoryViewport) {
+        if (this._game.mainViewport && this._game.miniViewport) {
             this.hasMainViewport = true;
             this._subscriptions.push(
                 this._game.mainViewport.onUpdated
                     .pipe(
                         combineLatest(
-                            this._game.inventoryViewport.onUpdated,
+                            this._game.miniViewport.onUpdated,
                             (first, second) => ({
                                 main: first,
-                                inventory: second,
+                                mini: second,
                             })
                         ),
-                        map(({ main, inventory }) => ({
-                            bottom: inventory.height + 'px',
+                        map(({ main, mini }) => ({
+                            bottom: mini.height + 'px',
                             left: main.x + 'px',
                             width: main.width + 'px',
-                            height: main.height - inventory.height + 'px',
+                            height: main.height - mini.height + 'px',
                         })),
                         tap((style) => {
                             this.mainViewportStyle = style;
@@ -163,11 +223,81 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         }
     }
 
-    centerInventoryCamera() {
-        this._game.onCenterCamera(this._game.inventoryCameraRig);
+    centerMiniCamera() {
+        this._game.onCenterCamera(this._game.miniCameraRig);
     }
 
     setMenuStyle(style: Partial<HTMLElement['style']>) {
         this.menuStyle = style;
+    }
+
+    /**
+     * Enables and displays the map view.
+     * Optionally adds the given external renderer to the view.
+     * @param externalRenderer The external renderer that should be used to integrate with the map's rendering system.
+     */
+    async enableMapView(externalRenderer?: __esri.ExternalRenderer) {
+        await loadMapModules();
+
+        console.log('[PlayerGameView] Enable Map');
+        if (hasValue(appManager.config.arcGisApiKey)) {
+            Config.apiKey = appManager.config.arcGisApiKey;
+        }
+
+        const map = new GeoMap({
+            basemap: DEFAULT_MAP_PORTAL_BASEMAP,
+        });
+
+        this._mapView = new SceneView({
+            map: map,
+            center: [DEFAULT_MAP_PORTAL_LONGITUDE, DEFAULT_MAP_PORTAL_LATITUDE],
+            zoom: DEFAULT_MAP_PORTAL_ZOOM,
+            container: this.mapViewId,
+        });
+
+        try {
+            // wait for the map to load
+            await this._mapView.when();
+            this.hasMap = true;
+            if (externalRenderer) {
+                this._coordinateTransformer = (pos) => {
+                    const matrix = new Matrix4();
+                    ExternalRenderers.renderCoordinateTransformAt(
+                        this._mapView,
+                        [pos.x, pos.y, pos.z],
+                        SpatialReference.WGS84,
+                        matrix.elements
+                    );
+                    return matrix;
+                };
+                ExternalRenderers.add(this._mapView, {
+                    setup: (context) => {
+                        externalRenderer.setup(context);
+                        context.resetWebGLState();
+                    },
+                    render: (context) => {
+                        externalRenderer.render(context);
+                        ExternalRenderers.requestRender(this._mapView);
+                        context.resetWebGLState();
+                    },
+                    dispose: (context) => externalRenderer.dispose(context),
+                });
+            }
+        } catch (err) {
+            console.warn('[PlayerGameView] Failed to load the map view.', err);
+            this.hasMap = false;
+        }
+    }
+
+    /**
+     * Disables and destroys the map view.
+     */
+    disableMapView() {
+        // TODO:
+    }
+
+    protected setWidthAndHeightCore(width: number, height: number) {
+        this.mapView.style.height = this._game.getRenderer().domElement.style.height;
+        this.mapView.style.width = this._game.getRenderer().domElement.style.width;
     }
 }
