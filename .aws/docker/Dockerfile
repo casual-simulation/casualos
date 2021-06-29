@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     wget \
     tar \
-    git-all
+    git-all iptables
 
 
 #Docker 19
