@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/crypto-browser",
-    "version": "2.0.2-alpha.981597206",
+    "version": "2.0.2-alpha.981663424",
     "description": "An implemenation of @casual-simulation/crypto for web browsers.",
     "keywords": [
         "crypto"
@@ -40,7 +40,7 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/crypto": "^2.0.2-alpha.981597206",
+        "@casual-simulation/crypto": "^2.0.2-alpha.981663424",
         "bowser": "^2.4.0"
     }
 }

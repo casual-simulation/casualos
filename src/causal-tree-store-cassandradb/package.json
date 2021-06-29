@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-store-cassandradb",
-    "version": "2.0.2-alpha.981597206",
+    "version": "2.0.2-alpha.981663424",
     "description": "A causal tree store that interfaces with CassandraDB",
     "keywords": [
         "cassandra",
@@ -43,7 +43,7 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/causal-trees": "^2.0.2-alpha.981597206",
+        "@casual-simulation/causal-trees": "^2.0.2-alpha.981663424",
         "cassandra-driver": "4.5.1"
     }
 }
