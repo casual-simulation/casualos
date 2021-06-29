@@ -4,7 +4,6 @@ set -e
 
 # Fallback to apt if apt-get fails
 sudo apt-get update || sudo apt update -y
-sudo apt-get upgrade -y
 
 # Install utilities that Docker needs
 sudo apt-get install -y \
