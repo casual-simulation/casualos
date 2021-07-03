@@ -79,6 +79,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
                 console.log('Found no objects at', position);
                 console.log(bot3D.bot);
                 console.log(dimension);
+                return null;
             }
             const bot = this._bot;
             const draggedObjects = dropWhile(objects, (o) => o.id !== bot.id);
