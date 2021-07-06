@@ -2580,6 +2580,15 @@ const secret = await os.showInput('', {
 os.toast(secret);
 ```
 
+5. Show an input for entering dates.
+```typescript
+const secret = await os.showInput('', {
+    type: 'date',
+    title: 'Enter a date'
+});
+os.toast(secret);
+```
+
 ### `os.showInputForTag(bot, tag, options?)`
 
 
