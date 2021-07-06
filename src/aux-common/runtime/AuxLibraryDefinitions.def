@@ -1252,7 +1252,7 @@ declare interface ShowInputOptions {
 /**
  * Defines the possible input types.
  */
-declare type ShowInputType = 'text' | 'color' | 'secret';
+declare type ShowInputType = 'text' | 'color' | 'secret' | 'date';
 
 /**
  * Defines the possible input types.
@@ -1359,6 +1359,16 @@ declare interface ShowChatBarAction {
      * The color to use for the placeholder.
      */
     placeholderColor?: string;
+
+    /**
+     * The color to use for the background.
+     */
+    backgroundColor?: string;
+
+    /**
+     * The color to use for the foreground (text).
+     */
+     foregroundColor?: string;
 }
 
 /**
@@ -1379,6 +1389,16 @@ declare interface ShowChatOptions {
      * The color to use for the placeholder.
      */
     placeholderColor?: string;
+
+    /**
+     * The color to use for the background.
+     */
+     backgroundColor?: string;
+
+     /**
+     * The color to use for the foreground (text).
+     */
+      foregroundColor?: string;
 }
 
 /**
@@ -2590,6 +2610,14 @@ declare global {
      * @param data The data.
      */
     function getJSON(data: any): string;
+
+    /**
+     * Shouts the given events in order until a bot returns a result.
+     * Returns the result that was produced or undefined if no result was produced.
+     * @param eventNames The names of the events to shout.
+     * @param arg The argument to shout.
+     */
+     function priorityShout(eventNames: string[], arg?: any): any;
 
     /**
      * Asks every bot in the server to run the given action.

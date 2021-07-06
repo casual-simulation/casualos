@@ -797,17 +797,17 @@ export const DEFAULT_MAP_PORTAL_BASEMAP = 'dark-gray';
 /**
  * The default longitude that the map portal should show.
  */
-export const DEFAULT_MAP_PORTAL_LONGITUDE = -85.66645;
+export const DEFAULT_MAP_PORTAL_LONGITUDE = -84.71112905478944;
 
 /**
  * The default latitude that the map portal should show.
  */
-export const DEFAULT_MAP_PORTAL_LATITUDE = 42.963745;
+export const DEFAULT_MAP_PORTAL_LATITUDE = 43.152972972972975;
 
 /**
  * The default zoom that the map portal should show.
  */
-export const DEFAULT_MAP_PORTAL_ZOOM = 17;
+export const DEFAULT_MAP_PORTAL_ZOOM = 7;
 
 /**
  * Whether portals are pannable by default.

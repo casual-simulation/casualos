@@ -1,0 +1,169 @@
+name: Release
+
+on:
+    push:
+        branches:
+            - master
+            - staging
+
+jobs:
+    build:
+        name: Build and Release
+        runs-on: ubuntu-latest
+        env:
+            CI: true
+        steps:
+            - uses: actions/checkout@v1
+            - name: Use Node.js 14.x
+              uses: actions/setup-node@v1
+              with:
+                  node-version: 14.x
+            - name: NPM Install
+              run: |
+                  npm ci
+                  npm run bootstrap
+            - name: Find Version
+              run: |
+                  echo "GIT_TAG=$(git describe --abbrev=0 --tags)" >> $GITHUB_ENV
+            - name: Make GitHub Release
+              if: ${{ github.ref == 'refs/heads/master' }}
+              run: |
+                  CHANGELOG=$(./script/most_recent_changelog.sh)
+                  node ./src/make-github-release/bin/make-github-release.js release --owner "${{ github.repository_owner }}" --repo ${{ github.event.repository.name }} --text \"${CHANGELOG}\" --auth ${{ secrets.GITHUB_TOKEN }}
+            - name: Test
+              run: |
+                  npx jest --detectOpenHandles --forceExit --no-cache
+            - name: Build
+              run: |
+                  npm run build
+            - name: Publish NPM Packages
+              run: |
+                  echo "@casual-simulation:registry=http://registry.npmjs.org/" > .npmrc
+                  echo "registry=http://registry.npmjs.org/" >> .npmrc
+                  echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> .npmrc
+                  npm whoami
+                  echo "Publishing NPM Packages..."
+                  ls -la
+                  npx lerna publish from-package --yes
+
+                  echo "Updating package-lock.json..."
+                  # Sleep for 5 seconds to hopefully give NPM time to update the package listing
+                  sleep 5
+                  cd ./src/aux-server
+
+                  for i in {1..5}; do 
+                      npm install --package-lock-only && break || sleep 5;
+                  done
+              env:
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+            - name: Publish Docs
+              if: ${{ github.ref == 'refs/heads/master' }}
+              run: |
+                  cd docs
+
+                  echo "Installing NPM Packages..."
+                  yarn install --frozen-lockfile
+
+                  echo "Upgrading Casual Simulation NPM Packages.."
+                  yarn upgrade --scope @casual-simulation --latest
+
+                  git config --global user.name DevOps
+                  git config --global user.email devops@casualsimulation.org
+                  git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+
+                  echo "Building and deploying..."
+                  GIT_USER="DevOps" USE_SSH=true yarn deploy
+            - name: Build Docker
+              run: |
+                  echo "Building..."
+
+                  docker build -t "casualsimulation/aux:${{ env.GIT_TAG }}" -t "casualsimulation/aux:latest" -t "casualsimulation/aux:alpha" .
+                  docker build -t "casualsimulation/aux-proxy:${{ env.GIT_TAG }}" -t "casualsimulation/aux-proxy:latest" -t "casualsimulation/aux-proxy:alpha" ./src/aux-proxy
+                  docker build -t "casualsimulation/aux-redirector:${{ env.GIT_TAG }}" -t "casualsimulation/aux-redirector:latest" -t "casualsimulation/aux-redirector:alpha" ./src/aux-redirector
+            - name: Login to DockerHub
+              run: |
+                  echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+            - name: Publish DockerHub
+              run: |
+                  echo "Publishing the x64 Docker Image...."
+                  docker push casualsimulation/aux:${{ env.GIT_TAG }}
+                  docker push casualsimulation/aux-proxy:${{ env.GIT_TAG }}
+                  docker push casualsimulation/aux-redirector:${{ env.GIT_TAG }}
+            - name: Publish DockerHub Latest
+              if: ${{ github.ref == 'refs/heads/master' }}
+              run: |
+                  echo "Publishing the latest tags...."
+                  docker push casualsimulation/aux:latest
+                  docker push casualsimulation/aux-proxy:latest
+                  docker push casualsimulation/aux-redirector:latest
+            - name: Publish DockerHub Alpha
+              if: ${{ github.ref != 'refs/heads/master' }}
+              run: |
+                  echo "Publishing the alpha tags...."
+                  docker push casualsimulation/aux:alpha
+                  docker push casualsimulation/aux-proxy:alpha
+                  docker push casualsimulation/aux-redirector:alpha
+            - name: Login to GHCR
+              run: |
+                  echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            - name: Set GHCR Environment Variables
+              run: |
+                  echo "Publishing the x64 Docker Image...."
+                  CASUALOS_IMAGE_ID=ghcr.io/${{ github.repository_owner }}/casualos
+                  CASUALOS_IMAGE_ID=$(echo $CASUALOS_IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+                  PROXY_IMAGE_ID=ghcr.io/${{ github.repository_owner }}/casualos-proxy
+                  PROXY_IMAGE_ID=$(echo $PROXY_IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+                  REDIRECTOR_IMAGE_ID=ghcr.io/${{ github.repository_owner }}/casualos-redirector
+                  REDIRECTOR_IMAGE_ID=$(echo $REDIRECTOR_IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+                  docker tag casualsimulation/aux $CASUALOS_IMAGE_ID:${{ env.GIT_TAG }}
+                  docker tag casualsimulation/aux-proxy $PROXY_IMAGE_ID:${{ env.GIT_TAG }}
+                  docker tag casualsimulation/aux-redirector $REDIRECTOR_IMAGE_ID:${{ env.GIT_TAG }}
+
+                  docker tag casualsimulation/aux $CASUALOS_IMAGE_ID:latest
+                  docker tag casualsimulation/aux-proxy $PROXY_IMAGE_ID:latest
+                  docker tag casualsimulation/aux-redirector $REDIRECTOR_IMAGE_ID:latest
+
+                  docker tag casualsimulation/aux $CASUALOS_IMAGE_ID:alpha
+                  docker tag casualsimulation/aux-proxy $PROXY_IMAGE_ID:alpha
+                  docker tag casualsimulation/aux-redirector $REDIRECTOR_IMAGE_ID:alpha
+
+                  echo "CASUALOS_IMAGE_ID=$CASUALOS_IMAGE_ID" >> $GITHUB_ENV
+                  echo "PROXY_IMAGE_ID=$PROXY_IMAGE_ID" >> $GITHUB_ENV
+                  echo "REDIRECTOR_IMAGE_ID=$REDIRECTOR_IMAGE_ID" >> $GITHUB_ENV
+            - name: Publish GHCR
+              run: |
+                  docker push $CASUALOS_IMAGE_ID:${{ env.GIT_TAG }}
+                  docker push $PROXY_IMAGE_ID:${{ env.GIT_TAG }}
+                  docker push $REDIRECTOR_IMAGE_ID:${{ env.GIT_TAG }}
+            - name: Publish GHCR Latest
+              if: ${{ github.ref == 'refs/heads/master' }}
+              run: |
+                  echo "Publishing the latest tags...."
+                  docker push $CASUALOS_IMAGE_ID:latest
+                  docker push $PROXY_IMAGE_ID:latest
+                  docker push $REDIRECTOR_IMAGE_ID:latest
+            - name: Publish GHCR Alpha
+              if: ${{ github.ref != 'refs/heads/master' }}
+              run: |
+                  echo "Publishing the alpha tags...."
+                  docker push $CASUALOS_IMAGE_ID:alpha
+                  docker push $PROXY_IMAGE_ID:alpha
+                  docker push $REDIRECTOR_IMAGE_ID:alpha
+    arm32:
+        name: ARM32 Docker Build
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - name: Configure AWS Credentials
+              uses: aws-actions/configure-aws-credentials@v1
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: us-east-1
+            - name: Run CodeBuild
+              uses: aws-actions/aws-codebuild-run-build@v1.0.3
+              with:
+                  project-name: publish-casualos-docker-arm32

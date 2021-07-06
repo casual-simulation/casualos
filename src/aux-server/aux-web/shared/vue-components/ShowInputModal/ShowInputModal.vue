@@ -16,7 +16,15 @@
             >
                 <md-dialog-title v-show="currentLabel">{{ currentLabel }}</md-dialog-title>
                 <md-dialog-content class="input-dialog-content">
-                    <md-field>
+                    <md-datepicker
+                        v-model="currentValue"
+                        v-if="currentType === 'date'"
+                        md-immediately
+                        ref="inputModalField"
+                    >
+                        <label :style="{ color: labelColor }">{{ currentPlaceholder }}</label>
+                    </md-datepicker>
+                    <md-field v-else>
                         <label :style="{ color: labelColor }">{{ currentPlaceholder }}</label>
                         <md-immediate-input
                             v-model="currentValue"

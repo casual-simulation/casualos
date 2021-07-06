@@ -527,6 +527,22 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 rig.cameraParent.rotation.y !== targetYRot ||
                 rig.cameraParent.rotation.z !== targetZRot
             ) {
+                const deltaX = targetXPos - rig.cameraParent.position.x;
+                const deltaY = targetYPos - rig.cameraParent.position.y;
+                const deltaZ = targetZPos - rig.cameraParent.position.z;
+
+                const controls = this.cameraRigControllers.find(
+                    (c) => c.rig === rig
+                );
+
+                if (controls) {
+                    controls.controls.cameraFrameOffset.set(
+                        deltaX,
+                        deltaY,
+                        deltaZ
+                    );
+                }
+
                 rig.cameraParent.position.set(
                     targetXPos,
                     targetYPos,

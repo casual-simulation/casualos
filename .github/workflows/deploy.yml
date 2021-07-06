@@ -1,0 +1,52 @@
+name: Deploy
+
+on:
+    workflow_dispatch:
+        inputs:
+            branch:
+                description: 'Branch to deploy'
+                required: true
+                default: 'staging'
+
+jobs:
+    deploy:
+        name: Deploy
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v1
+            - name: Use Node.js 14.x
+              uses: actions/setup-node@v1
+              with:
+                  node-version: 14.x
+            - name: Checkout develop
+              run: |
+                  git checkout develop
+                  git reset origin/develop --hard
+            - name: Update CHANGELOG
+              run: |
+                  CURRENT_DATE="$(date +%-m\/%-d\/%Y)"
+                  pwd
+                  ls -la
+                  sed -i -e "s!#### Date: TBD!#### Date: ${CURRENT_DATE}!g" ./CHANGELOG.md
+            - name: Commit CHANGELOG
+              run: |
+                  git config --global user.name DevOps
+                  git config --global user.email devops@casualsimulation.org
+                  git add ./CHANGELOG.md
+                  git commit -m "chore: Update CHANGELOG Date"
+            - name: Merge develop into target branch
+              run: |
+                  git checkout "${{ github.event.inputs.branch }}"
+                  git fetch origin
+                  git reset "origin/${{ github.event.inputs.branch }}" --hard
+                  git merge -X theirs --no-ff develop
+            - name: Update package versions
+              run: |
+                  VERSION=$("./script/next_version.sh" "${GITHUB_RUN_ID}")
+                  lerna version "$VERSION" --yes --no-push
+            - name: Push changes with tags
+              run: |
+                  git remote set-url origin https://x-access-token:${{ secrets.DEPLOY_SECRET }}@github.com/${{ github.repository }}
+                  git push origin --follow-tags
+              env:
+                  CI: true

@@ -616,6 +616,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             destroy,
             changeState,
             superShout,
+            priorityShout,
             shout,
             whisper,
 
@@ -5361,6 +5362,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Shouts the given events in order until a bot returns a result.
+     * Returns the result that was produced or undefined if no result was produced.
+     * @param eventNames The names of the events to shout.
+     * @param arg The argument to shout.
+     */
+    function priorityShout(eventNames: string[], arg?: any) {
+        for (let name of eventNames) {
+            let results: any = event(name, null, arg, undefined, true);
+
+            if (results.hasResult) {
+                return results[results.length - 1];
+            }
+        }
+
+        return undefined;
+    }
+
+    /**
      * Asks every bot in the server to run the given action.
      * In effect, this is like shouting to a bunch of people in a room.
      *
@@ -5597,12 +5616,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bots The bots that the event should be executed on. If null, then the event will be run on every bot.
      * @param arg The argument to pass.
      * @param sort Whether to sort the Bots before processing. Defaults to true.
+     * @param shortCircuit Whether to stop processing bots when one returns a value.
      */
     function event(
         name: string,
         bots: (Bot | string)[],
         arg?: any,
-        sendListenEvents: boolean = true
+        sendListenEvents: boolean = true,
+        shortCircuit: boolean = false
     ): any[] {
         const startTime = globalThis.performance.now();
         let tag = trimEvent(name);
@@ -5622,8 +5643,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let targets = [] as RuntimeBot[];
         let listeners = [] as RuntimeBot[];
         let checkedEnergy = false;
+        let stop = false;
 
         for (let id of ids) {
+            if (stop) {
+                break;
+            }
             if (!id) {
                 continue;
             }
@@ -5654,6 +5679,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                         });
                     }
                     results.push(result);
+
+                    if (shortCircuit && result !== undefined) {
+                        stop = true;
+                    }
                 } catch (ex) {
                     context.enqueueError(ex);
                     results.push(undefined);
@@ -5676,6 +5705,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             };
             event('onListen', listeners, listenArg, false);
             event('onAnyListen', null, listenArg, false);
+        }
+
+        if (shortCircuit && stop) {
+            (<any>results).hasResult = true;
         }
 
         return results;

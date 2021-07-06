@@ -182,9 +182,13 @@ export class PlayerGame extends Game {
      */
     private _miniPortalMaxWidth: number = 700;
 
-    defaultZoom: number = null;
-    defaultRotationX: number = null;
-    defaultRotationY: number = null;
+    defaultPlayerZoom: number = null;
+    defaultPlayerRotationX: number = null;
+    defaultPlayerRotationY: number = null;
+
+    defaultMiniZoom: number = null;
+    defaultMiniRotationX: number = null;
+    defaultMiniRotationY: number = null;
 
     miniPortalControls: CameraRigControls;
     invOffsetCurr: number = 0;
@@ -349,6 +353,24 @@ export class PlayerGame extends Game {
             this.playerSimulations,
             'showFocusPoint',
             DEFAULT_PORTAL_SHOW_FOCUS_POINT
+        );
+    }
+
+    getMiniPortalZoom(): number {
+        return this._getSimulationValue(this.miniSimulations, 'playerZoom');
+    }
+
+    getMiniPortalRotationX(): number {
+        return this._getSimulationValue(
+            this.miniSimulations,
+            'playerRotationX'
+        );
+    }
+
+    getMiniPortalRotationY(): number {
+        return this._getSimulationValue(
+            this.miniSimulations,
+            'playerRotationY'
         );
     }
 
@@ -1069,8 +1091,11 @@ export class PlayerGame extends Game {
 
         this.gameView.setMenuStyle({
             bottom:
-                (window.innerHeight - sliderTop + this.menuOffset).toString() +
-                'px',
+                (
+                    this.mainViewport.height -
+                    sliderTop +
+                    this.menuOffset
+                ).toString() + 'px',
             left: this.miniViewport.x.toString() + 'px',
             width: this.miniViewport.width.toString() + 'px',
         });
@@ -1361,40 +1386,77 @@ export class PlayerGame extends Game {
 
     private _updateDefaultZoomAndRotation() {
         if (
-            this.defaultZoom === null &&
-            this.defaultRotationX === null &&
-            this.defaultRotationY === null
+            this.defaultPlayerZoom === null &&
+            this.defaultPlayerRotationX === null &&
+            this.defaultPlayerRotationY === null
         ) {
             const zoomNum = this.getPlayerZoom();
             const rotX = this.getPlayerRotationX();
             const rotY = this.getPlayerRotationY();
 
             if (
-                (zoomNum != undefined && zoomNum != this.defaultZoom) ||
-                (rotX != undefined && rotX != this.defaultRotationX) ||
-                (rotY != undefined && rotY != this.defaultRotationY)
+                (zoomNum != undefined && zoomNum != this.defaultPlayerZoom) ||
+                (rotX != undefined && rotX != this.defaultPlayerRotationX) ||
+                (rotY != undefined && rotY != this.defaultPlayerRotationY)
             ) {
-                if (rotX != null && rotY != null) {
-                    this.setCameraToPosition(
-                        this.mainCameraRig,
-                        new Vector3(0, 0, 0),
-                        zoomNum,
-
-                        // The player rotation X and Y values
-                        new Vector2(rotX, rotY)
-                    );
-                } else {
-                    this.setCameraToPosition(
-                        this.mainCameraRig,
-                        new Vector3(0, 0, 0),
-                        zoomNum
-                    );
-                }
+                this._setCameraRotationAndZoom(
+                    rotX,
+                    rotY,
+                    zoomNum,
+                    this.mainCameraRig
+                );
             }
 
-            this.defaultZoom = zoomNum;
-            this.defaultRotationX = rotX;
-            this.defaultRotationY = rotY;
+            this.defaultPlayerZoom = zoomNum;
+            this.defaultPlayerRotationX = rotX;
+            this.defaultPlayerRotationY = rotY;
+        }
+
+        if (
+            this.defaultMiniZoom === null &&
+            this.defaultMiniRotationX === null &&
+            this.defaultMiniRotationY === null
+        ) {
+            const zoomNum = this.getMiniPortalZoom();
+            const rotX = this.getMiniPortalRotationX();
+            const rotY = this.getMiniPortalRotationY();
+
+            if (
+                (zoomNum != undefined && zoomNum != this.defaultMiniZoom) ||
+                (rotX != undefined && rotX != this.defaultMiniRotationX) ||
+                (rotY != undefined && rotY != this.defaultMiniRotationY)
+            ) {
+                this._setCameraRotationAndZoom(
+                    rotX,
+                    rotY,
+                    zoomNum,
+                    this.miniCameraRig
+                );
+            }
+
+            this.defaultMiniZoom = zoomNum;
+            this.defaultMiniRotationX = rotX;
+            this.defaultMiniRotationY = rotY;
+        }
+    }
+
+    private _setCameraRotationAndZoom(
+        rotX: number,
+        rotY: number,
+        zoomNum: number,
+        rig: CameraRig
+    ) {
+        if (rotX != null && rotY != null) {
+            this.setCameraToPosition(
+                rig,
+                new Vector3(0, 0, 0),
+                zoomNum,
+
+                // The player rotation X and Y values
+                new Vector2(rotX, rotY)
+            );
+        } else {
+            this.setCameraToPosition(rig, new Vector3(0, 0, 0), zoomNum);
         }
     }
 

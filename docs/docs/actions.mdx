@@ -1321,6 +1321,29 @@ whisper(bots, "reset");
 whisper(this, "setColor", "red");
 ```
 
+### `priorityShout(events, arg?)`
+
+Shouts to all bots that are <TagLink tag='listening'/> and have a [listen tag][listen-tag] for the specified events until one of the bots returns a value.
+Optionally includes a custom `that` argument. Also triggers <TagLink tag='@onListen'/> and <TagLink tag='@onAnyListen'/> for the bots that the shout was sent to.
+
+This function is useful when you want to shout but only want one bot to process the shout.
+
+The **first parameter** is the array of event names that should be shouted. e.g. Using `onClick` for the name will trigger the <TagLink tag='@onClick'/> listener until a bot returns a value.
+
+#### Examples:
+
+```typescript title='Shout to the first bot that handles @onClick'
+priorityShout(['onClick']);
+```
+
+```typescript title='Shout to the first bot that handles @myTest or @mySecondTest'
+priorityShout(['myTest', 'mySecondTest']);
+```
+
+```typescript title='Priority shout with a color'
+priorityShout(['myTest', 'mySecondTest'], "blue");
+```
+
 ### `superShout(name, arg?)`
 
 
@@ -1914,36 +1937,48 @@ It should be an object with the following properties:
 - `placeholder` - The text that should be shown as a placeholder. (optional)
 - `prefill` - The text that should be filled into the chat bar. If the chat bar already has text in it, then setting this property does nothing.
 - `placeholderColor` - The color that the placeholder text should be. Defaults to `#448aff`.
+- `backgroundColor` - The color that the background of the chat bar should be. Defaults to `#fff`.
+- `foregroundColor` - The color that the foreground (text) of the chat bar should be. Defaults to `#000`.
 
 #### Examples:
 
-1. Show the chat bar with a placeholder.
-```typescript
+```typescript title='Show the chat bar with a placeholder.'
 os.showChat({
     placeholder: "hello"
 });
 ```
 
-2. Show the chat bar with some prefilled text.
-```typescript
+```typescript title='Show the chat bar with some prefilled text.'
 os.showChat({
     prefill: "this is prefilled"
 });
 ```
 
-3. Show the chat bar with some prefilled text and a placeholder.
-```typescript
+```typescript title='Show the chat bar with some prefilled text and a placeholder.'
 os.showChat({
     prefill: "this is prefilled",
     placeholder: "hello"
 });
 ```
 
-4. Show the chat bar with a custom placeholder color.
-```typescript
+```typescript title='Show the chat bar with a custom placeholder color.'
 os.showChat({
     placeholder: "hello",
     placeholderColor: '#44a471'
+});
+```
+
+```typescript title='Show the chat bar with a custom background color.'
+os.showChat({
+    placeholder: "hello",
+    backgroundColor: '#f1abe2'
+});
+```
+
+```typescript title='Show the chat bar with a custom foreground color.'
+os.showChat({
+    placeholder: "hello",
+    foregroundColor: '#531234'
 });
 ```
 
@@ -2541,6 +2576,15 @@ os.toast(color);
 const secret = await os.showInput('', {
     type: 'secret',
     title: 'Enter a secret key'
+});
+os.toast(secret);
+```
+
+5. Show an input for entering dates.
+```typescript
+const secret = await os.showInput('', {
+    type: 'date',
+    title: 'Enter a date'
 });
 os.toast(secret);
 ```

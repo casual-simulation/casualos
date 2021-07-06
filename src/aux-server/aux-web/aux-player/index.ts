@@ -40,6 +40,7 @@ import {
     MdDialog,
     MdDialogConfirm,
     MdDialogAlert,
+    MdDatepicker,
     MdTabs,
     MdCheckbox,
     MdTooltip,
@@ -91,6 +92,7 @@ Vue.use(MdSnackbar);
 Vue.use(MdSwitch);
 Vue.use(MdBadge);
 Vue.use(MdDialogPrompt);
+Vue.use(MdDatepicker);
 Vue.use(VueShortkey, {
     prevent: ['input', 'textarea'],
 });

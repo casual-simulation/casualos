@@ -1,5 +1,24 @@
 # CasualOS Changelog
 
+## V2.0.2
+
+#### Date: 7/6/2021
+
+### :rocket: Improvements
+
+-   Improved the miniPortal to support the `portalCameraZoom`, `portalCameraRotationX` and `portalCameraRotationY` tags.
+-   Added the `priorityShout()` function to make it easy to run a set of shouts until a bot returns a value.
+-   Added the ability to control the foreground and background colors of the chat bar via the `foregroundColor` and `backgroundColor` options in `os.showChat()`.
+-   Added the `date` type for `os.showInput()` to make entering days easier.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where camera position offsets would continuously be applied to the camera.
+-   Fixed an issue where the menu would be positioned incorrectly if the meet portal was anchored to the top of the screen.
+-   Fixed an issue where clicking on the grid with a controller in XR would crash CasualOS.
+-   Fixed an issue where the transformer tag did not work correctly for bots in the mapPortal.
+-   Fixed an issue where dragging an object that gets destroyed in an onPointerDown would freeze the UI.
+
 ## V2.0.1
 
 #### Date: 6/9/2021
