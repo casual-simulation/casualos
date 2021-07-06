@@ -69,10 +69,10 @@ jobs:
 
                   git config --global user.name DevOps
                   git config --global user.email devops@casualsimulation.org
-                  git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+                  git remote set-url origin https://x-access-token:${{ secrets.DEPLOY_SECRET }}@github.com/${{ github.repository }}
 
                   echo "Building and deploying..."
-                  GIT_USER="DevOps" USE_SSH=true yarn deploy
+                  GIT_USER="DevOps" GIT_PASS="${{ secrets.DEPLOY_SECRET }}" yarn deploy
             - name: Build Docker
               run: |
                   echo "Building..."
