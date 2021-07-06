@@ -9,6 +9,7 @@
 -   Improved the miniPortal to support the `portalCameraZoom`, `portalCameraRotationX` and `portalCameraRotationY` tags.
 -   Added the `priorityShout()` function to make it easy to run a set of shouts until a bot returns a value.
 -   Added the ability to control the foreground and background colors of the chat bar via the `foregroundColor` and `backgroundColor` options in `os.showChat()`.
+-   Added the `date` type for `os.showInput()` to make entering days easier.
 
 ### :bug: Bug Fixes
 
