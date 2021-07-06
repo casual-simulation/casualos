@@ -16,6 +16,7 @@
 -   Fixed an issue where the menu would be positioned incorrectly if the meet portal was anchored to the top of the screen.
 -   Fixed an issue where clicking on the grid with a controller in XR would crash CasualOS.
 -   Fixed an issue where the transformer tag did not work correctly for bots in the mapPortal.
+-   Fixed an issue where dragging an object that gets destroyed in an onPointerDown would freeze the UI.
 
 ## V2.0.1
 
