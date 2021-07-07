@@ -99,7 +99,8 @@ export type ExtraActions =
     | AddDropSnapTargetsAction
     | EnableCustomDraggingAction
     | EnablePOVAction
-    | GoToTagAction;
+    | GoToTagAction
+    | UpdateHtmlPortalAction;
 
 /**
  * Defines a set of possible async action types.
@@ -196,7 +197,9 @@ export type AsyncActions =
     | EndRecordingAction
     | SpeakTextAction
     | GetVoicesAction
-    | GetGeolocationAction;
+    | GetGeolocationAction
+    | RegisterCustomPortalAction
+    | RegisterHtmlPortalAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2561,6 +2564,11 @@ export interface OpenCustomPortalAction extends AsyncAction {
 export type CustomPortalOutputType = 'html';
 
 /**
+ * the list of modes that custom portals support.
+ */
+export type CustomPortalOutputMode = 'push' | 'pull';
+
+/**
  * Defines an event that registers a custom portal.
  * This functions similarly to OpenCustomPortalAction except that it is more
  * tightly integrated into CasualOS.
@@ -2599,6 +2607,62 @@ export interface RegisterCustomPortalOptions {
      * Used to make it easy to register multiple custom portals that rely on the same kind of renderers.
      */
     kind?: string;
+
+    /**
+     * The output mode of the custom portal.
+     * Used to make it easy to control how a custom portal recieves updates.
+     */
+    outputMode?: CustomPortalOutputMode;
+}
+
+/**
+ * Defines an event that requests that a HTML portal be created.
+ */
+export interface RegisterHtmlPortalAction extends AsyncAction {
+    type: 'register_html_portal';
+
+    /**
+     * The ID of the portal.
+     */
+    portalId: string;
+}
+
+/**
+ * Defines an event that notifies a custom portal has recieved a HTML update.
+ */
+export interface UpdateHtmlPortalAction extends Action {
+    type: 'update_html_portal';
+
+    /**
+     * The ID of the portal.
+     */
+    portalId: string;
+
+    /**
+     * The array of mutation rectords that represent the changes to the HTML.
+     */
+    updates: SerializableMutationRecord[];
+}
+
+/**
+ * Defines a mutation record that can be serialized and sent over a web worker pipe.
+ */
+export interface SerializableMutationRecord {
+    type: MutationRecord['type'];
+    target: NodeReference;
+    addedNodes: NodeReference[];
+    removedNodes: NodeReference[];
+
+    previousSibling: NodeReference;
+    nextSibling: NodeReference;
+
+    attributeName: string;
+    attributeNamespace: string;
+    oldValue: string;
+}
+
+export interface NodeReference {
+    __id: string;
 }
 
 /**
@@ -5516,5 +5580,54 @@ export function goToTag(
         botId,
         tag,
         space,
+    };
+}
+
+/**
+ * Creates a RegisterCustomPortalAction.
+ * @param portalId The Id of the portal.
+ * @param botId The ID of the bot.
+ * @param options The options to use for the portal.
+ */
+export function registerCustomPortal(
+    portalId: string,
+    botId: string,
+    options: RegisterCustomPortalOptions,
+    taskId?: string | number
+): RegisterCustomPortalAction {
+    return {
+        type: 'register_custom_portal',
+        portalId,
+        botId,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a RegisterHtmlPortalAction.
+ */
+export function registerHtmlPortal(
+    portalId: string,
+    taskId?: string | number
+): RegisterHtmlPortalAction {
+    return {
+        type: 'register_html_portal',
+        portalId,
+        taskId,
+    };
+}
+
+/**
+ * Creates a UpdateHtmlPortalAction.
+ */
+export function updateHtmlPortal(
+    portalId: string,
+    updates: SerializableMutationRecord[]
+): UpdateHtmlPortalAction {
+    return {
+        type: 'update_html_portal',
+        portalId,
+        updates,
     };
 }
