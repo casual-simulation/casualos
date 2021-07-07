@@ -4,6 +4,7 @@
         "typeRoots": [
             "node_modules/@types",
             "src/aux-server/typings",
+            "src/aux-vm/typings",
             "src/crypto-node/typings"
         ],
         "paths": {
@@ -30,6 +31,7 @@
         { "path": "./src/crypto-browser" },
         { "path": "./src/crypto-node" },
         { "path": "./src/stacktrace" },
-        { "path": "./src/tunnel" }
+        { "path": "./src/tunnel" },
+        { "path": "./src/undom" }
     ]
 }
