@@ -18,7 +18,6 @@ export class CustomPortalHelper {
 
     handleEvents(events: BotAction[]): void {
         // TODO: process register_custom_portal events and create the corresponding backend objects.
-
         for (let event of events) {
             if (event.type === 'register_custom_portal') {
                 let portalId = event.portalId;
@@ -33,6 +32,10 @@ export class CustomPortalHelper {
                 }
                 this.portals.set(portalId, backend);
             }
+        }
+
+        for (let portal of this.portals.values()) {
+            portal.handleEvents(events);
         }
     }
 }

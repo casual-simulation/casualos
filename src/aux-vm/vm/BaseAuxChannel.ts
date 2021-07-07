@@ -45,6 +45,7 @@ import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
 import { StoredAux } from '../StoredAux';
 import { flatMap, pick } from 'lodash';
+import { CustomPortalHelper } from 'portals/CustomPortalHelper';
 
 export interface AuxChannelOptions {}
 
@@ -57,6 +58,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _deviceInfo: DeviceInfo;
     protected _partitionEditModeProvider: AuxPartitionRealtimeEditModeProvider;
     protected _partitions: AuxPartitions;
+    protected _portalHelper: CustomPortalHelper;
     private _statusHelper: StatusHelper;
     private _hasRegisteredSubs: boolean;
     private _eventBuffer: BotAction[];
@@ -479,6 +481,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         if (!this._helper) {
             this._helper = this._createAuxHelper();
         }
+        if (!this._portalHelper) {
+            this._portalHelper = new CustomPortalHelper(this._helper);
+        }
 
         this._handleStatusUpdated({
             type: 'progress',
@@ -579,6 +584,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 this._loadPartition(event.space, event.config, event);
             }
         }
+        this._portalHelper.handleEvents(e);
         this._onLocalEvents.next(e);
     }
 
