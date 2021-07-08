@@ -11,6 +11,7 @@ import {
     UpdateHtmlPortalAction,
     SerializableMutationRecord,
     asyncResult,
+    htmlPortalEvent,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
@@ -18,6 +19,37 @@ import { BrowserSimulation } from '../../../../../aux-vm-browser';
 import { getNodeMajorVersion } from '../../../../../aux-custom-portals/monaco/typescript/lib/typescriptServices';
 
 const DISALLOWED_NODE_NAMES = new Set(['script']);
+const DISALLOWED_EVENTS = new Set([
+    'mousewheel',
+    'wheel',
+    'animationstart',
+    'animationiteration',
+    'animationend',
+    'devicemotion',
+    'deviceorientation',
+    'deviceorientationabsolute',
+]);
+
+const ALLOWED_EVENTS = new Set([
+    // TODO: Build complete list of allowed events
+    // 'click',
+    // 'mousedown',
+    // 'mouseup',
+    // 'mouseenter',
+    // 'mouseleave',
+    // 'touchstart',
+    // 'touchend',
+    // 'touchmove',
+    // 'touchcancel',
+    // 'keyup',
+    // 'keydown',
+    // ''
+]);
+
+const EVENT_OPTIONS = {
+    capture: true,
+    passive: true,
+};
 
 // Mostly taken from https://github.com/developit/preact-worker-demo/blob/bac36d7c34b241e4c041bcbdefaef77bcc5f367e/src/renderer/dom.js#L224
 @Component({
@@ -32,6 +64,7 @@ export default class HtmlPortal extends Vue {
     private _nodes: Map<string, Node>;
     private _mutationQueue: SerializableMutationRecord[];
     private _mutationQueueTimer: any;
+    private _currentTouch: any;
     private _sub: Subscription;
 
     constructor() {
@@ -59,6 +92,26 @@ export default class HtmlPortal extends Vue {
             })
         );
 
+        const container = this.$refs.container as any;
+        for (let prop in container) {
+            let eventName = prop.substring(2);
+            if (
+                prop.startsWith('on') &&
+                prop === prop.toLowerCase() &&
+                !DISALLOWED_EVENTS.has(eventName) &&
+                (container[prop] === null ||
+                    typeof container[prop] === 'function')
+            ) {
+                container.addEventListener(
+                    eventName,
+                    (e: Event) => {
+                        return this._proxyEvent(e);
+                    },
+                    EVENT_OPTIONS
+                );
+            }
+        }
+
         if (hasValue(this.taskId)) {
             this._simulation.helper.transaction(asyncResult(this.taskId, null));
         }
@@ -66,6 +119,53 @@ export default class HtmlPortal extends Vue {
 
     beforeDestroy() {
         this._sub.unsubscribe();
+    }
+
+    private _proxyEvent(event: Event) {
+        // if(event.type === 'click' && this._currentTouch) {
+        //     return false;
+        // }
+
+        if (ALLOWED_EVENTS.size > 0 && !ALLOWED_EVENTS.has(event.type)) {
+            return;
+        }
+
+        let e: any = { type: event.type };
+        if (event.target) {
+            e.target = (<any>event.target).__id;
+        }
+
+        for (let prop in event) {
+            let value = (<any>event)[prop];
+
+            if (
+                typeof value !== 'object' &&
+                typeof value !== 'function' &&
+                prop !== prop.toUpperCase() &&
+                !e.hasOwnProperty(prop)
+            ) {
+                e[prop] = value;
+            }
+        }
+
+        this._simulation.helper.transaction(htmlPortalEvent(this.portalId, e));
+
+        // if (event.type === 'touchstart') {
+        //     this._currentTouch = this._getTouch(event as TouchEvent);
+        // } else if(event.type === 'touchend' && this._currentTouch) {
+        //     let touch = this._getTouch(event as TouchEvent);
+        //     if (touch) {
+
+        //     }
+        // }
+    }
+
+    private _getTouch(event: TouchEvent) {
+        let t: any =
+            (event.changedTouches && event.changedTouches[0]) ||
+            (event.touches && event.touches[0]) ||
+            event;
+        return t && { pageX: t.pageX, pageY: t.pageY };
     }
 
     private _createNode(skeleton: any): Node {

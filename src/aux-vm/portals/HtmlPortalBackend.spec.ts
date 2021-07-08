@@ -6,6 +6,7 @@ import {
     botAdded,
     createBot,
     createMemoryPartition,
+    htmlPortalEvent,
     iteratePartitions,
     MemoryPartition,
     registerHtmlPortal,
@@ -145,7 +146,7 @@ describe('HtmlPortalBackend', () => {
             await helper.transaction(
                 botAdded(
                     createBot('myBot', {
-                        onRender: `@debugger; that.document.body.appendChild(that.document.createElement('h1'))`,
+                        onRender: `@that.document.body.appendChild(that.document.createElement('h1'))`,
                     })
                 )
             );
@@ -183,6 +184,41 @@ describe('HtmlPortalBackend', () => {
                     },
                 ]),
             ]);
+        });
+
+        it('should call event listeners for the html_portal_event events', async () => {
+            const helper = createHelper({
+                shared: memory,
+            });
+            await helper.transaction(
+                botAdded(
+                    createBot('myBot', {
+                        onRender: `@let h1 = that.document.createElement('h1'); h1.addEventListener('click', () => tags.clicked = true); that.document.body.appendChild(h1);`,
+                        clicked: false,
+                    })
+                )
+            );
+
+            uuidMock.mockReturnValueOnce('uuid');
+
+            let portal = new HtmlPortalBackend('testPortal', 'myBot', helper);
+
+            await waitAsync();
+
+            portal.handleEvents([asyncResult('uuid', null)]);
+
+            await waitAsync();
+
+            portal.handleEvents([
+                htmlPortalEvent('testPortal', {
+                    type: 'click',
+                    target: '1',
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(runtime.currentState['myBot'].values.clicked).toBe(true);
         });
     });
 });

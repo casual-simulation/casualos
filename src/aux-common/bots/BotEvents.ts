@@ -100,7 +100,8 @@ export type ExtraActions =
     | EnableCustomDraggingAction
     | EnablePOVAction
     | GoToTagAction
-    | UpdateHtmlPortalAction;
+    | UpdateHtmlPortalAction
+    | HtmlPortalEventAction;
 
 /**
  * Defines a set of possible async action types.
@@ -2642,6 +2643,23 @@ export interface UpdateHtmlPortalAction extends Action {
      * The array of mutation rectords that represent the changes to the HTML.
      */
     updates: SerializableMutationRecord[];
+}
+
+/**
+ * Defines an event that represents an event that was dispatched from HTML in a portal.
+ */
+export interface HtmlPortalEventAction extends Action {
+    type: 'html_portal_event';
+
+    /**
+     * The ID of the portal.
+     */
+    portalId: string;
+
+    /**
+     * The event.
+     */
+    event: any;
 }
 
 /**
@@ -5629,5 +5647,21 @@ export function updateHtmlPortal(
         type: 'update_html_portal',
         portalId,
         updates,
+    };
+}
+
+/**
+ * Creates a HtmlPortalEventAction.
+ * @param portalId The ID of the portal.
+ * @param event The event that occurred.
+ */
+export function htmlPortalEvent(
+    portalId: string,
+    event: any
+): HtmlPortalEventAction {
+    return {
+        type: 'html_portal_event',
+        portalId,
+        event,
     };
 }

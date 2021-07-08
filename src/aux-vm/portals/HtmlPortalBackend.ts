@@ -77,11 +77,40 @@ export class HtmlPortalBackend implements PortalBackend {
                 if (event.taskId === this._initTaskId) {
                     this._startRender();
                 }
+            } else if (event.type === 'html_portal_event') {
+                if (event.portalId === this.portalId) {
+                    let target = this._getNode(event.event.target);
+                    if (target && target.dispatchEvent) {
+                        let finalEvent = {
+                            ...event.event,
+                            target: target,
+                            bubbles: true,
+                        };
+                        target.dispatchEvent(finalEvent);
+                    }
+                }
             }
         }
     }
 
     dispose(): void {}
+
+    private _getNode(node: any): Node {
+        let id: string;
+        if (node && typeof node === 'object') {
+            id = node.__id;
+        } else if (typeof node === 'string') {
+            id = node;
+        }
+        if (!id) {
+            return null;
+        }
+
+        if (node.nodeName === 'BODY') {
+            return document.body;
+        }
+        return this._nodes.get(id);
+    }
 
     private _startRender() {
         this._helper.transaction(
