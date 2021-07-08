@@ -45,7 +45,7 @@ import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
 import { StoredAux } from '../StoredAux';
 import { flatMap, pick } from 'lodash';
-import { CustomPortalHelper } from 'portals/CustomPortalHelper';
+import { CustomPortalHelper } from '../portals/CustomPortalHelper';
 
 export interface AuxChannelOptions {}
 

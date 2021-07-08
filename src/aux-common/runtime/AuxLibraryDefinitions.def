@@ -1925,6 +1925,64 @@ declare type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint | Snap
     options: OpenCustomPortalOptions;
 }
 
+
+/**
+ * The list of types of output that custom portals support.
+ */
+ export type CustomPortalOutputType = 'html';
+
+ /**
+  * the list of modes that custom portals support.
+  */
+ export type CustomPortalOutputMode = 'push' | 'pull';
+ 
+ /**
+  * Defines an event that registers a custom portal.
+  * This functions similarly to OpenCustomPortalAction except that it is more
+  * tightly integrated into CasualOS.
+  */
+ export interface RegisterCustomPortalAction extends AsyncAction {
+     type: 'register_custom_portal';
+ 
+     /**
+      * The ID of the portal.
+      */
+     portalId: string;
+ 
+     /**
+      * The ID of the bot that should be used to configure the portal.
+      */
+     botId: string;
+ 
+     /**
+      * Options that should be used to configure the custom portal.
+      */
+     options: RegisterCustomPortalOptions;
+ }
+ 
+ /**
+  * The options for a register custom portal action.
+  */
+ export interface RegisterCustomPortalOptions {
+     /**
+      * The type of the custom portal.
+      * Used by CasualOS to determine how CasualOS should consume the rendered output and display it.
+      */
+     type: CustomPortalOutputType;
+ 
+     /**
+      * The kind of the custom portal.
+      * Used to make it easy to register multiple custom portals that rely on the same kind of renderers.
+      */
+     kind?: string;
+ 
+     /**
+      * The output mode of the custom portal.
+      * Used to make it easy to control how a custom portal recieves updates.
+      */
+     outputMode?: CustomPortalOutputMode;
+ }
+
 /**
  * Defines an event that adds an entry point to a custom portal.
  */
@@ -3778,6 +3836,18 @@ declare global {
          * @param options The options that should be used for the prefix.
          */
         registerPrefix(prefix: string, options?: RegisterPrefixOptions): Promise<void>;
+
+        /**
+         * Registers a custom portal for the given bot with the given options.
+         * @param portalId The ID of the portal.
+         * @param bot The bot that should be used to render the portal.
+         * @param config The configuration for the portal.
+         */
+        register(
+            portalId: string,
+            bot: Bot | string,
+            config: RegisterCustomPortalOptions
+        ): Promise<void>;
     };
 
     /**

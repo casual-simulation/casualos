@@ -71,6 +71,7 @@ import IdePortal from '../../shared/vue-components/IdePortal/IdePortal';
 import { AudioRecorder, AudioRecording } from '../../shared/AudioRecorder';
 import { MediaRecording, Recorder } from '../../shared/Recorder';
 import ImuPortal from '../../shared/vue-components/ImuPortal/ImuPortal';
+import HtmlPortalContainer from '../../shared/vue-components/HtmlPortalContainer/HtmlPortalContainer';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -111,6 +112,7 @@ if (window.speechSynthesis) {
         login: LoginPopup,
         authorize: AuthorizePopup,
         'imu-portal': ImuPortal,
+        'html-portals': HtmlPortalContainer,
     },
 })
 export default class PlayerApp extends Vue {

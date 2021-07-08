@@ -10,35 +10,57 @@ import {
     runScript,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
-import { SubscriptionLike } from 'rxjs';
+import { Subscription, SubscriptionLike } from 'rxjs';
+import HtmlPortal from '../HtmlPortal/HtmlPortal';
 
 @Component({
-    components: {},
+    components: {
+        'html-portal': HtmlPortal,
+    },
 })
 export default class HtmlPortalContainer extends Vue {
+    portals: PortalData[] = [];
+
     constructor() {
         super();
     }
 
-    uiHtmlElements(): HTMLElement[] {
-        return [<HTMLElement>this.$refs.botQueue];
+    // uiHtmlElements(): HTMLElement[] {
+    //     return [<HTMLElement>this.$refs.botQueue];
+    // }
+
+    created() {
+        this.portals = [];
     }
 
     mounted() {
-        appManager.simulationManager.watchSimulations((sim) => {});
-        appManager.simulationManager.simulationAdded.subscribe((sim) => {});
+        appManager.simulationManager.watchSimulations((sim) => {
+            let sub = new Subscription();
 
-        appManager.simulationManager.simulationRemoved.subscribe((sim) => {});
-    }
+            sub.add(
+                sim.localEvents.subscribe((e) => {
+                    if (e.type === 'register_html_portal') {
+                        this.portals = [
+                            ...this.portals,
+                            {
+                                type: 'html',
+                                simulationId: sim.id,
+                                portalId: e.portalId,
+                                taskId: e.taskId,
+                            },
+                        ];
+                    }
+                })
+            );
 
-    isEmptyOrDiff(f: Bot): boolean {
-        return tagsOnBot(f).length === 0 || f.id === 'mod';
+            return sub;
+        });
     }
+}
 
-    startSearch() {
-        const search = <Vue>this.$refs.searchInput;
-        if (search) {
-            search.$el.focus();
-        }
-    }
+interface PortalData {
+    type: 'html';
+    simulationId: string;
+    portalId: string;
+    taskId: number | string;
 }

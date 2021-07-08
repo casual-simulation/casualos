@@ -228,6 +228,8 @@ import {
     EnableCustomDraggingAction,
     enableCustomDragging as calcEnableCustomDragging,
     MINI_PORTAL,
+    RegisterCustomPortalOptions,
+    registerCustomPortal,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -731,6 +733,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 open: openCustomPortal,
                 buildBundle,
                 registerPrefix,
+                register,
             },
 
             server: {
@@ -2300,6 +2303,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             {
                 language: options?.language || 'javascript',
             },
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Registers a custom portal for the given bot with the given options.
+     * @param portalId The ID of the portal.
+     * @param bot The bot that should be used to render the portal.
+     * @param config The configuration for the portal.
+     */
+    function register(
+        portalId: string,
+        bot: Bot | string,
+        config: RegisterCustomPortalOptions
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = registerCustomPortal(
+            portalId,
+            getID(bot),
+            config,
             task.taskId
         );
         return addAsyncAction(task, event);

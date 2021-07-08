@@ -154,6 +154,7 @@ import {
     disablePOV,
     botUpdated,
     enableCustomDragging,
+    registerCustomPortal,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -3154,6 +3155,28 @@ describe('AuxLibrary', () => {
                     'test',
                     {
                         language: 'jsx',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('portal.register()', () => {
+            it('should return a RegisterCustomPortal action', () => {
+                const promise: any = library.api.portal.register(
+                    'testPortal',
+                    bot1,
+                    {
+                        type: 'html',
+                    }
+                );
+                const expected = registerCustomPortal(
+                    'testPortal',
+                    bot1.id,
+                    {
+                        type: 'html',
                     },
                     context.tasks.size
                 );
