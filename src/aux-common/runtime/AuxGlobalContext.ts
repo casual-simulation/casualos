@@ -190,21 +190,23 @@ export interface AuxGlobalContext {
 
     /**
      * Completes the task with the given task ID with the given result.
+     * Returns whether the task was handled by this context.
      * @param taskId The ID of the task.
      * @param result The result.
      * @param remote Whether this call is being triggered from a remote device.
      *               This should be true if resolveTask() is being called in response to a remote or device action.
      */
-    resolveTask(taskId: number | string, result: any, remote: boolean): void;
+    resolveTask(taskId: number | string, result: any, remote: boolean): boolean;
 
     /**
      * Completes the task with the given task ID with the given error.
+     * * Returns whether the task was handled by this context.
      * @param taskId The ID of the task.
      * @param error The error.
      * @param remote Whether this call is being triggered from a remote device.
      *               This should be true if resolveTask() is being called in response to a remote or device action.
      */
-    rejectTask(taskId: number | string, error: any, remote: boolean): void;
+    rejectTask(taskId: number | string, error: any, remote: boolean): boolean;
 
     /**
      * Gets a list of timers that contains the amount of time a tag has run for in miliseconds.
@@ -739,20 +741,26 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         return task;
     }
 
-    resolveTask(taskId: number, result: any, remote: boolean): void {
+    resolveTask(taskId: number, result: any, remote: boolean): boolean {
         const task = this.tasks.get(taskId);
         if (task && (task.allowRemoteResolution || remote === false)) {
             this.tasks.delete(taskId);
             task.resolve(result);
+            return true;
         }
+
+        return false;
     }
 
-    rejectTask(taskId: number, error: any, remote: boolean): void {
+    rejectTask(taskId: number, error: any, remote: boolean): boolean {
         const task = this.tasks.get(taskId);
         if (task && (task.allowRemoteResolution || remote === false)) {
             this.tasks.delete(taskId);
             task.reject(error);
+            return true;
         }
+
+        return false;
     }
 
     getShoutTimers() {

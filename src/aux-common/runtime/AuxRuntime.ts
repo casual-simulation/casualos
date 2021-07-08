@@ -304,13 +304,39 @@ export class AuxRuntime
                 action.mapBotsInResult === true
                     ? this._mapBotsToRuntimeBots(action.result)
                     : action.result;
-            this._globalContext.resolveTask(action.taskId, value, false);
+            if (!this._globalContext.resolveTask(action.taskId, value, false)) {
+                this._actionBatch.push(action);
+            }
         } else if (action.type === 'async_error') {
-            this._globalContext.rejectTask(action.taskId, action.error, false);
+            if (
+                !this._globalContext.rejectTask(
+                    action.taskId,
+                    action.error,
+                    false
+                )
+            ) {
+                this._actionBatch.push(action);
+            }
         } else if (action.type === 'device_result') {
-            this._globalContext.resolveTask(action.taskId, action.result, true);
+            if (
+                !this._globalContext.resolveTask(
+                    action.taskId,
+                    action.result,
+                    true
+                )
+            ) {
+                this._actionBatch.push(action);
+            }
         } else if (action.type === 'device_error') {
-            this._globalContext.rejectTask(action.taskId, action.error, true);
+            if (
+                !this._globalContext.rejectTask(
+                    action.taskId,
+                    action.error,
+                    true
+                )
+            ) {
+                this._actionBatch.push(action);
+            }
         } else if (action.type === 'open_custom_portal') {
             this._registerPortalBot(action.portalId, action.botId);
             this._actionBatch.push(action);

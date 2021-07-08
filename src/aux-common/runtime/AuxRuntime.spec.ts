@@ -3213,6 +3213,22 @@ describe('AuxRuntime', () => {
             expect(events.slice(1)).toEqual([[toast('abc')]]);
         });
 
+        it('should emit async result actions that are not handled by the context', async () => {
+            runtime.process([asyncResult(99, null)]);
+
+            await waitAsync();
+
+            expect(events).toEqual([[asyncResult(99, null)]]);
+        });
+
+        it('should emit async error actions that are not handled by the context', async () => {
+            runtime.process([asyncError(99, 'error')]);
+
+            await waitAsync();
+
+            expect(events).toEqual([[asyncError(99, 'error')]]);
+        });
+
         it('should support mapping bots in async actions results', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
@@ -3312,6 +3328,22 @@ describe('AuxRuntime', () => {
             await waitAsync();
 
             expect(events.slice(1)).toEqual([[toast('bad')]]);
+        });
+
+        it('should emit device result actions that are not handled by the context', async () => {
+            runtime.process([deviceResult(null, 123, 'task2')]);
+
+            await waitAsync();
+
+            expect(events).toEqual([[deviceResult(null, 123, 'task2')]]);
+        });
+
+        it('should emit device error actions that are not handled by the context', async () => {
+            runtime.process([deviceError(null, 'error', 'task2')]);
+
+            await waitAsync();
+
+            expect(events).toEqual([[deviceError(null, 'error', 'task2')]]);
         });
 
         it('should support using await for async actions', async () => {
