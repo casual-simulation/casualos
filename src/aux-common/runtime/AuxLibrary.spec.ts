@@ -9587,6 +9587,81 @@ describe('AuxLibrary', () => {
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
     });
+
+    describe('os.watchPortal()', () => {
+        let tagContext: TagSpecificApiOptions;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+        let bot3: RuntimeBot;
+
+        beforeAll(() => {
+            jest.useFakeTimers('modern');
+        });
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+            bot3 = createDummyRuntimeBot('test3');
+
+            addToContext(context, bot1, bot2, bot3);
+
+            tagContext = {
+                bot: bot1,
+                config: null,
+                creator: null,
+                tag: null,
+            };
+        });
+
+        afterEach(() => {
+            jest.clearAllTimers();
+        });
+
+        afterAll(() => {
+            jest.useRealTimers();
+        });
+
+        it('should add a timer to the list of timers for the current bot', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.watchPortal(tagContext)(
+                'testPortal',
+                fn
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_portal',
+                    portalId: 'testPortal',
+                    tag: null,
+                    handler: fn,
+                },
+            ]);
+        });
+
+        it('should clear the timer if the bot is destroyed', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.watchPortal(tagContext)(
+                'testPortal',
+                fn
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_portal',
+                    portalId: 'testPortal',
+                    tag: null,
+                    handler: fn,
+                },
+            ]);
+
+            library.api.destroy(bot1);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+    });
+
     describe('os.inSheet()', () => {
         let player: RuntimeBot;
 

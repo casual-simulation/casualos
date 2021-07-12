@@ -649,6 +649,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             clearTimeout,
             clearInterval,
             clearWatchBot,
+            clearWatchPortal,
 
             os: {
                 sleep,
@@ -898,6 +899,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 create(options.bot?.id, ...args),
             setTimeout: botTimer('timeout', setTimeout, true),
             setInterval: botTimer('interval', setInterval, false),
+            watchPortal: watchPortalBots(),
             watchBot: watchBot(),
         },
     };
@@ -952,6 +954,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         context.cancelAndRemoveTimers(id);
     }
 
+    function watchPortalBots() {
+        let timerId = 0;
+        return (options: TagSpecificApiOptions) =>
+            function (portalId: string, handler: () => void) {
+                let id = timerId++;
+                context.recordBotTimer(options.bot.id, {
+                    type: 'watch_portal',
+                    timerId: id,
+                    portalId,
+                    tag: options.tag,
+                    handler,
+                });
+
+                return id;
+            };
+    }
 
     function watchBot() {
         let timerId = 0;
@@ -972,6 +990,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function clearWatchBot(id: number) {
         context.cancelAndRemoveTimers(id, 'watch_bot');
     }
+
+    function clearWatchPortal(id: number) {
+        context.cancelAndRemoveTimers(id, 'watch_portal');
+    }
+
     /**
      * Gets a list of all the bots.
      *
