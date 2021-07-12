@@ -340,6 +340,9 @@ export class AuxRuntime
         } else if (action.type === 'open_custom_portal') {
             this._registerPortalBot(action.portalId, action.botId);
             this._actionBatch.push(action);
+        } else if (action.type === 'register_custom_portal') {
+            this._registerPortalBot(action.portalId, action.botId);
+            this._actionBatch.push(action);
         } else if (action.type === 'register_builtin_portal') {
             if (!this._portalBots.has(action.portalId)) {
                 const newBot = this.context.createBot(

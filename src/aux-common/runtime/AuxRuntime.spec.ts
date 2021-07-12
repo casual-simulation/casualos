@@ -74,6 +74,7 @@ import {
     openCustomPortal,
     registerBuiltinPortal,
     isRuntimeBot,
+    registerCustomPortal,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -3830,6 +3831,130 @@ describe('AuxRuntime', () => {
 
                 expect(actions).toEqual([
                     openCustomPortal('page', 'test1', 'myTag', {}),
+                ]);
+            });
+        });
+
+        describe('register_custom_portal', () => {
+            it('should add a global variable for the bot included in a register portal action', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                runtime.process([
+                    registerCustomPortal('page', 'test1', {
+                        type: 'html',
+                    }),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+            });
+
+            it('should override previous variables', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'other',
+                        }),
+                    })
+                );
+                runtime.process([
+                    registerCustomPortal('page', 'test1', {
+                        type: 'html',
+                    }),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+
+                runtime.process([
+                    registerCustomPortal('page', 'test2', {
+                        type: 'html',
+                    }),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test2']
+                );
+            });
+
+            it('should remove the variable if given no bot to use for configuration', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                runtime.process([
+                    registerCustomPortal('page', 'test1', {
+                        type: 'html',
+                    }),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+
+                runtime.process([
+                    registerCustomPortal('page', null, {
+                        type: 'html',
+                    }),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBeUndefined();
+            });
+
+            it('should remove the global variables that were created by the runtime', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                runtime.process([
+                    registerCustomPortal('page', 'test1', {
+                        type: 'html',
+                    }),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+
+                runtime.unsubscribe();
+
+                expect(
+                    Object.getOwnPropertyDescriptor(globalThis, 'pageBot')
+                ).toBeUndefined();
+            });
+
+            it('should emit register portal actions', async () => {
+                let actions = [] as BotAction[];
+                runtime.onActions.subscribe((a) => actions.push(...a));
+
+                runtime.process([
+                    registerCustomPortal('page', 'test1', {
+                        type: 'html',
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(actions).toEqual([
+                    registerCustomPortal('page', 'test1', {
+                        type: 'html',
+                    }),
                 ]);
             });
         });
