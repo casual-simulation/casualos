@@ -3,6 +3,7 @@ import {
     AuxRuntime,
     Bot,
     BotAction,
+    ON_PORTAL_SETUP,
     registerHtmlPortal,
     SerializableMutationRecord,
     updateHtmlPortal,
@@ -75,7 +76,7 @@ export class HtmlPortalBackend implements PortalBackend {
         for (let event of events) {
             if (event.type === 'async_result') {
                 if (event.taskId === this._initTaskId) {
-                    this._startRender();
+                    this._setupPortal();
                 }
             } else if (event.type === 'html_portal_event') {
                 if (event.portalId === this.portalId) {
@@ -112,9 +113,9 @@ export class HtmlPortalBackend implements PortalBackend {
         return this._nodes.get(id);
     }
 
-    private _startRender() {
+    private _setupPortal() {
         this._helper.transaction(
-            action('onRender', [this.botId], undefined, {
+            action(ON_PORTAL_SETUP, [this.botId], undefined, {
                 document: this._document,
             })
         );

@@ -9,6 +9,7 @@ import {
     htmlPortalEvent,
     iteratePartitions,
     MemoryPartition,
+    ON_PORTAL_SETUP,
     registerHtmlPortal,
     stateUpdatedEvent,
     updateHtmlPortal,
@@ -110,7 +111,7 @@ describe('HtmlPortalBackend', () => {
         expect(actions).toEqual([registerHtmlPortal('testPortal', 'uuid')]);
     });
 
-    describe('onRender', () => {
+    describe('onPortalSetup', () => {
         it('should send a onRender action when the register_html_portal result is returned', async () => {
             const helper = createHelper({
                 shared: memory,
@@ -118,7 +119,7 @@ describe('HtmlPortalBackend', () => {
             await helper.transaction(
                 botAdded(
                     createBot('myBot', {
-                        onRender: `@tags.rendered = true`,
+                        [ON_PORTAL_SETUP]: `@tags.rendered = true`,
                         rendered: false,
                     })
                 )
@@ -139,14 +140,14 @@ describe('HtmlPortalBackend', () => {
             expect(runtime.currentState['myBot'].values.rendered).toBe(true);
         });
 
-        it('should include the HTML document in the onRender action', async () => {
+        it('should include the HTML document in the onPortalSetup action', async () => {
             const helper = createHelper({
                 shared: memory,
             });
             await helper.transaction(
                 botAdded(
                     createBot('myBot', {
-                        onRender: `@that.document.body.appendChild(that.document.createElement('h1'))`,
+                        [ON_PORTAL_SETUP]: `@that.document.body.appendChild(that.document.createElement('h1'))`,
                     })
                 )
             );
@@ -193,7 +194,7 @@ describe('HtmlPortalBackend', () => {
             await helper.transaction(
                 botAdded(
                     createBot('myBot', {
-                        onRender: `@let h1 = that.document.createElement('h1'); h1.addEventListener('click', () => tags.clicked = true); that.document.body.appendChild(h1);`,
+                        [ON_PORTAL_SETUP]: `@let h1 = that.document.createElement('h1'); h1.addEventListener('click', () => tags.clicked = true); that.document.body.appendChild(h1);`,
                         clicked: false,
                     })
                 )
