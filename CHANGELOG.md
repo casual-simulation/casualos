@@ -33,6 +33,8 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where dragging a bot whose position was animated in tempLocal space would produce no visible effect.
+-   Fixed an issue where GLB models compressed with a newer version of Draco could not be loaded.
+    -   You may have to refresh the browser tab 1 extra time after getting the update for this change to take effect. This is because the Draco library is cached by the web browser and updates to the library are checked in the background while the old version is being used.
 
 ## V2.0.2
 
