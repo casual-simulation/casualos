@@ -95,6 +95,7 @@ import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
 import { DeepObjectError } from './Utils';
 import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { merge } from '../utils';
+import { flatMap } from 'lodash';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -1061,6 +1062,82 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            it('should trigger all the watchers for the deleted bots', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'ghi',
+                        }),
+                        test3: createBot('test3', {
+                            abc: '999',
+                            test: `@
+                                watchBot('test1', () => { os.toast("Deleted 1!"); });
+                                watchBot('test2', () => { os.toast("Deleted 2!"); });
+                            `,
+                        }),
+                    })
+                );
+
+                runtime.shout('test');
+
+                await waitAsync();
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: null,
+                        test2: null,
+                    })
+                );
+
+                await waitAsync();
+
+                expect(flatMap(errors)).toEqual([]);
+
+                expect(events).toEqual([
+                    [toast('Deleted 1!'), toast('Deleted 2!')],
+                ]);
+            });
+
+            it('should not crash when a watcher errors', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'ghi',
+                        }),
+                        test3: createBot('test3', {
+                            abc: '999',
+                            test: `@
+                                watchBot('test1', () => { throw new Error('abc'); });
+                                watchBot('test2', () => { os.toast("Deleted 2!"); });
+                            `,
+                        }),
+                    })
+                );
+
+                runtime.shout('test');
+
+                await waitAsync();
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: null,
+                        test2: null,
+                    })
+                );
+
+                await waitAsync();
+
+                expect(flatMap(errors)).toEqual([new Error('abc')]);
+
+                expect(events).toEqual([[toast('Deleted 2!')]]);
+            });
+
             describe('onAnyBotsRemoved', () => {
                 it('should send a onAnyBotsRemoved event with the bot IDs that were removed', async () => {
                     runtime.stateUpdated(
@@ -1459,6 +1536,98 @@ describe('AuxRuntime', () => {
                     removedBots: [],
                     updatedBots: ['test'],
                 });
+            });
+
+            it('should trigger all the watchers for the changed bots', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'ghi',
+                        }),
+                        test3: createBot('test3', {
+                            abc: '999',
+                            test: `@
+                                watchBot('test1', () => { os.toast("Changed 1!"); });
+                                watchBot('test2', () => { os.toast("Changed 2!"); });
+                            `,
+                        }),
+                    })
+                );
+
+                runtime.shout('test');
+
+                await waitAsync();
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                abc: 'def1',
+                            },
+                        },
+                        test2: {
+                            tags: {
+                                abc: 'ghi1',
+                            },
+                        },
+                    })
+                );
+
+                await waitAsync();
+
+                expect(flatMap(errors)).toEqual([]);
+
+                expect(events).toEqual([
+                    [toast('Changed 1!'), toast('Changed 2!')],
+                ]);
+            });
+
+            it('should not crash when a watcher errors', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'ghi',
+                        }),
+                        test3: createBot('test3', {
+                            abc: '999',
+                            test: `@
+                                watchBot('test1', () => { throw new Error('abc'); });
+                                watchBot('test2', () => { os.toast("Changed 2!"); });
+                            `,
+                        }),
+                    })
+                );
+
+                runtime.shout('test');
+
+                await waitAsync();
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                abc: 'def1',
+                            },
+                        },
+                        test2: {
+                            tags: {
+                                abc: 'ghi1',
+                            },
+                        },
+                    })
+                );
+
+                await waitAsync();
+
+                expect(flatMap(errors)).toEqual([new Error('abc')]);
+
+                expect(events).toEqual([[toast('Changed 2!')]]);
             });
 
             describe('numbers', () => {

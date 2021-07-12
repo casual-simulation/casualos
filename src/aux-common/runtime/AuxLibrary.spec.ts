@@ -8,6 +8,7 @@ import {
     addToContext,
     MemoryGlobalContext,
     SET_INTERVAL_ANIMATION_FRAME_TIME,
+    WatchBotTimer,
 } from './AuxGlobalContext';
 import {
     toast,
@@ -9528,6 +9529,24 @@ describe('AuxLibrary', () => {
         it('should add a timer to the list of timers for the current bot', () => {
             const fn = jest.fn();
             let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                bot2,
+                fn
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: bot2.id,
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+            ]);
+        });
+
+        it('should support passing bot IDs directly', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
                 'testBot',
                 fn
             );
@@ -9538,9 +9557,47 @@ describe('AuxLibrary', () => {
                     type: 'watch_bot',
                     botId: 'testBot',
                     tag: null,
-                    handler: fn,
+                    handler: expect.any(Function),
                 },
             ]);
+        });
+
+        it('should add a timer for each bot in the given list', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                [bot2, bot3.id],
+                fn
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: bot2.id,
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: bot3.id,
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+            ]);
+        });
+
+        it('should call the given function when the handler is called', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                'testBot',
+                fn
+            );
+
+            const timer = context.getBotTimers(bot1.id)[0] as WatchBotTimer;
+            timer.handler();
+
+            expect(fn).toHaveBeenCalledTimes(1);
         });
 
         it('should clear the timer if the bot is destroyed', () => {
@@ -9556,7 +9613,7 @@ describe('AuxLibrary', () => {
                     type: 'watch_bot',
                     botId: 'testBot',
                     tag: null,
-                    handler: fn,
+                    handler: expect.any(Function),
                 },
             ]);
 
@@ -9578,13 +9635,60 @@ describe('AuxLibrary', () => {
                     type: 'watch_bot',
                     botId: 'testBot',
                     tag: null,
-                    handler: fn,
+                    handler: expect.any(Function),
                 },
             ]);
 
             library.api.clearWatchBot(timeoutId);
 
             expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('should be able to all watchers for a timeout ID when calling clearWatchBot()', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                [bot2, 'testBot'],
+                fn
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: bot2.id,
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: 'testBot',
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+            ]);
+
+            library.api.clearWatchBot(timeoutId);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('should enqueue errors that are thrown by the handler', () => {
+            const fn = jest.fn();
+            fn.mockImplementation(() => {
+                throw new Error('abc');
+            });
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                'testBot',
+                fn
+            );
+
+            const timer = context.getBotTimers(bot1.id)[0] as WatchBotTimer;
+
+            const result = timer.handler();
+
+            expect(result).toBeUndefined();
+            expect(context.dequeueErrors()).toEqual([new Error('abc')]);
         });
     });
 

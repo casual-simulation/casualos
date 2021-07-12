@@ -779,6 +779,9 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         return actions;
     }
 
+    // TODO: Improve to correctly handle when a non ScriptError object is added
+    // but contains symbol properties that reference the throwing bot and tag.
+    // The AuxRuntime should look for these error objects and create ScriptErrors for them.
     enqueueError(error: ScriptError | RanOutOfEnergyError): void {
         if (error instanceof RanOutOfEnergyError) {
             throw error;

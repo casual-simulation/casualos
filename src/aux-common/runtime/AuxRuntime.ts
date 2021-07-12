@@ -603,6 +603,13 @@ export class AuxRuntime
     private _sendOnBotsRemovedShouts(botIds: string[]) {
         if (botIds.length > 0) {
             try {
+                for (let bot of botIds) {
+                    const watchers = this._globalContext.getWatchersForBot(bot);
+                    for (let watcher of watchers) {
+                        watcher.handler();
+                    }
+                }
+
                 this._shout(
                     ON_ANY_BOTS_REMOVED_ACTION_NAME,
                     null,
@@ -638,6 +645,13 @@ export class AuxRuntime
                         true,
                         false
                     );
+
+                    const watchers = this._globalContext.getWatchersForBot(
+                        update.bot.id
+                    );
+                    for (let watcher of watchers) {
+                        watcher.handler();
+                    }
                 }
                 this._shout(
                     ON_ANY_BOTS_CHANGED_ACTION_NAME,
@@ -1016,6 +1030,9 @@ export class AuxRuntime
     }
 
     private _processUnbatchedErrors() {
+        // TODO: Improve to correctly handle when a non ScriptError object is added
+        // but contains symbol properties that reference the throwing bot and tag.
+        // The AuxRuntime should look for these error objects and create ScriptErrors for them.
         return this._globalContext.dequeueErrors();
     }
 

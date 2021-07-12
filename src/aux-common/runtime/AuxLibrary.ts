@@ -974,15 +974,31 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function watchBot() {
         let timerId = 0;
         return (options: TagSpecificApiOptions) =>
-            function (bot: Bot | string, handler: () => void) {
+            function (
+                bot: (Bot | string)[] | Bot | string,
+                handler: () => void
+            ) {
                 let id = timerId++;
-                context.recordBotTimer(options.bot.id, {
-                    type: 'watch_bot',
-                    timerId: id,
-                    botId: getID(bot),
-                    tag: options.tag,
-                    handler,
-                });
+                let botIds = Array.isArray(bot)
+                    ? bot.map((b) => getID(b))
+                    : [getID(bot)];
+                const finalHandler = () => {
+                    try {
+                        return handler();
+                    } catch (err) {
+                        context.enqueueError(err);
+                    }
+                };
+
+                for (let botId of botIds) {
+                    context.recordBotTimer(options.bot.id, {
+                        type: 'watch_bot',
+                        timerId: id,
+                        botId: botId,
+                        tag: options.tag,
+                        handler: finalHandler,
+                    });
+                }
                 return id;
             };
     }

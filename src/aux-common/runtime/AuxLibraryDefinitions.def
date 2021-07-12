@@ -2734,6 +2734,20 @@ declare global {
     function superShout(eventName: string, arg?: any): SuperShoutAction;
 
     /**
+     * Watches the given bot for changes and calls the given callback when the bot is changed or destroyed.
+     * Returns a number that can be passed to clearWatchBot() to stop watching the bot.
+     * @param bot The bot that should be watched for changes.
+     * @param callback The function that should be called when the bot is changed or destroyed.
+     */
+    function watchBot(bot: Bot | string, callback: () => void): number;
+
+    /**
+     * Cancels watching a bot using the given ID number that was returned from watchBot().
+     * @param watchId The ID number that should be used to cancel the watch callbacks.
+     */
+    function clearWatchBot(watchId: number): void;
+
+    /**
      * Sends a web request based on the given options.
      * @param options The options that specify where and what to send in the web request.
      *
