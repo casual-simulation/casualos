@@ -2734,18 +2734,32 @@ declare global {
     function superShout(eventName: string, arg?: any): SuperShoutAction;
 
     /**
-     * Watches the given bot for changes and calls the given callback when the bot is changed or destroyed.
+     * Watches the given bot or list of bots for changes and calls the given callback when the bot is changed or destroyed.
      * Returns a number that can be passed to clearWatchBot() to stop watching the bot.
-     * @param bot The bot that should be watched for changes.
+     * @param bot The bot or list of bots that should be watched for changes.
      * @param callback The function that should be called when the bot is changed or destroyed.
      */
-    function watchBot(bot: Bot | string, callback: () => void): number;
+    function watchBot(bot: (Bot | string)[] | Bot | string, callback: () => void): number;
 
     /**
      * Cancels watching a bot using the given ID number that was returned from watchBot().
      * @param watchId The ID number that should be used to cancel the watch callbacks.
      */
     function clearWatchBot(watchId: number): void;
+
+    /**
+     * Watches the given portal for when bots are added and removed from it and calls the given function.
+     * Returns a number that can be passed to clearWatchPortal() to stop watching the portal.
+     * @param portalId The ID of the portal to watch.
+     * @param callback The function that should be called when the portal changes.
+     */
+    function watchPortal(portalId: string, callback: () => void): number;
+
+    /**
+     * Cancels watching a portal using the given ID number that was returned from watchPortal().
+     * @param watchId The ID number that should be used to cancel the watch callbacks.
+     */
+    function clearWatchPortal(watchId: number): void;
 
     /**
      * Sends a web request based on the given options.

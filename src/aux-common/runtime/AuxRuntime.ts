@@ -49,6 +49,7 @@ import {
     openCustomPortal,
     ON_ERROR,
     action,
+    isBotInDimension,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -221,6 +222,10 @@ export class AuxRuntime
      */
     get currentState() {
         return this._compiledState;
+    }
+
+    get userId(): string {
+        return this._userId;
     }
 
     set userId(id: string) {
@@ -526,8 +531,12 @@ export class AuxRuntime
             newBotIds = addedBotIds;
         }
 
+        let removedBots = null as CompiledBot[];
         if (update.removedBots.length > 0) {
-            this._removeBotsFromState(update.removedBots, nextUpdate);
+            removedBots = this._removeBotsFromState(
+                update.removedBots,
+                nextUpdate
+            );
         }
 
         if (update.updatedBots.length > 0) {
@@ -551,6 +560,7 @@ export class AuxRuntime
         this._sendOnBotsAddedShouts(newBots, nextUpdate);
         this._sendOnBotsRemovedShouts(update.removedBots);
         this._sendOnBotsChangedShouts(updates);
+        this._triggerPortalChangedHandlers(newBots, removedBots, updates);
 
         return nextUpdate;
     }
@@ -673,6 +683,88 @@ export class AuxRuntime
         }
     }
 
+    private _triggerPortalChangedHandlers(
+        newBots: [CompiledBot, PrecalculatedBot][],
+        removedBots: CompiledBot[],
+        updates: UpdatedBot[]
+    ) {
+        const portals = this._globalContext.getWatchedPortals();
+
+        if (!hasValue(this.userId)) {
+            return;
+        }
+
+        if (portals.size <= 0) {
+            return;
+        }
+
+        if (
+            (!newBots || newBots.length <= 0) &&
+            (!removedBots || removedBots.length <= 0) &&
+            (!updates || updates.length <= 0)
+        ) {
+            return;
+        }
+
+        const userBot = this.currentState[this.userId];
+
+        if (!userBot) {
+            return;
+        }
+
+        for (let portal of portals) {
+            const dimension = userBot.values[portal];
+            let hasChange = false;
+            if (hasValue(dimension)) {
+                if (newBots && newBots.length > 0) {
+                    for (let [_, newBot] of newBots) {
+                        if (isBotInDimension(null, newBot, dimension)) {
+                            hasChange = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!hasChange && removedBots && removedBots.length > 0) {
+                    for (let bot of removedBots) {
+                        if (isBotInDimension(null, bot, dimension)) {
+                            hasChange = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!hasChange && updates && updates.length > 0) {
+                for (let update of updates) {
+                    if (hasValue(dimension)) {
+                        if (update.tags.includes(dimension)) {
+                            hasChange = true;
+                            break;
+                        }
+                    }
+
+                    if (
+                        update.bot.id === this.userId &&
+                        update.tags.includes(portal)
+                    ) {
+                        hasChange = true;
+                        break;
+                    }
+                }
+            }
+
+            if (hasChange) {
+                const watchers = this._globalContext.getWatchersForPortal(
+                    portal
+                );
+                for (let watcher of watchers) {
+                    watcher.handler();
+                }
+            }
+        }
+    }
+
     private _addBotsToState(bots: Bot[], nextUpdate: StateUpdatedEvent) {
         let newBots = [] as [CompiledBot, PrecalculatedBot][];
         let newBotIDs = new Set<string>();
@@ -739,11 +831,13 @@ export class AuxRuntime
         botIds: string[],
         nextUpdate: StateUpdatedEvent
     ) {
+        let removedBots: CompiledBot[] = [];
         for (let id of botIds) {
             const bot = this._compiledState[id];
             if (bot) {
                 removeFromContext(this._globalContext, [bot.script]);
             }
+            removedBots.push(bot);
             delete this._compiledState[id];
             const list = this._getFunctionNamesForBot(id, false);
             if (list) {
@@ -755,6 +849,8 @@ export class AuxRuntime
             nextUpdate.state[id] = null;
             nextUpdate.removedBots.push(id);
         }
+
+        return removedBots;
     }
 
     private _updateBotsWithState(

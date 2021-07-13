@@ -158,6 +158,11 @@ export interface AuxGlobalContext {
     getWatchersForPortal(id: string): WatchPortalTimer[];
 
     /**
+     * Gets the list of portal IDs that are being watched.
+     */
+    getWatchedPortals(): Set<string>;
+
+    /**
      * Cancels the timer with the given timer ID and bot ID.
      * @param id The ID of the bot.
      * @param timerId The ID of the timer.
@@ -660,6 +665,10 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             return watchers.slice();
         }
         return [];
+    }
+
+    getWatchedPortals(): Set<string> {
+        return new Set(this._portalWatcherMap.keys());
     }
 
     cancelAndRemoveBotTimer(
