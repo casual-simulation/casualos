@@ -230,6 +230,8 @@ import {
     MINI_PORTAL,
     RegisterCustomPortalOptions,
     registerCustomPortal,
+    setPortalOutput,
+    SetPortalOutputAction,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -742,6 +744,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 buildBundle,
                 registerPrefix,
                 register,
+                setOutput,
             },
 
             server: {
@@ -2394,6 +2397,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             task.taskId
         );
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sets the output of the given portal.
+     * @param portalId The ID of the portal.
+     * @param output The output that the portal should display.
+     */
+    function setOutput(portalId: string, output: any): SetPortalOutputAction {
+        const event = setPortalOutput(portalId, output);
+        return addAction(event);
     }
 
     /**

@@ -27,7 +27,8 @@ export class CustomPortalHelper {
                     backend = new HtmlPortalBackend(
                         portalId,
                         event.botId,
-                        this.helper
+                        this.helper,
+                        event.taskId
                     );
                 }
                 this.portals.set(portalId, backend);

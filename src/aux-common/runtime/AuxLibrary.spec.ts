@@ -156,6 +156,7 @@ import {
     botUpdated,
     enableCustomDragging,
     registerCustomPortal,
+    setPortalOutput,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -3182,6 +3183,18 @@ describe('AuxLibrary', () => {
                     context.tasks.size
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('portal.setOutput()', () => {
+            it('should return a SetPortalOutput action', () => {
+                const promise: any = library.api.portal.setOutput(
+                    'testPortal',
+                    'hahaha'
+                );
+                const expected = setPortalOutput('testPortal', 'hahaha');
+                expect(promise).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });

@@ -1,9 +1,11 @@
 import {
     action,
+    asyncResult,
     AuxRuntime,
     Bot,
     BotAction,
-    ON_PORTAL_SETUP,
+    hasValue,
+    ON_PORTAL_SETUP_ACTION_NAME,
     registerHtmlPortal,
     SerializableMutationRecord,
     updateHtmlPortal,
@@ -12,6 +14,7 @@ import { AuxHelper } from '../vm';
 import { PortalBackend } from './PortalBackend';
 import { v4 as uuid } from 'uuid';
 import undom from '@casual-simulation/undom';
+import { render } from 'preact';
 
 /**
  * Defines a class that is used to communicate HTML changes for a custom html portal.
@@ -22,6 +25,7 @@ export class HtmlPortalBackend implements PortalBackend {
 
     private _helper: AuxHelper;
     private _initTaskId: string;
+    private _registerTaskId: string | number;
     private _document: Document;
     private _mutationObserver: MutationObserver;
     private _nodes: Map<string, Node> = new Map<string, Node>();
@@ -52,9 +56,15 @@ export class HtmlPortalBackend implements PortalBackend {
 
     private _idCounter = 0;
 
-    constructor(portalId: string, botId: string, helper: AuxHelper) {
+    constructor(
+        portalId: string,
+        botId: string,
+        helper: AuxHelper,
+        registerTaskId?: string | number
+    ) {
         this.portalId = portalId;
         this.botId = botId;
+        this._registerTaskId = registerTaskId;
 
         this._helper = helper;
 
@@ -90,6 +100,18 @@ export class HtmlPortalBackend implements PortalBackend {
                         target.dispatchEvent(finalEvent);
                     }
                 }
+            } else if (event.type === 'set_portal_output') {
+                if (event.portalId === this.portalId) {
+                    if (typeof event.output === 'object') {
+                        let prevDocument = globalThis.document;
+                        try {
+                            globalThis.document = this._document;
+                            render(event.output, this._document.body);
+                        } finally {
+                            globalThis.document = prevDocument;
+                        }
+                    }
+                }
             }
         }
     }
@@ -115,10 +137,14 @@ export class HtmlPortalBackend implements PortalBackend {
 
     private _setupPortal() {
         this._helper.transaction(
-            action(ON_PORTAL_SETUP, [this.botId], undefined, {
+            action(ON_PORTAL_SETUP_ACTION_NAME, [this.botId], undefined, {
                 document: this._document,
             })
         );
+
+        if (hasValue(this._registerTaskId)) {
+            this._helper.transaction(asyncResult(this._registerTaskId, null));
+        }
     }
 
     private _processMutations(mutations: MutationRecord[]) {
@@ -155,7 +181,11 @@ export class HtmlPortalBackend implements PortalBackend {
 
         let result = {} as any;
         for (let prop in obj) {
-            if (obj.hasOwnProperty(prop) && !this._propDenylist.has(prop)) {
+            if (
+                obj.hasOwnProperty(prop) &&
+                !this._propDenylist.has(prop) &&
+                (!prop.startsWith('_') || prop === '__id')
+            ) {
                 result[prop] = (<any>obj)[prop];
             }
         }

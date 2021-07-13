@@ -101,7 +101,8 @@ export type ExtraActions =
     | EnablePOVAction
     | GoToTagAction
     | UpdateHtmlPortalAction
-    | HtmlPortalEventAction;
+    | HtmlPortalEventAction
+    | SetPortalOutputAction;
 
 /**
  * Defines a set of possible async action types.
@@ -2626,6 +2627,25 @@ export interface RegisterHtmlPortalAction extends AsyncAction {
      * The ID of the portal.
      */
     portalId: string;
+}
+
+/**
+ * Defines an event that notifies that the output of a portal should be updated with the given data.
+ */
+export interface SetPortalOutputAction extends Action {
+    type: 'set_portal_output';
+
+    /**
+     * The ID of the portal.
+     */
+    portalId: string;
+
+    /**
+     * The output that the portal should show.
+     */
+    output: any;
+
+    uncopiable: true;
 }
 
 /**
@@ -5619,6 +5639,23 @@ export function registerCustomPortal(
         botId,
         options,
         taskId,
+    };
+}
+
+/**
+ * Creates a SetPortalOutputAction.
+ * @param portalId The ID of the portal.
+ * @param output The output that the portal should display.
+ */
+export function setPortalOutput(
+    portalId: string,
+    output: any
+): SetPortalOutputAction {
+    return {
+        type: 'set_portal_output',
+        uncopiable: true,
+        portalId,
+        output,
     };
 }
 

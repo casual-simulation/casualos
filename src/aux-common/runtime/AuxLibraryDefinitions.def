@@ -213,7 +213,8 @@ declare type ExtraActions =
     | LocalFormAnimationAction
     | AddDropSnapTargetsAction
     | EnableCustomDraggingAction
-    | EnablePOVAction;
+    | EnablePOVAction
+    | SetPortalOutputAction;
 
 /**
  * Defines a set of possible async action types.
@@ -1983,6 +1984,26 @@ declare type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint | Snap
      outputMode?: CustomPortalOutputMode;
  }
 
+
+/**
+ * Defines an event that notifies that the output of a portal should be updated with the given data.
+ */
+ export interface SetPortalOutputAction extends Action {
+    type: 'set_portal_output';
+
+    /**
+     * The ID of the portal.
+     */
+    portalId: string;
+
+    /**
+     * The output that the portal should show.
+     */
+    output: any;
+
+    uncopiable: true;
+}
+
 /**
  * Defines an event that adds an entry point to a custom portal.
  */
@@ -3250,6 +3271,12 @@ declare global {
     function subtractMods(bot: any, ...diffs: Mod[]): void;
 
     /**
+     * Produces HTML from the given HTML strings and expressions.
+     * Best used with a tagged template string.
+     */
+    function html(strings: string[], ...expressions: any[]): any;
+
+    /**
      * Defines a set of functions that relate to common OS operations.
      */
     const os: {
@@ -3876,6 +3903,13 @@ declare global {
             bot: Bot | string,
             config: RegisterCustomPortalOptions
         ): Promise<void>;
+
+        /**
+         * Sets the output of the given portal.
+         * @param portal The ID of the portal.
+         * @param output The output that the portal should display.
+         */
+        setOutput(portalId: string, output: any): SetPortalOutputAction;
     };
 
     /**

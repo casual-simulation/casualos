@@ -1409,7 +1409,7 @@ export const ON_ERROR = 'onError';
 /**
  * The name of the event that is triggered when a portal is being configured.
  */
-export const ON_PORTAL_SETUP = 'onPortalSetup';
+export const ON_PORTAL_SETUP_ACTION_NAME = 'onPortalSetup';
 
 /**
  * The tag used to set the space that the tag portal operates in.
@@ -1768,6 +1768,7 @@ export const KNOWN_TAGS: string[] = [
     ON_SERVER_LEAVE_ACTION_NAME,
 
     ON_PORTAL_CHANGED_ACTION_NAME,
+    ON_PORTAL_SETUP_ACTION_NAME,
     'onKeyDown',
     'onKeyUp',
     ON_GRID_CLICK_ACTION_NAME,

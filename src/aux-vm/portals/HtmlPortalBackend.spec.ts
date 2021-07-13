@@ -9,10 +9,13 @@ import {
     htmlPortalEvent,
     iteratePartitions,
     MemoryPartition,
-    ON_PORTAL_SETUP,
+    ON_PORTAL_SETUP_ACTION_NAME,
     registerHtmlPortal,
+    setPortalOutput,
     stateUpdatedEvent,
+    toast,
     updateHtmlPortal,
+    UpdateHtmlPortalAction,
 } from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subscription } from 'rxjs';
@@ -20,6 +23,8 @@ import { HtmlPortalBackend } from './HtmlPortalBackend';
 import { v4 as uuid } from 'uuid';
 import { AuxHelper } from '../vm';
 import { skip, tap } from 'rxjs/operators';
+import { h } from 'preact';
+import htm from 'htm';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -119,7 +124,7 @@ describe('HtmlPortalBackend', () => {
             await helper.transaction(
                 botAdded(
                     createBot('myBot', {
-                        [ON_PORTAL_SETUP]: `@tags.rendered = true`,
+                        [ON_PORTAL_SETUP_ACTION_NAME]: `@tags.rendered = true`,
                         rendered: false,
                     })
                 )
@@ -147,7 +152,7 @@ describe('HtmlPortalBackend', () => {
             await helper.transaction(
                 botAdded(
                     createBot('myBot', {
-                        [ON_PORTAL_SETUP]: `@that.document.body.appendChild(that.document.createElement('h1'))`,
+                        [ON_PORTAL_SETUP_ACTION_NAME]: `@that.document.body.appendChild(that.document.createElement('h1'))`,
                     })
                 )
             );
@@ -194,7 +199,7 @@ describe('HtmlPortalBackend', () => {
             await helper.transaction(
                 botAdded(
                     createBot('myBot', {
-                        [ON_PORTAL_SETUP]: `@let h1 = that.document.createElement('h1'); h1.addEventListener('click', () => tags.clicked = true); that.document.body.appendChild(h1);`,
+                        [ON_PORTAL_SETUP_ACTION_NAME]: `@let h1 = that.document.createElement('h1'); h1.addEventListener('click', () => tags.clicked = true); that.document.body.appendChild(h1);`,
                         clicked: false,
                     })
                 )
@@ -220,6 +225,81 @@ describe('HtmlPortalBackend', () => {
             await waitAsync();
 
             expect(runtime.currentState['myBot'].values.clicked).toBe(true);
+        });
+
+        it('should emit an async result for the given register task ID', async () => {
+            const helper = createHelper({
+                shared: memory,
+            });
+            await helper.transaction(
+                botAdded(
+                    createBot('myBot', {
+                        [ON_PORTAL_SETUP_ACTION_NAME]: `@os.toast("Hit")`,
+                    })
+                )
+            );
+
+            uuidMock.mockReturnValueOnce('uuid');
+
+            let portal = new HtmlPortalBackend(
+                'testPortal',
+                'myBot',
+                helper,
+                'taskId'
+            );
+
+            await waitAsync();
+
+            portal.handleEvents([asyncResult('uuid', null)]);
+
+            await waitAsync();
+
+            expect(actions.slice(2)).toEqual([
+                toast('Hit'),
+                asyncResult('taskId', null),
+            ]);
+        });
+    });
+
+    describe('set_portal_output', () => {
+        it('should render the output as a preact component', async () => {
+            const helper = createHelper({
+                shared: memory,
+            });
+
+            uuidMock.mockReturnValueOnce('uuid');
+
+            let portal = new HtmlPortalBackend('testPortal', 'myBot', helper);
+
+            await waitAsync();
+
+            const html = htm.bind(h);
+
+            portal.handleEvents([asyncResult('uuid', null)]);
+            portal.handleEvents([
+                setPortalOutput('testPortal', html`<h1>Hello</h1>`),
+            ]);
+
+            await waitAsync();
+
+            expect(actions.length).toBe(2);
+            expect(actions[0]).toEqual(
+                registerHtmlPortal('testPortal', 'uuid')
+            );
+
+            const updateAction = actions[1] as UpdateHtmlPortalAction;
+
+            expect(updateAction).toMatchSnapshot();
+
+            expect(updateAction.type).toBe('update_html_portal');
+            expect(updateAction.portalId).toBe('testPortal');
+            expect(updateAction.updates.length).toBe(1);
+            expect(updateAction.updates[0].type).toBe('childList');
+            expect(updateAction.updates[0].addedNodes.length).toBe(1);
+            const h1Node = updateAction.updates[0].addedNodes[0] as any;
+            expect(h1Node.nodeName).toBe('H1');
+            expect(h1Node.childNodes.length).toBe(1);
+            expect(h1Node.childNodes[0].nodeName).toBe('#text');
         });
     });
 });
