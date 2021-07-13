@@ -100,12 +100,23 @@ export default function undom(): globalThis.Document {
     }
 
     class Text extends Node {
+        private _data: string;
+
         data: string;
 
         constructor(text: string) {
             super(3, '#text'); // TEXT_NODE
             // this.textContent = this.nodeValue = text;
-            this.data = text;
+            this._data = text;
+            Object.defineProperty(this, 'data', {
+                get: () => this._data,
+                set: (text) => {
+                    const oldValue = this._data;
+                    this._data = text;
+                    mutation(this, 'characterData', { oldValue });
+                },
+                enumerable: true,
+            });
         }
 
         get textContent() {
@@ -113,9 +124,7 @@ export default function undom(): globalThis.Document {
         }
 
         set textContent(value) {
-            let oldValue = this.data;
             this.data = value;
-            mutation(this, 'characterData', { oldValue });
         }
 
         get nodeValue() {
@@ -123,7 +132,7 @@ export default function undom(): globalThis.Document {
         }
 
         set nodeValue(value) {
-            this.textContent = value;
+            this.data = value;
         }
     }
 
