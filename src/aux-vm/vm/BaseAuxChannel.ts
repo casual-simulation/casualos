@@ -585,7 +585,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             }
         }
         this._portalHelper.handleEvents(e);
-        this._onLocalEvents.next(e);
+
+        const copiableEvents = e.filter((e) => !(<any>e).uncopiable);
+        this._onLocalEvents.next(copiableEvents);
     }
 
     protected _handleDeviceEvents(e: DeviceAction[]) {
