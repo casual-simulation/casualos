@@ -278,6 +278,10 @@ import './PerformanceNowPolyfill';
 import './BlobPolyfill';
 import { AuxDevice } from './AuxDevice';
 import { AuxVersion } from './AuxVersion';
+import { h } from 'preact';
+import htm from 'htm';
+
+const html = htm.bind(h);
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -650,6 +654,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             clearInterval,
             clearWatchBot,
             clearWatchPortal,
+
+            html,
 
             os: {
                 sleep,

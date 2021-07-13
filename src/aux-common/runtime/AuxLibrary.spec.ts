@@ -11952,4 +11952,22 @@ describe('AuxLibrary', () => {
             expect(result.numberOfActiveTimers).toBe(2);
         });
     });
+
+    describe('html', () => {
+        let bot1: RuntimeBot;
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('bot1', {
+                abc: 'def',
+            });
+            addToContext(context, bot1);
+        });
+
+        it('should return a HTML VDOM element', () => {
+            const result = library.api.html`
+                <h1>Hello, World!</h1>
+            `;
+
+            expect(result).toMatchSnapshot();
+        });
+    });
 });
