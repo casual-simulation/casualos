@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V2.0.3
+
+#### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Renamed `portal.open()` to `customPortal.open()`.
+-   Renamed `portal.buildBundle()` to `customPortal.buildBundle()`.
+
 ## V2.0.2
 
 #### Date: 7/6/2021
