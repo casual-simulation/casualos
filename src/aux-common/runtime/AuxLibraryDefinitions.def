@@ -3862,29 +3862,9 @@ declare global {
     };
 
     /**
-     * Defines a set of functions that relate to custom portal operations.
+     * Defines a set of functions that relate to portal operations.
      */
     const portal: {
-        /**
-         * Registers a custom portal with the given source code.
-         * @param portalId The ID of the portal.
-         * @param bot The bot that should be used to configure the portal.
-         * @param tagOrSource The tag or source code that the portal should be created from.
-         * @param options The options for the portal.
-         */
-        open(
-            portalId: string,
-            bot: Bot | string,
-            tagOrSource?: string,
-            options?: OpenCustomPortalOptions
-        ): Promise<void>;
-
-        /**
-         * Builds a script bundle from the given tag.
-         * @param tag The tag that the bundle should be created from.
-         */
-        buildBundle(tag: string): Promise<CodeBundle>;
-
         /**
          * Specifies that the given prefix should be interpreted as code.
          * @param prefix The prefix that code tags should start with.
@@ -3910,6 +3890,28 @@ declare global {
          * @param output The output that the portal should display.
          */
         setOutput(portalId: string, output: any): SetPortalOutputAction;
+    };
+
+    const customPortal: {
+        /**
+         * Registers a custom portal with the given source code.
+         * @param portalId The ID of the portal.
+         * @param bot The bot that should be used to configure the portal.
+         * @param tagOrSource The tag or source code that the portal should be created from.
+         * @param options The options for the portal.
+         */
+         open(
+            portalId: string,
+            bot: Bot | string,
+            tagOrSource?: string,
+            options?: OpenCustomPortalOptions
+        ): Promise<void>;
+
+        /**
+         * Builds a script bundle from the given tag.
+         * @param tag The tag that the bundle should be created from.
+         */
+        buildBundle(tag: string): Promise<CodeBundle>;
     };
 
     /**

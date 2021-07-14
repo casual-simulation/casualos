@@ -3126,9 +3126,70 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('customPortal.open()', () => {
+            it('should return a OpenCustomPortal action', () => {
+                const promise: any = library.api.customPortal.open(
+                    'test',
+                    bot1,
+                    'tag'
+                );
+                const expected = openCustomPortal(
+                    'test',
+                    bot1.id,
+                    'tag',
+                    {
+                        style: {},
+                        mode: 'tag',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should include the specified options', () => {
+                const promise: any = library.api.customPortal.open(
+                    'test',
+                    bot1,
+                    'tag',
+                    {
+                        style: {
+                            abc: 'def',
+                        },
+                        mode: 'source',
+                    }
+                );
+                const expected = openCustomPortal(
+                    'test',
+                    bot1.id,
+                    'tag',
+                    {
+                        style: {
+                            abc: 'def',
+                        },
+                        mode: 'source',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('portal.buildBundle()', () => {
             it('should return a BuildBundleAction', () => {
                 const promise: any = library.api.portal.buildBundle('tag');
+                const expected = buildBundle('tag', context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('customPortal.buildBundle()', () => {
+            it('should return a BuildBundleAction', () => {
+                const promise: any = library.api.customPortal.buildBundle(
+                    'tag'
+                );
                 const expected = buildBundle('tag', context.tasks.size);
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -3187,9 +3248,9 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('portal.setOutput()', () => {
+        describe('portal.reset()', () => {
             it('should return a SetPortalOutput action', () => {
-                const promise: any = library.api.portal.setOutput(
+                const promise: any = library.api.portal.reset(
                     'testPortal',
                     'hahaha'
                 );

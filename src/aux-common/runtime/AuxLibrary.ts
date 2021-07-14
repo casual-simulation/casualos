@@ -744,7 +744,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 buildBundle,
                 registerPrefix,
                 register,
-                setOutput,
+                reset,
+            },
+
+            customPortal: {
+                open: openCustomPortal,
+                buildBundle,
             },
 
             server: {
@@ -2404,7 +2409,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portalId The ID of the portal.
      * @param output The output that the portal should display.
      */
-    function setOutput(portalId: string, output: any): SetPortalOutputAction {
+    function reset(portalId: string, output: any): SetPortalOutputAction {
         const event = setPortalOutput(portalId, output);
         return addAction(event);
     }
