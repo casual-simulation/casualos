@@ -40,6 +40,7 @@ export class HtmlPortalBackend implements PortalBackend {
         '__handlers',
         '_component',
         '_componentConstructor',
+        'l',
     ]);
 
     /**
