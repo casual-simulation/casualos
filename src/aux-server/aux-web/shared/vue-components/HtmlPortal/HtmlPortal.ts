@@ -320,14 +320,24 @@ export default class HtmlPortal extends Vue {
     private _applyAttributes(mutation: any) {
         let { target, attributeName } = mutation;
         let val: any;
+        let hasAttribute = false;
 
         for (let p of target.attributes) {
             if (p.name === attributeName) {
                 val = p.value;
+                hasAttribute = true;
                 break;
             }
         }
-        (<Element>this._getNode(target))?.setAttribute(attributeName, val);
+        let node = <Element>this._getNode(target);
+
+        if (node) {
+            if (hasAttribute) {
+                node.setAttribute(attributeName, val);
+            } else {
+                node.removeAttribute(attributeName);
+            }
+        }
     }
 
     private _applyCharacterData(mutation: any) {
