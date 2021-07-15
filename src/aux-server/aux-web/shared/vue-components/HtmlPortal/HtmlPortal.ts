@@ -269,7 +269,11 @@ export default class HtmlPortal extends Vue {
         let queue = this._mutationQueue;
 
         for (let mutation of queue) {
-            this._applyMutation(mutation);
+            try {
+                this._applyMutation(mutation);
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         this._mutationQueue = [];
