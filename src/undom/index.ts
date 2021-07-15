@@ -177,6 +177,8 @@ export default function undom(): globalThis.Document {
     interface Attr {}
 
     class Element extends Node {
+        private _style: any;
+
         attributes: Attr[];
         style: any;
         __handlers: any;
@@ -187,7 +189,15 @@ export default function undom(): globalThis.Document {
             this.attributes = [];
             this.children = [];
             this.__handlers = {};
-            this.style = {};
+            this._style = {};
+            Object.defineProperty(this, 'style', {
+                get: () => this._style,
+                set: (style) => {
+                    this._style = style;
+                    this.setAttribute('style', style);
+                },
+                enumerable: true,
+            });
             Object.defineProperty(this, 'className', {
                 set: (val) => {
                     this.setAttribute('class', val);
@@ -219,7 +229,7 @@ export default function undom(): globalThis.Document {
                 ),
                 oldValue = attr && attr.value;
             if (!attr) this.attributes.push((attr = { ns, name }));
-            attr.value = String(value);
+            attr.value = String(value ?? '');
             mutation(this, 'attributes', {
                 attributeName: name,
                 attributeNamespace: ns,
