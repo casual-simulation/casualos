@@ -1829,6 +1829,54 @@ describe('AuxRuntime', () => {
                     expect(events).toEqual([[toast('Changed 1!')]]);
                 });
 
+                it('should call the handler when the bot for the given portal changes', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            user1: createBot('user1', {
+                                testPortal: 'home',
+                            }),
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                test: `@
+                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                `,
+                            }),
+                        })
+                    );
+                    runtime.userId = 'user1';
+
+                    runtime.shout('test');
+
+                    runtime.process([
+                        registerCustomPortal('testPortal', 'test1', {
+                            type: 'html',
+                        }),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(events.slice(1)).toEqual([]);
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: {
+                                tags: {
+                                    something: 'def',
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(flatMap(errors)).toEqual([]);
+
+                    expect(events.slice(1)).toEqual([[toast('Changed 1!')]]);
+                });
+
                 it('should call the handler when the portal tag on the user bot is added', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({

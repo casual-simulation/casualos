@@ -751,6 +751,11 @@ export class AuxRuntime
                         hasChange = true;
                         break;
                     }
+
+                    if (this._portalBots.get(portal) === update.bot.id) {
+                        hasChange = true;
+                        break;
+                    }
                 }
             }
 
