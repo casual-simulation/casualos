@@ -5907,6 +5907,165 @@ try {
 }
 ```
 
+## Portal Actions
+
+Portal actions are a way to register and display customized portals inside CasualOS.
+They work in tandem with listen tags and bots to create arbitrarily complex experiences.
+
+### `portal.register(portalId, bot, options)`
+
+Registers a portal with the given ID, bot, and options. Returns a promise that resolves when the portal has been registered.
+Can be called multiple times with new options to override previous options.
+
+Once setup, CasualOS will send a <TagLink tag='@onPortalSetup'/> whisper to the given bot.
+At this point, you can call <ActionLink action='portal.reset(portalId, content)'/> to set what the portal displays.
+
+CasualOS will also define a global variable `{portalId}Bot` that points to the given bot.
+
+The **first parameter** is the ID that the portal should have.
+
+The **second parameter** is the bot that should represent the portal. This is the bot that recieves the <TagLink tag='@onPortalSetup'/> whisper and
+should generally be in charge of calling <ActionLink action='portal.reset(portalId, content)'/>.
+
+The **third parameter** is an object that specifies options about the portal. It should have the following structure:
+
+```typescript
+let options: {
+    type: 'html';
+};
+```
+
+Currently, portals can only have one type: `html`. In the future, we'll add more types to facilitate different experience types.
+
+`html` means that <ActionLink action='portal.reset(portalId, content)'/> expects to recieve HTML objects.
+CasualOS includes a helper called `html` that can be used to make HTML objects out of a string.
+
+You can use it to convert a string into HTML by adding it before a string that uses backticks, like this:
+```typescript
+let htmlData = html`
+    <div>
+        <h1>Hello World</h1>
+    </div>
+`;
+```
+
+#### Examples:
+
+```typescript title='Setup a basic portal'
+await portal.register('basicPortal', thisBot, {
+    type: 'html',
+});
+
+portal.reset('basicPortal', html`
+    <h1>Hello World!</h1>
+`);
+```
+
+```typescript title='Setup a portal with a button'
+await portal.register('buttonPortal', thisBot, {
+    type: 'html',
+});
+
+portal.reset('buttonPortal', html`
+    <button onClick=${ () => os.toast("You clicked the button!")}>
+        Click Me!
+    </button>
+`);
+```
+
+```typescript title='Setup a portal with an input box'
+await portal.register('inputPortal', thisBot, {
+    type: 'html',
+});
+
+portal.reset('inputPortal', html`
+    <input onInput=${ (e) =>  tags.label = e.target.value }>
+`);
+```
+
+### `portal.reset(portalId, content)`
+
+Resets the portal with the given ID to display the given content.
+Each time this function is called, the portal will be cleared and will display the specified content.
+
+Used in tandem with <ActionLink action='portal.register(portalId, bot, options)'/> to create custom portals.
+
+The **first parameter** is the ID of the portal.
+
+The **second parameter** is the content that the portal should display.
+
+#### Examples:
+
+```typescript title='Display a header'
+portal.reset('myPortal', html`
+    <h1>Hello World!</h1>
+`);
+```
+
+```typescript title='Display a button'
+portal.reset('myPortal', html`
+    <button onClick=${ () => os.toast("You clicked the button!")}>
+        Click Me!
+    </button>
+`);
+```
+
+```typescript title='Display an input box'
+portal.reset('myPortal', html`
+    <input onInput=${ (e) => { tags.label = e.target.value } } />
+`);
+```
+
+
+### `portal.registerPrefix(prefix, options?)`
+
+Specifies that the given prefix should be used to indicate that the tag contains script content that can be used in a custom portal.
+Use this function to specify custom prefixes that function similarly to `@` or `🧬`.
+
+The **first parameter** is the prefix that should indicate that the rest of the tag value is a script.
+
+The **second parameter** is optional and is the options that should be used for the prefix. It is an object and should have the following structure:
+```typescript
+let options: {
+
+    /**
+     * The language that scripts with the prefix should be interpreted as.
+     * 
+     * "javascript" and "typescript" can be used for general purpose programming.
+     * 
+     * "jsx" and "tsx" are extensions to JavaScript and TypeScript which includes the ability
+     * to write HTML-like code that gets converted to JavaScript/TypeScript code.
+     * 
+     * "json" can be used to interpret the data as JSON (like 🧬).
+     * 
+     * "text" can be used to interpret the data as plain text.
+     * 
+     * Defaults to "javascript".
+     */
+    language?: "javascript" | "typescript" | "json" | "jsx" | "tsx" | "text";
+};
+```
+
+#### Examples:
+
+1. Add `📖` as an script prefix.
+```typescript
+await portal.registerPrefix("📖");
+```
+
+2. Register some arbitrary text as a prefix.
+```typescript
+await portal.registerPrefix("myPrefix");
+```
+
+3. Register a prefix as [JSX code](https://reactjs.org/docs/introducing-jsx.html).
+```typescript
+await portal.registerPrefix("🔺", {
+    language: "jsx"
+});
+```
+
+
 ## Custom Portal Actions
 
 Custom portals are a way to create your own portals inside CasualOS.
@@ -5930,12 +6089,12 @@ div.textContent = 'Hello, World!';
 Next, create an `onClick` tag and type this:
 ```
 @await portal.registerPrefix('📖');
-await portal.open('my-portal', null, '📖main');
+await customPortal.open('my-portal', null, '📖main');
 ```
 
 Finally, click the bot to start the portal. You should see a white frame appear over the top half of the screen and have the text "Hello, World!" in it.
 
-### `portal.open(portalId, bot, tag?, options?)`
+### `customPortal.open(portalId, bot, tag?, options?)`
 
 Registers a custom portal with the given ID and options. Returns a promise that resolves when the portal has been registered.
 Can be called multiple times with new options to override previous options.
@@ -5987,23 +6146,23 @@ let myConfigBot = create({
     space: "tempLocal",
     portalColor: "blue"
 });
-await portal.open("pagePortal", myConfigBot);
+await customPortal.open("pagePortal", myConfigBot);
 ```
 
 2. Open a custom portal for the `test` tag.
 ```typescript
-await portal.open("my-portal", null, "test");
+await customPortal.open("my-portal", null, "test");
 ```
 
 3. Open a custom portal for `test` tags that are prefixed with `🔺`.
 ```typescript
 await portal.registerPrefix('🔺');
-await portal.open("my-portal", null, "🔺test");
+await customPortal.open("my-portal", null, "🔺test");
 ```
 
 4. Open a custom portal with a custom CSS style.
 ```typescript
-await portal.open("my-portal", null, "test", {
+await customPortal.open("my-portal", null, "test", {
     style: {
         height: '30%'
     }
@@ -6012,60 +6171,12 @@ await portal.open("my-portal", null, "test", {
 
 5. Open a custom portal with some source code.
 ```typescript
-await portal.open("my-portal", null, `console.log("Hello, Portal!");`, {
+await customPortal.open("my-portal", null, `console.log("Hello, Portal!");`, {
     mode: "source"
 });
 ```
 
-### `portal.registerPrefix(prefix, options?)`
-
-Specifies that the given prefix should be used to indicate that the tag contains script content that can be used in a custom portal.
-Use this function to specify custom prefixes that function similarly to `@` or `🧬`.
-
-The **first parameter** is the prefix that should indicate that the rest of the tag value is a script.
-
-The **second parameter** is optional and is the options that should be used for the prefix. It is an object and should have the following structure:
-```typescript
-let options: {
-
-    /**
-     * The language that scripts with the prefix should be interpreted as.
-     * 
-     * "javascript" and "typescript" can be used for general purpose programming.
-     * 
-     * "jsx" and "tsx" are extensions to JavaScript and TypeScript which includes the ability
-     * to write HTML-like code that gets converted to JavaScript/TypeScript code.
-     * 
-     * "json" can be used to interpret the data as JSON (like 🧬).
-     * 
-     * "text" can be used to interpret the data as plain text.
-     * 
-     * Defaults to "javascript".
-     */
-    language?: "javascript" | "typescript" | "json" | "jsx" | "tsx" | "text";
-};
-```
-
-#### Examples:
-
-1. Add `📖` as an script prefix.
-```typescript
-await portal.registerPrefix("📖");
-```
-
-2. Register some arbitrary text as a prefix.
-```typescript
-await portal.registerPrefix("myPrefix");
-```
-
-3. Register a prefix as [JSX code](https://reactjs.org/docs/introducing-jsx.html).
-```typescript
-await portal.registerPrefix("🔺", {
-    language: "jsx"
-});
-```
-
-### `portal.buildBundle(tag)`
+### `customPortal.buildBundle(tag)`
 
 Builds a script bundle for the given tag and returns a promise that resolves when the build is done.
 This function is useful for getting the code that portals would use.
@@ -6110,7 +6221,7 @@ The **first parameter** is the tag that the bundle should be built from. This va
 
 1. Get a script bundle for the `test` tag.
 ```typescript
-const bundle = await portal.buildBundle("test");
+const bundle = await customPortal.buildBundle("test");
 ```
 
 ## Experimental Actions
