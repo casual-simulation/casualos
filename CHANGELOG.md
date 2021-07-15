@@ -29,6 +29,10 @@
     -   `watchPortal()` can be used to watch the given portal for changes and triggers the given callback function when the portal changes.
         -   Specifically, `watchPortal()` tracks when the portal is changed (by watching the portal tag on the `configBot`), when bots are added, removed, or updated in the portal, and when the portal bot changes.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where dragging a bot whose position was animated in tempLocal space would produce no visible effect.
+
 ## V2.0.2
 
 #### Date: 7/6/2021
