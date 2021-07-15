@@ -49,6 +49,8 @@ export class HtmlPortalBackend implements PortalBackend {
         'l',
     ]);
 
+    private _propCopyList: Set<string> = new Set(['style']);
+
     /**
      * The list of properties that should be converted to references.
      * Taken from https://github.com/developit/preact-worker-demo/blob/master/src/renderer/worker.js
@@ -210,7 +212,11 @@ export class HtmlPortalBackend implements PortalBackend {
                 !this._propDenylist.has(prop) &&
                 (!prop.startsWith('_') || prop === '__id')
             ) {
-                result[prop] = (<any>obj)[prop];
+                if (this._propCopyList.has(prop)) {
+                    result[prop] = { ...(<any>obj)[prop] };
+                } else {
+                    result[prop] = (<any>obj)[prop];
+                }
             }
         }
 

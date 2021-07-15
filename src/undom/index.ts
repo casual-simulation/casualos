@@ -201,17 +201,27 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         __handlers: any;
         namespace: string;
 
+        private _createStyleProxy(value: any): any {
+            return new Proxy(value, {
+                set: (target, key, value) => {
+                    let result = Reflect.set(target, key, value);
+                    this.setAttribute('style', this._style);
+                    return result;
+                },
+            });
+        }
+
         constructor(nodeType: number, nodeName: string) {
             super(nodeType || 1, nodeName); // ELEMENT_NODE
             this.attributes = [];
             this.children = [];
             this.__handlers = {};
-            this._style = {};
+            this._style = this._createStyleProxy({});
             Object.defineProperty(this, 'style', {
                 get: () => this._style,
                 set: (style) => {
-                    this._style = style;
-                    this.setAttribute('style', style);
+                    this._style = this._createStyleProxy(style);
+                    this.setAttribute('style', this._style);
                 },
                 enumerable: true,
             });
@@ -246,7 +256,8 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
                 ),
                 oldValue = attr && attr.value;
             if (!attr) this.attributes.push((attr = { ns, name }));
-            attr.value = String(value ?? '');
+            attr.value =
+                typeof value === 'object' ? { ...value } : String(value ?? '');
             mutation(this, 'attributes', {
                 attributeName: name,
                 attributeNamespace: ns,

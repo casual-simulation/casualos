@@ -40,6 +40,16 @@ export default class HtmlPortalContainer extends Vue {
             sub.add(
                 sim.localEvents.subscribe((e) => {
                     if (e.type === 'register_html_portal') {
+                        const index = this.portals.findIndex(
+                            (p) =>
+                                p.simulationId === sim.id &&
+                                p.portalId === e.portalId
+                        );
+
+                        if (index >= 0) {
+                            this.portals.splice(index, 1);
+                        }
+
                         this.portals = [
                             ...this.portals,
                             {

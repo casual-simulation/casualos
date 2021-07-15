@@ -208,7 +208,7 @@ export default class HtmlPortal extends Vue {
 
             if (skeleton.attributes) {
                 for (let attr of skeleton.attributes) {
-                    el.setAttribute(attr.name, attr.value);
+                    this._setElementAttribute(el, attr.name, attr.value);
                 }
             }
 
@@ -357,10 +357,26 @@ export default class HtmlPortal extends Vue {
 
         if (node) {
             if (hasAttribute) {
-                node.setAttribute(attributeName, val);
+                this._setElementAttribute(node, attributeName, val);
             } else {
                 node.removeAttribute(attributeName);
             }
+        }
+    }
+
+    private _setElementAttribute(
+        node: Element,
+        attributeName: string,
+        value: any
+    ) {
+        if (attributeName === 'style' && typeof value === 'object') {
+            for (let prop in value) {
+                if (value.hasOwnProperty(prop)) {
+                    (<any>node).style[prop] = value[prop];
+                }
+            }
+        } else {
+            node.setAttribute(attributeName, value);
         }
     }
 
