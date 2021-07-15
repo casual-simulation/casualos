@@ -302,7 +302,11 @@ export default class HtmlPortal extends Vue {
 
         if (removedNodes) {
             for (let node of removedNodes) {
-                parent.removeChild(this._getNode(node));
+                try {
+                    parent.removeChild(this._getNode(node));
+                } catch (err) {
+                    console.warn(err);
+                }
             }
         }
 
