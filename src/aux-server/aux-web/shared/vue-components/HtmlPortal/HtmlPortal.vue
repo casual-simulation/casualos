@@ -3,3 +3,4 @@
 </template>
 <script src="./HtmlPortal.ts"></script>
 <style src="./HtmlPortal.css" scoped></style>
+<style src="./HtmlPortalUnscoped.css"></style>
