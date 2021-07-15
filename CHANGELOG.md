@@ -9,6 +9,26 @@
 -   Renamed `portal.open()` to `customPortal.open()`.
 -   Renamed `portal.buildBundle()` to `customPortal.buildBundle()`.
 
+### :rocket: Improvements
+
+-   Added the `portal.register(name, bot, options)` and `portal.reset(name, content)` functions.
+    -   `portal.register()` works like `portal.open()` except that it takes an options object instead of a tag. The options object is required and should have the following properties:
+        -   `type` - The kind of content that the portal displays. At the moment, `html` is the only valid option and indicates that the portal will display HTML data.
+    -   Calling `portal.register()` will also make the given bot available globally as `{name}Bot`.
+    -   `portal.register()` returns a promise that resolves when the portal has been setup and can accept content. Additionally, `onPortalSetup` will be whispered to the bot that was specified for the portal.
+    -   `portal.reset()` is used to provide content to a portal. You can call this as many times as you want and the portal will only update when you call `portal.reset()` for it.
+-   Added the `html` string helper.
+    -   This can be used to produce HTML from a string for `portal.reset()` by placing it before a string that uses backtick characters (`` ` ``).
+    -   e.g.
+        ```javascript
+        let result = html`<h1>Hello, World!</h1>`;
+        ```
+    -   See the docs for more information.
+-   Added the `watchBot(bot, callback)` and `watchPortal(portal, callback)` helper functions.
+    -   `watchBot()` can be used to watch a given bot (or list of bots) for changes and triggers the given callback function when the bot(s) change.
+    -   `watchPortal()` can be used to watch the given portal for changes and triggers the given callback function when the portal changes.
+        -   Specifically, `watchPortal()` tracks when the portal is changed (by watching the portal tag on the `configBot`), when bots are added, removed, or updated in the portal, and when the portal bot changes.
+
 ## V2.0.2
 
 #### Date: 7/6/2021
