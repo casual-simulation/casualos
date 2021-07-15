@@ -16,7 +16,10 @@ import {
 import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import { BrowserSimulation } from '../../../../../aux-vm-browser';
-import { TARGET_INPUT_PROPERTIES } from '@casual-simulation/aux-vm/portals/HtmlPortalBackend';
+import {
+    HtmlPortalSetupResult,
+    TARGET_INPUT_PROPERTIES,
+} from '@casual-simulation/aux-vm/portals/HtmlPortalBackend';
 
 const DISALLOWED_NODE_NAMES = new Set(['script']);
 const DISALLOWED_EVENTS = new Set([
@@ -93,6 +96,7 @@ export default class HtmlPortal extends Vue {
         );
 
         const container = this.$refs.container as any;
+        let eventNames = [] as string[];
         for (let prop in container) {
             let eventName = prop.substring(2);
             if (
@@ -102,6 +106,7 @@ export default class HtmlPortal extends Vue {
                 (container[prop] === null ||
                     typeof container[prop] === 'function')
             ) {
+                eventNames.push(prop);
                 container.addEventListener(
                     eventName,
                     (e: Event) => {
@@ -113,7 +118,11 @@ export default class HtmlPortal extends Vue {
         }
 
         if (hasValue(this.taskId)) {
-            this._simulation.helper.transaction(asyncResult(this.taskId, null));
+            this._simulation.helper.transaction(
+                asyncResult(this.taskId, {
+                    builtinEvents: eventNames,
+                } as HtmlPortalSetupResult)
+            );
         }
     }
 

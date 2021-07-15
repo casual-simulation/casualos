@@ -22,10 +22,17 @@ const NODE_TYPES = {
 };
 */
 
+export interface UndomOptions {
+    /**
+     * The list of event names that should be added to the Node class.
+     */
+    builtinEvents?: string[];
+}
+
 /** Create a minimally viable DOM Document
  *	@returns {Document} document
  */
-export default function undom(): globalThis.Document {
+export default function undom(options: UndomOptions = {}): globalThis.Document {
     let observers = [] as MutationObserver[],
         pendingMutations = false;
 
@@ -134,6 +141,16 @@ export default function undom(): globalThis.Document {
             if (this.parentNode) {
                 this.parentNode.removeChild(this);
             }
+        }
+    }
+
+    if (options.builtinEvents) {
+        for (let event of options.builtinEvents) {
+            Object.defineProperty(Node.prototype, event, {
+                get: () => {},
+                set: () => {},
+                enumerable: true,
+            });
         }
     }
 
@@ -253,13 +270,12 @@ export default function undom(): globalThis.Document {
         }
 
         addEventListener(type: string, handler: (event: Event) => void) {
-            (
-                this.__handlers[toLower(type)] ||
-                (this.__handlers[toLower(type)] = [])
-            ).push(handler);
+            (this.__handlers[type] || (this.__handlers[type] = [])).push(
+                handler
+            );
         }
         removeEventListener(type: string, handler: (event: Event) => void) {
-            splice(this.__handlers[toLower(type)], handler, undefined, true);
+            splice(this.__handlers[type], handler, undefined, true);
         }
         dispatchEvent(event: Event) {
             let t = (event.currentTarget = this as Element),

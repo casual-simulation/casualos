@@ -18,6 +18,10 @@ import { render } from 'preact';
 
 export const TARGET_INPUT_PROPERTIES = ['value', 'checked'];
 
+export interface HtmlPortalSetupResult {
+    builtinEvents: string[];
+}
+
 /**
  * Defines a class that is used to communicate HTML changes for a custom html portal.
  */
@@ -72,14 +76,6 @@ export class HtmlPortalBackend implements PortalBackend {
         this._helper = helper;
 
         this._initTaskId = uuid();
-        let doc = (this._document = undom());
-
-        this._mutationObserver = new doc.defaultView.MutationObserver(
-            this._processMutations.bind(this)
-        );
-        this._mutationObserver.observe(doc, {
-            subtree: true,
-        });
         this._helper.transaction(
             registerHtmlPortal(this.portalId, this._initTaskId)
         );
@@ -89,7 +85,7 @@ export class HtmlPortalBackend implements PortalBackend {
         for (let event of events) {
             if (event.type === 'async_result') {
                 if (event.taskId === this._initTaskId) {
-                    this._setupPortal();
+                    this._setupPortal(event.result as HtmlPortalSetupResult);
                 }
             } else if (event.type === 'html_portal_event') {
                 if (event.portalId === this.portalId) {
@@ -108,7 +104,11 @@ export class HtmlPortalBackend implements PortalBackend {
                             }
                         }
 
-                        target.dispatchEvent(finalEvent);
+                        try {
+                            target.dispatchEvent(finalEvent);
+                        } catch (err) {
+                            console.error(err);
+                        }
                     }
                 }
             } else if (event.type === 'set_portal_output') {
@@ -118,6 +118,8 @@ export class HtmlPortalBackend implements PortalBackend {
                         try {
                             globalThis.document = this._document;
                             render(event.output, this._document.body);
+                        } catch (err) {
+                            console.error(err);
                         } finally {
                             globalThis.document = prevDocument;
                         }
@@ -146,7 +148,18 @@ export class HtmlPortalBackend implements PortalBackend {
         return this._nodes.get(id);
     }
 
-    private _setupPortal() {
+    private _setupPortal(result: HtmlPortalSetupResult) {
+        let doc = (this._document = undom({
+            builtinEvents: result?.builtinEvents,
+        }));
+
+        this._mutationObserver = new doc.defaultView.MutationObserver(
+            this._processMutations.bind(this)
+        );
+        this._mutationObserver.observe(doc, {
+            subtree: true,
+        });
+
         this._helper.transaction(
             action(ON_PORTAL_SETUP_ACTION_NAME, [this.botId], undefined, {
                 document: this._document,
