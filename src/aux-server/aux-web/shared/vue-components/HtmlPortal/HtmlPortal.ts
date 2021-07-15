@@ -16,7 +16,7 @@ import {
 import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import { BrowserSimulation } from '../../../../../aux-vm-browser';
-import { getNodeMajorVersion } from '../../../../../aux-custom-portals/monaco/typescript/lib/typescriptServices';
+import { TARGET_INPUT_PROPERTIES } from '@casual-simulation/aux-vm/portals/HtmlPortalBackend';
 
 const DISALLOWED_NODE_NAMES = new Set(['script']);
 const DISALLOWED_EVENTS = new Set([
@@ -132,7 +132,14 @@ export default class HtmlPortal extends Vue {
 
         let e: any = { type: event.type };
         if (event.target) {
-            e.target = (<any>event.target).__id;
+            const anyTarget = <any>event.target;
+            e.target = anyTarget.__id;
+
+            for (let prop of TARGET_INPUT_PROPERTIES) {
+                if (prop in anyTarget) {
+                    e[`_target${prop}`] = anyTarget[prop];
+                }
+            }
         }
 
         for (let prop in event) {

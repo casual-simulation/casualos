@@ -29,6 +29,8 @@ export default function undom(): globalThis.Document {
     let observers = [] as MutationObserver[],
         pendingMutations = false;
 
+    let pauseMutations = false;
+
     class Node {
         nodeType: number;
         nodeName: string;
@@ -42,8 +44,39 @@ export default function undom(): globalThis.Document {
             this.childNodes = [];
         }
 
+        get nextSibling(): Node {
+            if (this.parentNode) {
+                let siblingIndex = this.parentNode.childNodes.indexOf(this) + 1;
+                if (siblingIndex < this.parentNode.childNodes.length) {
+                    return this.parentNode.childNodes[siblingIndex];
+                }
+            }
+
+            return null;
+        }
+
+        get previousSibling(): Node {
+            if (this.parentNode) {
+                let siblingIndex = this.parentNode.childNodes.indexOf(this) - 1;
+                if (siblingIndex >= 0) {
+                    return this.parentNode.childNodes[siblingIndex];
+                }
+            }
+
+            return null;
+        }
+
         appendChild(child: Node) {
-            child.remove();
+            try {
+                if (child.parentNode === this) {
+                    pauseMutations = true;
+                }
+                child.remove();
+            } finally {
+                if (child.parentNode === this) {
+                    pauseMutations = false;
+                }
+            }
             child.parentNode = this;
             this.childNodes.push(child);
             if (this.children && child.nodeType === 1)
@@ -86,7 +119,9 @@ export default function undom(): globalThis.Document {
         }
         removeChild(child: Node) {
             let i = splice(this.childNodes, child);
-            if (child.nodeType === 1) splice(this.children, child);
+            if (child.nodeType === 1) {
+                splice(this.children, child);
+            }
             mutation(this, 'childList', {
                 addedNodes: [],
                 removedNodes: [child],
@@ -94,8 +129,11 @@ export default function undom(): globalThis.Document {
                 nextSibling: this.childNodes[i],
             });
         }
+
         remove() {
-            if (this.parentNode) this.parentNode.removeChild(this);
+            if (this.parentNode) {
+                this.parentNode.removeChild(this);
+            }
         }
     }
 
@@ -292,6 +330,9 @@ export default function undom(): globalThis.Document {
         type: string,
         record: Partial<MutationRecord>
     ) {
+        if (pauseMutations) {
+            return;
+        }
         record.target = target;
         record.type = type;
 

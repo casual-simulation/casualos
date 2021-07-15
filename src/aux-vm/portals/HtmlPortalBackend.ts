@@ -16,6 +16,8 @@ import { v4 as uuid } from 'uuid';
 import undom from '@casual-simulation/undom';
 import { render } from 'preact';
 
+export const TARGET_INPUT_PROPERTIES = ['value', 'checked'];
+
 /**
  * Defines a class that is used to communicate HTML changes for a custom html portal.
  */
@@ -98,6 +100,14 @@ export class HtmlPortalBackend implements PortalBackend {
                             target: target,
                             bubbles: true,
                         };
+
+                        for (let prop of TARGET_INPUT_PROPERTIES) {
+                            let eventPropName = `_target${prop}`;
+                            if (eventPropName in finalEvent) {
+                                (<any>target)[prop] = finalEvent[eventPropName];
+                            }
+                        }
+
                         target.dispatchEvent(finalEvent);
                     }
                 }
