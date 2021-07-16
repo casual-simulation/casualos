@@ -11,15 +11,15 @@ import {
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
-import HtmlPortal from '../HtmlPortal/HtmlPortal';
+import HtmlApp from '../HtmlApp/HtmlApp';
 
 @Component({
     components: {
-        'html-portal': HtmlPortal,
+        'html-app': HtmlApp,
     },
 })
-export default class HtmlPortalContainer extends Vue {
-    portals: PortalData[] = [];
+export default class HtmlAppContainer extends Vue {
+    apps: AppData[] = [];
 
     constructor() {
         super();
@@ -30,7 +30,7 @@ export default class HtmlPortalContainer extends Vue {
     // }
 
     created() {
-        this.portals = [];
+        this.apps = [];
     }
 
     mounted() {
@@ -39,23 +39,22 @@ export default class HtmlPortalContainer extends Vue {
 
             sub.add(
                 sim.localEvents.subscribe((e) => {
-                    if (e.type === 'register_html_portal') {
-                        const index = this.portals.findIndex(
+                    if (e.type === 'register_html_app') {
+                        const index = this.apps.findIndex(
                             (p) =>
-                                p.simulationId === sim.id &&
-                                p.portalId === e.portalId
+                                p.simulationId === sim.id && p.appId === e.appId
                         );
 
                         if (index >= 0) {
-                            this.portals.splice(index, 1);
+                            this.apps.splice(index, 1);
                         }
 
-                        this.portals = [
-                            ...this.portals,
+                        this.apps = [
+                            ...this.apps,
                             {
                                 type: 'html',
                                 simulationId: sim.id,
-                                portalId: e.portalId,
+                                appId: e.appId,
                                 taskId: e.taskId,
                             },
                         ];
@@ -68,9 +67,9 @@ export default class HtmlPortalContainer extends Vue {
     }
 }
 
-interface PortalData {
+interface AppData {
     type: 'html';
     simulationId: string;
-    portalId: string;
+    appId: string;
     taskId: number | string;
 }

@@ -228,10 +228,10 @@ import {
     EnableCustomDraggingAction,
     enableCustomDragging as calcEnableCustomDragging,
     MINI_PORTAL,
-    RegisterCustomPortalOptions,
-    registerCustomPortal,
-    setPortalOutput,
-    SetPortalOutputAction,
+    RegisterCustomAppOptions,
+    registerCustomApp,
+    setAppOutput,
+    SetAppOutputAction,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -737,19 +737,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPointerDirection,
                 getInputState,
                 getInputList,
+
+                registerExecutable: openCustomPortal,
+                buildExecutable: buildBundle,
+
+                registerTagPrefix: registerPrefix,
+
+                registerApp: registerApp,
+                compileApp: setAppContent,
             },
 
             portal: {
                 open: openCustomPortal,
                 buildBundle,
                 registerPrefix,
-                register,
-                reset,
-            },
-
-            customPortal: {
-                open: openCustomPortal,
-                buildBundle,
             },
 
             server: {
@@ -2389,13 +2390,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The bot that should be used to render the portal.
      * @param config The configuration for the portal.
      */
-    function register(
+    function registerApp(
         portalId: string,
         bot: Bot | string,
-        config: RegisterCustomPortalOptions
+        config: RegisterCustomAppOptions
     ): Promise<void> {
         const task = context.createTask();
-        const event = registerCustomPortal(
+        const event = registerCustomApp(
             portalId,
             getID(bot),
             config,
@@ -2409,8 +2410,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portalId The ID of the portal.
      * @param output The output that the portal should display.
      */
-    function reset(portalId: string, output: any): SetPortalOutputAction {
-        const event = setPortalOutput(portalId, output);
+    function setAppContent(portalId: string, output: any): SetAppOutputAction {
+        const event = setAppOutput(portalId, output);
         return addAction(event);
     }
 

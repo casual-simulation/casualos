@@ -100,9 +100,9 @@ export type ExtraActions =
     | EnableCustomDraggingAction
     | EnablePOVAction
     | GoToTagAction
-    | UpdateHtmlPortalAction
-    | HtmlPortalEventAction
-    | SetPortalOutputAction;
+    | UpdateHtmlAppAction
+    | HtmlAppEventAction
+    | SetAppOutputAction;
 
 /**
  * Defines a set of possible async action types.
@@ -200,8 +200,8 @@ export type AsyncActions =
     | SpeakTextAction
     | GetVoicesAction
     | GetGeolocationAction
-    | RegisterCustomPortalAction
-    | RegisterHtmlPortalAction;
+    | RegisterCustomAppAction
+    | RegisterHtmlAppAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2563,7 +2563,7 @@ export interface OpenCustomPortalAction extends AsyncAction {
 /**
  * The list of types of output that custom portals support.
  */
-export type CustomPortalOutputType = 'html';
+export type CustomAppOutputType = 'html';
 
 /**
  * the list of modes that custom portals support.
@@ -2575,13 +2575,13 @@ export type CustomPortalOutputMode = 'push' | 'pull';
  * This functions similarly to OpenCustomPortalAction except that it is more
  * tightly integrated into CasualOS.
  */
-export interface RegisterCustomPortalAction extends AsyncAction {
-    type: 'register_custom_portal';
+export interface RegisterCustomAppAction extends AsyncAction {
+    type: 'register_custom_app';
 
     /**
-     * The ID of the portal.
+     * The ID of the app.
      */
-    portalId: string;
+    appId: string;
 
     /**
      * The ID of the bot that should be used to configure the portal.
@@ -2591,57 +2591,45 @@ export interface RegisterCustomPortalAction extends AsyncAction {
     /**
      * Options that should be used to configure the custom portal.
      */
-    options: RegisterCustomPortalOptions;
+    options: RegisterCustomAppOptions;
 }
 
 /**
  * The options for a register custom portal action.
  */
-export interface RegisterCustomPortalOptions {
+export interface RegisterCustomAppOptions {
     /**
-     * The type of the custom portal.
+     * The type of the custom app.
      * Used by CasualOS to determine how CasualOS should consume the rendered output and display it.
      */
-    type: CustomPortalOutputType;
-
-    /**
-     * The kind of the custom portal.
-     * Used to make it easy to register multiple custom portals that rely on the same kind of renderers.
-     */
-    kind?: string;
-
-    /**
-     * The output mode of the custom portal.
-     * Used to make it easy to control how a custom portal recieves updates.
-     */
-    outputMode?: CustomPortalOutputMode;
+    type?: CustomAppOutputType;
 }
 
 /**
- * Defines an event that requests that a HTML portal be created.
+ * Defines an event that requests that a HTML app be created.
  */
-export interface RegisterHtmlPortalAction extends AsyncAction {
-    type: 'register_html_portal';
+export interface RegisterHtmlAppAction extends AsyncAction {
+    type: 'register_html_app';
 
     /**
-     * The ID of the portal.
+     * The ID of the app.
      */
-    portalId: string;
+    appId: string;
 }
 
 /**
- * Defines an event that notifies that the output of a portal should be updated with the given data.
+ * Defines an event that notifies that the output of a app should be updated with the given data.
  */
-export interface SetPortalOutputAction extends Action {
-    type: 'set_portal_output';
+export interface SetAppOutputAction extends Action {
+    type: 'set_app_output';
 
     /**
-     * The ID of the portal.
+     * The ID of the app.
      */
-    portalId: string;
+    appId: string;
 
     /**
-     * The output that the portal should show.
+     * The output that the app should show.
      */
     output: any;
 
@@ -2649,15 +2637,15 @@ export interface SetPortalOutputAction extends Action {
 }
 
 /**
- * Defines an event that notifies a custom portal has recieved a HTML update.
+ * Defines an event that notifies that a custom app has recieved a HTML update.
  */
-export interface UpdateHtmlPortalAction extends Action {
-    type: 'update_html_portal';
+export interface UpdateHtmlAppAction extends Action {
+    type: 'update_html_app';
 
     /**
-     * The ID of the portal.
+     * The ID of the app.
      */
-    portalId: string;
+    appId: string;
 
     /**
      * The array of mutation rectords that represent the changes to the HTML.
@@ -2668,13 +2656,13 @@ export interface UpdateHtmlPortalAction extends Action {
 /**
  * Defines an event that represents an event that was dispatched from HTML in a portal.
  */
-export interface HtmlPortalEventAction extends Action {
-    type: 'html_portal_event';
+export interface HtmlAppEventAction extends Action {
+    type: 'html_app_event';
 
     /**
-     * The ID of the portal.
+     * The ID of the app.
      */
-    portalId: string;
+    appId: string;
 
     /**
      * The event.
@@ -5622,20 +5610,20 @@ export function goToTag(
 }
 
 /**
- * Creates a RegisterCustomPortalAction.
- * @param portalId The Id of the portal.
+ * Creates a RegisterCustomAppAction.
+ * @param appId The Id of the app.
  * @param botId The ID of the bot.
  * @param options The options to use for the portal.
  */
-export function registerCustomPortal(
-    portalId: string,
+export function registerCustomApp(
+    appId: string,
     botId: string,
-    options: RegisterCustomPortalOptions,
+    options: RegisterCustomAppOptions,
     taskId?: string | number
-): RegisterCustomPortalAction {
+): RegisterCustomAppAction {
     return {
-        type: 'register_custom_portal',
-        portalId,
+        type: 'register_custom_app',
+        appId,
         botId,
         options,
         taskId,
@@ -5643,62 +5631,56 @@ export function registerCustomPortal(
 }
 
 /**
- * Creates a SetPortalOutputAction.
- * @param portalId The ID of the portal.
- * @param output The output that the portal should display.
+ * Creates a SetAppOutputAction.
+ * @param appId The ID of the app.
+ * @param output The output that the app should display.
  */
-export function setPortalOutput(
-    portalId: string,
-    output: any
-): SetPortalOutputAction {
+export function setAppOutput(appId: string, output: any): SetAppOutputAction {
     return {
-        type: 'set_portal_output',
+        type: 'set_app_output',
         uncopiable: true,
-        portalId,
+        appId,
         output,
     };
 }
 
 /**
- * Creates a RegisterHtmlPortalAction.
+ * Creates a RegisterHtmlAppAction.
  */
-export function registerHtmlPortal(
-    portalId: string,
+export function registerHtmlApp(
+    appId: string,
     taskId?: string | number
-): RegisterHtmlPortalAction {
+): RegisterHtmlAppAction {
     return {
-        type: 'register_html_portal',
-        portalId,
+        type: 'register_html_app',
+        appId,
         taskId,
     };
 }
 
 /**
- * Creates a UpdateHtmlPortalAction.
+ * Creates a UpdateHtmlAppAction.
  */
-export function updateHtmlPortal(
-    portalId: string,
+export function updateHtmlApp(
+    appId: string,
     updates: SerializableMutationRecord[]
-): UpdateHtmlPortalAction {
+): UpdateHtmlAppAction {
     return {
-        type: 'update_html_portal',
-        portalId,
+        type: 'update_html_app',
+        appId,
         updates,
     };
 }
 
 /**
- * Creates a HtmlPortalEventAction.
- * @param portalId The ID of the portal.
+ * Creates a HtmlAppEventAction.
+ * @param appId The ID of the portal.
  * @param event The event that occurred.
  */
-export function htmlPortalEvent(
-    portalId: string,
-    event: any
-): HtmlPortalEventAction {
+export function htmlAppEvent(appId: string, event: any): HtmlAppEventAction {
     return {
-        type: 'html_portal_event',
-        portalId,
+        type: 'html_app_event',
+        appId,
         event,
     };
 }

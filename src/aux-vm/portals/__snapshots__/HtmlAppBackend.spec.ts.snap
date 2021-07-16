@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`HtmlPortalBackend set_portal_output should render the output as a preact component 1`] = `
+exports[`HtmlAppBackend set_app_output should render the output as a preact component 1`] = `
 Object {
-  "portalId": "testPortal",
-  "type": "update_html_portal",
+  "appId": "testPortal",
+  "type": "update_html_app",
   "updates": Array [
     Object {
       "addedNodes": Array [

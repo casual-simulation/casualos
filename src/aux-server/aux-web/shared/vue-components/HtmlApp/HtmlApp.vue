@@ -1,6 +1,6 @@
 <template>
     <div class="html-container" ref="container"></div>
 </template>
-<script src="./HtmlPortal.ts"></script>
-<style src="./HtmlPortal.css" scoped></style>
+<script src="./HtmlApp.ts"></script>
+<style src="./HtmlApp.css" scoped></style>
 <style src="./HtmlPortalUnscoped.css"></style>

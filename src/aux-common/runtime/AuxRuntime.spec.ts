@@ -74,7 +74,7 @@ import {
     openCustomPortal,
     registerBuiltinPortal,
     isRuntimeBot,
-    registerCustomPortal,
+    registerCustomApp,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -1851,7 +1851,7 @@ describe('AuxRuntime', () => {
                     runtime.shout('test');
 
                     runtime.process([
-                        registerCustomPortal('testPortal', 'test1', {
+                        registerCustomApp('testPortal', 'test1', {
                             type: 'html',
                         }),
                     ]);
@@ -4160,7 +4160,7 @@ describe('AuxRuntime', () => {
             });
         });
 
-        describe('register_custom_portal', () => {
+        describe('register_custom_app', () => {
             it('should add a global variable for the bot included in a register portal action', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
@@ -4170,7 +4170,7 @@ describe('AuxRuntime', () => {
                     })
                 );
                 runtime.process([
-                    registerCustomPortal('page', 'test1', {
+                    registerCustomApp('page', 'test1', {
                         type: 'html',
                     }),
                 ]);
@@ -4192,7 +4192,7 @@ describe('AuxRuntime', () => {
                     })
                 );
                 runtime.process([
-                    registerCustomPortal('page', 'test1', {
+                    registerCustomApp('page', 'test1', {
                         type: 'html',
                     }),
                 ]);
@@ -4202,7 +4202,7 @@ describe('AuxRuntime', () => {
                 );
 
                 runtime.process([
-                    registerCustomPortal('page', 'test2', {
+                    registerCustomApp('page', 'test2', {
                         type: 'html',
                     }),
                 ]);
@@ -4221,7 +4221,7 @@ describe('AuxRuntime', () => {
                     })
                 );
                 runtime.process([
-                    registerCustomPortal('page', 'test1', {
+                    registerCustomApp('page', 'test1', {
                         type: 'html',
                     }),
                 ]);
@@ -4231,7 +4231,7 @@ describe('AuxRuntime', () => {
                 );
 
                 runtime.process([
-                    registerCustomPortal('page', null, {
+                    registerCustomApp('page', null, {
                         type: 'html',
                     }),
                 ]);
@@ -4248,7 +4248,7 @@ describe('AuxRuntime', () => {
                     })
                 );
                 runtime.process([
-                    registerCustomPortal('page', 'test1', {
+                    registerCustomApp('page', 'test1', {
                         type: 'html',
                     }),
                 ]);
@@ -4269,7 +4269,7 @@ describe('AuxRuntime', () => {
                 runtime.onActions.subscribe((a) => actions.push(...a));
 
                 runtime.process([
-                    registerCustomPortal('page', 'test1', {
+                    registerCustomApp('page', 'test1', {
                         type: 'html',
                     }),
                 ]);
@@ -4277,7 +4277,7 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(actions).toEqual([
-                    registerCustomPortal('page', 'test1', {
+                    registerCustomApp('page', 'test1', {
                         type: 'html',
                     }),
                 ]);

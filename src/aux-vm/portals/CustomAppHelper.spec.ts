@@ -7,21 +7,21 @@ import {
     createMemoryPartition,
     iteratePartitions,
     MemoryPartition,
-    registerCustomPortal,
+    registerCustomApp,
 } from '@casual-simulation/aux-common';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AuxHelper } from '../vm';
-import { CustomPortalHelper } from './CustomPortalHelper';
-import { HtmlPortalBackend } from './HtmlPortalBackend';
+import { CustomAppHelper } from './CustomAppHelper';
+import { HtmlAppBackend } from './HtmlAppBackend';
 
-describe('CustomPortalHelper', () => {
+describe('CustomAppHelper', () => {
     let runtime: AuxRuntime;
     let actions: BotAction[];
     let memory: MemoryPartition;
     let userId: string = 'user';
     let helper: AuxHelper;
-    let portals: CustomPortalHelper;
+    let portals: CustomAppHelper;
     let sub: Subscription;
 
     beforeEach(async () => {
@@ -54,7 +54,7 @@ describe('CustomPortalHelper', () => {
             shared: memory,
         });
 
-        portals = new CustomPortalHelper(helper);
+        portals = new CustomAppHelper(helper);
     });
 
     function createHelper(partitions: AuxPartitions) {
@@ -98,16 +98,16 @@ describe('CustomPortalHelper', () => {
     });
 
     describe('handleEvents()', () => {
-        describe('register_custom_portal', () => {
+        describe('register_custom_app', () => {
             it('should create a portal for the given event', () => {
                 portals.handleEvents([
-                    registerCustomPortal('htmlPortal', null, { type: 'html' }),
+                    registerCustomApp('htmlPortal', null, { type: 'html' }),
                 ]);
 
                 expect([...portals.portals.keys()]).toEqual(['htmlPortal']);
                 const values = [...portals.portals.values()];
 
-                expect(values[0]).toBeInstanceOf(HtmlPortalBackend);
+                expect(values[0]).toBeInstanceOf(HtmlAppBackend);
                 expect(values[0].botId).toBe(null);
             });
         });

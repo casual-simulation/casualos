@@ -5,13 +5,13 @@ import {
     Bot,
     BotAction,
     hasValue,
-    ON_PORTAL_SETUP_ACTION_NAME,
-    registerHtmlPortal,
+    ON_APP_SETUP_ACTION_NAME,
+    registerHtmlApp,
     SerializableMutationRecord,
-    updateHtmlPortal,
+    updateHtmlApp,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from '../vm';
-import { PortalBackend } from './PortalBackend';
+import { AppBackend } from './AppBackend';
 import { v4 as uuid } from 'uuid';
 import undom from '@casual-simulation/undom';
 import { render } from 'preact';
@@ -25,8 +25,8 @@ export interface HtmlPortalSetupResult {
 /**
  * Defines a class that is used to communicate HTML changes for a custom html portal.
  */
-export class HtmlPortalBackend implements PortalBackend {
-    portalId: string;
+export class HtmlAppBackend implements AppBackend {
+    appId: string;
     botId: string;
 
     private _helper: AuxHelper;
@@ -66,31 +66,29 @@ export class HtmlPortalBackend implements PortalBackend {
     private _idCounter = 0;
 
     constructor(
-        portalId: string,
+        appId: string,
         botId: string,
         helper: AuxHelper,
         registerTaskId?: string | number
     ) {
-        this.portalId = portalId;
+        this.appId = appId;
         this.botId = botId;
         this._registerTaskId = registerTaskId;
 
         this._helper = helper;
 
         this._initTaskId = uuid();
-        this._helper.transaction(
-            registerHtmlPortal(this.portalId, this._initTaskId)
-        );
+        this._helper.transaction(registerHtmlApp(this.appId, this._initTaskId));
     }
 
     handleEvents(events: BotAction[]): void {
         for (let event of events) {
             if (event.type === 'async_result') {
                 if (event.taskId === this._initTaskId) {
-                    this._setupPortal(event.result as HtmlPortalSetupResult);
+                    this._setupApp(event.result as HtmlPortalSetupResult);
                 }
-            } else if (event.type === 'html_portal_event') {
-                if (event.portalId === this.portalId) {
+            } else if (event.type === 'html_app_event') {
+                if (event.appId === this.appId) {
                     let target = this._getNode(event.event.target);
                     if (target && target.dispatchEvent) {
                         let finalEvent = {
@@ -113,8 +111,8 @@ export class HtmlPortalBackend implements PortalBackend {
                         }
                     }
                 }
-            } else if (event.type === 'set_portal_output') {
-                if (event.portalId === this.portalId) {
+            } else if (event.type === 'set_app_output') {
+                if (event.appId === this.appId) {
                     if (typeof event.output === 'object') {
                         let prevDocument = globalThis.document;
                         try {
@@ -150,7 +148,7 @@ export class HtmlPortalBackend implements PortalBackend {
         return this._nodes.get(id);
     }
 
-    private _setupPortal(result: HtmlPortalSetupResult) {
+    private _setupApp(result: HtmlPortalSetupResult) {
         let doc = (this._document = undom({
             builtinEvents: result?.builtinEvents,
         }));
@@ -163,7 +161,7 @@ export class HtmlPortalBackend implements PortalBackend {
         });
 
         this._helper.transaction(
-            action(ON_PORTAL_SETUP_ACTION_NAME, [this.botId], undefined, {
+            action(ON_APP_SETUP_ACTION_NAME, [this.botId], undefined, {
                 document: this._document,
             })
         );
@@ -182,9 +180,7 @@ export class HtmlPortalBackend implements PortalBackend {
             }
         }
 
-        this._helper.transaction(
-            updateHtmlPortal(this.portalId, mutations as any[])
-        );
+        this._helper.transaction(updateHtmlApp(this.appId, mutations as any[]));
     }
 
     // Mostly copied from https://github.com/developit/preact-worker-demo/blob/bac36d7c34b241e4c041bcbdefaef77bcc5f367e/src/renderer/worker.js#L81

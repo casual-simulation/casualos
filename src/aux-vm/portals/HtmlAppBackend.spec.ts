@@ -6,20 +6,20 @@ import {
     botAdded,
     createBot,
     createMemoryPartition,
-    htmlPortalEvent,
+    htmlAppEvent,
     iteratePartitions,
     MemoryPartition,
-    ON_PORTAL_SETUP_ACTION_NAME,
-    registerHtmlPortal,
-    setPortalOutput,
+    ON_APP_SETUP_ACTION_NAME,
+    registerHtmlApp,
+    setAppOutput,
     stateUpdatedEvent,
     toast,
-    updateHtmlPortal,
-    UpdateHtmlPortalAction,
+    updateHtmlApp,
+    UpdateHtmlAppAction,
 } from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subscription } from 'rxjs';
-import { HtmlPortalBackend } from './HtmlPortalBackend';
+import { HtmlAppBackend } from './HtmlAppBackend';
 import { v4 as uuid } from 'uuid';
 import { AuxHelper } from '../vm';
 import { skip, tap } from 'rxjs/operators';
@@ -29,7 +29,7 @@ import htm from 'htm';
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
 
-describe('HtmlPortalBackend', () => {
+describe('HtmlAppBackend', () => {
     let runtime: AuxRuntime;
     let actions: BotAction[];
     let memory: MemoryPartition;
@@ -103,28 +103,28 @@ describe('HtmlPortalBackend', () => {
         sub.unsubscribe();
     });
 
-    it('should send a register_html_portal event when created', async () => {
+    it('should send a register_html_app event when created', async () => {
         const helper = createHelper({
             shared: memory,
         });
         uuidMock.mockReturnValueOnce('uuid');
 
-        let portal = new HtmlPortalBackend('testPortal', 'myBot', helper);
+        let portal = new HtmlAppBackend('testPortal', 'myBot', helper);
 
         await waitAsync();
 
-        expect(actions).toEqual([registerHtmlPortal('testPortal', 'uuid')]);
+        expect(actions).toEqual([registerHtmlApp('testPortal', 'uuid')]);
     });
 
-    describe('onPortalSetup', () => {
-        it('should send a onRender action when the register_html_portal result is returned', async () => {
+    describe('onAppSetup', () => {
+        it('should send a onRender action when the register_html_app result is returned', async () => {
             const helper = createHelper({
                 shared: memory,
             });
             await helper.transaction(
                 botAdded(
                     createBot('myBot', {
-                        [ON_PORTAL_SETUP_ACTION_NAME]: `@tags.rendered = true`,
+                        [ON_APP_SETUP_ACTION_NAME]: `@tags.rendered = true`,
                         rendered: false,
                     })
                 )
@@ -132,7 +132,7 @@ describe('HtmlPortalBackend', () => {
 
             uuidMock.mockReturnValueOnce('uuid');
 
-            let portal = new HtmlPortalBackend('testPortal', 'myBot', helper);
+            let portal = new HtmlAppBackend('testPortal', 'myBot', helper);
 
             await waitAsync();
 
@@ -145,21 +145,21 @@ describe('HtmlPortalBackend', () => {
             expect(runtime.currentState['myBot'].values.rendered).toBe(true);
         });
 
-        it('should include the HTML document in the onPortalSetup action', async () => {
+        it('should include the HTML document in the onAppSetup action', async () => {
             const helper = createHelper({
                 shared: memory,
             });
             await helper.transaction(
                 botAdded(
                     createBot('myBot', {
-                        [ON_PORTAL_SETUP_ACTION_NAME]: `@that.document.body.appendChild(that.document.createElement('h1'))`,
+                        [ON_APP_SETUP_ACTION_NAME]: `@that.document.body.appendChild(that.document.createElement('h1'))`,
                     })
                 )
             );
 
             uuidMock.mockReturnValueOnce('uuid');
 
-            let portal = new HtmlPortalBackend('testPortal', 'myBot', helper);
+            let portal = new HtmlAppBackend('testPortal', 'myBot', helper);
 
             await waitAsync();
 
@@ -168,8 +168,8 @@ describe('HtmlPortalBackend', () => {
             await waitAsync();
 
             expect(actions.slice(1)).toEqual([
-                registerHtmlPortal('testPortal', 'uuid'),
-                updateHtmlPortal('testPortal', [
+                registerHtmlApp('testPortal', 'uuid'),
+                updateHtmlApp('testPortal', [
                     {
                         type: 'childList',
                         target: expect.objectContaining({
@@ -192,14 +192,14 @@ describe('HtmlPortalBackend', () => {
             ]);
         });
 
-        it('should call event listeners for the html_portal_event events', async () => {
+        it('should call event listeners for the html_app_event events', async () => {
             const helper = createHelper({
                 shared: memory,
             });
             await helper.transaction(
                 botAdded(
                     createBot('myBot', {
-                        [ON_PORTAL_SETUP_ACTION_NAME]: `@let h1 = that.document.createElement('h1'); h1.addEventListener('click', () => tags.clicked = true); that.document.body.appendChild(h1);`,
+                        [ON_APP_SETUP_ACTION_NAME]: `@let h1 = that.document.createElement('h1'); h1.addEventListener('click', () => tags.clicked = true); that.document.body.appendChild(h1);`,
                         clicked: false,
                     })
                 )
@@ -207,7 +207,7 @@ describe('HtmlPortalBackend', () => {
 
             uuidMock.mockReturnValueOnce('uuid');
 
-            let portal = new HtmlPortalBackend('testPortal', 'myBot', helper);
+            let portal = new HtmlAppBackend('testPortal', 'myBot', helper);
 
             await waitAsync();
 
@@ -216,7 +216,7 @@ describe('HtmlPortalBackend', () => {
             await waitAsync();
 
             portal.handleEvents([
-                htmlPortalEvent('testPortal', {
+                htmlAppEvent('testPortal', {
                     type: 'click',
                     target: '1',
                 }),
@@ -234,14 +234,14 @@ describe('HtmlPortalBackend', () => {
             await helper.transaction(
                 botAdded(
                     createBot('myBot', {
-                        [ON_PORTAL_SETUP_ACTION_NAME]: `@os.toast("Hit")`,
+                        [ON_APP_SETUP_ACTION_NAME]: `@os.toast("Hit")`,
                     })
                 )
             );
 
             uuidMock.mockReturnValueOnce('uuid');
 
-            let portal = new HtmlPortalBackend(
+            let portal = new HtmlAppBackend(
                 'testPortal',
                 'myBot',
                 helper,
@@ -261,7 +261,7 @@ describe('HtmlPortalBackend', () => {
         });
     });
 
-    describe('set_portal_output', () => {
+    describe('set_app_output', () => {
         it('should render the output as a preact component', async () => {
             const helper = createHelper({
                 shared: memory,
@@ -269,7 +269,7 @@ describe('HtmlPortalBackend', () => {
 
             uuidMock.mockReturnValueOnce('uuid');
 
-            let portal = new HtmlPortalBackend('testPortal', 'myBot', helper);
+            let portal = new HtmlAppBackend('testPortal', 'myBot', helper);
 
             await waitAsync();
 
@@ -277,22 +277,20 @@ describe('HtmlPortalBackend', () => {
 
             portal.handleEvents([asyncResult('uuid', null)]);
             portal.handleEvents([
-                setPortalOutput('testPortal', html`<h1>Hello</h1>`),
+                setAppOutput('testPortal', html`<h1>Hello</h1>`),
             ]);
 
             await waitAsync();
 
             expect(actions.length).toBe(2);
-            expect(actions[0]).toEqual(
-                registerHtmlPortal('testPortal', 'uuid')
-            );
+            expect(actions[0]).toEqual(registerHtmlApp('testPortal', 'uuid'));
 
-            const updateAction = actions[1] as UpdateHtmlPortalAction;
+            const updateAction = actions[1] as UpdateHtmlAppAction;
 
             expect(updateAction).toMatchSnapshot();
 
-            expect(updateAction.type).toBe('update_html_portal');
-            expect(updateAction.portalId).toBe('testPortal');
+            expect(updateAction.type).toBe('update_html_app');
+            expect(updateAction.appId).toBe('testPortal');
             expect(updateAction.updates.length).toBe(1);
             expect(updateAction.updates[0].type).toBe('childList');
             expect(updateAction.updates[0].addedNodes.length).toBe(1);

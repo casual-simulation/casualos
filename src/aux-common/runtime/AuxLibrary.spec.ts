@@ -155,8 +155,8 @@ import {
     disablePOV,
     botUpdated,
     enableCustomDragging,
-    registerCustomPortal,
-    setPortalOutput,
+    registerCustomApp,
+    setAppOutput,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -3126,9 +3126,9 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('customPortal.open()', () => {
+        describe('os.registerExecutable()', () => {
             it('should return a OpenCustomPortal action', () => {
-                const promise: any = library.api.customPortal.open(
+                const promise: any = library.api.os.registerExecutable(
                     'test',
                     bot1,
                     'tag'
@@ -3148,7 +3148,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should include the specified options', () => {
-                const promise: any = library.api.customPortal.open(
+                const promise: any = library.api.os.registerExecutable(
                     'test',
                     bot1,
                     'tag',
@@ -3185,11 +3185,9 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('customPortal.buildBundle()', () => {
+        describe('os.buildExecutable()', () => {
             it('should return a BuildBundleAction', () => {
-                const promise: any = library.api.customPortal.buildBundle(
-                    'tag'
-                );
+                const promise: any = library.api.os.buildExecutable('tag');
                 const expected = buildBundle('tag', context.tasks.size);
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -3226,16 +3224,46 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('portal.register()', () => {
+        describe('os.registerTagPrefix()', () => {
+            it('should return a RegisterPrefix action', () => {
+                const promise: any = library.api.os.registerTagPrefix('test');
+                const expected = registerPrefix(
+                    'test',
+                    {
+                        language: 'javascript',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', () => {
+                const promise: any = library.api.os.registerTagPrefix('test', {
+                    language: 'jsx',
+                });
+                const expected = registerPrefix(
+                    'test',
+                    {
+                        language: 'jsx',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.registerApp()', () => {
             it('should return a RegisterCustomPortal action', () => {
-                const promise: any = library.api.portal.register(
+                const promise: any = library.api.os.registerApp(
                     'testPortal',
                     bot1,
                     {
                         type: 'html',
                     }
                 );
-                const expected = registerCustomPortal(
+                const expected = registerCustomApp(
                     'testPortal',
                     bot1.id,
                     {
@@ -3248,13 +3276,13 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('portal.reset()', () => {
+        describe('os.compileApp()', () => {
             it('should return a SetPortalOutput action', () => {
-                const promise: any = library.api.portal.reset(
+                const promise: any = library.api.os.compileApp(
                     'testPortal',
                     'hahaha'
                 );
-                const expected = setPortalOutput('testPortal', 'hahaha');
+                const expected = setAppOutput('testPortal', 'hahaha');
                 expect(promise).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

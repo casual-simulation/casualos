@@ -8,10 +8,10 @@ import {
     tagsOnBot,
     hasValue,
     runScript,
-    UpdateHtmlPortalAction,
+    UpdateHtmlAppAction,
     SerializableMutationRecord,
     asyncResult,
-    htmlPortalEvent,
+    htmlAppEvent,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
@@ -19,7 +19,7 @@ import { BrowserSimulation } from '../../../../../aux-vm-browser';
 import {
     HtmlPortalSetupResult,
     TARGET_INPUT_PROPERTIES,
-} from '@casual-simulation/aux-vm/portals/HtmlPortalBackend';
+} from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
 
 const DISALLOWED_NODE_NAMES = new Set(['script']);
 const DISALLOWED_EVENTS = new Set([
@@ -58,9 +58,9 @@ const EVENT_OPTIONS = {
 @Component({
     components: {},
 })
-export default class HtmlPortal extends Vue {
+export default class HtmlApp extends Vue {
     @Prop() simulationId: string;
-    @Prop() portalId: string;
+    @Prop() appId: string;
     @Prop() taskId: string | number;
 
     private _simulation: BrowserSimulation;
@@ -86,10 +86,7 @@ export default class HtmlPortal extends Vue {
 
         this._sub.add(
             this._simulation.localEvents.subscribe((e) => {
-                if (
-                    e.type === 'update_html_portal' &&
-                    e.portalId === this.portalId
-                ) {
+                if (e.type === 'update_html_app' && e.appId === this.appId) {
                     this._updatePortal(e);
                 }
             })
@@ -164,7 +161,7 @@ export default class HtmlPortal extends Vue {
             }
         }
 
-        this._simulation.helper.transaction(htmlPortalEvent(this.portalId, e));
+        this._simulation.helper.transaction(htmlAppEvent(this.appId, e));
 
         // if (event.type === 'touchstart') {
         //     this._currentTouch = this._getTouch(event as TouchEvent);
@@ -226,7 +223,7 @@ export default class HtmlPortal extends Vue {
         return node;
     }
 
-    private _updatePortal(e: UpdateHtmlPortalAction) {
+    private _updatePortal(e: UpdateHtmlAppAction) {
         for (let m of e.updates) {
             this._queueMutation(m);
         }

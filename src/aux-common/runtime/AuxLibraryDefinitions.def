@@ -214,7 +214,7 @@ declare type ExtraActions =
     | AddDropSnapTargetsAction
     | EnableCustomDraggingAction
     | EnablePOVAction
-    | SetPortalOutputAction;
+    | SetAppOutputAction;
 
 /**
  * Defines a set of possible async action types.
@@ -1930,7 +1930,7 @@ declare type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint | Snap
 /**
  * The list of types of output that custom portals support.
  */
- export type CustomPortalOutputType = 'html';
+ export type CustomAppOutputType = 'html';
 
  /**
   * the list of modes that custom portals support.
@@ -1942,8 +1942,8 @@ declare type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint | Snap
   * This functions similarly to OpenCustomPortalAction except that it is more
   * tightly integrated into CasualOS.
   */
- export interface RegisterCustomPortalAction extends AsyncAction {
-     type: 'register_custom_portal';
+ export interface RegisterCustomAppAction extends AsyncAction {
+     type: 'register_custom_app';
  
      /**
       * The ID of the portal.
@@ -1958,18 +1958,18 @@ declare type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint | Snap
      /**
       * Options that should be used to configure the custom portal.
       */
-     options: RegisterCustomPortalOptions;
+     options: RegisterCustomAppOptions;
  }
  
  /**
   * The options for a register custom portal action.
   */
- export interface RegisterCustomPortalOptions {
+ export interface RegisterCustomAppOptions {
      /**
       * The type of the custom portal.
       * Used by CasualOS to determine how CasualOS should consume the rendered output and display it.
       */
-     type: CustomPortalOutputType;
+     type: CustomAppOutputType;
  
      /**
       * The kind of the custom portal.
@@ -1988,8 +1988,8 @@ declare type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint | Snap
 /**
  * Defines an event that notifies that the output of a portal should be updated with the given data.
  */
- export interface SetPortalOutputAction extends Action {
-    type: 'set_portal_output';
+ export interface SetAppOutputAction extends Action {
+    type: 'set_app_output';
 
     /**
      * The ID of the portal.
@@ -3859,59 +3859,57 @@ declare global {
          * Gets the name of the dimension that is used for the current user's mini portal.
          */
         getMiniPortalDimension(): string;
-    };
 
-    /**
-     * Defines a set of functions that relate to portal operations.
-     */
-    const portal: {
+        /**
+         * Registers a custom app for the given bot with the given options.
+         * Apps allow you add custom functionality to the CasualOS frontend and are deeply integrated into the CasualOS platform.
+         * 
+         * @param id The ID of the app.
+         * @param bot The bot that should be used to control the app.
+         * @param config The configuration for the app.
+         */
+         registerApp(
+            id: string,
+            bot: Bot | string,
+            config: RegisterCustomAppOptions
+        ): Promise<void>;
+
+        /**
+         * Sets the output of the given app.
+         * @param id The ID of the app.
+         * @param output The output that the app should display.
+         */
+        compileApp(id: string, output: any): SetAppOutputAction;
+
         /**
          * Specifies that the given prefix should be interpreted as code.
          * @param prefix The prefix that code tags should start with.
          * @param options The options that should be used for the prefix.
          */
-        registerPrefix(prefix: string, options?: RegisterPrefixOptions): Promise<void>;
+         registerTagPrefix(prefix: string, options?: RegisterPrefixOptions): Promise<void>;
 
         /**
-         * Registers a custom portal for the given bot with the given options.
-         * @param portalId The ID of the portal.
-         * @param bot The bot that should be used to render the portal.
-         * @param config The configuration for the portal.
+         * Registers a custom executable with the given source code.
+         * Executables can contain arbitrary code that can run anywhere.
+         * As such, executables allow you to add custom functionality that is not deeply integrated into the CasualOS platform.
+         * 
+         * @param id The ID of the executable.
+         * @param bot The bot that should be used to configure the executable.
+         * @param tagOrSource The tag or source code that the executable should be created from.
+         * @param options The options for the executable.
          */
-        register(
-            portalId: string,
-            bot: Bot | string,
-            config: RegisterCustomPortalOptions
-        ): Promise<void>;
-
-        /**
-         * Sets the output of the given portal.
-         * @param portal The ID of the portal.
-         * @param output The output that the portal should display.
-         */
-        setOutput(portalId: string, output: any): SetPortalOutputAction;
-    };
-
-    const customPortal: {
-        /**
-         * Registers a custom portal with the given source code.
-         * @param portalId The ID of the portal.
-         * @param bot The bot that should be used to configure the portal.
-         * @param tagOrSource The tag or source code that the portal should be created from.
-         * @param options The options for the portal.
-         */
-         open(
-            portalId: string,
+        registerExecutable(
+            id: string,
             bot: Bot | string,
             tagOrSource?: string,
             options?: OpenCustomPortalOptions
         ): Promise<void>;
 
         /**
-         * Builds a script bundle from the given tag.
+         * Builds an executable bundle from the given tag.
          * @param tag The tag that the bundle should be created from.
          */
-        buildBundle(tag: string): Promise<CodeBundle>;
+        buildExecutable(tag: string): Promise<CodeBundle>;
     };
 
     /**

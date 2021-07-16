@@ -5907,37 +5907,30 @@ try {
 }
 ```
 
-## Portal Actions
+## App Actions
 
-Portal actions are a way to register and display customized portals inside CasualOS.
-They work in tandem with listen tags and bots to create arbitrarily complex experiences.
+App actions are a way to register and display customized apps inside CasualOS.
+They work in tandem with listen tags and bots to create arbitrarily complex experiences that interface with the CasualOS frontend.
 
-### `portal.register(portalId, bot, options)`
+Apps work by utilizing a subset of HTML that works in the CasualOS middle-end and can be synced to the CasualOS front-end. This allows
+apps to leverage all the power of bots, tags, and tag masks while at the same time being able to seamlessly integrate with the front-end.
 
-Registers a portal with the given ID, bot, and options. Returns a promise that resolves when the portal has been registered.
+### `os.registerApp(appId, bot)`
+
+Registers a app with the given ID, bot, and options. Returns a promise that resolves when the app has been registered.
 Can be called multiple times with new options to override previous options.
 
-Once setup, CasualOS will send a <TagLink tag='@onPortalSetup'/> whisper to the given bot.
-At this point, you can call <ActionLink action='portal.reset(portalId, content)'/> to set what the portal displays.
+Once setup, CasualOS will send a <TagLink tag='@onAppSetup'/> whisper to the given bot.
+At this point, you can call <ActionLink action='os.compileApp(appId, content)'/> to set what the app displays.
 
-CasualOS will also define a global variable `{portalId}Bot` that points to the given bot.
+CasualOS will also define a global variable `{app}Bot` that points to the given bot.
 
-The **first parameter** is the ID that the portal should have.
+The **first parameter** is the ID that the app should have.
 
-The **second parameter** is the bot that should represent the portal. This is the bot that recieves the <TagLink tag='@onPortalSetup'/> whisper and
-should generally be in charge of calling <ActionLink action='portal.reset(portalId, content)'/>.
+The **second parameter** is the bot that should represent the app. This is the bot that recieves the <TagLink tag='@onAppSetup'/> whisper and
+should generally be in charge of calling <ActionLink action='os.compileApp(appId, content)'/>.
 
-The **third parameter** is an object that specifies options about the portal. It should have the following structure:
-
-```typescript
-let options: {
-    type: 'html';
-};
-```
-
-Currently, portals can only have one type: `html`. In the future, we'll add more types to facilitate different experience types.
-
-`html` means that <ActionLink action='portal.reset(portalId, content)'/> expects to recieve HTML objects.
+Apps work by running the HTML you give it by calling <ActionLink action='os.compileApp(appId, content)'/> with the HTML you want the app to show.
 CasualOS includes a helper called `html` that can be used to make HTML objects out of a string.
 
 You can use it to convert a string into HTML by adding it before a string that uses backticks, like this:
@@ -5951,59 +5944,53 @@ let htmlData = html`
 
 #### Examples:
 
-```typescript title='Setup a basic portal'
-await portal.register('basicPortal', thisBot, {
-    type: 'html',
-});
+```typescript title='Setup a basic app'
+await os.registerApp('basicApp', thisBot);
 
-portal.reset('basicPortal', html`
+os.compileApp('basicApp', html`
     <h1>Hello World!</h1>
 `);
 ```
 
-```typescript title='Setup a portal with a button'
-await portal.register('buttonPortal', thisBot, {
-    type: 'html',
-});
+```typescript title='Setup an app with a button'
+await os.registerApp('buttonApp', thisBot);
 
-portal.reset('buttonPortal', html`
+os.compileApp('buttonApp', html`
     <button onClick=${ () => os.toast("You clicked the button!")}>
         Click Me!
     </button>
 `);
 ```
 
-```typescript title='Setup a portal with an input box'
-await portal.register('inputPortal', thisBot, {
-    type: 'html',
-});
+```typescript title='Setup an app with an input box'
+await os.registerApp('inputApp', thisBot);
 
-portal.reset('inputPortal', html`
+os.compileApp('inputApp', html`
     <input onInput=${ (e) =>  tags.label = e.target.value }>
 `);
 ```
 
-### `portal.reset(portalId, content)`
+### `os.compileApp(appId, content)`
 
-Resets the portal with the given ID to display the given content.
-Each time this function is called, the portal will be cleared and will display the specified content.
+Compiles the app with the given ID to display the given content.
+Each time this function is called, the app will be cleared and will display the specified content.
 
-Used in tandem with <ActionLink action='portal.register(portalId, bot, options)'/> to create custom portals.
+Used in tandem with <ActionLink action='os.registerApp(appId, bot)'/> to create custom apps.
 
-The **first parameter** is the ID of the portal.
+The **first parameter** is the ID of the app.
 
-The **second parameter** is the content that the portal should display.
+The **second parameter** is the content that the app should display.
 
 #### Examples:
 
 ```typescript title='Display a header'
-portal.reset('myPortal', html`
+os.compileApp('myApp', html`
     <h1>Hello World!</h1>
 `);
 ```
 
 ```typescript title='Display a button'
-portal.reset('myPortal', html`
+os.compileApp('myApp', html`
     <button onClick=${ () => os.toast("You clicked the button!")}>
         Click Me!
     </button>
@@ -6011,15 +5998,115 @@ portal.reset('myPortal', html`
 ```
 
 ```typescript title='Display an input box'
-portal.reset('myPortal', html`
+os.compileApp('myApp', html`
     <input onInput=${ (e) => { tags.label = e.target.value } } />
 `);
 ```
 
+## Custom Executable Actions
 
-### `portal.registerPrefix(prefix, options?)`
+Custom executables are a way to create your own programs inside CasualOS.
+Unlike listen tags and apps, they provide the ability to interact directly with HTML and make it easy to reuse code.
+This makes them very powerful for creating experiences that you have full control over.
 
-Specifies that the given prefix should be used to indicate that the tag contains script content that can be used in a custom portal.
+Custom executbles are designed to work hand in hand with [JavaScript Modules](https://javascript.info/modules-intro) and they
+provide several features to make using other modules easy. In particular, Custom executables allow importing scripts from other tags and scripts from the web.
+
+#### Examples:
+
+1. A custom executable that displays "Hello, World!".
+
+First, create a bot and open it in the sheet. Then create the `main` tag and type the following into it:
+```
+📖const div = document.createElement('div');
+document.body.appendChild(div);
+div.textContent = 'Hello, World!';
+```
+
+Next, create an `onClick` tag and type this:
+```
+@await os.registerTagPrefix('📖');
+await os.registerExecutable('my-portal', null, '📖main');
+```
+
+Finally, click the bot to start the executable. You should see a white frame appear over the top half of the screen and have the text "Hello, World!" in it.
+
+### `os.registerExecutable(id, bot, tag?, options?)`
+
+Registers a custom executable with the given ID and options. Returns a promise that resolves when the executable has been registered.
+Can be called multiple times with new options to override previous options.
+
+After calling this function for an executable, CasualOS will look for tags that are referenced by the specified tag via import statements and produce a script bundle that is injected into the executable.
+Additionally, whenever one of those tags are changed the executable will be reloaded with the new bundle.
+
+CasualOS will also define a global variable `{id}Bot` that points to the given bot.
+
+The **first parameter** is the ID that the executable should have. This is used to distinguish executables from each other.
+
+The **second parameter** is the bot that should be used to configure the executable. You can provide `null` if you do not want the executable to have a config bot.
+
+The **third parameter** is optional and is the tag or source code that the executable should be loaded from.
+This value can be prefixed with a registered prefix to limit which tags can be used as entrypoints.
+The `mode` property of the options parameter determines whether this parameter should be a tag or some source code.
+
+The **fourth parameter** is optional and is the options that the executable should use. It is an object and should have the following structure:
+
+```typescript
+let options: {
+
+    /**
+     * The mode that the executable should operate in.
+     * 
+     * "Tag" indicates that second parameter should be interpreted
+     * as a tag name and that the executable should be loaded from that tag.
+     * 
+     * "source" indicates that the second parameter should be interpreted
+     * as some source code and the executable loaded directly from the source.
+     * 
+     * Defaults to "tag".
+     */
+    mode?: "tag" | "source";
+
+    /**
+     * The CSS styles that should be used for the executable.
+     */
+    style?: any;
+};
+```
+
+#### Examples:
+
+1. Open a custom executable for the `test` tag.
+```typescript
+await os.registerExecutable("my-exe", null, "test");
+```
+
+2. Open a custom executable for `test` tags that are prefixed with `🔺`.
+```typescript
+await os.registerTagPrefix('🔺');
+await os.registerExecutable("my-exe", null, "🔺test");
+```
+
+3. Open a custom executable with a custom CSS style.
+```typescript
+await os.registerExecutable("my-exe", null, "test", {
+    style: {
+        height: '30%'
+    }
+});
+```
+
+4. Open a custom executable with some source code.
+```typescript
+await os.registerExecutable("my-exe", null, `console.log("Hello, Executable!");`, {
+    mode: "source"
+});
+```
+
+
+### `os.registerTagPrefix(prefix, options?)`
+
+Specifies that the given prefix should be used to indicate that the tag contains script content.
 Use this function to specify custom prefixes that function similarly to `@` or `🧬`.
 
 The **first parameter** is the prefix that should indicate that the rest of the tag value is a script.
@@ -6050,136 +6137,25 @@ let options: {
 
 1. Add `📖` as an script prefix.
 ```typescript
-await portal.registerPrefix("📖");
+await os.registerTagPrefix("📖");
 ```
 
 2. Register some arbitrary text as a prefix.
 ```typescript
-await portal.registerPrefix("myPrefix");
+await os.registerTagPrefix("myPrefix");
 ```
 
 3. Register a prefix as [JSX code](https://reactjs.org/docs/introducing-jsx.html).
 ```typescript
-await portal.registerPrefix("🔺", {
+await os.registerTagPrefix("🔺", {
     language: "jsx"
 });
 ```
 
-
-## Custom Portal Actions
-
-Custom portals are a way to create your own portals inside CasualOS.
-Unlike listen tags, they provide the ability to interact directly with HTML and make it easy to reuse code.
-This makes them very powerful for creating experiences that you have full control over.
-
-Custom portals are designed to work hand in hand with [JavaScript Modules](https://javascript.info/modules-intro) and they
-provide several features to make using other modules easy. In particular, Custom portals allow importing scripts from other tags and scripts from the web.
-
-#### Examples:
-
-1. A custom portal that displays "Hello, World!".
-
-First, create a bot and open it in the sheet. Then create the `main` tag and type the following into it:
-```
-📖const div = document.createElement('div');
-document.body.appendChild(div);
-div.textContent = 'Hello, World!';
-```
-
-Next, create an `onClick` tag and type this:
-```
-@await portal.registerPrefix('📖');
-await customPortal.open('my-portal', null, '📖main');
-```
-
-Finally, click the bot to start the portal. You should see a white frame appear over the top half of the screen and have the text "Hello, World!" in it.
-
-### `customPortal.open(portalId, bot, tag?, options?)`
-
-Registers a custom portal with the given ID and options. Returns a promise that resolves when the portal has been registered.
-Can be called multiple times with new options to override previous options.
-
-After calling this function for a portal, CasualOS will look for tags that are referenced by the specified tag via import statements and produce a script bundle that is injected into the portal.
-Additionally, whenever one of those tags are changed the portal will be reloaded with the new bundle.
-
-CasualOS will also define a global variable `{portalId}Bot` that points to the given bot.
-This lets you override the default config bot for builtin portals like `pagePortal` and `tagPortal`.
-
-The **first parameter** is the ID that the portal should have. This is used to distinguish portals from each other.
-
-The **second parameter** is the bot that should be used to configure the portal. You can provide `null` if you do not want the portal to have a config bot.
-
-The **third parameter** is optional and is the tag or source code that the portal should be loaded from.
-This value can be prefixed with a registered prefix to limit which tags can be used as entrypoints.
-The `mode` property of the options parameter determines whether this parameter should be a tag or some source code.
-
-The **fourth parameter** is optional and is the options that the portal should use. It is an object and should have the following structure:
-
-```typescript
-let options: {
-
-    /**
-     * The mode that the portal should operate in.
-     * 
-     * "Tag" indicates that second parameter should be interpreted
-     * as a tag name and that the portal should be loaded from that tag.
-     * 
-     * "source" indicates that the second parameter should be interpreted
-     * as some source code and the portal loaded directly from the source.
-     * 
-     * Defaults to "tag".
-     */
-    mode?: "tag" | "source";
-
-    /**
-     * The CSS styles that should be used for the portal.
-     */
-    style?: any;
-};
-```
-
-#### Examples:
-
-1. Replace the `pagePortalBot` with a custom bot.
-```typescript
-let myConfigBot = create({
-    space: "tempLocal",
-    portalColor: "blue"
-});
-await customPortal.open("pagePortal", myConfigBot);
-```
-
-2. Open a custom portal for the `test` tag.
-```typescript
-await customPortal.open("my-portal", null, "test");
-```
-
-3. Open a custom portal for `test` tags that are prefixed with `🔺`.
-```typescript
-await portal.registerPrefix('🔺');
-await customPortal.open("my-portal", null, "🔺test");
-```
-
-4. Open a custom portal with a custom CSS style.
-```typescript
-await customPortal.open("my-portal", null, "test", {
-    style: {
-        height: '30%'
-    }
-});
-```
-
-5. Open a custom portal with some source code.
-```typescript
-await customPortal.open("my-portal", null, `console.log("Hello, Portal!");`, {
-    mode: "source"
-});
-```
-
-### `customPortal.buildBundle(tag)`
+### `os.buildExecutable(tag)`
 
 Builds a script bundle for the given tag and returns a promise that resolves when the build is done.
-This function is useful for getting the code that portals would use.
+This function is useful for getting the code that executables would use.
 
 Resolves with an object that has the following structure:
 ```typescript
@@ -6221,7 +6197,7 @@ The **first parameter** is the tag that the bundle should be built from. This va
 
 1. Get a script bundle for the `test` tag.
 ```typescript
-const bundle = await customPortal.buildBundle("test");
+const bundle = await os.buileExecutable("test");
 ```
 
 ## Experimental Actions
