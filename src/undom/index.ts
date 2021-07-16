@@ -111,6 +111,7 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
                         i++;
                     if (ref2) splice(this.children, ref, child);
                 }
+                child.parentNode = this;
                 mutation(this, 'childList', {
                     addedNodes: [child],
                     removedNodes: [],
@@ -126,6 +127,7 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         }
         removeChild(child: Node) {
             let i = splice(this.childNodes, child);
+            child.parentNode = null;
             if (child.nodeType === 1) {
                 splice(this.children, child);
             }
