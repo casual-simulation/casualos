@@ -6,19 +6,19 @@
 
 ### :boom: Breaking Changes
 
--   Renamed `portal.open()` to `customPortal.open()`.
--   Renamed `portal.buildBundle()` to `customPortal.buildBundle()`.
+-   Renamed `portal.open()` to `os.registerExecutable()`.
+-   Renamed `portal.buildBundle()` to `os.buildExecutable()`.
 
 ### :rocket: Improvements
 
--   Added the `portal.register(name, bot, options)` and `portal.reset(name, content)` functions.
-    -   `portal.register()` works like `portal.open()` except that it takes an options object instead of a tag. The options object is required and should have the following properties:
-        -   `type` - The kind of content that the portal displays. At the moment, `html` is the only valid option and indicates that the portal will display HTML data.
-    -   Calling `portal.register()` will also make the given bot available globally as `{name}Bot`.
-    -   `portal.register()` returns a promise that resolves when the portal has been setup and can accept content. Additionally, `onPortalSetup` will be whispered to the bot that was specified for the portal.
-    -   `portal.reset()` is used to provide content to a portal. You can call this as many times as you want and the portal will only update when you call `portal.reset()` for it.
+-   Added the `os.registerApp(name, bot)` and `os.compileApp(name, content)` functions.
+    -   `os.registerApp()` takes an app name and a bot and sets up a space for adding content to the CasualOS frontend.
+    -   Calling `os.registerApp()` will also make the given bot available globally as `{name}Bot`.
+    -   `os.registerApp()` returns a promise that resolves when the app has been setup and can accept content. Additionally, `onAppSetup` will be whispered to the bot that was specified for the app.
+    -   `os.compileApp()` is used to provide content to an app. You can call this as many times as you want and the app will only update when you call `os.compileApp()` for it.
+    -   See the docs for more information.
 -   Added the `html` string helper.
-    -   This can be used to produce HTML from a string for `portal.reset()` by placing it before a string that uses backtick characters (`` ` ``).
+    -   This can be used to produce HTML from a string for `os.compileApp()` by placing it before a string that uses backtick characters (`` ` ``).
     -   e.g.
         ```javascript
         let result = html`<h1>Hello, World!</h1>`;
