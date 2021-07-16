@@ -3,4 +3,4 @@
 </template>
 <script src="./HtmlApp.ts"></script>
 <style src="./HtmlApp.css" scoped></style>
-<style src="./HtmlPortalUnscoped.css"></style>
+<style src="./HtmlAppUnscoped.css"></style>
