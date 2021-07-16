@@ -19,7 +19,7 @@ module.exports = {
             },
             'actions'
         ],
-        'Custom Portals': ['custom-portals/introduction']
+        'Custom Executables': ['custom-executables/introduction']
     },
   };
   

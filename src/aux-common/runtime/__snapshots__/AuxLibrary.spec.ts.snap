@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AuxLibrary html should return a HTML VDOM element 1`] = `
+Object {
+  "__": null,
+  "__b": 0,
+  "__c": null,
+  "__d": undefined,
+  "__e": null,
+  "__h": null,
+  "__k": null,
+  "__v": 1,
+  "constructor": undefined,
+  "key": undefined,
+  "props": Object {
+    "children": "Hello, World!",
+  },
+  "ref": undefined,
+  "type": "h1",
+}
+`;

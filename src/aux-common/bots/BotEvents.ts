@@ -99,7 +99,10 @@ export type ExtraActions =
     | AddDropSnapTargetsAction
     | EnableCustomDraggingAction
     | EnablePOVAction
-    | GoToTagAction;
+    | GoToTagAction
+    | UpdateHtmlAppAction
+    | HtmlAppEventAction
+    | SetAppOutputAction;
 
 /**
  * Defines a set of possible async action types.
@@ -196,7 +199,9 @@ export type AsyncActions =
     | EndRecordingAction
     | SpeakTextAction
     | GetVoicesAction
-    | GetGeolocationAction;
+    | GetGeolocationAction
+    | RegisterCustomAppAction
+    | RegisterHtmlAppAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2553,6 +2558,137 @@ export interface OpenCustomPortalAction extends AsyncAction {
      * The options for the portal.
      */
     options: OpenCustomPortalOptions;
+}
+
+/**
+ * The list of types of output that custom portals support.
+ */
+export type CustomAppOutputType = 'html';
+
+/**
+ * the list of modes that custom portals support.
+ */
+export type CustomPortalOutputMode = 'push' | 'pull';
+
+/**
+ * Defines an event that registers a custom portal.
+ * This functions similarly to OpenCustomPortalAction except that it is more
+ * tightly integrated into CasualOS.
+ */
+export interface RegisterCustomAppAction extends AsyncAction {
+    type: 'register_custom_app';
+
+    /**
+     * The ID of the app.
+     */
+    appId: string;
+
+    /**
+     * The ID of the bot that should be used to configure the portal.
+     */
+    botId: string;
+
+    /**
+     * Options that should be used to configure the custom portal.
+     */
+    options: RegisterCustomAppOptions;
+}
+
+/**
+ * The options for a register custom portal action.
+ */
+export interface RegisterCustomAppOptions {
+    /**
+     * The type of the custom app.
+     * Used by CasualOS to determine how CasualOS should consume the rendered output and display it.
+     */
+    type?: CustomAppOutputType;
+}
+
+/**
+ * Defines an event that requests that a HTML app be created.
+ */
+export interface RegisterHtmlAppAction extends AsyncAction {
+    type: 'register_html_app';
+
+    /**
+     * The ID of the app.
+     */
+    appId: string;
+}
+
+/**
+ * Defines an event that notifies that the output of a app should be updated with the given data.
+ */
+export interface SetAppOutputAction extends Action {
+    type: 'set_app_output';
+
+    /**
+     * The ID of the app.
+     */
+    appId: string;
+
+    /**
+     * The output that the app should show.
+     */
+    output: any;
+
+    uncopiable: true;
+}
+
+/**
+ * Defines an event that notifies that a custom app has recieved a HTML update.
+ */
+export interface UpdateHtmlAppAction extends Action {
+    type: 'update_html_app';
+
+    /**
+     * The ID of the app.
+     */
+    appId: string;
+
+    /**
+     * The array of mutation rectords that represent the changes to the HTML.
+     */
+    updates: SerializableMutationRecord[];
+}
+
+/**
+ * Defines an event that represents an event that was dispatched from HTML in a portal.
+ */
+export interface HtmlAppEventAction extends Action {
+    type: 'html_app_event';
+
+    /**
+     * The ID of the app.
+     */
+    appId: string;
+
+    /**
+     * The event.
+     */
+    event: any;
+}
+
+/**
+ * Defines a mutation record that can be serialized and sent over a web worker pipe.
+ */
+export interface SerializableMutationRecord {
+    type: MutationRecord['type'];
+    target: NodeReference;
+    addedNodes: NodeReference[];
+    removedNodes: NodeReference[];
+
+    previousSibling: NodeReference;
+    nextSibling: NodeReference;
+
+    attributeName: string;
+    attributeNamespace: string;
+    oldValue: string;
+}
+
+export interface NodeReference {
+    __id: string;
 }
 
 /**
@@ -5470,5 +5606,81 @@ export function goToTag(
         botId,
         tag,
         space,
+    };
+}
+
+/**
+ * Creates a RegisterCustomAppAction.
+ * @param appId The Id of the app.
+ * @param botId The ID of the bot.
+ * @param options The options to use for the portal.
+ */
+export function registerCustomApp(
+    appId: string,
+    botId: string,
+    options: RegisterCustomAppOptions,
+    taskId?: string | number
+): RegisterCustomAppAction {
+    return {
+        type: 'register_custom_app',
+        appId,
+        botId,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a SetAppOutputAction.
+ * @param appId The ID of the app.
+ * @param output The output that the app should display.
+ */
+export function setAppOutput(appId: string, output: any): SetAppOutputAction {
+    return {
+        type: 'set_app_output',
+        uncopiable: true,
+        appId,
+        output,
+    };
+}
+
+/**
+ * Creates a RegisterHtmlAppAction.
+ */
+export function registerHtmlApp(
+    appId: string,
+    taskId?: string | number
+): RegisterHtmlAppAction {
+    return {
+        type: 'register_html_app',
+        appId,
+        taskId,
+    };
+}
+
+/**
+ * Creates a UpdateHtmlAppAction.
+ */
+export function updateHtmlApp(
+    appId: string,
+    updates: SerializableMutationRecord[]
+): UpdateHtmlAppAction {
+    return {
+        type: 'update_html_app',
+        appId,
+        updates,
+    };
+}
+
+/**
+ * Creates a HtmlAppEventAction.
+ * @param appId The ID of the portal.
+ * @param event The event that occurred.
+ */
+export function htmlAppEvent(appId: string, event: any): HtmlAppEventAction {
+    return {
+        type: 'html_app_event',
+        appId,
+        event,
     };
 }

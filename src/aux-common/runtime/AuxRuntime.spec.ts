@@ -74,6 +74,7 @@ import {
     openCustomPortal,
     registerBuiltinPortal,
     isRuntimeBot,
+    registerCustomApp,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -95,6 +96,7 @@ import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
 import { DeepObjectError } from './Utils';
 import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { merge } from '../utils';
+import { flatMap } from 'lodash';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -1061,6 +1063,82 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            it('should trigger all the watchers for the deleted bots', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'ghi',
+                        }),
+                        test3: createBot('test3', {
+                            abc: '999',
+                            test: `@
+                                watchBot('test1', () => { os.toast("Deleted 1!"); });
+                                watchBot('test2', () => { os.toast("Deleted 2!"); });
+                            `,
+                        }),
+                    })
+                );
+
+                runtime.shout('test');
+
+                await waitAsync();
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: null,
+                        test2: null,
+                    })
+                );
+
+                await waitAsync();
+
+                expect(flatMap(errors)).toEqual([]);
+
+                expect(events).toEqual([
+                    [toast('Deleted 1!'), toast('Deleted 2!')],
+                ]);
+            });
+
+            it('should not crash when a watcher errors', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'ghi',
+                        }),
+                        test3: createBot('test3', {
+                            abc: '999',
+                            test: `@
+                                watchBot('test1', () => { throw new Error('abc'); });
+                                watchBot('test2', () => { os.toast("Deleted 2!"); });
+                            `,
+                        }),
+                    })
+                );
+
+                runtime.shout('test');
+
+                await waitAsync();
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: null,
+                        test2: null,
+                    })
+                );
+
+                await waitAsync();
+
+                expect(flatMap(errors)).toEqual([new Error('abc')]);
+
+                expect(events).toEqual([[toast('Deleted 2!')]]);
+            });
+
             describe('onAnyBotsRemoved', () => {
                 it('should send a onAnyBotsRemoved event with the bot IDs that were removed', async () => {
                     runtime.stateUpdated(
@@ -1458,6 +1536,423 @@ describe('AuxRuntime', () => {
                     addedBots: [],
                     removedBots: [],
                     updatedBots: ['test'],
+                });
+            });
+
+            it('should trigger all the watchers for the changed bots', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'ghi',
+                        }),
+                        test3: createBot('test3', {
+                            abc: '999',
+                            test: `@
+                                watchBot('test1', () => { os.toast("Changed 1!"); });
+                                watchBot('test2', () => { os.toast("Changed 2!"); });
+                            `,
+                        }),
+                    })
+                );
+
+                runtime.shout('test');
+
+                await waitAsync();
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                abc: 'def1',
+                            },
+                        },
+                        test2: {
+                            tags: {
+                                abc: 'ghi1',
+                            },
+                        },
+                    })
+                );
+
+                await waitAsync();
+
+                expect(flatMap(errors)).toEqual([]);
+
+                expect(events).toEqual([
+                    [toast('Changed 1!'), toast('Changed 2!')],
+                ]);
+            });
+
+            it('should not crash when a watcher errors', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'ghi',
+                        }),
+                        test3: createBot('test3', {
+                            abc: '999',
+                            test: `@
+                                watchBot('test1', () => { throw new Error('abc'); });
+                                watchBot('test2', () => { os.toast("Changed 2!"); });
+                            `,
+                        }),
+                    })
+                );
+
+                runtime.shout('test');
+
+                await waitAsync();
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                abc: 'def1',
+                            },
+                        },
+                        test2: {
+                            tags: {
+                                abc: 'ghi1',
+                            },
+                        },
+                    })
+                );
+
+                await waitAsync();
+
+                expect(flatMap(errors)).toEqual([new Error('abc')]);
+
+                expect(events).toEqual([[toast('Changed 2!')]]);
+            });
+
+            describe('watchPortal()', () => {
+                it('should call the handler when a new bot is added to the portal', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            user1: createBot('user1', {
+                                testPortal: 'home',
+                            }),
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                home: true,
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                test: `@
+                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                `,
+                            }),
+                        })
+                    );
+                    runtime.userId = 'user1';
+
+                    runtime.shout('test');
+
+                    await waitAsync();
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                home: true,
+                            }),
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(flatMap(errors)).toEqual([]);
+
+                    expect(events).toEqual([[toast('Changed 1!')]]);
+                });
+
+                it('should call the handler when a bot that is in the portal is removed', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            user1: createBot('user1', {
+                                testPortal: 'home',
+                            }),
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                home: true,
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                test: `@
+                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                `,
+                            }),
+                        })
+                    );
+                    runtime.userId = 'user1';
+
+                    runtime.shout('test');
+
+                    await waitAsync();
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: null,
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(flatMap(errors)).toEqual([]);
+
+                    expect(events).toEqual([[toast('Changed 1!')]]);
+                });
+
+                it('should call the handler when an existing bot is added to the portal', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            user1: createBot('user1', {
+                                testPortal: 'home',
+                            }),
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                test: `@
+                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                `,
+                            }),
+                        })
+                    );
+                    runtime.userId = 'user1';
+
+                    runtime.shout('test');
+
+                    await waitAsync();
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: {
+                                tags: {
+                                    home: true,
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(flatMap(errors)).toEqual([]);
+
+                    expect(events).toEqual([[toast('Changed 1!')]]);
+                });
+
+                it('should call the handler when an existing bot is removed from the portal', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            user1: createBot('user1', {
+                                testPortal: 'home',
+                            }),
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                home: true,
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                test: `@
+                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                `,
+                            }),
+                        })
+                    );
+                    runtime.userId = 'user1';
+
+                    runtime.shout('test');
+
+                    await waitAsync();
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: {
+                                tags: {
+                                    home: null,
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(flatMap(errors)).toEqual([]);
+
+                    expect(events).toEqual([[toast('Changed 1!')]]);
+                });
+
+                it('should call the handler when the portal tag on the user bot changes', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            user1: createBot('user1', {
+                                testPortal: 'home',
+                            }),
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                test: `@
+                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                `,
+                            }),
+                        })
+                    );
+                    runtime.userId = 'user1';
+
+                    runtime.shout('test');
+
+                    await waitAsync();
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            user1: {
+                                tags: {
+                                    testPortal: 'abc',
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(flatMap(errors)).toEqual([]);
+
+                    expect(events).toEqual([[toast('Changed 1!')]]);
+                });
+
+                it('should call the handler when the bot for the given portal changes', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            user1: createBot('user1', {
+                                testPortal: 'home',
+                            }),
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                test: `@
+                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                `,
+                            }),
+                        })
+                    );
+                    runtime.userId = 'user1';
+
+                    runtime.shout('test');
+
+                    runtime.process([
+                        registerCustomApp('testPortal', 'test1', {
+                            type: 'html',
+                        }),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(events.slice(1)).toEqual([]);
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: {
+                                tags: {
+                                    something: 'def',
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(flatMap(errors)).toEqual([]);
+
+                    expect(events.slice(1)).toEqual([[toast('Changed 1!')]]);
+                });
+
+                it('should call the handler when the portal tag on the user bot is added', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            user1: createBot('user1', {}),
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                test: `@
+                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                `,
+                            }),
+                        })
+                    );
+                    runtime.userId = 'user1';
+
+                    runtime.shout('test');
+
+                    await waitAsync();
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            user1: {
+                                tags: {
+                                    testPortal: 'abc',
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(flatMap(errors)).toEqual([]);
+
+                    expect(events).toEqual([[toast('Changed 1!')]]);
+                });
+
+                it('should call the handler when the portal tag on the user bot is removed', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            user1: createBot('user1', {
+                                testPortal: 'home',
+                            }),
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                test: `@
+                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                `,
+                            }),
+                        })
+                    );
+                    runtime.userId = 'user1';
+
+                    runtime.shout('test');
+
+                    await waitAsync();
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            user1: {
+                                tags: {
+                                    testPortal: null,
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(flatMap(errors)).toEqual([]);
+
+                    expect(events).toEqual([[toast('Changed 1!')]]);
                 });
             });
 
@@ -3213,6 +3708,22 @@ describe('AuxRuntime', () => {
             expect(events.slice(1)).toEqual([[toast('abc')]]);
         });
 
+        it('should emit async result actions that are not handled by the context', async () => {
+            runtime.process([asyncResult(99, null)]);
+
+            await waitAsync();
+
+            expect(events).toEqual([[asyncResult(99, null)]]);
+        });
+
+        it('should emit async error actions that are not handled by the context', async () => {
+            runtime.process([asyncError(99, 'error')]);
+
+            await waitAsync();
+
+            expect(events).toEqual([[asyncError(99, 'error')]]);
+        });
+
         it('should support mapping bots in async actions results', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
@@ -3312,6 +3823,22 @@ describe('AuxRuntime', () => {
             await waitAsync();
 
             expect(events.slice(1)).toEqual([[toast('bad')]]);
+        });
+
+        it('should emit device result actions that are not handled by the context', async () => {
+            runtime.process([deviceResult(null, 123, 'task2')]);
+
+            await waitAsync();
+
+            expect(events).toEqual([[deviceResult(null, 123, 'task2')]]);
+        });
+
+        it('should emit device error actions that are not handled by the context', async () => {
+            runtime.process([deviceError(null, 'error', 'task2')]);
+
+            await waitAsync();
+
+            expect(events).toEqual([[deviceError(null, 'error', 'task2')]]);
         });
 
         it('should support using await for async actions', async () => {
@@ -3629,6 +4156,130 @@ describe('AuxRuntime', () => {
 
                 expect(actions).toEqual([
                     openCustomPortal('page', 'test1', 'myTag', {}),
+                ]);
+            });
+        });
+
+        describe('register_custom_app', () => {
+            it('should add a global variable for the bot included in a register portal action', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                runtime.process([
+                    registerCustomApp('page', 'test1', {
+                        type: 'html',
+                    }),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+            });
+
+            it('should override previous variables', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'other',
+                        }),
+                    })
+                );
+                runtime.process([
+                    registerCustomApp('page', 'test1', {
+                        type: 'html',
+                    }),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+
+                runtime.process([
+                    registerCustomApp('page', 'test2', {
+                        type: 'html',
+                    }),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test2']
+                );
+            });
+
+            it('should remove the variable if given no bot to use for configuration', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                runtime.process([
+                    registerCustomApp('page', 'test1', {
+                        type: 'html',
+                    }),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+
+                runtime.process([
+                    registerCustomApp('page', null, {
+                        type: 'html',
+                    }),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBeUndefined();
+            });
+
+            it('should remove the global variables that were created by the runtime', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                runtime.process([
+                    registerCustomApp('page', 'test1', {
+                        type: 'html',
+                    }),
+                ]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+
+                runtime.unsubscribe();
+
+                expect(
+                    Object.getOwnPropertyDescriptor(globalThis, 'pageBot')
+                ).toBeUndefined();
+            });
+
+            it('should emit register portal actions', async () => {
+                let actions = [] as BotAction[];
+                runtime.onActions.subscribe((a) => actions.push(...a));
+
+                runtime.process([
+                    registerCustomApp('page', 'test1', {
+                        type: 'html',
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(actions).toEqual([
+                    registerCustomApp('page', 'test1', {
+                        type: 'html',
+                    }),
                 ]);
             });
         });

@@ -622,6 +622,22 @@ describe('BaseAuxChannel', () => {
             expect(localEvents).toEqual([toast('abc')]);
         });
 
+        it('should not send events that are uncopiable', async () => {
+            let localEvents = [] as Action[];
+            channel.onLocalEvents.subscribe((e) => localEvents.push(...e));
+
+            let toasted = toast('abc');
+            toasted.uncopiable = true;
+
+            await channel.initAndWait();
+
+            await channel.sendEvents([toasted]);
+
+            await waitAsync();
+
+            expect(localEvents).toEqual([]);
+        });
+
         it('should wait for the initial state before running actions', async () => {
             // Setup a custom subject for all the onBotsAdded events
             // this lets us control when the memory partition first sends a state

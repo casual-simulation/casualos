@@ -1,5 +1,39 @@
 # CasualOS Changelog
 
+## V2.0.3
+
+#### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Renamed `portal.open()` to `os.registerExecutable()`.
+-   Renamed `portal.buildBundle()` to `os.buildExecutable()`.
+-   Renamed `portal.registerPrefix()` to `os.registerTagPrefix()`.
+
+### :rocket: Improvements
+
+-   Added the `os.registerApp(name, bot)` and `os.compileApp(name, content)` functions.
+    -   `os.registerApp()` takes an app name and a bot and sets up a space for adding content to the CasualOS frontend.
+    -   Calling `os.registerApp()` will also make the given bot available globally as `{name}Bot`.
+    -   `os.registerApp()` returns a promise that resolves when the app has been setup and can accept content. Additionally, `onAppSetup` will be whispered to the bot that was specified for the app.
+    -   `os.compileApp()` is used to provide content to an app. You can call this as many times as you want and the app will only update when you call `os.compileApp()` for it.
+    -   See the docs for more information.
+-   Added the `html` string helper.
+    -   This can be used to produce HTML from a string for `os.compileApp()` by placing it before a string that uses backtick characters (`` ` ``).
+    -   e.g.
+        ```javascript
+        let result = html`<h1>Hello, World!</h1>`;
+        ```
+    -   See the docs for more information.
+-   Added the `watchBot(bot, callback)` and `watchPortal(portal, callback)` helper functions.
+    -   `watchBot()` can be used to watch a given bot (or list of bots) for changes and triggers the given callback function when the bot(s) change.
+    -   `watchPortal()` can be used to watch the given portal for changes and triggers the given callback function when the portal changes.
+        -   Specifically, `watchPortal()` tracks when the portal is changed (by watching the portal tag on the `configBot`), when bots are added, removed, or updated in the portal, and when the portal bot changes.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where dragging a bot whose position was animated in tempLocal space would produce no visible effect.
+
 ## V2.0.2
 
 #### Date: 7/6/2021

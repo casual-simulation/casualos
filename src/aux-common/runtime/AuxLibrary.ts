@@ -228,6 +228,10 @@ import {
     EnableCustomDraggingAction,
     enableCustomDragging as calcEnableCustomDragging,
     MINI_PORTAL,
+    RegisterCustomAppOptions,
+    registerCustomApp,
+    setAppOutput,
+    SetAppOutputAction,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -276,6 +280,10 @@ import './PerformanceNowPolyfill';
 import './BlobPolyfill';
 import { AuxDevice } from './AuxDevice';
 import { AuxVersion } from './AuxVersion';
+import { h } from 'preact';
+import htm from 'htm';
+
+const html = htm.bind(h);
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -646,6 +654,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             __energyCheck,
             clearTimeout,
             clearInterval,
+            clearWatchBot,
+            clearWatchPortal,
+
+            html,
 
             os: {
                 sleep,
@@ -725,6 +737,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPointerDirection,
                 getInputState,
                 getInputList,
+
+                registerExecutable: openCustomPortal,
+                buildExecutable: buildBundle,
+
+                registerTagPrefix: registerPrefix,
+
+                registerApp: registerApp,
+                compileApp: setAppContent,
             },
 
             portal: {
@@ -894,6 +914,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 create(options.bot?.id, ...args),
             setTimeout: botTimer('timeout', setTimeout, true),
             setInterval: botTimer('interval', setInterval, false),
+            watchPortal: watchPortalBots(),
+            watchBot: watchBot(),
         },
     };
 
@@ -945,6 +967,63 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     function clearInterval(id: number) {
         context.cancelAndRemoveTimers(id);
+    }
+
+    function watchPortalBots() {
+        let timerId = 0;
+        return (options: TagSpecificApiOptions) =>
+            function (portalId: string, handler: () => void) {
+                let id = timerId++;
+                context.recordBotTimer(options.bot.id, {
+                    type: 'watch_portal',
+                    timerId: id,
+                    portalId,
+                    tag: options.tag,
+                    handler,
+                });
+
+                return id;
+            };
+    }
+
+    function watchBot() {
+        let timerId = 0;
+        return (options: TagSpecificApiOptions) =>
+            function (
+                bot: (Bot | string)[] | Bot | string,
+                handler: () => void
+            ) {
+                let id = timerId++;
+                let botIds = Array.isArray(bot)
+                    ? bot.map((b) => getID(b))
+                    : [getID(bot)];
+                const finalHandler = () => {
+                    try {
+                        return handler();
+                    } catch (err) {
+                        context.enqueueError(err);
+                    }
+                };
+
+                for (let botId of botIds) {
+                    context.recordBotTimer(options.bot.id, {
+                        type: 'watch_bot',
+                        timerId: id,
+                        botId: botId,
+                        tag: options.tag,
+                        handler: finalHandler,
+                    });
+                }
+                return id;
+            };
+    }
+
+    function clearWatchBot(id: number) {
+        context.cancelAndRemoveTimers(id, 'watch_bot');
+    }
+
+    function clearWatchPortal(id: number) {
+        context.cancelAndRemoveTimers(id, 'watch_portal');
     }
 
     /**
@@ -2303,6 +2382,37 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             task.taskId
         );
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Registers a custom portal for the given bot with the given options.
+     * @param portalId The ID of the portal.
+     * @param bot The bot that should be used to render the portal.
+     * @param config The configuration for the portal.
+     */
+    function registerApp(
+        portalId: string,
+        bot: Bot | string,
+        config: RegisterCustomAppOptions
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = registerCustomApp(
+            portalId,
+            getID(bot),
+            config,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sets the output of the given portal.
+     * @param portalId The ID of the portal.
+     * @param output The output that the portal should display.
+     */
+    function setAppContent(portalId: string, output: any): SetAppOutputAction {
+        const event = setAppOutput(portalId, output);
+        return addAction(event);
     }
 
     /**
