@@ -8,6 +8,7 @@
 
 -   Renamed `portal.open()` to `os.registerExecutable()`.
 -   Renamed `portal.buildBundle()` to `os.buildExecutable()`.
+-   Renamed `portal.registerPrefix()` to `os.registerTagPrefix()`.
 
 ### :rocket: Improvements
 
