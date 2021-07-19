@@ -6,9 +6,14 @@
 
 ### :boom: Breaking Changes
 
+-   "Custom Portals" are now called "Executables"
+    -   This is because portals should deal almost exclusively with bots and heavily interface with CasualOS.
+    -   "Custom Portals" (as they were called) made this difficult and are better explained as a way to create arbitrary web programs (i.e. executables).
+    -   The new "Apps" (`os.registerApp()` and `os.compileApp()`) features make it easier to create custom portals since they can leverage bots and listen tags directly.
 -   Renamed `portal.open()` to `os.registerExecutable()`.
 -   Renamed `portal.buildBundle()` to `os.buildExecutable()`.
 -   Renamed `portal.registerPrefix()` to `os.registerTagPrefix()`.
+-   Changed the menuPortal to always be anchored to the bottom of the screen instead of to the miniPortal.
 
 ### :rocket: Improvements
 
@@ -29,12 +34,14 @@
     -   `watchBot()` can be used to watch a given bot (or list of bots) for changes and triggers the given callback function when the bot(s) change.
     -   `watchPortal()` can be used to watch the given portal for changes and triggers the given callback function when the portal changes.
         -   Specifically, `watchPortal()` tracks when the portal is changed (by watching the portal tag on the `configBot`), when bots are added, removed, or updated in the portal, and when the portal bot changes.
+-   Improved the bot dragging logic to support using `os.replaceDragBot(null)` to stop dragging a bot.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where dragging a bot whose position was animated in tempLocal space would produce no visible effect.
 -   Fixed an issue where GLB models compressed with a newer version of Draco could not be loaded.
     -   You may have to refresh the browser tab 1 extra time after getting the update for this change to take effect. This is because the Draco library is cached by the web browser and updates to the library are checked in the background while the old version is being used.
+-   Fixed an issue where bots in the mapPortal that had LOD listeners would not function correctly unless they had a label.
 
 ## V2.0.2
 
