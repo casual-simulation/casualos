@@ -178,6 +178,14 @@ export default class ShowInputModal extends Vue {
             typeof this.currentValue === 'object'
         ) {
             value = this.currentValue.hex;
+        } else if (this.currentType === 'date') {
+            if (typeof this.currentValue === 'string') {
+                value = parseYearMonthDayDate(this.currentValue);
+            } else if (typeof this.currentValue === 'number') {
+                value = new Date(this.currentValue);
+            } else {
+                value = this.currentValue;
+            }
         } else {
             value = this.currentValue;
         }
@@ -270,8 +278,9 @@ export default class ShowInputModal extends Vue {
         options: Partial<ShowInputOptions>,
         defaultPlaceholder: string
     ) {
-        this.currentValue = currentValue || '';
         this.currentType = options.type || 'text';
+        this.currentValue =
+            currentValue || (this.currentType === 'date' ? null : '');
         this.currentSubtype = options.subtype || 'basic';
 
         if (typeof options.placeholder !== 'undefined') {
@@ -280,4 +289,12 @@ export default class ShowInputModal extends Vue {
             this.currentPlaceholder = defaultPlaceholder;
         }
     }
+}
+
+/**
+ * Parses the given date string in yyyy-MM-dd format and returns a Date object.
+ */
+function parseYearMonthDayDate(dateString: string) {
+    const [year, month, day] = dateString.split('-');
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 }

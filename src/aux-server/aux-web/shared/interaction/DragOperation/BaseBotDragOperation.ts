@@ -40,6 +40,7 @@ import {
     onDraggingArg,
     DRAGGING_ACTION_NAME,
     DRAGGING_ANY_ACTION_NAME,
+    hasValue,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -278,6 +279,11 @@ export abstract class BaseBotDragOperation implements IOperation {
     }
 
     private _replaceDragBot(bot: Bot | BotTags) {
+        if (!hasValue(bot)) {
+            this._finished = true;
+            return;
+        }
+
         let operation: IOperation;
         if (isBot(bot)) {
             operation = this._createBotDragOperation(bot);
@@ -416,29 +422,78 @@ export abstract class BaseBotDragOperation implements IOperation {
         let events: BotAction[] = [];
         for (let i = 0; i < bots.length; i++) {
             let tags;
+
+            const x = `${this._dimension}X`;
+            const y = `${this._dimension}Y`;
+            const z = `${this._dimension}Z`;
+            const rotX = `${this._dimension}RotationX`;
+            const rotY = `${this._dimension}RotationY`;
+            const rotZ = `${this._dimension}RotationZ`;
+
             tags = {
                 tags: {
                     [this._dimension]: true,
-                    [`${this._dimension}X`]: position.x,
-                    [`${this._dimension}Y`]: position.y,
-                    [`${this._dimension}Z`]: position.z,
+                    [x]: position.x,
+                    [y]: position.y,
+                    [z]: position.z,
                 },
             };
             if (rotation) {
                 merge(tags, {
                     tags: {
-                        [`${this._dimension}RotationX`]:
-                            Math.abs(rotation.x) > 0 ? rotation.x : null,
-                        [`${this._dimension}RotationY`]:
-                            Math.abs(rotation.y) > 0 ? rotation.y : null,
-                        [`${this._dimension}RotationZ`]:
-                            Math.abs(rotation.z) > 0 ? rotation.z : null,
+                        [rotX]: Math.abs(rotation.x) > 0 ? rotation.x : null,
+                        [rotY]: Math.abs(rotation.y) > 0 ? rotation.y : null,
+                        [rotZ]: Math.abs(rotation.z) > 0 ? rotation.z : null,
                     },
                 });
             }
             if (this._previousDimension) {
                 tags.tags[this._previousDimension] = null;
             }
+
+            let bot = bots[i];
+            for (let partition in bot.masks) {
+                let maskTags = bot.masks[partition];
+                if (x in maskTags || y in maskTags || z in maskTags) {
+                    merge(tags, {
+                        masks: {
+                            [partition]: {
+                                [x]: null,
+                                [y]: null,
+                                [z]: null,
+                            },
+                        },
+                    });
+                }
+
+                if (
+                    rotation &&
+                    (rotX in maskTags || rotY in maskTags || rotZ in maskTags)
+                ) {
+                    merge(tags, {
+                        masks: {
+                            [partition]: {
+                                [rotX]: null,
+                                [rotY]: null,
+                                [rotZ]: null,
+                            },
+                        },
+                    });
+                }
+
+                if (this._previousDimension) {
+                    if (this._previousDimension) {
+                        merge(tags, {
+                            masks: {
+                                [partition]: {
+                                    [this._previousDimension]: null,
+                                },
+                            },
+                        });
+                    }
+                }
+            }
+
             events.push(this._updateBot(bots[i], tags));
         }
 
@@ -469,17 +524,45 @@ export abstract class BaseBotDragOperation implements IOperation {
         for (let i = 0; i < bots.length; i++) {
             let tags;
 
+            const x = `${this._dimension}X`;
+            const y = `${this._dimension}Y`;
             tags = {
                 tags: {
                     [this._dimension]: true,
-                    [`${this._dimension}X`]: gridPosition.x,
-                    [`${this._dimension}Y`]: gridPosition.y,
+                    [x]: gridPosition.x,
+                    [y]: gridPosition.y,
                 },
             };
             if (this._previousDimension) {
                 tags.tags[this._previousDimension] = null;
             }
-            events.push(this._updateBot(bots[i], tags));
+
+            let bot = bots[i];
+            for (let partition in bot.masks) {
+                let maskTags = bot.masks[partition];
+                if (x in maskTags || y in maskTags) {
+                    merge(tags, {
+                        masks: {
+                            [partition]: {
+                                [x]: null,
+                                [y]: null,
+                            },
+                        },
+                    });
+
+                    if (this._previousDimension) {
+                        merge(tags, {
+                            masks: {
+                                [partition]: {
+                                    [this._previousDimension]: null,
+                                },
+                            },
+                        });
+                    }
+                }
+            }
+
+            events.push(this._updateBot(bot, tags));
         }
 
         await this.simulation.helper.transaction(...events);

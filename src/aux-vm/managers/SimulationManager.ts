@@ -1,5 +1,5 @@
 import { Initable } from './Initable';
-import { Subject, Observable, Subscription } from 'rxjs';
+import { Subject, Observable, Subscription, SubscriptionLike } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 
 /**
@@ -79,7 +79,7 @@ export class SimulationManager<TSimulation extends Initable> {
         }
 
         for (let [id, sim] of this.simulations) {
-            if (!ids.find(i => i === id)) {
+            if (!ids.find((i) => i === id)) {
                 await this.removeSimulation(id);
             }
         }
@@ -120,7 +120,7 @@ export class SimulationManager<TSimulation extends Initable> {
 
         let sub = new Subscription();
         sub.add(
-            sim.onError.subscribe(e => {
+            sim.onError.subscribe((e) => {
                 console.error(e);
                 this.removeSimulation(id);
             })
@@ -163,6 +163,42 @@ export class SimulationManager<TSimulation extends Initable> {
         this.simulations.forEach((sim, id) => {
             this.removeSimulation(id);
         });
+    }
+
+    /**
+     * Calls the given function for current and new simulations and uses the subscription returned by the function to manage resources.
+     * The subscription will automatically be unsubscribed when the simulation is removed.
+     * Returns a subscription that can be used to unsubscribe resources and stop watching.
+     *
+     * @param onSimulationAdded The function that should be called for each simulation.
+     */
+    watchSimulations(
+        onSimulationAdded: (sim: TSimulation) => SubscriptionLike
+    ): Subscription {
+        let sub = new Subscription();
+
+        let simulationSubs = new Map<TSimulation, Subscription>();
+        sub.add(
+            this.simulationAdded.subscribe((sim) => {
+                let simSub = onSimulationAdded(sim);
+                if (simSub) {
+                    const s = new Subscription(() => simSub.unsubscribe());
+                    simulationSubs.set(sim, s);
+                    sub.add(s);
+                }
+            })
+        );
+
+        sub.add(
+            this.simulationRemoved.subscribe((sim) => {
+                let simSub = simulationSubs.get(sim);
+                if (simSub) {
+                    simSub.unsubscribe();
+                }
+            })
+        );
+
+        return sub;
     }
 }
 

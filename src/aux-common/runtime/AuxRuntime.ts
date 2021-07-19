@@ -49,6 +49,7 @@ import {
     openCustomPortal,
     ON_ERROR,
     action,
+    isBotInDimension,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -223,6 +224,10 @@ export class AuxRuntime
         return this._compiledState;
     }
 
+    get userId(): string {
+        return this._userId;
+    }
+
     set userId(id: string) {
         this._userId = id;
         this._globalContext.playerBot = this.userBot;
@@ -304,15 +309,44 @@ export class AuxRuntime
                 action.mapBotsInResult === true
                     ? this._mapBotsToRuntimeBots(action.result)
                     : action.result;
-            this._globalContext.resolveTask(action.taskId, value, false);
+            if (!this._globalContext.resolveTask(action.taskId, value, false)) {
+                this._actionBatch.push(action);
+            }
         } else if (action.type === 'async_error') {
-            this._globalContext.rejectTask(action.taskId, action.error, false);
+            if (
+                !this._globalContext.rejectTask(
+                    action.taskId,
+                    action.error,
+                    false
+                )
+            ) {
+                this._actionBatch.push(action);
+            }
         } else if (action.type === 'device_result') {
-            this._globalContext.resolveTask(action.taskId, action.result, true);
+            if (
+                !this._globalContext.resolveTask(
+                    action.taskId,
+                    action.result,
+                    true
+                )
+            ) {
+                this._actionBatch.push(action);
+            }
         } else if (action.type === 'device_error') {
-            this._globalContext.rejectTask(action.taskId, action.error, true);
+            if (
+                !this._globalContext.rejectTask(
+                    action.taskId,
+                    action.error,
+                    true
+                )
+            ) {
+                this._actionBatch.push(action);
+            }
         } else if (action.type === 'open_custom_portal') {
             this._registerPortalBot(action.portalId, action.botId);
+            this._actionBatch.push(action);
+        } else if (action.type === 'register_custom_app') {
+            this._registerPortalBot(action.appId, action.botId);
             this._actionBatch.push(action);
         } else if (action.type === 'register_builtin_portal') {
             if (!this._portalBots.has(action.portalId)) {
@@ -497,8 +531,12 @@ export class AuxRuntime
             newBotIds = addedBotIds;
         }
 
+        let removedBots = null as CompiledBot[];
         if (update.removedBots.length > 0) {
-            this._removeBotsFromState(update.removedBots, nextUpdate);
+            removedBots = this._removeBotsFromState(
+                update.removedBots,
+                nextUpdate
+            );
         }
 
         if (update.updatedBots.length > 0) {
@@ -522,6 +560,7 @@ export class AuxRuntime
         this._sendOnBotsAddedShouts(newBots, nextUpdate);
         this._sendOnBotsRemovedShouts(update.removedBots);
         this._sendOnBotsChangedShouts(updates);
+        this._triggerPortalChangedHandlers(newBots, removedBots, updates);
 
         return nextUpdate;
     }
@@ -577,6 +616,13 @@ export class AuxRuntime
     private _sendOnBotsRemovedShouts(botIds: string[]) {
         if (botIds.length > 0) {
             try {
+                for (let bot of botIds) {
+                    const watchers = this._globalContext.getWatchersForBot(bot);
+                    for (let watcher of watchers) {
+                        watcher.handler();
+                    }
+                }
+
                 this._shout(
                     ON_ANY_BOTS_REMOVED_ACTION_NAME,
                     null,
@@ -612,6 +658,13 @@ export class AuxRuntime
                         true,
                         false
                     );
+
+                    const watchers = this._globalContext.getWatchersForBot(
+                        update.bot.id
+                    );
+                    for (let watcher of watchers) {
+                        watcher.handler();
+                    }
                 }
                 this._shout(
                     ON_ANY_BOTS_CHANGED_ACTION_NAME,
@@ -625,6 +678,93 @@ export class AuxRuntime
                     throw err;
                 } else {
                     console.warn(err);
+                }
+            }
+        }
+    }
+
+    private _triggerPortalChangedHandlers(
+        newBots: [CompiledBot, PrecalculatedBot][],
+        removedBots: CompiledBot[],
+        updates: UpdatedBot[]
+    ) {
+        const portals = this._globalContext.getWatchedPortals();
+
+        if (!hasValue(this.userId)) {
+            return;
+        }
+
+        if (portals.size <= 0) {
+            return;
+        }
+
+        if (
+            (!newBots || newBots.length <= 0) &&
+            (!removedBots || removedBots.length <= 0) &&
+            (!updates || updates.length <= 0)
+        ) {
+            return;
+        }
+
+        const userBot = this.currentState[this.userId];
+
+        if (!userBot) {
+            return;
+        }
+
+        for (let portal of portals) {
+            const dimension = userBot.values[portal];
+            let hasChange = false;
+            if (hasValue(dimension)) {
+                if (newBots && newBots.length > 0) {
+                    for (let [_, newBot] of newBots) {
+                        if (isBotInDimension(null, newBot, dimension)) {
+                            hasChange = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!hasChange && removedBots && removedBots.length > 0) {
+                    for (let bot of removedBots) {
+                        if (isBotInDimension(null, bot, dimension)) {
+                            hasChange = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!hasChange && updates && updates.length > 0) {
+                for (let update of updates) {
+                    if (hasValue(dimension)) {
+                        if (update.tags.includes(dimension)) {
+                            hasChange = true;
+                            break;
+                        }
+                    }
+
+                    if (
+                        update.bot.id === this.userId &&
+                        update.tags.includes(portal)
+                    ) {
+                        hasChange = true;
+                        break;
+                    }
+
+                    if (this._portalBots.get(portal) === update.bot.id) {
+                        hasChange = true;
+                        break;
+                    }
+                }
+            }
+
+            if (hasChange) {
+                const watchers = this._globalContext.getWatchersForPortal(
+                    portal
+                );
+                for (let watcher of watchers) {
+                    watcher.handler();
                 }
             }
         }
@@ -696,11 +836,13 @@ export class AuxRuntime
         botIds: string[],
         nextUpdate: StateUpdatedEvent
     ) {
+        let removedBots: CompiledBot[] = [];
         for (let id of botIds) {
             const bot = this._compiledState[id];
             if (bot) {
                 removeFromContext(this._globalContext, [bot.script]);
             }
+            removedBots.push(bot);
             delete this._compiledState[id];
             const list = this._getFunctionNamesForBot(id, false);
             if (list) {
@@ -712,6 +854,8 @@ export class AuxRuntime
             nextUpdate.state[id] = null;
             nextUpdate.removedBots.push(id);
         }
+
+        return removedBots;
     }
 
     private _updateBotsWithState(
@@ -990,6 +1134,9 @@ export class AuxRuntime
     }
 
     private _processUnbatchedErrors() {
+        // TODO: Improve to correctly handle when a non ScriptError object is added
+        // but contains symbol properties that reference the throwing bot and tag.
+        // The AuxRuntime should look for these error objects and create ScriptErrors for them.
         return this._globalContext.dequeueErrors();
     }
 

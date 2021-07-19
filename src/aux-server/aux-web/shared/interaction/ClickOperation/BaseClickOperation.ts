@@ -89,6 +89,8 @@ export abstract class BaseClickOperation implements IOperation {
             if (this._dragOperation.isFinished()) {
                 this._dragOperation.dispose();
                 this._dragOperation = null;
+                this._finished = true;
+                return;
             } else {
                 this._dragOperation.update(calc);
             }
@@ -134,6 +136,10 @@ export abstract class BaseClickOperation implements IOperation {
                         this._dragOperation = this._baseCreateDragOperation(
                             calc
                         );
+
+                        if (!this._dragOperation) {
+                            this._finished = true;
+                        }
                     } else {
                         // Finish the click operation because we tried dragging but could not
                         // actually drag anything.

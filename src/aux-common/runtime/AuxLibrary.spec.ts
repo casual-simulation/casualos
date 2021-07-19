@@ -8,6 +8,7 @@ import {
     addToContext,
     MemoryGlobalContext,
     SET_INTERVAL_ANIMATION_FRAME_TIME,
+    WatchBotTimer,
 } from './AuxGlobalContext';
 import {
     toast,
@@ -154,6 +155,8 @@ import {
     disablePOV,
     botUpdated,
     enableCustomDragging,
+    registerCustomApp,
+    setAppOutput,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -3123,9 +3126,68 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.registerExecutable()', () => {
+            it('should return a OpenCustomPortal action', () => {
+                const promise: any = library.api.os.registerExecutable(
+                    'test',
+                    bot1,
+                    'tag'
+                );
+                const expected = openCustomPortal(
+                    'test',
+                    bot1.id,
+                    'tag',
+                    {
+                        style: {},
+                        mode: 'tag',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should include the specified options', () => {
+                const promise: any = library.api.os.registerExecutable(
+                    'test',
+                    bot1,
+                    'tag',
+                    {
+                        style: {
+                            abc: 'def',
+                        },
+                        mode: 'source',
+                    }
+                );
+                const expected = openCustomPortal(
+                    'test',
+                    bot1.id,
+                    'tag',
+                    {
+                        style: {
+                            abc: 'def',
+                        },
+                        mode: 'source',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('portal.buildBundle()', () => {
             it('should return a BuildBundleAction', () => {
                 const promise: any = library.api.portal.buildBundle('tag');
+                const expected = buildBundle('tag', context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.buildExecutable()', () => {
+            it('should return a BuildBundleAction', () => {
+                const promise: any = library.api.os.buildExecutable('tag');
                 const expected = buildBundle('tag', context.tasks.size);
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -3158,6 +3220,70 @@ describe('AuxLibrary', () => {
                     context.tasks.size
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.registerTagPrefix()', () => {
+            it('should return a RegisterPrefix action', () => {
+                const promise: any = library.api.os.registerTagPrefix('test');
+                const expected = registerPrefix(
+                    'test',
+                    {
+                        language: 'javascript',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', () => {
+                const promise: any = library.api.os.registerTagPrefix('test', {
+                    language: 'jsx',
+                });
+                const expected = registerPrefix(
+                    'test',
+                    {
+                        language: 'jsx',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.registerApp()', () => {
+            it('should return a RegisterCustomPortal action', () => {
+                const promise: any = library.api.os.registerApp(
+                    'testPortal',
+                    bot1,
+                    {
+                        type: 'html',
+                    }
+                );
+                const expected = registerCustomApp(
+                    'testPortal',
+                    bot1.id,
+                    {
+                        type: 'html',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.compileApp()', () => {
+            it('should return a SetPortalOutput action', () => {
+                const promise: any = library.api.os.compileApp(
+                    'testPortal',
+                    'hahaha'
+                );
+                const expected = setAppOutput('testPortal', 'hahaha');
+                expect(promise).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
@@ -9481,6 +9607,267 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('os.watchBot()', () => {
+        let tagContext: TagSpecificApiOptions;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+        let bot3: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+            bot3 = createDummyRuntimeBot('test3');
+
+            addToContext(context, bot1, bot2, bot3);
+
+            tagContext = {
+                bot: bot1,
+                config: null,
+                creator: null,
+                tag: null,
+            };
+        });
+
+        it('should add a timer to the list of timers for the current bot', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                bot2,
+                fn
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: bot2.id,
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+            ]);
+        });
+
+        it('should support passing bot IDs directly', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                'testBot',
+                fn
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: 'testBot',
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+            ]);
+        });
+
+        it('should add a timer for each bot in the given list', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                [bot2, bot3.id],
+                fn
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: bot2.id,
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: bot3.id,
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+            ]);
+        });
+
+        it('should call the given function when the handler is called', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                'testBot',
+                fn
+            );
+
+            const timer = context.getBotTimers(bot1.id)[0] as WatchBotTimer;
+            timer.handler();
+
+            expect(fn).toHaveBeenCalledTimes(1);
+        });
+
+        it('should clear the timer if the bot is destroyed', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                'testBot',
+                fn
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: 'testBot',
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+            ]);
+
+            library.api.destroy(bot1);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('should be able to clear the timer by calling clearWatchBot()', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                'testBot',
+                fn
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: 'testBot',
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+            ]);
+
+            library.api.clearWatchBot(timeoutId);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('should be able to all watchers for a timeout ID when calling clearWatchBot()', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                [bot2, 'testBot'],
+                fn
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: bot2.id,
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: 'testBot',
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+            ]);
+
+            library.api.clearWatchBot(timeoutId);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('should enqueue errors that are thrown by the handler', () => {
+            const fn = jest.fn();
+            fn.mockImplementation(() => {
+                throw new Error('abc');
+            });
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                'testBot',
+                fn
+            );
+
+            const timer = context.getBotTimers(bot1.id)[0] as WatchBotTimer;
+
+            const result = timer.handler();
+
+            expect(result).toBeUndefined();
+            expect(context.dequeueErrors()).toEqual([new Error('abc')]);
+        });
+    });
+
+    describe('os.watchPortal()', () => {
+        let tagContext: TagSpecificApiOptions;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+        let bot3: RuntimeBot;
+
+        beforeAll(() => {
+            jest.useFakeTimers('modern');
+        });
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+            bot3 = createDummyRuntimeBot('test3');
+
+            addToContext(context, bot1, bot2, bot3);
+
+            tagContext = {
+                bot: bot1,
+                config: null,
+                creator: null,
+                tag: null,
+            };
+        });
+
+        afterEach(() => {
+            jest.clearAllTimers();
+        });
+
+        afterAll(() => {
+            jest.useRealTimers();
+        });
+
+        it('should add a timer to the list of timers for the current bot', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.watchPortal(tagContext)(
+                'testPortal',
+                fn
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_portal',
+                    portalId: 'testPortal',
+                    tag: null,
+                    handler: fn,
+                },
+            ]);
+        });
+
+        it('should clear the timer if the bot is destroyed', () => {
+            const fn = jest.fn();
+            let timeoutId = library.tagSpecificApi.watchPortal(tagContext)(
+                'testPortal',
+                fn
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_portal',
+                    portalId: 'testPortal',
+                    tag: null,
+                    handler: fn,
+                },
+            ]);
+
+            library.api.destroy(bot1);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+    });
+
     describe('os.inSheet()', () => {
         let player: RuntimeBot;
 
@@ -11665,6 +12052,24 @@ describe('AuxLibrary', () => {
 
             // only counts the bots in the context
             expect(result.numberOfActiveTimers).toBe(2);
+        });
+    });
+
+    describe('html', () => {
+        let bot1: RuntimeBot;
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('bot1', {
+                abc: 'def',
+            });
+            addToContext(context, bot1);
+        });
+
+        it('should return a HTML VDOM element', () => {
+            const result = library.api.html`
+                <h1>Hello, World!</h1>
+            `;
+
+            expect(result).toMatchSnapshot();
         });
     });
 });

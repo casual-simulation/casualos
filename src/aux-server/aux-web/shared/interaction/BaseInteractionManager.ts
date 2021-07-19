@@ -477,6 +477,7 @@ export abstract class BaseInteractionManager {
 
     dragBot(simulation: Simulation, bot: Bot | BotTags, dimension: string) {
         if (
+            !hasValue(bot) ||
             this._operations.some((op) => {
                 const isDrag =
                     op instanceof BaseBotDragOperation ||
