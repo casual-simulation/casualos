@@ -100,9 +100,7 @@ describe('CustomAppHelper', () => {
     describe('handleEvents()', () => {
         describe('register_custom_app', () => {
             it('should create a portal for the given event', () => {
-                portals.handleEvents([
-                    registerCustomApp('htmlPortal', null, { type: 'html' }),
-                ]);
+                portals.handleEvents([registerCustomApp('htmlPortal', null)]);
 
                 expect([...portals.portals.keys()]).toEqual(['htmlPortal']);
                 const values = [...portals.portals.values()];

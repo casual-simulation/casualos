@@ -1850,11 +1850,7 @@ describe('AuxRuntime', () => {
 
                     runtime.shout('test');
 
-                    runtime.process([
-                        registerCustomApp('testPortal', 'test1', {
-                            type: 'html',
-                        }),
-                    ]);
+                    runtime.process([registerCustomApp('testPortal', 'test1')]);
 
                     await waitAsync();
 
@@ -4169,11 +4165,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.process([
-                    registerCustomApp('page', 'test1', {
-                        type: 'html',
-                    }),
-                ]);
+                runtime.process([registerCustomApp('page', 'test1')]);
 
                 expect((<any>globalThis).pageBot).toBe(
                     runtime.context.state['test1']
@@ -4191,21 +4183,13 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.process([
-                    registerCustomApp('page', 'test1', {
-                        type: 'html',
-                    }),
-                ]);
+                runtime.process([registerCustomApp('page', 'test1')]);
 
                 expect((<any>globalThis).pageBot).toBe(
                     runtime.context.state['test1']
                 );
 
-                runtime.process([
-                    registerCustomApp('page', 'test2', {
-                        type: 'html',
-                    }),
-                ]);
+                runtime.process([registerCustomApp('page', 'test2')]);
 
                 expect((<any>globalThis).pageBot).toBe(
                     runtime.context.state['test2']
@@ -4220,21 +4204,13 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.process([
-                    registerCustomApp('page', 'test1', {
-                        type: 'html',
-                    }),
-                ]);
+                runtime.process([registerCustomApp('page', 'test1')]);
 
                 expect((<any>globalThis).pageBot).toBe(
                     runtime.context.state['test1']
                 );
 
-                runtime.process([
-                    registerCustomApp('page', null, {
-                        type: 'html',
-                    }),
-                ]);
+                runtime.process([registerCustomApp('page', null)]);
 
                 expect((<any>globalThis).pageBot).toBeUndefined();
             });
@@ -4247,11 +4223,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.process([
-                    registerCustomApp('page', 'test1', {
-                        type: 'html',
-                    }),
-                ]);
+                runtime.process([registerCustomApp('page', 'test1')]);
 
                 expect((<any>globalThis).pageBot).toBe(
                     runtime.context.state['test1']
@@ -4268,19 +4240,11 @@ describe('AuxRuntime', () => {
                 let actions = [] as BotAction[];
                 runtime.onActions.subscribe((a) => actions.push(...a));
 
-                runtime.process([
-                    registerCustomApp('page', 'test1', {
-                        type: 'html',
-                    }),
-                ]);
+                runtime.process([registerCustomApp('page', 'test1')]);
 
                 await waitAsync();
 
-                expect(actions).toEqual([
-                    registerCustomApp('page', 'test1', {
-                        type: 'html',
-                    }),
-                ]);
+                expect(actions).toEqual([registerCustomApp('page', 'test1')]);
             });
         });
     });
