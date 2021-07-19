@@ -316,6 +316,7 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
     class Document extends Element {
         defaultView: any;
         body: Element;
+        head: Element;
 
         constructor() {
             super(9, '#document'); // DOCUMENT_NODE
@@ -337,8 +338,8 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
             opts: { bubbles?: boolean; cancelable?: boolean }
         ) {
             this.type = type;
-            this.bubbles = !!opts.bubbles;
-            this.cancelable = !!opts.cancelable;
+            this.bubbles = !!opts?.bubbles;
+            this.cancelable = !!opts?.cancelable;
         }
         stopPropagation() {
             this._stop = true;
@@ -463,6 +464,7 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
             createElementNS,
             createTextNode,
         });
+        document.appendChild((document.head = createElement('head')));
         document.appendChild((document.body = createElement('body')));
         return document;
     }
