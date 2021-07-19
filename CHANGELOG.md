@@ -2,7 +2,7 @@
 
 ## V2.0.3
 
-#### Date: TBD
+#### Date: 7/19/2021
 
 ### :boom: Breaking Changes
 
