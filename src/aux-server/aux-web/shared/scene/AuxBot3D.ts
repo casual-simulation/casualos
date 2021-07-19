@@ -287,6 +287,8 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
                 this.bot = bot;
                 this._boundingBox = null;
                 this._boundingSphere = null;
+                this._unitBoundingBox = null;
+                this._unitBoundingSphere = null;
 
                 this.pointable = isBotPointable(calc, this.bot);
                 this.focusable = isBotFocusable(calc, this.bot);

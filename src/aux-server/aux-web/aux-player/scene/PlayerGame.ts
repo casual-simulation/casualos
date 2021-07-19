@@ -1088,25 +1088,11 @@ export class PlayerGame extends Game {
         let width = right - left;
 
         (<HTMLElement>this.slider).style.width = width.toString() + 'px';
-
-        this.gameView.setMenuStyle({
-            bottom:
-                (
-                    this.mainViewport.height -
-                    sliderTop +
-                    this.menuOffset
-                ).toString() + 'px',
-            left: this.miniViewport.x.toString() + 'px',
-            width: this.miniViewport.width.toString() + 'px',
-        });
     }
 
     private _hideMiniPortal() {
         this.miniViewport.setScale(null, 0);
         (<HTMLElement>this.slider).style.display = 'none';
-        this.gameView.setMenuStyle({
-            bottom: this.menuOffset.toString() + 'px',
-        });
     }
 
     private _showMiniPortal() {

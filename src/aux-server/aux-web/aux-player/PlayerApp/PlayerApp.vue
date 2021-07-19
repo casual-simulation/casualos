@@ -23,6 +23,8 @@
                 </tag-portal>
             </meet-portal>
 
+            <html-portals></html-portals>
+
             <upload-files></upload-files>
             <checkout></checkout>
             <show-input></show-input>

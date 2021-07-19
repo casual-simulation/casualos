@@ -23,6 +23,7 @@ let folders = [
     `${__dirname}/src/crypto-node`,
     `${__dirname}/src/crypto-browser`,
     `${__dirname}/src/tunnel`,
+    `${__dirname}/src/undom`,
 ];
 
 let patterns = [

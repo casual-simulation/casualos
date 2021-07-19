@@ -1,7 +1,7 @@
 version: '3.7'
 services:
     server:
-        image: 'casualsimulation/aux-arm32:latest'
+        image: 'ghcr.io/casual-simulation/casualos-arm32:alpha'
         privileged: true
         restart: always
         ports:

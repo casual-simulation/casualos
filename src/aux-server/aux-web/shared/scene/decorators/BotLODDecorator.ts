@@ -62,6 +62,7 @@ export class BotLODDecorator extends AuxBot3DDecoratorBase {
             'auxMaxLODThreshold',
             DEFAULT_BOT_LOD_MAX_THRESHOLD
         );
+
         if (hasLOD && !this.frameUpdate) {
             this.frameUpdate = this._frameUpdate;
             this.bot3D.updateFrameUpdateList();

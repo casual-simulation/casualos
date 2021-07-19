@@ -44,6 +44,7 @@
         "@casual-simulation/causal-tree-client-socketio": "^2.0.0",
         "@casual-simulation/causal-trees": "^2.0.0",
         "@casual-simulation/crypto": "^2.0.0",
+        "@casual-simulation/undom": "^2.0.0",
         "esbuild": "^0.8.43",
         "esbuild-wasm": "^0.8.43",
         "lodash": "4.17.21",

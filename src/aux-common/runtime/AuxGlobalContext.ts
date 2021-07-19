@@ -146,6 +146,23 @@ export interface AuxGlobalContext {
     getBotTimers(id: string): BotTimer[];
 
     /**
+     * Gets the list of bot timers that were setup to watch the given bot ID.
+     * @param id The ID of the bot that the timers are watching.
+     */
+    getWatchersForBot(id: string): WatchBotTimer[];
+
+    /**
+     * Gets the list of portal timers that were setup to watch the given portal ID.
+     * @param id The ID of the portal that the timers are watching.
+     */
+    getWatchersForPortal(id: string): WatchPortalTimer[];
+
+    /**
+     * Gets the list of portal IDs that are being watched.
+     */
+    getWatchedPortals(): Set<string>;
+
+    /**
      * Cancels the timer with the given timer ID and bot ID.
      * @param id The ID of the bot.
      * @param timerId The ID of the timer.
@@ -170,8 +187,9 @@ export interface AuxGlobalContext {
     /**
      * Cancels and removes the timers with the given timer ID.
      * @param timerId The ID of the timer.
+     * @param type The type of the timers to cancel. If null, timers of all types are canceled.
      */
-    cancelAndRemoveTimers(timerId: number): void;
+    cancelAndRemoveTimers(timerId: number, type?: string): void;
 
     /**
      * Gets the number of timers.
@@ -190,21 +208,23 @@ export interface AuxGlobalContext {
 
     /**
      * Completes the task with the given task ID with the given result.
+     * Returns whether the task was handled by this context.
      * @param taskId The ID of the task.
      * @param result The result.
      * @param remote Whether this call is being triggered from a remote device.
      *               This should be true if resolveTask() is being called in response to a remote or device action.
      */
-    resolveTask(taskId: number | string, result: any, remote: boolean): void;
+    resolveTask(taskId: number | string, result: any, remote: boolean): boolean;
 
     /**
      * Completes the task with the given task ID with the given error.
+     * * Returns whether the task was handled by this context.
      * @param taskId The ID of the task.
      * @param error The error.
      * @param remote Whether this call is being triggered from a remote device.
      *               This should be true if resolveTask() is being called in response to a remote or device action.
      */
-    rejectTask(taskId: number | string, error: any, remote: boolean): void;
+    rejectTask(taskId: number | string, error: any, remote: boolean): boolean;
 
     /**
      * Gets a list of timers that contains the amount of time a tag has run for in miliseconds.
@@ -260,7 +280,11 @@ export interface AsyncTask {
 /**
  * Defines an interface for a timer that was created by a bot (e.g. setTimeout() or setInterval()).
  */
-export type BotTimer = TimeoutOrIntervalTimer | AnimationTimer;
+export type BotTimer =
+    | TimeoutOrIntervalTimer
+    | AnimationTimer
+    | WatchPortalTimer
+    | WatchBotTimer;
 
 /**
  * Defines an interface for a setTimeout() or setInterval() timer that was created by a bot.
@@ -305,6 +329,66 @@ export interface AnimationTimer {
      * A function used to cancel the timer.
      */
     cancel: () => void;
+}
+
+/**
+ * Defines an interface for a subscription to watching a set of bots that was created by a bot.
+ */
+export interface WatchPortalTimer {
+    /**
+     * The ID of the timer.
+     */
+    timerId: number;
+
+    /**
+     * The type of the timer.
+     */
+    type: 'watch_portal';
+
+    /**
+     * The tag that the timer is for.
+     */
+    tag: string;
+
+    /**
+     * The ID of the portal that the timer is for.
+     */
+    portalId: string;
+
+    /**
+     * The function that should be called when the portal changes.
+     */
+    handler: () => void;
+}
+
+/**
+ * Defines an interface for a subscription to watching a set of bots that was created by a bot.
+ */
+export interface WatchBotTimer {
+    /**
+     * The ID of the timer.
+     */
+    timerId: number;
+
+    /**
+     * The type of the timer.
+     */
+    type: 'watch_bot';
+
+    /**
+     * The tag that the timer was created by.
+     */
+    tag: string;
+
+    /**
+     * The ID of the bot that the timer is for.
+     */
+    botId: string;
+
+    /**
+     * The function that should be called when the bot changes.
+     */
+    handler: () => void;
 }
 
 /**
@@ -432,6 +516,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     } = {};
     private _listenerMap: Map<string, string[]>;
     private _botTimerMap: Map<string, BotTimer[]>;
+    private _botWatcherMap: Map<string, WatchBotTimer[]>;
+    private _portalWatcherMap: Map<string, WatchPortalTimer[]>;
     private _numberOfTimers: number = 0;
     private _startTime: number;
     private _animationLoop: Subscription;
@@ -455,6 +541,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this._batcher = batcher;
         this._listenerMap = new Map();
         this._botTimerMap = new Map();
+        this._botWatcherMap = new Map();
+        this._portalWatcherMap = new Map();
         this._startTime = performance.now();
     }
 
@@ -520,6 +608,22 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         }
         list.push(info);
         this._numberOfTimers += 1;
+
+        if (info.type === 'watch_bot') {
+            let watchers = this._botWatcherMap.get(info.botId);
+            if (!watchers) {
+                watchers = [];
+                this._botWatcherMap.set(info.botId, watchers);
+            }
+            watchers.push(info);
+        } else if (info.type === 'watch_portal') {
+            let watchers = this._portalWatcherMap.get(info.portalId);
+            if (!watchers) {
+                watchers = [];
+                this._portalWatcherMap.set(info.portalId, watchers);
+            }
+            watchers.push(info);
+        }
     }
 
     removeBotTimer(
@@ -545,6 +649,26 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             return timers.slice();
         }
         return [];
+    }
+
+    getWatchersForBot(id: string): WatchBotTimer[] {
+        let watchers = this._botWatcherMap.get(id);
+        if (watchers) {
+            return watchers.slice();
+        }
+        return [];
+    }
+
+    getWatchersForPortal(id: string): WatchPortalTimer[] {
+        let watchers = this._portalWatcherMap.get(id);
+        if (watchers) {
+            return watchers.slice();
+        }
+        return [];
+    }
+
+    getWatchedPortals(): Set<string> {
+        return new Set(this._portalWatcherMap.keys());
     }
 
     cancelAndRemoveBotTimer(
@@ -582,11 +706,14 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this._botTimerMap.clear();
     }
 
-    cancelAndRemoveTimers(timerId: number) {
+    cancelAndRemoveTimers(timerId: number, type?: string) {
         for (let list of this._botTimerMap.values()) {
             for (let i = 0; i < list.length; i++) {
                 const timer = list[i];
-                if (timer.timerId === timerId) {
+                if (
+                    timer.timerId === timerId &&
+                    (!type || timer.type === type)
+                ) {
                     this._clearTimer(timer);
                     list.splice(i, 1);
                     i -= 1;
@@ -613,6 +740,26 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             clearInterval(timer.timerId);
         } else if (timer.type === 'animation') {
             timer.cancel();
+        } else if (timer.type === 'watch_bot') {
+            let watchers = this._botWatcherMap.get(timer.botId);
+            if (watchers) {
+                let index = watchers.findIndex(
+                    (w) => w.timerId === timer.timerId
+                );
+                if (index >= 0) {
+                    watchers.splice(index, 1);
+                }
+            }
+        } else if (timer.type === 'watch_portal') {
+            let watchers = this._portalWatcherMap.get(timer.portalId);
+            if (watchers) {
+                let index = watchers.findIndex(
+                    (w) => w.timerId === timer.timerId
+                );
+                if (index >= 0) {
+                    watchers.splice(index, 1);
+                }
+            }
         }
     }
 
@@ -641,6 +788,9 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         return actions;
     }
 
+    // TODO: Improve to correctly handle when a non ScriptError object is added
+    // but contains symbol properties that reference the throwing bot and tag.
+    // The AuxRuntime should look for these error objects and create ScriptErrors for them.
     enqueueError(error: ScriptError | RanOutOfEnergyError): void {
         if (error instanceof RanOutOfEnergyError) {
             throw error;
@@ -739,20 +889,26 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         return task;
     }
 
-    resolveTask(taskId: number, result: any, remote: boolean): void {
+    resolveTask(taskId: number, result: any, remote: boolean): boolean {
         const task = this.tasks.get(taskId);
         if (task && (task.allowRemoteResolution || remote === false)) {
             this.tasks.delete(taskId);
             task.resolve(result);
+            return true;
         }
+
+        return false;
     }
 
-    rejectTask(taskId: number, error: any, remote: boolean): void {
+    rejectTask(taskId: number, error: any, remote: boolean): boolean {
         const task = this.tasks.get(taskId);
         if (task && (task.allowRemoteResolution || remote === false)) {
             this.tasks.delete(taskId);
             task.reject(error);
+            return true;
         }
+
+        return false;
     }
 
     getShoutTimers() {

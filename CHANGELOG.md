@@ -1,5 +1,48 @@
 # CasualOS Changelog
 
+## V2.0.3
+
+#### Date: 7/19/2021
+
+### :boom: Breaking Changes
+
+-   "Custom Portals" are now called "Executables"
+    -   This is because portals should deal almost exclusively with bots and heavily interface with CasualOS.
+    -   "Custom Portals" (as they were called) made this difficult and are better explained as a way to create arbitrary web programs (i.e. executables).
+    -   The new "Apps" (`os.registerApp()` and `os.compileApp()`) features make it easier to create custom portals since they can leverage bots and listen tags directly.
+-   Renamed `portal.open()` to `os.registerExecutable()`.
+-   Renamed `portal.buildBundle()` to `os.buildExecutable()`.
+-   Renamed `portal.registerPrefix()` to `os.registerTagPrefix()`.
+-   Changed the menuPortal to always be anchored to the bottom of the screen instead of to the miniPortal.
+
+### :rocket: Improvements
+
+-   Added the `os.registerApp(name, bot)` and `os.compileApp(name, content)` functions.
+    -   `os.registerApp()` takes an app name and a bot and sets up a space for adding content to the CasualOS frontend.
+    -   Calling `os.registerApp()` will also make the given bot available globally as `{name}Bot`.
+    -   `os.registerApp()` returns a promise that resolves when the app has been setup and can accept content. Additionally, `onAppSetup` will be whispered to the bot that was specified for the app.
+    -   `os.compileApp()` is used to provide content to an app. You can call this as many times as you want and the app will only update when you call `os.compileApp()` for it.
+    -   See the docs for more information.
+-   Added the `html` string helper.
+    -   This can be used to produce HTML from a string for `os.compileApp()` by placing it before a string that uses backtick characters (`` ` ``).
+    -   e.g.
+        ```javascript
+        let result = html`<h1>Hello, World!</h1>`;
+        ```
+    -   See the docs for more information.
+-   Added the `watchBot(bot, callback)` and `watchPortal(portal, callback)` helper functions.
+    -   `watchBot()` can be used to watch a given bot (or list of bots) for changes and triggers the given callback function when the bot(s) change.
+    -   `watchPortal()` can be used to watch the given portal for changes and triggers the given callback function when the portal changes.
+        -   Specifically, `watchPortal()` tracks when the portal is changed (by watching the portal tag on the `configBot`), when bots are added, removed, or updated in the portal, and when the portal bot changes.
+-   Improved the bot dragging logic to support using `os.replaceDragBot(null)` to stop dragging a bot.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where dragging a bot whose position was animated in tempLocal space would produce no visible effect.
+-   Fixed an issue where GLB models compressed with a newer version of Draco could not be loaded.
+    -   You may have to refresh the browser tab 1 extra time after getting the update for this change to take effect. This is because the Draco library is cached by the web browser and updates to the library are checked in the background while the old version is being used.
+-   Fixed an issue where bots in the mapPortal that had LOD listeners would not function correctly unless they had a label.
+
 ## V2.0.2
 
 #### Date: 7/6/2021

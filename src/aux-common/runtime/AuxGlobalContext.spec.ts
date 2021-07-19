@@ -639,4 +639,162 @@ describe('AuxGlobalContext', () => {
             expect(context.getBotTimers(bot2.id)).toEqual([]);
         });
     });
+
+    describe('getWatchersForBot()', () => {
+        it('should return an empty set if there are no bots with listeners', () => {
+            expect(context.getWatchersForBot('missing')).toEqual([]);
+        });
+
+        it('should return a set with the recorded bot IDs', () => {
+            const fn1 = jest.fn();
+            const fn2 = jest.fn();
+            const fn3 = jest.fn();
+            const listener1 = {
+                type: 'watch_bot' as const,
+                botId: 'bot1',
+                handler: fn1,
+                tag: 'abc',
+                timerId: 1,
+            };
+            const listener2 = {
+                type: 'watch_bot' as const,
+                botId: 'bot1',
+                handler: fn2,
+                tag: 'abc',
+                timerId: 2,
+            };
+            const listener3 = {
+                type: 'watch_bot' as const,
+                botId: 'bot1',
+                handler: fn3,
+                tag: 'def',
+                timerId: 3,
+            };
+            context.recordBotTimer('test1', listener1);
+            context.recordBotTimer('test2', listener2);
+            context.recordBotTimer('test3', listener3);
+
+            expect(context.getWatchersForBot('bot1')).toEqual([
+                listener1,
+                listener2,
+                listener3,
+            ]);
+        });
+
+        it('should not include timers that were cleared because the bot that made them was destroyed', () => {
+            const fn1 = jest.fn();
+            const fn2 = jest.fn();
+            const fn3 = jest.fn();
+            const listener1 = {
+                type: 'watch_bot' as const,
+                botId: 'bot1',
+                handler: fn1,
+                tag: 'abc',
+                timerId: 1,
+            };
+            const listener2 = {
+                type: 'watch_bot' as const,
+                botId: 'bot1',
+                handler: fn2,
+                tag: 'abc',
+                timerId: 2,
+            };
+            const listener3 = {
+                type: 'watch_bot' as const,
+                botId: 'bot1',
+                handler: fn3,
+                tag: 'def',
+                timerId: 3,
+            };
+            context.recordBotTimer('test1', listener1);
+            context.recordBotTimer('test2', listener2);
+            context.recordBotTimer('test3', listener3);
+
+            context.cancelBotTimers('test1');
+
+            expect(context.getWatchersForBot('bot1')).toEqual([
+                listener2,
+                listener3,
+            ]);
+        });
+    });
+
+    describe('getWatchersForPortal()', () => {
+        it('should return an empty set if there are no bots with listeners', () => {
+            expect(context.getWatchersForPortal('missing')).toEqual([]);
+        });
+
+        it('should return a set with the recorded bot IDs', () => {
+            const fn1 = jest.fn();
+            const fn2 = jest.fn();
+            const fn3 = jest.fn();
+            const listener1 = {
+                type: 'watch_portal' as const,
+                portalId: 'portal1',
+                handler: fn1,
+                tag: 'abc',
+                timerId: 1,
+            };
+            const listener2 = {
+                type: 'watch_portal' as const,
+                portalId: 'portal1',
+                handler: fn2,
+                tag: 'abc',
+                timerId: 2,
+            };
+            const listener3 = {
+                type: 'watch_portal' as const,
+                portalId: 'portal1',
+                handler: fn3,
+                tag: 'def',
+                timerId: 3,
+            };
+            context.recordBotTimer('test1', listener1);
+            context.recordBotTimer('test2', listener2);
+            context.recordBotTimer('test3', listener3);
+
+            expect(context.getWatchersForPortal('portal1')).toEqual([
+                listener1,
+                listener2,
+                listener3,
+            ]);
+        });
+
+        it('should not include timers that were cleared because the bot that made them was destroyed', () => {
+            const fn1 = jest.fn();
+            const fn2 = jest.fn();
+            const fn3 = jest.fn();
+            const listener1 = {
+                type: 'watch_portal' as const,
+                portalId: 'portal1',
+                handler: fn1,
+                tag: 'abc',
+                timerId: 1,
+            };
+            const listener2 = {
+                type: 'watch_portal' as const,
+                portalId: 'portal1',
+                handler: fn2,
+                tag: 'abc',
+                timerId: 2,
+            };
+            const listener3 = {
+                type: 'watch_portal' as const,
+                portalId: 'portal1',
+                handler: fn3,
+                tag: 'def',
+                timerId: 3,
+            };
+            context.recordBotTimer('test1', listener1);
+            context.recordBotTimer('test2', listener2);
+            context.recordBotTimer('test3', listener3);
+
+            context.cancelBotTimers('test1');
+
+            expect(context.getWatchersForPortal('portal1')).toEqual([
+                listener2,
+                listener3,
+            ]);
+        });
+    });
 });

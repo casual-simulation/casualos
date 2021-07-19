@@ -89,6 +89,8 @@ export abstract class BaseClickOperation implements IOperation {
             if (this._dragOperation.isFinished()) {
                 this._dragOperation.dispose();
                 this._dragOperation = null;
+                this._finished = true;
+                return;
             } else {
                 this._dragOperation.update(calc);
             }
