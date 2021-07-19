@@ -40,6 +40,7 @@ import {
     onDraggingArg,
     DRAGGING_ACTION_NAME,
     DRAGGING_ANY_ACTION_NAME,
+    hasValue,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -278,6 +279,11 @@ export abstract class BaseBotDragOperation implements IOperation {
     }
 
     private _replaceDragBot(bot: Bot | BotTags) {
+        if (!hasValue(bot)) {
+            this._finished = true;
+            return;
+        }
+
         let operation: IOperation;
         if (isBot(bot)) {
             operation = this._createBotDragOperation(bot);
