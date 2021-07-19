@@ -56,7 +56,6 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     hasMap: boolean = false;
     menu: DimensionItem[] = [];
     extraMenuStyle: Partial<HTMLElement['style']> = {};
-    menuStyle: Partial<HTMLElement['style']> = {};
 
     @Inject() addSidebarItem: PlayerApp['addSidebarItem'];
     @Inject() removeSidebarItem: PlayerApp['removeSidebarItem'];
@@ -84,7 +83,6 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
     get finalMenuStyle() {
         return {
-            ...this.menuStyle,
             ...this.extraMenuStyle,
         };
     }
@@ -128,7 +126,6 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
     setupCore() {
         this.menu = [];
-        this.menuStyle = {};
         this.extraMenuStyle = {};
         this._subscriptions.push(
             this._game
@@ -225,10 +222,6 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
     centerMiniCamera() {
         this._game.onCenterCamera(this._game.miniCameraRig);
-    }
-
-    setMenuStyle(style: Partial<HTMLElement['style']>) {
-        this.menuStyle = style;
     }
 
     /**
