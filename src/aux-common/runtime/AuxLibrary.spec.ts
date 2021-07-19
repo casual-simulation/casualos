@@ -3258,17 +3258,11 @@ describe('AuxLibrary', () => {
             it('should return a RegisterCustomPortal action', () => {
                 const promise: any = library.api.os.registerApp(
                     'testPortal',
-                    bot1,
-                    {
-                        type: 'html',
-                    }
+                    bot1
                 );
                 const expected = registerCustomApp(
                     'testPortal',
                     bot1.id,
-                    {
-                        type: 'html',
-                    },
                     context.tasks.size
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);

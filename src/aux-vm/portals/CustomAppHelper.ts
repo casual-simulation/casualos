@@ -22,15 +22,12 @@ export class CustomAppHelper {
             if (event.type === 'register_custom_app') {
                 let appId = event.appId;
 
-                let backend: AppBackend;
-                if (event.options.type === 'html') {
-                    backend = new HtmlAppBackend(
-                        appId,
-                        event.botId,
-                        this.helper,
-                        event.taskId
-                    );
-                }
+                let backend: AppBackend = new HtmlAppBackend(
+                    appId,
+                    event.botId,
+                    this.helper,
+                    event.taskId
+                );
                 this.portals.set(appId, backend);
             }
         }
