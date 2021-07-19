@@ -228,7 +228,6 @@ import {
     EnableCustomDraggingAction,
     enableCustomDragging as calcEnableCustomDragging,
     MINI_PORTAL,
-    RegisterCustomAppOptions,
     registerCustomApp,
     setAppOutput,
     SetAppOutputAction,
@@ -2390,18 +2389,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The bot that should be used to render the portal.
      * @param config The configuration for the portal.
      */
-    function registerApp(
-        portalId: string,
-        bot: Bot | string,
-        config: RegisterCustomAppOptions
-    ): Promise<void> {
+    function registerApp(portalId: string, bot: Bot | string): Promise<void> {
         const task = context.createTask();
-        const event = registerCustomApp(
-            portalId,
-            getID(bot),
-            config,
-            task.taskId
-        );
+        const event = registerCustomApp(portalId, getID(bot), task.taskId);
         return addAsyncAction(task, event);
     }
 

@@ -3866,12 +3866,10 @@ declare global {
          * 
          * @param id The ID of the app.
          * @param bot The bot that should be used to control the app.
-         * @param config The configuration for the app.
          */
          registerApp(
             id: string,
-            bot: Bot | string,
-            config: RegisterCustomAppOptions
+            bot: Bot | string
         ): Promise<void>;
 
         /**

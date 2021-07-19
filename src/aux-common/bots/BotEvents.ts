@@ -2587,22 +2587,6 @@ export interface RegisterCustomAppAction extends AsyncAction {
      * The ID of the bot that should be used to configure the portal.
      */
     botId: string;
-
-    /**
-     * Options that should be used to configure the custom portal.
-     */
-    options: RegisterCustomAppOptions;
-}
-
-/**
- * The options for a register custom portal action.
- */
-export interface RegisterCustomAppOptions {
-    /**
-     * The type of the custom app.
-     * Used by CasualOS to determine how CasualOS should consume the rendered output and display it.
-     */
-    type?: CustomAppOutputType;
 }
 
 /**
@@ -5613,19 +5597,16 @@ export function goToTag(
  * Creates a RegisterCustomAppAction.
  * @param appId The Id of the app.
  * @param botId The ID of the bot.
- * @param options The options to use for the portal.
  */
 export function registerCustomApp(
     appId: string,
     botId: string,
-    options: RegisterCustomAppOptions,
     taskId?: string | number
 ): RegisterCustomAppAction {
     return {
         type: 'register_custom_app',
         appId,
         botId,
-        options,
         taskId,
     };
 }
