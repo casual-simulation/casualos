@@ -1,5 +1,16 @@
 # CasualOS Changelog
 
+## V2.0.4
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the ability to download a PDF with embedded bot data by specifying a filename with a `.pdf` extension to `os.downloadBots()`.
+-   Added the `os.parseBotsFromData(data)` function.
+    -   This function can parse a list of bot mods from JSON or from the contents of a PDF that was created with `os.downloadBots()`.
+    -   It returns a list of bot mods (i.e. mods that have the structure of bots) which can in turn be passed to `create()` to add them to the server.
+
 ## V2.0.3
 
 #### Date: 7/19/2021
