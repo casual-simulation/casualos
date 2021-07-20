@@ -242,7 +242,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
-import { convertToCopiableValue, getEasing } from './Utils';
+import {
+    convertToCopiableValue,
+    embedBase64InPdf,
+    getEasing,
+    getEmbeddedBase64FromPdf,
+} from './Utils';
 import { sha256 as hashSha256, sha512 as hashSha512, hmac } from 'hash.js';
 import stableStringify from 'fast-json-stable-stringify';
 import {
@@ -281,6 +286,7 @@ import { AuxDevice } from './AuxDevice';
 import { AuxVersion } from './AuxVersion';
 import { h } from 'preact';
 import htm from 'htm';
+import { fromByteArray, toByteArray } from 'base64-js';
 
 const html = htm.bind(h);
 
@@ -699,6 +705,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 loadServer,
                 unloadServer,
                 importAUX,
+                parseBotsFromData,
                 replaceDragBot,
                 isInDimension,
                 getCurrentDimension,
@@ -1774,11 +1781,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         for (let bot of bots) {
             state[bot.id] = bot;
         }
+
+        let data = JSON.stringify(getDownloadState(state));
+        if (isPdf(filename)) {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(data);
+            const base64 = fromByteArray(bytes);
+            data = embedBase64InPdf(base64);
+        }
+
+        const downloadedFilename = formatAuxFilename(filename);
+
         return addAction(
             download(
-                JSON.stringify(getDownloadState(state)),
-                formatAuxFilename(filename),
-                'application/json'
+                data,
+                downloadedFilename,
+                mime.getType(downloadedFilename) || 'application/json'
             )
         );
     }
@@ -1907,14 +1925,57 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function importAUX(urlOrJSON: string): ImportAUXAction | ApplyStateAction {
         try {
-            const data = JSON.parse(urlOrJSON);
-            const state = getUploadState(data);
-            const event = addState(state);
-            return addAction(event);
-        } catch {
-            const event = calcImportAUX(urlOrJSON);
-            return addAction(event);
+            const bots = parseBotsFromData(urlOrJSON);
+            if (bots) {
+                let state: BotsState = {};
+                for (let bot of bots) {
+                    state[bot.id] = bot;
+                }
+                const uploaded = getUploadState(state);
+                const event = addState(uploaded);
+                return addAction(event);
+            }
+        } catch {}
+        const event = calcImportAUX(urlOrJSON);
+        return addAction(event);
+    }
+
+    /**
+     * Parses the given JSON or PDF data and returns the list of bots that were contained in it.
+     * @param jsonOrPdf The JSON or PDF data to parse.
+     */
+    function parseBotsFromData(jsonOrPdf: string): Bot[] {
+        let data: any;
+
+        try {
+            data = JSON.parse(jsonOrPdf);
+        } catch (e) {
+            try {
+                data = getEmbeddedBase64FromPdf(jsonOrPdf);
+                const bytes = toByteArray(data);
+                const decoder = new TextDecoder();
+                const text = decoder.decode(bytes);
+                data = JSON.parse(text);
+            } catch (err) {
+                data = null;
+            }
         }
+
+        if (!hasValue(data)) {
+            return null;
+        }
+
+        const state = getUploadState(data);
+        let bots = [] as Bot[];
+
+        for (let bot in state) {
+            const b = state[bot];
+            if (hasValue(b)) {
+                bots.push(b);
+            }
+        }
+
+        return bots;
     }
 
     /**
@@ -5848,8 +5909,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         };
     }
 
+    function isPdf(filename: string): boolean {
+        return filename.endsWith('.pdf');
+    }
+
     function formatAuxFilename(filename: string): string {
         if (filename.endsWith('.aux')) {
+            return filename;
+        } else if (isPdf(filename)) {
             return filename;
         }
         return filename + '.aux';

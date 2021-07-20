@@ -1616,13 +1616,14 @@ os.download("abc", "test.txt");
 ### `os.downloadBots(bots, filename)`
 
 
-Downloads the given array of bots as a `.aux` file with the given filename.
+Downloads the given array of bots as a `.aux` or a `.pdf` file with the given filename.
 Useful for quickly backing up a set of bots.
 
 The **first parameter** is the array of bots that should be downloaded.
 
 The **second parameter** is the name of the file that the bots should be stored in.
-`.aux` will automatically be added to the end of the filename.
+If the filename ends with `.pdf`, then a PDF file will be downloaded with the bots as embedded data.
+Otherwise, `.aux` will automatically be added to the end of the filename.
 
 #### Examples:
 
@@ -1634,6 +1635,11 @@ os.downloadBots(getBots(inDimension("abc")), "abcBots");
 2. Download the current bot as "currentBot.aux".
 ```typescript
 os.downloadBots([bot], "currentBot");
+```
+
+3. Download all bots as "myServer.pdf".
+```typescript
+os.downloadBots(getBots(), "myServer.pdf");
 ```
 
 ### `os.run(script)`
@@ -3454,6 +3460,19 @@ os.importAUX(`{
         }
     }
 }`);
+```
+
+### `os.parseBotsFromData(data)`
+
+Parses a list of bot mods from the given string of data.
+The data can be JSON or the contents of a PDF file.
+Returns an array of mods where each mod has the structure of a bot (i.e. it has `id` and `tags` properties).
+Returns null if the data is not valid JSON or PDF.
+
+The **first parameter** is the string of JSON data or the contents of the PDF file that should parsed.
+
+```typescript title='Parse the list of bots in an @onFileUpload'
+let bots = os.parseBotsFromData(that.file.data);
 ```
 
 ### `os.version()`

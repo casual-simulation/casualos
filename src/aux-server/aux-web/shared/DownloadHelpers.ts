@@ -71,6 +71,7 @@ const textFileExtensions = new Set([
     '.html',
     '.js',
     '.ts',
+    '.pdf',
 ]);
 
 export async function getFileData(
