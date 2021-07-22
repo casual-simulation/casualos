@@ -3725,6 +3725,12 @@ declare global {
         importAUX(urlOrJSON: string): ImportAUXAction | ApplyStateAction;
 
         /**
+         * Parses the given JSON or PDF data and returns the list of bots that were contained in it.
+         * @param jsonOrPdf The JSON or PDF data to parse.
+         */
+        parseBotsFromData(jsonOrPdf: string): Bot[];
+
+        /**
          * Replaces the bot that the user is beginning to drag.
          * Only works from inside a onDrag() or onAnyBotDrag() listen tag.
          * @param bot The bot or mod that should be dragged instead of the original.
