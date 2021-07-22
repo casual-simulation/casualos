@@ -102,7 +102,8 @@ export type ExtraActions =
     | GoToTagAction
     | UpdateHtmlAppAction
     | HtmlAppEventAction
-    | SetAppOutputAction;
+    | SetAppOutputAction
+    | UnregisterHtmlAppAction;
 
 /**
  * Defines a set of possible async action types.
@@ -201,6 +202,7 @@ export type AsyncActions =
     | GetVoicesAction
     | GetGeolocationAction
     | RegisterCustomAppAction
+    | UnregisterCustomAppAction
     | RegisterHtmlAppAction;
 
 /**
@@ -2590,10 +2592,34 @@ export interface RegisterCustomAppAction extends AsyncAction {
 }
 
 /**
+ * Defines an event that unregisters a custom app.
+ */
+export interface UnregisterCustomAppAction extends AsyncAction {
+    type: 'unregister_custom_app';
+
+    /**
+     * The ID of the app.
+     */
+    appId: string;
+}
+
+/**
  * Defines an event that requests that a HTML app be created.
  */
 export interface RegisterHtmlAppAction extends AsyncAction {
     type: 'register_html_app';
+
+    /**
+     * The ID of the app.
+     */
+    appId: string;
+}
+
+/**
+ * Defines an event that requests that a HTML app be deleted.
+ */
+export interface UnregisterHtmlAppAction extends Action {
+    type: 'unregister_html_app';
 
     /**
      * The ID of the app.
@@ -5612,6 +5638,22 @@ export function registerCustomApp(
 }
 
 /**
+ * Creates a UnegisterCustomAppAction.
+ * @param appId The Id of the app.
+ * @param botId The ID of the bot.
+ */
+export function unregisterCustomApp(
+    appId: string,
+    taskId?: string | number
+): UnregisterCustomAppAction {
+    return {
+        type: 'unregister_custom_app',
+        appId,
+        taskId,
+    };
+}
+
+/**
  * Creates a SetAppOutputAction.
  * @param appId The ID of the app.
  * @param output The output that the app should display.
@@ -5636,6 +5678,16 @@ export function registerHtmlApp(
         type: 'register_html_app',
         appId,
         taskId,
+    };
+}
+
+/**
+ * Creates a UnregisterHtmlAppAction.
+ */
+export function unregisterHtmlApp(appId: string): UnregisterHtmlAppAction {
+    return {
+        type: 'unregister_html_app',
+        appId,
     };
 }
 

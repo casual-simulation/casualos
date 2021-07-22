@@ -231,6 +231,7 @@ import {
     registerCustomApp,
     setAppOutput,
     SetAppOutputAction,
+    unregisterCustomApp,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -750,6 +751,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 registerTagPrefix: registerPrefix,
 
                 registerApp: registerApp,
+                unregisterApp,
                 compileApp: setAppContent,
             },
 
@@ -2448,11 +2450,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Registers a custom portal for the given bot with the given options.
      * @param portalId The ID of the portal.
      * @param bot The bot that should be used to render the portal.
-     * @param config The configuration for the portal.
      */
     function registerApp(portalId: string, bot: Bot | string): Promise<void> {
         const task = context.createTask();
         const event = registerCustomApp(portalId, getID(bot), task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Unregisters a custom portal for the given bot with the given options.
+     * @param portalId The ID of the portal.
+     */
+    function unregisterApp(portalId: string): Promise<void> {
+        const task = context.createTask();
+        const event = unregisterCustomApp(portalId, task.taskId);
         return addAsyncAction(task, event);
     }
 

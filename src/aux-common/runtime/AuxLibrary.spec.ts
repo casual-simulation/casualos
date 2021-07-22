@@ -157,6 +157,7 @@ import {
     enableCustomDragging,
     registerCustomApp,
     setAppOutput,
+    unregisterCustomApp,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -3376,6 +3377,18 @@ describe('AuxLibrary', () => {
                 const expected = registerCustomApp(
                     'testPortal',
                     bot1.id,
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.unregisterApp()', () => {
+            it('should return a UnregisterCustomPortal action', () => {
+                const promise: any = library.api.os.unregisterApp('testPortal');
+                const expected = unregisterCustomApp(
+                    'testPortal',
                     context.tasks.size
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);

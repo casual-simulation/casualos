@@ -3879,6 +3879,15 @@ declare global {
         ): Promise<void>;
 
         /**
+         * Removes a custom app from the session.
+         * 
+         * @param id The ID of the app.
+         */
+        unregisterApp(
+            id: string
+        ): Promise<void>;
+
+        /**
          * Sets the output of the given app.
          * @param id The ID of the app.
          * @param output The output that the app should display.

@@ -60,6 +60,17 @@ export default class HtmlAppContainer extends Vue {
                                 taskId: e.taskId,
                             },
                         ];
+                    } else if (e.type === 'unregister_html_app') {
+                        const index = this.apps.findIndex(
+                            (p) =>
+                                p.simulationId === sim.id && p.appId === e.appId
+                        );
+
+                        if (index >= 0) {
+                            this.apps.splice(index, 1);
+                        }
+
+                        this.apps = [...this.apps];
                     }
                 })
             );

@@ -9,6 +9,7 @@ import {
     registerHtmlApp,
     SerializableMutationRecord,
     updateHtmlApp,
+    unregisterHtmlApp,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from '../vm';
 import { AppBackend } from './AppBackend';
@@ -129,7 +130,9 @@ export class HtmlAppBackend implements AppBackend {
         }
     }
 
-    dispose(): void {}
+    dispose(): void {
+        this._helper.transaction(unregisterHtmlApp(this.appId));
+    }
 
     private _getNode(node: any): Node {
         let id: string;

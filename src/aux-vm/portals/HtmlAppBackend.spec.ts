@@ -14,6 +14,7 @@ import {
     setAppOutput,
     stateUpdatedEvent,
     toast,
+    unregisterHtmlApp,
     updateHtmlApp,
     UpdateHtmlAppAction,
 } from '@casual-simulation/aux-common';
@@ -298,6 +299,27 @@ describe('HtmlAppBackend', () => {
             expect(h1Node.nodeName).toBe('H1');
             expect(h1Node.childNodes.length).toBe(1);
             expect(h1Node.childNodes[0].nodeName).toBe('#text');
+        });
+    });
+
+    describe('dispose()', () => {
+        it('should send a unregister_html_app event', async () => {
+            const helper = createHelper({
+                shared: memory,
+            });
+            await helper.transaction(botAdded(createBot('myBot', {})));
+
+            uuidMock.mockReturnValueOnce('uuid');
+
+            let portal = new HtmlAppBackend('testPortal', 'myBot', helper);
+
+            await waitAsync();
+
+            portal.dispose();
+
+            await waitAsync();
+
+            expect(actions.slice(2)).toEqual([unregisterHtmlApp('testPortal')]);
         });
     });
 });
