@@ -2684,7 +2684,7 @@ export interface HtmlAppEventAction extends Action {
  * Defines a mutation record that can be serialized and sent over a web worker pipe.
  */
 export interface SerializableMutationRecord {
-    type: MutationRecord['type'];
+    type: 'attributes' | 'characterData' | 'childList' | 'event_listener';
     target: NodeReference;
     addedNodes: NodeReference[];
     removedNodes: NodeReference[];
@@ -2695,6 +2695,16 @@ export interface SerializableMutationRecord {
     attributeName: string;
     attributeNamespace: string;
     oldValue: string;
+
+    /**
+     * The name of the event listener.
+     */
+    listenerName?: string;
+
+    /**
+     * The number of event listeners that were added (positive number) or removed (negative number).
+     */
+    listenerDelta?: number;
 }
 
 export interface NodeReference {

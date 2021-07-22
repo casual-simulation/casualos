@@ -286,9 +286,19 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
             (this.__handlers[type] || (this.__handlers[type] = [])).push(
                 handler
             );
+            mutation(null, 'event_listener', {
+                listenerName: type,
+                listenerDelta: 1,
+            });
         }
         removeEventListener(type: string, handler: (event: Event) => void) {
-            splice(this.__handlers[type], handler, undefined, true);
+            let index = splice(this.__handlers[type], handler, undefined, true);
+            if (index >= 0) {
+                mutation(null, 'event_listener', {
+                    listenerName: type,
+                    listenerDelta: -1,
+                });
+            }
         }
         dispatchEvent(event: Event) {
             let t = (event.currentTarget = this as Element),
@@ -368,7 +378,17 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
     function mutation(
         target: Node,
         type: string,
-        record: Partial<MutationRecord>
+        record: Partial<MutationRecord> & {
+            /**
+             * The name of the event listener.
+             */
+            listenerName?: string;
+
+            /**
+             * The number of event listeners that were added (positive number) or removed (negative number).
+             */
+            listenerDelta?: number;
+        }
     ) {
         if (pauseMutations) {
             return;
@@ -378,7 +398,8 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
 
         for (let i = observers.length; i--; ) {
             let ob = observers[i],
-                match = target === ob._target;
+                match =
+                    (!target && ob._options.subtree) || target === ob._target;
             if (!match && ob._options.subtree) {
                 do {
                     if ((match = target === ob._target)) break;
