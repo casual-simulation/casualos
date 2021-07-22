@@ -6028,6 +6028,19 @@ os.compileApp('myApp', html`
 `);
 ```
 
+### `os.unregisterApp(appId)`
+
+Unregisters and removes the app with the given ID.
+Returns a promise that resolves when the app has been removed.
+
+The **first parameter** is the ID of the app.
+
+#### Examples
+
+```typescript title='Unregister an app'
+await os.unregisterApp('myApp');
+```
+
 ## Custom Executable Actions
 
 Custom executables are a way to create your own programs inside CasualOS.
