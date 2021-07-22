@@ -6022,6 +6022,12 @@ os.compileApp('myApp', html`
 `);
 ```
 
+```typescript title='Display a slider input'
+os.compileApp('myApp', html`
+    <input type="range" min="0" max="100" onInput=${ (e) => { tags.label = e.target.value } } />
+`);
+```
+
 ## Custom Executable Actions
 
 Custom executables are a way to create your own programs inside CasualOS.
