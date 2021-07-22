@@ -10,6 +10,7 @@
 -   Added the `os.parseBotsFromData(data)` function.
     -   This function can parse a list of bot mods from JSON or from the contents of a PDF that was created with `os.downloadBots()`.
     -   It returns a list of bot mods (i.e. mods that have the structure of bots) which can in turn be passed to `create()` to add them to the server.
+-   Added the `os.unregisterApp(appID)` function to allow removing apps after they have been registered.
 
 ## V2.0.3
 
