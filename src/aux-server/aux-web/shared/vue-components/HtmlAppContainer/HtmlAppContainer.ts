@@ -12,6 +12,7 @@ import {
 import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import HtmlApp from '../HtmlApp/HtmlApp';
+import { v4 as uuid } from 'uuid';
 
 @Component({
     components: {
@@ -55,6 +56,7 @@ export default class HtmlAppContainer extends Vue {
                                 type: 'html',
                                 simulationId: sim.id,
                                 appId: e.appId,
+                                key: uuid(),
                                 taskId: e.taskId,
                             },
                         ];
@@ -71,5 +73,6 @@ interface AppData {
     type: 'html';
     simulationId: string;
     appId: string;
+    key: string;
     taskId: number | string;
 }

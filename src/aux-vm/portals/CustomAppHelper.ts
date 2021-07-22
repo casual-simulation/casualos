@@ -28,6 +28,12 @@ export class CustomAppHelper {
                     this.helper,
                     event.taskId
                 );
+
+                const existing = this.portals.get(appId);
+                if (existing) {
+                    existing.dispose();
+                }
+
                 this.portals.set(appId, backend);
             }
         }
