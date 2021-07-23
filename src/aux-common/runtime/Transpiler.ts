@@ -1,4 +1,5 @@
 import * as Acorn from 'acorn';
+import AcornJSX from 'acorn-jsx';
 import { generate, baseGenerator } from 'astring';
 import LRU from 'lru-cache';
 import { traverse } from 'estraverse';
@@ -10,6 +11,7 @@ import {
     Text,
 } from 'yjs';
 import {
+    createAbsolutePositionFromStateVector,
     createRelativePositionFromStateVector,
     getClock,
 } from '../yjs/YjsHelpers';
@@ -116,13 +118,17 @@ export function replaceMacros(text: string) {
  */
 export class Transpiler {
     private _parser: typeof Acorn.Parser;
+    private _jsxFactory: string;
+    private _jsxFragment: string;
     private _cache: LRU.Cache<string, TranspilerResult>;
 
-    constructor() {
+    constructor(options?: { jsxFactory?: string; jsxFragment?: string }) {
         this._cache = new LRU<string, TranspilerResult>({
             max: 1000,
         });
-        this._parser = Acorn.Parser;
+        this._parser = Acorn.Parser.extend(AcornJSX());
+        this._jsxFactory = options?.jsxFactory ?? 'h';
+        this._jsxFragment = options?.jsxFragment ?? 'Fragment';
     }
 
     /**
@@ -163,7 +169,7 @@ export class Transpiler {
         const text = doc.getText();
         text.insert(0, code);
 
-        this._replace(macroed, node, doc, text);
+        this._replace(node, doc, text);
         const finalCode = text.toString();
         const result: TranspilerResult = {
             code: finalCode,
@@ -224,12 +230,7 @@ export class Transpiler {
         });
     }
 
-    private _replace(
-        code: string,
-        node: Acorn.Node,
-        doc: Doc,
-        text: Text
-    ): void {
+    private _replace(node: Acorn.Node, doc: Doc, text: Text): void {
         if (!node) {
             return;
         }
@@ -246,8 +247,25 @@ export class Transpiler {
                     this._replaceForInStatement(n, doc, text);
                 } else if (n.type === 'ForOfStatement') {
                     this._replaceForOfStatement(n, doc, text);
+                } else if (n.type === 'JSXElement') {
+                    this._replaceJSXElement(n, doc, text);
+                } else if (n.type === 'JSXText') {
+                    this._replaceJSXText(n, doc, text);
+                } else if (n.type === 'JSXExpressionContainer') {
+                    this._replaceJSXExpressionContainer(n, doc, text);
+                } else if (n.type === 'JSXFragment') {
+                    this._replaceJSXFragment(n, doc, text);
                 }
             }),
+
+            keys: {
+                JSXElement: [],
+                JSXFragment: [],
+                JSXOpeningElement: [],
+                JSXClosingElement: [],
+                JSXText: [],
+                JSXExpressionContainer: ['expression'],
+            },
         });
     }
 
@@ -269,6 +287,420 @@ export class Transpiler {
 
     private _replaceForOfStatement(node: any, doc: Doc, text: Text): any {
         this._insertEnergyCheckIntoStatement(doc, text, node.body);
+    }
+
+    private _replaceJSXElement(node: any, doc: Doc, text: Text): any {
+        this._insertJSXFactoryCall(
+            node,
+            node.openingElement,
+            node.closingElement,
+            doc,
+            text
+        );
+
+        this._removeTag(
+            node,
+            node.openingElement,
+            node.closingElement,
+            doc,
+            text
+        );
+    }
+
+    private _replaceJSXFragment(node: any, doc: Doc, text: Text): any {
+        this._insertJSXFactoryCall(
+            node,
+            node.openingFragment,
+            node.closingFragment,
+            doc,
+            text
+        );
+
+        this._removeTag(
+            node,
+            node.openingFragment,
+            node.closingFragment,
+            doc,
+            text
+        );
+    }
+
+    private _insertJSXFactoryCall(
+        node: any,
+        openElement: any,
+        closeElement: any,
+        doc: Doc,
+        text: Text
+    ): void {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const openingFunctionCall = `${this._jsxFactory}(`;
+        const absoluteStart = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.start,
+            undefined,
+            true
+        );
+        const end = createRelativePositionFromStateVector(
+            text,
+            version,
+            closeElement.end,
+            -1,
+            true
+        );
+
+        let currentIndex = absoluteStart.index;
+
+        text.insert(currentIndex, openingFunctionCall);
+        currentIndex += openingFunctionCall.length;
+
+        if (node.type === 'JSXElement') {
+            const name = openElement.name.name;
+            if (/^[a-z]/.test(name)) {
+                // make string literal
+                const nodeName = `"${name}",`;
+                text.insert(currentIndex, nodeName);
+                currentIndex += nodeName.length;
+            } else {
+                // make variable reference
+                const nodeName = `${name},`;
+                text.insert(currentIndex, nodeName);
+                currentIndex += nodeName.length;
+            }
+        } else {
+            // make string literal
+            const nodeName = this._jsxFragment + ',';
+            text.insert(currentIndex, nodeName);
+            currentIndex += nodeName.length;
+        }
+
+        if (openElement.attributes.length > 0) {
+            this._replaceJSXElementAttributes(
+                node,
+                openElement,
+                openElement.attributes,
+                doc,
+                text,
+                currentIndex
+            );
+        } else {
+            const props = `null,`;
+            text.insert(currentIndex, props);
+        }
+
+        this._replaceJSXElementChildren(node, node.children, doc, text);
+
+        const absoluteEnd = createAbsolutePositionFromRelativePosition(
+            end,
+            doc
+        );
+        doc.clientID += 1;
+        text.insert(absoluteEnd.index, ')');
+    }
+
+    private _replaceJSXElementAttributes(
+        node: any,
+        openElement: any,
+        attributes: any[],
+        doc: Doc,
+        text: Text,
+        currentIndex: number
+    ): void {
+        // doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const start = createRelativePositionFromStateVector(
+            text,
+            version,
+            openElement.name?.end ?? openElement.start + 1,
+            undefined,
+            true
+        );
+        const end = createRelativePositionFromStateVector(
+            text,
+            version,
+            openElement.end,
+            -1,
+            true
+        );
+
+        let attrs = [];
+
+        for (let attr of attributes) {
+            const attrStart = createRelativePositionFromStateVector(
+                text,
+                version,
+                attr.start,
+                undefined,
+                true
+            );
+            const attrName = attr.name.name;
+
+            attrs.push([attr, attrStart, attrName]);
+        }
+
+        let index = 0;
+        for (let [attr, start, name] of attrs) {
+            const pos = createAbsolutePositionFromRelativePosition(start, doc);
+            let val = `"${name}":`;
+            if (index > 0) {
+                val = ',' + val;
+            }
+            text.insert(pos.index, val);
+            index++;
+
+            this._replace(attr.value, doc, text);
+        }
+
+        const startAbsolute = createAbsolutePositionFromRelativePosition(
+            start,
+            doc
+        );
+        text.insert(startAbsolute.index, '{');
+
+        const endAbsolute = createAbsolutePositionFromRelativePosition(
+            end,
+            doc
+        );
+        text.insert(endAbsolute.index, '},');
+    }
+
+    private _replaceJSXElementChildren(
+        node: any,
+        children: any,
+        doc: Doc,
+        text: Text
+    ): void {
+        const version = { '0': getClock(doc, 0) };
+
+        for (let child of children) {
+            const pos = createRelativePositionFromStateVector(
+                text,
+                version,
+                child.end,
+                undefined,
+                true
+            );
+            this._replace(child, doc, text);
+
+            doc.clientID += 1;
+            const absoluteEnd = createAbsolutePositionFromRelativePosition(
+                pos,
+                doc
+            );
+            text.insert(absoluteEnd.index, ',');
+        }
+    }
+
+    private _replaceJSXText(node: any, doc: Doc, text: Text): any {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const startIndex = node.start;
+        const endIndex = node.end;
+
+        const absoluteStart = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            startIndex,
+            undefined,
+            true
+        );
+        text.insert(absoluteStart.index, '`');
+
+        const absoluteEnd = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            endIndex,
+            undefined,
+            true
+        );
+        text.insert(absoluteEnd.index, '`');
+    }
+
+    private _replaceJSXExpressionContainer(node: any, doc: Doc, text: Text) {
+        const version = { '0': getClock(doc, 0) };
+
+        // Positions for the opening "{"
+        const valueStartBegin = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.start,
+            undefined,
+            true
+        );
+        const valueStartEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.start + 1,
+            -1,
+            true
+        );
+
+        // Positions for the closing "}"
+        const valueEndBegin = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.end - 1,
+            undefined,
+            true
+        );
+        const valueEndEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.end + 1,
+            -1,
+            true
+        );
+
+        // Delete the opening "{"
+        const absoluteValueStartBegin = createAbsolutePositionFromRelativePosition(
+            valueStartBegin,
+            doc
+        );
+        const absoluteValueStartEnd = createAbsolutePositionFromRelativePosition(
+            valueStartEnd,
+            doc
+        );
+        text.delete(absoluteValueStartBegin.index, 1);
+
+        // Delete the closing "}"
+        const absoluteValueEndBegin = createAbsolutePositionFromRelativePosition(
+            valueEndBegin,
+            doc
+        );
+        const absoluteValueEndEnd = createAbsolutePositionFromRelativePosition(
+            valueEndEnd,
+            doc
+        );
+        text.delete(absoluteValueEndBegin.index, 1);
+    }
+
+    private _removeTag(
+        node: any,
+        openElement: any,
+        closeElement: any,
+        doc: Doc,
+        text: Text
+    ): void {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        // Save relative positions here
+        const openStart = createRelativePositionFromStateVector(
+            text,
+            version,
+            openElement.start,
+            undefined,
+            true
+        );
+        const openNameEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            openElement.name?.end ?? openElement.start + 1,
+            -1,
+            true
+        );
+        const openEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            openElement.end - 1,
+            undefined,
+            true
+        );
+        const closingStart = createRelativePositionFromStateVector(
+            text,
+            version,
+            closeElement.start,
+            undefined,
+            true
+        );
+        const closingEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            closeElement.end,
+            -1,
+            true
+        );
+
+        let attributePositions = [];
+        for (let attribute of openElement.attributes) {
+            const nameStart = createRelativePositionFromStateVector(
+                text,
+                version,
+                attribute.name.start,
+                undefined,
+                true
+            );
+            const nameEnd = createRelativePositionFromStateVector(
+                text,
+                version,
+                attribute.name.end + 1,
+                -1,
+                true
+            );
+
+            attributePositions.push([nameStart, nameEnd]);
+
+            // if (attribute.value.type === 'JSXChildExpression') {
+            //
+            // }
+        }
+
+        for (let [start, end] of attributePositions) {
+            // remove attribute name
+            const nameStart = createAbsolutePositionFromRelativePosition(
+                start,
+                doc
+            );
+            const nameEnd = createAbsolutePositionFromRelativePosition(
+                end,
+                doc
+            );
+
+            // remove name + "="
+            text.delete(nameStart.index, nameEnd.index - nameStart.index);
+        }
+
+        // remove open tag < and tag name
+        const openStartAbsolute = createAbsolutePositionFromRelativePosition(
+            openStart,
+            doc
+        );
+        const openNameEndAbsolute = createAbsolutePositionFromRelativePosition(
+            openNameEnd,
+            doc
+        );
+        text.delete(
+            openStartAbsolute.index,
+            openNameEndAbsolute.index - openStartAbsolute.index
+        );
+
+        // remove open tag >
+        const openEndAbsolute = createAbsolutePositionFromRelativePosition(
+            openEnd,
+            doc
+        );
+        text.delete(openEndAbsolute.index, 1);
+
+        // remove closing tag
+        const closingStartAbsolute = createAbsolutePositionFromRelativePosition(
+            closingStart,
+            doc
+        );
+        const closingEndAbsolute = createAbsolutePositionFromRelativePosition(
+            closingEnd,
+            doc
+        );
+        text.delete(
+            closingStartAbsolute.index,
+            closingEndAbsolute.index - closingStartAbsolute.index
+        );
     }
 
     private _insertEnergyCheckIntoStatement(
@@ -332,38 +764,29 @@ export class Transpiler {
         wrapWithBraces: boolean
     ) {
         if (wrapWithBraces) {
-            const relative = createRelativePositionFromStateVector(
+            const absolute = createAbsolutePositionFromStateVector(
+                doc,
                 text,
                 version,
                 startIndex
             );
-            const absolute = createAbsolutePositionFromRelativePosition(
-                relative,
-                doc
-            );
             text.insert(absolute.index, '{');
         }
 
-        const relative = createRelativePositionFromStateVector(
+        const absolute = createAbsolutePositionFromStateVector(
+            doc,
             text,
             version,
             startIndex
         );
-        const absolute = createAbsolutePositionFromRelativePosition(
-            relative,
-            doc
-        );
         text.insert(absolute.index, ENERGY_CHECK_CALL + postfix);
 
         if (wrapWithBraces) {
-            const relative = createRelativePositionFromStateVector(
+            const absolute = createAbsolutePositionFromStateVector(
+                doc,
                 text,
                 version,
                 endIndex
-            );
-            const absolute = createAbsolutePositionFromRelativePosition(
-                relative,
-                doc
             );
             text.insert(absolute.index, '}');
         }
