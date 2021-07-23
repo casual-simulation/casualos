@@ -51,7 +51,7 @@ html.ar-app .webxr-sessions canvas {
 
 .toolbar.menu {
     position: absolute;
-    bottom: 0;
+    bottom: 8px;
     left: 33%;
     width: 33%;
 }
