@@ -351,6 +351,26 @@ export class Transpiler {
             -1,
             true
         );
+        const nameStart =
+            node.type === 'JSXElement'
+                ? createRelativePositionFromStateVector(
+                      text,
+                      version,
+                      openElement.name.start,
+                      undefined,
+                      true
+                  )
+                : null;
+        const nameEnd =
+            node.type == 'JSXElement'
+                ? createRelativePositionFromStateVector(
+                      text,
+                      version,
+                      openElement.name.end,
+                      -1,
+                      true
+                  )
+                : null;
 
         let currentIndex = absoluteStart.index;
 
@@ -358,17 +378,37 @@ export class Transpiler {
         currentIndex += openingFunctionCall.length;
 
         if (node.type === 'JSXElement') {
-            const name = openElement.name.name;
-            if (/^[a-z]/.test(name)) {
-                // make string literal
-                const nodeName = `"${name}",`;
-                text.insert(currentIndex, nodeName);
-                currentIndex += nodeName.length;
+            const nameElement = openElement.name;
+
+            let addQuotes = false;
+            if (nameElement.type === 'JSXIdentifier') {
+                const name = openElement.name.name;
+                if (/^[a-z]/.test(name)) {
+                    addQuotes = true;
+                }
+            }
+
+            // Add quotes around builtin component names
+            if (addQuotes) {
+                const startIndex = createAbsolutePositionFromRelativePosition(
+                    nameStart,
+                    doc
+                );
+                text.insert(startIndex.index, '"');
+                const endIndex = createAbsolutePositionFromRelativePosition(
+                    nameEnd,
+                    doc
+                );
+                text.insert(endIndex.index, '",');
+                currentIndex = endIndex.index + 2;
             } else {
-                // make variable reference
-                const nodeName = `${name},`;
-                text.insert(currentIndex, nodeName);
-                currentIndex += nodeName.length;
+                // Add the comma after variable reference names
+                const endIndex = createAbsolutePositionFromRelativePosition(
+                    nameEnd,
+                    doc
+                );
+                text.insert(endIndex.index, ',');
+                currentIndex = endIndex.index + 1;
             }
         } else {
             // make string literal
@@ -383,8 +423,7 @@ export class Transpiler {
                 openElement,
                 openElement.attributes,
                 doc,
-                text,
-                currentIndex
+                text
             );
         } else {
             const props = `null,`;
@@ -406,8 +445,7 @@ export class Transpiler {
         openElement: any,
         attributes: any[],
         doc: Doc,
-        text: Text,
-        currentIndex: number
+        text: Text
     ): void {
         // doc.clientID += 1;
         const version = { '0': getClock(doc, 0) };
@@ -697,9 +735,6 @@ export class Transpiler {
                 attributePositions.push([openBraceStart, openBraceEnd]);
                 attributePositions.push([closeBraceStart, closeBraceEnd]);
             }
-            // if (attribute.value.type === 'JSXChildExpression') {
-            //
-            // }
         }
 
         for (let [start, end] of attributePositions) {
@@ -717,19 +752,12 @@ export class Transpiler {
             text.delete(nameStart.index, nameEnd.index - nameStart.index);
         }
 
-        // remove open tag < and tag name
+        // remove open tag <
         const openStartAbsolute = createAbsolutePositionFromRelativePosition(
             openStart,
             doc
         );
-        const openNameEndAbsolute = createAbsolutePositionFromRelativePosition(
-            openNameEnd,
-            doc
-        );
-        text.delete(
-            openStartAbsolute.index,
-            openNameEndAbsolute.index - openStartAbsolute.index
-        );
+        text.delete(openStartAbsolute.index, 1);
 
         // remove open tag >
         const openEndAbsolute = createAbsolutePositionFromRelativePosition(

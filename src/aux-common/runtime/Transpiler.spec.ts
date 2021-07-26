@@ -467,6 +467,14 @@ describe('Transpiler', () => {
                 expect(result).toBe(`h("div",{ "bob":true},)`);
             });
 
+            it('should support dot notation in element names', () => {
+                const result = transpiler.transpile(
+                    `<Html.Button></Html.Button>`
+                );
+
+                expect(result).toBe(`h(Html.Button,null,)`);
+            });
+
             // const cases = [];
 
             // it.each(cases)('%s', (desc, given, expected) => {
