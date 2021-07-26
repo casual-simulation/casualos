@@ -413,6 +413,54 @@ describe('Transpiler', () => {
                 expect(result).toBe(`h(Fragment,null,\`My Button\`,)`);
             });
 
+            it('should support fragments with multiple children', () => {
+                const result = transpiler.transpile(
+                    [`<>`, `<div></div>`, `<button></button>`, `</>`].join('')
+                );
+
+                expect(result).toBe(
+                    `h(Fragment,null,h("div",null,),h("button",null,),)`
+                );
+            });
+
+            it('should support the attribute spread syntax', () => {
+                const result = transpiler.transpile(
+                    `<div {...myAttribute}></div>`
+                );
+
+                expect(result).toBe(`h("div",{ ...myAttribute},)`);
+            });
+
+            it('should apply spread attributes in the order they are provided compared to normal attributes', () => {
+                const result = transpiler.transpile(
+                    `<div name="bob" {...myAttribute} value="123"></div>`
+                );
+
+                expect(result).toBe(
+                    `h("div",{ "name":"bob" ,...myAttribute ,"value":"123"},)`
+                );
+            });
+
+            it('should support additional expressions in a spread attribute', () => {
+                const result = transpiler.transpile(
+                    `<div {...{ bob: true, value: 123 }}></div>`
+                );
+
+                expect(result).toBe(
+                    `h("div",{ ...{ bob: true, value: 123 }},)`
+                );
+            });
+
+            it('should support elements in spread attributes', () => {
+                const result = transpiler.transpile(
+                    `<div {...{ bob: <button></button> }}></div>`
+                );
+
+                expect(result).toBe(
+                    `h("div",{ ...{ bob: h("button",null,) }},)`
+                );
+            });
+
             // const cases = [];
 
             // it.each(cases)('%s', (desc, given, expected) => {

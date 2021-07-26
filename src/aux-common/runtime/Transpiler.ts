@@ -437,22 +437,33 @@ export class Transpiler {
                 undefined,
                 true
             );
-            const attrName = attr.name.name;
 
-            attrs.push([attr, attrStart, attrName]);
+            if (attr.type === 'JSXSpreadAttribute') {
+                attrs.push([attr, attrStart]);
+            } else {
+                const attrName = attr.name.name;
+                attrs.push([attr, attrStart, attrName]);
+            }
         }
 
         let index = 0;
         for (let [attr, start, name] of attrs) {
             const pos = createAbsolutePositionFromRelativePosition(start, doc);
-            let val = `"${name}":`;
+            let val = '';
             if (index > 0) {
-                val = ',' + val;
+                val = ',';
+            }
+            if (attr.type !== 'JSXSpreadAttribute') {
+                val += `"${name}":`;
             }
             text.insert(pos.index, val);
             index++;
 
-            this._replace(attr.value, doc, text);
+            if (attr.type === 'JSXSpreadAttribute') {
+                this._replace(attr.argument, doc, text);
+            } else {
+                this._replace(attr.value, doc, text);
+            }
         }
 
         const startAbsolute = createAbsolutePositionFromRelativePosition(
@@ -630,23 +641,56 @@ export class Transpiler {
 
         let attributePositions = [];
         for (let attribute of openElement.attributes) {
-            const nameStart = createRelativePositionFromStateVector(
-                text,
-                version,
-                attribute.name.start,
-                undefined,
-                true
-            );
-            const nameEnd = createRelativePositionFromStateVector(
-                text,
-                version,
-                attribute.name.end + 1,
-                -1,
-                true
-            );
+            if (attribute.type !== 'JSXSpreadAttribute') {
+                const nameStart = createRelativePositionFromStateVector(
+                    text,
+                    version,
+                    attribute.name.start,
+                    undefined,
+                    true
+                );
+                const nameEnd = createRelativePositionFromStateVector(
+                    text,
+                    version,
+                    attribute.name.end + 1,
+                    -1,
+                    true
+                );
 
-            attributePositions.push([nameStart, nameEnd]);
+                attributePositions.push([nameStart, nameEnd]);
+            } else {
+                const openBraceStart = createRelativePositionFromStateVector(
+                    text,
+                    version,
+                    attribute.start,
+                    undefined,
+                    true
+                );
+                const openBraceEnd = createRelativePositionFromStateVector(
+                    text,
+                    version,
+                    attribute.start + 1,
+                    undefined,
+                    true
+                );
+                const closeBraceStart = createRelativePositionFromStateVector(
+                    text,
+                    version,
+                    attribute.end - 1,
+                    -1,
+                    true
+                );
+                const closeBraceEnd = createRelativePositionFromStateVector(
+                    text,
+                    version,
+                    attribute.end,
+                    -1,
+                    true
+                );
 
+                attributePositions.push([openBraceStart, openBraceEnd]);
+                attributePositions.push([closeBraceStart, closeBraceEnd]);
+            }
             // if (attribute.value.type === 'JSXChildExpression') {
             //
             // }
