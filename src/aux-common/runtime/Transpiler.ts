@@ -455,6 +455,10 @@ export class Transpiler {
             }
             if (attr.type !== 'JSXSpreadAttribute') {
                 val += `"${name}":`;
+
+                if (!attr.value) {
+                    val += 'true';
+                }
             }
             text.insert(pos.index, val);
             index++;
@@ -652,7 +656,9 @@ export class Transpiler {
                 const nameEnd = createRelativePositionFromStateVector(
                     text,
                     version,
-                    attribute.name.end + 1,
+                    !!attribute.value
+                        ? attribute.name.end + 1
+                        : attribute.name.end,
                     -1,
                     true
                 );

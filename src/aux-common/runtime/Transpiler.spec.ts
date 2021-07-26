@@ -461,6 +461,12 @@ describe('Transpiler', () => {
                 );
             });
 
+            it('should support attributes with no value', () => {
+                const result = transpiler.transpile(`<div bob></div>`);
+
+                expect(result).toBe(`h("div",{ "bob":true},)`);
+            });
+
             // const cases = [];
 
             // it.each(cases)('%s', (desc, given, expected) => {
