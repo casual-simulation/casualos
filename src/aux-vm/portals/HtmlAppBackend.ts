@@ -33,6 +33,7 @@ export class HtmlAppBackend implements AppBackend {
     private _helper: AuxHelper;
     private _initTaskId: string;
     private _registerTaskId: string | number;
+    private _instanceId: string;
     private _document: Document;
     private _mutationObserver: MutationObserver;
     private _nodes: Map<string, Node> = new Map<string, Node>();
@@ -70,7 +71,8 @@ export class HtmlAppBackend implements AppBackend {
         appId: string,
         botId: string,
         helper: AuxHelper,
-        registerTaskId?: string | number
+        registerTaskId?: string | number,
+        instanceId?: string
     ) {
         this.appId = appId;
         this.botId = botId;
@@ -79,7 +81,10 @@ export class HtmlAppBackend implements AppBackend {
         this._helper = helper;
 
         this._initTaskId = uuid();
-        this._helper.transaction(registerHtmlApp(this.appId, this._initTaskId));
+        this._instanceId = instanceId ?? uuid();
+        this._helper.transaction(
+            registerHtmlApp(this.appId, this._instanceId, this._initTaskId)
+        );
     }
 
     handleEvents(events: BotAction[]): void {
@@ -131,7 +136,9 @@ export class HtmlAppBackend implements AppBackend {
     }
 
     dispose(): void {
-        this._helper.transaction(unregisterHtmlApp(this.appId));
+        this._helper.transaction(
+            unregisterHtmlApp(this.appId, this._instanceId)
+        );
     }
 
     private _getNode(node: any): Node {

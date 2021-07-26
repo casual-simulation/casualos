@@ -110,11 +110,19 @@ describe('HtmlAppBackend', () => {
         });
         uuidMock.mockReturnValueOnce('uuid');
 
-        let portal = new HtmlAppBackend('testPortal', 'myBot', helper);
+        let portal = new HtmlAppBackend(
+            'testPortal',
+            'myBot',
+            helper,
+            undefined,
+            'appId'
+        );
 
         await waitAsync();
 
-        expect(actions).toEqual([registerHtmlApp('testPortal', 'uuid')]);
+        expect(actions).toEqual([
+            registerHtmlApp('testPortal', 'appId', 'uuid'),
+        ]);
     });
 
     describe('onAppSetup', () => {
@@ -160,7 +168,13 @@ describe('HtmlAppBackend', () => {
 
             uuidMock.mockReturnValueOnce('uuid');
 
-            let portal = new HtmlAppBackend('testPortal', 'myBot', helper);
+            let portal = new HtmlAppBackend(
+                'testPortal',
+                'myBot',
+                helper,
+                undefined,
+                'appId'
+            );
 
             await waitAsync();
 
@@ -169,7 +183,7 @@ describe('HtmlAppBackend', () => {
             await waitAsync();
 
             expect(actions.slice(1)).toEqual([
-                registerHtmlApp('testPortal', 'uuid'),
+                registerHtmlApp('testPortal', 'appId', 'uuid'),
                 updateHtmlApp('testPortal', [
                     {
                         type: 'childList',
@@ -270,7 +284,13 @@ describe('HtmlAppBackend', () => {
 
             uuidMock.mockReturnValueOnce('uuid');
 
-            let portal = new HtmlAppBackend('testPortal', 'myBot', helper);
+            let portal = new HtmlAppBackend(
+                'testPortal',
+                'myBot',
+                helper,
+                undefined,
+                'appId'
+            );
 
             await waitAsync();
 
@@ -284,7 +304,9 @@ describe('HtmlAppBackend', () => {
             await waitAsync();
 
             expect(actions.length).toBe(2);
-            expect(actions[0]).toEqual(registerHtmlApp('testPortal', 'uuid'));
+            expect(actions[0]).toEqual(
+                registerHtmlApp('testPortal', 'appId', 'uuid')
+            );
 
             const updateAction = actions[1] as UpdateHtmlAppAction;
 
@@ -309,9 +331,15 @@ describe('HtmlAppBackend', () => {
             });
             await helper.transaction(botAdded(createBot('myBot', {})));
 
-            uuidMock.mockReturnValueOnce('uuid');
+            uuidMock.mockReturnValueOnce('uuid').mockReturnValueOnce;
 
-            let portal = new HtmlAppBackend('testPortal', 'myBot', helper);
+            let portal = new HtmlAppBackend(
+                'testPortal',
+                'myBot',
+                helper,
+                undefined,
+                'appId'
+            );
 
             await waitAsync();
 
@@ -319,7 +347,9 @@ describe('HtmlAppBackend', () => {
 
             await waitAsync();
 
-            expect(actions.slice(2)).toEqual([unregisterHtmlApp('testPortal')]);
+            expect(actions.slice(2)).toEqual([
+                unregisterHtmlApp('testPortal', 'appId'),
+            ]);
         });
     });
 });
