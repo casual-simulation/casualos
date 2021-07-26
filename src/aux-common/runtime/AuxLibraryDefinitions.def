@@ -2586,6 +2586,15 @@ export interface CodeBundle {
     modules: BundleModules;
 }
 
+/**
+ * Defines an interface for a function that provides HTML VDOM capabilities to bots.
+ */
+ export interface HtmlFunction {
+    (...args: any[]): any;
+    h: (name: string | Function, props: any, ...children: any[]) => any;
+    f: any;
+}
+
 declare global {
 
     /**
@@ -3274,7 +3283,7 @@ declare global {
      * Produces HTML from the given HTML strings and expressions.
      * Best used with a tagged template string.
      */
-    function html(strings: string[], ...expressions: any[]): any;
+    const html: HtmlFunction;
 
     /**
      * Defines a set of functions that relate to common OS operations.

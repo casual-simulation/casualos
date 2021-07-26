@@ -285,11 +285,26 @@ import './PerformanceNowPolyfill';
 import './BlobPolyfill';
 import { AuxDevice } from './AuxDevice';
 import { AuxVersion } from './AuxVersion';
-import { h } from 'preact';
+import { Fragment, h } from 'preact';
 import htm from 'htm';
 import { fromByteArray, toByteArray } from 'base64-js';
 
-const html = htm.bind(h);
+const _html: HtmlFunction = htm.bind(h) as any;
+
+const html: HtmlFunction = ((...args: any[]) => {
+    return _html(...args);
+}) as any;
+(<any>html).h = h;
+(<any>html).f = Fragment;
+
+/**
+ * Defines an interface for a function that provides HTML VDOM capabilities to bots.
+ */
+export interface HtmlFunction {
+    (...args: any[]): any;
+    h: (name: string | Function, props: any, ...children: any[]) => any;
+    f: any;
+}
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
