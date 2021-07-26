@@ -19,7 +19,8 @@
         "/LICENSE.txt",
         "**/*.js",
         "**/*.js.map",
-        "**/*.d.ts"
+        "**/*.d.ts",
+        "html/iframe_host.html"
     ],
     "repository": {
         "type": "git",
