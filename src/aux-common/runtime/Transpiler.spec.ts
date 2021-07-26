@@ -475,6 +475,12 @@ describe('Transpiler', () => {
                 expect(result).toBe(`h(Html.Button,null,)`);
             });
 
+            it('should leave HTML escaped character sequences in text', () => {
+                const result = transpiler.transpile(`<p>10 is &lt; 20</p>`);
+
+                expect(result).toBe(`h("p",null,\`10 is &lt; 20\`,)`);
+            });
+
             // const cases = [];
 
             // it.each(cases)('%s', (desc, given, expected) => {
