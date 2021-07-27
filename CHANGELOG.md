@@ -2,7 +2,7 @@
 
 ## V2.0.5
 
-#### Date: TBD
+#### Date: 7/27/2021
 
 ### :rocket: Bug Fixes
 
