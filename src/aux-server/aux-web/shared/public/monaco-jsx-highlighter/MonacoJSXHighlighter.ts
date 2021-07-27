@@ -70,36 +70,6 @@ export const JSXCommentContexts = {
     JSX: 'JSX'
 }
 
-export const configureLocToMonacoRange = (
-    _monaco = monaco, parser = 'babylon'
-) => {
-    switch (parser) {
-        case 'babylon':
-        default:
-            return (
-                node: NodeWithLocations,
-                startLineOffset = 0,
-                startColumnOffset = 0,
-                endLineOffset = 0,
-                endColumnOffset = 0,
-            ) => {
-                if (!node || !node.start) {
-                    return new _monaco.Range(1, 1, 1, 1);
-                }
-                return new _monaco.Range(
-                    startLineOffset + node.loc.start.line,
-                    startColumnOffset + node.loc.start.column + 1,
-                    endLineOffset + node.end ?
-                        node.loc.end.line
-                        : node.loc.start.line,
-                    endColumnOffset + node.end ?
-                        node.loc.end.column + 1
-                        : node.loc.start.column + 1,
-                );
-            };
-    }
-};
-
 interface NodeWithLocations {
     start: number;
     end: number;
@@ -130,8 +100,23 @@ class MonacoJSXHighlighter {
     private _transpiler: Transpiler;
     private _monacoEditor: monaco.editor.ICodeEditor;
     private _decoratorIds: string[];
+    private _lineOffset: number = 0;
 
-    private _locToMonacoRange: (loc: NodeWithLocations) => monaco.Range;
+    private _locToMonacoRange(node: NodeWithLocations): monaco.Range {
+        if (!node || !node.start) {
+            return new monaco.Range(1, 1, 1, 1);
+        }
+        return new monaco.Range(
+            this._getActualLineNumber(node.loc.start.line),
+            node.loc.start.column + 1,
+            this._getActualLineNumber(node.end ?
+                node.loc.end.line
+                : node.loc.start.line),
+            node.end ?
+                node.loc.end.column + 1
+                : node.loc.start.column + 1,
+        );
+    }
 
     constructor(
         transpiler: Transpiler,
@@ -139,14 +124,20 @@ class MonacoJSXHighlighter {
         options: Partial<MonacoJSXHighlighterOptions> = {},
     ) {
         this._transpiler = transpiler;
-        this._locToMonacoRange = configureLocToMonacoRange(monaco);
         this._monacoEditor = monacoEditor;
         this.options = {...defaultOptions, ...options};
     }
 
     getAstPromise = () => new Promise((resolve) => {
         try {
-            resolve(this._transpiler.parse(this._monacoEditor.getValue()));
+            let script = this._monacoEditor.getValue();
+            if (script.indexOf('await ') >= 0) {
+                script = `async function _() {\n${script}\n}`;
+                this._lineOffset = -1;
+            } else {
+                this._lineOffset = 0;
+            }
+            resolve(this._transpiler.parse(script));
         } catch (e) {
             reject(e);
         }
@@ -287,9 +278,9 @@ class MonacoJSXHighlighter {
         const elementName = openingElement.name.name;
         decorators.push({
             range: new monaco.Range(
-                oLoc.start.line,
+                this._getActualLineNumber(oLoc.start.line),
                 oLoc.start.column + 1,
-                oLoc.start.line,
+                this._getActualLineNumber(oLoc.start.line),
                 oLoc.start.column + 2
             ),
             options: this.options.isUseSeparateElementStyles ?
@@ -298,11 +289,11 @@ class MonacoJSXHighlighter {
         });
         decorators.push({
             range: new monaco.Range(
-                oLoc.end.line,
+                this._getActualLineNumber(oLoc.end.line),
                 oLoc.end.column + (
                     openingElement.selfClosing ? -1 : 0
                 ),
-                oLoc.end.line,
+                this._getActualLineNumber(oLoc.end.line),
                 oLoc.end.column + 1
             ),
             options: this.options.isUseSeparateElementStyles ?
@@ -316,9 +307,9 @@ class MonacoJSXHighlighter {
         const cLoc = closingElement.loc;
         decorators.push({
             range: new monaco.Range(
-                cLoc.start.line,
+                this._getActualLineNumber(cLoc.start.line),
                 cLoc.start.column + 1,
-                cLoc.start.line,
+                this._getActualLineNumber(cLoc.start.line),
                 cLoc.start.column + 3
             ),
             options: this.options.isUseSeparateElementStyles ?
@@ -327,9 +318,9 @@ class MonacoJSXHighlighter {
         });
         decorators.push({
             range: new monaco.Range(
-                cLoc.end.line,
+                this._getActualLineNumber(cLoc.end.line),
                 cLoc.end.column,
-                cLoc.end.line,
+                this._getActualLineNumber(cLoc.end.line),
                 cLoc.end.column + 1
             ),
             options: this.options.isUseSeparateElementStyles ?
@@ -362,6 +353,10 @@ class MonacoJSXHighlighter {
                 extractDecorator(node);
             break;
         }
+    }
+
+    private _getActualLineNumber(lineNumber: number) {
+        return lineNumber + this._lineOffset;
     }
 }
 
