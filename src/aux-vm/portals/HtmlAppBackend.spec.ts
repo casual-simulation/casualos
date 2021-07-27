@@ -322,6 +322,52 @@ describe('HtmlAppBackend', () => {
             expect(h1Node.childNodes.length).toBe(1);
             expect(h1Node.childNodes[0].nodeName).toBe('#text');
         });
+
+        it('should render the most recent output when the app is setup', async () => {
+            const helper = createHelper({
+                shared: memory,
+            });
+
+            uuidMock.mockReturnValueOnce('uuid');
+
+            let portal = new HtmlAppBackend(
+                'testPortal',
+                'myBot',
+                helper,
+                undefined,
+                'appId'
+            );
+
+            await waitAsync();
+
+            const html = htm.bind(h);
+
+            portal.handleEvents([
+                setAppOutput('testPortal', html`<h1>Hello</h1>`),
+                asyncResult('uuid', null),
+            ]);
+
+            await waitAsync();
+
+            expect(actions.length).toBe(2);
+            expect(actions[0]).toEqual(
+                registerHtmlApp('testPortal', 'appId', 'uuid')
+            );
+
+            const updateAction = actions[1] as UpdateHtmlAppAction;
+
+            expect(updateAction).toMatchSnapshot();
+
+            expect(updateAction.type).toBe('update_html_app');
+            expect(updateAction.appId).toBe('testPortal');
+            expect(updateAction.updates.length).toBe(1);
+            expect(updateAction.updates[0].type).toBe('childList');
+            expect(updateAction.updates[0].addedNodes.length).toBe(1);
+            const h1Node = updateAction.updates[0].addedNodes[0] as any;
+            expect(h1Node.nodeName).toBe('H1');
+            expect(h1Node.childNodes.length).toBe(1);
+            expect(h1Node.childNodes[0].nodeName).toBe('#text');
+        });
     });
 
     describe('dispose()', () => {
