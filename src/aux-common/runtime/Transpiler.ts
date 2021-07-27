@@ -347,7 +347,7 @@ export class Transpiler {
         const end = createRelativePositionFromStateVector(
             text,
             version,
-            closeElement.end,
+            !!closeElement ? closeElement.end : node.end,
             -1,
             true
         );
@@ -662,24 +662,28 @@ export class Transpiler {
         const openEnd = createRelativePositionFromStateVector(
             text,
             version,
-            openElement.end - 1,
+            openElement.end - (closeElement ? 1 : 2),
             undefined,
             true
         );
-        const closingStart = createRelativePositionFromStateVector(
-            text,
-            version,
-            closeElement.start,
-            undefined,
-            true
-        );
-        const closingEnd = createRelativePositionFromStateVector(
-            text,
-            version,
-            closeElement.end,
-            -1,
-            true
-        );
+        const closingStart = !!closeElement
+            ? createRelativePositionFromStateVector(
+                  text,
+                  version,
+                  closeElement.start,
+                  undefined,
+                  true
+              )
+            : null;
+        const closingEnd = !!closeElement
+            ? createRelativePositionFromStateVector(
+                  text,
+                  version,
+                  closeElement.end,
+                  -1,
+                  true
+              )
+            : null;
 
         let attributePositions = [];
         for (let attribute of openElement.attributes) {
@@ -764,21 +768,23 @@ export class Transpiler {
             openEnd,
             doc
         );
-        text.delete(openEndAbsolute.index, 1);
+        text.delete(openEndAbsolute.index, closeElement ? 1 : 2);
 
-        // remove closing tag
-        const closingStartAbsolute = createAbsolutePositionFromRelativePosition(
-            closingStart,
-            doc
-        );
-        const closingEndAbsolute = createAbsolutePositionFromRelativePosition(
-            closingEnd,
-            doc
-        );
-        text.delete(
-            closingStartAbsolute.index,
-            closingEndAbsolute.index - closingStartAbsolute.index
-        );
+        if (closeElement) {
+            // remove closing tag
+            const closingStartAbsolute = createAbsolutePositionFromRelativePosition(
+                closingStart,
+                doc
+            );
+            const closingEndAbsolute = createAbsolutePositionFromRelativePosition(
+                closingEnd,
+                doc
+            );
+            text.delete(
+                closingStartAbsolute.index,
+                closingEndAbsolute.index - closingStartAbsolute.index
+            );
+        }
     }
 
     private _insertEnergyCheckIntoStatement(

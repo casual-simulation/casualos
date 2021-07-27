@@ -481,6 +481,12 @@ describe('Transpiler', () => {
                 expect(result).toBe(`h("p",null,\`10 is &lt; 20\`,)`);
             });
 
+            it('should support self closing elements', () => {
+                const result = transpiler.transpile(`<span/>`);
+
+                expect(result).toBe(`h("span",null,)`);
+            });
+
             // const cases = [];
 
             // it.each(cases)('%s', (desc, given, expected) => {
