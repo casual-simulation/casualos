@@ -2613,6 +2613,12 @@ export interface RegisterHtmlAppAction extends AsyncAction {
      * The ID of the app.
      */
     appId: string;
+
+    /**
+     * The ID of the app instance.
+     * Used to distinguish between multiple instances of the same app.
+     */
+    instanceId: string;
 }
 
 /**
@@ -2625,6 +2631,12 @@ export interface UnregisterHtmlAppAction extends Action {
      * The ID of the app.
      */
     appId: string;
+
+    /**
+     * The ID of the app instance.
+     * Used to distinguish between multiple instances of the same app.
+     */
+    instanceId: string;
 }
 
 /**
@@ -5682,11 +5694,13 @@ export function setAppOutput(appId: string, output: any): SetAppOutputAction {
  */
 export function registerHtmlApp(
     appId: string,
+    instanceId: string,
     taskId?: string | number
 ): RegisterHtmlAppAction {
     return {
         type: 'register_html_app',
         appId,
+        instanceId,
         taskId,
     };
 }
@@ -5694,10 +5708,14 @@ export function registerHtmlApp(
 /**
  * Creates a UnregisterHtmlAppAction.
  */
-export function unregisterHtmlApp(appId: string): UnregisterHtmlAppAction {
+export function unregisterHtmlApp(
+    appId: string,
+    instanceId: string
+): UnregisterHtmlAppAction {
     return {
         type: 'unregister_html_app',
         appId,
+        instanceId,
     };
 }
 

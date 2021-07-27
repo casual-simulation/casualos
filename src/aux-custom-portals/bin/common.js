@@ -69,6 +69,7 @@ module.exports = [
                 'fast-json-stable-stringify',
                 'lru-cache',
                 'acorn',
+                'acorn-jsx',
                 'mime',
                 '@tweenjs/tween.js',
                 'estraverse',

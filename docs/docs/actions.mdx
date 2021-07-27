@@ -5950,8 +5950,16 @@ The **second parameter** is the bot that should represent the app. This is the b
 should generally be in charge of calling <ActionLink action='os.compileApp(appId, content)'/>.
 
 Apps work by running the HTML you give it by calling <ActionLink action='os.compileApp(appId, content)'/> with the HTML you want the app to show.
-CasualOS includes a helper called `html` that can be used to make HTML objects out of a string.
+Since JavaScript does not natively support HTML, we are using a special extension called [JSX](https://reactjs.org/docs/introducing-jsx.html) that adds HTML-like syntax to JavaScript.
+At the most basic, JSX is like writing HTML inside JavaScript:
+```typescript
+let htmlData = <div>
+    <h1>Hello World</h1>
+</div>;
+```
+See this article for more information: [Introducing JSX](https://reactjs.org/docs/introducing-jsx.html)
 
+CasualOS also includes a helper called `html` that can be used to make HTML objects out of a string.
 You can use it to convert a string into HTML by adding it before a string that uses backticks, like this:
 ```typescript
 let htmlData = html`
@@ -5961,32 +5969,32 @@ let htmlData = html`
 `;
 ```
 
+JSX is the preferred way to write HTML inside JavaScript since CasualOS can properly detect it and add helpful features like syntax highlighting and error messages.
+
 #### Examples:
 
 ```typescript title='Setup a basic app'
 await os.registerApp('basicApp', thisBot);
 
-os.compileApp('basicApp', html`
-    <h1>Hello World!</h1>
-`);
+os.compileApp('basicApp', <h1>Hello World!</h1>);
 ```
 
 ```typescript title='Setup an app with a button'
 await os.registerApp('buttonApp', thisBot);
 
-os.compileApp('buttonApp', html`
-    <button onClick=${ () => os.toast("You clicked the button!")}>
+os.compileApp('buttonApp', 
+    <button onClick={ () => os.toast("You clicked the button!") }>
         Click Me!
     </button>
-`);
+);
 ```
 
 ```typescript title='Setup an app with an input box'
 await os.registerApp('inputApp', thisBot);
 
-os.compileApp('inputApp', html`
-    <input onInput=${ (e) =>  tags.label = e.target.value }>
-`);
+os.compileApp('inputApp', 
+    <input onInput={ (e) => { tags.label = e.target.value } }>
+);
 ```
 
 ### `os.compileApp(appId, content)`
@@ -6003,29 +6011,27 @@ The **second parameter** is the content that the app should display.
 #### Examples:
 
 ```typescript title='Display a header'
-os.compileApp('myApp', html`
-    <h1>Hello World!</h1>
-`);
+os.compileApp('myApp', <h1>Hello World!</h1>);
 ```
 
 ```typescript title='Display a button'
-os.compileApp('myApp', html`
-    <button onClick=${ () => os.toast("You clicked the button!")}>
+os.compileApp('myApp', 
+    <button onClick={ () => os.toast("You clicked the button!")}>
         Click Me!
     </button>
-`);
+);
 ```
 
 ```typescript title='Display an input box'
-os.compileApp('myApp', html`
-    <input onInput=${ (e) => { tags.label = e.target.value } } />
-`);
+os.compileApp('myApp', 
+    <input onInput={ (e) => { tags.label = e.target.value } } />
+);
 ```
 
 ```typescript title='Display a slider input'
-os.compileApp('myApp', html`
-    <input type="range" min="0" max="100" onInput=${ (e) => { tags.label = e.target.value } } />
-`);
+os.compileApp('myApp', 
+    <input type="range" min="0" max="100" onInput={ (e) => { tags.label = e.target.value } } />
+);
 ```
 
 ### `os.unregisterApp(appId)`

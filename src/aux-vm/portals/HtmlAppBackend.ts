@@ -33,9 +33,11 @@ export class HtmlAppBackend implements AppBackend {
     private _helper: AuxHelper;
     private _initTaskId: string;
     private _registerTaskId: string | number;
+    private _instanceId: string;
     private _document: Document;
     private _mutationObserver: MutationObserver;
     private _nodes: Map<string, Node> = new Map<string, Node>();
+    private _initialContent: any;
 
     /**
      * the list of properties that should be disallowed.
@@ -70,7 +72,8 @@ export class HtmlAppBackend implements AppBackend {
         appId: string,
         botId: string,
         helper: AuxHelper,
-        registerTaskId?: string | number
+        registerTaskId?: string | number,
+        instanceId?: string
     ) {
         this.appId = appId;
         this.botId = botId;
@@ -79,7 +82,10 @@ export class HtmlAppBackend implements AppBackend {
         this._helper = helper;
 
         this._initTaskId = uuid();
-        this._helper.transaction(registerHtmlApp(this.appId, this._initTaskId));
+        this._instanceId = instanceId ?? uuid();
+        this._helper.transaction(
+            registerHtmlApp(this.appId, this._instanceId, this._initTaskId)
+        );
     }
 
     handleEvents(events: BotAction[]): void {
@@ -115,15 +121,12 @@ export class HtmlAppBackend implements AppBackend {
             } else if (event.type === 'set_app_output') {
                 if (event.appId === this.appId) {
                     if (typeof event.output === 'object') {
-                        let prevDocument = globalThis.document;
-                        try {
-                            globalThis.document = this._document;
-                            render(event.output, this._document.body);
-                        } catch (err) {
-                            console.error(err);
-                        } finally {
-                            globalThis.document = prevDocument;
+                        if (!this._document) {
+                            this._initialContent = event.output;
+                            continue;
                         }
+
+                        this._renderContent(event.output);
                     }
                 }
             }
@@ -131,7 +134,21 @@ export class HtmlAppBackend implements AppBackend {
     }
 
     dispose(): void {
-        this._helper.transaction(unregisterHtmlApp(this.appId));
+        this._helper.transaction(
+            unregisterHtmlApp(this.appId, this._instanceId)
+        );
+    }
+
+    private _renderContent(content: any) {
+        let prevDocument = globalThis.document;
+        try {
+            globalThis.document = this._document;
+            render(content, this._document.body);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            globalThis.document = prevDocument;
+        }
     }
 
     private _getNode(node: any): Node {
@@ -168,6 +185,10 @@ export class HtmlAppBackend implements AppBackend {
                 document: this._document,
             })
         );
+
+        if (this._initialContent) {
+            this._renderContent(this._initialContent);
+        }
 
         if (hasValue(this._registerTaskId)) {
             this._helper.transaction(asyncResult(this._registerTaskId, null));

@@ -43,7 +43,9 @@ export default class HtmlAppContainer extends Vue {
                     if (e.type === 'register_html_app') {
                         const index = this.apps.findIndex(
                             (p) =>
-                                p.simulationId === sim.id && p.appId === e.appId
+                                p.simulationId === sim.id &&
+                                p.appId === e.appId &&
+                                p.key === e.instanceId
                         );
 
                         if (index >= 0) {
@@ -56,14 +58,16 @@ export default class HtmlAppContainer extends Vue {
                                 type: 'html',
                                 simulationId: sim.id,
                                 appId: e.appId,
-                                key: uuid(),
+                                key: e.instanceId,
                                 taskId: e.taskId,
                             },
                         ];
                     } else if (e.type === 'unregister_html_app') {
                         const index = this.apps.findIndex(
                             (p) =>
-                                p.simulationId === sim.id && p.appId === e.appId
+                                p.simulationId === sim.id &&
+                                p.appId === e.appId &&
+                                p.key === e.instanceId
                         );
 
                         if (index >= 0) {

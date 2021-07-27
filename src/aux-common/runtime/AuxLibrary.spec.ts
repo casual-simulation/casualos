@@ -195,6 +195,7 @@ import { Subscription, SubscriptionLike } from 'rxjs';
 import { waitAsync } from '../test/TestHelpers';
 import { embedBase64InPdf } from './Utils';
 import { fromByteArray, toByteArray } from 'base64-js';
+import { Fragment } from 'preact';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -12190,6 +12191,19 @@ describe('AuxLibrary', () => {
             `;
 
             expect(result).toMatchSnapshot();
+        });
+
+        describe('h()', () => {
+            it('should return a HTML VDOM element', () => {
+                const result = library.api.html.h('h1', null, 'Hello, World!');
+                expect(result).toMatchSnapshot();
+            });
+        });
+
+        describe('f', () => {
+            it('should be the Fragment element type', () => {
+                expect(library.api.html.f).toBe(Fragment);
+            });
         });
     });
 });

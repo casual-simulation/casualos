@@ -15,12 +15,18 @@ import StackFrame from 'stackframe';
  */
 export const COMPILED_SCRIPT_SYMBOL = Symbol('compiled_script');
 
+const JSX_FACTORY = 'html.h';
+const JSX_FRAGMENT_FACTORY = 'html.f';
+
 /**
  * Defines a class that can compile scripts and formulas
  * into functions.
  */
 export class AuxCompiler {
-    private _transpiler = new Transpiler();
+    private _transpiler = new Transpiler({
+        jsxFactory: JSX_FACTORY,
+        jsxFragment: JSX_FRAGMENT_FACTORY,
+    });
     private _functionCache = new Map<string, Function>();
 
     /**

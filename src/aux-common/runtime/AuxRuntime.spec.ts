@@ -4806,6 +4806,20 @@ describe('AuxRuntime', () => {
             ]);
         });
 
+        it('should compile listeners to use the html.h() function for JSX', async () => {
+            uuidMock.mockReturnValueOnce('uuid');
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        test: '@return (<div></div>)',
+                    }),
+                })
+            );
+            let result = runtime.shout('test');
+
+            expect(result.results).toMatchSnapshot();
+        });
+
         describe('bot_added', () => {
             it('should produce an event when a bot is created', async () => {
                 uuidMock.mockReturnValueOnce('uuid');
