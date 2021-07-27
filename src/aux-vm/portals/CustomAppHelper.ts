@@ -1,4 +1,10 @@
-import { AuxRuntime, BotAction } from '@casual-simulation/aux-common';
+import {
+    asyncError,
+    asyncResult,
+    AuxRuntime,
+    BotAction,
+    hasValue,
+} from '@casual-simulation/aux-common';
 import { AuxHelper } from '../vm';
 import { HtmlAppBackend } from './HtmlAppBackend';
 import { AppBackend } from './AppBackend';
@@ -28,7 +34,34 @@ export class CustomAppHelper {
                     this.helper,
                     event.taskId
                 );
+
+                const existing = this.portals.get(appId);
+                if (existing) {
+                    existing.dispose();
+                }
+
                 this.portals.set(appId, backend);
+            } else if (event.type === 'unregister_custom_app') {
+                try {
+                    let appId = event.appId;
+
+                    const existing = this.portals.get(appId);
+                    if (existing) {
+                        existing.dispose();
+                    }
+
+                    this.portals.delete(appId);
+
+                    if (hasValue(event.taskId)) {
+                        this.helper.transaction(
+                            asyncResult(event.taskId, null)
+                        );
+                    }
+                } catch (e) {
+                    if (hasValue(event.taskId)) {
+                        this.helper.transaction(asyncError(event.taskId, e));
+                    }
+                }
             }
         }
 

@@ -183,7 +183,8 @@ Here's a list of the tools and packages that we're using to build CasualOS.
     -   [Husky](https://github.com/typicode/husky) for pre-commit hooks.
 -   Dependencies
     -   AUX Common
-        -   [acorn](https://github.com/acornjs/acorn) for parsing AUX formulas.
+        -   [acorn](https://github.com/acornjs/acorn) for parsing listener functions.
+            -   [acorn-jsx](https://github.com/acornjs/acorn-jsx) for parsing JSX code in listeners.
         -   [astring](https://github.com/davidbonnet/astring) for generating JS from acorn trees.
         -   [estraverse](https://github.com/estools/estraverse) for traversing the acorn trees and transforming them.
         -   [lodash](https://lodash.com/) for easy array/object manipulation.

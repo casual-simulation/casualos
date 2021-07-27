@@ -1,6 +1,6 @@
 <template>
     <div class="html-portals-container">
-        <div v-for="app in apps" :key="`${app.simulationId}-${app.appId}`">
+        <div v-for="app in apps" :key="app.key">
             <html-app
                 v-if="app.type === 'html'"
                 :simulationId="app.simulationId"

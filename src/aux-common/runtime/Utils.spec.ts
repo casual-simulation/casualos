@@ -1,4 +1,8 @@
-import { convertToCopiableValue } from './Utils';
+import {
+    convertToCopiableValue,
+    embedBase64InPdf,
+    getEmbeddedBase64FromPdf,
+} from './Utils';
 
 describe('convertToCopiableValue()', () => {
     it('should leave strings alone', () => {
@@ -151,5 +155,25 @@ describe('convertToCopiableValue()', () => {
         const result = convertToCopiableValue(obj);
 
         expect(result).toBe('[Nested object]');
+    });
+});
+
+describe('embedBase64InPdf()', () => {
+    it('should reference the given data in the PDF', () => {
+        const data = 'abcdefghiabcdefghi';
+        const result = embedBase64InPdf(data);
+
+        expect(result).toContain(data);
+        expect(result).toMatchSnapshot();
+    });
+});
+
+describe('getEmbeddedBase64FromPdf()', () => {
+    it('should return the data that was embedded in the PDF', () => {
+        const data = 'abcdefghiabcdefghi';
+        const pdf = embedBase64InPdf(data);
+        const result = getEmbeddedBase64FromPdf(pdf);
+
+        expect(result).toEqual(data);
     });
 });

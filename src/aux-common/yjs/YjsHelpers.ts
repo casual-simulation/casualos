@@ -1,5 +1,6 @@
 import { VersionVector } from '@casual-simulation/causal-trees';
 import {
+    createAbsolutePositionFromRelativePosition,
     createID,
     Doc,
     findRootTypeKey,
@@ -50,7 +51,8 @@ export function createRelativePositionFromStateVector(
     text: Text,
     vector: VersionVector,
     index: number,
-    assoc: number = 0
+    assoc: number = 0,
+    includeDeleted: boolean = false
 ) {
     // Mostly copied from https://github.com/yjs/yjs/blob/c67428d7150b0ea0f1cce935fcd3bf520476d021/src/utils/RelativePosition.js#L163
     // under MIT license.
@@ -65,7 +67,7 @@ export function createRelativePositionFromStateVector(
     while (t !== null) {
         const clientVersion = vector[t.id.client.toString()];
         if (typeof clientVersion === 'number' && t.id.clock <= clientVersion) {
-            if (!t.deleted && t.countable) {
+            if ((!t.deleted || includeDeleted) && t.countable) {
                 if (t.length > index) {
                     // case 1: found position somewhere in the linked list
                     return createRelativePosition(
@@ -84,6 +86,32 @@ export function createRelativePositionFromStateVector(
         t = t.right;
     }
     return createRelativePosition(text, null, assoc);
+}
+
+/**
+ * Creates a relative position from an absolute position based on the given state vector.
+ * @param text The text that the position should be created from.
+ * @param vector The version vector that the position should be calculated from.
+ * @param index The index.
+ */
+export function createAbsolutePositionFromStateVector(
+    doc: Doc,
+    text: Text,
+    vector: VersionVector,
+    index: number,
+    assoc: number = 0,
+    includeDeleted: boolean = false
+) {
+    const relative = createRelativePositionFromStateVector(
+        text,
+        vector,
+        index,
+        assoc,
+        includeDeleted
+    );
+    const absolute = createAbsolutePositionFromRelativePosition(relative, doc);
+
+    return absolute;
 }
 
 /**

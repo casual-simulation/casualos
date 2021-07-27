@@ -102,7 +102,8 @@ export type ExtraActions =
     | GoToTagAction
     | UpdateHtmlAppAction
     | HtmlAppEventAction
-    | SetAppOutputAction;
+    | SetAppOutputAction
+    | UnregisterHtmlAppAction;
 
 /**
  * Defines a set of possible async action types.
@@ -201,6 +202,7 @@ export type AsyncActions =
     | GetVoicesAction
     | GetGeolocationAction
     | RegisterCustomAppAction
+    | UnregisterCustomAppAction
     | RegisterHtmlAppAction;
 
 /**
@@ -2590,6 +2592,18 @@ export interface RegisterCustomAppAction extends AsyncAction {
 }
 
 /**
+ * Defines an event that unregisters a custom app.
+ */
+export interface UnregisterCustomAppAction extends AsyncAction {
+    type: 'unregister_custom_app';
+
+    /**
+     * The ID of the app.
+     */
+    appId: string;
+}
+
+/**
  * Defines an event that requests that a HTML app be created.
  */
 export interface RegisterHtmlAppAction extends AsyncAction {
@@ -2599,6 +2613,30 @@ export interface RegisterHtmlAppAction extends AsyncAction {
      * The ID of the app.
      */
     appId: string;
+
+    /**
+     * The ID of the app instance.
+     * Used to distinguish between multiple instances of the same app.
+     */
+    instanceId: string;
+}
+
+/**
+ * Defines an event that requests that a HTML app be deleted.
+ */
+export interface UnregisterHtmlAppAction extends Action {
+    type: 'unregister_html_app';
+
+    /**
+     * The ID of the app.
+     */
+    appId: string;
+
+    /**
+     * The ID of the app instance.
+     * Used to distinguish between multiple instances of the same app.
+     */
+    instanceId: string;
 }
 
 /**
@@ -2658,7 +2696,7 @@ export interface HtmlAppEventAction extends Action {
  * Defines a mutation record that can be serialized and sent over a web worker pipe.
  */
 export interface SerializableMutationRecord {
-    type: MutationRecord['type'];
+    type: 'attributes' | 'characterData' | 'childList' | 'event_listener';
     target: NodeReference;
     addedNodes: NodeReference[];
     removedNodes: NodeReference[];
@@ -2669,6 +2707,16 @@ export interface SerializableMutationRecord {
     attributeName: string;
     attributeNamespace: string;
     oldValue: string;
+
+    /**
+     * The name of the event listener.
+     */
+    listenerName?: string;
+
+    /**
+     * The number of event listeners that were added (positive number) or removed (negative number).
+     */
+    listenerDelta?: number;
 }
 
 export interface NodeReference {
@@ -5612,6 +5660,22 @@ export function registerCustomApp(
 }
 
 /**
+ * Creates a UnegisterCustomAppAction.
+ * @param appId The Id of the app.
+ * @param botId The ID of the bot.
+ */
+export function unregisterCustomApp(
+    appId: string,
+    taskId?: string | number
+): UnregisterCustomAppAction {
+    return {
+        type: 'unregister_custom_app',
+        appId,
+        taskId,
+    };
+}
+
+/**
  * Creates a SetAppOutputAction.
  * @param appId The ID of the app.
  * @param output The output that the app should display.
@@ -5630,12 +5694,28 @@ export function setAppOutput(appId: string, output: any): SetAppOutputAction {
  */
 export function registerHtmlApp(
     appId: string,
+    instanceId: string,
     taskId?: string | number
 ): RegisterHtmlAppAction {
     return {
         type: 'register_html_app',
         appId,
+        instanceId,
         taskId,
+    };
+}
+
+/**
+ * Creates a UnregisterHtmlAppAction.
+ */
+export function unregisterHtmlApp(
+    appId: string,
+    instanceId: string
+): UnregisterHtmlAppAction {
+    return {
+        type: 'unregister_html_app',
+        appId,
+        instanceId,
     };
 }
 

@@ -358,6 +358,45 @@ describe('AuxCompiler', () => {
             expect(error).toEqual(new SyntaxError('Unexpected token (1:10)'));
         });
 
+        it('should compile JSX to point to html.h()', () => {
+            let symbol = Symbol('return value');
+            let fn = compiler.compile('return <div></div>', {
+                variables: {
+                    html: () => ({
+                        h: () => symbol,
+                    }),
+                },
+                constants: {
+                    myTest: 123,
+                    myOtherTest: 456,
+                },
+            });
+
+            const result = fn();
+
+            expect(result).toBe(symbol);
+        });
+
+        it('should compile JSX fragments to point to html.f', () => {
+            let symbol = Symbol('return value');
+            let fn = compiler.compile('return <><h1></h1></>', {
+                variables: {
+                    html: () => ({
+                        h: (type: any) => type,
+                        f: symbol,
+                    }),
+                },
+                constants: {
+                    myTest: 123,
+                    myOtherTest: 456,
+                },
+            });
+
+            const result = fn();
+
+            expect(result).toBe(symbol);
+        });
+
         describe('calculateOriginalLineLocation()', () => {
             it('should return (0, 0) if given a location before the user script actually starts', () => {
                 const script = 'return str + num + abc;';

@@ -191,6 +191,47 @@ describe('YjsHelpers', () => {
 
             expect(pos1).toEqual(expected1);
         });
+
+        it('should be able to find a position in deleted text', () => {
+            const doc1 = new Doc();
+            doc1.clientID = 1;
+            const doc2 = new Doc();
+            doc2.clientID = 2;
+            const text1 = doc1.getText();
+            const text2 = doc2.getText();
+            text1.insert(0, 'abcdef');
+            text2.insert(0, 'ghijfk');
+
+            const vector1 = getStateVector(doc1);
+            const vector2 = getStateVector(doc2);
+
+            const state1 = encodeStateAsUpdate(doc1);
+            const state2 = encodeStateAsUpdate(doc2);
+
+            applyUpdate(doc1, state2);
+            applyUpdate(doc2, state1);
+
+            expect(text1.toString()).toEqual('abcdefghijfk');
+            expect(text2.toString()).toEqual('abcdefghijfk');
+
+            text2.delete(0, 3);
+
+            const state3 = encodeStateAsUpdate(doc2);
+            applyUpdate(doc1, state3);
+
+            const pos1 = createRelativePositionFromStateVector(
+                text1,
+                vector1,
+                2,
+                undefined,
+                true
+            );
+
+            expect(pos1.item).toEqual({
+                client: 1,
+                clock: 2,
+            });
+        });
     });
 
     describe('yjs', () => {
