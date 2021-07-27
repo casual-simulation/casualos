@@ -131,6 +131,12 @@ export class Transpiler {
         this._jsxFragment = options?.jsxFragment ?? 'Fragment';
     }
 
+    parse(code: string): any {
+        const macroed = replaceMacros(code);
+        const node = this._parse(macroed);
+        return node;
+    }
+
     /**
      * Transpiles the given code into ES6 JavaScript Code.
      */
