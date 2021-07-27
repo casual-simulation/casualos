@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V2.0.5
+
+#### Date: 7/27/2021
+
+### :rocket: Bug Fixes
+
+-   Fixed an issue where async scripts did not support JSX syntax highlighting.
+
 ## V2.0.4
 
 #### Date: 7/27/2021
