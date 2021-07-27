@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-server",
-    "version": "2.0.4",
+    "version": "2.0.5",
     "description": "The repository for the AUX server project.",
     "main": "server/dist/main.js",
     "private": true,
