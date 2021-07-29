@@ -55,12 +55,12 @@ import MdImmediateInput from '../shared/public/MdImmediateInput';
 import VueClipboard from 'vue-clipboard2';
 import VueShortkey from 'vue-shortkey';
 
-import '../shared/public/fonts/MaterialIcons/MaterialIcons.css';
-import '../shared/public/fonts/Roboto/Roboto.css';
-import '../shared/public/fonts/NotoSansKR/NotoSansKR.css';
+import '@casual-simulation/aux-components/fonts/MaterialIcons/MaterialIcons.css';
+import '@casual-simulation/aux-components/fonts/Roboto/Roboto.css';
+import '@casual-simulation/aux-components/fonts/NotoSansKR/NotoSansKR.css';
 
 import { polyfill } from 'es6-promise';
-import '../shared/SVGPolyfill';
+import '@casual-simulation/aux-components/SVGPolyfill';
 
 import { appManager, AppType } from '../shared/AppManager';
 import PlayerApp from './PlayerApp/PlayerApp';

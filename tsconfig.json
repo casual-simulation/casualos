@@ -17,6 +17,7 @@
     "references": [
         { "path": "./src/crypto" },
         { "path": "./src/aux-common" },
+        { "path": "./src/aux-components" },
         { "path": "./src/aux-vm" },
         { "path": "./src/aux-vm-client" },
         { "path": "./src/aux-vm-node" },

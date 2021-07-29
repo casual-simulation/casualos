@@ -51,11 +51,11 @@ import {
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
 
-import '../shared/public/fonts/MaterialIcons/MaterialIcons.css';
-import '../shared/public/fonts/Roboto/Roboto.css';
-import '../shared/public/fonts/NotoSansKR/NotoSansKR.css';
+import '@casual-simulation/aux-components/fonts/MaterialIcons/MaterialIcons.css';
+import '@casual-simulation/aux-components/fonts/Roboto/Roboto.css';
+import '@casual-simulation/aux-components/fonts/NotoSansKR/NotoSansKR.css';
 
-import '../shared/SVGPolyfill';
+import '@casual-simulation/aux-components/SVGPolyfill';
 import AuthApp from './AuthApp/AuthApp';
 import AuthHome from './AuthHome/AuthHome';
 
