@@ -35,6 +35,9 @@ export default class AuthLogin extends Vue {
     }
 
     async login() {
+        if (!this.email) {
+            return;
+        }
         this.processing = true;
 
         try {
