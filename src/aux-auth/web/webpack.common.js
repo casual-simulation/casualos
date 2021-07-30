@@ -49,27 +49,27 @@ function authConfig(latestTag) {
                 favicon: path.resolve(__dirname, 'site', 'favicon.ico'),
             }),
             ...commonPlugins(latestTag),
-            // new WorkboxPlugin.GenerateSW({
-            //     clientsClaim: true,
-            //     skipWaiting: true,
-            //     exclude: [/\.map$/],
-            //     include: [
-            //         /\.html$/,
-            //         /\.css$/,
-            //         /\.json$/,
-            //         /\.js$/,
-            //         /\.png$/,
-            //         /\.glb$/,
-            //         /\.ico$/,
-            //         /\.ttf$/,
-            //         /roboto-v18-latin-regular\.woff2$/,
-            //     ],
-            //     runtimeCaching: [],
-            //     maximumFileSizeToCacheInBytes: 15728640, // 5MiB
-            //     importScriptsViaChunks: ['service-worker'],
-            //     swDest: 'sw.js',
-            //     inlineWorkboxRuntime: true,
-            // }),
+            new WorkboxPlugin.GenerateSW({
+                clientsClaim: true,
+                skipWaiting: true,
+                exclude: [/\.map$/],
+                include: [
+                    /\.html$/,
+                    /\.css$/,
+                    /\.json$/,
+                    /\.js$/,
+                    /\.png$/,
+                    /\.glb$/,
+                    /\.ico$/,
+                    /\.ttf$/,
+                    /roboto-v18-latin-regular\.woff2$/,
+                ],
+                runtimeCaching: [],
+                maximumFileSizeToCacheInBytes: 15728640, // 5MiB
+                // importScriptsViaChunks: ['service-worker'],
+                swDest: 'sw.js',
+                inlineWorkboxRuntime: true,
+            }),
             new CopyPlugin({
                 patterns: [
                     {
