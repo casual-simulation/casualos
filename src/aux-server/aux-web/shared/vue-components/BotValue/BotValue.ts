@@ -11,7 +11,7 @@ import {
     getSpaceForTag,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
-import { EventBus } from '../../EventBus';
+import { EventBus } from '@casual-simulation/aux-components';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 @Component({})

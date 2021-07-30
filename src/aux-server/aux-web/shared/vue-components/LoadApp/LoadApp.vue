@@ -6,6 +6,7 @@
             :progress="loadingState.progress * 100"
             :error="loadingState.error ? loadingState.message : null"
             :show="loadingState && !loadingState.done"
+            :version="version"
             @dismiss="dismissLoading()"
         >
         </loading>

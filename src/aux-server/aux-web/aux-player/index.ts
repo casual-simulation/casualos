@@ -65,7 +65,6 @@ import '@casual-simulation/aux-components/SVGPolyfill';
 import { appManager, AppType } from '../shared/AppManager';
 import PlayerApp from './PlayerApp/PlayerApp';
 import PlayerHome from './PlayerHome/PlayerHome';
-import Loading from '../shared/vue-components/Loading/Loading';
 
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
@@ -117,9 +116,9 @@ const router = new VueRouter({
 });
 
 async function start() {
-    const loading = new Vue({
-        render: (createEle) => createEle(Loading),
-    }).$mount('#loading');
+    // const loading = new Vue({
+    //     render: (createEle) => createEle(Loading),
+    // }).$mount('#loading');
 
     // await appManager.initPromise;
 
