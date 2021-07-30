@@ -58,6 +58,10 @@ import '@casual-simulation/aux-components/fonts/NotoSansKR/NotoSansKR.css';
 import '@casual-simulation/aux-components/SVGPolyfill';
 import AuthApp from './AuthApp/AuthApp';
 import AuthHome from './AuthHome/AuthHome';
+import AuthLogin from './AuthLogin/AuthLogin';
+import { authManager } from './AuthManager';
+import AuthLoading from './AuthLoading/AuthLoading';
+import { EventBus } from '@casual-simulation/aux-components';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -84,7 +88,16 @@ Vue.use(MdDatepicker);
 
 const routes: RouteConfig[] = [
     {
-        path: '*',
+        path: '/login',
+        name: 'login',
+        component: AuthLogin,
+        props: (route) => ({
+            query: route.query,
+            url: route.fullPath,
+        }),
+    },
+    {
+        path: '/',
         name: 'home',
         component: AuthHome,
         props: (route) => ({
@@ -99,10 +112,58 @@ const router = new VueRouter({
     routes,
 });
 
+const manager = authManager;
+let loading: Vue;
+
+router.beforeEach((to, from, next) => {
+    EventBus.$emit('startLoading');
+    next();
+});
+
+router.beforeEach(async (to, from, next) => {
+    try {
+        const loggedIn = await manager.magic.user.isLoggedIn();
+        if (loggedIn && !manager.userInfoLoaded) {
+            try {
+                await manager.loadUserInfo();
+                if (to.name === 'login') {
+                    console.log(
+                        '[index] Already logged in. Redirecting to home.'
+                    );
+                    next({ name: 'home' });
+                } else {
+                    next();
+                }
+                return;
+            } catch (err) {
+                console.error('[index] Could not load User info.', err);
+            }
+        }
+
+        if (to.name !== 'login' && !loggedIn) {
+            console.log('[index] Not Logged In and. Redirecting to Login.');
+            next({ name: 'login' });
+            return;
+        } else {
+            next();
+            return;
+        }
+    } catch (err) {
+        next();
+        return;
+    }
+});
+
+router.afterEach((to, from) => {
+    EventBus.$emit('stopLoading');
+});
+
 async function start() {
-    // const loading = new Vue({
-    //     render: (createEle) => createEle(Loading),
-    // }).$mount('#loading');
+    loading = new Vue({
+        render: (createEle) => createEle(AuthLoading),
+    }).$mount('#loading');
+
+    // loading.$emit('start');
 
     // await appManager.initPromise;
 
