@@ -1,6 +1,8 @@
 import { Magic } from 'magic-sdk';
 import { Subject, BehaviorSubject, Observable } from 'rxjs';
 
+const EMAIL_KEY = 'userEmail';
+
 export class AuthManager {
     private _magic: Magic;
 
@@ -51,6 +53,10 @@ export class AuthManager {
         this._email = email;
         this._userId = issuer;
 
+        if (this._email) {
+            this._saveEmail(this._email);
+        }
+
         this._loginState.next(this.userInfoLoaded);
     }
 
@@ -59,12 +65,24 @@ export class AuthManager {
         this._email = null;
         this._userId = null;
         this._idToken = null;
-
+        this._saveEmail(null);
         this._loginState.next(false);
     }
 
     get version(): string {
         return GIT_TAG;
+    }
+
+    get savedEmail(): string {
+        return localStorage.getItem(EMAIL_KEY);
+    }
+
+    private _saveEmail(email: string) {
+        if (email) {
+            localStorage.setItem(EMAIL_KEY, email);
+        } else {
+            localStorage.removeItem(EMAIL_KEY);
+        }
     }
 }
 

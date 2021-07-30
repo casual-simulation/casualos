@@ -14,7 +14,7 @@ export default class AuthLogin extends Vue {
     private _loggedIn: boolean;
 
     async created() {
-        this.email = '';
+        this.email = authManager.savedEmail || '';
         this.processing = false;
         this._loggedIn = false;
     }
