@@ -42,6 +42,10 @@ export class AuthManager {
         return this._appMetadata?.avatarUrl;
     }
 
+    get avatarPortraitUrl() {
+        return this._appMetadata?.avatarPortraitUrl;
+    }
+
     get name() {
         return this._appMetadata?.name;
     }
@@ -102,6 +106,7 @@ export class AuthManager {
         // TODO: Handle errors
         await this._putAppMetadata({
             avatarUrl: this.avatarUrl,
+            avatarPortraitUrl: this.avatarPortraitUrl,
             name: this.name,
             ...newMetadata,
         });
@@ -128,6 +133,7 @@ export class AuthManager {
                     return this._putAppMetadata({
                         name: null,
                         avatarUrl: null,
+                        avatarPortraitUrl: null,
                     });
                 }
             } else {

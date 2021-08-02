@@ -4,14 +4,14 @@ iframe {
     border: none;
 }
 
-@media(min-width: 900px) {
+@media (min-width: 900px) {
     iframe {
         min-width: 800px;
         min-height: 500px;
     }
 }
 
-@media(min-width: 600px) {
+@media (min-width: 600px) {
     iframe {
         min-width: 80vw;
         min-height: 80vh;
@@ -20,4 +20,10 @@ iframe {
 
 .avatar-dialog .md-dialog-content {
     padding: 0;
+}
+
+.avatar-img {
+    width: 256px;
+    height: 256px;
+    display: block;
 }

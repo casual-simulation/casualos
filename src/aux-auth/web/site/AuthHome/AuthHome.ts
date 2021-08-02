@@ -9,7 +9,7 @@ import Avatar from '../AuthAvatar/AuthAvatar';
 
 @Component({
     components: {
-        avatar: Avatar
+        avatar: Avatar,
     },
 })
 export default class AuthHome extends Vue {
@@ -17,6 +17,7 @@ export default class AuthHome extends Vue {
     originalEmail: string = null;
     originalName: string = null;
     originalAvatarUrl: string = null;
+    originalAvatarPortraitUrl: string = null;
 
     updating: boolean = false;
     updated: boolean = false;
@@ -37,9 +38,11 @@ export default class AuthHome extends Vue {
             this.originalEmail = authManager.email;
             this.originalName = authManager.name;
             this.originalAvatarUrl = authManager.avatarUrl;
+            this.originalAvatarPortraitUrl = authManager.avatarPortraitUrl;
             this.metadata = {
                 email: authManager.email,
                 avatarUrl: authManager.avatarUrl,
+                avatarPortraitUrl: authManager.avatarPortraitUrl,
                 name: authManager.name,
             };
         });
@@ -64,9 +67,13 @@ export default class AuthHome extends Vue {
         this._updateMetadata();
     }
 
-    updateAvatar(avatarUrl: string) {
-        this.metadata.avatarUrl = avatarUrl;
-        if (this.originalAvatarUrl === this.metadata.avatarUrl) {
+    updateAvatar(avatar: { url: string; render: string }) {
+        this.metadata.avatarUrl = avatar.url;
+        this.metadata.avatarPortraitUrl = avatar.render;
+        if (
+            this.originalAvatarUrl === this.metadata.avatarUrl &&
+            this.originalAvatarPortraitUrl === this.metadata.avatarPortraitUrl
+        ) {
             return;
         }
         this.updating = true;
@@ -84,6 +91,13 @@ export default class AuthHome extends Vue {
 
         if (this.originalAvatarUrl !== this.metadata.avatarUrl) {
             newMetadata.avatarUrl = this.metadata.avatarUrl;
+            hasChange = true;
+        }
+
+        if (
+            this.originalAvatarPortraitUrl !== this.metadata.avatarPortraitUrl
+        ) {
+            newMetadata.avatarPortraitUrl = this.metadata.avatarPortraitUrl;
             hasChange = true;
         }
 

@@ -24,7 +24,11 @@
                     >
                 </div>
                 <div>
-                    <avatar :avatarUrl="metadata.avatarUrl" @updateAvatar="updateAvatar"></avatar>
+                    <avatar
+                        :avatarUrl="metadata.avatarUrl"
+                        :render="metadata.avatarPortraitUrl"
+                        @updateAvatar="updateAvatar"
+                    ></avatar>
                 </div>
 
                 <p v-show="updating">Updating...</p>

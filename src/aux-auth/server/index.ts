@@ -39,6 +39,7 @@ async function start() {
             res.send({
                 name: user.name,
                 avatarUrl: user.avatarUrl,
+                avatarPortraitUrl: user.avatarPortraitUrl,
             });
         } catch (err) {
             console.error(err);
@@ -61,6 +62,7 @@ async function start() {
                         _id: issuer,
                         name: data.name,
                         avatarUrl: data.avatarUrl,
+                        avatarPortraitUrl: data.avatarPortraitUrl,
                     },
                 },
                 {

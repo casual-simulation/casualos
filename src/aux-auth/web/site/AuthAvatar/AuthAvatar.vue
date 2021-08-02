@@ -1,12 +1,23 @@
 <template>
     <div>
-        <md-button v-if="!hasAvatar" @click="createAvatar = true">Create Avatar</md-button>
-
-        <p v-if="hasAvatar">You have an avatar! {{ avatarUrl }}</p>
+        <div v-if="hasAvatar">
+            <h3>Avatar</h3>
+            <p>You have an avatar! {{ avatarUrl }}</p>
+            <img v-if="render" class="avatar-img" :src="render" />
+        </div>
+        <md-button @click="changeAvatar()">
+            {{ hasAvatar ? 'Change Avatar' : 'Create Avatar' }}
+        </md-button>
 
         <md-dialog class="avatar-dialog" :md-active.sync="createAvatar">
             <md-dialog-content>
-                <iframe :src="iframeUrl"></iframe>
+                <md-progress-spinner
+                    v-if="createdAvatar"
+                    md-mode="indeterminate"
+                    :md-diameter="20"
+                    :md-stroke="2"
+                ></md-progress-spinner>
+                <iframe v-if="!createdAvatar" :src="iframeUrl"></iframe>
             </md-dialog-content>
         </md-dialog>
     </div>
