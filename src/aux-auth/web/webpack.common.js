@@ -44,7 +44,7 @@ function authConfig(latestTag) {
                 chunks: ['site', 'vendors'],
                 // inject: false,
                 template: path.resolve(__dirname, 'site', 'index.html'),
-                title: 'CasualOS',
+                title: 'CasualOS.me',
                 filename: 'index.html',
                 favicon: path.resolve(__dirname, 'site', 'favicon.ico'),
             }),
