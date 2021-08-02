@@ -1,5 +1,7 @@
+import axios from 'axios';
 import { Magic } from 'magic-sdk';
 import { Subject, BehaviorSubject, Observable } from 'rxjs';
+import { AppMetadata } from '../../shared/AuthMetadata';
 
 const EMAIL_KEY = 'userEmail';
 
@@ -9,12 +11,13 @@ export class AuthManager {
     private _email: string;
     private _userId: string;
     private _idToken: string;
+    private _appMetadata: AppMetadata;
 
     private _loginState: Subject<boolean>;
 
     constructor(magicApiKey: string) {
         this._magic = new Magic(magicApiKey, {
-            testMode: !PRODUCTION,
+            testMode: false,
         });
         this._loginState = new BehaviorSubject<boolean>(false);
     }
@@ -33,6 +36,14 @@ export class AuthManager {
 
     get idToken() {
         return this._idToken;
+    }
+
+    get avatarUrl() {
+        return this._appMetadata?.avatarUrl;
+    }
+
+    get name() {
+        return this._appMetadata?.name;
     }
 
     get userInfoLoaded() {
@@ -57,6 +68,8 @@ export class AuthManager {
             this._saveEmail(this._email);
         }
 
+        this._appMetadata = await this._loadOrCreateAppMetadata();
+
         this._loginState.next(this.userInfoLoaded);
     }
 
@@ -77,12 +90,44 @@ export class AuthManager {
         return localStorage.getItem(EMAIL_KEY);
     }
 
+    async changeEmail(newEmail: string) {
+        // TODO: Handle errors
+        await this.magic.user.updateEmail({
+            email: newEmail,
+        });
+        await this.loadUserInfo();
+    }
+
     private _saveEmail(email: string) {
         if (email) {
             localStorage.setItem(EMAIL_KEY, email);
         } else {
             localStorage.removeItem(EMAIL_KEY);
         }
+    }
+
+    private async _loadOrCreateAppMetadata(): Promise<AppMetadata> {
+        try {
+            const response = await axios.get(
+                `/api/${encodeURIComponent(this._userId)}/metadata`
+            );
+            return response.data;
+        } catch (e) {
+            if (e.response) {
+                if (e.response.status === 404) {
+                    return this._createAppMetadata();
+                }
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    private async _createAppMetadata(): Promise<AppMetadata> {
+        const response = await axios.put(
+            `/api/${encodeURIComponent(this._userId)}/metadata`
+        );
+        return response.data;
     }
 }
 

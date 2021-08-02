@@ -7,6 +7,13 @@ const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
 
 app.use(express.static(dist));
 
+app.get('/api/:userId/metadata', (req, res) => {
+    res.send({
+        name: 'test',
+        avatarUrl: null,
+    });
+});
+
 app.get('*', (req, res) => {
     res.sendFile(path.join(dist, 'index.html'));
 });
