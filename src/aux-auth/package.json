@@ -56,7 +56,8 @@
         "vue-shortkey": "^3.1.6",
         "workbox-webpack-plugin": "6.0.2",
         "rxjs": "^6.5.2",
-        "magic-sdk": "4.4.0"
+        "magic-sdk": "4.4.0",
+        "@magic-sdk/admin": "1.3.0"
     },
     "devDependencies": {
         "loader-utils": "^2.0.0",

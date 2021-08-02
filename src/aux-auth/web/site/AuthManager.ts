@@ -98,6 +98,16 @@ export class AuthManager {
         await this.loadUserInfo();
     }
 
+    async updateMetadata(newMetadata: Partial<AppMetadata>) {
+        // TODO: Handle errors
+        await this._putAppMetadata({
+            avatarUrl: this.avatarUrl,
+            name: this.name,
+            ...newMetadata,
+        });
+        await this.loadUserInfo();
+    }
+
     private _saveEmail(email: string) {
         if (email) {
             localStorage.setItem(EMAIL_KEY, email);
@@ -109,13 +119,16 @@ export class AuthManager {
     private async _loadOrCreateAppMetadata(): Promise<AppMetadata> {
         try {
             const response = await axios.get(
-                `/api/${encodeURIComponent(this._userId)}/metadata`
+                `/api/${encodeURIComponent(this.idToken)}/metadata`
             );
             return response.data;
         } catch (e) {
             if (e.response) {
                 if (e.response.status === 404) {
-                    return this._createAppMetadata();
+                    return this._putAppMetadata({
+                        name: null,
+                        avatarUrl: null,
+                    });
                 }
             } else {
                 throw e;
@@ -123,9 +136,10 @@ export class AuthManager {
         }
     }
 
-    private async _createAppMetadata(): Promise<AppMetadata> {
+    private async _putAppMetadata(metadata: AppMetadata): Promise<AppMetadata> {
         const response = await axios.put(
-            `/api/${encodeURIComponent(this._userId)}/metadata`
+            `/api/${encodeURIComponent(this.idToken)}/metadata`,
+            metadata
         );
         return response.data;
     }

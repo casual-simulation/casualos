@@ -1,23 +1,87 @@
 import express, { Response, NextFunction } from 'express';
 import path from 'path';
+import { AppMetadata } from 'shared/AuthMetadata';
+import { MongoClient, MongoClientOptions } from 'mongodb';
+import { Magic } from '@magic-sdk/admin';
+import pify from 'pify';
+import MAGIC_SECRET_KEY from './MAGIC_SDK_SECRET_KEY.txt';
 
-let app = express();
+const connect = pify(MongoClient.connect);
 
-const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
-
-app.use(express.static(dist));
-
-app.get('/api/:userId/metadata', (req, res) => {
-    res.send({
-        name: 'test',
-        avatarUrl: null,
+async function start() {
+    let app = express();
+    let mongo: MongoClient = await connect('mongodb://127.0.0.1:27017', {
+        useNewUrlParser: false,
     });
-});
+    const magic = new Magic(MAGIC_SECRET_KEY);
 
-app.get('*', (req, res) => {
-    res.sendFile(path.join(dist, 'index.html'));
-});
+    const db = mongo.db('aux-auth');
+    const users = db.collection<AppMetadata>('users');
 
-app.listen(3002, () => {
-    console.log('[AuxAuth] Listening on port 3002');
-});
+    const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
+
+    app.use(express.json());
+
+    app.use(express.static(dist));
+
+    app.get('/api/:token/metadata', async (req, res) => {
+        try {
+            const token = req.params.token;
+            console.log('user ID', token);
+            const issuer = magic.token.getIssuer(token);
+
+            const user = await users.findOne({ _id: issuer });
+
+            if (!user) {
+                res.sendStatus(404);
+                return;
+            }
+            res.send({
+                name: user.name,
+                avatarUrl: user.avatarUrl,
+            });
+        } catch (err) {
+            console.error(err);
+            res.sendStatus(500);
+        }
+    });
+
+    app.put('/api/:token/metadata', async (req, res) => {
+        const token = req.params.token;
+
+        try {
+            console.log('Body', req.body);
+            const data: AppMetadata = req.body;
+            const issuer = magic.token.getIssuer(token);
+
+            await users.updateOne(
+                { _id: issuer },
+                {
+                    $set: {
+                        _id: issuer,
+                        name: data.name,
+                        avatarUrl: data.avatarUrl,
+                    },
+                },
+                {
+                    upsert: true,
+                }
+            );
+
+            res.status(200).send();
+        } catch (err) {
+            console.error(err);
+            res.sendStatus(500);
+        }
+    });
+
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(dist, 'index.html'));
+    });
+
+    app.listen(3002, () => {
+        console.log('[AuxAuth] Listening on port 3002');
+    });
+}
+
+start();

@@ -32,7 +32,7 @@ module.exports = {
                 exclude: /node_modules/,
             },
             {
-                test: /\.(pem)$/,
+                test: /\.(pem|txt)$/,
                 use: [
                     {
                         loader: 'raw-loader',

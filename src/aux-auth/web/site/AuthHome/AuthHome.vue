@@ -29,6 +29,9 @@
                     </md-field>
                     <md-button>Change Avatar</md-button>
                 </div>
+
+                <p v-show="updating">Updating...</p>
+                <p v-show="updated">Updated!</p>
             </div>
         </div>
     </div>

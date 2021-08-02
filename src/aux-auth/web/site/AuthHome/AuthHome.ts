@@ -1,9 +1,10 @@
-import { UserMetadata } from '../../../shared/AuthMetadata';
+import { AppMetadata, UserMetadata } from '../../../shared/AuthMetadata';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide } from 'vue-property-decorator';
+import { Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../AuthManager';
 import { Subscription } from 'rxjs';
+import { debounce } from 'lodash';
 
 @Component({
     components: {},
@@ -11,16 +12,26 @@ import { Subscription } from 'rxjs';
 export default class AuthHome extends Vue {
     metadata: UserMetadata = null;
     originalEmail: string = null;
+    originalName: string = null;
+
+    updating: boolean = false;
+    updated: boolean = false;
 
     private _sub: Subscription;
 
     created() {
         this.metadata = null;
+        this.updating = false;
+        this.updated = false;
+
+        this._updateMetadata = this._updateMetadata.bind(this);
+        this._updateMetadata = debounce(this._updateMetadata, 500);
     }
 
     mounted() {
         this._sub = authManager.loginState.subscribe((state) => {
             this.originalEmail = authManager.email;
+            this.originalName = authManager.name;
             this.metadata = {
                 email: authManager.email,
                 avatarUrl: authManager.avatarUrl,
@@ -36,5 +47,34 @@ export default class AuthHome extends Vue {
     saveEmail() {
         // TODO: Handle errors
         authManager.changeEmail(this.metadata.email);
+    }
+
+    @Watch('metadata.name')
+    updateName() {
+        if (this.originalName === this.metadata.name) {
+            return;
+        }
+        this.updating = true;
+        this.updated = false;
+        this._updateMetadata();
+    }
+
+    private async _updateMetadata() {
+        let newMetadata: Partial<AppMetadata> = {};
+        let hasChange = false;
+        if (this.originalName !== this.metadata.name) {
+            newMetadata.name = this.metadata.name;
+            hasChange = true;
+        }
+
+        if (hasChange) {
+            await authManager.updateMetadata(newMetadata);
+        }
+
+        this.updating = false;
+
+        if (hasChange) {
+            this.updated = true;
+        }
     }
 }
