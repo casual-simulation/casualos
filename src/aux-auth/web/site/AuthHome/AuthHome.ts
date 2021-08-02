@@ -5,14 +5,18 @@ import { Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../AuthManager';
 import { Subscription } from 'rxjs';
 import { debounce } from 'lodash';
+import Avatar from '../AuthAvatar/AuthAvatar';
 
 @Component({
-    components: {},
+    components: {
+        avatar: Avatar
+    },
 })
 export default class AuthHome extends Vue {
     metadata: UserMetadata = null;
     originalEmail: string = null;
     originalName: string = null;
+    originalAvatarUrl: string = null;
 
     updating: boolean = false;
     updated: boolean = false;
@@ -32,6 +36,7 @@ export default class AuthHome extends Vue {
         this._sub = authManager.loginState.subscribe((state) => {
             this.originalEmail = authManager.email;
             this.originalName = authManager.name;
+            this.originalAvatarUrl = authManager.avatarUrl;
             this.metadata = {
                 email: authManager.email,
                 avatarUrl: authManager.avatarUrl,
@@ -59,11 +64,26 @@ export default class AuthHome extends Vue {
         this._updateMetadata();
     }
 
+    updateAvatar(avatarUrl: string) {
+        this.metadata.avatarUrl = avatarUrl;
+        if (this.originalAvatarUrl === this.metadata.avatarUrl) {
+            return;
+        }
+        this.updating = true;
+        this.updated = false;
+        this._updateMetadata();
+    }
+
     private async _updateMetadata() {
         let newMetadata: Partial<AppMetadata> = {};
         let hasChange = false;
         if (this.originalName !== this.metadata.name) {
             newMetadata.name = this.metadata.name;
+            hasChange = true;
+        }
+
+        if (this.originalAvatarUrl !== this.metadata.avatarUrl) {
+            newMetadata.avatarUrl = this.metadata.avatarUrl;
             hasChange = true;
         }
 

@@ -23,11 +23,8 @@
                         >Save Email</md-button
                     >
                 </div>
-                <div class="button-field">
-                    <md-field>
-                        <label for="avatar">Avatar</label>
-                    </md-field>
-                    <md-button>Change Avatar</md-button>
+                <div>
+                    <avatar :avatarUrl="metadata.avatarUrl" @updateAvatar="updateAvatar"></avatar>
                 </div>
 
                 <p v-show="updating">Updating...</p>
