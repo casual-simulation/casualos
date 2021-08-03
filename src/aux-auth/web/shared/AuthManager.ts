@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Magic } from 'magic-sdk';
 import { Subject, BehaviorSubject, Observable } from 'rxjs';
+import { listenForChannel } from '../../../aux-vm-browser';
 import { AppMetadata } from '../../shared/AuthMetadata';
 
 const EMAIL_KEY = 'userEmail';
@@ -17,7 +18,7 @@ export class AuthManager {
 
     constructor(magicApiKey: string) {
         this._magic = new Magic(magicApiKey, {
-            testMode: false,
+            testMode: true,
         });
         this._loginState = new BehaviorSubject<boolean>(false);
     }
@@ -124,7 +125,7 @@ export class AuthManager {
     private async _loadOrCreateAppMetadata(): Promise<AppMetadata> {
         try {
             const response = await axios.get(
-                `/api/${encodeURIComponent(this.idToken)}/metadata`
+                `/api/${encodeURIComponent(this.userId)}/metadata`
             );
             return response.data;
         } catch (e) {

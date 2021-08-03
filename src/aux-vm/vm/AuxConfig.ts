@@ -60,6 +60,11 @@ export interface AuxConfigParameters {
     vmOrigin?: string;
 
     /**
+     * The origin that the Auth iframe should be loaded from.
+     */
+    authOrigin?: string;
+
+    /**
      * The list of portal bots that should be automatically created
      * before the sync event is triggered.
      */

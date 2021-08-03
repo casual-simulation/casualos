@@ -232,6 +232,7 @@ import {
     setAppOutput,
     SetAppOutputAction,
     unregisterCustomApp,
+    requestAuthId,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -768,6 +769,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 registerApp: registerApp,
                 unregisterApp,
                 compileApp: setAppContent,
+                requestAuthID,
             },
 
             portal: {
@@ -2490,6 +2492,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function setAppContent(portalId: string, output: any): SetAppOutputAction {
         const event = setAppOutput(portalId, output);
         return addAction(event);
+    }
+
+    /**
+     * Requests an Auth ID for the current session.
+     */
+    function requestAuthID(): Promise<string> {
+        const task = context.createTask();
+        const event = requestAuthId(task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**

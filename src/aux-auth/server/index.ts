@@ -4,7 +4,8 @@ import { AppMetadata } from 'shared/AuthMetadata';
 import { MongoClient, MongoClientOptions } from 'mongodb';
 import { Magic } from '@magic-sdk/admin';
 import pify from 'pify';
-import MAGIC_SECRET_KEY from './MAGIC_SDK_SECRET_KEY.txt';
+
+declare var MAGIC_SECRET_KEY: string;
 
 const connect = pify(MongoClient.connect);
 
@@ -24,12 +25,9 @@ async function start() {
 
     app.use(express.static(dist));
 
-    app.get('/api/:token/metadata', async (req, res) => {
+    app.get('/api/:issuer/metadata', async (req, res) => {
         try {
-            const token = req.params.token;
-            console.log('user ID', token);
-            const issuer = magic.token.getIssuer(token);
-
+            const issuer = req.params.issuer;
             const user = await users.findOne({ _id: issuer });
 
             if (!user) {

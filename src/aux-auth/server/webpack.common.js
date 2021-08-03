@@ -62,6 +62,7 @@ module.exports = {
         new webpack.DefinePlugin({
             GIT_HASH: JSON.stringify(commitHash),
             GIT_TAG: JSON.stringify(latestTag),
+            MAGIC_SECRET_KEY: JSON.stringify(process.env.MAGIC_SECRET_KEY),
         }),
     ],
 };

@@ -2,7 +2,7 @@ import { AppMetadata, UserMetadata } from '../../../shared/AuthMetadata';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Watch } from 'vue-property-decorator';
-import { authManager } from '../AuthManager';
+import { authManager } from '../../shared/AuthManager';
 import { Subscription } from 'rxjs';
 import { debounce } from 'lodash';
 import Avatar from '../AuthAvatar/AuthAvatar';

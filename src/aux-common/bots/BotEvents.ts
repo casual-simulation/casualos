@@ -203,7 +203,8 @@ export type AsyncActions =
     | GetGeolocationAction
     | RegisterCustomAppAction
     | UnregisterCustomAppAction
-    | RegisterHtmlAppAction;
+    | RegisterHtmlAppAction
+    | RequestAuthIdAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3108,6 +3109,13 @@ export interface GoToTagAction {
     space: string | null;
 }
 
+/**
+ * Defines an event that requests an AuthID from the portal.
+ */
+export interface RequestAuthIdAction extends AsyncAction {
+    type: 'request_auth_id';
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -5743,5 +5751,15 @@ export function htmlAppEvent(appId: string, event: any): HtmlAppEventAction {
         type: 'html_app_event',
         appId,
         event,
+    };
+}
+
+/**
+ * Creates a RequestAuthIdAction.
+ */
+export function requestAuthId(taskId?: string | number): RequestAuthIdAction {
+    return {
+        type: 'request_auth_id',
+        taskId,
     };
 }

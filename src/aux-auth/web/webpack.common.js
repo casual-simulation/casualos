@@ -24,6 +24,7 @@ function authConfig(latestTag) {
     return merge(baseConfig(), {
         entry: {
             site: path.resolve(__dirname, 'site', 'index.ts'),
+            iframe: path.resolve(__dirname, 'iframe', 'index.ts'),
             // 'service-worker': path.resolve(
             //     __dirname,
             //     './shared/service-worker.ts'
@@ -46,7 +47,15 @@ function authConfig(latestTag) {
                 template: path.resolve(__dirname, 'site', 'index.html'),
                 title: 'CasualOS.me',
                 filename: 'index.html',
-                favicon: path.resolve(__dirname, 'site', 'favicon.ico'),
+                favicon: path.resolve(__dirname, 'shared', 'favicon.ico'),
+            }),
+            new HtmlWebpackPlugin({
+                chunks: ['iframe', 'vendors'],
+                // inject: false,
+                template: path.resolve(__dirname, 'iframe', 'index.html'),
+                title: 'CasualOS.me',
+                filename: 'iframe.html',
+                favicon: path.resolve(__dirname, 'shared', 'favicon.ico'),
             }),
             ...commonPlugins(latestTag),
             new WorkboxPlugin.GenerateSW({

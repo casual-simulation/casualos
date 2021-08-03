@@ -59,9 +59,14 @@ import '@casual-simulation/aux-components/SVGPolyfill';
 import AuthApp from './AuthApp/AuthApp';
 import AuthHome from './AuthHome/AuthHome';
 import AuthLogin from './AuthLogin/AuthLogin';
-import { authManager } from './AuthManager';
+import { authManager } from '../shared/AuthManager';
 import AuthLoading from './AuthLoading/AuthLoading';
 import { EventBus } from '@casual-simulation/aux-components';
+import {
+    listenForChannel,
+    setupChannel,
+} from '@casual-simulation/aux-vm-browser/html/IFrameHelpers';
+import { skip } from 'rxjs/operators';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -113,6 +118,37 @@ const router = new VueRouter({
 });
 
 const manager = authManager;
+let messagePort: MessagePort;
+
+if (window.opener) {
+    console.log(
+        '[auth-aux/site/index] Opened by another tab. Setting up channel.'
+    );
+    const channel = setupChannel(window.opener);
+
+    messagePort = channel.port1;
+
+    window.addEventListener('close', () => {
+        if (messagePort) {
+            messagePort.postMessage({
+                type: 'close',
+            });
+        }
+    });
+
+    authManager.loginState.pipe(skip(1)).subscribe((loggedIn) => {
+        if (messagePort) {
+            if (loggedIn) {
+                console.log('[auth-aux/site/index] Sending login event.');
+                messagePort.postMessage({
+                    type: 'login',
+                    userId: authManager.userId,
+                });
+            }
+        }
+    });
+}
+
 let loading: Vue;
 
 router.beforeEach((to, from, next) => {
@@ -123,13 +159,32 @@ router.beforeEach((to, from, next) => {
 router.beforeEach(async (to, from, next) => {
     try {
         const loggedIn = await manager.magic.user.isLoggedIn();
+
+        if (messagePort && loggedIn) {
+            if (!manager.userInfoLoaded) {
+                await manager.loadUserInfo();
+            }
+
+            messagePort.postMessage({
+                type: 'login',
+                userId: authManager.userId,
+            });
+            // We have a connection to the parent window.
+            // This means that the login flow was started from the parent
+            // and we should close instead of redirecting to home.
+            window.close();
+            return;
+        }
+
         if (loggedIn && !manager.userInfoLoaded) {
             try {
                 await manager.loadUserInfo();
+
                 if (to.name === 'login') {
                     console.log(
                         '[index] Already logged in. Redirecting to home.'
                     );
+
                     next({ name: 'home' });
                 } else {
                     next();

@@ -221,7 +221,7 @@ export class BaseSimulation implements Simulation {
 
         await this._vm.init();
 
-        this._initManagers();
+        await this._initManagers();
 
         this._setStatus('Initialized.');
     }
@@ -235,7 +235,7 @@ export class BaseSimulation implements Simulation {
         );
     }
 
-    protected _initManagers() {}
+    protected _initManagers(): void | Promise<void> {}
 
     protected _setStatus(status: string) {
         this._status = status;

@@ -158,6 +158,7 @@ import {
     registerCustomApp,
     setAppOutput,
     unregisterCustomApp,
+    requestAuthId,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -3405,6 +3406,15 @@ describe('AuxLibrary', () => {
                 );
                 const expected = setAppOutput('testPortal', 'hahaha');
                 expect(promise).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.requestAuthID()', () => {
+            it('should send a RequestAuthIdAction', () => {
+                const promise: any = library.api.os.requestAuthID();
+                const expected = requestAuthId(context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
