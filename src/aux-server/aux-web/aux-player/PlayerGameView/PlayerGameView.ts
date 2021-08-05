@@ -287,6 +287,19 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
      */
     disableMapView() {
         // TODO:
+        console.log('[PlayerGameView] Disable Map');
+        try {
+            if (this._mapView) {
+                this._mapView.destroy();
+                this._mapView = null;
+            }
+            this.hasMap = false;
+        } catch (err) {
+            console.warn(
+                '[PlayerGameView] Failed to destroy the map view.',
+                err
+            );
+        }
     }
 
     protected setWidthAndHeightCore(width: number, height: number) {
