@@ -950,7 +950,11 @@ export class CameraControls {
 
         // Rotate the target position around the touch origin midpoint
         // before applying the spherical rotation to the camera
-        if (this.state === STATE.TOUCH_ROTATE_ZOOM && this.originMidpoint) {
+        if (
+            this.state === STATE.TOUCH_ROTATE_ZOOM &&
+            this.originMidpoint &&
+            this.spherical.phi > 0.1
+        ) {
             rotationTarget = this.originMidpoint;
 
             lookTarget.sub(this.originMidpoint);
