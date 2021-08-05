@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where setting the `mapPortal` tag on the `configBot` to `null` would not close the map portal.
+-   Fixed an issue where the camera would rotate somewhat randomly when facing straight down using touch controls.
 
 ## V2.0.5
 
