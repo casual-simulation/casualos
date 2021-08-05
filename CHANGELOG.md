@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V2.0.6
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting the `mapPortal` tag on the `configBot` to `null` would not close the map portal.
+
 ## V2.0.5
 
 #### Date: 7/27/2021
