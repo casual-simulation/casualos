@@ -28,6 +28,46 @@ import Vue from 'vue';
 import PlayerApp from './PlayerApp/PlayerApp';
 import Loading from '../shared/vue-components/Loading/Loading';
 import { router } from './core';
+import { appManager } from '../shared/AppManager';
+
+appManager.isCastReceiver = true;
+
+const context = cast.framework.CastReceiverContext.getInstance();
+const playerManager = context.getPlayerManager();
+
+const LOG_RECEIVER_TAG = 'Receiver';
+const castDebugLogger = cast.debug.CastDebugLogger.getInstance();
+
+playerManager.addEventListener(
+    cast.framework.events.EventType.ERROR,
+    (event) => {
+        castDebugLogger.error(
+            LOG_RECEIVER_TAG,
+            'Detailed Error Code - ' + event.detailedErrorCode
+        );
+        if (event && event.detailedErrorCode == 905) {
+            castDebugLogger.error(
+                LOG_RECEIVER_TAG,
+                'LOAD_FAILED: Verify the load request is set up ' +
+                    'properly and the media is able to play.'
+            );
+        }
+    }
+);
+
+playerManager.setMessageInterceptor(
+    cast.framework.messages.MessageType.LOAD,
+    (loadRequestData) => {
+        castDebugLogger.debug(
+            LOG_RECEIVER_TAG,
+            `loadRequestData: ${JSON.stringify(loadRequestData)}`
+        );
+        const source = loadRequestData.media.contentId;
+        appManager.setPrimarySimulation(source);
+
+        return loadRequestData;
+    }
+);
 
 async function start() {
     const loading = new Vue({

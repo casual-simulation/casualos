@@ -26,6 +26,7 @@ const config: ClientConfig = {
         disableCollaboration: process.env.DISABLE_COLLABORATION === 'true',
         ab1BootstrapURL: process.env.AB1_BOOTSTRAP_URL || null,
         arcGisApiKey: process.env.ARC_GIS_API_KEY,
+        castApplicationId: '7A8E083E',
     },
 };
 

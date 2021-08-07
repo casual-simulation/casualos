@@ -111,34 +111,38 @@ export default class PlayerHome extends Vue {
 
         if (this.query) {
             // On first load check the server and load a default
-            let server = this.query['server'] as string | string[];
-            if (!hasValue(server)) {
-                // if there is no server tag defined, check for the story tag
-                server = this.query['story'];
-                if (hasValue(server)) {
-                    let update: Dictionary<string | string[]> = {
-                        server: server,
-                        story: null,
-                    };
-                    this._updateQuery(update);
-                } else {
-                    // Generate a random server name
-                    const randomName: string = uniqueNamesGenerator(
-                        namesConfig
-                    );
-                    let update: Dictionary<string> = {};
-                    if (!appManager.config.disableCollaboration) {
-                        update.server = randomName;
-                    }
-                    if (!hasValue(this.query['pagePortal'])) {
-                        update.pagePortal = 'home';
-                    }
-                    this._updateQuery(update);
-                    server = randomName;
-                }
+            if (!appManager.isCastReceiver) {
+                this._loadServerFromQuery();
             }
-            this._setServer(server);
         }
+    }
+
+    private _loadServerFromQuery() {
+        let server = this.query['server'] as string | string[];
+        if (!hasValue(server)) {
+            // if there is no server tag defined, check for the story tag
+            server = this.query['story'];
+            if (hasValue(server)) {
+                let update: Dictionary<string | string[]> = {
+                    server: server,
+                    story: null,
+                };
+                this._updateQuery(update);
+            } else {
+                // Generate a random server name
+                const randomName: string = uniqueNamesGenerator(namesConfig);
+                let update: Dictionary<string> = {};
+                if (!appManager.config.disableCollaboration) {
+                    update.server = randomName;
+                }
+                if (!hasValue(this.query['pagePortal'])) {
+                    update.pagePortal = 'home';
+                }
+                this._updateQuery(update);
+                server = randomName;
+            }
+        }
+        this._setServer(server);
     }
 
     private _setupSimulation(sim: BrowserSimulation): Subscription {

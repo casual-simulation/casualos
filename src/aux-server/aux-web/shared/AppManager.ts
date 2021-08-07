@@ -32,6 +32,9 @@ import { fromByteArray } from 'base64-js';
 import builder from './builder/builder.v1.json';
 import bootstrap from './builder/ab-1.bootstrap.json';
 
+declare var cast: any;
+declare var chrome: any;
+
 /**
  * Defines an interface that contains version information about the app.
  */
@@ -93,6 +96,12 @@ export class AppManager {
     private _deviceConfig: AuxConfig['config']['device'];
     private _primaryPromise: Promise<BotManager>;
     private _registration: ServiceWorkerRegistration;
+
+    /**
+     * Wether we are currently loaded in a chromecast session.
+     * Used to prevent auto-generating a server.
+     */
+    isCastReceiver: boolean;
 
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
@@ -238,6 +247,7 @@ export class AppManager {
         await this._initConfig();
         this._initSentry();
         await this._initDeviceConfig();
+        this._initCast();
         this._sendProgress('Initialized.', 1, true);
     }
 
@@ -282,6 +292,27 @@ export class AppManager {
             isCollaborative: !this._config.disableCollaboration,
             ab1BootstrapUrl: ab1Bootstrap,
         };
+    }
+
+    private _initCast() {
+        if (!this.isCastReceiver) {
+            (<any>window)['__onGCastApiAvailable'] = (isAvailable: boolean) => {
+                if (isAvailable) {
+                    this._initializeCastApi();
+                }
+            };
+
+            const script = document.createElement('script');
+            script.src =
+                'https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1';
+            document.body.appendChild(script);
+        }
+    }
+
+    private _initializeCastApi() {
+        cast.framework.CastContext.getInstance().setOptions({
+            receiverApplicationId: appManager.config.castApplicationId,
+        });
     }
 
     private _sendProgress(message: string, progress: number, done?: boolean) {

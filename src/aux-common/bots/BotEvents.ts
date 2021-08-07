@@ -203,7 +203,8 @@ export type AsyncActions =
     | GetGeolocationAction
     | RegisterCustomAppAction
     | UnregisterCustomAppAction
-    | RegisterHtmlAppAction;
+    | RegisterHtmlAppAction
+    | CastAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2721,6 +2722,13 @@ export interface SerializableMutationRecord {
 
 export interface NodeReference {
     __id: string;
+}
+
+/**
+ * Defines an event that casts the current server using chromecast.
+ */
+export interface CastAction extends AsyncAction {
+    type: 'cast';
 }
 
 /**

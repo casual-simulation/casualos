@@ -25,6 +25,7 @@ function playerConfig(latestTag) {
     return merge(baseConfig(), {
         entry: {
             player: path.resolve(__dirname, 'aux-player', 'index.ts'),
+            cast: path.resolve(__dirname, 'aux-player', 'cast.ts'),
             vm: path.resolve(
                 __dirname,
                 '..',
@@ -63,6 +64,18 @@ function playerConfig(latestTag) {
                 template: path.resolve(__dirname, 'aux-player', 'index.html'),
                 title: 'CasualOS',
                 filename: 'player.html',
+                favicon: path.resolve(__dirname, 'aux-player', 'favicon.ico'),
+            }),
+            new HtmlWebpackPlugin({
+                chunks: ['cast', 'vendors', 'monaco'],
+                // inject: false,
+                template: path.resolve(
+                    __dirname,
+                    'aux-player',
+                    'chromecast.html'
+                ),
+                title: 'CasualOS',
+                filename: 'chromecast.html',
                 favicon: path.resolve(__dirname, 'aux-player', 'favicon.ico'),
             }),
             new HtmlWebpackPlugin({

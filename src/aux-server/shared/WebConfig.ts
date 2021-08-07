@@ -53,4 +53,9 @@ export interface WebConfig {
      * The API key that should be used for the ArcGIS mapping API.
      */
     arcGisApiKey?: string;
+
+    /**
+     * The Application ID that should be used for Google Cast.
+     */
+    castApplicationId?: string;
 }

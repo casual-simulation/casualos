@@ -73,6 +73,9 @@ import { MediaRecording, Recorder } from '../../shared/Recorder';
 import ImuPortal from '../../shared/vue-components/ImuPortal/ImuPortal';
 import HtmlAppContainer from '../../shared/vue-components/HtmlAppContainer/HtmlAppContainer';
 
+declare var cast: any;
+declare var chrome: any;
+
 let syntheticVoices = [] as SyntheticVoice[];
 
 if (window.speechSynthesis) {
@@ -961,6 +964,38 @@ export default class PlayerApp extends Vue {
 
                         simulation.helper.transaction(
                             asyncResult(e.taskId, value, false)
+                        );
+                    } catch (ex) {
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, ex.toString())
+                        );
+                    }
+                } else if (e.type === 'cast') {
+                    if (appManager.isCastReceiver) {
+                        return;
+                    }
+                    let context = cast.framework.CastContext.getInstance();
+
+                    try {
+                        console.log('[PlayerApp] requesting session...');
+                        await context.requestSession();
+
+                        let castSession = context.getCurrentSession();
+
+                        let mediaInfo = new chrome.cast.media.MediaInfo(
+                            simulation.id,
+                            'application/xml'
+                        );
+                        let request = new chrome.cast.media.LoadRequest(
+                            mediaInfo
+                        );
+
+                        console.log('[PlayerApp] loading media...');
+                        await castSession.loadMedia(request);
+
+                        console.log('[PlayerApp] done casting.');
+                        simulation.helper.transaction(
+                            asyncResult(e.taskId, null, false)
                         );
                     } catch (ex) {
                         simulation.helper.transaction(
