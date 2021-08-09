@@ -6,6 +6,11 @@ import { AppMetadata } from '../../shared/AuthMetadata';
 
 const EMAIL_KEY = 'userEmail';
 
+export interface AuthorizedToken {
+    service: string;
+    token: string;
+}
+
 export class AuthManager {
     private _magic: Magic;
 
@@ -15,12 +20,14 @@ export class AuthManager {
     private _appMetadata: AppMetadata;
 
     private _loginState: Subject<boolean>;
+    private _authorizedTokens: Subject<AuthorizedToken>;
 
     constructor(magicApiKey: string) {
         this._magic = new Magic(magicApiKey, {
-            testMode: true,
+            testMode: false,
         });
         this._loginState = new BehaviorSubject<boolean>(false);
+        this._authorizedTokens = new Subject<AuthorizedToken>();
     }
 
     get magic() {
@@ -59,6 +66,10 @@ export class AuthManager {
         return this._loginState;
     }
 
+    get authorizedTokens(): Observable<AuthorizedToken> {
+        return this._authorizedTokens;
+    }
+
     async loadUserInfo() {
         const {
             email,
@@ -76,6 +87,36 @@ export class AuthManager {
         this._appMetadata = await this._loadOrCreateAppMetadata();
 
         this._loginState.next(this.userInfoLoaded);
+    }
+
+    /**
+     * Determines if the given service has already been authorized.
+     */
+    async isServiceAuthorized(service: string) {
+        try {
+            const response = await axios.get(
+                `/api/${encodeURIComponent(
+                    this.userId
+                )}/services/${encodeURIComponent(service)}`
+            );
+            return !!response.data;
+        } catch {
+            return false;
+        }
+    }
+
+    async authorizeService(service: string) {
+        const token = await this.magic.user.generateIdToken({
+            attachment: service,
+        });
+
+        await this._addAuthorizedService(service, token);
+
+        this._authorizedTokens.next({
+            service,
+            token,
+        });
+        return token;
     }
 
     async logout() {
@@ -112,6 +153,14 @@ export class AuthManager {
             ...newMetadata,
         });
         await this.loadUserInfo();
+    }
+
+    private async _addAuthorizedService(service: string, token: string) {
+        const response = await axios.put(
+            `/api/${encodeURIComponent(this.idToken)}/services`,
+            { service, token }
+        );
+        return response.data;
     }
 
     private _saveEmail(email: string) {

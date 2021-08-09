@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide } from 'vue-property-decorator';
+import { Prop, Provide } from 'vue-property-decorator';
 import { authManager } from '../../shared/AuthManager';
 
 @Component({
@@ -9,6 +9,8 @@ import { authManager } from '../../shared/AuthManager';
 export default class AuthLogin extends Vue {
     email: string;
     processing: boolean;
+
+    @Prop({ default: null }) after: string;
 
     private _loggedIn: boolean;
 
@@ -29,7 +31,12 @@ export default class AuthLogin extends Vue {
     private async _loadInfoAndNavigate() {
         if (this._loggedIn) {
             await authManager.loadUserInfo();
-            this.$router.push({ name: 'home' });
+
+            if (this.after) {
+                this.$router.push({ name: this.after });
+            } else {
+                this.$router.push({ name: 'home' });
+            }
         }
     }
 
@@ -54,7 +61,7 @@ export default class AuthLogin extends Vue {
     private async _loginWithEmail() {
         try {
             await authManager.magic.auth.loginWithMagicLink({
-                email: PRODUCTION ? this.email : 'test+success@magic.link',
+                email: this.email,
             });
             this._loggedIn = true;
         } catch (err) {

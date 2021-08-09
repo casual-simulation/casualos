@@ -17,6 +17,7 @@ export class AuthHelper {
     private _proxy: Remote<AuxAuth>;
     private _initialized: boolean = false;
     private _sub: Subscription = new Subscription();
+    private _query: string;
 
     /**
      * Creates a new instance of the AuthHelper class.
@@ -24,6 +25,9 @@ export class AuthHelper {
      */
     constructor(iframeOrigin?: string) {
         this._origin = iframeOrigin || 'https://casualos.me';
+
+        // Cache the query on create so that scripts cannot change it by changing the user bot.
+        this._query = location.search;
     }
 
     dispose() {
@@ -34,7 +38,8 @@ export class AuthHelper {
     }
 
     private async _init() {
-        const iframeUrl = new URL('/iframe.html', this._origin).href;
+        const iframeUrl = new URL(`/iframe.html${this._query}`, this._origin)
+            .href;
 
         const iframe = (this._iframe = document.createElement('iframe'));
         this._sub.add(() => {

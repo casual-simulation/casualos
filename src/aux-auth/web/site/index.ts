@@ -67,6 +67,7 @@ import {
     setupChannel,
 } from '@casual-simulation/aux-vm-browser/html/IFrameHelpers';
 import { skip } from 'rxjs/operators';
+import AuthSelect from './AuthSelect/AuthSelect';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -97,18 +98,21 @@ const routes: RouteConfig[] = [
         name: 'login',
         component: AuthLogin,
         props: (route) => ({
-            query: route.query,
-            url: route.fullPath,
+            after: route.query['after'],
+        }),
+    },
+    {
+        path: '/select',
+        name: 'select',
+        component: AuthSelect,
+        props: (route) => ({
+            defaultService: route.query['service'],
         }),
     },
     {
         path: '/',
         name: 'home',
         component: AuthHome,
-        props: (route) => ({
-            query: route.query,
-            url: route.fullPath,
-        }),
     },
 ];
 
@@ -128,6 +132,12 @@ if (window.opener) {
 
     messagePort = channel.port1;
 
+    messagePort.addEventListener('message', (message) => {
+        if (message.data.type === 'close') {
+            window.close();
+        }
+    });
+
     window.addEventListener('close', () => {
         if (messagePort) {
             messagePort.postMessage({
@@ -145,6 +155,17 @@ if (window.opener) {
                     userId: authManager.userId,
                 });
             }
+        }
+    });
+
+    authManager.authorizedTokens.subscribe((token) => {
+        if (messagePort) {
+            console.log('[auth-aux/site/index] Sending token event.');
+            messagePort.postMessage({
+                type: 'token',
+                token: token.token,
+                service: token.service,
+            });
         }
     });
 }
@@ -169,10 +190,15 @@ router.beforeEach(async (to, from, next) => {
                 type: 'login',
                 userId: authManager.userId,
             });
-            // We have a connection to the parent window.
-            // This means that the login flow was started from the parent
-            // and we should close instead of redirecting to home.
-            window.close();
+
+            if (to.name !== 'select') {
+                // Redirect to the select page if the login flow was started from the parent window.
+                // this will let the user select an account to use.
+                next({ name: 'select', query: to.query });
+            } else {
+                next();
+            }
+
             return;
         }
 

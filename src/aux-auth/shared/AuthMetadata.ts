@@ -10,3 +10,8 @@ export interface AppMetadata {
     avatarPortraitUrl: string;
     name: string;
 }
+
+export interface AppService {
+    userId: string;
+    service: string;
+}

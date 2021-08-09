@@ -9,7 +9,27 @@ export interface AuxAuth {
 
     /**
      * Logs the user in.
-     * Returns a promise that resolves with a token that represents the user.
+     * Returns a promise that resolves with data about the user.
      */
-    login(): Promise<string>;
+    login(): Promise<LoginData>;
+}
+
+/**
+ * Data about the logged in user.
+ */
+export interface LoginData {
+    /**
+     * The ID of the user.
+     */
+    userId: string;
+
+    /**
+     * The token that the service is authorized to use.
+     */
+    token: string;
+
+    /**
+     * The service that was authorized by the user.
+     */
+    service: string;
 }

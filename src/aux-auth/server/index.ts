@@ -1,6 +1,6 @@
 import express, { Response, NextFunction } from 'express';
 import path from 'path';
-import { AppMetadata } from 'shared/AuthMetadata';
+import { AppMetadata, AppService } from '../shared/AuthMetadata';
 import { MongoClient, MongoClientOptions } from 'mongodb';
 import { Magic } from '@magic-sdk/admin';
 import pify from 'pify';
@@ -14,10 +14,11 @@ async function start() {
     let mongo: MongoClient = await connect('mongodb://127.0.0.1:27017', {
         useNewUrlParser: false,
     });
-    const magic = new Magic(MAGIC_SECRET_KEY);
+    const magic = new Magic(MAGIC_SECRET_KEY, {});
 
     const db = mongo.db('aux-auth');
     const users = db.collection<AppMetadata>('users');
+    const services = db.collection<AppService>('services');
 
     const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
 
@@ -61,6 +62,56 @@ async function start() {
                         name: data.name,
                         avatarUrl: data.avatarUrl,
                         avatarPortraitUrl: data.avatarPortraitUrl,
+                    },
+                },
+                {
+                    upsert: true,
+                }
+            );
+
+            res.status(200).send();
+        } catch (err) {
+            console.error(err);
+            res.sendStatus(500);
+        }
+    });
+
+    app.get('/api/:issuer/services/:service', async (req, res) => {
+        try {
+            const issuer = req.params.issuer;
+            const service = req.params.service;
+            const data = await services.findOne({ userId: issuer, service });
+
+            if (!data) {
+                res.sendStatus(404);
+                return;
+            }
+            res.send({
+                userId: data.userId,
+                service: data.service,
+            });
+        } catch (err) {
+            console.error(err);
+            res.sendStatus(500);
+        }
+    });
+
+    app.put('/api/:token/services', async (req, res) => {
+        const token = req.params.token;
+
+        try {
+            console.log('Body', req.body);
+            const { service, token: serviceToken } = req.body;
+            const issuer = magic.token.getIssuer(token);
+
+            magic.token.validate(serviceToken, service);
+
+            await services.updateOne(
+                { userId: issuer, service },
+                {
+                    $set: {
+                        userId: issuer,
+                        service: service,
                     },
                 },
                 {
