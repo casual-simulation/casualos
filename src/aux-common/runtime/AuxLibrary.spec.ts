@@ -158,7 +158,11 @@ import {
     registerCustomApp,
     setAppOutput,
     unregisterCustomApp,
-    requestAuthId,
+    requestAuthData,
+    AuthData,
+    defineGlobalBot,
+    Bot,
+    TEMPORARY_BOT_PARTITION_ID,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -3410,12 +3414,142 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('os.requestAuthID()', () => {
-            it('should send a RequestAuthIdAction', () => {
-                const promise: any = library.api.os.requestAuthID();
-                const expected = requestAuthId(context.tasks.size);
-                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+        describe('os.requestAuthBot()', () => {
+            it('should send a RequestAuthDataAction', () => {
+                const promise: any = library.api.os.requestAuthBot();
+                const expected = requestAuthData(context.tasks.size);
+
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create a bot with the given resolved data', async () => {
+                const promise = library.api.os.requestAuthBot();
+
+                let resultBot: Bot;
+                promise.then((bot) => {
+                    resultBot = bot;
+                });
+
+                const expected = requestAuthData(context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+
+                // Resolve RequestAuthDataAction
+                context.resolveTask(
+                    1,
+                    {
+                        userId: 'myUserId',
+                        service: 'myService',
+                        token: 'myToken',
+                    } as AuthData,
+                    false
+                );
+
+                await waitAsync();
+
+                // Resolve DefineGlobalBotAction
+                context.resolveTask(2, null, false);
+
+                await waitAsync();
+
+                expect(resultBot.id).toEqual('myUserId');
+                expect(resultBot.tags.token).toEqual('myToken');
+            });
+
+            it('should emit a DefineGlobalBotAction', async () => {
+                const promise: any = library.api.os.requestAuthBot();
+
+                const expected = requestAuthData(context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    1,
+                    {
+                        userId: 'myUserId',
+                        service: 'myService',
+                        token: 'myToken',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(context.actions).toEqual([
+                    expected,
+                    botAdded(
+                        createBot(
+                            'myUserId',
+                            {
+                                token: 'myToken',
+                                service: 'myService',
+                            },
+                            TEMPORARY_BOT_PARTITION_ID
+                        )
+                    ),
+                    defineGlobalBot('auth', 'myUserId', 2),
+                ]);
+            });
+
+            it('should reuse the existing authBot if the User ID is the same.', async () => {
+                const promise = library.api.os.requestAuthBot();
+
+                let resultBot: Bot;
+                promise.then((bot) => {
+                    resultBot = bot;
+                });
+
+                const expected = requestAuthData(context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+
+                // Resolve RequestAuthDataAction
+                context.resolveTask(
+                    1,
+                    {
+                        userId: 'myUserId',
+                        service: 'myService',
+                        token: 'myToken',
+                    } as AuthData,
+                    false
+                );
+
+                await waitAsync();
+
+                // Resolve DefineGlobalBotAction
+                context.resolveTask(2, null, false);
+
+                await waitAsync();
+
+                expect(resultBot.id).toEqual('myUserId');
+                expect(resultBot.tags.token).toEqual('myToken');
+
+                const promise2 = library.api.os.requestAuthBot();
+
+                let resultBot2: Bot;
+                promise2.then((bot) => {
+                    resultBot2 = bot;
+                });
+
+                // Resolve RequestAuthDataAction
+                context.resolveTask(
+                    3,
+                    {
+                        userId: 'myUserId',
+                        service: 'myService',
+                        token: 'myToken',
+                    } as AuthData,
+                    false
+                );
+
+                await waitAsync();
+
+                // Resolve DefineGlobalBotAction
+                context.resolveTask(4, null, false);
+
+                await waitAsync();
+
+                expect(resultBot2).toBe(resultBot);
             });
         });
 

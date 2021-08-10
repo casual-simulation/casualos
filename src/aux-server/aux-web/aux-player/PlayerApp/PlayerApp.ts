@@ -966,7 +966,7 @@ export default class PlayerApp extends Vue {
                             asyncError(e.taskId, ex.toString())
                         );
                     }
-                } else if (e.type === 'request_auth_id') {
+                } else if (e.type === 'request_auth_data') {
                     try {
                         const id = await simulation.auth.authenticate();
 
