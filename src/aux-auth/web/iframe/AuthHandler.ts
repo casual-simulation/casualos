@@ -13,6 +13,7 @@ import { authManager } from '../shared/AuthManager';
 export class AuthHandler implements AuxAuth {
     private _loggedIn: boolean = false;
     private _loginData: LoginData;
+    private _userId: string;
 
     async isLoggedIn(): Promise<boolean> {
         return this._loggedIn;
@@ -23,14 +24,20 @@ export class AuthHandler implements AuxAuth {
             return this._loginData;
         }
 
+        const service = this._getDefaultService();
+
+        if (!service) {
+            throw new Error('Unable to login without an auxCode');
+        }
+
         console.log('[AuthHandler] Attempting login.');
         if (await this._checkLoginStatus()) {
             console.log('[AuthHandler] Already logged in.');
+            await this._authorizeService(service);
             return this._loginData;
         } else {
-            const data = await this._loginWithNewTab();
-            this._loginData = data;
-            this._loggedIn = true;
+            this._userId = await this._loginWithNewTab();
+            await this._authorizeService(service);
             return this._loginData;
         }
     }
@@ -42,24 +49,26 @@ export class AuthHandler implements AuxAuth {
 
         if (loggedIn) {
             await authManager.loadUserInfo();
-            const service = this._getDefaultService();
-            if (service) {
-                if (await authManager.isServiceAuthorized(service)) {
-                    await authManager.loadUserInfo();
-                    const token = await authManager.authorizeService(service);
-                    this._loginData = {
-                        userId: authManager.userId,
-                        service: service,
-                        token: token,
-                    };
-                    this._loggedIn = true;
-                }
-            }
         }
-        return this._loggedIn;
+        return loggedIn;
     }
 
-    private _loginWithNewTab(): Promise<LoginData> {
+    private async _authorizeService(service: string) {
+        console.log('[AuthHandler] Authorizing Service...', service);
+        if (await authManager.isServiceAuthorized(service)) {
+            await authManager.loadUserInfo();
+            const token = await authManager.authorizeService(service);
+            this._loginData = {
+                userId: this._userId ?? authManager.userId,
+                service: service,
+                token: token,
+            };
+            this._loggedIn = true;
+            console.log('[AuthHandler] Authorized!', service);
+        }
+    }
+
+    private _loginWithNewTab(): Promise<string> {
         console.log('[AuthHandler] Opening login tab...');
         const url = new URL('/', location.origin);
         let service = this._getDefaultService();
@@ -90,16 +99,12 @@ export class AuthHandler implements AuxAuth {
                     } else if (message.data.type === 'login') {
                         console.log('[AuthHandler] Got User ID.');
                         userId = message.data.userId;
-                    } else if (message.data.type === 'token') {
-                        console.log('[AuthHandler] Got token.');
                         handled = true;
                         sub.unsubscribe();
                         newTab.close();
-                        resolve({
-                            userId,
-                            token: message.data.token,
-                            service: message.data.service,
-                        });
+                        resolve(userId);
+                    } else if (message.data.type === 'token') {
+                        console.log('[AuthHandler] Got token.');
                     }
                 });
 
