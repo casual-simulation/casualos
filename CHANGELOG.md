@@ -4,6 +4,11 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the `formAnimationAddress` tag to allow specifying a separate GLTF/GLB URL that should be used for animations.
+    -   This allows dynamically loading animations instead of requiring that all animations be built into the `formAddress` GLTF mesh.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where setting the `mapPortal` tag on the `configBot` to `null` would not close the map portal.
