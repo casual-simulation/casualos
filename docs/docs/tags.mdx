@@ -723,6 +723,20 @@ Only works for mesh forms.
   </PossibleValue>
 </PossibleValuesTable>
 
+### `formAnimationAddress`
+
+The URL that the animations for the mesh should be loaded from.
+For GLTF forms, this should be the URL of the GLTF file that contains the animations that should be used for the mesh.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    Use the animations that were built into the mesh.
+  </PossibleValueCode>
+  <PossibleValue value='Any URL'>
+    Use the animations from the given GLTF file.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `gltfVersion`
 
 The GLTF specification version that should be used to load a GLTF model.

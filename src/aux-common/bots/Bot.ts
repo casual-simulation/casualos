@@ -1677,6 +1677,7 @@ export const KNOWN_TAGS: string[] = [
     'formSubtype',
     'form',
     'formAnimation',
+    'formAnimationAddress',
     'orientationMode',
     'anchorPoint',
     'gltfVersion',
