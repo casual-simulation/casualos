@@ -82,7 +82,7 @@
         "compression": "1.7.4",
         "cors": "2.8.5",
         "d3": "^5.9.2",
-        "deno-vm": "^0.8.0",
+        "deno-vm": "^0.8.1",
         "dexie": "^2.0.4",
         "downloadjs": "^1.4.7",
         "es6-promise": "^4.2.5",
