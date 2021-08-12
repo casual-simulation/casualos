@@ -336,6 +336,12 @@ export function watchSimulation(
             .subscribe()
     );
 
+    addDefinitionsForPortalBot(
+        'auth',
+        'botId',
+        monaco.languages.typescript.javascriptDefaults
+    );
+
     return sub;
 }
 

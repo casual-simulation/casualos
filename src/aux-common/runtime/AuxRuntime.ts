@@ -361,10 +361,7 @@ export class AuxRuntime
             }
         } else if (action.type === 'define_global_bot') {
             if (!this._portalBots.has(action.name)) {
-                const newBot = this.context.state[action.botId];
-                if (newBot) {
-                    this._registerPortalBot(action.name, newBot.id);
-                }
+                this._registerPortalBot(action.name, action.botId);
             }
             if (hasValue(action.taskId)) {
                 this._processCore([asyncResult(action.taskId, null)]);
