@@ -31,7 +31,7 @@ const merge = mergeWithCustomize({
 });
 
 const finalPlayerConfig = merge(
-    common.auth('v9.9.9-dev:alpha'),
+    common.auth('v9.9.9-dev:alpha', false),
     developmentConfig()
 );
 

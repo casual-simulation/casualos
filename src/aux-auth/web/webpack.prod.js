@@ -37,7 +37,7 @@ const merge = mergeWithCustomize({
 });
 
 const finalPlayerConfig = merge(
-    common.auth(latestTag),
+    common.auth(latestTag, true),
     productionPlayerConfig()
 );
 

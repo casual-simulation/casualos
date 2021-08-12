@@ -2,8 +2,10 @@
 <html>
     <head>
         <meta charset="utf-8" />
-        <!-- TODO: Implement Content Security Policy that prevents XSS while allowing Jitsi, Maps, and other services to work -->
-        <!-- <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval'; worker-src 'self' blob:" /> -->
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'self' https://auth.magic.link; child-src <%= allowedChildOrigins %>; frame-src https://auth.magic.link; script-src 'self' https://auth.magic.link <%= !production ? `'unsafe-eval'` : `` %>;"
+        />
         <meta
             name="viewport"
             content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
@@ -14,17 +16,6 @@
             content="black-translucent"
         />
         <title><%= htmlWebpackPlugin.options.title %></title>
-        <style>
-            body {
-                margin: 0;
-                touch-action: manipulation;
-                overscroll-behavior: none;
-                font-family: Roboto, apple-system, BlinkMacSystemFont,
-                    'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Fira Sans',
-                    'Droid Sans', 'Helvetica Neue', Arial, sans-serif,
-                    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
-            }
-        </style>
     </head>
 
     <body>

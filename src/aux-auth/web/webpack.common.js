@@ -20,7 +20,7 @@ module.exports = {
     auth: authConfig,
 };
 
-function authConfig(latestTag) {
+function authConfig(latestTag, prod) {
     return merge(baseConfig(), {
         entry: {
             site: path.resolve(__dirname, 'site', 'index.ts'),
@@ -48,6 +48,13 @@ function authConfig(latestTag) {
                 title: 'CasualOS.me',
                 filename: 'index.html',
                 favicon: path.resolve(__dirname, 'shared', 'favicon.ico'),
+
+                templateParameters: {
+                    production: prod,
+                    allowedChildOrigins:
+                        process.env.ALLOWED_CHILD_ORIGINS ??
+                        'http://localhost:3000 https://casualos.com https://static.casualos.com https://alpha.casualos.com https://stable.casualos.com',
+                },
             }),
             new HtmlWebpackPlugin({
                 chunks: ['iframe', 'vendors'],
@@ -56,6 +63,13 @@ function authConfig(latestTag) {
                 title: 'CasualOS.me',
                 filename: 'iframe.html',
                 favicon: path.resolve(__dirname, 'shared', 'favicon.ico'),
+
+                templateParameters: {
+                    production: prod,
+                    allowedChildOrigins:
+                        process.env.ALLOWED_CHILD_ORIGINS ??
+                        'http://localhost:3000 https://casualos.com https://static.casualos.com https://alpha.casualos.com https://stable.casualos.com',
+                },
             }),
             ...commonPlugins(latestTag),
             new WorkboxPlugin.GenerateSW({

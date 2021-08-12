@@ -2,8 +2,10 @@
 <html>
     <head>
         <meta charset="utf-8" />
-        <!-- TODO: Implement Content Security Policy that prevents XSS while allowing Jitsi, Maps, and other services to work -->
-        <!-- <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval'; worker-src 'self' blob:" /> -->
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'self' https://auth.magic.link/; img-src 'self' https://*; style-src 'self' 'unsafe-inline'; child-src 'self'; frame-src https://auth.magic.link; script-src 'self' https://auth.magic.link <%= !production ? `'unsafe-eval'` : `` %>;"
+        />
         <meta
             name="viewport"
             content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
