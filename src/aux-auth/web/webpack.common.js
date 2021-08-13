@@ -20,7 +20,10 @@ module.exports = {
     auth: authConfig,
 };
 
-function authConfig(latestTag, prod) {
+function authConfig(latestTag, prod, apiEndpoint) {
+    const allowedChildOrigins = `http://localhost:3000 https://casualos.com https://static.casualos.com https://alpha.casualos.com https://stable.casualos.com`;
+    const allowedFetchOrigins = apiEndpoint;
+
     return merge(baseConfig(), {
         entry: {
             site: path.resolve(__dirname, 'site', 'index.ts'),
@@ -53,7 +56,8 @@ function authConfig(latestTag, prod) {
                     production: prod,
                     allowedChildOrigins:
                         process.env.ALLOWED_CHILD_ORIGINS ??
-                        'http://localhost:3000 https://casualos.com https://static.casualos.com https://alpha.casualos.com https://stable.casualos.com',
+                        allowedChildOrigins,
+                    allowedFetchOrigins,
                 },
             }),
             new HtmlWebpackPlugin({
@@ -68,7 +72,8 @@ function authConfig(latestTag, prod) {
                     production: prod,
                     allowedChildOrigins:
                         process.env.ALLOWED_CHILD_ORIGINS ??
-                        'http://localhost:3000 https://casualos.com https://static.casualos.com https://alpha.casualos.com https://stable.casualos.com',
+                        allowedChildOrigins,
+                    allowedFetchOrigins,
                 },
             }),
             ...commonPlugins(latestTag),

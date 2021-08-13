@@ -6,17 +6,19 @@
     "private": true,
     "scripts": {
         "start": "node server/dist/main.js",
-        "watch": "concurrently \"npm:watch:web\" \"npm:watch:server\" \"nodemon server/dist/main.js\"",
+        "watch": "npm run build:serverless:aws && concurrently \"npm:watch:web\" \"npm:watch:server\" \"nodemon server/dist/main.js\" \"cd serverless/aws && sam local start-api -p 3003\"",
         "build": "npm run build:web && npm run build:server",
         "build:profile": "npm run build:web:profile && npm run build:server:profile",
         "build:dev:profile": "npm run build:web:dev:profile",
         "build:web": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config web/webpack.prod.js",
         "build:server": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config server/webpack.prod.js",
+        "build:serverless:aws": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config serverless/aws/webpack.dev.js",
         "build:web:profile": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config web/webpack.prod.js --profile --json > web_bundle_stats.json",
         "build:web:dev:profile": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config web/webpack.dev.js --profile --json > web_bundle_stats.json",
         "build:docs": "echo \"Nothing to build...\"",
         "watch:web": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config web/webpack.dev.js --watch",
         "watch:server": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config server/webpack.dev.js --watch",
+        "watch:serverless:aws": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config serverless/aws/webpack.dev.js --watch",
         "view:server:profile": "webpack-bundle-analyzer server/dist/server_bundle_stats.json",
         "view:web:profile": "webpack-bundle-analyzer web/dist/web_bundle_stats.json",
         "test": "jest",
@@ -57,7 +59,8 @@
         "workbox-webpack-plugin": "6.0.2",
         "rxjs": "^6.5.2",
         "magic-sdk": "4.4.0",
-        "@magic-sdk/admin": "1.3.0"
+        "@magic-sdk/admin": "1.3.0",
+        "aws-sdk": "^2.968.0"
     },
     "devDependencies": {
         "loader-utils": "^2.0.0",

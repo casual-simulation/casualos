@@ -11,6 +11,8 @@ export interface AuthorizedToken {
     token: string;
 }
 
+declare const API_ENDPOINT: string;
+
 export class AuthManager {
     private _magic: Magic;
 
@@ -158,7 +160,7 @@ export class AuthManager {
 
     private async _addAuthorizedService(service: string, token: string) {
         const response = await axios.put(
-            `/api/${encodeURIComponent(this.idToken)}/services`,
+            `${API_ENDPOINT}/api/${encodeURIComponent(this.idToken)}/services`,
             { service, token }
         );
         return response.data;
@@ -175,7 +177,9 @@ export class AuthManager {
     private async _loadOrCreateAppMetadata(): Promise<AppMetadata> {
         try {
             const response = await axios.get(
-                `/api/${encodeURIComponent(this.userId)}/metadata`
+                `${API_ENDPOINT}/api/${encodeURIComponent(
+                    this.userId
+                )}/metadata`
             );
             return response.data;
         } catch (e) {
@@ -195,7 +199,7 @@ export class AuthManager {
 
     private async _putAppMetadata(metadata: AppMetadata): Promise<AppMetadata> {
         const response = await axios.put(
-            `/api/${encodeURIComponent(this.idToken)}/metadata`,
+            `${API_ENDPOINT}/api/${encodeURIComponent(this.idToken)}/metadata`,
             metadata
         );
         return response.data;

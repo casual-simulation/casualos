@@ -18,3 +18,8 @@ services:
             - '6379:6379'
         volumes:
             - './services/data/cache:/data'
+    dynamodb:
+        image: 'amazon/dynamodb-local:latest'
+        restart: always
+        ports:
+            - '8000:9125'

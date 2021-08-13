@@ -36,8 +36,10 @@ const merge = mergeWithCustomize({
     },
 });
 
+const API_ENDPOINT = process.env.AUTH_API_ENDPOINT;
+
 const finalPlayerConfig = merge(
-    common.auth(latestTag, true),
+    common.auth(latestTag, true, API_ENDPOINT),
     productionPlayerConfig()
 );
 
@@ -86,6 +88,7 @@ function productionBaseConfig() {
         plugins: [
             new webpack.DefinePlugin({
                 PRODUCTION: JSON.stringify(true),
+                API_ENDPOINT: JSON.stringify(API_ENDPOINT),
             }),
             new MiniCssExtractPlugin({
                 filename: '[name].[contenthash].css',
@@ -110,14 +113,6 @@ function productionBaseConfig() {
             ],
         },
     };
-}
-
-function productionDenoConfig() {
-    return merge(productionBaseConfig(), {
-        optimization: {
-            splitChunks: false,
-        },
-    });
 }
 
 function productionPlayerConfig() {
