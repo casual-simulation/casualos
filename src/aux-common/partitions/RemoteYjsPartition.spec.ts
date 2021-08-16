@@ -22,6 +22,7 @@ import {
     RECEIVE_EVENT,
     remote,
     SEND_EVENT,
+    StatusUpdate,
     VersionVector,
     WATCH_BRANCH,
 } from '@casual-simulation/causal-trees';
@@ -352,6 +353,49 @@ describe('RemoteYjsPartition', () => {
                 ]);
 
                 expect(connection.sentMessages).toEqual([]);
+            });
+
+            it('should not become synced when an event is received', async () => {
+                let events = [] as Action[];
+                partition.onEvents.subscribe((e) => events.push(...e));
+
+                const action = device(
+                    deviceInfo('username', 'device', 'session'),
+                    {
+                        type: 'abc',
+                    }
+                );
+
+                let statuses: StatusUpdate[] = [];
+                sub.add(
+                    partition.onStatusUpdated.subscribe((update) =>
+                        statuses.push(update)
+                    )
+                );
+
+                partition.connect();
+
+                receiveEvent.next({
+                    branch: 'testBranch',
+                    action: action,
+                });
+
+                await waitAsync();
+
+                expect(statuses).toEqual([
+                    {
+                        type: 'connection',
+                        connected: true,
+                    },
+                    expect.objectContaining({
+                        type: 'authentication',
+                        authenticated: true,
+                    }),
+                    expect.objectContaining({
+                        type: 'authorization',
+                        authorized: true,
+                    }),
+                ]);
             });
 
             describe('device', () => {

@@ -475,7 +475,9 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                 })
                 .subscribe(
                     (event) => {
-                        if (!this._synced) {
+                        // The partition should become synced if it was not synced
+                        // and it just got some new data.
+                        if (!this._synced && event.type === 'updates') {
                             this._updateSynced(true);
                         }
                         if (event.type === 'updates') {

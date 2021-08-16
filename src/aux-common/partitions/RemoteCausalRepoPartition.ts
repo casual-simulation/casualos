@@ -517,7 +517,12 @@ export class RemoteCausalRepoPartitionImpl
                 })
                 .subscribe(
                     (event) => {
-                        if (!this._synced) {
+                        // The partition should become synced if it was not synced
+                        // and it just got some new atoms or was reset.
+                        if (
+                            !this._synced &&
+                            (event.type === 'atoms' || event.type === 'reset')
+                        ) {
                             this._updateSynced(true);
                         }
                         if (event.type === 'atoms') {
