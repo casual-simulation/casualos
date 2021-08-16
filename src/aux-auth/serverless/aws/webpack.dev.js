@@ -8,7 +8,7 @@ module.exports = merge(common, {
     plugins: [
         new webpack.DefinePlugin({
             DEVELOPMENT: JSON.stringify(true),
-            ENDPOINT: JSON.stringify('http://localhost:9125'),
+            ENDPOINT: JSON.stringify('http://dynamodb:8000'),
         }),
     ],
 });

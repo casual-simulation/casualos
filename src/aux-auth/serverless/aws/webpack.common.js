@@ -14,14 +14,8 @@ const latestTag = childProcess
 
 module.exports = {
     entry: {
-        getAllItems: path.resolve(
-            __dirname,
-            'src',
-            'handlers',
-            'get-all-items.js'
-        ),
-        getById: path.resolve(__dirname, 'src', 'handlers', 'get-by-id.js'),
-        putItem: path.resolve(__dirname, 'src', 'handlers', 'put-item.js'),
+        metadata: path.resolve(__dirname, 'src', 'handlers', 'metadata.js'),
+        services: path.resolve(__dirname, 'src', 'handlers', 'services.js'),
     },
     target: 'node14.16',
     node: {
@@ -31,6 +25,9 @@ module.exports = {
     output: {
         filename: 'handlers/[name].js',
         path: path.resolve(__dirname, 'dist'),
+        library: {
+            type: 'commonjs2',
+        },
     },
     module: {
         rules: [
@@ -55,23 +52,12 @@ module.exports = {
         extensions: ['.js', '.ts'],
         alias: {},
     },
-    externals: [
-        nodeExternals({
-            allowlist: /^@casual-simulation\/(?!aux-server)/,
-
-            // Use package.json instead of node_modules.
-            // This way we can exclude packages even though they're not in the first node_modules
-            // directory
-            modulesFromFile: true,
-        }),
-    ], // in order to ignore all modules in node_modules folder
     plugins: [
         new webpack.ContextReplacementPlugin(/socket\.io/, /socket\.io-client/),
         new webpack.ContextReplacementPlugin(/express/, /express/),
         new webpack.DefinePlugin({
             GIT_HASH: JSON.stringify(commitHash),
             GIT_TAG: JSON.stringify(latestTag),
-            MAGIC_SECRET_KEY: JSON.stringify(process.env.MAGIC_SECRET_KEY),
         }),
     ],
 };

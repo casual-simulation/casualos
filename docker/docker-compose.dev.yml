@@ -19,7 +19,11 @@ services:
         volumes:
             - './services/data/cache:/data'
     dynamodb:
+        command: '-jar DynamoDBLocal.jar -sharedDb -dbPath ./data'
         image: 'amazon/dynamodb-local:latest'
         restart: always
         ports:
-            - '8000:9125'
+            - '9125:8000'
+        volumes:
+            - './services/data/dynamodb:/home/dynamodblocal/data'
+        working_dir: /home/dynamodblocal

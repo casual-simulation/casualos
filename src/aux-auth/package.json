@@ -6,7 +6,8 @@
     "private": true,
     "scripts": {
         "start": "node server/dist/main.js",
-        "watch": "npm run build:serverless:aws && concurrently \"npm:watch:web\" \"npm:watch:server\" \"nodemon server/dist/main.js\" \"cd serverless/aws && sam local start-api -p 3003\"",
+        "watch": "concurrently \"npm:watch:web\" \"npm:watch:server\" \"nodemon server/dist/main.js\"",
+        "serverless": "npm run build:serverless:aws && cd serverless/aws && sam local start-api -p 3003 --docker-network docker_default",
         "build": "npm run build:web && npm run build:server",
         "build:profile": "npm run build:web:profile && npm run build:server:profile",
         "build:dev:profile": "npm run build:web:dev:profile",

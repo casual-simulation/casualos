@@ -1,5 +1,6 @@
 // Create clients and set shared const values outside of the handler.
 const { Magic } = require('@magic-sdk/admin');
+const { formatResponse } = require('../utils');
 
 // Get the DynamoDB table name from environment variables
 const USER_SERVICES_TABLE = 'UserServices';
@@ -15,7 +16,7 @@ const magic = new Magic(MAGIC_SECRET_KEY);
 /**
  * A simple example includes a HTTP get method to get all items from a DynamoDB table.
  */
-exports.getServiceForIssuer = async (event) => {
+export async function getServiceForIssuer(event) {
     if (event.httpMethod !== 'GET') {
         throw new Error(
             `getIssuerMetadata only accept GET method, you tried: ${event.httpMethod}`
@@ -57,13 +58,13 @@ exports.getServiceForIssuer = async (event) => {
     console.info(
         `response from: ${event.path} statusCode: ${response.statusCode} body: ${response.body}`
     );
-    return response;
-};
+    return formatResponse(response);
+}
 
 /**
  * A simple example includes a HTTP get method to get all items from a DynamoDB table.
  */
-exports.putService = async (event) => {
+export async function putService(event) {
     if (event.httpMethod !== 'GET') {
         throw new Error(
             `getIssuerMetadata only accept GET method, you tried: ${event.httpMethod}`
@@ -97,5 +98,5 @@ exports.putService = async (event) => {
     console.info(
         `response from: ${event.path} statusCode: ${response.statusCode} body: ${response.body}`
     );
-    return response;
-};
+    return formatResponse(response);
+}

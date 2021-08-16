@@ -12,6 +12,11 @@ Description: >-
 Transform:
     - AWS::Serverless-2016-10-31
 
+Parameters:
+    MagicSecretKeyParameter:
+        Type: String
+        Description: The secret key to use to access the Magic SDK.
+
 # Resources declares the AWS resources that you want to include in the stack
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
 Resources:
@@ -35,6 +40,7 @@ Resources:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
                     USERS_TABLE: !Ref UsersTable
+                    MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
             Events:
                 Api:
                     Type: Api
@@ -59,6 +65,7 @@ Resources:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
                     USERS_TABLE: !Ref UsersTable
+                    MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
             Events:
                 Api:
                     Type: Api
@@ -84,6 +91,7 @@ Resources:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
                     USERS_TABLE: !Ref UserServicesTable
+                    MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
             Events:
                 Api:
                     Type: Api
@@ -108,6 +116,7 @@ Resources:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
                     USERS_TABLE: !Ref UserServicesTable
+                    MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
             Events:
                 Api:
                     Type: Api
