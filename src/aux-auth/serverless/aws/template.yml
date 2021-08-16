@@ -129,11 +129,14 @@ Resources:
 
     # DynamoDB table to store users: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
     UsersTable:
-        Type: AWS::Serverless::SimpleTable
+        Type: AWS::DynamoDB::Table
         Properties:
-            PrimaryKey:
-                Name: id
-                Type: String
+            KeySchema:
+                - AttributeName: id
+                  KeyType: HASH
+            AttributeDefinitions:
+                - AttributeName: id
+                  AttributeType: S
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
@@ -147,6 +150,11 @@ Resources:
                   KeyType: HASH
                 - AttributeName: service
                   KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: userId
+                  AttributeType: S
+                - AttributeName: service
+                  AttributeType: S
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
