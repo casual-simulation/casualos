@@ -19,90 +19,125 @@ Resources:
     # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
 
     # This is a Lambda function config associated with the source code: get-all-items.js
-    getAllItemsFunction:
+    getIssuerMetadata:
         Type: AWS::Serverless::Function
         Properties:
-            Handler: dist/handlers/get-all-items.getAllItemsHandler
+            Handler: dist/handlers/metadata.getIssuerMetadata
             Runtime: nodejs14.x
             MemorySize: 128
             Timeout: 100
-            Description: A simple example includes a HTTP get method to get all items from a DynamoDB table.
+            Description: A function that retreives the metadata for an issuer.
             Policies:
                 # Give Create/Read/Update/Delete Permissions to the SampleTable
                 - DynamoDBCrudPolicy:
-                      TableName: !Ref SampleTable
+                      TableName: !Ref UsersTable
             Environment:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
-                    SAMPLE_TABLE: !Ref SampleTable
+                    USERS_TABLE: !Ref UsersTable
             Events:
                 Api:
                     Type: Api
                     Properties:
-                        Path: /
+                        Path: /api/{issuer}/metadata
                         Method: GET
-    # Each Lambda function is defined by properties:
-    # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
 
-    # This is a Lambda function config associated with the source code: get-by-id.js
-    getByIdFunction:
+    # This is a Lambda function config associated with the source code: get-all-items.js
+    putIssuerMetadata:
         Type: AWS::Serverless::Function
         Properties:
-            Handler: dist/handlers/get-by-id.getByIdHandler
+            Handler: dist/handlers/metadata.putIssuerMetadata
             Runtime: nodejs14.x
             MemorySize: 128
             Timeout: 100
-            Description: A simple example includes a HTTP get method to get one item by id from a DynamoDB table.
+            Description: A function that updates the metadata for an issuer.
             Policies:
                 # Give Create/Read/Update/Delete Permissions to the SampleTable
                 - DynamoDBCrudPolicy:
-                      TableName: !Ref SampleTable
+                      TableName: !Ref UsersTable
             Environment:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
-                    SAMPLE_TABLE: !Ref SampleTable
+                    USERS_TABLE: !Ref UsersTable
             Events:
                 Api:
                     Type: Api
                     Properties:
-                        Path: /{id}
+                        Path: /api/{token}/metadata
+                        Method: PUT
+
+
+        # This is a Lambda function config associated with the source code: get-all-items.js
+    getServiceForIssuer:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: dist/handlers/services.getServiceForIssuer
+            Runtime: nodejs14.x
+            MemorySize: 128
+            Timeout: 100
+            Description: A function that retreives a service for the user.
+            Policies:
+                # Give Create/Read/Update/Delete Permissions to the SampleTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref UserServicesTable
+            Environment:
+                Variables:
+                    # Make table name accessible as environment variable from function code during execution
+                    USERS_TABLE: !Ref UserServicesTable
+            Events:
+                Api:
+                    Type: Api
+                    Properties:
+                        Path: /api/{issuer}/services/{service}
                         Method: GET
-    # Each Lambda function is defined by properties:
-    # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
 
-    # This is a Lambda function config associated with the source code: put-item.js
-    putItemFunction:
+    # This is a Lambda function config associated with the source code: get-all-items.js
+    putService:
         Type: AWS::Serverless::Function
         Properties:
-            Handler: dist/handlers/put-item.putItemHandler
+            Handler: dist/handlers/services.putService
             Runtime: nodejs14.x
             MemorySize: 128
             Timeout: 100
-            Description: A simple example includes a HTTP post method to add one item to a DynamoDB table.
+            Description: A function that adds a service for the user.
             Policies:
                 # Give Create/Read/Update/Delete Permissions to the SampleTable
                 - DynamoDBCrudPolicy:
-                      TableName: !Ref SampleTable
+                      TableName: !Ref UserServicesTable
             Environment:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
-                    SAMPLE_TABLE: !Ref SampleTable
+                    USERS_TABLE: !Ref UserServicesTable
             Events:
                 Api:
                     Type: Api
                     Properties:
-                        Path: /
-                        Method: POST
+                        Path: /api/{token}/services
+                        Method: PUT
+
     # Simple syntax to create a DynamoDB table with a single attribute primary key, more in
     # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlesssimpletable
 
-    # DynamoDB table to store item: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
-    SampleTable:
+    # DynamoDB table to store users: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
+    UsersTable:
         Type: AWS::Serverless::SimpleTable
         Properties:
             PrimaryKey:
                 Name: id
                 Type: String
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
+
+    # DynamoDB table to store services for users: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
+    UserServicesTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: userId
+                  KeyType: HASH
+                - AttributeName: service
+                  KeyType: RANGE
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
