@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V2.0.7
+
+#### Date: 8/16/2021
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where remote whispers could cause CasualOS to think it was loaded before it actually was.
+    -   This would in turn cause CasualOS to think that ab-1 was not installed and led to ab-1 getting duplicated which could then cause the auxCode to be loaded again.
+
 ## V2.0.6
 
 #### Date: 8/11/2021
