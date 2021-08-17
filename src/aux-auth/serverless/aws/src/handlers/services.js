@@ -3,7 +3,7 @@ const { Magic } = require('@magic-sdk/admin');
 const { formatResponse } = require('../utils');
 
 // Get the DynamoDB table name from environment variables
-const USER_SERVICES_TABLE = 'UserServices';
+const USER_SERVICES_TABLE = process.env.USER_SERVICES_TABLE;
 const MAGIC_SECRET_KEY = process.env.MAGIC_SECRET_KEY;
 
 // Create a DocumentClient that represents the query to add an item
@@ -19,7 +19,7 @@ const magic = new Magic(MAGIC_SECRET_KEY);
 export async function getServiceForIssuer(event) {
     if (event.httpMethod !== 'GET') {
         throw new Error(
-            `getIssuerMetadata only accept GET method, you tried: ${event.httpMethod}`
+            `getServiceForIssuer only accept GET method, you tried: ${event.httpMethod}`
         );
     }
     // All log statements are written to CloudWatch
@@ -65,9 +65,9 @@ export async function getServiceForIssuer(event) {
  * A simple example includes a HTTP get method to get all items from a DynamoDB table.
  */
 export async function putService(event) {
-    if (event.httpMethod !== 'GET') {
+    if (event.httpMethod !== 'PUT') {
         throw new Error(
-            `getIssuerMetadata only accept GET method, you tried: ${event.httpMethod}`
+            `putService only accept PUT method, you tried: ${event.httpMethod}`
         );
     }
     // All log statements are written to CloudWatch
@@ -75,7 +75,7 @@ export async function putService(event) {
 
     const token = event.pathParameters.token;
     const issuer = magic.token.getIssuer(token);
-    const { service, token: serviceToken } = event.body;
+    const { service, token: serviceToken } = JSON.parse(event.body);
 
     magic.token.validate(serviceToken, service);
 
@@ -99,4 +99,12 @@ export async function putService(event) {
         `response from: ${event.path} statusCode: ${response.statusCode} body: ${response.body}`
     );
     return formatResponse(response);
+}
+
+export async function handleService(event) {
+    if (event.httpMethod === 'PUT') {
+        return await putService(event);
+    } else {
+        return await getServiceForIssuer(event);
+    }
 }

@@ -38,6 +38,12 @@ export async function getIssuerMetadata(event) {
         .promise();
     const item = data.Item;
 
+    if (!item) {
+        return formatResponse({
+            statusCode: 404,
+        });
+    }
+
     const response = {
         statusCode: 200,
         body: JSON.stringify({
@@ -58,17 +64,18 @@ export async function getIssuerMetadata(event) {
  * A simple example includes a HTTP get method to get all items from a DynamoDB table.
  */
 export async function putIssuerMetadata(event) {
-    if (event.httpMethod !== 'GET') {
+    if (event.httpMethod !== 'PUT') {
         throw new Error(
-            `getIssuerMetadata only accept GET method, you tried: ${event.httpMethod}`
+            `putIssuerMetadata only accept PUT method, you tried: ${event.httpMethod}`
         );
     }
     // All log statements are written to CloudWatch
     console.info('received:', event);
 
     const token = event.pathParameters.token;
+    console.log('Token', token);
     const issuer = magic.token.getIssuer(token);
-    const data = event.body;
+    const data = JSON.parse(event.body);
 
     await docClient
         .put({
@@ -92,4 +99,12 @@ export async function putIssuerMetadata(event) {
         `response from: ${event.path} statusCode: ${response.statusCode} body: ${response.body}`
     );
     return formatResponse(response);
+}
+
+export async function handleMetadata(event) {
+    if (event.httpMethod === 'PUT') {
+        return await putIssuerMetadata(event);
+    } else {
+        return await getIssuerMetadata(event);
+    }
 }
