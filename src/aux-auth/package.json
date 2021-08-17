@@ -9,7 +9,7 @@
         "watch": "concurrently \"npm:watch:web\" \"npm:watch:server\" \"nodemon server/dist/main.js\"",
         "serverless": "npm run build:serverless:aws && npm run merge:secrets && cd serverless/aws && sam local start-api -p 3003 --docker-network docker_default --env-vars env.json --env-vars secrets.env.json",
         "merge:secrets": "node ./scripts/mergeSecrets.js",
-        "build": "npm run build:web && npm run build:server",
+        "build": "npm run build:web && npm run build:server && npm run build:serverless:aws",
         "build:profile": "npm run build:web:profile && npm run build:server:profile",
         "build:dev:profile": "npm run build:web:dev:profile",
         "build:web": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config web/webpack.prod.js",
