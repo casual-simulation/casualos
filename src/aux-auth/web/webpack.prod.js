@@ -36,7 +36,7 @@ const merge = mergeWithCustomize({
     },
 });
 
-const API_ENDPOINT = process.env.AUTH_API_ENDPOINT;
+const API_ENDPOINT = process.env.AUTH_API_ENDPOINT ?? 'https://api.casualos.me';
 
 const finalPlayerConfig = merge(
     common.auth(latestTag, true, API_ENDPOINT),

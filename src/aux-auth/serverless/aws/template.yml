@@ -21,6 +21,7 @@ Globals:
     Api:
         # enable CORS; to make more specific, change the origin wildcard
         # to a particular domain name, e.g. "'www.example.com'"
+        # TODO: add a CORS policy to the API Gateway
         Cors:
             AllowMethods: "'*'"
             AllowHeaders: "'*'"
