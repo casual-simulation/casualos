@@ -14,7 +14,7 @@ module.exports = merge(common, {
     plugins: [
         new webpack.DefinePlugin({
             DEVELOPMENT: JSON.stringify(false),
-            ENDPOINT: JSON.stringify(undefined),
+            DYNAMODB_ENDPOINT: JSON.stringify(undefined),
         }),
     ],
 });

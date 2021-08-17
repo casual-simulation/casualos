@@ -9,7 +9,7 @@ const MAGIC_SECRET_KEY = process.env.MAGIC_SECRET_KEY;
 // Create a DocumentClient that represents the query to add an item
 const dynamodb = require('aws-sdk/clients/dynamodb');
 const docClient = new dynamodb.DocumentClient({
-    endpoint: ENDPOINT,
+    endpoint: DYNAMODB_ENDPOINT,
 });
 const magic = new Magic(MAGIC_SECRET_KEY);
 
