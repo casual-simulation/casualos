@@ -18,6 +18,7 @@ const USER_SERVICES_TABLE = 'UserServices';
 
 async function start() {
     const tablesResult = await ddb.listTables({}).promise();
+    const reset = process.argv.includes('--reset');
 
     const templateSrc = readFileSync(
         path.resolve(__dirname, '..', 'serverless', 'aws', 'template.yml'),
@@ -25,7 +26,17 @@ async function start() {
     );
     const template = YAML.parseDocument(templateSrc).toJSON();
 
-    if (!tablesResult.TableNames.includes(USERS_TABLE)) {
+    const hasUsersTable = tablesResult.TableNames.includes(USERS_TABLE);
+    if (!hasUsersTable || reset) {
+        if (hasUsersTable) {
+            console.log('Deleting Users Table');
+            await ddb
+                .deleteTable({
+                    TableName: USERS_TABLE,
+                })
+                .promise();
+        }
+
         console.log('Creating Users Table');
 
         const params = template.Resources.UsersTable.Properties;
@@ -40,7 +51,19 @@ async function start() {
         console.log('Users Table already exists');
     }
 
-    if (!tablesResult.TableNames.includes(USER_SERVICES_TABLE)) {
+    const hasUserServicesTable = tablesResult.TableNames.includes(
+        USER_SERVICES_TABLE
+    );
+    if (!hasUserServicesTable || reset) {
+        if (hasUserServicesTable) {
+            console.log('Deleting UserServices Table');
+            await ddb
+                .deleteTable({
+                    TableName: USER_SERVICES_TABLE,
+                })
+                .promise();
+        }
+
         console.log('Creating UserServices Table');
 
         const params = template.Resources.UserServicesTable.Properties;
