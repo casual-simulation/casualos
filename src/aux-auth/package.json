@@ -48,6 +48,8 @@
     ],
     "dependencies": {
         "@casual-simulation/aux-components": "^2.0.5",
+        "@casual-simulation/aux-vm-browser": "^2.0.4",
+        "@casual-simulation/aux-vm": "^2.0.4",
         "express": "^4.16.4",
         "axios": "^0.21.1",
         "vue": "^2.5.17",
