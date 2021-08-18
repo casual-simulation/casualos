@@ -25,7 +25,7 @@ Globals:
         Cors:
             AllowMethods: "'*'"
             AllowHeaders: "'*'"
-            AllowOrigin: "'http://localhost:3002 https://api.casualos.me'"
+            AllowOrigin: "'http://localhost:3002 https://casualos.me'"
 
 # Resources declares the AWS resources that you want to include in the stack
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html

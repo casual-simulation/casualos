@@ -4,7 +4,7 @@ module.exports = {
             ...response,
             headers: {
                 'Access-Control-Allow-Origin':
-                    'http://localhost:3002 https://api.casualos.me',
+                    'http://localhost:3002 https://casualos.me',
             },
         };
     },
