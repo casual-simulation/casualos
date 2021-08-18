@@ -25,7 +25,7 @@ export async function getIssuerMetadata(event) {
     // All log statements are written to CloudWatch
     console.info('received:', event);
 
-    const issuer = event.pathParameters.token;
+    const issuer = decodeURIComponent(event.pathParameters.token);
 
     // get all items from the table (only first 1MB data, you can use `LastEvaluatedKey` to get the rest of data)
     // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property
@@ -77,7 +77,7 @@ export async function putIssuerMetadata(event) {
     // All log statements are written to CloudWatch
     console.info('received:', event);
 
-    const token = event.pathParameters.token;
+    const token = decodeURIComponent(event.pathParameters.token);
     console.log('Token', token);
     const issuer = magic.token.getIssuer(token);
     const data = JSON.parse(event.body);
