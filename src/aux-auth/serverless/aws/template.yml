@@ -56,7 +56,7 @@ Resources:
                 GetMetadata:
                     Type: Api
                     Properties:
-                        Path: /api/{issuer}/metadata
+                        Path: /api/{token}/metadata
                         Method: GET
                 PutMetadata:
                     Type: Api
@@ -112,7 +112,7 @@ Resources:
                 GetService:
                     Type: Api
                     Properties:
-                        Path: /api/{issuer}/services/{service}
+                        Path: /api/{token}/services/{service}
                         Method: GET
                 PutService:
                     Type: Api

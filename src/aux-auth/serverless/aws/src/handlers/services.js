@@ -25,7 +25,7 @@ export async function getServiceForIssuer(event) {
     // All log statements are written to CloudWatch
     console.info('received:', event);
 
-    const issuer = event.pathParameters.issuer;
+    const issuer = event.pathParameters.token;
     const service = event.pathParameters.service;
 
     // get all items from the table (only first 1MB data, you can use `LastEvaluatedKey` to get the rest of data)
