@@ -37,7 +37,8 @@ Resources:
     handleMetadata:
         Type: AWS::Serverless::Function
         Properties:
-            Handler: dist/handlers/metadata.handleMetadata
+            Handler: metadata.handleMetadata
+            CodeUri: dist/handlers
             Runtime: nodejs14.x
             MemorySize: 128
             Timeout: 100
@@ -92,7 +93,8 @@ Resources:
     handleService:
         Type: AWS::Serverless::Function
         Properties:
-            Handler: dist/handlers/services.handleService
+            Handler: services.handleService
+            CodeUri: dist/handlers
             Runtime: nodejs14.x
             MemorySize: 128
             Timeout: 100
