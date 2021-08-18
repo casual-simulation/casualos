@@ -39,7 +39,7 @@ export async function getIssuerMetadata(event) {
     const item = data.Item;
 
     if (!item) {
-        return formatResponse({
+        return formatResponse(event, {
             statusCode: 404,
         });
     }
@@ -57,7 +57,7 @@ export async function getIssuerMetadata(event) {
     console.info(
         `response from: ${event.path} statusCode: ${response.statusCode} body: ${response.body}`
     );
-    return formatResponse(response);
+    return formatResponse(event, response);
 }
 
 /**
@@ -98,7 +98,7 @@ export async function putIssuerMetadata(event) {
     console.info(
         `response from: ${event.path} statusCode: ${response.statusCode} body: ${response.body}`
     );
-    return formatResponse(response);
+    return formatResponse(event, response);
 }
 
 export async function handleMetadata(event) {

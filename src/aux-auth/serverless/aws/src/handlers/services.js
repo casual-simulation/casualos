@@ -58,7 +58,7 @@ export async function getServiceForIssuer(event) {
     console.info(
         `response from: ${event.path} statusCode: ${response.statusCode} body: ${response.body}`
     );
-    return formatResponse(response);
+    return formatResponse(event, response);
 }
 
 /**
@@ -98,7 +98,7 @@ export async function putService(event) {
     console.info(
         `response from: ${event.path} statusCode: ${response.statusCode} body: ${response.body}`
     );
-    return formatResponse(response);
+    return formatResponse(event, response);
 }
 
 export async function handleService(event) {
