@@ -13,11 +13,17 @@ function findHeader(request, header) {
     return undefined;
 }
 
+function validateOrigin(request) {
+    const origin = findHeader(request, 'origin');
+    return allowedOrigins.has(origin);
+}
+
 module.exports = {
+    allowedOrigins,
+    findHeader,
+    validateOrigin,
     formatResponse: (request, response) => {
         const origin = findHeader(request, 'origin');
-        console.log('test', JSON.stringify(request.headers));
-        console.log('hit');
         let headers = {};
         if (allowedOrigins.has(origin)) {
             headers['Access-Control-Allow-Origin'] = origin;

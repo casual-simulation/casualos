@@ -1,6 +1,6 @@
 // Create clients and set shared const values outside of the handler.
 const { Magic } = require('@magic-sdk/admin');
-const { formatResponse } = require('../utils');
+const { formatResponse, validateOrigin } = require('../utils');
 
 // Get the DynamoDB table name from environment variables
 const USERS_TABLE = process.env.USERS_TABLE;
@@ -69,6 +69,11 @@ export async function putIssuerMetadata(event) {
             `putIssuerMetadata only accept PUT method, you tried: ${event.httpMethod}`
         );
     }
+
+    if (!validateOrigin(event)) {
+        throw new Error('Invalid origin');
+    }
+
     // All log statements are written to CloudWatch
     console.info('received:', event);
 
