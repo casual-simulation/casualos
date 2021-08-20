@@ -12,6 +12,7 @@
     -   Requests that the user sign in and creates the `authBot` global variable to represent whether the user is signed in.
     -   Only works if an App Bundle (AB) was auto loaded using the `autoLoad` query parameter.
     -   Returns a promise that resolves when the user is signed in.
+    -   See the "Auth Bot Tags" section in the documentation for more info.
 
 ## V2.0.7
 
