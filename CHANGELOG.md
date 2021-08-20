@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V2.0.8
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Created https://casualos.me
+    -   casualos.me is a companion service for CasualOS that provides the ability to sign in with an account and in the future will be able to allow permanent storage of records.
+-   Added the `os.requestAuthBot()` function.
+    -   Requests that the user sign in and creates the `authBot` global variable to represent whether the user is signed in.
+    -   Only works if an App Bundle (AB) was auto loaded using the `autoLoad` query parameter.
+    -   Returns a promise that resolves when the user is signed in.
+
 ## V2.0.7
 
 #### Date: 8/16/2021
