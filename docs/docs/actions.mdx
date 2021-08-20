@@ -3562,6 +3562,25 @@ Exists fullscreen mode.
 os.exitFullscreenMode();
 ```
 
+### `os.requestAuthBot()`
+
+Requests that an "authentication" bot be added to the server for the current browser tab. Auth bots are useful for allowing an app bundle to
+automatically create and access records that are associated with a https://casualos.me user account. Because auth bots are tied to a particular app bundle,
+CasualOS can sometimes skip the manual login process in favor of an automated login system.
+Returns a promise that resolves with a bot that contains information about the signed in user session.
+
+Requires that an app bundle was automatically loaded to work. Otherwise the promise will be rejected with an error.
+On success, the `authBot` global variable will reference the bot that was returned by the promise.
+
+See [Auth Bot Tags](./tags.mdx#auth-bot) for more information.
+
+#### Examples
+
+```typescript title='Request an auth bot for the user'
+await os.requestAuthBot();
+os.toast("Logged in!");
+```
+
 ## Server Actions
 
 ### `server.backupToGithub(auth)`
