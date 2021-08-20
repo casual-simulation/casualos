@@ -31,7 +31,7 @@ import {
     BotSpace,
     getScriptPrefix,
 } from '@casual-simulation/aux-common';
-import { EventBus } from '../../EventBus';
+import { EventBus } from '@casual-simulation/aux-components';
 
 import BotValue from '../BotValue/BotValue';
 import TagEditor from '../TagEditor/TagEditor';

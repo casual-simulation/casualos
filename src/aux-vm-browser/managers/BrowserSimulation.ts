@@ -5,6 +5,7 @@ import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Bot } from '@casual-simulation/aux-common';
 import { Observable } from 'rxjs';
 import { IdePortalManager } from './IdePortalManager';
+import { AuthHelper } from './AuthHelper';
 
 /**
  * Defines an interface for objects that represent bot simulations.
@@ -24,6 +25,11 @@ export interface BrowserSimulation extends RemoteSimulation {
      * Gets the progress manager.
      */
     progress: ProgressManager;
+
+    /**
+     * Gets the authentication helper.
+     */
+    auth: AuthHelper;
 
     /**
      * The observable list of console messages from the simulation.

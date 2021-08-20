@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import { appManager } from '../../AppManager';
 import Component from 'vue-class-component';
-import Loading from '../Loading/Loading';
+import { Loading } from '@casual-simulation/aux-components';
 import { ProgressMessage } from '@casual-simulation/causal-trees';
 import { switchMap, tap } from 'rxjs/operators';
 
@@ -13,6 +13,10 @@ import { switchMap, tap } from 'rxjs/operators';
 export default class LoadApp extends Vue {
     loading: boolean;
     loadingState: ProgressMessage = null;
+
+    get version() {
+        return appManager.version.latestTaggedVersion;
+    }
 
     constructor() {
         super();
@@ -29,7 +33,7 @@ export default class LoadApp extends Vue {
 
         appManager.loadingProgress
             .pipe(
-                tap(state => {
+                tap((state) => {
                     if (state && state.error) {
                         this.loadingState = null;
                     } else {
@@ -43,7 +47,7 @@ export default class LoadApp extends Vue {
             () => {
                 this.loading = false;
             },
-            err => {
+            (err) => {
                 console.error('[LoadApp] Loading errored:', err);
                 this.loading = false;
             }

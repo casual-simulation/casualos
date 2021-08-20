@@ -157,6 +157,12 @@ import {
     enableCustomDragging,
     registerCustomApp,
     setAppOutput,
+    unregisterCustomApp,
+    requestAuthData,
+    AuthData,
+    defineGlobalBot,
+    Bot,
+    TEMPORARY_BOT_PARTITION_ID,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -192,6 +198,9 @@ import {
 import { RanOutOfEnergyError } from './AuxResults';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import { waitAsync } from '../test/TestHelpers';
+import { embedBase64InPdf } from './Utils';
+import { fromByteArray, toByteArray } from 'base64-js';
+import { Fragment } from 'preact';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -2147,6 +2156,49 @@ describe('AuxLibrary', () => {
                     'test.aux',
                     'application/json'
                 );
+
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create a PDF if the .pdf extension is used', () => {
+                const action = library.api.os.downloadBots(
+                    [bot1, bot2],
+                    'test.pdf'
+                );
+                const json = JSON.stringify({
+                    version: 1,
+                    state: {
+                        [bot1.id]: bot1,
+                        [bot2.id]: bot2,
+                    },
+                });
+                const encoder = new TextEncoder();
+                const bytes = encoder.encode(json);
+                const base64 = fromByteArray(bytes);
+
+                const expected = download(
+                    embedBase64InPdf(base64),
+                    'test.pdf',
+                    'application/pdf'
+                );
+
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create PDFs that can be parsed', () => {
+                const action = library.api.os.downloadBots(
+                    [bot1, bot2],
+                    'test.pdf'
+                );
+
+                const bots = library.api.os.parseBotsFromData(action.data);
+
+                expect(bots).toEqual([
+                    createBot(bot1.id, bot1.tags),
+                    createBot(bot2.id, bot2.tags),
+                ]);
             });
         });
 
@@ -2358,6 +2410,74 @@ describe('AuxLibrary', () => {
                 const action = library.api.os.importAUX(json);
                 expect(action).toEqual(addState(uploadState));
                 expect(context.actions).toEqual([addState(uploadState)]);
+            });
+
+            it('should be able to parse PDF files', () => {
+                const uploadState: BotsState = {
+                    [bot1.id]: createBot(bot1.id, bot1.tags),
+                };
+                const downloadAction = library.api.os.downloadBots(
+                    [bot1],
+                    'test.pdf'
+                );
+                const action = library.api.os.importAUX(downloadAction.data);
+                expect(action).toEqual(addState(uploadState));
+                expect(context.actions.slice(1)).toEqual([
+                    addState(uploadState),
+                ]);
+            });
+        });
+
+        describe('os.parseBotsFromData()', () => {
+            it('should return the list of bots that are in the given JSON', () => {
+                const json = JSON.stringify({
+                    version: 1,
+                    state: {
+                        [bot1.id]: bot1,
+                        [bot2.id]: bot2,
+                    },
+                });
+
+                const bots = library.api.os.parseBotsFromData(json);
+
+                expect(bots).toEqual([
+                    createBot(bot1.id, bot1.tags),
+                    createBot(bot2.id, bot2.tags),
+                ]);
+            });
+
+            it('should return the list of bots that are in the given PDF', () => {
+                const json = JSON.stringify({
+                    version: 1,
+                    state: {
+                        [bot1.id]: bot1,
+                        [bot2.id]: bot2,
+                    },
+                });
+                const encoder = new TextEncoder();
+                const bytes = encoder.encode(json);
+                const base64 = fromByteArray(bytes);
+                const pdf = embedBase64InPdf(base64);
+
+                const bots = library.api.os.parseBotsFromData(pdf);
+
+                expect(bots).toEqual([
+                    createBot(bot1.id, bot1.tags),
+                    createBot(bot2.id, bot2.tags),
+                ]);
+            });
+
+            it('should return null if the data is not JSON or a PDF', () => {
+                const bots = library.api.os.parseBotsFromData('abcdef');
+                expect(bots).toEqual(null);
+            });
+
+            it('should return null if the data in the PDF is not bots', () => {
+                const pdf = embedBase64InPdf('abcdefghijfk');
+
+                const bots = library.api.os.parseBotsFromData(pdf);
+
+                expect(bots).toEqual(null);
             });
         });
 
@@ -3270,6 +3390,18 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.unregisterApp()', () => {
+            it('should return a UnregisterCustomPortal action', () => {
+                const promise: any = library.api.os.unregisterApp('testPortal');
+                const expected = unregisterCustomApp(
+                    'testPortal',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.compileApp()', () => {
             it('should return a SetPortalOutput action', () => {
                 const promise: any = library.api.os.compileApp(
@@ -3279,6 +3411,161 @@ describe('AuxLibrary', () => {
                 const expected = setAppOutput('testPortal', 'hahaha');
                 expect(promise).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.requestAuthBot()', () => {
+            it('should send a RequestAuthDataAction', () => {
+                const promise: any = library.api.os.requestAuthBot();
+                const expected = requestAuthData(context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create a bot with the given resolved data', async () => {
+                const promise = library.api.os.requestAuthBot();
+
+                let resultBot: Bot;
+                promise.then((bot) => {
+                    resultBot = bot;
+                });
+
+                const expected = requestAuthData(context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+
+                // Resolve RequestAuthDataAction
+                context.resolveTask(
+                    1,
+                    {
+                        userId: 'myUserId',
+                        service: 'myService',
+                        token: 'myToken',
+                        avatarUrl: 'myAvatarUrl',
+                        name: 'name',
+                    } as AuthData,
+                    false
+                );
+
+                await waitAsync();
+
+                // Resolve DefineGlobalBotAction
+                context.resolveTask(2, null, false);
+
+                await waitAsync();
+
+                expect(resultBot.id).toEqual('myUserId');
+                expect(resultBot.tags.authToken).toEqual('myToken');
+                expect(resultBot.tags.authBundle).toEqual('myService');
+                expect(resultBot.tags.avatarAddress).toEqual('myAvatarUrl');
+                expect(resultBot.tags.name).toEqual('name');
+            });
+
+            it('should emit a DefineGlobalBotAction', async () => {
+                const promise: any = library.api.os.requestAuthBot();
+
+                const expected = requestAuthData(context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    1,
+                    {
+                        userId: 'myUserId',
+                        service: 'myService',
+                        token: 'myToken',
+                        avatarUrl: 'myAvatarUrl',
+                        name: 'name',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(context.actions).toEqual([
+                    expected,
+                    botAdded(
+                        createBot(
+                            'myUserId',
+                            {
+                                authToken: 'myToken',
+                                authBundle: 'myService',
+                                avatarAddress: 'myAvatarUrl',
+                                name: 'name',
+                            },
+                            TEMPORARY_BOT_PARTITION_ID
+                        )
+                    ),
+                    defineGlobalBot('auth', 'myUserId', 2),
+                ]);
+            });
+
+            it('should reuse the existing authBot if the User ID is the same.', async () => {
+                const promise = library.api.os.requestAuthBot();
+
+                let resultBot: Bot;
+                promise.then((bot) => {
+                    resultBot = bot;
+                });
+
+                const expected = requestAuthData(context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+
+                // Resolve RequestAuthDataAction
+                context.resolveTask(
+                    1,
+                    {
+                        userId: 'myUserId',
+                        service: 'myService',
+                        token: 'myToken',
+                        avatarUrl: 'myAvatarUrl',
+                        name: 'name',
+                    } as AuthData,
+                    false
+                );
+
+                await waitAsync();
+
+                // Resolve DefineGlobalBotAction
+                context.resolveTask(2, null, false);
+
+                await waitAsync();
+
+                expect(resultBot.id).toEqual('myUserId');
+                expect(resultBot.tags.authToken).toEqual('myToken');
+                expect(resultBot.tags.authBundle).toEqual('myService');
+                expect(resultBot.tags.avatarAddress).toEqual('myAvatarUrl');
+                expect(resultBot.tags.name).toEqual('name');
+
+                const promise2 = library.api.os.requestAuthBot();
+
+                let resultBot2: Bot;
+                promise2.then((bot) => {
+                    resultBot2 = bot;
+                });
+
+                // Resolve RequestAuthDataAction
+                context.resolveTask(
+                    3,
+                    {
+                        userId: 'myUserId',
+                        service: 'myService',
+                        token: 'myToken',
+                        avatarUrl: 'myAvatarUrl',
+                        name: 'name',
+                    } as AuthData,
+                    false
+                );
+
+                await waitAsync();
+
+                // Resolve DefineGlobalBotAction
+                context.resolveTask(4, null, false);
+
+                await waitAsync();
+
+                expect(resultBot2).toBe(resultBot);
             });
         });
 
@@ -12064,6 +12351,19 @@ describe('AuxLibrary', () => {
             `;
 
             expect(result).toMatchSnapshot();
+        });
+
+        describe('h()', () => {
+            it('should return a HTML VDOM element', () => {
+                const result = library.api.html.h('h1', null, 'Hello, World!');
+                expect(result).toMatchSnapshot();
+            });
+        });
+
+        describe('f', () => {
+            it('should be the Fragment element type', () => {
+                expect(library.api.html.f).toBe(Fragment);
+            });
         });
     });
 });

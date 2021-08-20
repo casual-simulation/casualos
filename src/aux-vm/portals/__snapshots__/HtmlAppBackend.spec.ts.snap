@@ -1,5 +1,63 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`HtmlAppBackend set_app_output should render the most recent output when the app is setup 1`] = `
+Object {
+  "appId": "testPortal",
+  "type": "update_html_app",
+  "updates": Array [
+    Object {
+      "addedNodes": Array [
+        Object {
+          "__id": "1",
+          "attributes": Array [],
+          "childNodes": Array [
+            Object {
+              "__id": "2",
+              "childNodes": Array [],
+              "data": "Hello",
+              "nodeName": "#text",
+              "nodeType": 3,
+            },
+          ],
+          "nodeName": "H1",
+          "nodeType": 1,
+          "style": Object {},
+        },
+      ],
+      "nextSibling": undefined,
+      "previousSibling": undefined,
+      "removedNodes": Array [],
+      "target": Object {
+        "__id": "0",
+        "attributes": Array [],
+        "childNodes": Array [
+          Object {
+            "__id": "1",
+            "attributes": Array [],
+            "childNodes": Array [
+              Object {
+                "__id": "2",
+                "childNodes": Array [],
+                "data": "Hello",
+                "nodeName": "#text",
+                "nodeType": 3,
+              },
+            ],
+            "nodeName": "H1",
+            "nodeType": 1,
+            "style": Object {},
+          },
+        ],
+        "nodeName": "BODY",
+        "nodeType": 1,
+        "style": Object {},
+      },
+      "type": "childList",
+    },
+  ],
+}
+`;
+
 exports[`HtmlAppBackend set_app_output should render the output as a preact component 1`] = `
 Object {
   "appId": "testPortal",

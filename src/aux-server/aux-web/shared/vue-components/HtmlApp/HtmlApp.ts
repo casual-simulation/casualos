@@ -21,7 +21,7 @@ import {
     TARGET_INPUT_PROPERTIES,
 } from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
 
-const DISALLOWED_NODE_NAMES = new Set(['script']);
+const DISALLOWED_NODE_NAMES = new Set(['SCRIPT']);
 const DISALLOWED_EVENTS = new Set([
     'mousewheel',
     'wheel',
@@ -69,6 +69,7 @@ export default class HtmlApp extends Vue {
     private _mutationQueueTimer: any;
     private _currentTouch: any;
     private _sub: Subscription;
+    private _listeners: Map<string, number> = new Map();
 
     constructor() {
         super();
@@ -80,6 +81,7 @@ export default class HtmlApp extends Vue {
 
     mounted() {
         this._nodes = new Map();
+        this._listeners = new Map();
         this._mutationQueue = [];
         this._simulation = _simulation(this.simulationId);
         this._sub = new Subscription();
@@ -91,6 +93,8 @@ export default class HtmlApp extends Vue {
                 }
             })
         );
+
+        this._proxyEvent = this._proxyEvent.bind(this);
 
         const container = this.$refs.container as any;
         let eventNames = [] as string[];
@@ -104,13 +108,6 @@ export default class HtmlApp extends Vue {
                     typeof container[prop] === 'function')
             ) {
                 eventNames.push(prop);
-                container.addEventListener(
-                    eventName,
-                    (e: Event) => {
-                        return this._proxyEvent(e);
-                    },
-                    EVENT_OPTIONS
-                );
             }
         }
 
@@ -128,10 +125,6 @@ export default class HtmlApp extends Vue {
     }
 
     private _proxyEvent(event: Event) {
-        // if(event.type === 'click' && this._currentTouch) {
-        //     return false;
-        // }
-
         if (ALLOWED_EVENTS.size > 0 && !ALLOWED_EVENTS.has(event.type)) {
             return;
         }
@@ -162,23 +155,6 @@ export default class HtmlApp extends Vue {
         }
 
         this._simulation.helper.transaction(htmlAppEvent(this.appId, e));
-
-        // if (event.type === 'touchstart') {
-        //     this._currentTouch = this._getTouch(event as TouchEvent);
-        // } else if(event.type === 'touchend' && this._currentTouch) {
-        //     let touch = this._getTouch(event as TouchEvent);
-        //     if (touch) {
-
-        //     }
-        // }
-    }
-
-    private _getTouch(event: TouchEvent) {
-        let t: any =
-            (event.changedTouches && event.changedTouches[0]) ||
-            (event.touches && event.touches[0]) ||
-            event;
-        return t && { pageX: t.pageX, pageY: t.pageY };
     }
 
     private _createNode(skeleton: any): Node {
@@ -186,7 +162,7 @@ export default class HtmlApp extends Vue {
         if (skeleton.nodeType === 3) {
             node = document.createTextNode(skeleton.data);
         } else if (skeleton.nodeType === 1) {
-            if (DISALLOWED_NODE_NAMES.has(skeleton.nodeName)) {
+            if (DISALLOWED_NODE_NAMES.has(skeleton.nodeName.toUpperCase())) {
                 return null;
             }
 
@@ -297,7 +273,34 @@ export default class HtmlApp extends Vue {
             this._applyAttributes(mutation);
         } else if (mutation.type === 'characterData') {
             this._applyCharacterData(mutation);
+        } else if (mutation.type === 'event_listener') {
+            this._applyEventListener(mutation);
         }
+    }
+
+    private _applyEventListener(mutation: any) {
+        let { target, listenerName, listenerDelta } = mutation;
+
+        const container = this.$refs.container as any;
+        let currentCount = this._listeners.get(listenerName);
+        if (!hasValue(currentCount) || currentCount < 0) {
+            currentCount = 0;
+        }
+        const hadListener = currentCount > 0;
+        currentCount += listenerDelta;
+        const shouldHaveListener = currentCount > 0;
+
+        if (!hadListener && shouldHaveListener) {
+            container.addEventListener(
+                listenerName,
+                this._proxyEvent,
+                EVENT_OPTIONS
+            );
+        } else if (hadListener && !shouldHaveListener) {
+            container.removeEventListener(listenerName, this._proxyEvent);
+        }
+
+        this._listeners.set(listenerName, currentCount);
     }
 
     private _applyChildList(mutation: any) {

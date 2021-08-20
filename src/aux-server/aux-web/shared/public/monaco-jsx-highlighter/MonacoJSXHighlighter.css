@@ -1,25 +1,28 @@
 .mtk100.Identifier.JsxElement.Bracket {
-    color:#383838;
+    color:#2873c1;
 }
 
 .mtk1000.Identifier.JsxOpeningElement.Bracket {
-    color:#383838;
+    color:#2873c1;
 }
 
 .mtk1001.Identifier.JsxClosingElement.Bracket {
-    color:#383838;
+    color:#2873c1;
 }
 
 .mtk101.Identifier.JsxOpeningElement.Identifier {
-    color: #800000;
+    color: #2873c1;
+    font-weight: 800;
 }
 
 .mtk102.Identifier.JsxClosingElement.Identifier {
-    color: #800000;
+    color: #2873c1;
+    font-weight: 800;
 }
 
 .mtk103.Identifier.JsxAttribute.Identifier {
-    color: #FF0000;
+    color: #e87d20;
+    font-weight: initial;
 }
 
 .mtk104.JsxElement.JsxText {

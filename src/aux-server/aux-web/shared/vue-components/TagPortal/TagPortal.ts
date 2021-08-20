@@ -26,7 +26,7 @@ import {
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { TagPortalConfig } from './TagPortalConfig';
-import { EventBus } from '../../EventBus';
+import { EventBus } from '@casual-simulation/aux-components';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
 

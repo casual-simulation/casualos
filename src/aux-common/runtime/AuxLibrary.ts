@@ -231,6 +231,12 @@ import {
     registerCustomApp,
     setAppOutput,
     SetAppOutputAction,
+    unregisterCustomApp,
+    requestAuthData as calcRequestAuthData,
+    AuthData,
+    createBot,
+    defineGlobalBot as calcDefineGlobalBot,
+    TEMPORARY_BOT_PARTITION_ID,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -242,7 +248,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
-import { convertToCopiableValue, getEasing } from './Utils';
+import {
+    convertToCopiableValue,
+    embedBase64InPdf,
+    getEasing,
+    getEmbeddedBase64FromPdf,
+} from './Utils';
 import { sha256 as hashSha256, sha512 as hashSha512, hmac } from 'hash.js';
 import stableStringify from 'fast-json-stable-stringify';
 import {
@@ -279,10 +290,26 @@ import './PerformanceNowPolyfill';
 import './BlobPolyfill';
 import { AuxDevice } from './AuxDevice';
 import { AuxVersion } from './AuxVersion';
-import { h } from 'preact';
+import { Fragment, h } from 'preact';
 import htm from 'htm';
+import { fromByteArray, toByteArray } from 'base64-js';
 
-const html = htm.bind(h);
+const _html: HtmlFunction = htm.bind(h) as any;
+
+const html: HtmlFunction = ((...args: any[]) => {
+    return _html(...args);
+}) as any;
+(<any>html).h = h;
+(<any>html).f = Fragment;
+
+/**
+ * Defines an interface for a function that provides HTML VDOM capabilities to bots.
+ */
+export interface HtmlFunction {
+    (...args: any[]): any;
+    h: (name: string | Function, props: any, ...children: any[]) => any;
+    f: any;
+}
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -699,6 +726,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 loadServer,
                 unloadServer,
                 importAUX,
+                parseBotsFromData,
                 replaceDragBot,
                 isInDimension,
                 getCurrentDimension,
@@ -743,7 +771,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 registerTagPrefix: registerPrefix,
 
                 registerApp: registerApp,
+                unregisterApp,
                 compileApp: setAppContent,
+                requestAuthBot,
             },
 
             portal: {
@@ -1774,11 +1804,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         for (let bot of bots) {
             state[bot.id] = bot;
         }
+
+        let data = JSON.stringify(getDownloadState(state));
+        if (isPdf(filename)) {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(data);
+            const base64 = fromByteArray(bytes);
+            data = embedBase64InPdf(base64);
+        }
+
+        const downloadedFilename = formatAuxFilename(filename);
+
         return addAction(
             download(
-                JSON.stringify(getDownloadState(state)),
-                formatAuxFilename(filename),
-                'application/json'
+                data,
+                downloadedFilename,
+                mime.getType(downloadedFilename) || 'application/json'
             )
         );
     }
@@ -1907,14 +1948,57 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function importAUX(urlOrJSON: string): ImportAUXAction | ApplyStateAction {
         try {
-            const data = JSON.parse(urlOrJSON);
-            const state = getUploadState(data);
-            const event = addState(state);
-            return addAction(event);
-        } catch {
-            const event = calcImportAUX(urlOrJSON);
-            return addAction(event);
+            const bots = parseBotsFromData(urlOrJSON);
+            if (bots) {
+                let state: BotsState = {};
+                for (let bot of bots) {
+                    state[bot.id] = bot;
+                }
+                const uploaded = getUploadState(state);
+                const event = addState(uploaded);
+                return addAction(event);
+            }
+        } catch {}
+        const event = calcImportAUX(urlOrJSON);
+        return addAction(event);
+    }
+
+    /**
+     * Parses the given JSON or PDF data and returns the list of bots that were contained in it.
+     * @param jsonOrPdf The JSON or PDF data to parse.
+     */
+    function parseBotsFromData(jsonOrPdf: string): Bot[] {
+        let data: any;
+
+        try {
+            data = JSON.parse(jsonOrPdf);
+        } catch (e) {
+            try {
+                data = getEmbeddedBase64FromPdf(jsonOrPdf);
+                const bytes = toByteArray(data);
+                const decoder = new TextDecoder();
+                const text = decoder.decode(bytes);
+                data = JSON.parse(text);
+            } catch (err) {
+                data = null;
+            }
         }
+
+        if (!hasValue(data)) {
+            return null;
+        }
+
+        const state = getUploadState(data);
+        let bots = [] as Bot[];
+
+        for (let bot in state) {
+            const b = state[bot];
+            if (hasValue(b)) {
+                bots.push(b);
+            }
+        }
+
+        return bots;
     }
 
     /**
@@ -2387,11 +2471,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Registers a custom portal for the given bot with the given options.
      * @param portalId The ID of the portal.
      * @param bot The bot that should be used to render the portal.
-     * @param config The configuration for the portal.
      */
     function registerApp(portalId: string, bot: Bot | string): Promise<void> {
         const task = context.createTask();
         const event = registerCustomApp(portalId, getID(bot), task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Unregisters a custom portal for the given bot with the given options.
+     * @param portalId The ID of the portal.
+     */
+    function unregisterApp(portalId: string): Promise<void> {
+        const task = context.createTask();
+        const event = unregisterCustomApp(portalId, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -2403,6 +2496,45 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function setAppContent(portalId: string, output: any): SetAppOutputAction {
         const event = setAppOutput(portalId, output);
         return addAction(event);
+    }
+
+    /**
+     * Requests an Auth Bot for the current session.
+     */
+    async function requestAuthBot(): Promise<Bot> {
+        const data = await requestAuthData();
+
+        let bot = getBot('id', data.userId);
+
+        if (!bot) {
+            bot = context.createBot(
+                createBot(
+                    data.userId,
+                    {
+                        authToken: data.token,
+                        authBundle: data.service,
+                        avatarAddress: data.avatarUrl,
+                        name: data.name,
+                    },
+                    TEMPORARY_BOT_PARTITION_ID
+                )
+            );
+        }
+
+        await defineGlobalBot('auth', bot.id);
+        return bot;
+    }
+
+    function requestAuthData(): Promise<AuthData> {
+        const task = context.createTask();
+        const event = calcRequestAuthData(task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    function defineGlobalBot(name: string, botId: string): Promise<void> {
+        const task = context.createTask();
+        const event = calcDefineGlobalBot(name, botId, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -5848,8 +5980,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         };
     }
 
+    function isPdf(filename: string): boolean {
+        return filename.endsWith('.pdf');
+    }
+
     function formatAuxFilename(filename: string): string {
         if (filename.endsWith('.aux')) {
+            return filename;
+        } else if (isPdf(filename)) {
             return filename;
         }
         return filename + '.aux';

@@ -8,6 +8,7 @@ import {
     iteratePartitions,
     MemoryPartition,
     registerCustomApp,
+    unregisterCustomApp,
 } from '@casual-simulation/aux-common';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -100,15 +101,25 @@ describe('CustomAppHelper', () => {
     describe('handleEvents()', () => {
         describe('register_custom_app', () => {
             it('should create a portal for the given event', () => {
-                portals.handleEvents([
-                    registerCustomApp('htmlPortal', null, { type: 'html' }),
-                ]);
+                portals.handleEvents([registerCustomApp('htmlPortal', null)]);
 
                 expect([...portals.portals.keys()]).toEqual(['htmlPortal']);
                 const values = [...portals.portals.values()];
 
                 expect(values[0]).toBeInstanceOf(HtmlAppBackend);
                 expect(values[0].botId).toBe(null);
+            });
+        });
+
+        describe('unregister_custom_app', () => {
+            it('should delete the portal for the given event', () => {
+                portals.handleEvents([registerCustomApp('htmlPortal', null)]);
+
+                expect([...portals.portals.keys()]).toEqual(['htmlPortal']);
+
+                portals.handleEvents([unregisterCustomApp('htmlPortal')]);
+
+                expect(portals.portals.size).toBe(0);
             });
         });
     });

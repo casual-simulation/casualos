@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Provide } from 'vue-property-decorator';
+import { Tagline, EventBus } from '@casual-simulation/aux-components';
 import { appManager } from '../../shared/AppManager';
-import { EventBus } from '../../shared/EventBus';
 import ConfirmDialogOptions from '../../shared/ConfirmDialogOptions';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import { SubscriptionLike, Subscription } from 'rxjs';
@@ -46,7 +46,6 @@ import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { DeviceInfo, ADMIN_ROLE } from '@casual-simulation/causal-trees';
 import Console from '../../shared/vue-components/Console/Console';
 import { recordMessage } from '../../shared/Console';
-import Tagline from '../../shared/vue-components/Tagline/Tagline';
 import VueBarcode from '../../shared/public/VueBarcode';
 import BarcodeScanner from '../../shared/vue-components/BarcodeScanner/BarcodeScanner';
 import Checkout from '../Checkout/Checkout';
@@ -961,6 +960,18 @@ export default class PlayerApp extends Vue {
 
                         simulation.helper.transaction(
                             asyncResult(e.taskId, value, false)
+                        );
+                    } catch (ex) {
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, ex.toString())
+                        );
+                    }
+                } else if (e.type === 'request_auth_data') {
+                    try {
+                        const id = await simulation.auth.authenticate();
+
+                        simulation.helper.transaction(
+                            asyncResult(e.taskId, id, false)
                         );
                     } catch (ex) {
                         simulation.helper.transaction(

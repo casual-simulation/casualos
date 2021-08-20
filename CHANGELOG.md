@@ -1,5 +1,69 @@
 # CasualOS Changelog
 
+## V2.0.8
+
+#### Date: 8/20/2021
+
+### :rocket: Improvements
+
+-   Created https://casualos.me
+    -   casualos.me is a companion service for CasualOS that provides the ability to sign in with an account and in the future will be able to allow permanent storage of records.
+-   Added the `os.requestAuthBot()` function.
+    -   Requests that the user sign in and creates the `authBot` global variable to represent whether the user is signed in.
+    -   Only works if an App Bundle (AB) was auto loaded using the `autoLoad` query parameter.
+    -   Returns a promise that resolves when the user is signed in.
+    -   See the "Auth Bot Tags" section in the documentation for more info.
+
+## V2.0.7
+
+#### Date: 8/16/2021
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where remote whispers could cause CasualOS to think it was loaded before it actually was.
+    -   This would in turn cause CasualOS to think that ab-1 was not installed and led to ab-1 getting duplicated which could then cause the auxCode to be loaded again.
+
+## V2.0.6
+
+#### Date: 8/11/2021
+
+### :rocket: Improvements
+
+-   Added the `formAnimationAddress` tag to allow specifying a separate GLTF/GLB URL that should be used for animations.
+    -   This allows dynamically loading animations instead of requiring that all animations be built into the `formAddress` GLTF mesh.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting the `mapPortal` tag on the `configBot` to `null` would not close the map portal.
+-   Fixed an issue where the camera would rotate somewhat randomly when facing straight down using touch controls.
+
+## V2.0.5
+
+#### Date: 7/27/2021
+
+### :rocket: Bug Fixes
+
+-   Fixed an issue where async scripts did not support JSX syntax highlighting.
+
+## V2.0.4
+
+#### Date: 7/27/2021
+
+### :rocket: Improvements
+
+-   Added the ability to download a PDF with embedded bot data by specifying a filename with a `.pdf` extension to `os.downloadBots()`.
+-   Added the `os.parseBotsFromData(data)` function.
+    -   This function can parse a list of bot mods from JSON or from the contents of a PDF that was created with `os.downloadBots()`.
+    -   It returns a list of bot mods (i.e. mods that have the structure of bots) which can in turn be passed to `create()` to add them to the server.
+-   Added the `os.unregisterApp(appID)` function to allow removing apps after they have been registered.
+-   Added the ability to use [JSX](https://reactjs.org/docs/introducing-jsx.html) for Apps instead of the `html` string helper.
+    -   JSX allows you to use a HTML-like language directly inside listeners. This provides some nice benefits including proper syntax highlighting and error messages.
+    -   For example:
+        ```javascript
+        let result = <h1>Hello, World!</h1>;
+        ```
+    -   Due to convienience this will probably become the preferred way to write HTML for apps, however the `html` string helper will still be available.
+
 ## V2.0.3
 
 #### Date: 7/19/2021

@@ -723,6 +723,20 @@ Only works for mesh forms.
   </PossibleValue>
 </PossibleValuesTable>
 
+### `formAnimationAddress`
+
+The URL that the animations for the mesh should be loaded from.
+For GLTF forms, this should be the URL of the GLTF file that contains the animations that should be used for the mesh.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    Use the animations that were built into the mesh.
+  </PossibleValueCode>
+  <PossibleValue value='Any URL'>
+    Use the animations from the given GLTF file.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `gltfVersion`
 
 The GLTF specification version that should be used to load a GLTF model.
@@ -2803,6 +2817,29 @@ that the player has selected text from the right to the left.
 This is important because text will always be inserted at <TagLink tag='cursorEndIndex'/>.
 
 Only available on the config bot.
+
+## Auth Bot Tags
+
+These are tags that are automatically set on the authBot.
+
+### `authToken`
+
+The token that is used to verify that the user is authenticated for the app bundle that was automatically loaded.
+Only available on the auth bot.
+
+### `authBundle`
+
+The name of the app bundle that the auth bot was created for.
+Only available on the auth bot.
+
+### `avatarAddress`
+
+The address that the user's avatar mesh can be found at.
+This can be used with <TagLink tag='form'/> and <TagLink tag='formAddress'/> to display the avatar in the page or mini portals.
+
+### `name`
+
+The name that the user specified for their account.
 
 ## Hidden Tags
 

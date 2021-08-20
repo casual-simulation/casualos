@@ -1677,6 +1677,7 @@ export const KNOWN_TAGS: string[] = [
     'formSubtype',
     'form',
     'formAnimation',
+    'formAnimationAddress',
     'orientationMode',
     'anchorPoint',
     'gltfVersion',
@@ -1725,6 +1726,11 @@ export const KNOWN_TAGS: string[] = [
     'stripeErrors',
     'stripeError',
     'stripeErrorType',
+
+    'authToken',
+    'authBundle',
+    'avatarAddress',
+    'name',
 
     CLICK_ACTION_NAME,
     'onAnyBotClicked',

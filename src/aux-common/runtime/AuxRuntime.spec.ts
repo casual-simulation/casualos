@@ -75,6 +75,7 @@ import {
     registerBuiltinPortal,
     isRuntimeBot,
     registerCustomApp,
+    defineGlobalBot,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -1850,11 +1851,7 @@ describe('AuxRuntime', () => {
 
                     runtime.shout('test');
 
-                    runtime.process([
-                        registerCustomApp('testPortal', 'test1', {
-                            type: 'html',
-                        }),
-                    ]);
+                    runtime.process([registerCustomApp('testPortal', 'test1')]);
 
                     await waitAsync();
 
@@ -4169,11 +4166,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.process([
-                    registerCustomApp('page', 'test1', {
-                        type: 'html',
-                    }),
-                ]);
+                runtime.process([registerCustomApp('page', 'test1')]);
 
                 expect((<any>globalThis).pageBot).toBe(
                     runtime.context.state['test1']
@@ -4191,21 +4184,13 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.process([
-                    registerCustomApp('page', 'test1', {
-                        type: 'html',
-                    }),
-                ]);
+                runtime.process([registerCustomApp('page', 'test1')]);
 
                 expect((<any>globalThis).pageBot).toBe(
                     runtime.context.state['test1']
                 );
 
-                runtime.process([
-                    registerCustomApp('page', 'test2', {
-                        type: 'html',
-                    }),
-                ]);
+                runtime.process([registerCustomApp('page', 'test2')]);
 
                 expect((<any>globalThis).pageBot).toBe(
                     runtime.context.state['test2']
@@ -4220,21 +4205,13 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.process([
-                    registerCustomApp('page', 'test1', {
-                        type: 'html',
-                    }),
-                ]);
+                runtime.process([registerCustomApp('page', 'test1')]);
 
                 expect((<any>globalThis).pageBot).toBe(
                     runtime.context.state['test1']
                 );
 
-                runtime.process([
-                    registerCustomApp('page', null, {
-                        type: 'html',
-                    }),
-                ]);
+                runtime.process([registerCustomApp('page', null)]);
 
                 expect((<any>globalThis).pageBot).toBeUndefined();
             });
@@ -4247,11 +4224,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.process([
-                    registerCustomApp('page', 'test1', {
-                        type: 'html',
-                    }),
-                ]);
+                runtime.process([registerCustomApp('page', 'test1')]);
 
                 expect((<any>globalThis).pageBot).toBe(
                     runtime.context.state['test1']
@@ -4268,19 +4241,150 @@ describe('AuxRuntime', () => {
                 let actions = [] as BotAction[];
                 runtime.onActions.subscribe((a) => actions.push(...a));
 
+                runtime.process([registerCustomApp('page', 'test1')]);
+
+                await waitAsync();
+
+                expect(actions).toEqual([registerCustomApp('page', 'test1')]);
+            });
+        });
+
+        describe('define_global_bot', () => {
+            it('should add a global variable for the given bot', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                runtime.process([defineGlobalBot('page', 'test1')]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+            });
+
+            it('should resolve the task when the bot is defined', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const task = runtime.context.createTask();
+                let resolved: boolean = false;
+                task.promise.then(() => {
+                    resolved = true;
+                });
+
                 runtime.process([
-                    registerCustomApp('page', 'test1', {
-                        type: 'html',
+                    defineGlobalBot('page', 'test1', task.taskId),
+                ]);
+
+                await waitAsync();
+
+                expect(resolved).toBe(true);
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+            });
+
+            it('should resolve the task even if the bot is already globally defined', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const task1 = runtime.context.createTask();
+                const task2 = runtime.context.createTask();
+                let resolved: boolean = false;
+                task2.promise.then(() => {
+                    resolved = true;
+                });
+
+                runtime.process([
+                    defineGlobalBot('page', 'test1', task1.taskId),
+                    defineGlobalBot('page', 'test1', task2.taskId),
+                ]);
+
+                await waitAsync();
+
+                expect(resolved).toBe(true);
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+            });
+
+            it('should be able to re-define a global bot', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 123,
+                        }),
+                    })
+                );
+
+                const task1 = runtime.context.createTask();
+                const task2 = runtime.context.createTask();
+                let resolved: boolean = false;
+                task2.promise.then(() => {
+                    resolved = true;
+                });
+
+                runtime.process([
+                    defineGlobalBot('page', 'test1', task1.taskId),
+                    defineGlobalBot('page', 'test2', task2.taskId),
+                ]);
+
+                await waitAsync();
+
+                expect(resolved).toBe(true);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test2']
+                );
+            });
+
+            it('should be able to resolve the task when completed via an async result', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc:
+                                '@await os.requestAuthBot(); os.toast("Hello");',
+                        }),
+                    })
+                );
+
+                let actions: any[] = [];
+                runtime.onActions.subscribe((a) => actions.push(...a));
+
+                runtime.shout('abc');
+
+                await waitAsync();
+
+                expect(actions.length).toBe(1);
+
+                runtime.process([
+                    asyncResult(actions[0].taskId, {
+                        userId: 'myUser',
+                        token: 'token',
+                        service: 'service',
                     }),
                 ]);
 
                 await waitAsync();
 
-                expect(actions).toEqual([
-                    registerCustomApp('page', 'test1', {
-                        type: 'html',
-                    }),
-                ]);
+                expect(actions.length).toBe(3);
+                expect(actions[2]).toEqual(toast('Hello'));
             });
         });
     });
@@ -4840,6 +4944,20 @@ describe('AuxRuntime', () => {
                     }),
                 ],
             ]);
+        });
+
+        it('should compile listeners to use the html.h() function for JSX', async () => {
+            uuidMock.mockReturnValueOnce('uuid');
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        test: '@return (<div></div>)',
+                    }),
+                })
+            );
+            let result = runtime.shout('test');
+
+            expect(result.results).toMatchSnapshot();
         });
 
         describe('bot_added', () => {

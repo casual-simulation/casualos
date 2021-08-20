@@ -1616,13 +1616,14 @@ os.download("abc", "test.txt");
 ### `os.downloadBots(bots, filename)`
 
 
-Downloads the given array of bots as a `.aux` file with the given filename.
+Downloads the given array of bots as a `.aux` or a `.pdf` file with the given filename.
 Useful for quickly backing up a set of bots.
 
 The **first parameter** is the array of bots that should be downloaded.
 
 The **second parameter** is the name of the file that the bots should be stored in.
-`.aux` will automatically be added to the end of the filename.
+If the filename ends with `.pdf`, then a PDF file will be downloaded with the bots as embedded data.
+Otherwise, `.aux` will automatically be added to the end of the filename.
 
 #### Examples:
 
@@ -1634,6 +1635,11 @@ os.downloadBots(getBots(inDimension("abc")), "abcBots");
 2. Download the current bot as "currentBot.aux".
 ```typescript
 os.downloadBots([bot], "currentBot");
+```
+
+3. Download all bots as "myServer.pdf".
+```typescript
+os.downloadBots(getBots(), "myServer.pdf");
 ```
 
 ### `os.run(script)`
@@ -3456,6 +3462,19 @@ os.importAUX(`{
 }`);
 ```
 
+### `os.parseBotsFromData(data)`
+
+Parses a list of bot mods from the given string of data.
+The data can be JSON or the contents of a PDF file.
+Returns an array of mods where each mod has the structure of a bot (i.e. it has `id` and `tags` properties).
+Returns null if the data is not valid JSON or PDF.
+
+The **first parameter** is the string of JSON data or the contents of the PDF file that should parsed.
+
+```typescript title='Parse the list of bots in an @onFileUpload'
+let bots = os.parseBotsFromData(that.file.data);
+```
+
 ### `os.version()`
 
 
@@ -3541,6 +3560,25 @@ Exists fullscreen mode.
 1. Exit fullscreen mode.
 ```typescript
 os.exitFullscreenMode();
+```
+
+### `os.requestAuthBot()`
+
+Requests that an "authentication" bot be added to the server for the current browser tab. Auth bots are useful for allowing an app bundle to
+automatically create and access records that are associated with a https://casualos.me user account. Because auth bots are tied to a particular app bundle,
+CasualOS can sometimes skip the manual login process in favor of an automated login system.
+Returns a promise that resolves with a bot that contains information about the signed in user session.
+
+Requires that an app bundle was automatically loaded to work. Otherwise the promise will be rejected with an error.
+On success, the `authBot` global variable will reference the bot that was returned by the promise.
+
+See [Auth Bot Tags](./tags.mdx#auth-bot) for more information.
+
+#### Examples
+
+```typescript title='Request an auth bot for the user'
+await os.requestAuthBot();
+os.toast("Logged in!");
 ```
 
 ## Server Actions
@@ -5931,8 +5969,16 @@ The **second parameter** is the bot that should represent the app. This is the b
 should generally be in charge of calling <ActionLink action='os.compileApp(appId, content)'/>.
 
 Apps work by running the HTML you give it by calling <ActionLink action='os.compileApp(appId, content)'/> with the HTML you want the app to show.
-CasualOS includes a helper called `html` that can be used to make HTML objects out of a string.
+Since JavaScript does not natively support HTML, we are using a special extension called [JSX](https://reactjs.org/docs/introducing-jsx.html) that adds HTML-like syntax to JavaScript.
+At the most basic, JSX is like writing HTML inside JavaScript:
+```typescript
+let htmlData = <div>
+    <h1>Hello World</h1>
+</div>;
+```
+See this article for more information: [Introducing JSX](https://reactjs.org/docs/introducing-jsx.html)
 
+CasualOS also includes a helper called `html` that can be used to make HTML objects out of a string.
 You can use it to convert a string into HTML by adding it before a string that uses backticks, like this:
 ```typescript
 let htmlData = html`
@@ -5942,32 +5988,32 @@ let htmlData = html`
 `;
 ```
 
+JSX is the preferred way to write HTML inside JavaScript since CasualOS can properly detect it and add helpful features like syntax highlighting and error messages.
+
 #### Examples:
 
 ```typescript title='Setup a basic app'
 await os.registerApp('basicApp', thisBot);
 
-os.compileApp('basicApp', html`
-    <h1>Hello World!</h1>
-`);
+os.compileApp('basicApp', <h1>Hello World!</h1>);
 ```
 
 ```typescript title='Setup an app with a button'
 await os.registerApp('buttonApp', thisBot);
 
-os.compileApp('buttonApp', html`
-    <button onClick=${ () => os.toast("You clicked the button!")}>
+os.compileApp('buttonApp', 
+    <button onClick={ () => os.toast("You clicked the button!") }>
         Click Me!
     </button>
-`);
+);
 ```
 
 ```typescript title='Setup an app with an input box'
 await os.registerApp('inputApp', thisBot);
 
-os.compileApp('inputApp', html`
-    <input onInput=${ (e) =>  tags.label = e.target.value }>
-`);
+os.compileApp('inputApp', 
+    <input onInput={ (e) => { tags.label = e.target.value } }>
+);
 ```
 
 ### `os.compileApp(appId, content)`
@@ -5984,23 +6030,40 @@ The **second parameter** is the content that the app should display.
 #### Examples:
 
 ```typescript title='Display a header'
-os.compileApp('myApp', html`
-    <h1>Hello World!</h1>
-`);
+os.compileApp('myApp', <h1>Hello World!</h1>);
 ```
 
 ```typescript title='Display a button'
-os.compileApp('myApp', html`
-    <button onClick=${ () => os.toast("You clicked the button!")}>
+os.compileApp('myApp', 
+    <button onClick={ () => os.toast("You clicked the button!")}>
         Click Me!
     </button>
-`);
+);
 ```
 
 ```typescript title='Display an input box'
-os.compileApp('myApp', html`
-    <input onInput=${ (e) => { tags.label = e.target.value } } />
-`);
+os.compileApp('myApp', 
+    <input onInput={ (e) => { tags.label = e.target.value } } />
+);
+```
+
+```typescript title='Display a slider input'
+os.compileApp('myApp', 
+    <input type="range" min="0" max="100" onInput={ (e) => { tags.label = e.target.value } } />
+);
+```
+
+### `os.unregisterApp(appId)`
+
+Unregisters and removes the app with the given ID.
+Returns a promise that resolves when the app has been removed.
+
+The **first parameter** is the ID of the app.
+
+#### Examples
+
+```typescript title='Unregister an app'
+await os.unregisterApp('myApp');
 ```
 
 ## Custom Executable Actions

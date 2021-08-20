@@ -50,6 +50,7 @@ import {
     ON_ERROR,
     action,
     isBotInDimension,
+    asyncResult,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -357,6 +358,13 @@ export class AuxRuntime
                 this._actionBatch.push(
                     openCustomPortal(action.portalId, newBot.id, null, {})
                 );
+            }
+        } else if (action.type === 'define_global_bot') {
+            if (this._portalBots.get(action.name) !== action.botId) {
+                this._registerPortalBot(action.name, action.botId);
+            }
+            if (hasValue(action.taskId)) {
+                this._processCore([asyncResult(action.taskId, null)]);
             }
         } else {
             this._actionBatch.push(action);
@@ -1051,7 +1059,7 @@ export class AuxRuntime
         const actions = this._actionBatch;
         const errors = this._errorBatch;
 
-        actions.push(...unbatchedActions);
+        this._processCore(unbatchedActions);
         errors.push(...unbatchedErrors);
 
         this._actionBatch = [];

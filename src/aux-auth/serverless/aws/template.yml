@@ -1,0 +1,186 @@
+# This is the SAM template that represents the architecture of your serverless application
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
+
+# The AWSTemplateFormatVersion identifies the capabilities of the template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+    aws
+
+# Transform section specifies one or more macros that AWS CloudFormation uses to process your template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
+Transform:
+    - AWS::Serverless-2016-10-31
+
+Parameters:
+    MagicSecretKeyParameter:
+        Type: String
+        Description: The secret key to use to access the Magic SDK.
+
+Globals:
+    Api:
+        # enable CORS; to make more specific, change the origin wildcard
+        # to a particular domain name, e.g. "'www.example.com'"
+        # TODO: add a CORS policy to the API Gateway
+        Cors:
+            AllowMethods: "'*'"
+            AllowHeaders: "'*'"
+            AllowOrigin: "'*'"
+
+# Resources declares the AWS resources that you want to include in the stack
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Resources:
+    # Each Lambda function is defined by properties:
+    # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+
+    # This is a Lambda function config associated with the source code: get-all-items.js
+    handleMetadata:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: metadata.handleMetadata
+            CodeUri: dist/handlers
+            Runtime: nodejs14.x
+            MemorySize: 128
+            Timeout: 100
+            Description: A function that retreives the metadata for an issuer.
+            Policies:
+                # Give Create/Read/Update/Delete Permissions to the SampleTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref UsersTable
+            Environment:
+                Variables:
+                    # Make table name accessible as environment variable from function code during execution
+                    USERS_TABLE: !Ref UsersTable
+                    MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
+            Events:
+                GetMetadata:
+                    Type: Api
+                    Properties:
+                        Path: /api/{token}/metadata
+                        Method: GET
+                PutMetadata:
+                    Type: Api
+                    Properties:
+                        Path: /api/{token}/metadata
+                        Method: PUT
+
+    # This is a Lambda function config associated with the source code: get-all-items.js
+    # putIssuerMetadata:
+    #     Type: AWS::Serverless::Function
+    #     Properties:
+    #         Handler: dist/handlers/metadata.putIssuerMetadata
+    #         Runtime: nodejs14.x
+    #         MemorySize: 128
+    #         Timeout: 100
+    #         Description: A function that updates the metadata for an issuer.
+    #         Policies:
+    #             # Give Create/Read/Update/Delete Permissions to the SampleTable
+    #             - DynamoDBCrudPolicy:
+    #                   TableName: !Ref UsersTable
+    #         Environment:
+    #             Variables:
+    #                 # Make table name accessible as environment variable from function code during execution
+    #                 USERS_TABLE: !Ref UsersTable
+    #                 MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
+    #         Events:
+    #             Api:
+    #                 Type: Api
+    #                 Properties:
+    #                     Path: /api/{token}/metadata
+    #                     Method: PUT
+
+    # This is a Lambda function config associated with the source code: get-all-items.js
+    handleService:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: services.handleService
+            CodeUri: dist/handlers
+            Runtime: nodejs14.x
+            MemorySize: 128
+            Timeout: 100
+            Description: A function that retreives a service for the user.
+            Policies:
+                # Give Create/Read/Update/Delete Permissions to the SampleTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref UserServicesTable
+            Environment:
+                Variables:
+                    # Make table name accessible as environment variable from function code during execution
+                    USER_SERVICES_TABLE: !Ref UserServicesTable
+                    MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
+            Events:
+                GetService:
+                    Type: Api
+                    Properties:
+                        Path: /api/{token}/services/{service}
+                        Method: GET
+                PutService:
+                    Type: Api
+                    Properties:
+                        Path: /api/{token}/services
+                        Method: PUT
+
+    # This is a Lambda function config associated with the source code: get-all-items.js
+    # putService:
+    #     Type: AWS::Serverless::Function
+    #     Properties:
+    #         Handler: dist/handlers/services.putService
+    #         Runtime: nodejs14.x
+    #         MemorySize: 128
+    #         Timeout: 100
+    #         Description: A function that adds a service for the user.
+    #         Policies:
+    #             # Give Create/Read/Update/Delete Permissions to the SampleTable
+    #             - DynamoDBCrudPolicy:
+    #                   TableName: !Ref UserServicesTable
+    #         Environment:
+    #             Variables:
+    #                 # Make table name accessible as environment variable from function code during execution
+    #                 USER_SERVICES_TABLE: !Ref UserServicesTable
+    #                 MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
+    #         Events:
+    #             Api:
+    #                 Type: Api
+    #                 Properties:
+    #                     Path: /api/{token}/services
+    #                     Method: PUT
+
+    # Simple syntax to create a DynamoDB table with a single attribute primary key, more in
+    # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlesssimpletable
+
+    # DynamoDB table to store users: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
+    UsersTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: id
+                  KeyType: HASH
+            AttributeDefinitions:
+                - AttributeName: id
+                  AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
+
+    # DynamoDB table to store services for users: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
+    UserServicesTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: userId
+                  KeyType: HASH
+                - AttributeName: service
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: userId
+                  AttributeType: S
+                - AttributeName: service
+                  AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
+
+Outputs:
+    WebEndpoint:
+        Description: 'API Gateway endpoint URL for Prod stage'
+        Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'

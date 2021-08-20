@@ -1,0 +1,78 @@
+{
+    "name": "@casual-simulation/aux-auth",
+    "version": "2.0.5",
+    "description": "The repository for the AUX server project.",
+    "main": "server/dist/main.js",
+    "private": true,
+    "scripts": {
+        "start": "node server/dist/main.js",
+        "watch": "concurrently \"npm:watch:web\" \"npm:watch:server\" \"nodemon server/dist/main.js\"",
+        "serverless": "npm run dev:serverless:aws && npm run merge:secrets && cd serverless/aws && sam local start-api -p 3003 --docker-network docker_default --env-vars env.json --env-vars secrets.env.json",
+        "merge:secrets": "node ./scripts/mergeSecrets.js",
+        "build": "npm run build:web && npm run build:server && npm run build:serverless:aws",
+        "build:profile": "npm run build:web:profile && npm run build:server:profile",
+        "build:dev:profile": "npm run build:web:dev:profile",
+        "build:web": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config web/webpack.prod.js",
+        "build:server": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config server/webpack.prod.js",
+        "build:serverless:aws": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config serverless/aws/webpack.prod.js",
+        "dev:serverless:aws": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config serverless/aws/webpack.dev.js",
+        "build:web:profile": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config web/webpack.prod.js --profile --json > web_bundle_stats.json",
+        "build:web:dev:profile": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config web/webpack.dev.js --profile --json > web_bundle_stats.json",
+        "build:docs": "echo \"Nothing to build...\"",
+        "watch:web": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config web/webpack.dev.js --watch",
+        "watch:server": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config server/webpack.dev.js --watch",
+        "watch:serverless:aws": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config serverless/aws/webpack.dev.js --watch",
+        "view:server:profile": "webpack-bundle-analyzer server/dist/server_bundle_stats.json",
+        "view:web:profile": "webpack-bundle-analyzer web/dist/web_bundle_stats.json",
+        "test": "jest",
+        "test:watch": "jest --watchAll",
+        "test:ci": "jest --ci --reporters=default --reporters=jest-junit",
+        "clean": "echo \"Nothing to clean\""
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/casualos.git"
+    },
+    "author": "Casual Simulation, Inc.",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/casual-simulation/casualos/issues"
+    },
+    "homepage": "https://github.com/casual-simulation/casualos#readme",
+    "files": [
+        "dist",
+        "/README.md",
+        "/CHANGELOG.md",
+        "/docker-compose.yml",
+        "/LICENSE.txt"
+    ],
+    "dependencies": {
+        "@casual-simulation/aux-components": "^2.0.7",
+        "@casual-simulation/aux-common": "^2.0.7",
+        "@casual-simulation/aux-vm-browser": "^2.0.7",
+        "@casual-simulation/aux-vm": "^2.0.7",
+        "express": "^4.16.4",
+        "axios": "^0.21.1",
+        "vue": "^2.5.17",
+        "vue-class-component": "^6.3.2",
+        "vue-clipboard2": "0.3.1",
+        "vue-color": "^2.7.0",
+        "vue-filepond": "^4.0.3",
+        "vue-material": "^1.0.0-beta-10.2",
+        "vue-property-decorator": "^7.2.0",
+        "vue-router": "^3.0.1",
+        "vue-shortkey": "^3.1.6",
+        "workbox-webpack-plugin": "6.0.2",
+        "rxjs": "^6.5.2",
+        "magic-sdk": "4.4.0",
+        "@magic-sdk/admin": "1.3.0",
+        "aws-sdk": "^2.968.0"
+    },
+    "devDependencies": {
+        "loader-utils": "^2.0.0",
+        "schema-utils": "^3.0.0",
+        "yaml": "1.10.2",
+        "prompts": "2.4.1",
+        "lodash": "4.17.21"
+    }
+}

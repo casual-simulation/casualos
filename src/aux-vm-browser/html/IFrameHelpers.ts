@@ -1,4 +1,6 @@
 import '@casual-simulation/aux-vm/globalThis-polyfill';
+import { Message } from 'comlink/dist/umd/protocol';
+import { Observable } from 'rxjs';
 
 /**
  * Creates a new message channel and sends port2 to the iframe in a message.
@@ -21,13 +23,37 @@ export function setupChannel(iframeWindow: Window) {
 
 /**
  * Listens for the init_port event from the global context.
+ * @param origin The origin that the channels should be recieved from.
  */
-export function listenForChannel(): Promise<MessagePort> {
+export function listenForChannels(origin?: string): Observable<MessagePort> {
+    return new Observable((observer) => {
+        let listener = (msg: MessageEvent) => {
+            if (msg.data.type === 'init_port') {
+                if (!origin || msg.origin === origin) {
+                    observer.next(msg.data.port);
+                }
+            }
+        };
+        globalThis.addEventListener('message', listener);
+
+        return () => {
+            globalThis.removeEventListener('message', listener);
+        };
+    });
+}
+
+/**
+ * Listens for the init_port event from the global context.
+ * @param origin The origin that the channel should be recieved from.
+ */
+export function listenForChannel(origin?: string): Promise<MessagePort> {
     return new Promise<MessagePort>((resolve) => {
         let listener = (msg: MessageEvent) => {
             if (msg.data.type === 'init_port') {
-                globalThis.removeEventListener('message', listener);
-                resolve(msg.data.port);
+                if (!origin || msg.origin === origin) {
+                    globalThis.removeEventListener('message', listener);
+                    resolve(msg.data.port);
+                }
             }
         };
         globalThis.addEventListener('message', listener);

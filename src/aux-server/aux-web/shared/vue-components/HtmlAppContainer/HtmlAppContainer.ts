@@ -12,6 +12,7 @@ import {
 import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import HtmlApp from '../HtmlApp/HtmlApp';
+import { v4 as uuid } from 'uuid';
 
 @Component({
     components: {
@@ -42,7 +43,9 @@ export default class HtmlAppContainer extends Vue {
                     if (e.type === 'register_html_app') {
                         const index = this.apps.findIndex(
                             (p) =>
-                                p.simulationId === sim.id && p.appId === e.appId
+                                p.simulationId === sim.id &&
+                                p.appId === e.appId &&
+                                p.key === e.instanceId
                         );
 
                         if (index >= 0) {
@@ -55,9 +58,23 @@ export default class HtmlAppContainer extends Vue {
                                 type: 'html',
                                 simulationId: sim.id,
                                 appId: e.appId,
+                                key: e.instanceId,
                                 taskId: e.taskId,
                             },
                         ];
+                    } else if (e.type === 'unregister_html_app') {
+                        const index = this.apps.findIndex(
+                            (p) =>
+                                p.simulationId === sim.id &&
+                                p.appId === e.appId &&
+                                p.key === e.instanceId
+                        );
+
+                        if (index >= 0) {
+                            this.apps.splice(index, 1);
+                        }
+
+                        this.apps = [...this.apps];
                     }
                 })
             );
@@ -71,5 +88,6 @@ interface AppData {
     type: 'html';
     simulationId: string;
     appId: string;
+    key: string;
     taskId: number | string;
 }

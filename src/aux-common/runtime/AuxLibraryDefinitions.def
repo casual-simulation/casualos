@@ -2586,6 +2586,15 @@ export interface CodeBundle {
     modules: BundleModules;
 }
 
+/**
+ * Defines an interface for a function that provides HTML VDOM capabilities to bots.
+ */
+ export interface HtmlFunction {
+    (...args: any[]): any;
+    h: (name: string | Function, props: any, ...children: any[]) => any;
+    f: any;
+}
+
 declare global {
 
     /**
@@ -3274,7 +3283,7 @@ declare global {
      * Produces HTML from the given HTML strings and expressions.
      * Best used with a tagged template string.
      */
-    function html(strings: string[], ...expressions: any[]): any;
+    const html: HtmlFunction;
 
     /**
      * Defines a set of functions that relate to common OS operations.
@@ -3725,6 +3734,12 @@ declare global {
         importAUX(urlOrJSON: string): ImportAUXAction | ApplyStateAction;
 
         /**
+         * Parses the given JSON or PDF data and returns the list of bots that were contained in it.
+         * @param jsonOrPdf The JSON or PDF data to parse.
+         */
+        parseBotsFromData(jsonOrPdf: string): Bot[];
+
+        /**
          * Replaces the bot that the user is beginning to drag.
          * Only works from inside a onDrag() or onAnyBotDrag() listen tag.
          * @param bot The bot or mod that should be dragged instead of the original.
@@ -3873,11 +3888,26 @@ declare global {
         ): Promise<void>;
 
         /**
+         * Removes a custom app from the session.
+         * 
+         * @param id The ID of the app.
+         */
+        unregisterApp(
+            id: string
+        ): Promise<void>;
+
+        /**
          * Sets the output of the given app.
          * @param id The ID of the app.
          * @param output The output that the app should display.
          */
         compileApp(id: string, output: any): SetAppOutputAction;
+
+        /**
+         * Requests that the current session be authorized and for a global bot to be created
+         * to contain information about the authorized user.
+         */
+        requestAuthBot(): Promise<Bot>;
 
         /**
          * Specifies that the given prefix should be interpreted as code.

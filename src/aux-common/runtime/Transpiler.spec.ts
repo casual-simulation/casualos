@@ -289,6 +289,217 @@ describe('Transpiler', () => {
             });
         });
 
+        describe('jsx', () => {
+            let transpiler: Transpiler;
+
+            beforeEach(() => {
+                transpiler = new Transpiler({
+                    jsxFactory: 'h',
+                    jsxFragment: 'Fragment',
+                });
+            });
+
+            it('should convert basic JSX to preact code', () => {
+                const result = transpiler.transpile('<div>Hello</div>');
+
+                expect(result).toBe('h("div",null,`Hello`,)');
+            });
+
+            it('should convert basic JSX attributes to preact code', () => {
+                const result = transpiler.transpile(
+                    '<div val="123" other="str">Hello</div>'
+                );
+
+                expect(result).toBe(
+                    'h("div",{ "val":"123" ,"other":"str"},`Hello`,)'
+                );
+            });
+
+            it('should preserve whitespace as much as possible', () => {
+                const result = transpiler.transpile(
+                    [
+                        `<div `,
+                        `  val="123" `,
+                        `  other="str">`,
+                        `  Hello`,
+                        `</div>`,
+                    ].join('\n')
+                );
+
+                expect(result).toBe(
+                    [
+                        `h("div",{ `,
+                        `  "val":"123" `,
+                        `  ,"other":"str"},\``,
+                        `  Hello`,
+                        `\`,)`,
+                    ].join('\n')
+                );
+            });
+
+            it('should support nested elements', () => {
+                const result = transpiler.transpile(
+                    '<div><h1>Hello, World!</h1></div>'
+                );
+
+                expect(result).toBe(
+                    `h("div",null,h("h1",null,\`Hello, World!\`,),)`
+                );
+            });
+
+            it('should support elements with text and other elements', () => {
+                const result = transpiler.transpile(
+                    [
+                        `<div>`,
+                        `  Some text`,
+                        `  <h1>Hello, World!</h1>`,
+                        `</div>`,
+                    ].join('\n')
+                );
+
+                expect(result).toBe(
+                    [
+                        'h("div",null,`',
+                        `  Some text`,
+                        '  `,h("h1",null,`Hello, World!`,),`',
+                        '`,)',
+                    ].join('\n')
+                );
+            });
+
+            it('should support expressions in attributes', () => {
+                const result = transpiler.transpile(`<div abc={123}></div>`);
+
+                expect(result).toBe(`h("div",{ "abc":123},)`);
+            });
+
+            it('should support JSX in attributes', () => {
+                const result = transpiler.transpile(
+                    `<div abc={<h1>Hello</h1>}></div>`
+                );
+
+                expect(result).toBe(
+                    `h("div",{ "abc":h("h1",null,\`Hello\`,)},)`
+                );
+            });
+
+            it('should support expressions as children', () => {
+                const result = transpiler.transpile(`<div>{123}</div>`);
+
+                expect(result).toBe(`h("div",null,123,)`);
+            });
+
+            it('should support multiple expressions as children', () => {
+                const result = transpiler.transpile(
+                    `<div>{123}{true}{false}{'abc'}{{ obj: true }}</div>`
+                );
+
+                expect(result).toBe(
+                    `h("div",null,123,true,false,'abc',{ obj: true },)`
+                );
+            });
+
+            it('should make capitalized elements variable references', () => {
+                const result = transpiler.transpile(
+                    `<Button>My Button</Button>`
+                );
+
+                expect(result).toBe(`h(Button,null,\`My Button\`,)`);
+            });
+
+            it('should support fragments', () => {
+                const result = transpiler.transpile(`<>My Button</>`);
+
+                expect(result).toBe(`h(Fragment,null,\`My Button\`,)`);
+            });
+
+            it('should support fragments with multiple children', () => {
+                const result = transpiler.transpile(
+                    [`<>`, `<div></div>`, `<button></button>`, `</>`].join('')
+                );
+
+                expect(result).toBe(
+                    `h(Fragment,null,h("div",null,),h("button",null,),)`
+                );
+            });
+
+            it('should support the attribute spread syntax', () => {
+                const result = transpiler.transpile(
+                    `<div {...myAttribute}></div>`
+                );
+
+                expect(result).toBe(`h("div",{ ...myAttribute},)`);
+            });
+
+            it('should apply spread attributes in the order they are provided compared to normal attributes', () => {
+                const result = transpiler.transpile(
+                    `<div name="bob" {...myAttribute} value="123"></div>`
+                );
+
+                expect(result).toBe(
+                    `h("div",{ "name":"bob" ,...myAttribute ,"value":"123"},)`
+                );
+            });
+
+            it('should support additional expressions in a spread attribute', () => {
+                const result = transpiler.transpile(
+                    `<div {...{ bob: true, value: 123 }}></div>`
+                );
+
+                expect(result).toBe(
+                    `h("div",{ ...{ bob: true, value: 123 }},)`
+                );
+            });
+
+            it('should support elements in spread attributes', () => {
+                const result = transpiler.transpile(
+                    `<div {...{ bob: <button></button> }}></div>`
+                );
+
+                expect(result).toBe(
+                    `h("div",{ ...{ bob: h("button",null,) }},)`
+                );
+            });
+
+            it('should support attributes with no value', () => {
+                const result = transpiler.transpile(`<div bob></div>`);
+
+                expect(result).toBe(`h("div",{ "bob":true},)`);
+            });
+
+            it('should support dot notation in element names', () => {
+                const result = transpiler.transpile(
+                    `<Html.Button></Html.Button>`
+                );
+
+                expect(result).toBe(`h(Html.Button,null,)`);
+            });
+
+            it('should leave HTML escaped character sequences in text', () => {
+                const result = transpiler.transpile(`<p>10 is &lt; 20</p>`);
+
+                expect(result).toBe(`h("p",null,\`10 is &lt; 20\`,)`);
+            });
+
+            it('should support self closing elements', () => {
+                const result = transpiler.transpile(`<span/>`);
+
+                expect(result).toBe(`h("span",null,)`);
+            });
+
+            // const cases = [];
+
+            // it.each(cases)('%s', (desc, given, expected) => {
+            //     const result = transpiler.transpile(
+            //         given
+            //     );
+
+            //     expect(result).toBe(
+            //         expected
+            //     );
+            // });
+        });
+
         it('should support dynamic import statements', () => {
             const transpiler = new Transpiler();
             const result = transpiler.transpile('import("test");');
