@@ -3441,6 +3441,8 @@ describe('AuxLibrary', () => {
                         userId: 'myUserId',
                         service: 'myService',
                         token: 'myToken',
+                        avatarUrl: 'myAvatarUrl',
+                        name: 'name',
                     } as AuthData,
                     false
                 );
@@ -3455,6 +3457,8 @@ describe('AuxLibrary', () => {
                 expect(resultBot.id).toEqual('myUserId');
                 expect(resultBot.tags.authToken).toEqual('myToken');
                 expect(resultBot.tags.authBundle).toEqual('myService');
+                expect(resultBot.tags.avatarUrl).toEqual('myAvatarUrl');
+                expect(resultBot.tags.name).toEqual('name');
             });
 
             it('should emit a DefineGlobalBotAction', async () => {
@@ -3470,6 +3474,8 @@ describe('AuxLibrary', () => {
                         userId: 'myUserId',
                         service: 'myService',
                         token: 'myToken',
+                        avatarUrl: 'myAvatarUrl',
+                        name: 'name',
                     },
                     false
                 );
@@ -3484,6 +3490,8 @@ describe('AuxLibrary', () => {
                             {
                                 authToken: 'myToken',
                                 authBundle: 'myService',
+                                avatarUrl: 'myAvatarUrl',
+                                name: 'name',
                             },
                             TEMPORARY_BOT_PARTITION_ID
                         )
@@ -3511,6 +3519,8 @@ describe('AuxLibrary', () => {
                         userId: 'myUserId',
                         service: 'myService',
                         token: 'myToken',
+                        avatarUrl: 'myAvatarUrl',
+                        name: 'name',
                     } as AuthData,
                     false
                 );
@@ -3524,6 +3534,9 @@ describe('AuxLibrary', () => {
 
                 expect(resultBot.id).toEqual('myUserId');
                 expect(resultBot.tags.authToken).toEqual('myToken');
+                expect(resultBot.tags.authBundle).toEqual('myService');
+                expect(resultBot.tags.avatarUrl).toEqual('myAvatarUrl');
+                expect(resultBot.tags.name).toEqual('name');
 
                 const promise2 = library.api.os.requestAuthBot();
 
@@ -3539,6 +3552,8 @@ describe('AuxLibrary', () => {
                         userId: 'myUserId',
                         service: 'myService',
                         token: 'myToken',
+                        avatarUrl: 'myAvatarUrl',
+                        name: 'name',
                     } as AuthData,
                     false
                 );

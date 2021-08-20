@@ -31,10 +31,12 @@ const merge = mergeWithCustomize({
 });
 
 // NOTE: Use this to send API requests to the MongoDB development backend.
-// const API_ENDPOINT = 'http://localhost:3002';
+const DEV_API_ENDPOINT = 'http://localhost:3002';
 
 // NOTE: Use this to send API requests to the locally running AWS Lambda serverless backend.
-const API_ENDPOINT = 'http://localhost:3003';
+// const DEV_API_ENDPOINT = 'http://localhost:3003';
+
+const API_ENDPOINT = process.env.API_ENDPOINT || DEV_API_ENDPOINT;
 
 const finalPlayerConfig = merge(
     common.auth('v9.9.9-dev:alpha', false, API_ENDPOINT),

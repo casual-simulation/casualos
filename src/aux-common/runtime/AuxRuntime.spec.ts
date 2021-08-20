@@ -4287,6 +4287,9 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(resolved).toBe(true);
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
             });
 
             it('should resolve the task even if the bot is already globally defined', async () => {
@@ -4313,6 +4316,42 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(resolved).toBe(true);
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+            });
+
+            it('should be able to re-define a global bot', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 123,
+                        }),
+                    })
+                );
+
+                const task1 = runtime.context.createTask();
+                const task2 = runtime.context.createTask();
+                let resolved: boolean = false;
+                task2.promise.then(() => {
+                    resolved = true;
+                });
+
+                runtime.process([
+                    defineGlobalBot('page', 'test1', task1.taskId),
+                    defineGlobalBot('page', 'test2', task2.taskId),
+                ]);
+
+                await waitAsync();
+
+                expect(resolved).toBe(true);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test2']
+                );
             });
 
             it('should be able to resolve the task when completed via an async result', async () => {

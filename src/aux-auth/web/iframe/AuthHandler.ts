@@ -1,4 +1,5 @@
-import { AuxAuth, LoginData } from '@casual-simulation/aux-vm';
+import { AuxAuth } from '@casual-simulation/aux-vm';
+import { AuthData } from '@casual-simulation/aux-common';
 import {
     listenForChannel,
     listenForChannels,
@@ -12,14 +13,14 @@ import { authManager } from '../shared/AuthManager';
  */
 export class AuthHandler implements AuxAuth {
     private _loggedIn: boolean = false;
-    private _loginData: LoginData;
+    private _loginData: AuthData;
     private _userId: string;
 
     async isLoggedIn(): Promise<boolean> {
         return this._loggedIn;
     }
 
-    async login(): Promise<LoginData> {
+    async login(): Promise<AuthData> {
         if (await this.isLoggedIn()) {
             return this._loginData;
         }
@@ -62,6 +63,8 @@ export class AuthHandler implements AuxAuth {
                 userId: this._userId ?? authManager.userId,
                 service: service,
                 token: token,
+                avatarUrl: authManager.avatarUrl,
+                name: authManager.name,
             };
             this._loggedIn = true;
             console.log('[AuthHandler] Authorized!', service);

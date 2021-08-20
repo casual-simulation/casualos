@@ -1729,6 +1729,8 @@ export const KNOWN_TAGS: string[] = [
 
     'authToken',
     'authBundle',
+    'avatarUrl',
+    'name',
 
     CLICK_ACTION_NAME,
     'onAnyBotClicked',

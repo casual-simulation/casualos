@@ -2513,6 +2513,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     {
                         authToken: data.token,
                         authBundle: data.service,
+                        avatarUrl: data.avatarUrl,
+                        name: data.name,
                     },
                     TEMPORARY_BOT_PARTITION_ID
                 )

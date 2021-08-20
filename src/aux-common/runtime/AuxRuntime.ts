@@ -360,7 +360,7 @@ export class AuxRuntime
                 );
             }
         } else if (action.type === 'define_global_bot') {
-            if (!this._portalBots.has(action.name)) {
+            if (this._portalBots.get(action.name) !== action.botId) {
                 this._registerPortalBot(action.name, action.botId);
             }
             if (hasValue(action.taskId)) {
