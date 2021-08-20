@@ -1727,6 +1727,9 @@ export const KNOWN_TAGS: string[] = [
     'stripeError',
     'stripeErrorType',
 
+    'authToken',
+    'authBundle',
+
     CLICK_ACTION_NAME,
     'onAnyBotClicked',
     MOD_DROP_ENTER_ACTION_NAME,

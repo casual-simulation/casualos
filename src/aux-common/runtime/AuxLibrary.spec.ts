@@ -3453,7 +3453,8 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(resultBot.id).toEqual('myUserId');
-                expect(resultBot.tags.token).toEqual('myToken');
+                expect(resultBot.tags.authToken).toEqual('myToken');
+                expect(resultBot.tags.authBundle).toEqual('myService');
             });
 
             it('should emit a DefineGlobalBotAction', async () => {
@@ -3481,8 +3482,8 @@ describe('AuxLibrary', () => {
                         createBot(
                             'myUserId',
                             {
-                                token: 'myToken',
-                                service: 'myService',
+                                authToken: 'myToken',
+                                authBundle: 'myService',
                             },
                             TEMPORARY_BOT_PARTITION_ID
                         )
@@ -3522,7 +3523,7 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(resultBot.id).toEqual('myUserId');
-                expect(resultBot.tags.token).toEqual('myToken');
+                expect(resultBot.tags.authToken).toEqual('myToken');
 
                 const promise2 = library.api.os.requestAuthBot();
 

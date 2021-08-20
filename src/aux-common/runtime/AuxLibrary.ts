@@ -2511,8 +2511,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 createBot(
                     data.userId,
                     {
-                        token: data.token,
-                        service: data.service,
+                        authToken: data.token,
+                        authBundle: data.service,
                     },
                     TEMPORARY_BOT_PARTITION_ID
                 )
