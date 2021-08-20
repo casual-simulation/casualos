@@ -20,6 +20,7 @@ import {
     PrecalculatedBot,
     tagsOnBot,
     trimPortalScript,
+    DefineGlobalBotAction,
 } from '@casual-simulation/aux-common';
 import {
     BundleModules,
@@ -74,8 +75,10 @@ export class PortalManager implements SubscriptionLike {
     private _prefixesRemoved: Subject<string[]>;
     private _externalsDiscovered: Subject<ExternalModule[]>;
     private _librariesDiscovered: Subject<LibraryModule[]>;
+    private _globalBotsDiscovered: Subject<DefineGlobalBotAction[]>;
     private _externalModules: CodeBundle['externals'];
     private _libraryModules: CodeBundle['libraries'];
+    private _globalBots: Map<string, DefineGlobalBotAction> = new Map();
     private _vm: AuxVM;
     private _helper: BotHelper;
     private _watcher: BotWatcher;
@@ -132,6 +135,12 @@ export class PortalManager implements SubscriptionLike {
         );
     }
 
+    get globalBotsDiscovered(): Observable<DefineGlobalBotAction[]> {
+        return this._globalBotsDiscovered.pipe(
+            startWith([...this._globalBots.values()])
+        );
+    }
+
     /**
      * Gets an observable that resolves when a portal's bot ID has been updated.
      */
@@ -158,8 +167,16 @@ export class PortalManager implements SubscriptionLike {
                 )
             )
         );
+        const globalBots = this.globalBotsDiscovered.pipe(
+            map((bots) =>
+                bots.map(
+                    (b) =>
+                        ({ portalId: b.name, botId: b.botId } as PortalBotData)
+                )
+            )
+        );
 
-        return merge(newBotIds, updatedBotIds);
+        return merge(newBotIds, updatedBotIds, globalBots);
     }
 
     /**
@@ -208,6 +225,7 @@ export class PortalManager implements SubscriptionLike {
         this._prefixesRemoved = new Subject();
         this._externalsDiscovered = new Subject();
         this._librariesDiscovered = new Subject();
+        this._globalBotsDiscovered = new Subject();
         this._externalModules = {};
         this._libraryModules = {};
         this._bundler = bundler;
@@ -353,6 +371,7 @@ export class PortalManager implements SubscriptionLike {
         let newPrefixes: ScriptPrefix[] = [];
         let removedPrefixes: Set<string> = new Set();
         let nextEvents: BotActions[] = [];
+        let newGlobalBots: DefineGlobalBotAction[] = [];
 
         for (let event of events) {
             if (event.type === 'open_custom_portal') {
@@ -413,6 +432,9 @@ export class PortalManager implements SubscriptionLike {
                 }
             } else if (event.type === 'build_bundle') {
                 this._buildBundle(event);
+            } else if (event.type === 'define_global_bot') {
+                this._globalBots.set(event.name, event);
+                newGlobalBots.push(event);
             }
         }
 
@@ -430,6 +452,9 @@ export class PortalManager implements SubscriptionLike {
         }
         if (removedPrefixes.size > 0) {
             this._prefixesRemoved.next([...removedPrefixes.values()]);
+        }
+        if (newGlobalBots.length > 0) {
+            this._globalBotsDiscovered.next(newGlobalBots);
         }
     }
 

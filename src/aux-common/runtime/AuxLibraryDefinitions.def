@@ -3904,6 +3904,12 @@ declare global {
         compileApp(id: string, output: any): SetAppOutputAction;
 
         /**
+         * Requests that the current session be authorized and for a global bot to be created
+         * to contain information about the authorized user.
+         */
+        requestAuthBot(): Promise<Bot>;
+
+        /**
          * Specifies that the given prefix should be interpreted as code.
          * @param prefix The prefix that code tags should start with.
          * @param options The options that should be used for the prefix.

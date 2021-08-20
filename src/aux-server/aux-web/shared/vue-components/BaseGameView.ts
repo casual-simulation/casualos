@@ -6,7 +6,7 @@ import { default as CameraTypeVue } from '../../shared/vue-components/CameraType
 import CameraHome from '../../shared/vue-components/CameraHome/CameraHome';
 import { Game } from '../scene/Game';
 import { SubscriptionLike } from 'rxjs';
-import { EventBus } from '../EventBus';
+import { EventBus } from '@casual-simulation/aux-components';
 import { debounce } from 'lodash';
 import { BotCursorType, getCursorCSS } from '@casual-simulation/aux-common';
 

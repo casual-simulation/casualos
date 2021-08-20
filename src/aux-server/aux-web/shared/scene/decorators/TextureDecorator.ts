@@ -16,7 +16,7 @@ import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import { IMeshDecorator } from './IMeshDecorator';
 import { AuxTextureLoader } from '../AuxTextureLoader';
-import { EventBus } from '../../../shared/EventBus';
+import { EventBus } from '@casual-simulation/aux-components';
 
 export class TextureDecorator extends AuxBot3DDecoratorBase {
     /**

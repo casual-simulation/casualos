@@ -1904,5 +1904,35 @@ describe('PortalManager', () => {
                 },
             ]);
         });
+
+        it('should resolve when a new global bot is defined', async () => {
+            expect(portals).toEqual([]);
+
+            vm.sendState(
+                stateUpdatedEvent({
+                    test1: createPrecalculatedBot('test1', {
+                        script: '🔺console.log("test1");',
+                    }),
+                })
+            );
+
+            localEvents.next([
+                {
+                    type: 'define_global_bot',
+                    botId: 'test',
+                    name: 'my',
+                    taskId: 'task1',
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(portals).toEqual([
+                {
+                    portalId: 'my',
+                    botId: 'test',
+                },
+            ]);
+        });
     });
 });

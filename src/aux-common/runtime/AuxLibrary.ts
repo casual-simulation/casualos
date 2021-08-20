@@ -232,6 +232,11 @@ import {
     setAppOutput,
     SetAppOutputAction,
     unregisterCustomApp,
+    requestAuthData as calcRequestAuthData,
+    AuthData,
+    createBot,
+    defineGlobalBot as calcDefineGlobalBot,
+    TEMPORARY_BOT_PARTITION_ID,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -768,6 +773,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 registerApp: registerApp,
                 unregisterApp,
                 compileApp: setAppContent,
+                requestAuthBot,
             },
 
             portal: {
@@ -2490,6 +2496,43 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function setAppContent(portalId: string, output: any): SetAppOutputAction {
         const event = setAppOutput(portalId, output);
         return addAction(event);
+    }
+
+    /**
+     * Requests an Auth Bot for the current session.
+     */
+    async function requestAuthBot(): Promise<Bot> {
+        const data = await requestAuthData();
+
+        let bot = getBot('id', data.userId);
+
+        if (!bot) {
+            bot = context.createBot(
+                createBot(
+                    data.userId,
+                    {
+                        authToken: data.token,
+                        authBundle: data.service,
+                    },
+                    TEMPORARY_BOT_PARTITION_ID
+                )
+            );
+        }
+
+        await defineGlobalBot('auth', bot.id);
+        return bot;
+    }
+
+    function requestAuthData(): Promise<AuthData> {
+        const task = context.createTask();
+        const event = calcRequestAuthData(task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    function defineGlobalBot(name: string, botId: string): Promise<void> {
+        const task = context.createTask();
+        const event = calcDefineGlobalBot(name, botId, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**

@@ -355,7 +355,10 @@ describe('BaseAuxChannel', () => {
             };
             channel = new AuxChannelImpl(user, device, config);
 
-            uuidMock.mockReturnValueOnce('uuid1').mockReturnValueOnce('uuid2');
+            uuidMock
+                .mockReturnValueOnce('authBot')
+                .mockReturnValueOnce('uuid1')
+                .mockReturnValueOnce('uuid2');
 
             await channel.initAndWait();
 

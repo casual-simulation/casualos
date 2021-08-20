@@ -203,7 +203,9 @@ export type AsyncActions =
     | GetGeolocationAction
     | RegisterCustomAppAction
     | UnregisterCustomAppAction
-    | RegisterHtmlAppAction;
+    | RegisterHtmlAppAction
+    | RequestAuthDataAction
+    | DefineGlobalBotAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3108,6 +3110,36 @@ export interface GoToTagAction {
     space: string | null;
 }
 
+/**
+ * Defines an event that requests a Auth data from the OS.
+ */
+export interface RequestAuthDataAction extends AsyncAction {
+    type: 'request_auth_data';
+}
+
+export interface AuthData {
+    userId: string;
+    service: string;
+    token: string;
+}
+
+/**
+ * Defines an event that defines a global variable that points to the given bot.
+ */
+export interface DefineGlobalBotAction extends AsyncAction {
+    type: 'define_global_bot';
+
+    /**
+     * The ID of the bot that should be defined.
+     */
+    botId: string;
+
+    /**
+     * The name of the global variable that should reference the bot.
+     */
+    name: string;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -5743,5 +5775,33 @@ export function htmlAppEvent(appId: string, event: any): HtmlAppEventAction {
         type: 'html_app_event',
         appId,
         event,
+    };
+}
+
+/**
+ * Creates a RequestAuthDataAction.
+ */
+export function requestAuthData(
+    taskId?: string | number
+): RequestAuthDataAction {
+    return {
+        type: 'request_auth_data',
+        taskId,
+    };
+}
+
+/**
+ * Creates a DefineGlobalBotAction.
+ */
+export function defineGlobalBot(
+    name: string,
+    botId: string,
+    taskId?: string | number
+): DefineGlobalBotAction {
+    return {
+        type: 'define_global_bot',
+        name,
+        botId,
+        taskId,
     };
 }

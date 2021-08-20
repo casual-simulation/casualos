@@ -5,7 +5,7 @@ import { tagsOnBot, botTags, Bot } from '@casual-simulation/aux-common';
 import { BotRenderer } from '../../scene/BotRenderer';
 import { appManager } from '../../AppManager';
 import TagColor from '../TagColor/TagColor';
-import { EventBus } from '../../EventBus';
+import { EventBus } from '@casual-simulation/aux-components';
 import { debounce } from 'lodash';
 
 @Component({

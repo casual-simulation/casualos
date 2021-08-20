@@ -75,6 +75,7 @@ import {
     registerBuiltinPortal,
     isRuntimeBot,
     registerCustomApp,
+    defineGlobalBot,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -4245,6 +4246,106 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(actions).toEqual([registerCustomApp('page', 'test1')]);
+            });
+        });
+
+        describe('define_global_bot', () => {
+            it('should add a global variable for the given bot', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                runtime.process([defineGlobalBot('page', 'test1')]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+            });
+
+            it('should resolve the task when the bot is defined', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const task = runtime.context.createTask();
+                let resolved: boolean = false;
+                task.promise.then(() => {
+                    resolved = true;
+                });
+
+                runtime.process([
+                    defineGlobalBot('page', 'test1', task.taskId),
+                ]);
+
+                await waitAsync();
+
+                expect(resolved).toBe(true);
+            });
+
+            it('should resolve the task even if the bot is already globally defined', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const task1 = runtime.context.createTask();
+                const task2 = runtime.context.createTask();
+                let resolved: boolean = false;
+                task2.promise.then(() => {
+                    resolved = true;
+                });
+
+                runtime.process([
+                    defineGlobalBot('page', 'test1', task1.taskId),
+                    defineGlobalBot('page', 'test1', task2.taskId),
+                ]);
+
+                await waitAsync();
+
+                expect(resolved).toBe(true);
+            });
+
+            it('should be able to resolve the task when completed via an async result', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc:
+                                '@await os.requestAuthBot(); os.toast("Hello");',
+                        }),
+                    })
+                );
+
+                let actions: any[] = [];
+                runtime.onActions.subscribe((a) => actions.push(...a));
+
+                runtime.shout('abc');
+
+                await waitAsync();
+
+                expect(actions.length).toBe(1);
+
+                runtime.process([
+                    asyncResult(actions[0].taskId, {
+                        userId: 'myUser',
+                        token: 'token',
+                        service: 'service',
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(actions.length).toBe(3);
+                expect(actions[2]).toEqual(toast('Hello'));
             });
         });
     });

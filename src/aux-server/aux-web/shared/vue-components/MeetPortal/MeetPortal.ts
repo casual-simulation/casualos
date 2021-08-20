@@ -23,7 +23,7 @@ import {
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { MeetPortalConfig } from './MeetPortalConfig';
-import { EventBus } from '../../EventBus';
+import { EventBus } from '@casual-simulation/aux-components';
 
 @Component({
     components: {
@@ -132,16 +132,16 @@ export default class MeetPortal extends Vue {
         this.extraStyle = calculateMeetPortalAnchorPointOffset('fullscreen');
         this.portalVisible = true;
 
-        window.addEventListener('resize', e => this._resize());
+        window.addEventListener('resize', (e) => this._resize());
 
         this._sub.add(
             appManager.simulationManager.simulationAdded
-                .pipe(tap(sim => this._onSimulationAdded(sim)))
+                .pipe(tap((sim) => this._onSimulationAdded(sim)))
                 .subscribe()
         );
         this._sub.add(
             appManager.simulationManager.simulationRemoved
-                .pipe(tap(sim => this._onSimulationRemoved(sim)))
+                .pipe(tap((sim) => this._onSimulationRemoved(sim)))
                 .subscribe()
         );
     }
@@ -241,13 +241,13 @@ export default class MeetPortal extends Vue {
 
         sub.add(
             userBotChanged(sim)
-                .pipe(tap(user => this._onUserBotUpdated(sim, user)))
+                .pipe(tap((user) => this._onUserBotUpdated(sim, user)))
                 .subscribe()
         );
         sub.add(
             watchPortalConfigBot(sim, MEET_PORTAL)
                 .pipe(
-                    tap(bot => {
+                    tap((bot) => {
                         // TODO: Update options
                     })
                 )
