@@ -40,6 +40,7 @@ import {
     Action,
     BRANCHES,
     BranchesEvent,
+    StatusUpdate,
 } from '@casual-simulation/causal-trees';
 import { flatMap } from 'lodash';
 import { waitAsync } from '../test/TestHelpers';
@@ -473,6 +474,49 @@ describe('RemoteCausalRepoPartition', () => {
                 ]);
 
                 expect(connection.sentMessages).toEqual([]);
+            });
+
+            it('should not become synced when an event is received', async () => {
+                let events = [] as Action[];
+                partition.onEvents.subscribe((e) => events.push(...e));
+
+                const action = device(
+                    deviceInfo('username', 'device', 'session'),
+                    {
+                        type: 'abc',
+                    }
+                );
+
+                let statuses: StatusUpdate[] = [];
+                sub.add(
+                    partition.onStatusUpdated.subscribe((update) =>
+                        statuses.push(update)
+                    )
+                );
+
+                partition.connect();
+
+                receiveEvent.next({
+                    branch: 'testBranch',
+                    action: action,
+                });
+
+                await waitAsync();
+
+                expect(statuses).toEqual([
+                    {
+                        type: 'connection',
+                        connected: true,
+                    },
+                    expect.objectContaining({
+                        type: 'authentication',
+                        authenticated: true,
+                    }),
+                    expect.objectContaining({
+                        type: 'authorization',
+                        authorized: true,
+                    }),
+                ]);
             });
 
             describe('device', () => {

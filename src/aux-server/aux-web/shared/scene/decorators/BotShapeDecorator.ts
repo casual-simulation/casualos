@@ -13,6 +13,7 @@ import {
     LocalActions,
     BotScaleMode,
     getBotScaleMode,
+    calculateStringTagValue,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -71,6 +72,7 @@ export class BotShapeDecorator
     private _animationMixer: AnimationMixer;
     private _animClips: AnimationAction[];
     private _animClipMap: Map<string, AnimationAction>;
+    private _animationAddress: string;
 
     /**
      * The 3d plane object used to display an iframe.
@@ -113,7 +115,7 @@ export class BotShapeDecorator
     frameUpdate() {
         if (this._game && this._animationMixer) {
             this._animationMixer.update(this._game.getTime().deltaTime);
-            this.scene.updateMatrixWorld(true);
+            this.scene?.updateMatrixWorld(true);
         }
     }
 
@@ -137,8 +139,30 @@ export class BotShapeDecorator
             this.bot3D.bot,
             'auxFormAnimation'
         );
-        if (this._needsUpdate(shape, subShape, scaleMode, address, version)) {
-            this._rebuildShape(shape, subShape, scaleMode, address, version);
+        const animationAddress = calculateStringTagValue(
+            calc,
+            this.bot3D.bot,
+            'auxFormAnimationAddress',
+            null
+        );
+        if (
+            this._needsUpdate(
+                shape,
+                subShape,
+                scaleMode,
+                address,
+                animationAddress,
+                version
+            )
+        ) {
+            this._rebuildShape(
+                shape,
+                subShape,
+                scaleMode,
+                address,
+                animationAddress,
+                version
+            );
         }
 
         this._updateColor(calc);
@@ -173,6 +197,7 @@ export class BotShapeDecorator
         subShape: string,
         scaleMode: string,
         address: string,
+        animationAddress: string,
         version: number
     ) {
         return (
@@ -180,7 +205,9 @@ export class BotShapeDecorator
             this._subShape !== subShape ||
             this._scaleMode !== scaleMode ||
             (shape === 'mesh' &&
-                (this._address !== address || this._gltfVersion !== version))
+                (this._address !== address ||
+                    this._animationAddress !== animationAddress ||
+                    this._gltfVersion !== version))
         );
     }
 
@@ -432,12 +459,14 @@ export class BotShapeDecorator
         subShape: BotSubShape,
         scaleMode: BotScaleMode,
         address: string,
+        animationAddress: string,
         version: number
     ) {
         this._shape = shape;
         this._subShape = subShape;
         this._scaleMode = scaleMode;
         this._address = address;
+        this._animationAddress = animationAddress;
         this._gltfVersion = version;
         if (this.mesh || this.scene || this._shapeSubscription) {
             this.dispose();
@@ -526,10 +555,17 @@ export class BotShapeDecorator
         return true;
     }
 
-    private _createGltf() {
+    private async _createGltf() {
         this.stroke = null;
         this._canHaveStroke = false;
-        this._loadGLTF(this._address, this._gltfVersion < 2);
+        if (await this._loadGLTF(this._address, this._gltfVersion < 2)) {
+            if (hasValue(this._animationAddress)) {
+                this._loadAnimationGLTF(
+                    this._animationAddress,
+                    this._gltfVersion < 2
+                );
+            }
+        }
     }
 
     private async _loadGLTF(url: string, legacy: boolean) {
@@ -537,9 +573,28 @@ export class BotShapeDecorator
             const gltf = await gltfPool.loadGLTF(url, legacy);
             if (!this.container) {
                 // The decorator was disposed of by the Bot.
-                return;
+                return false;
             }
             this._setGltf(gltf);
+            return true;
+        } catch (err) {
+            console.error(
+                '[BotShapeDecorator] Unable to load GLTF ' + url,
+                err
+            );
+
+            return false;
+        }
+    }
+
+    private async _loadAnimationGLTF(url: string, legacy: boolean) {
+        try {
+            const gltf = await gltfPool.loadGLTF(url, legacy);
+            if (!this.container) {
+                // The decorator was disposed of by the Bot.
+                return;
+            }
+            this._processGLTFAnimations(gltf);
         } catch (err) {
             console.error(
                 '[BotShapeDecorator] Unable to load GLTF ' + url,
@@ -580,6 +635,15 @@ export class BotShapeDecorator
         this.container.add(this.collider);
         this.bot3D.colliders.push(this.collider);
 
+        if (!hasValue(this._animationAddress)) {
+            this._processGLTFAnimations(gltf);
+        }
+
+        this._updateColor(null);
+        this.bot3D.updateMatrixWorld(true);
+    }
+
+    private _processGLTFAnimations(gltf: GLTF) {
         // Animations
         if (gltf.animations.length > 0) {
             this._animationMixer = new AnimationMixer(this.scene);
@@ -595,9 +659,6 @@ export class BotShapeDecorator
             this._animClipMap = clipMap;
             this._updateAnimation(null, true);
         }
-
-        this._updateColor(null);
-        this.bot3D.updateMatrixWorld(true);
     }
 
     private _createSprite() {

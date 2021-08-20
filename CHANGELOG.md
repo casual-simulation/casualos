@@ -1,5 +1,28 @@
 # CasualOS Changelog
 
+## V2.0.7
+
+#### Date: 8/16/2021
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where remote whispers could cause CasualOS to think it was loaded before it actually was.
+    -   This would in turn cause CasualOS to think that ab-1 was not installed and led to ab-1 getting duplicated which could then cause the auxCode to be loaded again.
+
+## V2.0.6
+
+#### Date: 8/11/2021
+
+### :rocket: Improvements
+
+-   Added the `formAnimationAddress` tag to allow specifying a separate GLTF/GLB URL that should be used for animations.
+    -   This allows dynamically loading animations instead of requiring that all animations be built into the `formAddress` GLTF mesh.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting the `mapPortal` tag on the `configBot` to `null` would not close the map portal.
+-   Fixed an issue where the camera would rotate somewhat randomly when facing straight down using touch controls.
+
 ## V2.0.5
 
 #### Date: 7/27/2021

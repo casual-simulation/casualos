@@ -1218,6 +1218,9 @@ export class PlayerGame extends Game {
                 },
                 dispose: (context) => {},
             });
+        } else {
+            this.gameView.disableMapView();
+            this.mapViewport.layer = -1;
         }
     }
 
