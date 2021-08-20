@@ -3457,7 +3457,7 @@ describe('AuxLibrary', () => {
                 expect(resultBot.id).toEqual('myUserId');
                 expect(resultBot.tags.authToken).toEqual('myToken');
                 expect(resultBot.tags.authBundle).toEqual('myService');
-                expect(resultBot.tags.avatarUrl).toEqual('myAvatarUrl');
+                expect(resultBot.tags.avatarAddress).toEqual('myAvatarUrl');
                 expect(resultBot.tags.name).toEqual('name');
             });
 
@@ -3490,7 +3490,7 @@ describe('AuxLibrary', () => {
                             {
                                 authToken: 'myToken',
                                 authBundle: 'myService',
-                                avatarUrl: 'myAvatarUrl',
+                                avatarAddress: 'myAvatarUrl',
                                 name: 'name',
                             },
                             TEMPORARY_BOT_PARTITION_ID
@@ -3535,7 +3535,7 @@ describe('AuxLibrary', () => {
                 expect(resultBot.id).toEqual('myUserId');
                 expect(resultBot.tags.authToken).toEqual('myToken');
                 expect(resultBot.tags.authBundle).toEqual('myService');
-                expect(resultBot.tags.avatarUrl).toEqual('myAvatarUrl');
+                expect(resultBot.tags.avatarAddress).toEqual('myAvatarUrl');
                 expect(resultBot.tags.name).toEqual('name');
 
                 const promise2 = library.api.os.requestAuthBot();

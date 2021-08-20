@@ -1729,7 +1729,7 @@ export const KNOWN_TAGS: string[] = [
 
     'authToken',
     'authBundle',
-    'avatarUrl',
+    'avatarAddress',
     'name',
 
     CLICK_ACTION_NAME,
