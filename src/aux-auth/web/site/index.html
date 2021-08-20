@@ -4,7 +4,7 @@
         <meta charset="utf-8" />
         <meta
             http-equiv="Content-Security-Policy"
-            content="default-src 'self' https://auth.magic.link/; img-src 'self' https://*; style-src 'self' 'unsafe-inline'; child-src 'self'; frame-src https://auth.magic.link; script-src 'self' https://auth.magic.link <%= !production ? `'unsafe-eval'` : `` %>; connect-src 'self' <%= allowedFetchOrigins %>"
+            content="default-src 'self' https://auth.magic.link/; img-src 'self' https://*; style-src 'self' 'unsafe-inline'; child-src 'self'; frame-src https://auth.magic.link https://casualos.readyplayer.me; script-src 'self' https://auth.magic.link <%= !production ? `'unsafe-eval'` : `` %>; connect-src 'self' <%= allowedFetchOrigins %>"
         />
         <meta
             name="viewport"
