@@ -14,6 +14,10 @@
     -   Returns a promise that resolves when the user is signed in.
     -   See the "Auth Bot Tags" section in the documentation for more info.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where using a `formAnimationAddress` prevented `formAnimation` from working correctly on first load.
+
 ## V2.0.7
 
 #### Date: 8/16/2021
