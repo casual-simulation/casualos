@@ -330,10 +330,10 @@ export class BotShapeDecorator
         if (this._animation === animation && !forceUpdate) {
             return;
         }
+        this._animation = animation;
         if (!this._animationMixer) {
             return;
         }
-        this._animation = animation;
         this._animationMixer.stopAllAction();
         this._animationMixer.setTime(startTime);
 
@@ -657,7 +657,7 @@ export class BotShapeDecorator
 
             this._animClips = clips;
             this._animClipMap = clipMap;
-            this._updateAnimation(null, true);
+            this._updateAnimation(this._animation, true);
         }
     }
 
