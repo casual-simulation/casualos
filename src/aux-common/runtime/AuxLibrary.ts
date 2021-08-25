@@ -237,6 +237,9 @@ import {
     createBot,
     defineGlobalBot as calcDefineGlobalBot,
     TEMPORARY_BOT_PARTITION_ID,
+    PublishableRecord,
+    publishRecord as calcPublishRecord,
+    DEFAULT_RECORD_SPACE,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -774,6 +777,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 unregisterApp,
                 compileApp: setAppContent,
                 requestAuthBot,
+
+                publishRecord,
             },
 
             portal: {
@@ -2534,6 +2539,58 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function defineGlobalBot(name: string, botId: string): Promise<void> {
         const task = context.createTask();
         const event = calcDefineGlobalBot(name, botId, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Publishes a record that can be used across servers.
+     * @param recordDefinition The data that should be used to publish the record.
+     */
+    function publishRecord(recordDefinition: PublishableRecord): Promise<void> {
+        const task = context.createTask();
+
+        let address: string;
+        if ('address' in recordDefinition) {
+            if (!hasValue(recordDefinition.address)) {
+                throw new Error(
+                    'A non-null or empty address must be used when specifying an address.'
+                );
+            }
+            address = recordDefinition.address;
+        } else {
+            if (!hasValue(recordDefinition.prefix)) {
+                if (hasValue(recordDefinition.id)) {
+                    throw new Error(
+                        'A prefix must be specified when declaring an ID for the record.'
+                    );
+                }
+                address = uuid();
+            } else {
+                address = `${recordDefinition.prefix}-${
+                    recordDefinition.id ?? uuid()
+                }`;
+            }
+        }
+        const space = recordDefinition.space ?? DEFAULT_RECORD_SPACE;
+        const token =
+            recordDefinition.authToken ??
+            (<any>globalThis).authBot?.tags?.authToken;
+
+        if (!hasValue(token)) {
+            throw new Error('authToken is required when there is no authBot.');
+        }
+
+        if (!hasValue(recordDefinition.record)) {
+            throw new Error('The record property is required.');
+        }
+
+        const event = calcPublishRecord(
+            token,
+            address,
+            recordDefinition.record,
+            space,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

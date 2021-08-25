@@ -2232,6 +2232,78 @@ declare interface UnsuccessfulGeolocation {
  */
 declare type GeoLocation = SuccessfulGeolocation | UnsuccessfulGeolocation;
 
+
+/**
+ * Defines an event that publishes a record.
+ */
+ export interface PublishRecordAction extends AsyncAction {
+    type: 'publish_record';
+
+    /**
+     * The auth token that should be used to authenticate the publish record request.
+     */
+    token: string;
+
+    /**
+     * The address that the record should be published to.
+     */
+    address: string;
+
+    /**
+     * The record data that should be published.
+     */
+    record: any;
+
+    /**
+     * The space that the record should be published in.
+     */
+    space: RecordSpace;
+
+    uncopiable: true;
+}
+
+export interface RecordDefinition {
+    /**
+     * The auth token that should be used to authenticate the publish record request.
+     * Different auth tokens can be used to publish records to different CasualOS.me accounts.
+     * Defaults to using the auth token in the auth bot.
+     */
+    authToken?: string;
+
+    /**
+     * The space that the record should be published in.
+     * Defaults to tempRestricted.
+     */
+    space?: RecordSpace;
+
+    /**
+     * The record that should be published.
+     */
+    record: any;
+}
+
+export interface AddressedRecord extends RecordDefinition {
+    /**
+     * The address that the record should be published to.
+     */
+    address: string;
+}
+
+export interface PrefixedRecord extends RecordDefinition {
+    /**
+     * The prefix that the record should be published with.
+     */
+    prefix?: string;
+
+    /**
+     * The ID that the record should be published with.
+     * Defaults to a UUID.
+     */
+    id?: string;
+}
+
+export type PublishableRecord = AddressedRecord | PrefixedRecord;
+
 /**
  * Defines an interface for options that show a payment box.
  */
@@ -2425,10 +2497,42 @@ declare interface BotsState {
     [id: string]: Bot;
 }
 
+
 /**
  * The possible bot spaces.
+ *
+ * - "shared" means that the bot is a normal bot.
+ * - "local" means that the bot is stored in the local storage partition.
+ * - "tempLocal" means that the bot is stored in the temporary partition.
+ * - "history" means that the bot represents a version of another space.
+ * - "admin" means that the bot is shared across all servers.
+ * - "tempShared" means that the bot is temporary and shared with other devices.
+ * - "remoteTempShared" means that the bot is temporary and shared with this device from a remote device.
+ * - "certified" means that the bot is a certificate.
  */
-declare type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history' | 'admin' | 'tempShared' | 'remoteTempShared';
+ export type BotSpace =
+    | 'shared'
+    | 'local'
+    | 'tempLocal'
+    | 'history'
+    | 'admin'
+    | 'tempShared'
+    | 'remoteTempShared'
+    | 'certified';
+
+/**
+ * The possible spaces that records can be stored in.
+ * 
+ * - "tempGlobal" means that the record is temporary and available to anyone.
+ * - "tempRestricted" means that the record is temporary and available to a specific user.
+ * - "permanentGlobal" means that the record is permanent and available to anyone.
+ * - "permanentRestricted" means that the record is permanent and available to a specific user.
+ */
+export type RecordSpace = 
+    | 'tempGlobal'
+    | 'tempRestricted'
+    | 'permanentGlobal'
+    | 'permanentRestricted';
 
 /**
  * The possible portal types.
@@ -3908,6 +4012,12 @@ declare global {
          * to contain information about the authorized user.
          */
         requestAuthBot(): Promise<Bot>;
+
+        /**
+         * Publishes a record that can be used across servers.
+         * @param recordDefinition The data that should be used to publish the record.
+         */
+        publishRecord(recordDefinition: PublishableRecord): Promise<void>;
 
         /**
          * Specifies that the given prefix should be interpreted as code.

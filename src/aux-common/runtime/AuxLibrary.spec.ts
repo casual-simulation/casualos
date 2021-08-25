@@ -163,6 +163,7 @@ import {
     defineGlobalBot,
     Bot,
     TEMPORARY_BOT_PARTITION_ID,
+    publishRecord,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -3566,6 +3567,192 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(resultBot2).toBe(resultBot);
+            });
+        });
+
+        describe('os.publishRecord()', () => {
+            it('should send a PublishRecordAction', () => {
+                const action: any = library.api.os.publishRecord({
+                    space: 'tempRestricted',
+                    address: 'myAddress',
+                    record: {
+                        test1: true,
+                    },
+                    authToken: 'myToken',
+                });
+                const expected = publishRecord(
+                    'myToken',
+                    'myAddress',
+                    {
+                        test1: true,
+                    },
+                    'tempRestricted',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should default to tempRestricted space', () => {
+                const action: any = library.api.os.publishRecord({
+                    address: 'myAddress',
+                    record: {
+                        test1: true,
+                    },
+                    authToken: 'myToken',
+                });
+                const expected = publishRecord(
+                    'myToken',
+                    'myAddress',
+                    {
+                        test1: true,
+                    },
+                    'tempRestricted',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the authToken tag in the auth bot by default', () => {
+                try {
+                    (<any>globalThis).authBot = createBot('authBot', {
+                        authToken: 'myToken',
+                    });
+                    const action: any = library.api.os.publishRecord({
+                        space: 'tempRestricted',
+                        address: 'myAddress',
+                        record: {
+                            test1: true,
+                        },
+                    });
+                    const expected = publishRecord(
+                        'myToken',
+                        'myAddress',
+                        {
+                            test1: true,
+                        },
+                        'tempRestricted',
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                } finally {
+                    delete (<any>globalThis).authBot;
+                }
+            });
+
+            it('should throw an error if no token is specified and there is no auth bot', () => {
+                expect(() => {
+                    library.api.os.publishRecord({
+                        space: 'tempRestricted',
+                        address: 'myAddress',
+                        record: {
+                            test1: true,
+                        },
+                    });
+                }).toThrowError();
+            });
+
+            it('should support prefixed records', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.publishRecord({
+                    prefix: 'myPrefix',
+                    record: {
+                        test1: true,
+                    },
+                    authToken: 'myToken',
+                });
+                const expected = publishRecord(
+                    'myToken',
+                    'myPrefix-uuid',
+                    {
+                        test1: true,
+                    },
+                    'tempRestricted',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support a custom prefix and ID', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.publishRecord({
+                    prefix: 'myPrefix',
+                    id: 'test',
+                    record: {
+                        test1: true,
+                    },
+                    authToken: 'myToken',
+                });
+                const expected = publishRecord(
+                    'myToken',
+                    'myPrefix-test',
+                    {
+                        test1: true,
+                    },
+                    'tempRestricted',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use a UUID if no prefix or address is specified', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.publishRecord({
+                    record: {
+                        test1: true,
+                    },
+                    authToken: 'myToken',
+                });
+                const expected = publishRecord(
+                    'myToken',
+                    'uuid',
+                    {
+                        test1: true,
+                    },
+                    'tempRestricted',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if a null prefix is specified with an ID', () => {
+                expect(() => {
+                    library.api.os.publishRecord({
+                        prefix: null,
+                        id: 'test',
+                        record: {
+                            test1: true,
+                        },
+                        authToken: 'myToken',
+                    });
+                }).toThrowError();
+            });
+
+            it('should throw an error if a null address is specified', () => {
+                expect(() => {
+                    library.api.os.publishRecord({
+                        address: null,
+                        record: {
+                            test1: true,
+                        },
+                        authToken: 'myToken',
+                    });
+                }).toThrowError();
+            });
+
+            it('should throw an error if a null record is specified', () => {
+                expect(() => {
+                    library.api.os.publishRecord({
+                        address: 'myAddress',
+                        record: null,
+                        authToken: 'myToken',
+                    });
+                }).toThrowError();
             });
         });
 

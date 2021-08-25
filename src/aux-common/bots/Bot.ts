@@ -223,6 +223,25 @@ export type BotSpace =
     | 'certified';
 
 /**
+ * The possible spaces that records can be stored in.
+ *
+ * - "tempGlobal" means that the record is temporary and available to anyone.
+ * - "tempRestricted" means that the record is temporary and available to a specific user.
+ * - "permanentGlobal" means that the record is permanent and available to anyone.
+ * - "permanentRestricted" means that the record is permanent and available to a specific user.
+ */
+export type RecordSpace =
+    | 'tempGlobal'
+    | 'tempRestricted'
+    | 'permanentGlobal'
+    | 'permanentRestricted';
+
+/**
+ * The space that records should be published to by default.
+ */
+export const DEFAULT_RECORD_SPACE: RecordSpace = 'tempRestricted';
+
+/**
  * The possible portal types.
  */
 export type PortalType = 'page' | 'mini' | 'menu' | 'sheet' | 'meet' | string;
