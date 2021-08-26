@@ -254,6 +254,7 @@ import '../polyfill/Array.last.polyfill';
 import {
     convertToCopiableValue,
     embedBase64InPdf,
+    formatAuthToken,
     getEasing,
     getEmbeddedBase64FromPdf,
 } from './Utils';
@@ -2516,7 +2517,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 createBot(
                     data.userId,
                     {
-                        authToken: data.token,
+                        authToken: formatAuthToken(data.token, data.service),
                         authBundle: data.service,
                         avatarAddress: data.avatarUrl,
                         name: data.name,

@@ -199,7 +199,7 @@ import {
 import { RanOutOfEnergyError } from './AuxResults';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import { waitAsync } from '../test/TestHelpers';
-import { embedBase64InPdf } from './Utils';
+import { embedBase64InPdf, formatAuthToken } from './Utils';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { Fragment } from 'preact';
 
@@ -3456,7 +3456,9 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(resultBot.id).toEqual('myUserId');
-                expect(resultBot.tags.authToken).toEqual('myToken');
+                expect(resultBot.tags.authToken).toEqual(
+                    formatAuthToken('myToken', 'myService')
+                );
                 expect(resultBot.tags.authBundle).toEqual('myService');
                 expect(resultBot.tags.avatarAddress).toEqual('myAvatarUrl');
                 expect(resultBot.tags.name).toEqual('name');
@@ -3489,7 +3491,10 @@ describe('AuxLibrary', () => {
                         createBot(
                             'myUserId',
                             {
-                                authToken: 'myToken',
+                                authToken: formatAuthToken(
+                                    'myToken',
+                                    'myService'
+                                ),
                                 authBundle: 'myService',
                                 avatarAddress: 'myAvatarUrl',
                                 name: 'name',
@@ -3534,7 +3539,9 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(resultBot.id).toEqual('myUserId');
-                expect(resultBot.tags.authToken).toEqual('myToken');
+                expect(resultBot.tags.authToken).toEqual(
+                    formatAuthToken('myToken', 'myService')
+                );
                 expect(resultBot.tags.authBundle).toEqual('myService');
                 expect(resultBot.tags.avatarAddress).toEqual('myAvatarUrl');
                 expect(resultBot.tags.name).toEqual('name');

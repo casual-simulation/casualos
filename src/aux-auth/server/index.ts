@@ -1,13 +1,29 @@
-import express, { Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import { AppMetadata, AppService } from '../shared/AuthMetadata';
-import { MongoClient, MongoClientOptions } from 'mongodb';
+import { Collection, MongoClient, MongoClientOptions, ObjectId } from 'mongodb';
 import { Magic } from '@magic-sdk/admin';
 import pify from 'pify';
+import {
+    formatAuthToken,
+    parseAuthToken,
+} from '@casual-simulation/aux-common/runtime/Utils';
 
 declare var MAGIC_SECRET_KEY: string;
 
 const connect = pify(MongoClient.connect);
+
+type RecordVisibility = 'global' | 'restricted';
+
+interface AppRecord {
+    _id?: string;
+    issuer: string;
+    address: string;
+    visibility: RecordVisibility;
+    creationDate: number;
+    authorizedUsers: string[];
+    record: any;
+}
 
 async function start() {
     let app = express();
@@ -19,6 +35,8 @@ async function start() {
     const db = mongo.db('aux-auth');
     const users = db.collection<AppMetadata>('users');
     const services = db.collection<AppService>('services');
+    const permanentRecords = db.collection<AppRecord>('permanentRecords');
+    const tempRecords = [] as AppRecord[];
 
     const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
 
@@ -126,6 +144,70 @@ async function start() {
         }
     });
 
+    const allowedRecordsOrigins = new Set([
+        'http://player.localhost:3000',
+        'http://localhost:3000',
+    ]);
+
+    app.options('/api/records', (req, res) => {
+        handleRecordsCorsHeaders(req, res);
+        res.status(200).send();
+    });
+
+    app.post('/api/records', async (req, res) => {
+        try {
+            handleRecordsCorsHeaders(req, res);
+            console.log('secret key', MAGIC_SECRET_KEY);
+            console.log('Body', req.body);
+            const { token: authToken, address, space, record } = req.body;
+            const [token, bundle] = parseAuthToken(authToken);
+
+            magic.token.validate(token, bundle);
+            const issuer = magic.token.getIssuer(token);
+
+            let appRecord: AppRecord = {
+                issuer: issuer,
+                address: address,
+                record,
+                creationDate: Date.now(),
+                visibility: space.endsWith('restricted')
+                    ? 'restricted'
+                    : 'global',
+                authorizedUsers: [formatAuthToken(issuer, bundle)],
+            };
+
+            if (
+                space === 'permanentGlobal' ||
+                space === 'permanentRestricted'
+            ) {
+                if (hasRecordWithAddress(permanentRecords, issuer, address)) {
+                    res.status(409).send();
+                    return;
+                }
+                await saveRecord(permanentRecords, appRecord);
+            } else {
+                if (
+                    tempRecords.find(
+                        (r) => r.issuer === issuer && r.address === address
+                    )
+                ) {
+                    res.status(409).send();
+                    return;
+                }
+                tempRecords.push(appRecord);
+            }
+
+            res.status(200).send({
+                address: address,
+                space: space,
+                issuer: issuer,
+            });
+        } catch (err) {
+            console.error(err);
+            res.sendStatus(500);
+        }
+    });
+
     app.get('*', (req, res) => {
         res.sendFile(path.join(dist, 'index.html'));
     });
@@ -133,6 +215,37 @@ async function start() {
     app.listen(3002, () => {
         console.log('[AuxAuth] Listening on port 3002');
     });
+
+    async function saveRecord(
+        collection: Collection<AppRecord>,
+        record: AppRecord
+    ) {
+        await collection.insertOne({
+            ...record,
+            _id: new ObjectId(),
+        });
+    }
+
+    async function hasRecordWithAddress(
+        collection: Collection<AppRecord>,
+        issuer: string,
+        address: string
+    ) {
+        const count = await collection.count({
+            issuer,
+            address,
+        });
+
+        return count > 0;
+    }
+
+    function handleRecordsCorsHeaders(req: Request, res: Response) {
+        if (allowedRecordsOrigins.has(req.headers.origin as string)) {
+            res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+            res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        }
+    }
 }
 
 start();

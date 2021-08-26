@@ -1,7 +1,9 @@
 import {
     convertToCopiableValue,
     embedBase64InPdf,
+    formatAuthToken,
     getEmbeddedBase64FromPdf,
+    parseAuthToken,
 } from './Utils';
 
 describe('convertToCopiableValue()', () => {
@@ -175,5 +177,29 @@ describe('getEmbeddedBase64FromPdf()', () => {
         const result = getEmbeddedBase64FromPdf(pdf);
 
         expect(result).toEqual(data);
+    });
+});
+
+describe('formatAuthToken()', () => {
+    const cases = [['myToken', 'myService', 'myToken.myService']];
+
+    it.each(cases)('should format %s and %s', (token, service, expected) => {
+        const result = formatAuthToken(token, service);
+
+        expect(result).toBe(expected);
+    });
+});
+
+describe('parseAuthToken()', () => {
+    const cases = [
+        ['myToken.myService', ['myToken', 'myService']] as const,
+        ['myToken.mySer.vice', ['myToken', 'mySer.vice']] as const,
+        ['myToken', null as any] as const,
+    ] as const;
+
+    it.each(cases)('should format %s and %s', (token, expected) => {
+        const result = parseAuthToken(token);
+
+        expect(result).toEqual(expected);
     });
 });

@@ -1,5 +1,6 @@
 const childProcess = require('child_process');
 const path = require('path');
+const fs = require('fs');
 const nodeExternals = require('webpack-node-externals');
 const webpack = require('webpack');
 
@@ -11,6 +12,15 @@ const latestTag = childProcess
     .execSync('git describe --abbrev=0 --tags')
     .toString()
     .trim();
+
+const magicSecretKeyPath = path.resolve(
+    __dirname,
+    '..',
+    'MAGIC_SECRET_KEY.txt'
+);
+const magicSecretKey = fs.existsSync(magicSecretKeyPath)
+    ? fs.readFileSync(magicSecretKeyPath, 'utf8').trim()
+    : null;
 
 module.exports = {
     entry: path.resolve(__dirname, 'index.ts'),
@@ -62,7 +72,9 @@ module.exports = {
         new webpack.DefinePlugin({
             GIT_HASH: JSON.stringify(commitHash),
             GIT_TAG: JSON.stringify(latestTag),
-            MAGIC_SECRET_KEY: JSON.stringify(process.env.MAGIC_SECRET_KEY),
+            MAGIC_SECRET_KEY: JSON.stringify(
+                process.env.MAGIC_SECRET_KEY ?? magicSecretKey
+            ),
         }),
     ],
 };

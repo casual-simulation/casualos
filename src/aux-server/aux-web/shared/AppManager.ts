@@ -130,6 +130,7 @@ export class AppManager {
             sharedPartitionsVersion: this._config.sharedPartitionsVersion,
             vmOrigin: this._config.vmOrigin,
             authOrigin: this._config.authOrigin,
+            recordsOrigin: this._config.recordsOrigin,
             builtinPortals: KNOWN_PORTALS,
         };
     }
