@@ -2478,6 +2478,51 @@ export interface Bot {
 }
 
 /**
+ * Defines an interface for a record.
+ */
+export interface Record {
+    /**
+     * The address that the record was published at.
+     */
+    address: string;
+
+    /**
+     * The space that the record was published to.
+     */
+    space: RecordSpace;
+
+    /**
+     * The auth ID that published the record.
+     */
+    authID: string;
+
+    /**
+     * The data that was stored in the record.
+     */
+    data: any;
+}
+
+/**
+ * Defines an interface for an object that represents a reference to a specific record.
+ */
+ export interface RecordReference {
+    /**
+     * The ID of the user that published the record.
+     */
+    authID: string;
+
+    /**
+     * The space that the record lives in.
+     */
+    space: RecordSpace;
+
+    /**
+     * The address that the record was published to.
+     */
+    address: string;
+}
+
+/**
  * Defines the possible bot anchor points.
  */
 declare type BotAnchorPoint =
@@ -3285,6 +3330,30 @@ declare global {
     function not(filter: BotFilterFunction): BotFilterFunction;
 
     /**
+     * Creates a record filter that retrieves records created by the given Auth ID.
+     * @param authID The ID of the creator of the records.
+     */
+     function byAuthID(authID: string): AuthIdRecordFilter;
+
+    /**
+     * Creates a record filter that retrieves records with the given address.
+     * @param address The address that the record was stored at.
+     */
+     function byAddress(address: string): AddressRecordFilter;
+
+    /**
+     * Creates a record filter that retrieves records with the given address.
+     * @param token The auth token that should be used to authenticate the getRecords() request.
+     */
+    function withAuthToken(token: string): AuthTokenRecordFilter;
+
+    /**
+     * Creates a record filter that retrieves records with the given prefix in their address.
+     * @param prefix The prefix that should be matched to record addresses.
+     */
+    function byPrefix(prefix: string): PrefixRecordFilter;
+
+    /**
      * Gets the value of the given tag stored in the given bot.
      * @param bot The bot.
      * @param tag The tag.
@@ -4058,6 +4127,12 @@ declare global {
          * @param recordDefinition The data that should be used to publish the record.
          */
         publishRecord(recordDefinition: PublishableRecord): Promise<void>;
+
+        /**
+         * Retrives a list of records using the given filters.
+         * @param filters The list of filters that should be used to retrieve some records.
+         */
+        getRecords(...filters: RecordFilters[]): Promise<Record[]>;
 
         /**
          * Specifies that the given prefix should be interpreted as code.

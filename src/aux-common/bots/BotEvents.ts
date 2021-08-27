@@ -207,7 +207,8 @@ export type AsyncActions =
     | RegisterHtmlAppAction
     | RequestAuthDataAction
     | DefineGlobalBotAction
-    | PublishRecordAction;
+    | PublishRecordAction
+    | GetRecordsAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3215,6 +3216,38 @@ export interface PrefixedRecord extends RecordDefinition {
 
 export type PublishableRecord = AddressedRecord | PrefixedRecord;
 
+/**
+ * Defines an event that retrieves a set of records from a space.
+ */
+export interface GetRecordsAction extends AsyncAction {
+    type: 'get_records';
+
+    /**
+     * The ID of the auth bot that created the records that should be retrieved.
+     */
+    authID: string;
+
+    /**
+     * The token that should be used to authenticate the request.
+     */
+    token: string;
+
+    /**
+     * The address of the record that should be retrieved.
+     */
+    address?: string;
+
+    /**
+     * The address prefix that records should be retrieved with.
+     */
+    prefix?: string;
+
+    /**
+     * The space that the records should be retrieved from.
+     */
+    space: RecordSpace;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -5899,5 +5932,25 @@ export function publishRecord(
         space,
         taskId,
         uncopiable: true,
+    };
+}
+
+/**
+ * Creates a GetRecordsAction.
+ */
+export function getRecords(
+    token: string,
+    authID: string,
+    space: RecordSpace,
+    query: { address?: string; prefix?: string },
+    taskId?: string | number
+): GetRecordsAction {
+    return {
+        type: 'get_records',
+        token,
+        space,
+        authID,
+        ...query,
+        taskId,
     };
 }

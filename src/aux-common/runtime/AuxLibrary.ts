@@ -240,6 +240,10 @@ import {
     PublishableRecord,
     publishRecord as calcPublishRecord,
     DEFAULT_RECORD_SPACE,
+    getRecords as calcGetRecords,
+    RecordSpace,
+    Record,
+    RecordReference,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -705,6 +709,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             byCreator,
             either,
             not,
+            byAuthID,
+            byAddress,
+            withAuthToken,
+            byPrefix,
 
             remote,
             sendRemoteData: remoteWhisper,
@@ -817,6 +825,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 requestAuthBot,
 
                 publishRecord,
+                getRecords,
             },
 
             portal: {
@@ -1433,8 +1442,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Creates a function that filters bots by whether they are in the given space.
      * @param space The space that the bots should be in.
      */
-    function bySpace(space: string): BotFilterFunction {
-        return byTag(BOT_SPACE_TAG, space);
+    function bySpace(space: string): SpaceFilter {
+        let func = byTag(BOT_SPACE_TAG, space) as SpaceFilter;
+        func.recordFilter = true;
+        func.space = space;
+        return func;
     }
 
     /**
@@ -1478,6 +1490,50 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function not(filter: BotFilterFunction): BotFilterFunction {
         return (bot) => !filter(bot);
+    }
+
+    /**
+     * Creates a record filter that retrieves records created by the given Auth ID.
+     * @param authID The ID of the creator of the records.
+     */
+    function byAuthID(authID: string): AuthIdRecordFilter {
+        return {
+            recordFilter: true,
+            authID,
+        };
+    }
+
+    /**
+     * Creates a record filter that retrieves records with the given address.
+     * @param address The address that the record was stored at.
+     */
+    function byAddress(address: string): AddressRecordFilter {
+        return {
+            recordFilter: true,
+            address,
+        };
+    }
+
+    /**
+     * Creates a record filter that retrieves records with the given address.
+     * @param token The auth token that should be used to authenticate the getRecords() request.
+     */
+    function withAuthToken(token: string): AuthTokenRecordFilter {
+        return {
+            recordFilter: true,
+            authToken: token,
+        };
+    }
+
+    /**
+     * Creates a record filter that retrieves records with the given prefix in their address.
+     * @param prefix The prefix that should be matched to record addresses.
+     */
+    function byPrefix(prefix: string): PrefixRecordFilter {
+        return {
+            recordFilter: true,
+            prefix,
+        };
     }
 
     /**
@@ -2648,6 +2704,68 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             space,
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Retrives a list of records using the given filters.
+     * @param filters The list of filters that should be used to retrieve some records.
+     *
+     * @example
+     * // Get a record by address
+     * let records = await os.getRecords(byAuthID('myAuthID'), byAddress('myAddress'));
+     */
+    function getRecords(...filters: RecordFilters[]): Promise<Record[]> {
+        let token = (<any>globalThis).authBot?.tags?.authToken ?? null;
+        let address: string;
+        let prefix: string;
+        let authID: string;
+        let id: string;
+        let space: RecordSpace = 'tempRestricted';
+
+        for (let filter of filters) {
+            if (filter.recordFilter) {
+                if ('address' in filter) {
+                    address = filter.address;
+                }
+                if ('authID' in filter) {
+                    authID = filter.authID;
+                }
+                if ('space' in filter) {
+                    space = filter.space as RecordSpace;
+                }
+                if ('authToken' in filter) {
+                    token = filter.authToken;
+                }
+                if ('prefix' in filter) {
+                    prefix = filter.prefix;
+                }
+                if ('id' in filter) {
+                    id = filter.id;
+                }
+            }
+        }
+
+        if (!hasValue(authID)) {
+            throw new Error('An authID must be specified as a filter.');
+        }
+
+        if (!hasValue(address) && !hasValue(prefix) && !hasValue(id)) {
+            throw new Error(
+                'An address, prefix, or ID must be specified as a filter.'
+            );
+        }
+
+        if (!hasValue(address) && hasValue(prefix) && hasValue(id)) {
+            address = prefix + id;
+        } else if (!hasValue(address) && hasValue(id)) {
+            address = id;
+        }
+
+        let query = hasValue(address) ? { address } : { prefix };
+
+        const task = context.createTask();
+        const event = calcGetRecords(token, authID, space, query, task.taskId);
         return addAsyncAction(task, event);
     }
 

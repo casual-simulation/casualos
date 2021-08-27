@@ -181,6 +181,51 @@ export interface Bot {
 }
 
 /**
+ * Defines an interface for a record.
+ */
+export interface Record {
+    /**
+     * The address that the record was published at.
+     */
+    address: string;
+
+    /**
+     * The space that the record was published to.
+     */
+    space: RecordSpace;
+
+    /**
+     * The auth ID that published the record.
+     */
+    authID: string;
+
+    /**
+     * The data that was stored in the record.
+     */
+    data: any;
+}
+
+/**
+ * Defines an interface for an object that represents a reference to a specific record.
+ */
+export interface RecordReference {
+    /**
+     * The ID of the user that published the record.
+     */
+    authID: string;
+
+    /**
+     * The space that the record lives in.
+     */
+    space: RecordSpace;
+
+    /**
+     * The address that the record was published to.
+     */
+    address: string;
+}
+
+/**
  * Defines an interface that indicates a bot was updated.
  */
 export interface UpdatedBot {
