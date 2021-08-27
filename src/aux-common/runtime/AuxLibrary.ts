@@ -507,6 +507,42 @@ export interface BotFilterFunction {
     sort?: (bot: Bot) => any;
 }
 
+export interface RecordFilter {
+    recordFilter: true;
+}
+
+export interface AuthIdRecordFilter extends RecordFilter {
+    authID: string;
+}
+
+export interface SpaceFilter extends BotFilterFunction, RecordFilter {
+    space: string;
+}
+
+export interface AddressRecordFilter extends RecordFilter {
+    address: string;
+}
+
+export interface AuthTokenRecordFilter extends RecordFilter {
+    authToken: string;
+}
+
+export interface PrefixRecordFilter extends RecordFilter {
+    prefix: string;
+}
+
+export interface IDRecordFilter extends BotFilterFunction, RecordFilter {
+    id: string;
+}
+
+export type RecordFilters =
+    | AuthIdRecordFilter
+    | SpaceFilter
+    | AddressRecordFilter
+    | AuthTokenRecordFilter
+    | PrefixRecordFilter
+    | IDRecordFilter;
+
 /**
  * Defines a set of options for a tween.
  */
@@ -659,6 +695,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             whisper,
 
             byTag,
+            byID,
             byMod,
             inDimension,
             atPosition,
@@ -1255,6 +1292,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 return hasValue(val);
             };
         }
+    }
+
+    /**
+     * Creates a filter function that checks whether bots have the given ID.
+     * @param id The ID to check for.
+     *
+     * @example
+     * // Find all the bots with the ID "bob".
+     * let bobs = getBots(byId("bob"));
+     */
+    function byID(id: string): IDRecordFilter {
+        let filter: IDRecordFilter = ((bot: Bot) => {
+            return bot.id === id;
+        }) as any;
+
+        filter.recordFilter = true;
+        filter.id = id;
+
+        return filter;
     }
 
     /**

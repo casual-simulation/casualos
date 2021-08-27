@@ -691,6 +691,26 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('byID()', () => {
+            let bot1: RuntimeBot;
+
+            beforeEach(() => {
+                bot1 = createDummyRuntimeBot('test1');
+
+                addToContext(context, bot1);
+            });
+
+            it('should return true if the bot has the given ID', () => {
+                const filter = library.api.byID('test1');
+                expect(filter(bot1)).toBe(true);
+            });
+
+            it('should return false if the bot has a different ID', () => {
+                const filter = library.api.byID('wrong');
+                expect(filter(bot1)).toBe(false);
+            });
+        });
+
         describe('byMod()', () => {
             let bot1: RuntimeBot;
 
