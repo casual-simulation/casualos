@@ -545,7 +545,8 @@ export type RecordFilters =
     | AddressRecordFilter
     | AuthTokenRecordFilter
     | PrefixRecordFilter
-    | IDRecordFilter;
+    | IDRecordFilter
+    | RecordReference;
 
 /**
  * Defines a set of options for a tween.
@@ -2726,25 +2727,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let space: RecordSpace = 'tempRestricted';
 
         for (let filter of filters) {
-            if (filter.recordFilter) {
-                if ('address' in filter) {
-                    address = filter.address;
-                }
-                if ('authID' in filter) {
-                    authID = filter.authID;
-                }
-                if ('space' in filter) {
-                    space = filter.space as RecordSpace;
-                }
-                if ('authToken' in filter) {
-                    token = filter.authToken;
-                }
-                if ('prefix' in filter) {
-                    prefix = filter.prefix;
-                }
-                if ('id' in filter) {
-                    id = filter.id;
-                }
+            if ('address' in filter) {
+                address = filter.address;
+            }
+            if ('authID' in filter) {
+                authID = filter.authID;
+            }
+            if ('space' in filter) {
+                space = filter.space as RecordSpace;
+            }
+            if ('authToken' in filter) {
+                token = filter.authToken;
+            }
+            if ('prefix' in filter) {
+                prefix = filter.prefix;
+            }
+            if ('id' in filter) {
+                id = filter.id;
             }
         }
 

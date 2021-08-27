@@ -3889,14 +3889,36 @@ describe('AuxLibrary', () => {
                     library.api.withAuthToken('myToken'),
                     library.api.byAuthID('myID'),
                     library.api.bySpace('permanentGlobal'),
-                    library.api.byID('myID')
+                    library.api.byID('myTestID')
                 );
                 const expected = getRecords(
                     'myToken',
                     'myID',
                     'permanentGlobal',
                     {
-                        address: 'myID',
+                        address: 'myTestID',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to filter by record reference', () => {
+                const action: any = library.api.os.getRecords(
+                    library.api.withAuthToken('myToken'),
+                    {
+                        authID: 'myID',
+                        address: 'myAddress',
+                        space: 'permanentGlobal',
+                    }
+                );
+                const expected = getRecords(
+                    'myToken',
+                    'myID',
+                    'permanentGlobal',
+                    {
+                        address: 'myAddress',
                     },
                     context.tasks.size
                 );
