@@ -2659,7 +2659,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Publishes a record that can be used across servers.
      * @param recordDefinition The data that should be used to publish the record.
      */
-    function publishRecord(recordDefinition: PublishableRecord): Promise<void> {
+    function publishRecord(
+        recordDefinition: PublishableRecord
+    ): Promise<RecordReference> {
         const task = context.createTask();
 
         let address: string;

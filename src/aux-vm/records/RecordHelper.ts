@@ -44,7 +44,7 @@ export class RecordHelper {
                 let response = {
                     address: result.data.address,
                     space: result.data.space,
-                    issuer: result.data.issuer,
+                    authID: result.data.issuer,
                 };
                 this._helper.transaction(asyncResult(event.taskId, response));
             }

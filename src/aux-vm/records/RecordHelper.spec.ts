@@ -141,7 +141,7 @@ describe('RecordHelper', () => {
                     asyncResult(1, {
                         space: 'tempRestricted',
                         address: 'myAddress',
-                        issuer: 'myIssuer',
+                        authID: 'myIssuer',
                     }),
                 ]);
             });
