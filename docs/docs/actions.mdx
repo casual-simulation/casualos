@@ -1107,6 +1107,18 @@ let bots = getBots(byTag("#height", height => height > 2));
 let bots = getBots(byTag("#test"));
 ```
 
+### `byID(id)`
+
+Creates a bot filter that includes the bot with the given ID.
+
+The **first parameter** is the ID of the bot.
+
+#### Examples
+
+```typescript title="Find the bot with the ID '123'"
+let bot = getBot(byID("123"));
+```
+
 ### `inDimension(dimension)`
 
 
