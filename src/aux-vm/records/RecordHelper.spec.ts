@@ -6,6 +6,7 @@ import {
     botAdded,
     createBot,
     createMemoryPartition,
+    getRecords,
     iteratePartitions,
     MemoryPartition,
     publishRecord,
@@ -96,6 +97,14 @@ describe('RecordHelper', () => {
         return require('axios').__getLastPost();
     }
 
+    function getLastGet() {
+        return require('axios').__getLastGet();
+    }
+
+    function getRequests() {
+        return require('axios').__getRequests();
+    }
+
     describe('handleEvents()', () => {
         describe('publish_record', () => {
             beforeEach(() => {
@@ -142,6 +151,69 @@ describe('RecordHelper', () => {
                         space: 'tempRestricted',
                         address: 'myAddress',
                         authID: 'myIssuer',
+                    }),
+                ]);
+            });
+        });
+
+        describe('get_record', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should make a GET request to /api/records', async () => {
+                setResponse({
+                    data: {
+                        records: [
+                            {
+                                authID: 'myAuthID',
+                                space: 'tempRestricted',
+                                address: 'myAddress',
+                                data: { abc: 'def' },
+                            },
+                        ],
+                        totalCount: 5,
+                        hasMoreRecords: true,
+                        cursor: 'myCursor',
+                    },
+                });
+
+                records.handleEvents([
+                    getRecords(
+                        'myToken',
+                        'myAuthID',
+                        'tempRestricted',
+                        {
+                            prefix: 'myPrefix',
+                        },
+                        1
+                    ),
+                ]);
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/records?prefix=myPrefix&authID=myAuthID&space=tempRestricted',
+                    {
+                        headers: {
+                            Authorization: 'Bearer myToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(actions).toEqual([
+                    asyncResult(1, {
+                        records: [
+                            {
+                                authID: 'myAuthID',
+                                space: 'tempRestricted',
+                                address: 'myAddress',
+                                data: { abc: 'def' },
+                            },
+                        ],
+                        totalCount: 5,
+                        hasMoreRecords: true,
+                        cursor: 'myCursor',
                     }),
                 ]);
             });
