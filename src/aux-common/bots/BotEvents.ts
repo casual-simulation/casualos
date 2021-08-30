@@ -7,6 +7,7 @@ import {
     BotTagMasks,
     PortalType,
     RecordSpace,
+    Record,
 } from './Bot';
 import {
     Action,
@@ -3243,9 +3244,27 @@ export interface GetRecordsAction extends AsyncAction {
     prefix?: string;
 
     /**
+     * The cursor that records should be retrieved with.
+     */
+    cursor?: string;
+
+    /**
      * The space that the records should be retrieved from.
      */
     space: RecordSpace;
+}
+
+export interface GetRecordsQuery {
+    address?: string;
+    prefix?: string;
+    cursor?: string;
+}
+
+export interface GetRecordsActionResult {
+    records: Record[];
+    hasMoreRecords: boolean;
+    totalCount: number;
+    cursor?: string;
 }
 
 /**z
@@ -5942,7 +5961,7 @@ export function getRecords(
     token: string,
     authID: string,
     space: RecordSpace,
-    query: { address?: string; prefix?: string },
+    query: GetRecordsQuery,
     taskId?: string | number
 ): GetRecordsAction {
     return {

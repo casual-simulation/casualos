@@ -244,6 +244,9 @@ import {
     RecordSpace,
     Record,
     RecordReference,
+    GetRecordsAction,
+    GetRecordsActionResult,
+    GetRecordsQuery,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -648,6 +651,31 @@ export interface CodeBundle {
      * The list of modules that the bundle contains.
      */
     modules: BundleModules;
+}
+
+/**
+ * Defines an interface that represents a set of records that were retrieved.
+ */
+export interface GetRecordsResult {
+    /**
+     * The set of records that were retrieved.
+     */
+    records: Record[];
+
+    /**
+     * The total number of records that the query would have returned.
+     */
+    totalCount: number;
+
+    /**
+     * Whether there are more records available to retrieve for the query.
+     */
+    hasMoreRecords: boolean;
+
+    /**
+     * Gets the set page of records.
+     */
+    getMoreRecords(): Promise<GetRecordsResult>;
 }
 
 /**
@@ -2716,9 +2744,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Get a record by address
-     * let records = await os.getRecords(byAuthID('myAuthID'), byAddress('myAddress'));
+     * let result = await os.getRecords(byAuthID('myAuthID'), byAddress('myAddress'));
      */
-    function getRecords(...filters: RecordFilters[]): Promise<Record[]> {
+    function getRecords(
+        ...filters: RecordFilters[]
+    ): Promise<GetRecordsResult> {
         let token = (<any>globalThis).authBot?.tags?.authToken ?? null;
         let address: string;
         let prefix: string;
@@ -2765,9 +2795,35 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         let query = hasValue(address) ? { address } : { prefix };
 
-        const task = context.createTask();
-        const event = calcGetRecords(token, authID, space, query, task.taskId);
-        return addAsyncAction(task, event);
+        return issueEvent(query);
+
+        async function issueEvent(query: GetRecordsQuery) {
+            const task = context.createTask();
+            const event = calcGetRecords(
+                token,
+                authID,
+                space,
+                query,
+                task.taskId
+            );
+            const result: GetRecordsActionResult = await addAsyncAction(
+                task,
+                event
+            );
+
+            return {
+                records: result.records,
+                hasMoreRecords: result.hasMoreRecords,
+                totalCount: result.totalCount,
+                getMoreRecords: async (): Promise<GetRecordsResult> => {
+                    if (result.hasMoreRecords && hasValue(result.cursor)) {
+                        return issueEvent({ cursor: result.cursor });
+                    } else {
+                        throw new Error('No more records to retrieve.');
+                    }
+                },
+            };
+        }
     }
 
     /**

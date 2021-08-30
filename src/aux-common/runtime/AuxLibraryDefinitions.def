@@ -2505,7 +2505,7 @@ export interface Record {
 /**
  * Defines an interface for an object that represents a reference to a specific record.
  */
- export interface RecordReference {
+export interface RecordReference {
     /**
      * The ID of the user that published the record.
      */
@@ -2520,6 +2520,33 @@ export interface Record {
      * The address that the record was published to.
      */
     address: string;
+}
+
+
+/**
+ * Defines an interface that represents a set of records that were retrieved.
+ */
+export interface GetRecordsResult {
+
+    /**
+     * The set of records that were retrieved.
+     */
+    records: Record[];
+
+    /**
+     * The total number of records that the query would have returned.
+     */
+    totalCount: number;
+
+    /**
+     * Whether there are more records available to retrieve for the query.
+     */
+     hasMoreRecords: boolean;
+
+    /**
+     * Gets the set page of records.
+     */
+    getMoreRecords(): Promise<GetRecordsResult>;
 }
 
 /**
@@ -4132,7 +4159,7 @@ declare global {
          * Retrives a list of records using the given filters.
          * @param filters The list of filters that should be used to retrieve some records.
          */
-        getRecords(...filters: RecordFilters[]): Promise<Record[]>;
+        getRecords(...filters: RecordFilters[]): Promise<GetRecordsResult>;
 
         /**
          * Specifies that the given prefix should be interpreted as code.

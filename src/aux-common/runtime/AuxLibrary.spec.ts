@@ -1,6 +1,7 @@
 import {
     AuxLibrary,
     createDefaultLibrary,
+    GetRecordsResult,
     TagSpecificApiOptions,
 } from './AuxLibrary';
 import {
@@ -165,6 +166,7 @@ import {
     TEMPORARY_BOT_PARTITION_ID,
     publishRecord,
     getRecords,
+    GetRecordsActionResult,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -3860,7 +3862,6 @@ describe('AuxLibrary', () => {
                     },
                     context.tasks.size
                 );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
@@ -3880,7 +3881,6 @@ describe('AuxLibrary', () => {
                     },
                     context.tasks.size
                 );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
@@ -3900,7 +3900,6 @@ describe('AuxLibrary', () => {
                     },
                     context.tasks.size
                 );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
@@ -3922,7 +3921,6 @@ describe('AuxLibrary', () => {
                     },
                     context.tasks.size
                 );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
@@ -3943,7 +3941,6 @@ describe('AuxLibrary', () => {
                     },
                     context.tasks.size
                 );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
@@ -3964,7 +3961,6 @@ describe('AuxLibrary', () => {
                     },
                     context.tasks.size
                 );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
@@ -3986,7 +3982,6 @@ describe('AuxLibrary', () => {
                     },
                     context.tasks.size
                 );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
@@ -4005,7 +4000,6 @@ describe('AuxLibrary', () => {
                     },
                     context.tasks.size
                 );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
@@ -4038,7 +4032,6 @@ describe('AuxLibrary', () => {
                     },
                     context.tasks.size
                 );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
@@ -4060,11 +4053,87 @@ describe('AuxLibrary', () => {
                         },
                         context.tasks.size
                     );
-                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                     expect(context.actions).toEqual([expected]);
                 } finally {
                     delete (<any>globalThis).authBot;
                 }
+            });
+
+            it('should resolve with an object that can make additional requests', async () => {
+                (<any>globalThis).authBot = createBot('authBot', {
+                    authToken: 'authToken',
+                });
+                let result: GetRecordsResult;
+                library.api.os
+                    .getRecords(
+                        library.api.byAuthID('myID'),
+                        library.api.byAddress('myAddress')
+                    )
+                    .then((r) => (result = r));
+
+                context.resolveTask(
+                    1,
+                    {
+                        records: [
+                            {
+                                authID: 'authId',
+                                address: 'address1',
+                                data: { ghi: 'jfk' },
+                                space: 'tempRestricted',
+                            },
+                        ],
+                        totalCount: 5,
+                        cursor: 'myCursor',
+                        hasMoreRecords: true,
+                    } as GetRecordsActionResult,
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result.hasMoreRecords).toBe(true);
+                expect(result.records).toEqual([
+                    {
+                        authID: 'authId',
+                        address: 'address1',
+                        data: { ghi: 'jfk' },
+                        space: 'tempRestricted',
+                    },
+                ]);
+                expect(result.totalCount).toBe(5);
+
+                let otherResult: GetRecordsResult;
+                result.getMoreRecords().then((r) => (otherResult = r));
+
+                context.resolveTask(
+                    2,
+                    {
+                        records: [
+                            {
+                                authID: 'authId',
+                                address: 'address2',
+                                data: { abc: 'def' },
+                                space: 'tempRestricted',
+                            },
+                        ],
+                        totalCount: 5,
+                        hasMoreRecords: false,
+                    } as GetRecordsActionResult,
+                    false
+                );
+
+                await waitAsync();
+
+                expect(otherResult.hasMoreRecords).toBe(false);
+                expect(otherResult.totalCount).toBe(5);
+                expect(otherResult.records).toEqual([
+                    {
+                        authID: 'authId',
+                        address: 'address2',
+                        data: { abc: 'def' },
+                        space: 'tempRestricted',
+                    },
+                ]);
             });
         });
 
