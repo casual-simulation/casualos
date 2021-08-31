@@ -185,7 +185,7 @@ async function start() {
                 address: address,
                 record,
                 creationDate: Date.now(),
-                visibility: space.endsWith('restricted')
+                visibility: space.endsWith('Restricted')
                     ? 'restricted'
                     : 'global',
                 authorizedUsers: [formatAuthToken(issuer, bundle)],
@@ -236,17 +236,24 @@ async function start() {
             const authorization = req.headers.authorization;
 
             let issuer: string;
+            let bundle: string;
             if (
                 hasValue(authorization) &&
                 authorization.startsWith('Bearer ')
             ) {
                 const authToken = authorization.substring('Bearer '.length);
 
-                const [token, bundle] = parseAuthToken(authToken);
+                const [token, tokenBundle] = parseAuthToken(authToken);
 
-                magic.token.validate(token, bundle);
+                magic.token.validate(token, tokenBundle);
                 issuer = magic.token.getIssuer(token);
+                bundle = tokenBundle;
             }
+
+            let authToken =
+                hasValue(issuer) && hasValue(bundle)
+                    ? formatAuthToken(issuer, bundle)
+                    : undefined;
 
             if (
                 !hasValue(authID) ||
@@ -264,7 +271,7 @@ async function start() {
                 const visibility =
                     space === 'permanentGlobal' ? 'global' : 'restricted';
 
-                if (!hasValue(issuer) && visibility === 'restricted') {
+                if (!hasValue(authToken) && visibility === 'restricted') {
                     res.sendStatus(401);
                     return;
                 }
@@ -278,6 +285,10 @@ async function start() {
                     query.address = address;
                 } else if (hasValue(prefix)) {
                     query.address = { $regex: `^${escapeRegExp(prefix)}` };
+                }
+
+                if (visibility === 'restricted' && hasValue(authToken)) {
+                    query.authorizedUsers = { $in: [authToken] };
                 }
 
                 let findQuery = { ...query };
@@ -319,7 +330,7 @@ async function start() {
                 const visibility =
                     space === 'tempGlobal' ? 'global' : 'restricted';
 
-                if (!hasValue(issuer) && visibility === 'restricted') {
+                if (!hasValue(authToken) && visibility === 'restricted') {
                     res.sendStatus(401);
                     return;
                 }
@@ -329,7 +340,9 @@ async function start() {
                     r.visibility === visibility &&
                     hasValue(address)
                         ? r.address === address
-                        : r.address.startsWith(prefix)
+                        : r.address.startsWith(prefix) &&
+                          (visibility !== 'restricted' ||
+                              r.authorizedUsers.includes(authToken))
                 );
 
                 const result = {
