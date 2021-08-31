@@ -28,7 +28,10 @@ Make sure you have all the prerequisite tools installed:
     - `npm run bootstrap`
 4. Start related services:
     1. `docker-compose -f docker/docker-compose.dev.yml up -d`
-5. (Optional) Add `player.localhost` to your [hosts file][hosts-file].
+5. Bootstrap DynamoDB
+    - `npm run bootstrap:dynamodb`
+    - If you run into a `EHOSTDOWN` or `EHOSTUNREACH` error, then make sure you have the aws-cli installed and configured. (e.g. `aws configure`)
+6. (Optional) Add `player.localhost` to your [hosts file][hosts-file].
     - You can use this domain to prevent the service worker from installing.
     - Follow these steps:
         1. Open the hosts file as Sudo/Admin.
