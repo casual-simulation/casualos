@@ -217,6 +217,84 @@ describe('RecordHelper', () => {
                     }),
                 ]);
             });
+
+            it('should be able to include the given address', async () => {
+                setResponse({
+                    data: {
+                        records: [
+                            {
+                                authID: 'myAuthID',
+                                space: 'tempRestricted',
+                                address: 'myAddress',
+                                data: { abc: 'def' },
+                            },
+                        ],
+                        totalCount: 5,
+                        hasMoreRecords: true,
+                        cursor: 'myCursor',
+                    },
+                });
+
+                records.handleEvents([
+                    getRecords(
+                        'myToken',
+                        'myAuthID',
+                        'tempRestricted',
+                        {
+                            address: 'myAddress',
+                        },
+                        1
+                    ),
+                ]);
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/records?address=myAddress&authID=myAuthID&space=tempRestricted',
+                    {
+                        headers: {
+                            Authorization: 'Bearer myToken',
+                        },
+                    },
+                ]);
+            });
+
+            it('should be able to include the given cursor', async () => {
+                setResponse({
+                    data: {
+                        records: [
+                            {
+                                authID: 'myAuthID',
+                                space: 'tempRestricted',
+                                address: 'myAddress',
+                                data: { abc: 'def' },
+                            },
+                        ],
+                        totalCount: 5,
+                        hasMoreRecords: true,
+                        cursor: 'myCursor',
+                    },
+                });
+
+                records.handleEvents([
+                    getRecords(
+                        'myToken',
+                        'myAuthID',
+                        'tempRestricted',
+                        {
+                            cursor: 'myCursor',
+                        },
+                        1
+                    ),
+                ]);
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/records?cursor=myCursor&authID=myAuthID&space=tempRestricted',
+                    {
+                        headers: {
+                            Authorization: 'Bearer myToken',
+                        },
+                    },
+                ]);
+            });
         });
     });
 });

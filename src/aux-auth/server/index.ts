@@ -1,13 +1,22 @@
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import { AppMetadata, AppService } from '../shared/AuthMetadata';
-import { Collection, MongoClient, MongoClientOptions, ObjectId } from 'mongodb';
+import {
+    Collection,
+    Cursor,
+    MongoClient,
+    MongoClientOptions,
+    ObjectId,
+} from 'mongodb';
 import { Magic } from '@magic-sdk/admin';
 import pify from 'pify';
 import {
     formatAuthToken,
     parseAuthToken,
 } from '@casual-simulation/aux-common/runtime/Utils';
+import { hasValue } from '@casual-simulation/aux-common/bots/BotCalculations';
+import { Record } from '@casual-simulation/aux-common/bots/Bot';
+import { v4 as uuid } from 'uuid';
 
 declare var MAGIC_SECRET_KEY: string;
 
@@ -25,12 +34,18 @@ interface AppRecord {
     record: any;
 }
 
+// see https://stackoverflow.com/a/6969486/1832856
+function escapeRegExp(str: string) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}
+
 async function start() {
     let app = express();
     let mongo: MongoClient = await connect('mongodb://127.0.0.1:27017', {
         useNewUrlParser: false,
     });
     const magic = new Magic(MAGIC_SECRET_KEY, {});
+    let cursors = new Map<string, Cursor<AppRecord>>();
 
     const db = mongo.db('aux-auth');
     const users = db.collection<AppMetadata>('users');
@@ -180,7 +195,13 @@ async function start() {
                 space === 'permanentGlobal' ||
                 space === 'permanentRestricted'
             ) {
-                if (hasRecordWithAddress(permanentRecords, issuer, address)) {
+                if (
+                    await hasRecordWithAddress(
+                        permanentRecords,
+                        issuer,
+                        address
+                    )
+                ) {
                     res.status(409).send();
                     return;
                 }
@@ -202,6 +223,123 @@ async function start() {
                 space: space,
                 issuer: issuer,
             });
+        } catch (err) {
+            console.error(err);
+            res.sendStatus(500);
+        }
+    });
+
+    app.get('/api/records', async (req, res) => {
+        try {
+            handleRecordsCorsHeaders(req, res);
+            const { address, authID, prefix, cursor, space } = req.query;
+            const authorization = req.headers.authorization;
+
+            let issuer: string;
+            if (
+                hasValue(authorization) &&
+                authorization.startsWith('Bearer ')
+            ) {
+                const authToken = authorization.substring('Bearer '.length);
+
+                const [token, bundle] = parseAuthToken(authToken);
+
+                magic.token.validate(token, bundle);
+                issuer = magic.token.getIssuer(token);
+            }
+
+            if (
+                !hasValue(authID) ||
+                !hasValue(space) ||
+                (!hasValue(address) && !hasValue(prefix) && !hasValue(cursor))
+            ) {
+                res.sendStatus(400);
+                return;
+            }
+
+            if (
+                space === 'permanentGlobal' ||
+                space === 'permanentRestricted'
+            ) {
+                const visibility =
+                    space === 'permanentGlobal' ? 'global' : 'restricted';
+
+                if (!hasValue(issuer) && visibility === 'restricted') {
+                    res.sendStatus(401);
+                    return;
+                }
+
+                let query = {
+                    issuer: authID,
+                    visibility: visibility,
+                } as any;
+
+                if (hasValue(address)) {
+                    query.address = address;
+                } else if (hasValue(prefix)) {
+                    query.address = { $regex: `^${escapeRegExp(prefix)}` };
+                }
+
+                let findQuery = { ...query };
+                if (hasValue(cursor)) {
+                    findQuery._id = { $gt: new ObjectId(cursor) };
+                }
+
+                const batchSize = 25;
+                let records = [] as Record[];
+                let nextCursor: string;
+                for (let record of await permanentRecords
+                    .find(findQuery, {
+                        timeout: false,
+                    })
+                    .limit(batchSize)
+                    .toArray()) {
+                    nextCursor = record._id;
+                    records.push({
+                        address: record.address,
+                        authID: record.issuer,
+                        data: record.record,
+                        space: space,
+                    });
+                }
+
+                const totalCount = await permanentRecords.countDocuments(query);
+
+                const hasMoreRecords = records.length >= batchSize;
+
+                const result = {
+                    cursor: nextCursor,
+                    hasMoreRecords: hasMoreRecords,
+                    totalCount: totalCount,
+                    records: records,
+                };
+
+                res.send(result);
+            } else {
+                const visibility =
+                    space === 'tempGlobal' ? 'global' : 'restricted';
+
+                if (!hasValue(issuer) && visibility === 'restricted') {
+                    res.sendStatus(401);
+                    return;
+                }
+
+                const records = tempRecords.filter((r) =>
+                    r.issuer === authID &&
+                    r.visibility === visibility &&
+                    hasValue(address)
+                        ? r.address === address
+                        : r.address.startsWith(prefix)
+                );
+
+                const result = {
+                    hasMoreRecords: false,
+                    totalCount: records.length,
+                    records: records,
+                };
+
+                res.send(result);
+            }
         } catch (err) {
             console.error(err);
             res.sendStatus(500);
@@ -243,7 +381,10 @@ async function start() {
         if (allowedRecordsOrigins.has(req.headers.origin as string)) {
             res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
             res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+            res.setHeader(
+                'Access-Control-Allow-Headers',
+                'Content-Type, Authorization'
+            );
         }
     }
 }
