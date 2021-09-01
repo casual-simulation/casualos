@@ -15,6 +15,7 @@ const ddb = new AWS.DynamoDB({
 // See env.json
 const USERS_TABLE = 'Users';
 const USER_SERVICES_TABLE = 'UserServices';
+const RECORDS_TABLE = 'Records';
 
 async function start() {
     const tablesResult = await ddb.listTables({}).promise();
@@ -75,6 +76,30 @@ async function start() {
             .promise();
     } else {
         console.log('UserServices Table already exists');
+    }
+
+    const hasRecordsTable = tablesResult.TableNames.includes(RECORDS_TABLE);
+    if (!hasRecordsTable || reset) {
+        if (hasRecordsTable) {
+            console.log('Deleting Records Table');
+            await ddb
+                .deleteTable({
+                    TableName: RECORDS_TABLE,
+                })
+                .promise();
+        }
+
+        console.log('Creating Records Table');
+
+        const params = template.Resources.RecordsTable.Properties;
+        await ddb
+            .createTable({
+                TableName: RECORDS_TABLE,
+                ...params,
+            })
+            .promise();
+    } else {
+        console.log('Records Table already exists');
     }
 }
 

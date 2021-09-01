@@ -16,6 +16,21 @@ Parameters:
     MagicSecretKeyParameter:
         Type: String
         Description: The secret key to use to access the Magic SDK.
+    RedisPortParameter:
+        Type: Number
+        Description: The port number that the redis server is listening on.
+    RedisHostParameter:
+        Type: String
+        Description: The hostname of the redis server.
+    RedisUseTLSParameter:
+        Type: String
+        Description: Whether to use TLS when connecting to the redis server.
+    RedisRecordsNamespaceParameter:
+        Type: String
+        Description: The namespace to use for the redis records.
+    RedisPasswordParameter:
+        Type: String
+        Description: The password to use when connecting to the redis server.
 
 Globals:
     Api:
@@ -89,7 +104,7 @@ Resources:
     #                     Path: /api/{token}/metadata
     #                     Method: PUT
 
-    # This is a Lambda function config associated with the source code: get-all-items.js
+    # This is a Lambda function config associated with the source code: services.js
     handleService:
         Type: AWS::Serverless::Function
         Properties:
@@ -119,6 +134,41 @@ Resources:
                     Properties:
                         Path: /api/{token}/services
                         Method: PUT
+    # This is a Lambda function config associated with the source code: services.js
+    handleRecords:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: records.handleRecords
+            CodeUri: dist/handlers
+            Runtime: nodejs14.x
+            MemorySize: 128
+            Timeout: 100
+            Description: A function that publishes and retreives records for the user.
+            Policies:
+                # Give Create/Read/Update/Delete Permissions to the SampleTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref RecordsTable
+            Environment:
+                Variables:
+                    # Make table name accessible as environment variable from function code during execution
+                    RECORDS_TABLE: !Ref RecordsTable
+                    MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
+                    REDIS_PORT: !Ref RedisPortParameter
+                    REDIS_HOST: !Ref RedisHostParameter
+                    REDIS_USE_TLS: !Ref RedisUseTLSParameter
+                    REDIS_RECORDS_NAMESPACE: !Ref RedisRecordsNamespaceParameter
+                    REDIS_PASSWORD: !Ref RedisPasswordParameter
+            Events:
+                PostRecord:
+                    Type: Api
+                    Properties:
+                        Path: /api/records
+                        Method: POST
+                GetRecords:
+                    Type: Api
+                    Properties:
+                        Path: /api/records
+                        Method: GET
 
     # This is a Lambda function config associated with the source code: get-all-items.js
     # putService:
@@ -175,6 +225,24 @@ Resources:
                 - AttributeName: userId
                   AttributeType: S
                 - AttributeName: service
+                  AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
+
+    # DynamoDB table to store records
+    RecordsTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: issuer
+                  KeyType: HASH
+                - AttributeName: address
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: issuer
+                  AttributeType: S
+                - AttributeName: address
                   AttributeType: S
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
