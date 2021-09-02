@@ -1,3 +1,9 @@
+import {
+    GetRecordsActionResult,
+    hasValue,
+    Record,
+} from '@casual-simulation/aux-common';
+
 export type RecordVisibility = 'global' | 'restricted';
 
 export interface ServerlessRecord {
@@ -7,6 +13,15 @@ export interface ServerlessRecord {
     creationDate: number;
     visibility: RecordVisibility;
     authorizedUsers: string[];
+}
+
+export interface RecordsQuery {
+    issuer: string;
+    cursor?: string;
+    address?: string;
+    prefix?: string;
+    visibility: RecordVisibility;
+    token?: string;
 }
 
 export type SaveRecordResult = 'already_exists' | null;
@@ -23,11 +38,25 @@ export interface RecordsStore {
      * @param appRecord The record to save.
      */
     savePermanentRecord(appRecord: ServerlessRecord): Promise<SaveRecordResult>;
+
+    /**
+     * Gets the list of permanent records matching the given query.
+     * @param query The query.
+     */
+    getPermanentRecords(query: RecordsQuery): Promise<GetRecordsActionResult>;
+
+    /**
+     * Gets the list of temporary records matching the given query.
+     * @param query The query.
+     */
+    getTemporaryRecords(query: RecordsQuery): Promise<GetRecordsActionResult>;
 }
 
 export class MemoryRecordsStore implements RecordsStore {
     tempRecords: ServerlessRecord[] = [];
     permanentRecords: ServerlessRecord[] = [];
+
+    pageSize: number = 2;
 
     async saveTemporaryRecord(
         appRecord: ServerlessRecord
@@ -39,6 +68,73 @@ export class MemoryRecordsStore implements RecordsStore {
         appRecord: ServerlessRecord
     ): Promise<SaveRecordResult> {
         return this._addRecord(this.permanentRecords, appRecord);
+    }
+
+    async getPermanentRecords(
+        query: RecordsQuery
+    ): Promise<GetRecordsActionResult> {
+        return this._queryRecords(this.permanentRecords, query, 'permanent');
+    }
+
+    async getTemporaryRecords(
+        query: RecordsQuery
+    ): Promise<GetRecordsActionResult> {
+        return this._queryRecords(this.tempRecords, query, 'temp');
+    }
+
+    private _queryRecords(
+        records: ServerlessRecord[],
+        query: RecordsQuery,
+        type: 'permanent' | 'temp'
+    ): GetRecordsActionResult {
+        const foundRecords = records
+            .filter((r) => {
+                return (
+                    r.issuer === query.issuer &&
+                    r.visibility === query.visibility &&
+                    (hasValue(query.address)
+                        ? r.address === query.address
+                        : hasValue(query.prefix)
+                        ? r.address.startsWith(query.prefix)
+                        : true) &&
+                    (query.visibility !== 'restricted' ||
+                        r.authorizedUsers.includes(query.token))
+                );
+            })
+            .map(
+                (r) =>
+                    ({
+                        address: r.address,
+                        authID: r.issuer,
+                        data: r.record,
+                        space:
+                            type +
+                            (r.visibility === 'global'
+                                ? `Global`
+                                : `Restricted`),
+                    } as Record)
+            );
+
+        const cursor = query.cursor ? JSON.parse(query.cursor) : 0;
+        const finalRecords = foundRecords.slice(cursor, cursor + this.pageSize);
+
+        const hasMoreRecords =
+            finalRecords.length + cursor < foundRecords.length;
+
+        const nextCursor = hasMoreRecords
+            ? JSON.stringify(
+                  foundRecords.length > finalRecords.length
+                      ? cursor + finalRecords.length
+                      : finalRecords.length
+              )
+            : undefined;
+
+        return {
+            cursor: nextCursor,
+            records: finalRecords,
+            hasMoreRecords: hasMoreRecords,
+            totalCount: foundRecords.length,
+        };
     }
 
     private _addRecord(
