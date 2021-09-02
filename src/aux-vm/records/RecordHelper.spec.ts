@@ -287,7 +287,7 @@ describe('RecordHelper', () => {
                 ]);
 
                 expect(getLastGet()).toEqual([
-                    'http://localhost:3002/api/records?cursor=myCursor&authID=myAuthID&space=tempRestricted',
+                    'http://localhost:3002/api/records?authID=myAuthID&cursor=myCursor&space=tempRestricted',
                     {
                         headers: {
                             Authorization: 'Bearer myToken',
