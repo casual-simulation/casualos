@@ -20,6 +20,7 @@ import {
     BOOTSTRAP_PARTITION_ID,
     getTagValueForSpace,
     getUpdateForTagAndSpace,
+    updateAuthData,
 } from '@casual-simulation/aux-common';
 
 import {
@@ -283,5 +284,17 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         this._idePortal = new IdePortalManager(this._watcher, this.helper);
 
         this._subscriptions.push(this._portals);
+        this._subscriptions.push(
+            this._authHelper.authDataUpdated.subscribe(
+                (data) => {
+                    this._helper.transaction(updateAuthData(data));
+                },
+                (err) =>
+                    console.error(
+                        '[BotManager] An error occurred while updating auth data.',
+                        err
+                    )
+            )
+        );
     }
 }

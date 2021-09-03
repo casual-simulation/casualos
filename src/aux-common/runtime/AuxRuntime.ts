@@ -72,7 +72,11 @@ import { CompiledBot, CompiledBotsState } from './CompiledBot';
 import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
-import { convertToCopiableValue, DeepObjectError } from './Utils';
+import {
+    convertToCopiableValue,
+    DeepObjectError,
+    formatAuthToken,
+} from './Utils';
 import {
     AuxRealtimeEditModeProvider,
     SpaceRealtimeEditModeMap,
@@ -365,6 +369,15 @@ export class AuxRuntime
             }
             if (hasValue(action.taskId)) {
                 this._processCore([asyncResult(action.taskId, null)]);
+            }
+        } else if (action.type === 'update_auth_data') {
+            const bot = this._compiledState[action.data.userId];
+            if (bot) {
+                this.updateTag(
+                    bot,
+                    'authToken',
+                    formatAuthToken(action.data.token, action.data.service)
+                );
             }
         } else {
             this._actionBatch.push(action);

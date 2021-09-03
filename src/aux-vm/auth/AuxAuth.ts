@@ -14,4 +14,10 @@ export interface AuxAuth {
      * Returns a promise that resolves with data about the user.
      */
     login(): Promise<AuthData>;
+
+    /**
+     * Adds a listener for when a new auth token is received.
+     * @param listener The listener for the token.
+     */
+    addTokenListener(listener: (error: string, token: AuthData) => void): void;
 }
