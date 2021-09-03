@@ -1591,6 +1591,16 @@ await os.publishRecord({
 });
 ```
 
+```typescript title='Publish a record with a prefix'
+await os.publishRecord({
+    space: "tempRestricted",
+    prefix: "myRecords/",
+    record: {
+        myData: "yes!"
+    }
+});
+```
+
 ### `os.getRecords(...filters)`
 
 Retrieves a list of records based on the given filters and returns a promise that resolves when the records are retrieved.

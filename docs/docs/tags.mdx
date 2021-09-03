@@ -104,6 +104,28 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
   </PossibleValueCode>
 </PossibleValuesTable>
 
+
+#### Record Spaces
+
+Records can be stored in spaces as well. Like bot spaces, record spaces determine how long the record lives and if it is shared with other people.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='tempRestricted'>
+    The record is saved but will be deleted at the end of the day and is only retrievable by the user and appBundle that created them. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='tempGlobal'>
+    The record is saved but will be deleted at the end of the day and it is shared with everyone.
+  </PossibleValueCode>
+  <PossibleValueCode value='permanentRestricted'>
+    The record is saved and is only retrievable by the user and appBundle that created them.
+  </PossibleValueCode>
+  <PossibleValueCode value='permanentGlobal'>
+    The record is saved and is shared with everyone.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
 ### `creator`
 
 <Badges>
