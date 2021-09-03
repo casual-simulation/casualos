@@ -17,6 +17,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where using a `formAnimationAddress` prevented `formAnimation` from working correctly on first load.
+-   Fixed an issue where `os.focusOn()` would not work on mobile devices.
 
 ## V2.0.7
 
