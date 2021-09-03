@@ -46,21 +46,7 @@ const allowedOrigins = new Set([
     'https://casualos.me',
 ]);
 
-async function postRecord(event) {
-    if (event.httpMethod !== 'POST') {
-        throw new Error(
-            `postRecord only accept POST method, you tried: ${event.httpMethod}`
-        );
-    }
-
-    if (!validateOrigin(event, allowedOrigins)) {
-        throw new Error('Invalid origin');
-    }
-
-    const data = JSON.parse(event.body);
-
-    const result = await manager.publishRecord(data);
-
+function returnResult(event, result) {
     if (result.message) {
         return formatResponse(
             event,
@@ -83,6 +69,24 @@ async function postRecord(event) {
     );
 }
 
+async function postRecord(event) {
+    if (event.httpMethod !== 'POST') {
+        throw new Error(
+            `postRecord only accept POST method, you tried: ${event.httpMethod}`
+        );
+    }
+
+    if (!validateOrigin(event, allowedOrigins)) {
+        throw new Error('Invalid origin');
+    }
+
+    const data = JSON.parse(event.body);
+
+    const result = await manager.publishRecord(data);
+
+    return returnResult(event, result);
+}
+
 async function getRecords(event) {
     if (event.httpMethod !== 'GET') {
         throw new Error(
@@ -90,7 +94,51 @@ async function getRecords(event) {
         );
     }
 
-    throw new Error('Not implemented');
+    if (!validateOrigin(event, allowedOrigins)) {
+        throw new Error('Invalid origin');
+    }
+
+    if (!event.queryStringParameters.authID) {
+        return formatResponse(
+            event,
+            {
+                statusCode: 400,
+            },
+            allowedOrigins
+        );
+    }
+
+    const authorization = findHeader(event, 'authorization');
+
+    let token;
+
+    if (authorization && authorization.startsWith('Bearer ')) {
+        token = authorization.slice('Bearer '.length);
+    }
+
+    let params = {};
+
+    getQueryParam('authID', 'issuer');
+    getQueryParam('address');
+    getQueryParam('prefix');
+    getQueryParam('cursor');
+    getQueryParam('space');
+
+    if (token) {
+        params.token = token;
+    }
+
+    const result = await manager.getRecords(params);
+
+    return returnResult(event, result);
+
+    function getQueryParam(param, name = param) {
+        if (event.queryStringParameters[param]) {
+            params[name] = decodeURIComponent(
+                event.queryStringParameters[param]
+            );
+        }
+    }
 }
 
 export async function handleRecords(event) {

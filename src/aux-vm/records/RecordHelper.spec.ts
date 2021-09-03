@@ -295,6 +295,45 @@ describe('RecordHelper', () => {
                     },
                 ]);
             });
+
+            it('should include the authorization header even when no token is used', async () => {
+                setResponse({
+                    data: {
+                        records: [
+                            {
+                                authID: 'myAuthID',
+                                space: 'tempRestricted',
+                                address: 'myAddress',
+                                data: { abc: 'def' },
+                            },
+                        ],
+                        totalCount: 5,
+                        hasMoreRecords: true,
+                        cursor: 'myCursor',
+                    },
+                });
+
+                records.handleEvents([
+                    getRecords(
+                        null,
+                        'myAuthID',
+                        'tempRestricted',
+                        {
+                            cursor: 'myCursor',
+                        },
+                        1
+                    ),
+                ]);
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/records?authID=myAuthID&cursor=myCursor&space=tempRestricted',
+                    {
+                        headers: {
+                            Authorization: 'None',
+                        },
+                    },
+                ]);
+            });
         });
     });
 });

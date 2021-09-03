@@ -35,7 +35,7 @@ export class ServerlessRecordsStore implements RecordsStore {
     private _rHScan: (
         key: string,
         ...args: string[]
-    ) => Promise<[string, string[]]>;
+    ) => Promise<[string, ...[string, string][]]>;
 
     constructor(
         dynamoClient: dynamodb.DocumentClient,
@@ -51,6 +51,7 @@ export class ServerlessRecordsStore implements RecordsStore {
         this._rHExists = promisify(this._redis.hexists).bind(this._redis);
         this._rHSet = promisify(this._redis.hset).bind(this._redis);
         this._rHMGet = promisify(this._redis.hmget).bind(this._redis);
+        this._rHScan = promisify(this._redis.hscan).bind(this._redis);
     }
 
     async getPermanentRecords(
@@ -75,16 +76,26 @@ export class ServerlessRecordsStore implements RecordsStore {
                 };
             }
 
+            const record: ServerlessRecord = result.Item as ServerlessRecord;
+
+            if (!this._authorizedToAccessRecord(record, query)) {
+                return {
+                    hasMoreRecords: false,
+                    totalCount: 0,
+                    records: [],
+                };
+            }
+
             return {
                 hasMoreRecords: false,
                 totalCount: 1,
                 records: [
                     {
-                        address: result.Item.address,
-                        authID: result.Item.issuer,
-                        data: result.Item.record,
+                        address: record.address,
+                        authID: record.issuer,
+                        data: JSON.parse(record.record),
                         space: ('permanent' +
-                            (result.Item.visibility === 'global'
+                            (record.visibility === 'global'
                                 ? 'Global'
                                 : 'Restricted')) as any,
                     },
@@ -136,6 +147,12 @@ export class ServerlessRecordsStore implements RecordsStore {
             }
 
             let records: Record[] = result.Items.map((i) => {
+                const record: ServerlessRecord = i as ServerlessRecord;
+
+                if (!this._authorizedToAccessRecord(record, query)) {
+                    return null;
+                }
+
                 return {
                     authID: i.issuer,
                     address: i.address,
@@ -152,7 +169,7 @@ export class ServerlessRecordsStore implements RecordsStore {
                     ? JSON.stringify(result.LastEvaluatedKey)
                     : undefined,
                 totalCount: totalCount,
-                records: records,
+                records: records.filter((r) => !!r),
             };
         }
     }
@@ -173,7 +190,7 @@ export class ServerlessRecordsStore implements RecordsStore {
         let records: Record[] = [];
         let i = 0;
         while (i < MAX_REDIS_ITERATIONS) {
-            const [nextIndex, keys] = await this._rHScan(
+            const [nextIndex, ...keysAndValues] = await this._rHScan(
                 key,
                 cursor,
                 'MATCH',
@@ -181,10 +198,17 @@ export class ServerlessRecordsStore implements RecordsStore {
                 'COUNT',
                 REDIS_BATCH_SIZE
             );
-            const values = await this._rHMGet(key, ...keys);
             records.push(
-                ...values.map((v) => {
-                    const record: ServerlessRecord = JSON.parse(v);
+                ...keysAndValues.map(([key, value]) => {
+                    console.log(
+                        '[ServerlessRecordStore] Parsing Value:',
+                        value
+                    );
+                    const record: ServerlessRecord = JSON.parse(value);
+
+                    if (!this._authorizedToAccessRecord(record, query)) {
+                        return null;
+                    }
 
                     return {
                         address: record.address,
@@ -208,7 +232,7 @@ export class ServerlessRecordsStore implements RecordsStore {
         return {
             hasMoreRecords: false,
             totalCount: records.length,
-            records: records,
+            records: records.filter((r) => !!r),
         };
     }
 
@@ -256,6 +280,23 @@ export class ServerlessRecordsStore implements RecordsStore {
                 throw err;
             }
         }
+    }
+
+    private _authorizedToAccessRecord(
+        record: ServerlessRecord,
+        query: RecordsQuery
+    ) {
+        if (record.visibility !== query.visibility) {
+            return false;
+        }
+
+        if (record.visibility === 'restricted') {
+            if (!query.token || !record.authorizedUsers.includes(query.token)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 

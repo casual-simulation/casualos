@@ -59,7 +59,7 @@ import { SubscriptionLike, Subject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { MemoryConnection } from '../../causal-tree-server/MemoryConnectionServer';
 import { TestScriptBotFactory } from '@casual-simulation/aux-common/runtime/test/TestScriptBotFactory';
-import { keypair } from '../../aux-common/node_modules/@casual-simulation/crypto';
+import { keypair } from '@casual-simulation/aux-common/node_modules/@casual-simulation/crypto';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');

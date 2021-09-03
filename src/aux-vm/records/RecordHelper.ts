@@ -67,6 +67,8 @@ export class RecordHelper {
             let headers = {} as any;
             if (hasValue(event.token)) {
                 headers.Authorization = `Bearer ${event.token}`;
+            } else {
+                headers.Authorization = 'None';
             }
             const result = await axios.get(this._getUrl(event), {
                 headers: headers,

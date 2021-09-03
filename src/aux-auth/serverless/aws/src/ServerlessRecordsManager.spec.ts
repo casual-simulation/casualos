@@ -1,4 +1,4 @@
-import { formatAuthToken } from '../../../../aux-common';
+import { formatAuthToken } from '@casual-simulation/aux-common';
 import { MemoryAuthProvider } from './AuthProvider';
 import { MemoryRecordsStore } from './RecordsStore';
 import { ServerlessRecordsManager } from './ServerlessRecordsManager';
