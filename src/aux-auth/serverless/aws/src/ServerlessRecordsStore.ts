@@ -36,7 +36,7 @@ export class ServerlessRecordsStore implements RecordsStore {
     private _rHScan: (
         key: string,
         ...args: string[]
-    ) => Promise<[string, ...[string, string][]]>;
+    ) => Promise<[string, string[]]>;
     private _rHDel: (key: string, ...fields: string[]) => Promise<number>;
 
     constructor(
@@ -193,7 +193,7 @@ export class ServerlessRecordsStore implements RecordsStore {
         let records: Record[] = [];
         let i = 0;
         while (i < MAX_REDIS_ITERATIONS) {
-            const [nextIndex, ...keysAndValues] = await this._rHScan(
+            const [nextIndex, keysAndValues] = await this._rHScan(
                 key,
                 cursor,
                 'MATCH',
@@ -201,39 +201,40 @@ export class ServerlessRecordsStore implements RecordsStore {
                 'COUNT',
                 REDIS_BATCH_SIZE
             );
-            records.push(
-                ...keysAndValues.map(([key, value]) => {
-                    if (!value) {
-                        return null;
+
+            for (let i = 0; i + 1 < keysAndValues.length; i += 2) {
+                let key = keysAndValues[i];
+                let value = keysAndValues[i + 1];
+
+                if (!value) {
+                    continue;
+                }
+
+                try {
+                    const record: ServerlessRecord = JSON.parse(value);
+
+                    if (!this._authorizedToAccessRecord(record, query)) {
+                        continue;
                     }
 
-                    try {
-                        const record: ServerlessRecord = JSON.parse(value);
-
-                        if (!this._authorizedToAccessRecord(record, query)) {
-                            return null;
-                        }
-
-                        return {
-                            address: record.address,
-                            authID: record.issuer,
-                            data: record.record,
-                            space:
-                                'temp' +
-                                (record.visibility === 'global'
-                                    ? 'Global'
-                                    : 'Restricted'),
-                        } as Record;
-                    } catch (err) {
-                        console.error(
-                            '[ServerlessRecordStore] Failed to parse value:',
-                            value,
-                            err
-                        );
-                        return null;
-                    }
-                })
-            );
+                    records.push({
+                        address: record.address,
+                        authID: record.issuer,
+                        data: record.record,
+                        space:
+                            'temp' +
+                            (record.visibility === 'global'
+                                ? 'Global'
+                                : 'Restricted'),
+                    } as Record);
+                } catch (err) {
+                    console.error(
+                        '[ServerlessRecordStore] Failed to parse value:',
+                        value,
+                        err
+                    );
+                }
+            }
             if (nextIndex === '0') {
                 break;
             }

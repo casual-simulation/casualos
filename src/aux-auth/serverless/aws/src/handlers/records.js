@@ -1,5 +1,3 @@
-import { deleteRecord } from '../../../../../aux-common';
-
 // Create clients and set shared const values outside of the handler.
 const { Magic } = require('@magic-sdk/admin');
 const { formatResponse, validateOrigin, findHeader } = require('../utils');
@@ -161,7 +159,7 @@ async function getRecords(event) {
 
 export async function handleRecords(event) {
     if (event.httpMethod === 'POST') {
-        return await postRecord(event);
+        return await postOrDeleteRecord(event);
     } else {
         return await getRecords(event);
     }
