@@ -404,5 +404,25 @@ describe('ServerlessRecordsManager', () => {
                 status: 200,
             });
         });
+
+        it('it should not allow deleting records with a token that will expire in more than a day', async () => {
+            // 10 miliseconds older than 24 hours.
+            auth.setTokenExpireTime(
+                'myToken',
+                Date.now() + (1000 * 60 * 60 * 24 + 10)
+            );
+
+            const result = await manager.deleteRecord({
+                token: formatAuthToken('myToken', 'myService'),
+                issuer: 'myUser',
+                address: 'record/1',
+                space: 'permanentGlobal',
+            });
+
+            expect(result).toEqual({
+                status: 403,
+                message: 'Permanent auth tokens cannot delete records.',
+            });
+        });
     });
 });

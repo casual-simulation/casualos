@@ -17,4 +17,17 @@ export class MagicAuthProvider implements AuthProvider {
             return null;
         }
     }
+
+    getTokenExpireTime(token: string): number {
+        try {
+            const [proof, claim] = this._magic.token.decode(token);
+            const expireTimeSeconds = claim.ext;
+            const expireTimeMiliseconds = expireTimeSeconds * 1000;
+
+            return expireTimeMiliseconds;
+        } catch (err) {
+            console.error('[MagicAuthProvider]', err);
+            return null;
+        }
+    }
 }

@@ -58,6 +58,8 @@ export interface ServerlessDeleteRecordRequest {
     space: RecordSpace;
 }
 
+const _24_HOURS_IN_MILISECONDS = 1000 * 60 * 60 * 24;
+
 export class ServerlessRecordsManager {
     private _auth: AuthProvider;
     private _store: RecordsStore;
@@ -258,7 +260,14 @@ export class ServerlessRecordsManager {
             };
         }
 
-        const [issuer, bundle] = tokenResult;
+        const [issuer, bundle, expireTime] = tokenResult;
+
+        if (expireTime - _24_HOURS_IN_MILISECONDS > Date.now()) {
+            return {
+                status: 403,
+                message: 'Permanent auth tokens cannot delete records.',
+            };
+        }
 
         if (
             !hasValue(issuer) ||
@@ -325,7 +334,9 @@ export class ServerlessRecordsManager {
                 return null;
             }
 
-            return [issuer, b] as const;
+            const expireTime = this._auth.getTokenExpireTime(token);
+
+            return [issuer, b, expireTime] as const;
         }
 
         return undefined;
