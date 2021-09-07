@@ -28,7 +28,8 @@ async function start() {
     let needsUpdate = false;
     if (
         !result?.handleService?.MAGIC_SECRET_KEY ||
-        !result?.handleMetadata?.MAGIC_SECRET_KEY
+        !result?.handleMetadata?.MAGIC_SECRET_KEY ||
+        !result?.handleRecords?.MAGIC_SECRET_KEY
     ) {
         const response = await prompts({
             type: 'text',
@@ -41,6 +42,9 @@ async function start() {
                 MAGIC_SECRET_KEY: response.magicSDKSecretKey,
             },
             handleService: {
+                MAGIC_SECRET_KEY: response.magicSDKSecretKey,
+            },
+            handleRecords: {
                 MAGIC_SECRET_KEY: response.magicSDKSecretKey,
             },
         });

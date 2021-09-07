@@ -1,7 +1,8 @@
 import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
 import { AuxAuth } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
-import { Subscription } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
+import { AuthData } from '@casual-simulation/aux-common';
 
 interface StaticAuxAuth {
     new (): AuxAuth;
@@ -18,6 +19,14 @@ export class AuthHelper {
     private _initialized: boolean = false;
     private _sub: Subscription = new Subscription();
     private _query: string;
+    private _authDataUpdated = new Subject<AuthData>();
+
+    /**
+     * Gets an observable that resolves whenever auth data is updated and should be propagated into the AuxRuntime.
+     */
+    get authDataUpdated(): Observable<AuthData> {
+        return this._authDataUpdated;
+    }
 
     /**
      * Creates a new instance of the AuthHelper class.
@@ -57,6 +66,17 @@ export class AuthHelper {
 
         const wrapper = wrap<StaticAuxAuth>(this._channel.port1);
         this._proxy = await new wrapper();
+
+        this._proxy.addTokenListener(
+            proxy((err, data) => {
+                if (err) {
+                    return;
+                }
+
+                this._authDataUpdated.next(data);
+            })
+        );
+
         this._initialized = true;
     }
 

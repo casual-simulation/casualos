@@ -181,6 +181,51 @@ export interface Bot {
 }
 
 /**
+ * Defines an interface for a record.
+ */
+export interface Record {
+    /**
+     * The address that the record was published at.
+     */
+    address: string;
+
+    /**
+     * The space that the record was published to.
+     */
+    space: RecordSpace;
+
+    /**
+     * The auth ID that published the record.
+     */
+    authID: string;
+
+    /**
+     * The data that was stored in the record.
+     */
+    data: any;
+}
+
+/**
+ * Defines an interface for an object that represents a reference to a specific record.
+ */
+export interface RecordReference {
+    /**
+     * The ID of the user that published the record.
+     */
+    authID: string;
+
+    /**
+     * The space that the record lives in.
+     */
+    space: RecordSpace;
+
+    /**
+     * The address that the record was published to.
+     */
+    address: string;
+}
+
+/**
  * Defines an interface that indicates a bot was updated.
  */
 export interface UpdatedBot {
@@ -221,6 +266,25 @@ export type BotSpace =
     | 'tempShared'
     | 'remoteTempShared'
     | 'certified';
+
+/**
+ * The possible spaces that records can be stored in.
+ *
+ * - "tempGlobal" means that the record is temporary and available to anyone.
+ * - "tempRestricted" means that the record is temporary and available to a specific user.
+ * - "permanentGlobal" means that the record is permanent and available to anyone.
+ * - "permanentRestricted" means that the record is permanent and available to a specific user.
+ */
+export type RecordSpace =
+    | 'tempGlobal'
+    | 'tempRestricted'
+    | 'permanentGlobal'
+    | 'permanentRestricted';
+
+/**
+ * The space that records should be published to by default.
+ */
+export const DEFAULT_RECORD_SPACE: RecordSpace = 'tempRestricted';
 
 /**
  * The possible portal types.

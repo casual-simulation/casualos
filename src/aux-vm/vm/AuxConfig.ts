@@ -65,6 +65,11 @@ export interface AuxConfigParameters {
     authOrigin?: string;
 
     /**
+     * The origin that the records API is hosted at.
+     */
+    recordsOrigin?: string;
+
+    /**
      * The list of portal bots that should be automatically created
      * before the sync event is triggered.
      */

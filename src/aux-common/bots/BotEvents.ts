@@ -6,6 +6,8 @@ import {
     BotSpace,
     BotTagMasks,
     PortalType,
+    RecordSpace,
+    Record,
 } from './Bot';
 import {
     Action,
@@ -103,7 +105,8 @@ export type ExtraActions =
     | UpdateHtmlAppAction
     | HtmlAppEventAction
     | SetAppOutputAction
-    | UnregisterHtmlAppAction;
+    | UnregisterHtmlAppAction
+    | UpdateAuthDataAction;
 
 /**
  * Defines a set of possible async action types.
@@ -205,7 +208,9 @@ export type AsyncActions =
     | UnregisterCustomAppAction
     | RegisterHtmlAppAction
     | RequestAuthDataAction
-    | DefineGlobalBotAction;
+    | DefineGlobalBotAction
+    | PublishRecordAction
+    | GetRecordsAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3142,6 +3147,139 @@ export interface DefineGlobalBotAction extends AsyncAction {
     name: string;
 }
 
+/**
+ * Defines an event that updates the data that is in the auth bot.
+ */
+export interface UpdateAuthDataAction extends Action {
+    type: 'update_auth_data';
+
+    /**
+     * The new auth data.
+     */
+    data: AuthData;
+}
+
+/**
+ * Defines an event that publishes a record.
+ */
+export interface PublishRecordAction extends AsyncAction {
+    type: 'publish_record';
+
+    /**
+     * The auth token that should be used to authenticate the publish record request.
+     */
+    token: string;
+
+    /**
+     * The address that the record should be published to.
+     */
+    address: string;
+
+    /**
+     * The record data that should be published.
+     */
+    record: any;
+
+    /**
+     * The space that the record should be published in.
+     */
+    space: RecordSpace;
+
+    uncopiable: true;
+}
+
+export interface RecordDefinition {
+    /**
+     * The auth token that should be used to authenticate the publish record request.
+     * Different auth tokens can be used to publish records to different CasualOS.me accounts.
+     * Defaults to using the auth token in the auth bot.
+     */
+    authToken?: string;
+
+    /**
+     * The space that the record should be published in.
+     * Defaults to tempRestricted.
+     */
+    space?: RecordSpace;
+
+    /**
+     * The record that should be published.
+     */
+    record: any;
+}
+
+export interface AddressedRecord extends RecordDefinition {
+    /**
+     * The address that the record should be published to.
+     */
+    address: string;
+}
+
+export interface PrefixedRecord extends RecordDefinition {
+    /**
+     * The prefix that the record should be published with.
+     */
+    prefix?: string;
+
+    /**
+     * The ID that the record should be published with.
+     * Defaults to a UUID.
+     */
+    id?: string;
+}
+
+export type PublishableRecord = AddressedRecord | PrefixedRecord;
+
+/**
+ * Defines an event that retrieves a set of records from a space.
+ */
+export interface GetRecordsAction extends AsyncAction {
+    type: 'get_records';
+
+    /**
+     * The ID of the auth bot that created the records that should be retrieved.
+     */
+    authID: string;
+
+    /**
+     * The token that should be used to authenticate the request.
+     */
+    token: string;
+
+    /**
+     * The address of the record that should be retrieved.
+     */
+    address?: string;
+
+    /**
+     * The address prefix that records should be retrieved with.
+     */
+    prefix?: string;
+
+    /**
+     * The cursor that records should be retrieved with.
+     */
+    cursor?: string;
+
+    /**
+     * The space that the records should be retrieved from.
+     */
+    space: RecordSpace;
+}
+
+export interface GetRecordsQuery {
+    address?: string;
+    prefix?: string;
+    cursor?: string;
+}
+
+export interface GetRecordsActionResult {
+    records: Record[];
+    hasMoreRecords: boolean;
+    totalCount: number;
+    cursor?: string;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -5805,5 +5943,56 @@ export function defineGlobalBot(
         name,
         botId,
         taskId,
+    };
+}
+
+/**
+ * Creates a PublishRecordAction.
+ */
+export function publishRecord(
+    token: string,
+    address: string,
+    record: any,
+    space: RecordSpace,
+    taskId?: string | number
+): PublishRecordAction {
+    return {
+        type: 'publish_record',
+        token,
+        address,
+        record,
+        space,
+        taskId,
+        uncopiable: true,
+    };
+}
+
+/**
+ * Creates a GetRecordsAction.
+ */
+export function getRecords(
+    token: string,
+    authID: string,
+    space: RecordSpace,
+    query: GetRecordsQuery,
+    taskId?: string | number
+): GetRecordsAction {
+    return {
+        type: 'get_records',
+        token,
+        space,
+        authID,
+        ...query,
+        taskId,
+    };
+}
+
+/**
+ * Creates a UpdateAuthDataAction.
+ */
+export function updateAuthData(data: AuthData): UpdateAuthDataAction {
+    return {
+        type: 'update_auth_data',
+        data,
     };
 }

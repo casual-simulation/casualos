@@ -16,6 +16,7 @@ module.exports = {
     entry: {
         metadata: path.resolve(__dirname, 'src', 'handlers', 'metadata.js'),
         services: path.resolve(__dirname, 'src', 'handlers', 'services.js'),
+        records: path.resolve(__dirname, 'src', 'handlers', 'records.js'),
     },
     target: 'node14.16',
     node: {

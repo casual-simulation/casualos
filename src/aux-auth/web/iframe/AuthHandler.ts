@@ -9,15 +9,27 @@ import {
 import { authManager } from '../shared/AuthManager';
 
 /**
+ * The number of seconds that the token should be refreshed before it expires.
+ */
+const REFRESH_BUFFER_SECONDS = 5;
+
+/**
  * Defines a class that implements the backend for an AuxAuth instance.
  */
 export class AuthHandler implements AuxAuth {
     private _loggedIn: boolean = false;
     private _loginData: AuthData;
     private _userId: string;
+    private _listeners: ((error: string, data: AuthData) => void)[] = [];
 
     async isLoggedIn(): Promise<boolean> {
-        return this._loggedIn;
+        if (this._loggedIn) {
+            const expiry = this._getTokenExpirationTime(this._loginData.token);
+            if (this._nowInSeconds() < expiry) {
+                return true;
+            }
+        }
+        return false;
     }
 
     async login(): Promise<AuthData> {
@@ -43,6 +55,20 @@ export class AuthHandler implements AuxAuth {
         }
     }
 
+    addTokenListener(listener: (error: string, data: AuthData) => void) {
+        this._listeners.push(listener);
+    }
+
+    private _getTokenExpirationTime(token: string) {
+        const [proof, claimJson] = JSON.parse(atob(token));
+        const claim = JSON.parse(claimJson);
+        return claim.ext;
+    }
+
+    private _nowInSeconds() {
+        return Math.floor(Date.now() / 1000);
+    }
+
     private async _checkLoginStatus() {
         console.log('[AuthHandler] Checking login status...');
         const loggedIn = await authManager.magic.user.isLoggedIn();
@@ -66,6 +92,8 @@ export class AuthHandler implements AuxAuth {
                 avatarUrl: authManager.avatarUrl,
                 name: authManager.name,
             };
+
+            this._queueTokenRefresh(token);
             this._loggedIn = true;
             console.log('[AuthHandler] Authorized!', service);
         }
@@ -128,6 +156,72 @@ export class AuthHandler implements AuxAuth {
         } catch (ex) {
             console.error('[AuthSelect] Unable to find auxCode.', ex);
             return null;
+        }
+    }
+
+    private _queueTokenRefresh(token: string) {
+        const expiry = this._getTokenExpirationTime(token);
+        const now = this._nowInSeconds();
+        const lifetimeSeconds = expiry - now;
+
+        const refreshTime = lifetimeSeconds - REFRESH_BUFFER_SECONDS;
+
+        console.log(
+            '[AuthHandler] Refreshing token in',
+            refreshTime,
+            'seconds'
+        );
+
+        setTimeout(() => {
+            this._refreshToken();
+        }, refreshTime * 1000);
+    }
+
+    private async _refreshToken() {
+        try {
+            console.log('[AuthHandler] Refreshing token...');
+
+            if (!this._loginData) {
+                console.log('[AuthHandler] Unable to refresh. No login data.');
+                return;
+            }
+
+            const token = await authManager.authorizeService(
+                this._loginData.service
+            );
+
+            this._loginData = {
+                ...this._loginData,
+                token: token,
+            };
+
+            console.log('[AuthHandler] Token refreshed!');
+
+            try {
+                for (let listener of this._listeners) {
+                    listener(null, this._loginData);
+                }
+            } catch (err) {
+                console.error(
+                    '[AuthHandler] Error while running listener',
+                    err
+                );
+            }
+
+            this._queueTokenRefresh(token);
+        } catch (ex) {
+            console.error('[AuthHandler] Failed to refresh token.', ex);
+
+            try {
+                for (let listener of this._listeners) {
+                    listener(ex.toString(), null);
+                }
+            } catch (err) {
+                console.error(
+                    '[AuthHandler] Error while running listener',
+                    err
+                );
+            }
         }
     }
 }

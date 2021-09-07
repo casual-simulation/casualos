@@ -26,11 +26,14 @@ axios.put = (url, data) => {
     requests.push(['put', ...lastPut]);
     return returnResponse();
 };
-axios.get = (url) => {
+axios.get = (url, config) => {
     if (shouldFail) {
         throw new Error('Get failed.');
     }
     lastGet = [url];
+    if (typeof config !== 'undefined') {
+        lastGet.push(config);
+    }
     requests.push(['get', ...lastGet]);
     return returnResponse();
 };

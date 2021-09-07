@@ -1107,6 +1107,18 @@ let bots = getBots(byTag("#height", height => height > 2));
 let bots = getBots(byTag("#test"));
 ```
 
+### `byID(id)`
+
+Creates a bot filter that includes the bot with the given ID.
+
+The **first parameter** is the ID of the bot.
+
+#### Examples
+
+```typescript title="Find the bot with the ID '123'"
+let bot = getBot(byID("123"));
+```
+
 ### `inDimension(dimension)`
 
 
@@ -1183,8 +1195,8 @@ let bots = getBots(byCreator(this));
 
 ### `bySpace(space)`
 
-
 Creates a bot filter that includes bots in the given space. That is, they have <TagLink tag='space'/> set to the given value.
+Additionally can be used to specify the space that records should be retrieved from.
 
 The **first parameter** is the space that the bots are in.
 
@@ -1194,9 +1206,16 @@ The **first parameter** is the space that the bots are in.
 
 #### Examples
 
-1. Find all bots in the `tempLocal` space.
-```typescript
+```typescript title='Find all bots in the tempLocal space.'
 let bots = getBots(bySpace("tempLocal"));
+```
+
+```typescript title='Find records in the tempGlobal space.'
+let records = await getRecords(
+    byAuthID('myAuthID'),
+    bySpace("tempGlobal"),
+    byPrefix('myPrefix')
+);
 ```
 
 ### `byMod(mod)`
@@ -1265,11 +1284,71 @@ Creates a function that includes bots which _do not_ match the given filter.
 
 The **first parameter** is the bot filter whose results should be negated.
 
-#### Examples.
+#### Examples:
 
 1. Find all bots that are not in the `test` dimension.
 ```typescript
 const bots = getBots(not(inDimension("test")));
+```
+
+### `byAuthID(id)`
+
+Creates a record filter that is used to find records that were created by the auth bot with the given ID.
+
+The **first parameter** is the ID of the auth bot that published the records.
+
+#### Examples:
+
+```typescript title='Find records by publisher ID'
+let records = await getRecords(
+    byAuthID('myAuthID'),
+    byAddress('myAddress'),
+);
+```
+
+### `byAddress(address)`
+
+Creates a record filter that is used to find a record with the given address.
+
+The **first parameter** is the address that the record was stored at.
+
+#### Examples:
+
+```typescript title='Find records by address'
+let records = await getRecords(
+    byAuthID('myAuthID'),
+    byAddress('myAddress'),
+);
+```
+
+### `byPrefix(prefix)`
+
+Creates a record filter that is used to find records whose address starts with the given prefix.
+
+The **first parameter** is the prefix that the record addresses should start with.
+
+#### Examples:
+
+```typescript title='Find records by address prefix'
+let records = await getRecords(
+    byAuthID('myAuthID'),
+    byPrefix('myPrefix')
+);
+```
+
+### `withAuthToken(token)`
+
+Creates a record filter that is used to find records that are accessible with the given auth token.
+Defaults to using the <TagLink tag='authToken'/> tag on the authBot.
+
+The **first parameter** is the auth token that should be used to access the records.
+
+```typescript title='Find records with an auth token'
+let records = await getRecords(
+    withAuthToken('myToken'),
+    byAuthID('myAuthID'),
+    byPrefix('myPrefix')
+);
 ```
 
 ## Event Actions
@@ -1445,6 +1524,116 @@ action.reject(toastAction);
 
 ## OS Actions
 
+### `os.publishRecord(options)`
+
+Publishes a record based on the given options and returns a promise that resolves when the record is published.
+The resolved object can be used with <ActionLink action='os.getRecords(...filters)'/> to retrieve the record.
+
+Records are pieces of data (like JSON) that can be shared between servers.
+Once created, they cannot be changed and they are only loaded when requested.
+
+Note that in order to publish a record, the auth bot must first be loaded with <ActionLink action='os.requestAuthBot()'/>.
+
+The **first parameter** is an object with the following structure:
+```typescript
+let options: {
+    /**
+     * The auth token that should be used to authenticate the publish record request.
+     * Different auth tokens can be used to publish records to different CasualOS.me accounts.
+     * Defaults to using the auth token in the auth bot.
+     */
+    authToken?: string;
+
+    /**
+     * The space that the record should be published in.
+     * Defaults to tempRestricted.
+     */
+    space?: 'tempRestricted' | 'tempGlobal' | 'permanentRestricted' | 'permanentGlobal';
+
+    /**
+     * The record that should be published.
+     */
+    record: any;
+
+    /**
+     * The address that the record should be published to.
+     * If not specified, then the address of the record will be set to prefix + id.
+     */
+    address?: string;
+
+    /**
+     * The prefix that the record should be published with.
+     * 
+     * Can be used to publish records to unique addresses while still having part of the address be searchable.
+     * If an address is specified, then the prefix will be ignored.
+     */
+    prefix?: string;
+
+    /**
+     * The ID that the record should be published with.
+     * Defaults to a UUID.
+     * 
+     * If an address is specified, then this property is ignored.
+     */
+    id?: string;
+};
+```
+
+#### Examples:
+
+```typescript title='Publish a record'
+await os.publishRecord({
+    space: "tempRestricted",
+    address: "myRecord",
+    record: {
+        myData: "yes!"
+    }
+});
+```
+
+```typescript title='Publish a record with a prefix'
+await os.publishRecord({
+    space: "tempRestricted",
+    prefix: "myRecords/",
+    record: {
+        myData: "yes!"
+    }
+});
+```
+
+### `os.getRecords(...filters)`
+
+Retrieves a list of records based on the given filters and returns a promise that resolves when the records are retrieved.
+
+The possible set of filters are:
+
+- <ActionLink action='byAuthID(id)'/>
+- <ActionLink action='bySpace(space)'/>
+- <ActionLink action='byAddress(address)'/>
+- <ActionLink action='byPrefix(prefix)'/>
+- <ActionLink action='byID(id)'/>
+- <ActionLink action='withAuthToken(token)'/>
+
+You must always specify an <ActionLink action='byAuthID(id)'/> filter, and if you omit a <ActionLink action='bySpace(space)'/> filter, then records will be filtered by the `tempRestricted` space.
+
+**Each parameter** is a filter that should be used to determine which records should be loaded.
+
+#### Examples:
+
+```typescript title='Get a list of records in the permanentGlobal space published by the auth bot whose address is "myAddress"'
+let records = await os.getRecords(
+    byAuthID(authBot.id),
+    bySpace("permanentGlobal"),
+    byAddress("myAddress")
+);
+```
+
+```typescript title='Get a list of records in the tempRestricted space published by the auth bot whose address starts with "myPrefix"'
+let records = await os.getRecords(
+    byAuthID(authBot.id),
+    byPrefix("myPrefix")
+);
+```
 
 ### `os.sleep(time)`
 
