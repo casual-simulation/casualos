@@ -200,39 +200,50 @@ export class ServerlessRecordsStore implements RecordsStore {
             );
             records.push(
                 ...keysAndValues.map(([key, value]) => {
-                    console.log(
-                        '[ServerlessRecordStore] Parsing Value:',
-                        value
-                    );
-                    const record: ServerlessRecord = JSON.parse(value);
-
-                    if (!this._authorizedToAccessRecord(record, query)) {
+                    if (!value) {
                         return null;
                     }
 
-                    return {
-                        address: record.address,
-                        authID: record.issuer,
-                        data: record.record,
-                        space:
-                            'temp' +
-                            (record.visibility === 'global'
-                                ? 'Global'
-                                : 'Restricted'),
-                    } as Record;
+                    try {
+                        const record: ServerlessRecord = JSON.parse(value);
+
+                        if (!this._authorizedToAccessRecord(record, query)) {
+                            return null;
+                        }
+
+                        return {
+                            address: record.address,
+                            authID: record.issuer,
+                            data: record.record,
+                            space:
+                                'temp' +
+                                (record.visibility === 'global'
+                                    ? 'Global'
+                                    : 'Restricted'),
+                        } as Record;
+                    } catch (err) {
+                        console.error(
+                            '[ServerlessRecordStore] Failed to parse value:',
+                            value,
+                            err
+                        );
+                        return null;
+                    }
                 })
             );
             if (nextIndex === '0') {
                 break;
             }
-
+            cursor = nextIndex;
             i++;
         }
 
+        const availableRecords = records.filter((r) => !!r);
+
         return {
             hasMoreRecords: false,
-            totalCount: records.length,
-            records: records.filter((r) => !!r),
+            totalCount: availableRecords.length,
+            records: availableRecords,
         };
     }
 
