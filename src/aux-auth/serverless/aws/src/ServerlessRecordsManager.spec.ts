@@ -348,4 +348,61 @@ describe('ServerlessRecordsManager', () => {
             });
         });
     });
+
+    describe('deleteRecord()', () => {
+        beforeEach(async () => {
+            for (let i = 1; i <= 4; i++) {
+                await store.savePermanentRecord({
+                    issuer: 'myUser',
+                    address: 'record/' + i,
+                    authorizedUsers: [formatAuthToken('myUser', 'myService')],
+                    creationDate: 0,
+                    record: {},
+                    visibility: 'global',
+                });
+                await store.savePermanentRecord({
+                    issuer: 'myUser',
+                    address: 'record/' + (i + 4),
+                    authorizedUsers: [formatAuthToken('myUser', 'myService')],
+                    creationDate: 0,
+                    record: {},
+                    visibility: 'restricted',
+                });
+            }
+
+            for (let i = 1; i <= 4; i++) {
+                await store.saveTemporaryRecord({
+                    issuer: 'myUser',
+                    address: 'record/' + i,
+                    authorizedUsers: [formatAuthToken('myUser', 'myService')],
+                    creationDate: 0,
+                    record: {},
+                    visibility: 'global',
+                });
+                await store.saveTemporaryRecord({
+                    issuer: 'myUser',
+                    address: 'record/' + (i + 4),
+                    authorizedUsers: [formatAuthToken('myUser', 'myService')],
+                    creationDate: 0,
+                    record: {},
+                    visibility: 'restricted',
+                });
+            }
+
+            auth.setTokenIssuer('myToken', 'myUser');
+        });
+
+        it('should be able to delete a record based on user ID and address', async () => {
+            const result = await manager.deleteRecord({
+                token: formatAuthToken('myToken', 'myService'),
+                issuer: 'myUser',
+                address: 'record/1',
+                space: 'permanentGlobal',
+            });
+
+            expect(result).toEqual({
+                status: 200,
+            });
+        });
+    });
 });

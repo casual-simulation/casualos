@@ -1,3 +1,5 @@
+import { deleteRecord } from '../../../../../aux-common';
+
 // Create clients and set shared const values outside of the handler.
 const { Magic } = require('@magic-sdk/admin');
 const { formatResponse, validateOrigin, findHeader } = require('../utils');
@@ -69,21 +71,37 @@ function returnResult(event, result) {
     );
 }
 
-async function postRecord(event) {
+async function postOrDeleteRecord(event) {
     if (event.httpMethod !== 'POST') {
         throw new Error(
-            `postRecord only accept POST method, you tried: ${event.httpMethod}`
+            `postOrDeleteRecord only accept POST method, you tried: ${event.httpMethod}`
         );
     }
 
+    if (event.path.endsWith('/delete')) {
+        return deleteRecord(event);
+    } else {
+        return postRecord(event);
+    }
+}
+
+async function deleteRecord(event) {
     if (!validateOrigin(event, allowedOrigins)) {
         throw new Error('Invalid origin');
     }
 
     const data = JSON.parse(event.body);
+    const result = await manager.deleteRecord(data);
+    return returnResult(event, result);
+}
 
+async function postRecord(event) {
+    if (!validateOrigin(event, allowedOrigins)) {
+        throw new Error('Invalid origin');
+    }
+
+    const data = JSON.parse(event.body);
     const result = await manager.publishRecord(data);
-
     return returnResult(event, result);
 }
 

@@ -1,5 +1,6 @@
 import { DynamodbDataSourceConfig } from 'aws-sdk/clients/appsync';
 import {
+    DeletableRecord,
     RecordsQuery,
     RecordsStore,
     SaveRecordResult,
@@ -36,6 +37,7 @@ export class ServerlessRecordsStore implements RecordsStore {
         key: string,
         ...args: string[]
     ) => Promise<[string, ...[string, string][]]>;
+    private _rHDel: (key: string, ...fields: string[]) => Promise<number>;
 
     constructor(
         dynamoClient: dynamodb.DocumentClient,
@@ -52,6 +54,7 @@ export class ServerlessRecordsStore implements RecordsStore {
         this._rHSet = promisify(this._redis.hset).bind(this._redis);
         this._rHMGet = promisify(this._redis.hmget).bind(this._redis);
         this._rHScan = promisify(this._redis.hscan).bind(this._redis);
+        this._rHDel = promisify(this._redis.hdel).bind(this._redis);
     }
 
     async getPermanentRecords(
@@ -291,6 +294,25 @@ export class ServerlessRecordsStore implements RecordsStore {
                 throw err;
             }
         }
+    }
+
+    async deleteTemporaryRecord(record: DeletableRecord): Promise<void> {
+        const key = `${this._redisNamespace}/${record.issuer}`;
+        const field = record.address;
+
+        await this._rHDel(key, field);
+    }
+
+    async deletePermanentRecord(record: DeletableRecord): Promise<void> {
+        await this._dynamo
+            .delete({
+                TableName: this._permanentRecordsTable,
+                Key: {
+                    issuer: record.issuer,
+                    address: record.address,
+                },
+            })
+            .promise();
     }
 
     private _authorizedToAccessRecord(

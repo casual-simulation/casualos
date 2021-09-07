@@ -229,6 +229,57 @@ async function start() {
         }
     });
 
+    app.post('/api/records/delete', async (req, res) => {
+        try {
+            handleRecordsCorsHeaders(req, res);
+            console.log('secret key', MAGIC_SECRET_KEY);
+            console.log('Body', req.body);
+            const { token: authToken, address, space } = req.body;
+            const [token, bundle] = parseAuthToken(authToken);
+
+            magic.token.validate(token, bundle);
+            const issuer = magic.token.getIssuer(token);
+
+            if (
+                space === 'permanentGlobal' ||
+                space === 'permanentRestricted'
+            ) {
+                const filter: any = {
+                    issuer: issuer,
+                    address: address,
+                    visibility: 'restricted',
+                };
+                if (
+                    await hasRecordWithAddress(
+                        permanentRecords,
+                        issuer,
+                        address
+                    )
+                ) {
+                    res.status(404).send();
+                    return;
+                }
+                await permanentRecords.deleteOne(filter);
+            } else {
+                const index = tempRecords.findIndex(
+                    (r) => r.issuer === issuer && r.address === address
+                );
+
+                if (index < 0) {
+                    res.status(404).send();
+                    return;
+                }
+
+                tempRecords.splice(index, 1);
+            }
+
+            res.status(200).send();
+        } catch (err) {
+            console.error(err);
+            res.sendStatus(500);
+        }
+    });
+
     app.get('/api/records', async (req, res) => {
         try {
             handleRecordsCorsHeaders(req, res);

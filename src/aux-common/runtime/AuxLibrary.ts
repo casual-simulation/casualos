@@ -249,6 +249,8 @@ import {
     GetRecordsQuery,
     requestPermanentAuthToken as calcRequestPermanentAuthToken,
     PermanentAuthTokenResult,
+    DeletableRecord,
+    deleteRecord,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -858,6 +860,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 publishRecord,
                 getRecords,
+                destroyRecord,
             },
 
             portal: {
@@ -2839,6 +2842,38 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 },
             };
         }
+    }
+
+    /**
+     * Requests that the given record be destroyed.
+     * @param record The record that should be deleted.
+     */
+    function destroyRecord(record: DeletableRecord) {
+        let address: string;
+        if (!hasValue(record.address)) {
+            throw new Error(
+                'the address property is required in order to delete a record.'
+            );
+        }
+        address = record.address;
+
+        if (!hasValue(record.space)) {
+            throw new Error(
+                'the space property is required in order to delete a record.'
+            );
+        }
+        const space = record.space;
+
+        const token =
+            record.authToken ?? (<any>globalThis).authBot?.tags?.authToken;
+
+        if (!hasValue(token)) {
+            throw new Error('authToken is required when there is no authBot.');
+        }
+
+        const task = context.createTask();
+        const event = deleteRecord(token, address, space, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**

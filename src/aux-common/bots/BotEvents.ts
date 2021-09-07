@@ -8,6 +8,7 @@ import {
     PortalType,
     RecordSpace,
     Record,
+    RecordReference,
 } from './Bot';
 import {
     Action,
@@ -211,7 +212,8 @@ export type AsyncActions =
     | DefineGlobalBotAction
     | PublishRecordAction
     | GetRecordsAction
-    | RequestPermanentAuthTokenAction;
+    | RequestPermanentAuthTokenAction
+    | DeleteRecordAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3201,6 +3203,28 @@ export interface PublishRecordAction extends AsyncAction {
     uncopiable: true;
 }
 
+/**
+ * Defines an event that deletes a record.
+ */
+export interface DeleteRecordAction extends AsyncAction {
+    type: 'delete_record';
+
+    /**
+     * The auth token that should be used to authenticate the delete record request.
+     */
+    token: string;
+
+    /**
+     * The address of the record that should be deleted.
+     */
+    address: string;
+
+    /**
+     * The space that the record is in.
+     */
+    space: RecordSpace;
+}
+
 export interface RecordDefinition {
     /**
      * The auth token that should be used to authenticate the publish record request.
@@ -3242,6 +3266,23 @@ export interface PrefixedRecord extends RecordDefinition {
 }
 
 export type PublishableRecord = AddressedRecord | PrefixedRecord;
+
+export interface DeletableRecord {
+    /**
+     * The auth token that should be used to authenticate the delete record request.
+     */
+    authToken?: string;
+
+    /**
+     * The space that the record lives in.
+     */
+    space: RecordSpace;
+
+    /**
+     * The address that the record was published to.
+     */
+    address: string;
+}
 
 /**
  * Defines an event that retrieves a set of records from a space.
@@ -6020,6 +6061,28 @@ export function requestPermanentAuthToken(
 ): RequestPermanentAuthTokenAction {
     return {
         type: 'request_permanent_auth_token',
+        taskId,
+    };
+}
+
+/**
+ * Creates a DeleteRecordAction.
+ * @param token The auth token used to authorize the request.
+ * @param address The address of the record that should be deleted.
+ * @param space The space that the record is in.
+ * @param taskId
+ */
+export function deleteRecord(
+    token: string,
+    address: string,
+    space: RecordSpace,
+    taskId: number | string
+): DeleteRecordAction {
+    return {
+        type: 'delete_record',
+        token,
+        address,
+        space,
         taskId,
     };
 }

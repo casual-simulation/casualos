@@ -169,6 +169,11 @@ Resources:
                     Properties:
                         Path: /api/records
                         Method: GET
+                DeleteRecord:
+                    Type: Api
+                    Properties:
+                        Path: /api/records/delete
+                        Method: POST
 
     # This is a Lambda function config associated with the source code: get-all-items.js
     # putService:

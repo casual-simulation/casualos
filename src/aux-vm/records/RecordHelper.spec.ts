@@ -6,6 +6,7 @@ import {
     botAdded,
     createBot,
     createMemoryPartition,
+    deleteRecord,
     getRecords,
     iteratePartitions,
     MemoryPartition,
@@ -333,6 +334,36 @@ describe('RecordHelper', () => {
                         },
                     },
                 ]);
+            });
+        });
+
+        describe('delete_record', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should make a POST request to /api/records/delete', async () => {
+                setResponse({
+                    data: null,
+                    status: 200,
+                });
+
+                records.handleEvents([
+                    deleteRecord('myToken', 'myAddress', 'tempRestricted', 1),
+                ]);
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/records/delete',
+                    {
+                        token: 'myToken',
+                        address: 'myAddress',
+                        space: 'tempRestricted',
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(actions).toEqual([asyncResult(1, null)]);
             });
         });
     });

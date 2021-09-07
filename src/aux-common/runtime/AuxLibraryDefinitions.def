@@ -2304,6 +2304,24 @@ export interface PrefixedRecord extends RecordDefinition {
 
 export type PublishableRecord = AddressedRecord | PrefixedRecord;
 
+
+export interface DeletableRecord {
+    /**
+     * The auth token that should be used to authenticate the delete record request.
+     */
+     authToken?: string;
+     
+    /**
+     * The space that the record lives in.
+     */
+     space: RecordSpace;
+
+     /**
+      * The address that the record was published to.
+      */
+     address: string;
+};
+
 /**
  * Defines an interface for options that show a payment box.
  */
@@ -4165,6 +4183,12 @@ declare global {
          * @param filters The list of filters that should be used to retrieve some records.
          */
         getRecords(...filters: RecordFilters[]): Promise<GetRecordsResult>;
+
+        /**
+         * Requests that the given record be destroyed.
+         * @param record The record that should be deleted.
+         */
+        destroyRecord(record: DeletableRecord): Promise<void>;
 
         /**
          * Specifies that the given prefix should be interpreted as code.
