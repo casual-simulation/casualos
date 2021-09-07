@@ -3770,6 +3770,23 @@ await os.requestAuthBot();
 os.toast("Logged in!");
 ```
 
+### `os.requestPermanentAuthToken()`
+
+Requests that a permanent auth token be retrieved for the current app bundle.
+Returns a promise that resolves with the token that can be used with <ActionLink action='os.publishRecord(options)'/> and <ActionLink action='os.getRecords(...filters)'/>.
+
+Permanent auth tokens are useful for allowing any user and app bundle to publish records to your account and the app bundle that the auth token was requested from.
+This makes them useful for creating registries of records in a single user account that can be searched by prefix.
+
+Permanent auth tokens last for 1000 years and cannot be revoked.
+
+#### Examples
+
+```typescript title='Request a permanent auth token for this user and app bundle'
+const token = await os.requestPermanentAuthToken();
+os.toast(token);
+```
+
 ## Server Actions
 
 ### `server.backupToGithub(auth)`
