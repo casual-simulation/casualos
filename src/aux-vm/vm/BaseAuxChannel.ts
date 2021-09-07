@@ -28,6 +28,7 @@ import {
     DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
     stateUpdatedEvent,
     registerBuiltinPortal,
+    defineGlobalBot,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
@@ -46,6 +47,8 @@ import { StatusHelper } from './StatusHelper';
 import { StoredAux } from '../StoredAux';
 import { flatMap, pick } from 'lodash';
 import { CustomAppHelper } from '../portals/CustomAppHelper';
+import { RecordHelper } from '../records/RecordHelper';
+import { v4 as uuid } from 'uuid';
 
 export interface AuxChannelOptions {}
 
@@ -59,6 +62,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _partitionEditModeProvider: AuxPartitionRealtimeEditModeProvider;
     protected _partitions: AuxPartitions;
     protected _portalHelper: CustomAppHelper;
+    protected _recordHelper: RecordHelper;
     private _statusHelper: StatusHelper;
     private _hasRegisteredSubs: boolean;
     private _eventBuffer: BotAction[];
@@ -484,6 +488,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         if (!this._portalHelper) {
             this._portalHelper = new CustomAppHelper(this._helper);
         }
+        if (!this._recordHelper) {
+            this._recordHelper = new RecordHelper(
+                this._config.config,
+                this._helper
+            );
+        }
 
         this._handleStatusUpdated({
             type: 'progress',
@@ -585,6 +595,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             }
         }
         this._portalHelper.handleEvents(e);
+        this._recordHelper.handleEvents(e);
 
         const copiableEvents = e.filter((e) => !(<any>e).uncopiable);
         this._onLocalEvents.next(copiableEvents);
@@ -665,7 +676,13 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 let actions = this._config.config.builtinPortals.map((portal) =>
                     registerBuiltinPortal(portal)
                 );
-                this._runtime.process(actions);
+                this._runtime.process([
+                    ...actions,
+
+                    // Define the authBot with a random UUID so that it will be
+                    // referencable but return undefined until it is actually loaded.
+                    defineGlobalBot('auth', uuid()),
+                ]);
             }
         } catch (err) {
             console.error('[BaseAuxChannel] Unable to init portal bots:', err);

@@ -1,0 +1,10 @@
+/* @media(min-width: 768px) {
+    .login-container {
+        margin: 0 auto;
+    }
+} */
+.login-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    margin-top: 24px;
+}

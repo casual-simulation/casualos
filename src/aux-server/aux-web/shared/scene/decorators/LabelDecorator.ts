@@ -29,8 +29,8 @@ import { WordBubbleElement } from '../WordBubbleElement';
 import { Game } from '../Game';
 import { Orthographic_FrustrumSize } from '../CameraRigFactory';
 import { calculateScale, buildSRGBColor } from '../SceneUtils';
-import NotoSansKR from '../../public/fonts/NotoSansKR/NotoSansKR-Regular.otf';
-import Roboto from '../../public/fonts/Roboto/roboto-v18-latin-regular.woff';
+import NotoSansKR from '@casual-simulation/aux-components/fonts/NotoSansKR/NotoSansKR-Regular.otf';
+import Roboto from '@casual-simulation/aux-components/fonts/Roboto/roboto-v18-latin-regular.woff';
 
 export class LabelDecorator
     extends AuxBot3DDecoratorBase

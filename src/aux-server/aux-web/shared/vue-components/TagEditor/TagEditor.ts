@@ -3,7 +3,7 @@ import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import { validateTag, KNOWN_TAGS } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
-import { EventBus } from '../../EventBus';
+import { EventBus } from '@casual-simulation/aux-components';
 
 /**
  * A component that manages the logic for editing a tag name.

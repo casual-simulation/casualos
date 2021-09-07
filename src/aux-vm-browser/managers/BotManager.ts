@@ -20,6 +20,7 @@ import {
     BOOTSTRAP_PARTITION_ID,
     getTagValueForSpace,
     getUpdateForTagAndSpace,
+    updateAuthData,
 } from '@casual-simulation/aux-common';
 
 import {
@@ -52,6 +53,7 @@ import { ESBuildPortalBundler } from '@casual-simulation/aux-vm/managers';
 // @ts-ignore TS2307
 import ESBuildWasmURL from 'esbuild-wasm/esbuild.wasm';
 import { IdePortalManager } from './IdePortalManager';
+import { AuthHelper } from './AuthHelper';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -64,6 +66,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     private _bundler: PortalBundler;
     private _portals: PortalManager;
     private _idePortal: IdePortalManager;
+    private _authHelper: AuthHelper;
 
     /**
      * Gets the bots panel manager.
@@ -82,6 +85,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
     get progress() {
         return this._progress;
+    }
+
+    get auth() {
+        return this._authHelper;
     }
 
     get consoleMessages() {
@@ -115,6 +122,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         );
         this.helper.userId = user ? user.id : null;
 
+        this._authHelper = new AuthHelper(config.authOrigin);
         this._login = new LoginManager(this._vm);
         this._progress = new ProgressManager(this._vm);
 
@@ -261,7 +269,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         }
     }
 
-    protected _initManagers() {
+    protected async _initManagers() {
         super._initManagers();
         this._botPanel = new BotPanelManager(this._watcher, this._helper);
         this._bundler = new ESBuildPortalBundler({
@@ -276,5 +284,17 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         this._idePortal = new IdePortalManager(this._watcher, this.helper);
 
         this._subscriptions.push(this._portals);
+        this._subscriptions.push(
+            this._authHelper.authDataUpdated.subscribe(
+                (data) => {
+                    this._helper.transaction(updateAuthData(data));
+                },
+                (err) =>
+                    console.error(
+                        '[BotManager] An error occurred while updating auth data.',
+                        err
+                    )
+            )
+        );
     }
 }

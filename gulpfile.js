@@ -6,6 +6,7 @@ const fs = require('fs');
 
 let folders = [
     `${__dirname}/src/aux-common`,
+    `${__dirname}/src/aux-components`,
     `${__dirname}/src/aux-vm`,
     `${__dirname}/src/aux-vm-client`,
     `${__dirname}/src/aux-vm-node`,

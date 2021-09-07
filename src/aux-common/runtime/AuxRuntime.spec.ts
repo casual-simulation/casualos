@@ -75,6 +75,8 @@ import {
     registerBuiltinPortal,
     isRuntimeBot,
     registerCustomApp,
+    defineGlobalBot,
+    updateAuthData,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -93,7 +95,7 @@ import { ActionResult, ScriptError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
-import { DeepObjectError } from './Utils';
+import { DeepObjectError, formatAuthToken } from './Utils';
 import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { merge } from '../utils';
 import { flatMap } from 'lodash';
@@ -4245,6 +4247,185 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(actions).toEqual([registerCustomApp('page', 'test1')]);
+            });
+        });
+
+        describe('define_global_bot', () => {
+            it('should add a global variable for the given bot', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                runtime.process([defineGlobalBot('page', 'test1')]);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+            });
+
+            it('should resolve the task when the bot is defined', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const task = runtime.context.createTask();
+                let resolved: boolean = false;
+                task.promise.then(() => {
+                    resolved = true;
+                });
+
+                runtime.process([
+                    defineGlobalBot('page', 'test1', task.taskId),
+                ]);
+
+                await waitAsync();
+
+                expect(resolved).toBe(true);
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+            });
+
+            it('should resolve the task even if the bot is already globally defined', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const task1 = runtime.context.createTask();
+                const task2 = runtime.context.createTask();
+                let resolved: boolean = false;
+                task2.promise.then(() => {
+                    resolved = true;
+                });
+
+                runtime.process([
+                    defineGlobalBot('page', 'test1', task1.taskId),
+                    defineGlobalBot('page', 'test1', task2.taskId),
+                ]);
+
+                await waitAsync();
+
+                expect(resolved).toBe(true);
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test1']
+                );
+            });
+
+            it('should be able to re-define a global bot', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 123,
+                        }),
+                    })
+                );
+
+                const task1 = runtime.context.createTask();
+                const task2 = runtime.context.createTask();
+                let resolved: boolean = false;
+                task2.promise.then(() => {
+                    resolved = true;
+                });
+
+                runtime.process([
+                    defineGlobalBot('page', 'test1', task1.taskId),
+                    defineGlobalBot('page', 'test2', task2.taskId),
+                ]);
+
+                await waitAsync();
+
+                expect(resolved).toBe(true);
+
+                expect((<any>globalThis).pageBot).toBe(
+                    runtime.context.state['test2']
+                );
+            });
+
+            it('should be able to resolve the task when completed via an async result', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc:
+                                '@await os.requestAuthBot(); os.toast("Hello");',
+                        }),
+                    })
+                );
+
+                let actions: any[] = [];
+                runtime.onActions.subscribe((a) => actions.push(...a));
+
+                runtime.shout('abc');
+
+                await waitAsync();
+
+                expect(actions.length).toBe(1);
+
+                runtime.process([
+                    asyncResult(actions[0].taskId, {
+                        userId: 'myUser',
+                        token: 'token',
+                        service: 'service',
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(actions.length).toBe(3);
+                expect(actions[2]).toEqual(toast('Hello'));
+            });
+        });
+
+        describe('update_auth_token', () => {
+            it('should update the token tag on the bot with the given ID', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                runtime.process([
+                    updateAuthData({
+                        avatarUrl: 'avatarUrl',
+                        name: 'Name',
+                        service: 'myService',
+                        token: 'myToken',
+                        userId: 'test1',
+                    }),
+                ]);
+
+                expect(runtime.currentState.test1.tags).toEqual({
+                    abc: 'def',
+                    authToken: formatAuthToken('myToken', 'myService'),
+                });
+            });
+
+            it('should do nothing if there is no bot for the data', () => {
+                runtime.process([
+                    updateAuthData({
+                        avatarUrl: 'avatarUrl',
+                        name: 'Name',
+                        service: 'myService',
+                        token: 'myToken',
+                        userId: 'test1',
+                    }),
+                ]);
+
+                expect(runtime.currentState).toEqual({});
             });
         });
     });

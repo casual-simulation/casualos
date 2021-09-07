@@ -232,6 +232,21 @@ import {
     setAppOutput,
     SetAppOutputAction,
     unregisterCustomApp,
+    requestAuthData as calcRequestAuthData,
+    AuthData,
+    createBot,
+    defineGlobalBot as calcDefineGlobalBot,
+    TEMPORARY_BOT_PARTITION_ID,
+    PublishableRecord,
+    publishRecord as calcPublishRecord,
+    DEFAULT_RECORD_SPACE,
+    getRecords as calcGetRecords,
+    RecordSpace,
+    Record,
+    RecordReference,
+    GetRecordsAction,
+    GetRecordsActionResult,
+    GetRecordsQuery,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -246,6 +261,7 @@ import '../polyfill/Array.last.polyfill';
 import {
     convertToCopiableValue,
     embedBase64InPdf,
+    formatAuthToken,
     getEasing,
     getEmbeddedBase64FromPdf,
 } from './Utils';
@@ -498,6 +514,43 @@ export interface BotFilterFunction {
     sort?: (bot: Bot) => any;
 }
 
+export interface RecordFilter {
+    recordFilter: true;
+}
+
+export interface AuthIdRecordFilter extends RecordFilter {
+    authID: string;
+}
+
+export interface SpaceFilter extends BotFilterFunction, RecordFilter {
+    space: string;
+}
+
+export interface AddressRecordFilter extends RecordFilter {
+    address: string;
+}
+
+export interface AuthTokenRecordFilter extends RecordFilter {
+    authToken: string;
+}
+
+export interface PrefixRecordFilter extends RecordFilter {
+    prefix: string;
+}
+
+export interface IDRecordFilter extends BotFilterFunction, RecordFilter {
+    id: string;
+}
+
+export type RecordFilters =
+    | AuthIdRecordFilter
+    | SpaceFilter
+    | AddressRecordFilter
+    | AuthTokenRecordFilter
+    | PrefixRecordFilter
+    | IDRecordFilter
+    | RecordReference;
+
 /**
  * Defines a set of options for a tween.
  */
@@ -601,6 +654,31 @@ export interface CodeBundle {
 }
 
 /**
+ * Defines an interface that represents a set of records that were retrieved.
+ */
+export interface GetRecordsResult {
+    /**
+     * The set of records that were retrieved.
+     */
+    records: Record[];
+
+    /**
+     * The total number of records that the query would have returned.
+     */
+    totalCount: number;
+
+    /**
+     * Whether there are more records available to retrieve for the query.
+     */
+    hasMoreRecords: boolean;
+
+    /**
+     * Gets the set page of records.
+     */
+    getMoreRecords(): Promise<GetRecordsResult>;
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
@@ -650,6 +728,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             whisper,
 
             byTag,
+            byID,
             byMod,
             inDimension,
             atPosition,
@@ -659,6 +738,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             byCreator,
             either,
             not,
+            byAuthID,
+            byAddress,
+            withAuthToken,
+            byPrefix,
 
             remote,
             sendRemoteData: remoteWhisper,
@@ -768,6 +851,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 registerApp: registerApp,
                 unregisterApp,
                 compileApp: setAppContent,
+                requestAuthBot,
+
+                publishRecord,
+                getRecords,
             },
 
             portal: {
@@ -1246,6 +1333,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Creates a filter function that checks whether bots have the given ID.
+     * @param id The ID to check for.
+     *
+     * @example
+     * // Find all the bots with the ID "bob".
+     * let bobs = getBots(byId("bob"));
+     */
+    function byID(id: string): IDRecordFilter {
+        let filter: IDRecordFilter = ((bot: Bot) => {
+            return bot.id === id;
+        }) as any;
+
+        filter.recordFilter = true;
+        filter.id = id;
+
+        return filter;
+    }
+
+    /**
      * Creates a filter function that checks whether bots match the given mod.
      * @param mod The mod that bots should be checked against.
      *
@@ -1365,8 +1471,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Creates a function that filters bots by whether they are in the given space.
      * @param space The space that the bots should be in.
      */
-    function bySpace(space: string): BotFilterFunction {
-        return byTag(BOT_SPACE_TAG, space);
+    function bySpace(space: string): SpaceFilter {
+        let func = byTag(BOT_SPACE_TAG, space) as SpaceFilter;
+        func.recordFilter = true;
+        func.space = space;
+        return func;
     }
 
     /**
@@ -1410,6 +1519,50 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function not(filter: BotFilterFunction): BotFilterFunction {
         return (bot) => !filter(bot);
+    }
+
+    /**
+     * Creates a record filter that retrieves records created by the given Auth ID.
+     * @param authID The ID of the creator of the records.
+     */
+    function byAuthID(authID: string): AuthIdRecordFilter {
+        return {
+            recordFilter: true,
+            authID,
+        };
+    }
+
+    /**
+     * Creates a record filter that retrieves records with the given address.
+     * @param address The address that the record was stored at.
+     */
+    function byAddress(address: string): AddressRecordFilter {
+        return {
+            recordFilter: true,
+            address,
+        };
+    }
+
+    /**
+     * Creates a record filter that retrieves records with the given address.
+     * @param token The auth token that should be used to authenticate the getRecords() request.
+     */
+    function withAuthToken(token: string): AuthTokenRecordFilter {
+        return {
+            recordFilter: true,
+            authToken: token,
+        };
+    }
+
+    /**
+     * Creates a record filter that retrieves records with the given prefix in their address.
+     * @param prefix The prefix that should be matched to record addresses.
+     */
+    function byPrefix(prefix: string): PrefixRecordFilter {
+        return {
+            recordFilter: true,
+            prefix,
+        };
     }
 
     /**
@@ -2490,6 +2643,187 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function setAppContent(portalId: string, output: any): SetAppOutputAction {
         const event = setAppOutput(portalId, output);
         return addAction(event);
+    }
+
+    /**
+     * Requests an Auth Bot for the current session.
+     */
+    async function requestAuthBot(): Promise<Bot> {
+        const data = await requestAuthData();
+
+        let bot = getBot('id', data.userId);
+
+        if (!bot) {
+            bot = context.createBot(
+                createBot(
+                    data.userId,
+                    {
+                        authToken: formatAuthToken(data.token, data.service),
+                        authBundle: data.service,
+                        avatarAddress: data.avatarUrl,
+                        name: data.name,
+                    },
+                    TEMPORARY_BOT_PARTITION_ID
+                )
+            );
+        }
+
+        await defineGlobalBot('auth', bot.id);
+        return bot;
+    }
+
+    function requestAuthData(): Promise<AuthData> {
+        const task = context.createTask();
+        const event = calcRequestAuthData(task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    function defineGlobalBot(name: string, botId: string): Promise<void> {
+        const task = context.createTask();
+        const event = calcDefineGlobalBot(name, botId, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Publishes a record that can be used across servers.
+     * @param recordDefinition The data that should be used to publish the record.
+     */
+    function publishRecord(
+        recordDefinition: PublishableRecord
+    ): Promise<RecordReference> {
+        const task = context.createTask();
+
+        let address: string;
+        if ('address' in recordDefinition) {
+            if (!hasValue(recordDefinition.address)) {
+                throw new Error(
+                    'A non-null or empty address must be used when specifying an address.'
+                );
+            }
+            address = recordDefinition.address;
+        } else {
+            if (!hasValue(recordDefinition.prefix)) {
+                if (hasValue(recordDefinition.id)) {
+                    throw new Error(
+                        'A prefix must be specified when declaring an ID for the record.'
+                    );
+                }
+                address = uuid();
+            } else {
+                address = `${recordDefinition.prefix}-${
+                    recordDefinition.id ?? uuid()
+                }`;
+            }
+        }
+        const space = recordDefinition.space ?? DEFAULT_RECORD_SPACE;
+        const token =
+            recordDefinition.authToken ??
+            (<any>globalThis).authBot?.tags?.authToken;
+
+        if (!hasValue(token)) {
+            throw new Error('authToken is required when there is no authBot.');
+        }
+
+        if (!hasValue(recordDefinition.record)) {
+            throw new Error('The record property is required.');
+        }
+
+        const event = calcPublishRecord(
+            token,
+            address,
+            recordDefinition.record,
+            space,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Retrives a list of records using the given filters.
+     * @param filters The list of filters that should be used to retrieve some records.
+     *
+     * @example
+     * // Get a record by address
+     * let result = await os.getRecords(byAuthID('myAuthID'), byAddress('myAddress'));
+     */
+    function getRecords(
+        ...filters: RecordFilters[]
+    ): Promise<GetRecordsResult> {
+        let token = (<any>globalThis).authBot?.tags?.authToken ?? null;
+        let address: string;
+        let prefix: string;
+        let authID: string;
+        let id: string;
+        let space: RecordSpace = 'tempRestricted';
+
+        for (let filter of filters) {
+            if ('address' in filter) {
+                address = filter.address;
+            }
+            if ('authID' in filter) {
+                authID = filter.authID;
+            }
+            if ('space' in filter) {
+                space = filter.space as RecordSpace;
+            }
+            if ('authToken' in filter) {
+                token = filter.authToken;
+            }
+            if ('prefix' in filter) {
+                prefix = filter.prefix;
+            }
+            if ('id' in filter) {
+                id = filter.id;
+            }
+        }
+
+        if (!hasValue(authID)) {
+            throw new Error('An authID must be specified as a filter.');
+        }
+
+        if (!hasValue(address) && !hasValue(prefix) && !hasValue(id)) {
+            throw new Error(
+                'An address, prefix, or ID must be specified as a filter.'
+            );
+        }
+
+        if (!hasValue(address) && hasValue(prefix) && hasValue(id)) {
+            address = prefix + id;
+        } else if (!hasValue(address) && hasValue(id)) {
+            address = id;
+        }
+
+        let query = hasValue(address) ? { address } : { prefix };
+
+        return issueEvent(query);
+
+        async function issueEvent(query: GetRecordsQuery) {
+            const task = context.createTask();
+            const event = calcGetRecords(
+                token,
+                authID,
+                space,
+                query,
+                task.taskId
+            );
+            const result: GetRecordsActionResult = await addAsyncAction(
+                task,
+                event
+            );
+
+            return {
+                records: result.records,
+                hasMoreRecords: result.hasMoreRecords,
+                totalCount: result.totalCount,
+                getMoreRecords: async (): Promise<GetRecordsResult> => {
+                    if (result.hasMoreRecords && hasValue(result.cursor)) {
+                        return issueEvent({ cursor: result.cursor });
+                    } else {
+                        throw new Error('No more records to retrieve.');
+                    }
+                },
+            };
+        }
     }
 
     /**

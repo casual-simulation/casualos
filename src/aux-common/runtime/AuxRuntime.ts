@@ -50,6 +50,7 @@ import {
     ON_ERROR,
     action,
     isBotInDimension,
+    asyncResult,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -71,7 +72,11 @@ import { CompiledBot, CompiledBotsState } from './CompiledBot';
 import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
-import { convertToCopiableValue, DeepObjectError } from './Utils';
+import {
+    convertToCopiableValue,
+    DeepObjectError,
+    formatAuthToken,
+} from './Utils';
 import {
     AuxRealtimeEditModeProvider,
     SpaceRealtimeEditModeMap,
@@ -356,6 +361,22 @@ export class AuxRuntime
                 this._registerPortalBot(action.portalId, newBot.id);
                 this._actionBatch.push(
                     openCustomPortal(action.portalId, newBot.id, null, {})
+                );
+            }
+        } else if (action.type === 'define_global_bot') {
+            if (this._portalBots.get(action.name) !== action.botId) {
+                this._registerPortalBot(action.name, action.botId);
+            }
+            if (hasValue(action.taskId)) {
+                this._processCore([asyncResult(action.taskId, null)]);
+            }
+        } else if (action.type === 'update_auth_data') {
+            const bot = this._compiledState[action.data.userId];
+            if (bot) {
+                this.updateTag(
+                    bot,
+                    'authToken',
+                    formatAuthToken(action.data.token, action.data.service)
                 );
             }
         } else {
@@ -1051,7 +1072,7 @@ export class AuxRuntime
         const actions = this._actionBatch;
         const errors = this._errorBatch;
 
-        actions.push(...unbatchedActions);
+        this._processCore(unbatchedActions);
         errors.push(...unbatchedErrors);
 
         this._actionBatch = [];

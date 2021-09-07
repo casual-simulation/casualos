@@ -1,5 +1,61 @@
 # CasualOS Changelog
 
+## V2.0.8
+
+#### Date: 9/7/2021
+
+### :rocket: Improvements
+
+-   Created https://casualos.me
+    -   casualos.me is a companion service for CasualOS that provides the ability to sign in with an account and save permanent records of data.
+-   Added the `os.requestAuthBot()` function.
+    -   Requests that the user sign in and creates the `authBot` global variable to represent whether the user is signed in.
+    -   Only works if an App Bundle (AB) was auto loaded using the `autoLoad` query parameter.
+    -   Returns a promise that resolves when the user is signed in.
+    -   See the "Auth Bot Tags" section in the documentation for more info.
+-   Added the `os.publishRecord(recordDescription)` function to be able to save arbitrary JSON data.
+    -   Records are arbitrary pieces of data that can saved and retrieved from special record-enabled spaces.
+        -   The possible spaces are:
+            -   `tempRestricted` - (Default) Records are temporary (they are deleted at the end of the day) and they are only retrievable by the user and appBundle that created them.
+            -   `tempGlobal` - Records are temporary and they are they are retrievable by everyone.
+            -   `permanentRestricted` - Records are permanent and they are only retrievable by the user and appBundle that created them.
+            -   `permanentGlobal` - Records are permanent and they are retrievable by everyone.
+    -   Unlike bots, records are only accessible by searching for them using the `os.getRecords()` function.
+    -   Requires that the user has signed in with `os.requestAuthBot()`.
+    -   `recordDescription` is an object with the following properties:
+        -   `space` - The space that the record should be published to.
+        -   `record` - The data that should be included in the record.
+        -   `address` - (Optional) The address that the record should be published at. This can be omitted if a `prefix` is specified instead.
+        -   `prefix` - (Optional) The prefix that the record should be published at. If used instead of `address`, CasualOS will calculate the `address` by concatenating the given prefix and ID like this: `"{prefix}{id}"`.
+        -   `id` - (Optional) The ID that the record should be published at. If used with `prefix`, then CasualOS will combine the given `id` with the given `prefix` to calculate the `address`. If omitted, then CasualOS will generate a UUID to be used with the `prefix`.
+        -   `authToken` - (Optional) The auth token that should be used to publish the record. This is useful for allowing other users to be able to publish records to an app bundle on your account. If omitted, then the `authToken` tag from the `authBot` will be used.
+    -   Returns a promise that resolves when the record has been published.
+    -   See the documentation for some examples.
+-   Added the `os.getRecords(...filters)` function to be able to find and retrieve records.
+    -   Works similarly to `getBots()` except that the list of possible filters is different and more limited.
+    -   Possible filters are:
+        -   `byAuthID(id)` - Searches for records that were published by the given auth ID. This filter is required for all `os.getRecords()` queries.
+        -   `inSpace(space)` - Searches for records that were published to the given space. If omitted, only `tempRestricted` records will be searched.
+        -   `byAddress(address)` - Searches for the record with the given address. Useful for finding a specific record.
+        -   `byPrefix(prefix)` - Searches for records whose address starts with the given prefix. Useful for finding a list of records.
+        -   `byID(id)` - Searches for records whose address equals `{prefix}{id}`. Works similarly to `byAddress()` except that you must also use `byPrefix()`. Useful for finding a specific record.
+    -   Returns a promise that resolves with an object that contains a partial list of records.
+        -   Using this object, you can see the total number of records that the query matched and get the next part of the list using the `getMoreRecords()` function.
+        -   The object has the following structure:
+            -   `records` - The list of records that were retrieved. This list may contain all the records that were found or it might only contain some of the records that were found. You can retrieve all of the records by looping and calling `getMoreRecords()` until it returns an object with `hasMoreRecords` set to `false`.
+            -   `totalCount` - The total number of records that the query found.
+            -   `hasMoreRecords` - Whether there are more records that can be retrieved for the query.
+            -   `getMoreRecords()` - A function that can be called to get the next set of records for the query. Like `os.getRecords()`, this function returns a promise with an object that has the structure described above.
+    -   See the documentation for some examples.
+-   Added the `byID(id)` bot filter.
+    -   This function can be used either as a bot filter with `getBots()` or as a record filter with `os.getRecords()`.
+    -   As its name suggests, it can be used to find a bot with the given ID.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where using a `formAnimationAddress` prevented `formAnimation` from working correctly on first load.
+-   Fixed an issue where `os.focusOn()` would not work on mobile devices.
+
 ## V2.0.7
 
 #### Date: 8/16/2021

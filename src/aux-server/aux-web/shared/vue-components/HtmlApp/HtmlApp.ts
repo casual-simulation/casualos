@@ -21,7 +21,7 @@ import {
     TARGET_INPUT_PROPERTIES,
 } from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
 
-const DISALLOWED_NODE_NAMES = new Set(['script']);
+const DISALLOWED_NODE_NAMES = new Set(['SCRIPT']);
 const DISALLOWED_EVENTS = new Set([
     'mousewheel',
     'wheel',
@@ -162,7 +162,7 @@ export default class HtmlApp extends Vue {
         if (skeleton.nodeType === 3) {
             node = document.createTextNode(skeleton.data);
         } else if (skeleton.nodeType === 1) {
-            if (DISALLOWED_NODE_NAMES.has(skeleton.nodeName)) {
+            if (DISALLOWED_NODE_NAMES.has(skeleton.nodeName.toUpperCase())) {
                 return null;
             }
 

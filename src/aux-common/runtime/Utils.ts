@@ -313,3 +313,24 @@ export function getEmbeddedBase64FromPdf(pdf: string): string {
 
     return base64;
 }
+
+/**
+ * Formats the given token and service (bundle ID) into a string that can be used as an auth token for records requests.
+ */
+export function formatAuthToken(token: string, service: string): string {
+    return `${token}.${service}`;
+}
+
+/**
+ * Parses the given auth token into a token and service (bundle ID) pair.
+ * The returned token is the token that was returned from the auth API and the service is the bundle ID of the app that requested it.
+ */
+export function parseAuthToken(token: string): [string, string] {
+    const dotIndex = token.indexOf('.');
+    if (dotIndex < 0) {
+        return null;
+    }
+    const tokenWithoutService = token.slice(0, dotIndex);
+    const service = token.slice(dotIndex + 1);
+    return [tokenWithoutService, service];
+}

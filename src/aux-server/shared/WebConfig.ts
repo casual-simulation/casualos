@@ -38,6 +38,16 @@ export interface WebConfig {
     vmOrigin?: string;
 
     /**
+     * The HTTP origin that should be used for auth iframes.
+     */
+    authOrigin?: string;
+
+    /**
+     * The HTTP origin that should be used for records.
+     */
+    recordsOrigin?: string;
+
+    /**
      * Whether collaboration should be disabled.
      * Setting this to true will replace the shared partition of simulations
      * with tempLocal partitions.
