@@ -24,6 +24,11 @@ export interface RecordsQuery {
     token?: string;
 }
 
+export interface DeletableRecord {
+    issuer: string;
+    address: string;
+}
+
 export type SaveRecordResult = 'already_exists' | null;
 
 export interface RecordsStore {
@@ -50,6 +55,16 @@ export interface RecordsStore {
      * @param query The query.
      */
     getTemporaryRecords(query: RecordsQuery): Promise<GetRecordsActionResult>;
+
+    /**
+     * Deletes the permanent record that matches the given definition.
+     */
+    deletePermanentRecord(record: DeletableRecord): Promise<void>;
+
+    /**
+     * Deletes the temporary record that matches the given definition.
+     */
+    deleteTemporaryRecord(record: DeletableRecord): Promise<void>;
 }
 
 export class MemoryRecordsStore implements RecordsStore {
@@ -80,6 +95,26 @@ export class MemoryRecordsStore implements RecordsStore {
         query: RecordsQuery
     ): Promise<GetRecordsActionResult> {
         return this._queryRecords(this.tempRecords, query, 'temp');
+    }
+
+    async deletePermanentRecord(record: DeletableRecord): Promise<void> {
+        return this._deleteRecord(this.permanentRecords, record);
+    }
+
+    async deleteTemporaryRecord(record: DeletableRecord): Promise<void> {
+        return this._deleteRecord(this.tempRecords, record);
+    }
+
+    private _deleteRecord(
+        records: ServerlessRecord[],
+        record: DeletableRecord
+    ): void {
+        const index = records.findIndex(
+            (r) => r.issuer === record.issuer && r.address === record.address
+        );
+        if (index >= 0) {
+            records.splice(index, 1);
+        }
     }
 
     private _queryRecords(

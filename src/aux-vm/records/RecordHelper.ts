@@ -5,6 +5,7 @@ import {
     asyncResult,
     asyncError,
     GetRecordsAction,
+    DeleteRecordAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import { AuxHelper } from '../vm/AuxHelper';
@@ -28,6 +29,8 @@ export class RecordHelper {
                 this._publishRecord(event);
             } else if (event.type === 'get_records') {
                 this._getRecords(event);
+            } else if (event.type === 'delete_record') {
+                this._deleteRecord(event);
             }
         }
     }
@@ -86,6 +89,32 @@ export class RecordHelper {
             }
         } catch (e) {
             console.error('[RecordHelper] Error getting records:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _deleteRecord(event: DeleteRecordAction) {
+        try {
+            console.log('[RecordHelper] Deleting record...', event);
+            const result = await axios.post(
+                this._publishUrl('/api/records/delete'),
+                {
+                    token: event.token,
+                    address: event.address,
+                    space: event.space,
+                }
+            );
+
+            console.log('[RecordHelper] Record Deleted!');
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(asyncResult(event.taskId, null));
+            }
+        } catch (e) {
+            console.error('[RecordHelper] Error deleting record:', e);
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())

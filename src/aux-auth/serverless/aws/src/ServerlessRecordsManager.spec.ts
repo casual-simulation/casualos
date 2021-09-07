@@ -348,4 +348,81 @@ describe('ServerlessRecordsManager', () => {
             });
         });
     });
+
+    describe('deleteRecord()', () => {
+        beforeEach(async () => {
+            for (let i = 1; i <= 4; i++) {
+                await store.savePermanentRecord({
+                    issuer: 'myUser',
+                    address: 'record/' + i,
+                    authorizedUsers: [formatAuthToken('myUser', 'myService')],
+                    creationDate: 0,
+                    record: {},
+                    visibility: 'global',
+                });
+                await store.savePermanentRecord({
+                    issuer: 'myUser',
+                    address: 'record/' + (i + 4),
+                    authorizedUsers: [formatAuthToken('myUser', 'myService')],
+                    creationDate: 0,
+                    record: {},
+                    visibility: 'restricted',
+                });
+            }
+
+            for (let i = 1; i <= 4; i++) {
+                await store.saveTemporaryRecord({
+                    issuer: 'myUser',
+                    address: 'record/' + i,
+                    authorizedUsers: [formatAuthToken('myUser', 'myService')],
+                    creationDate: 0,
+                    record: {},
+                    visibility: 'global',
+                });
+                await store.saveTemporaryRecord({
+                    issuer: 'myUser',
+                    address: 'record/' + (i + 4),
+                    authorizedUsers: [formatAuthToken('myUser', 'myService')],
+                    creationDate: 0,
+                    record: {},
+                    visibility: 'restricted',
+                });
+            }
+
+            auth.setTokenIssuer('myToken', 'myUser');
+        });
+
+        it('should be able to delete a record based on user ID and address', async () => {
+            const result = await manager.deleteRecord({
+                token: formatAuthToken('myToken', 'myService'),
+                issuer: 'myUser',
+                address: 'record/1',
+                space: 'permanentGlobal',
+            });
+
+            expect(result).toEqual({
+                status: 200,
+            });
+        });
+
+        it('it should not allow deleting records with a token that will expire in more than a day', async () => {
+            // 10 miliseconds older than 24 hours.
+            auth.setTokenExpireTime(
+                'myToken',
+                Date.now() + (1000 * 60 * 60 * 24 + 10)
+            );
+
+            const result = await manager.deleteRecord({
+                token: formatAuthToken('myToken', 'myService'),
+                issuer: 'myUser',
+                address: 'record/1',
+                space: 'permanentGlobal',
+            });
+
+            expect(result).toEqual({
+                status: 403,
+                message: 'Permanent auth tokens cannot delete records.',
+            });
+        });
+    });
 });

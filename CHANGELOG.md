@@ -1,5 +1,21 @@
 # CasualOS Changelog
 
+## V2.0.9
+
+#### Date: 9/7/2021
+
+### :rocket: Improvements
+
+-   Added the `os.requestPermanentAuthToken()` and `os.destroyRecord(record)` functions.
+    -   `os.requestPermanentAuthToken()` is used to get auth tokens that can publish records to a app bundle from anywhere - including from other app bundles.
+    -   `os.destroyRecord(record)` destroys the given record and makes it inaccessable via `os.getRecords()`. You must be logged in to destroy records and you can only destroy records that have been created by your user account and app bundle.
+    -   See the documentation for more info.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where retrieving records from a temporary space can fail when the query matches no records.
+-   Fixed an issue where CasualOS could permanently stall while loading.
+
 ## V2.0.8
 
 #### Date: 9/7/2021

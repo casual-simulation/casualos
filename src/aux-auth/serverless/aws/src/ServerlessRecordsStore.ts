@@ -1,5 +1,6 @@
 import { DynamodbDataSourceConfig } from 'aws-sdk/clients/appsync';
 import {
+    DeletableRecord,
     RecordsQuery,
     RecordsStore,
     SaveRecordResult,
@@ -35,7 +36,8 @@ export class ServerlessRecordsStore implements RecordsStore {
     private _rHScan: (
         key: string,
         ...args: string[]
-    ) => Promise<[string, ...[string, string][]]>;
+    ) => Promise<[string, string[]]>;
+    private _rHDel: (key: string, ...fields: string[]) => Promise<number>;
 
     constructor(
         dynamoClient: dynamodb.DocumentClient,
@@ -52,6 +54,7 @@ export class ServerlessRecordsStore implements RecordsStore {
         this._rHSet = promisify(this._redis.hset).bind(this._redis);
         this._rHMGet = promisify(this._redis.hmget).bind(this._redis);
         this._rHScan = promisify(this._redis.hscan).bind(this._redis);
+        this._rHDel = promisify(this._redis.hdel).bind(this._redis);
     }
 
     async getPermanentRecords(
@@ -190,7 +193,7 @@ export class ServerlessRecordsStore implements RecordsStore {
         let records: Record[] = [];
         let i = 0;
         while (i < MAX_REDIS_ITERATIONS) {
-            const [nextIndex, ...keysAndValues] = await this._rHScan(
+            const [nextIndex, keysAndValues] = await this._rHScan(
                 key,
                 cursor,
                 'MATCH',
@@ -198,19 +201,23 @@ export class ServerlessRecordsStore implements RecordsStore {
                 'COUNT',
                 REDIS_BATCH_SIZE
             );
-            records.push(
-                ...keysAndValues.map(([key, value]) => {
-                    console.log(
-                        '[ServerlessRecordStore] Parsing Value:',
-                        value
-                    );
+
+            for (let i = 0; i + 1 < keysAndValues.length; i += 2) {
+                let key = keysAndValues[i];
+                let value = keysAndValues[i + 1];
+
+                if (!value) {
+                    continue;
+                }
+
+                try {
                     const record: ServerlessRecord = JSON.parse(value);
 
                     if (!this._authorizedToAccessRecord(record, query)) {
-                        return null;
+                        continue;
                     }
 
-                    return {
+                    records.push({
                         address: record.address,
                         authID: record.issuer,
                         data: record.record,
@@ -219,20 +226,28 @@ export class ServerlessRecordsStore implements RecordsStore {
                             (record.visibility === 'global'
                                 ? 'Global'
                                 : 'Restricted'),
-                    } as Record;
-                })
-            );
+                    } as Record);
+                } catch (err) {
+                    console.error(
+                        '[ServerlessRecordStore] Failed to parse value:',
+                        value,
+                        err
+                    );
+                }
+            }
             if (nextIndex === '0') {
                 break;
             }
-
+            cursor = nextIndex;
             i++;
         }
 
+        const availableRecords = records.filter((r) => !!r);
+
         return {
             hasMoreRecords: false,
-            totalCount: records.length,
-            records: records.filter((r) => !!r),
+            totalCount: availableRecords.length,
+            records: availableRecords,
         };
     }
 
@@ -280,6 +295,25 @@ export class ServerlessRecordsStore implements RecordsStore {
                 throw err;
             }
         }
+    }
+
+    async deleteTemporaryRecord(record: DeletableRecord): Promise<void> {
+        const key = `${this._redisNamespace}/${record.issuer}`;
+        const field = record.address;
+
+        await this._rHDel(key, field);
+    }
+
+    async deletePermanentRecord(record: DeletableRecord): Promise<void> {
+        await this._dynamo
+            .delete({
+                TableName: this._permanentRecordsTable,
+                Key: {
+                    issuer: record.issuer,
+                    address: record.address,
+                },
+            })
+            .promise();
     }
 
     private _authorizedToAccessRecord(

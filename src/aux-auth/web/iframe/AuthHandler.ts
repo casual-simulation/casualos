@@ -1,5 +1,8 @@
 import { AuxAuth } from '@casual-simulation/aux-vm';
-import { AuthData } from '@casual-simulation/aux-common';
+import {
+    AuthData,
+    PermanentAuthTokenResult,
+} from '@casual-simulation/aux-common';
 import {
     listenForChannel,
     listenForChannels,
@@ -53,6 +56,40 @@ export class AuthHandler implements AuxAuth {
             await this._authorizeService(service);
             return this._loginData;
         }
+    }
+
+    async getPermanentAuthToken(): Promise<PermanentAuthTokenResult> {
+        if (!(await this.isLoggedIn())) {
+            await this.login();
+        }
+
+        if (!(await this.isLoggedIn())) {
+            throw new Error(
+                'Unable to get permanent auth token when not logged in.'
+            );
+        }
+
+        const service = this._getDefaultService();
+
+        if (!service) {
+            throw new Error('Unable to get auth token without an auxCode');
+        }
+
+        console.log('[AuthHandler] Getting auth token for service...', service);
+        if (await authManager.isServiceAuthorized(service)) {
+            await authManager.loadUserInfo();
+            const token = await authManager.permanentlyAuthorizeService(
+                service
+            );
+
+            console.log('[AuthHandler] Got token!', service);
+            return {
+                service,
+                token,
+            };
+        }
+
+        throw new Error('auxCode not authorized to create tokens.');
     }
 
     addTokenListener(listener: (error: string, data: AuthData) => void) {

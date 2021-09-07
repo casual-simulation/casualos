@@ -1635,6 +1635,31 @@ let records = await os.getRecords(
 );
 ```
 
+### `os.destroyRecord(record)`
+
+Destroys the given record and returns a promise that resolves when the record has been destroyed.
+
+The **first parameter** is the record that should be destroyed. You can use a record returned from <ActionLink action='os.getRecords(...filter)'/> or you can specify an object with `address` and `space` properties.
+
+#### Examples:
+
+```typescript title='Destroy a record by space and address'
+await os.destroyRecord({
+    space: 'tempRestricted',
+    address: 'myRecord',
+});
+```
+
+```typescript title='Destroy the first record that was returned by os.getRecords()'
+const result = await os.getRecords(
+    byAuthID(authBot.id),
+    bySpace('permanentGlobal'),
+    byPrefix('myPrefix')
+);
+
+await os.destroyRecord(result.records[0]);
+```
+
 ### `os.sleep(time)`
 
 Waits the amount of time provided, in [miliseconds](https://en.wikipedia.org/wiki/Millisecond).
@@ -3768,6 +3793,23 @@ See [Auth Bot Tags](./tags.mdx#auth-bot) for more information.
 ```typescript title='Request an auth bot for the user'
 await os.requestAuthBot();
 os.toast("Logged in!");
+```
+
+### `os.requestPermanentAuthToken()`
+
+Requests that a permanent auth token be retrieved for the current app bundle.
+Returns a promise that resolves with the token that can be used with <ActionLink action='os.publishRecord(options)'/> and <ActionLink action='os.getRecords(...filters)'/>.
+
+Permanent auth tokens are useful for allowing any user and app bundle to publish records to your account and the app bundle that the auth token was requested from.
+This makes them useful for creating registries of records in a single user account that can be searched by prefix.
+
+Permanent auth tokens last for 1000 years and cannot be revoked. Additionally, permanent auth tokens cannot be used to destroy records.
+
+#### Examples
+
+```typescript title='Request a permanent auth token for this user and app bundle'
+const token = await os.requestPermanentAuthToken();
+os.toast(token);
 ```
 
 ## Server Actions

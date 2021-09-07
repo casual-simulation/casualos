@@ -2304,6 +2304,24 @@ export interface PrefixedRecord extends RecordDefinition {
 
 export type PublishableRecord = AddressedRecord | PrefixedRecord;
 
+
+export interface DeletableRecord {
+    /**
+     * The auth token that should be used to authenticate the delete record request.
+     */
+     authToken?: string;
+     
+    /**
+     * The space that the record lives in.
+     */
+     space: RecordSpace;
+
+     /**
+      * The address that the record was published to.
+      */
+     address: string;
+};
+
 /**
  * Defines an interface for options that show a payment box.
  */
@@ -4150,6 +4168,11 @@ declare global {
         requestAuthBot(): Promise<Bot>;
 
         /**
+         * Requests an auth token that does not expire and can be used to authorize other app bundles to publish records for this app bundle.
+         */
+        requestPermanentAuthToken(): Promise<string>;
+
+        /**
          * Publishes a record that can be used across servers.
          * @param recordDefinition The data that should be used to publish the record.
          */
@@ -4160,6 +4183,12 @@ declare global {
          * @param filters The list of filters that should be used to retrieve some records.
          */
         getRecords(...filters: RecordFilters[]): Promise<GetRecordsResult>;
+
+        /**
+         * Requests that the given record be destroyed.
+         * @param record The record that should be deleted.
+         */
+        destroyRecord(record: DeletableRecord): Promise<void>;
 
         /**
          * Specifies that the given prefix should be interpreted as code.

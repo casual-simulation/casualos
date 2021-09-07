@@ -167,6 +167,8 @@ import {
     publishRecord,
     getRecords,
     GetRecordsActionResult,
+    requestPermanentAuthToken,
+    deleteRecord,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -3600,6 +3602,37 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.requestPermanentAuthToken()', () => {
+            it('should send a RequestPermanentAuthTokenAction', () => {
+                const promise: any = library.api.os.requestPermanentAuthToken();
+                const expected = requestPermanentAuthToken(context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should resolve with a formatted auth token', async () => {
+                let result: string;
+                library.api.os
+                    .requestPermanentAuthToken()
+                    .then((r) => (result = r));
+
+                expect(
+                    context.resolveTask(
+                        context.tasks.size,
+                        {
+                            token: 'abc',
+                            service: 'def',
+                        },
+                        false
+                    )
+                ).toBe(true);
+
+                await waitAsync();
+
+                expect(result).toBe('abc.def');
+            });
+        });
+
         describe('os.publishRecord()', () => {
             it('should send a PublishRecordAction', () => {
                 const action: any = library.api.os.publishRecord({
@@ -4134,6 +4167,69 @@ describe('AuxLibrary', () => {
                         space: 'tempRestricted',
                     },
                 ]);
+            });
+        });
+
+        describe('os.destroyRecord()', () => {
+            it('should send a DeleteRecordAction', () => {
+                const action: any = library.api.os.destroyRecord({
+                    space: 'tempRestricted',
+                    address: 'myAddress',
+                    authToken: 'myToken',
+                });
+                const expected = deleteRecord(
+                    'myToken',
+                    'myAddress',
+                    'tempRestricted',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the authToken tag in the auth bot by default', () => {
+                try {
+                    (<any>globalThis).authBot = createBot('authBot', {
+                        authToken: 'myToken',
+                    });
+                    const action: any = library.api.os.destroyRecord({
+                        space: 'tempRestricted',
+                        address: 'myAddress',
+                    });
+                    const expected = deleteRecord(
+                        'myToken',
+                        'myAddress',
+                        'tempRestricted',
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                } finally {
+                    delete (<any>globalThis).authBot;
+                }
+            });
+
+            it('should be able to use a record reference', () => {
+                try {
+                    (<any>globalThis).authBot = createBot('authBot', {
+                        authToken: 'myToken',
+                    });
+                    const action: any = library.api.os.destroyRecord(<any>{
+                        authID: 'myID',
+                        address: 'myAddress',
+                        space: 'permanentGlobal',
+                    });
+                    const expected = deleteRecord(
+                        'myToken',
+                        'myAddress',
+                        'permanentGlobal',
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                } finally {
+                    delete (<any>globalThis).authBot;
+                }
             });
         });
 
