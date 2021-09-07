@@ -247,6 +247,8 @@ import {
     GetRecordsAction,
     GetRecordsActionResult,
     GetRecordsQuery,
+    requestPermanentAuthToken as calcRequestPermanentAuthToken,
+    PermanentAuthTokenResult,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -852,6 +854,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 unregisterApp,
                 compileApp: setAppContent,
                 requestAuthBot,
+                requestPermanentAuthToken,
 
                 publishRecord,
                 getRecords,
@@ -2682,6 +2685,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const event = calcDefineGlobalBot(name, botId, task.taskId);
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Requests an auth token that does not expire and can be used to authorize other app bundles to publish records for this app bundle.
+     */
+    async function requestPermanentAuthToken(): Promise<string> {
+        const task = context.createTask();
+        const event = calcRequestPermanentAuthToken(task.taskId);
+        const data: PermanentAuthTokenResult = await addAsyncAction(
+            task,
+            event
+        );
+        return formatAuthToken(data.token, data.service);
     }
 
     /**

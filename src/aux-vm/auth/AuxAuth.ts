@@ -1,4 +1,7 @@
-import { AuthData } from '@casual-simulation/aux-common';
+import {
+    AuthData,
+    PermanentAuthTokenResult,
+} from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for an object that is able to communicate with an authentication service.
@@ -14,6 +17,11 @@ export interface AuxAuth {
      * Returns a promise that resolves with data about the user.
      */
     login(): Promise<AuthData>;
+
+    /**
+     * Gets a permanent auth token for the current service.
+     */
+    getPermanentAuthToken(): Promise<PermanentAuthTokenResult>;
 
     /**
      * Adds a listener for when a new auth token is received.

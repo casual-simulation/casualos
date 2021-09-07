@@ -210,7 +210,8 @@ export type AsyncActions =
     | RequestAuthDataAction
     | DefineGlobalBotAction
     | PublishRecordAction
-    | GetRecordsAction;
+    | GetRecordsAction
+    | RequestPermanentAuthTokenAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3122,6 +3123,18 @@ export interface RequestAuthDataAction extends AsyncAction {
     type: 'request_auth_data';
 }
 
+/**
+ * Defines an event that requests a permanent auth token.
+ */
+export interface RequestPermanentAuthTokenAction extends AsyncAction {
+    type: 'request_permanent_auth_token';
+}
+
+export interface PermanentAuthTokenResult {
+    token: string;
+    service: string;
+}
+
 export interface AuthData {
     userId: string;
     service: string;
@@ -5994,5 +6007,19 @@ export function updateAuthData(data: AuthData): UpdateAuthDataAction {
     return {
         type: 'update_auth_data',
         data,
+    };
+}
+
+/**
+ * Creates a RequestPermanentAuthTokenAction.
+ * @param taskId
+ * @returns
+ */
+export function requestPermanentAuthToken(
+    taskId?: number | string
+): RequestPermanentAuthTokenAction {
+    return {
+        type: 'request_permanent_auth_token',
+        taskId,
     };
 }

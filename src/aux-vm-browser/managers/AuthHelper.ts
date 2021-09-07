@@ -99,4 +99,15 @@ export class AuthHelper {
         }
         return await this._proxy.login();
     }
+
+    /**
+     * Requests a permanent auth token for the current aux code.
+     * @returns
+     */
+    async getPermanentAuthToken() {
+        if (!this._initialized) {
+            await this._init();
+        }
+        return await this._proxy.getPermanentAuthToken();
+    }
 }

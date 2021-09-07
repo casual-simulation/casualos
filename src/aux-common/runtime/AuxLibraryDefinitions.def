@@ -4150,6 +4150,11 @@ declare global {
         requestAuthBot(): Promise<Bot>;
 
         /**
+         * Requests an auth token that does not expire and can be used to authorize other app bundles to publish records for this app bundle.
+         */
+        requestPermanentAuthToken(): Promise<string>;
+
+        /**
          * Publishes a record that can be used across servers.
          * @param recordDefinition The data that should be used to publish the record.
          */

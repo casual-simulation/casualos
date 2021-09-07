@@ -167,6 +167,7 @@ import {
     publishRecord,
     getRecords,
     GetRecordsActionResult,
+    requestPermanentAuthToken,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -3597,6 +3598,37 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(resultBot2).toBe(resultBot);
+            });
+        });
+
+        describe('os.requestPermanentAuthToken()', () => {
+            it('should send a RequestPermanentAuthTokenAction', () => {
+                const promise: any = library.api.os.requestPermanentAuthToken();
+                const expected = requestPermanentAuthToken(context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should resolve with a formatted auth token', async () => {
+                let result: string;
+                library.api.os
+                    .requestPermanentAuthToken()
+                    .then((r) => (result = r));
+
+                expect(
+                    context.resolveTask(
+                        context.tasks.size,
+                        {
+                            token: 'abc',
+                            service: 'def',
+                        },
+                        false
+                    )
+                ).toBe(true);
+
+                await waitAsync();
+
+                expect(result).toBe('abc.def');
             });
         });
 

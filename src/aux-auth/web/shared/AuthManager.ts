@@ -6,6 +6,9 @@ import { AppMetadata } from '../../shared/AuthMetadata';
 
 const EMAIL_KEY = 'userEmail';
 
+// 1000 years
+const PERMANENT_TOKEN_LIFESPAN_SECONDS = 1000 * 365 * 24 * 60 * 60;
+
 export interface AuthorizedToken {
     service: string;
     token: string;
@@ -111,6 +114,21 @@ export class AuthManager {
     async authorizeService(service: string) {
         const token = await this.magic.user.generateIdToken({
             attachment: service,
+        });
+
+        await this._addAuthorizedService(service, token);
+
+        this._authorizedTokens.next({
+            service,
+            token,
+        });
+        return token;
+    }
+
+    async permanentlyAuthorizeService(service: string) {
+        const token = await this.magic.user.generateIdToken({
+            attachment: service,
+            lifespan: PERMANENT_TOKEN_LIFESPAN_SECONDS,
         });
 
         await this._addAuthorizedService(service, token);
