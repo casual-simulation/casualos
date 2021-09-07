@@ -1635,6 +1635,31 @@ let records = await os.getRecords(
 );
 ```
 
+### `os.destroyRecord(record)`
+
+Destroys the given record and returns a promise that resolves when the record has been destroyed.
+
+The **first parameter** is the record that should be destroyed. You can use a record returned from <ActionLink action='os.getRecords(...filter)'/> or you can specify an object with `address` and `space` properties.
+
+#### Examples:
+
+```typescript title='Destroy a record by space and address'
+await os.destroyRecord({
+    space: 'tempRestricted',
+    address: 'myRecord',
+});
+```
+
+```typescript title='Destroy the first record that was returned by os.getRecords()'
+const result = await os.getRecords(
+    byAuthID(authBot.id),
+    bySpace('permanentGlobal'),
+    byPrefix('myPrefix')
+);
+
+await os.destroyRecord(result.records[0]);
+```
+
 ### `os.sleep(time)`
 
 Waits the amount of time provided, in [miliseconds](https://en.wikipedia.org/wiki/Millisecond).
