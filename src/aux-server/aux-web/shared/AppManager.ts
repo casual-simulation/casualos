@@ -76,6 +76,8 @@ export enum AppType {
     Player = 'player',
 }
 
+const SAVE_CONFIG_TIMEOUT_MILISECONDS = 5000;
+
 export class AppManager {
     public appType: AppType;
 
@@ -571,16 +573,31 @@ export class AppManager {
 
     private async _saveConfig() {
         try {
-            if (this.config) {
-                await this._db.keyval.put({
-                    key: 'config',
-                    value: this.config,
-                });
-            } else {
-                await this._db.keyval.delete('config');
+            const completed = await Promise.race([
+                new Promise<void>((resolve) =>
+                    setTimeout(resolve, SAVE_CONFIG_TIMEOUT_MILISECONDS)
+                ).then(() => false),
+                this._saveConfigCore().then(() => true),
+            ]);
+
+            if (!completed) {
+                console.error(
+                    '[AppManager] Unable to save config due to timeout.'
+                );
             }
         } catch (err) {
-            console.error('Unable to save config: ', err);
+            console.error('[AppManager] Unable to save config: ', err);
+        }
+    }
+
+    private async _saveConfigCore() {
+        if (this.config) {
+            await this._db.keyval.put({
+                key: 'config',
+                value: this.config,
+            });
+        } else {
+            await this._db.keyval.delete('config');
         }
     }
 
