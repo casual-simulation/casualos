@@ -2707,8 +2707,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function publishRecord(
         recordDefinition: PublishableRecord
     ): Promise<RecordReference> {
-        const task = context.createTask();
-
         let address: string;
         if ('address' in recordDefinition) {
             if (!hasValue(recordDefinition.address)) {
@@ -2744,6 +2742,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             throw new Error('The record property is required.');
         }
 
+        const task = context.createTask();
         const event = calcPublishRecord(
             token,
             address,
