@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V2.0.9
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where retrieving records from a temporary space can fail when the query matches no records.
+-   Fixed an issue where CasualOS could permanently stall while loading.
+
 ## V2.0.8
 
 #### Date: 9/7/2021
