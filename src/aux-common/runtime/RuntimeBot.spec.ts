@@ -1209,6 +1209,39 @@ describe('RuntimeBot', () => {
                 );
                 expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
             });
+
+            it('should not edit an array that is only in masks but surfaced through tags', () => {
+                const arr = ['hello'];
+                precalc.masks = {
+                    tempLocal: {
+                        arr,
+                    },
+                };
+                precalc.values.arr = arr;
+
+                const ret1 = script.tags.arr.push('test1');
+                const ret2 = script.masks.arr.push('test2');
+
+                const expected = ['hello', 'test1', 'test2'];
+                expect(ret1).toBe(2);
+                expect(ret2).toBe(3);
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toBeUndefined();
+                expect(script.masks.arr).toEqual(expected);
+                expect(script.changes.arr).toBeUndefined();
+                expect(script.maskChanges).toEqual({
+                    tempLocal: {
+                        arr: expected,
+                    },
+                });
+                expect(updateTagMaskMock).toBeCalledWith(
+                    precalc,
+                    'arr',
+                    ['tempLocal'],
+                    expected
+                );
+                expect(updateTagMock).not.toBeCalled();
+            });
         });
     });
 

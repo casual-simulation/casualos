@@ -100,9 +100,9 @@ export function createRuntimeBot(
     // const arrayModifyProperties = new Set(['length']);
 
     const wrapValue = (tag: string, value: any) => {
-        const isTagValue = () => value === manager.getValue(bot, tag);
-        const isMaskValue = () => value === manager.getTagMask(bot, tag);
         if (Array.isArray(value)) {
+            const isTagValue = () => value === manager.getRawValue(bot, tag);
+            const isMaskValue = () => value === manager.getTagMask(bot, tag);
             return new Proxy(value, {
                 get(target, key: string, proxy) {
                     if (arrayModifyMethods.has(key)) {
@@ -547,7 +547,7 @@ export interface RuntimeBotInterface extends RuntimeBatcher {
      * @param tag The tag.
      * @param space The space.
      */
-    getTagMask(bot: CompiledBot, tag: string): RealtimeEditMode;
+    getTagMask(bot: CompiledBot, tag: string): any;
 
     /**
      * Gets the listener for the given bot and tag, resolving any formulas that may be present.
