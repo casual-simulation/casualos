@@ -4,6 +4,9 @@ import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { AuthData } from '@casual-simulation/aux-common';
 
+// Save the query string that was used when the site loaded
+const query = typeof location !== 'undefined' ? location.search : null;
+
 interface StaticAuxAuth {
     new (): AuxAuth;
 }
@@ -18,7 +21,6 @@ export class AuthHelper {
     private _proxy: Remote<AuxAuth>;
     private _initialized: boolean = false;
     private _sub: Subscription = new Subscription();
-    private _query: string;
     private _authDataUpdated = new Subject<AuthData>();
 
     /**
@@ -34,9 +36,6 @@ export class AuthHelper {
      */
     constructor(iframeOrigin?: string) {
         this._origin = iframeOrigin || 'https://casualos.me';
-
-        // Cache the query on create so that scripts cannot change it by changing the user bot.
-        this._query = location.search;
     }
 
     dispose() {
@@ -47,8 +46,7 @@ export class AuthHelper {
     }
 
     private async _init() {
-        const iframeUrl = new URL(`/iframe.html${this._query}`, this._origin)
-            .href;
+        const iframeUrl = new URL(`/iframe.html${query}`, this._origin).href;
 
         const iframe = (this._iframe = document.createElement('iframe'));
         this._sub.add(() => {

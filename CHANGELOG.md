@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V2.0.10
+
+#### Date: 9/8/2021
+
+### :rocket: Improvements
+
+-   Improved the runtime to track changes to arrays without having to make a copy of the array or save it back to the tag.
+-   Improved `os.getRecords(...filters)` to use `authBot.id` if `byAuthID()` is not specified.
+
 ## V2.0.9
 
 #### Date: 9/7/2021

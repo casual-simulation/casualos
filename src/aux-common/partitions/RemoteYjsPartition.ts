@@ -621,11 +621,15 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                         const currentMap = this._bots.get(event.id);
                         if (event.update.tags && currentBot && currentMap) {
                             for (let tag of Object.keys(event.update.tags)) {
-                                const newVal = event.update.tags[tag];
+                                let newVal = event.update.tags[tag];
                                 const oldVal = currentBot.tags[tag];
 
                                 if (newVal === oldVal) {
-                                    continue;
+                                    if (Array.isArray(newVal)) {
+                                        newVal = newVal.slice();
+                                    } else {
+                                        continue;
+                                    }
                                 }
 
                                 this._updateValueInMap(

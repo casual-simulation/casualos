@@ -2770,7 +2770,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let token = (<any>globalThis).authBot?.tags?.authToken ?? null;
         let address: string;
         let prefix: string;
-        let authID: string;
+        let authID: string = (<any>globalThis).authBot?.id ?? null;
         let id: string;
         let space: RecordSpace = 'tempRestricted';
 
@@ -2796,7 +2796,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         if (!hasValue(authID)) {
-            throw new Error('An authID must be specified as a filter.');
+            throw new Error(
+                'An authID must be specified as a filter when there is no authBot.'
+            );
         }
 
         if (!hasValue(address) && !hasValue(prefix) && !hasValue(id)) {
