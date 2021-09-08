@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-store-mongodb",
-    "version": "2.0.8-alpha.1152089080",
+    "version": "2.0.10-alpha.1214737057",
     "description": "A causal tree store that interfaces with MongoDB",
     "keywords": [
         "mongodb",
@@ -42,7 +42,7 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/causal-trees": "^2.0.8-alpha.1152089080",
+        "@casual-simulation/causal-trees": "^2.0.10-alpha.1214737057",
         "@types/mongodb": "^3.5.32",
         "mongodb": "3.6.2"
     }

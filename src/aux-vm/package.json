@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm",
-    "version": "2.0.9",
+    "version": "2.0.10-alpha.1214737057",
     "description": "A set of abstractions required to securely run an AUX.",
     "keywords": [
         "aux"
@@ -40,11 +40,11 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^2.0.9",
+        "@casual-simulation/aux-common": "^2.0.10-alpha.1214737057",
         "@casual-simulation/causal-tree-client-socketio": "^2.0.3",
         "@casual-simulation/causal-trees": "^2.0.3",
         "@casual-simulation/crypto": "^2.0.0",
-        "@casual-simulation/undom": "^2.0.8-alpha.1152089080",
+        "@casual-simulation/undom": "^2.0.10-alpha.1214737057",
         "esbuild": "^0.8.43",
         "esbuild-wasm": "^0.8.43",
         "lodash": "4.17.21",
