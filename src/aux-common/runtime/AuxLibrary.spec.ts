@@ -4092,6 +4092,29 @@ describe('AuxLibrary', () => {
                 }
             });
 
+            it('should default the auth ID to the ID of the auth bot', () => {
+                try {
+                    (<any>globalThis).authBot = createBot('authBotID', {
+                        authToken: 'authToken',
+                    });
+                    const action: any = library.api.os.getRecords(
+                        library.api.byAddress('myAddress')
+                    );
+                    const expected = getRecords(
+                        'authToken',
+                        'authBotID',
+                        'tempRestricted',
+                        {
+                            address: 'myAddress',
+                        },
+                        context.tasks.size
+                    );
+                    expect(context.actions).toEqual([expected]);
+                } finally {
+                    delete (<any>globalThis).authBot;
+                }
+            });
+
             it('should resolve with an object that can make additional requests', async () => {
                 (<any>globalThis).authBot = createBot('authBot', {
                     authToken: 'authToken',
