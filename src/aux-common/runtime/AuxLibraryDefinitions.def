@@ -2232,6 +2232,96 @@ declare interface UnsuccessfulGeolocation {
  */
 declare type GeoLocation = SuccessfulGeolocation | UnsuccessfulGeolocation;
 
+
+/**
+ * Defines an event that publishes a record.
+ */
+ export interface PublishRecordAction extends AsyncAction {
+    type: 'publish_record';
+
+    /**
+     * The auth token that should be used to authenticate the publish record request.
+     */
+    token: string;
+
+    /**
+     * The address that the record should be published to.
+     */
+    address: string;
+
+    /**
+     * The record data that should be published.
+     */
+    record: any;
+
+    /**
+     * The space that the record should be published in.
+     */
+    space: RecordSpace;
+
+    uncopiable: true;
+}
+
+export interface RecordDefinition {
+    /**
+     * The auth token that should be used to authenticate the publish record request.
+     * Different auth tokens can be used to publish records to different CasualOS.me accounts.
+     * Defaults to using the auth token in the auth bot.
+     */
+    authToken?: string;
+
+    /**
+     * The space that the record should be published in.
+     * Defaults to tempRestricted.
+     */
+    space?: RecordSpace;
+
+    /**
+     * The record that should be published.
+     */
+    record: any;
+}
+
+export interface AddressedRecord extends RecordDefinition {
+    /**
+     * The address that the record should be published to.
+     */
+    address: string;
+}
+
+export interface PrefixedRecord extends RecordDefinition {
+    /**
+     * The prefix that the record should be published with.
+     */
+    prefix?: string;
+
+    /**
+     * The ID that the record should be published with.
+     * Defaults to a UUID.
+     */
+    id?: string;
+}
+
+export type PublishableRecord = AddressedRecord | PrefixedRecord;
+
+
+export interface DeletableRecord {
+    /**
+     * The auth token that should be used to authenticate the delete record request.
+     */
+     authToken?: string;
+     
+    /**
+     * The space that the record lives in.
+     */
+     space: RecordSpace;
+
+     /**
+      * The address that the record was published to.
+      */
+     address: string;
+};
+
 /**
  * Defines an interface for options that show a payment box.
  */
@@ -2406,6 +2496,78 @@ export interface Bot {
 }
 
 /**
+ * Defines an interface for a record.
+ */
+export interface Record {
+    /**
+     * The address that the record was published at.
+     */
+    address: string;
+
+    /**
+     * The space that the record was published to.
+     */
+    space: RecordSpace;
+
+    /**
+     * The auth ID that published the record.
+     */
+    authID: string;
+
+    /**
+     * The data that was stored in the record.
+     */
+    data: any;
+}
+
+/**
+ * Defines an interface for an object that represents a reference to a specific record.
+ */
+export interface RecordReference {
+    /**
+     * The ID of the user that published the record.
+     */
+    authID: string;
+
+    /**
+     * The space that the record lives in.
+     */
+    space: RecordSpace;
+
+    /**
+     * The address that the record was published to.
+     */
+    address: string;
+}
+
+
+/**
+ * Defines an interface that represents a set of records that were retrieved.
+ */
+export interface GetRecordsResult {
+
+    /**
+     * The set of records that were retrieved.
+     */
+    records: Record[];
+
+    /**
+     * The total number of records that the query would have returned.
+     */
+    totalCount: number;
+
+    /**
+     * Whether there are more records available to retrieve for the query.
+     */
+     hasMoreRecords: boolean;
+
+    /**
+     * Gets the set page of records.
+     */
+    getMoreRecords(): Promise<GetRecordsResult>;
+}
+
+/**
  * Defines the possible bot anchor points.
  */
 declare type BotAnchorPoint =
@@ -2425,10 +2587,42 @@ declare interface BotsState {
     [id: string]: Bot;
 }
 
+
 /**
  * The possible bot spaces.
+ *
+ * - "shared" means that the bot is a normal bot.
+ * - "local" means that the bot is stored in the local storage partition.
+ * - "tempLocal" means that the bot is stored in the temporary partition.
+ * - "history" means that the bot represents a version of another space.
+ * - "admin" means that the bot is shared across all servers.
+ * - "tempShared" means that the bot is temporary and shared with other devices.
+ * - "remoteTempShared" means that the bot is temporary and shared with this device from a remote device.
+ * - "certified" means that the bot is a certificate.
  */
-declare type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history' | 'admin' | 'tempShared' | 'remoteTempShared';
+ export type BotSpace =
+    | 'shared'
+    | 'local'
+    | 'tempLocal'
+    | 'history'
+    | 'admin'
+    | 'tempShared'
+    | 'remoteTempShared'
+    | 'certified';
+
+/**
+ * The possible spaces that records can be stored in.
+ * 
+ * - "tempGlobal" means that the record is temporary and available to anyone.
+ * - "tempRestricted" means that the record is temporary and available to a specific user.
+ * - "permanentGlobal" means that the record is permanent and available to anyone.
+ * - "permanentRestricted" means that the record is permanent and available to a specific user.
+ */
+export type RecordSpace = 
+    | 'tempGlobal'
+    | 'tempRestricted'
+    | 'permanentGlobal'
+    | 'permanentRestricted';
 
 /**
  * The possible portal types.
@@ -2467,6 +2661,36 @@ declare interface BotFilterFunction {
     (bot: Bot): boolean;
     sort?: (bot: Bot) => any;
 }
+
+export interface RecordFilter {
+    recordFilter: true;
+}
+
+export interface AuthIdRecordFilter extends RecordFilter {
+    authID: string;
+}
+
+export interface SpaceFilter extends BotFilterFunction, RecordFilter {
+    space: string;
+}
+
+export interface AddressRecordFilter extends RecordFilter {
+    address: string;
+}
+
+export interface AuthTokenRecordFilter extends RecordFilter {
+    authToken: string;
+}
+
+export interface PrefixRecordFilter extends RecordFilter {
+    prefix: string;
+}
+
+export interface IDRecordFilter extends BotFilterFunction, RecordFilter {
+    id: string;
+}
+
+export type RecordFilters = AuthIdRecordFilter | SpaceFilter | AddressRecordFilter | AuthTokenRecordFilter | PrefixRecordFilter | IDRecordFilter;
 
 /**
  * Defines a result from a webhook.
@@ -3028,6 +3252,16 @@ declare global {
     function byTag(tag: string, filter?: TagFilter): BotFilterFunction;
 
     /**
+     * Creates a filter function that checks whether bots have the given ID.
+     * @param id The ID to check for.
+     * 
+     * @example
+     * // Find all the bots with the ID "bob".
+     * let bobs = getBots(byId("bob"));
+     */
+    function byID(id: string): IDRecordFilter;
+
+    /**
      * Creates a filter function that checks whether bots match the given mod.
      * @param mod The mod that bots should be checked against.
      *
@@ -3139,6 +3373,30 @@ declare global {
      * let bots = getBots(not(inDimension("test")));
      */
     function not(filter: BotFilterFunction): BotFilterFunction;
+
+    /**
+     * Creates a record filter that retrieves records created by the given Auth ID.
+     * @param authID The ID of the creator of the records.
+     */
+     function byAuthID(authID: string): AuthIdRecordFilter;
+
+    /**
+     * Creates a record filter that retrieves records with the given address.
+     * @param address The address that the record was stored at.
+     */
+     function byAddress(address: string): AddressRecordFilter;
+
+    /**
+     * Creates a record filter that retrieves records with the given address.
+     * @param token The auth token that should be used to authenticate the getRecords() request.
+     */
+    function withAuthToken(token: string): AuthTokenRecordFilter;
+
+    /**
+     * Creates a record filter that retrieves records with the given prefix in their address.
+     * @param prefix The prefix that should be matched to record addresses.
+     */
+    function byPrefix(prefix: string): PrefixRecordFilter;
 
     /**
      * Gets the value of the given tag stored in the given bot.
@@ -3908,6 +4166,29 @@ declare global {
          * to contain information about the authorized user.
          */
         requestAuthBot(): Promise<Bot>;
+
+        /**
+         * Requests an auth token that does not expire and can be used to authorize other app bundles to publish records for this app bundle.
+         */
+        requestPermanentAuthToken(): Promise<string>;
+
+        /**
+         * Publishes a record that can be used across servers.
+         * @param recordDefinition The data that should be used to publish the record.
+         */
+        publishRecord(recordDefinition: PublishableRecord): Promise<void>;
+
+        /**
+         * Retrives a list of records using the given filters.
+         * @param filters The list of filters that should be used to retrieve some records.
+         */
+        getRecords(...filters: RecordFilters[]): Promise<GetRecordsResult>;
+
+        /**
+         * Requests that the given record be destroyed.
+         * @param record The record that should be deleted.
+         */
+        destroyRecord(record: DeletableRecord): Promise<void>;
 
         /**
          * Specifies that the given prefix should be interpreted as code.

@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm-deno",
-    "version": "2.0.8-alpha.1152089080",
+    "version": "2.0.9",
     "description": "A set of utilities required to securely run an AUX in Deno.",
     "keywords": [
         "aux"
@@ -40,11 +40,11 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^2.0.8-alpha.1152089080",
-        "@casual-simulation/aux-vm": "^2.0.8-alpha.1152089080",
-        "@casual-simulation/aux-vm-client": "^2.0.8-alpha.1152089080",
-        "@casual-simulation/causal-tree-client-socketio": "^2.0.8-alpha.1152089080",
-        "@casual-simulation/causal-trees": "^2.0.8-alpha.1152089080",
+        "@casual-simulation/aux-common": "^2.0.9",
+        "@casual-simulation/aux-vm": "^2.0.9",
+        "@casual-simulation/aux-vm-client": "^2.0.9",
+        "@casual-simulation/causal-tree-client-socketio": "^2.0.3",
+        "@casual-simulation/causal-trees": "^2.0.3",
         "@casual-simulation/crypto": "^2.0.0",
         "@casual-simulation/crypto-browser": "^2.0.0",
         "comlink": "^4.0.1",

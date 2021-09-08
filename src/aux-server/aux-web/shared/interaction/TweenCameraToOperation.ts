@@ -30,6 +30,7 @@ export class TweenCameraToOperation implements IOperation {
     private _rotValue: { x: number; y: number };
     private _duration: number;
     private _instant: boolean;
+    private _started: boolean;
     private _taskId: string | number;
     private _simulation: Simulation;
     private _positionTween: any;
@@ -79,6 +80,7 @@ export class TweenCameraToOperation implements IOperation {
         this._target = target;
         this._simulation = simulation;
         this._taskId = taskId;
+        this._started = false;
 
         // TODO: Implement proper duration
         this._instant = this._duration <= 0;
@@ -199,12 +201,17 @@ export class TweenCameraToOperation implements IOperation {
     }
 
     update(calc: BotCalculationContext): void {
-        if (!this._rigControls.controls.isEmptyState()) {
+        // Require that the operation has run at least
+        // one frame before being canceled.
+        // This is to prevent the operation from being canceled when it is started
+        // during a state where the rig controls are being used.
+        if (this._started && !this._rigControls.controls.isEmptyState()) {
             this._finished = true;
             this._canceled = true;
         }
 
         if (this._finished) return;
+        this._started = true;
     }
 
     isFinished(): boolean {

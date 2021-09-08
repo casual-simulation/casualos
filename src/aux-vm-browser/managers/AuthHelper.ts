@@ -1,7 +1,11 @@
 import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
 import { AuxAuth } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
-import { Subscription } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
+import { AuthData } from '@casual-simulation/aux-common';
+
+// Save the query string that was used when the site loaded
+const query = typeof location !== 'undefined' ? location.search : null;
 
 interface StaticAuxAuth {
     new (): AuxAuth;
@@ -17,7 +21,14 @@ export class AuthHelper {
     private _proxy: Remote<AuxAuth>;
     private _initialized: boolean = false;
     private _sub: Subscription = new Subscription();
-    private _query: string;
+    private _authDataUpdated = new Subject<AuthData>();
+
+    /**
+     * Gets an observable that resolves whenever auth data is updated and should be propagated into the AuxRuntime.
+     */
+    get authDataUpdated(): Observable<AuthData> {
+        return this._authDataUpdated;
+    }
 
     /**
      * Creates a new instance of the AuthHelper class.
@@ -25,9 +36,6 @@ export class AuthHelper {
      */
     constructor(iframeOrigin?: string) {
         this._origin = iframeOrigin || 'https://casualos.me';
-
-        // Cache the query on create so that scripts cannot change it by changing the user bot.
-        this._query = location.search;
     }
 
     dispose() {
@@ -38,8 +46,7 @@ export class AuthHelper {
     }
 
     private async _init() {
-        const iframeUrl = new URL(`/iframe.html${this._query}`, this._origin)
-            .href;
+        const iframeUrl = new URL(`/iframe.html${query}`, this._origin).href;
 
         const iframe = (this._iframe = document.createElement('iframe'));
         this._sub.add(() => {
@@ -57,6 +64,17 @@ export class AuthHelper {
 
         const wrapper = wrap<StaticAuxAuth>(this._channel.port1);
         this._proxy = await new wrapper();
+
+        this._proxy.addTokenListener(
+            proxy((err, data) => {
+                if (err) {
+                    return;
+                }
+
+                this._authDataUpdated.next(data);
+            })
+        );
+
         this._initialized = true;
     }
 
@@ -78,5 +96,16 @@ export class AuthHelper {
             await this._init();
         }
         return await this._proxy.login();
+    }
+
+    /**
+     * Requests a permanent auth token for the current aux code.
+     * @returns
+     */
+    async getPermanentAuthToken() {
+        if (!this._initialized) {
+            await this._init();
+        }
+        return await this._proxy.getPermanentAuthToken();
     }
 }

@@ -76,6 +76,7 @@ import {
     isRuntimeBot,
     registerCustomApp,
     defineGlobalBot,
+    updateAuthData,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -94,7 +95,7 @@ import { ActionResult, ScriptError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
-import { DeepObjectError } from './Utils';
+import { DeepObjectError, formatAuthToken } from './Utils';
 import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { merge } from '../utils';
 import { flatMap } from 'lodash';
@@ -4385,6 +4386,46 @@ describe('AuxRuntime', () => {
 
                 expect(actions.length).toBe(3);
                 expect(actions[2]).toEqual(toast('Hello'));
+            });
+        });
+
+        describe('update_auth_token', () => {
+            it('should update the token tag on the bot with the given ID', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                runtime.process([
+                    updateAuthData({
+                        avatarUrl: 'avatarUrl',
+                        name: 'Name',
+                        service: 'myService',
+                        token: 'myToken',
+                        userId: 'test1',
+                    }),
+                ]);
+
+                expect(runtime.currentState.test1.tags).toEqual({
+                    abc: 'def',
+                    authToken: formatAuthToken('myToken', 'myService'),
+                });
+            });
+
+            it('should do nothing if there is no bot for the data', () => {
+                runtime.process([
+                    updateAuthData({
+                        avatarUrl: 'avatarUrl',
+                        name: 'Name',
+                        service: 'myService',
+                        token: 'myToken',
+                        userId: 'test1',
+                    }),
+                ]);
+
+                expect(runtime.currentState).toEqual({});
             });
         });
     });
