@@ -390,6 +390,131 @@ describe('RuntimeBot', () => {
                 });
             });
         });
+
+        describe('array', () => {
+            beforeEach(() => {
+                precalc.tags.arr = precalc.values.arr = ['hello'];
+            });
+
+            it('should return an array-like object', () => {
+                expect(script.tags.arr).toEqual(['hello']);
+                expect(script.raw.arr).toEqual(['hello']);
+                expect(Array.isArray(script.tags.arr)).toBe(true);
+                expect(Array.isArray(script.raw.arr)).toBe(true);
+            });
+
+            it('should support setting an item in an array', () => {
+                const ret = (script.tags.arr[0] = 'test');
+
+                const expected = ['test'];
+                expect(ret).toEqual('test');
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toEqual(expected);
+                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+            });
+
+            it('should support pushing an item to an array', () => {
+                const ret = script.tags.arr.push('test');
+
+                const expected = ['hello', 'test'];
+                expect(ret).toBe(2);
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toEqual(expected);
+                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+            });
+
+            it('should support popping an item from an array', () => {
+                const ret = script.tags.arr.pop();
+
+                const expected = [] as any[];
+                expect(ret).toEqual('hello');
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toEqual(expected);
+                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+            });
+
+            it('should support unshifting an item to an array', () => {
+                const ret = script.tags.arr.unshift('test1', 'test2');
+
+                const expected = ['test1', 'test2', 'hello'] as any[];
+                expect(ret).toBe(3);
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toEqual(expected);
+                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+            });
+
+            it('should support shifting an item from an array', () => {
+                const ret = script.tags.arr.shift();
+
+                const expected = [] as any[];
+                expect(ret).toEqual('hello');
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toEqual(expected);
+                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+            });
+
+            it('should support filling an array', () => {
+                precalc.tags.arr = precalc.values.arr = [
+                    'hello',
+                    'test1',
+                    'test2',
+                ];
+                const ret = script.tags.arr.fill(10);
+
+                const expected = [10, 10, 10] as any[];
+                expect(ret).toEqual(expected);
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toEqual(expected);
+                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+            });
+
+            it('should support sorting the array', () => {
+                precalc.tags.arr = precalc.values.arr = ['zyx', 'lhm', 'abc'];
+                const ret = script.tags.arr.sort();
+
+                const expected = ['abc', 'lhm', 'zyx'] as any[];
+                expect(ret).toEqual(expected);
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toEqual(expected);
+                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+            });
+
+            it('should support splicing the array', () => {
+                precalc.tags.arr = precalc.values.arr = ['zyx', 'lhm', 'abc'];
+                const ret = script.tags.arr.splice(1, 1, 'def');
+
+                const expected = ['zyx', 'def', 'abc'] as any[];
+                expect(ret).toEqual(['lhm']);
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toEqual(expected);
+                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+            });
+
+            it('should support expanding an array by setting the length', () => {
+                const ret = (script.tags.arr.length = 5);
+
+                const expected = [
+                    'hello',
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                ] as any[];
+                expect(ret).toBe(5);
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toEqual(expected);
+                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+            });
+        });
     });
 
     describe('raw', () => {
@@ -532,6 +657,169 @@ describe('RuntimeBot', () => {
             const fun = script.raw.fun;
             expect(manager.getRawValue).toHaveBeenCalledWith(precalc, 'fun');
         });
+
+        describe('array', () => {
+            let arr: any[];
+
+            beforeEach(() => {
+                precalc.tags.arr = precalc.values.arr = arr = ['hello'];
+            });
+
+            it('should return the array', () => {
+                expect(script.tags.arr).not.toBe(arr);
+                expect(script.raw.arr).toBe(arr);
+                expect(Array.isArray(script.tags.arr)).toBe(true);
+                expect(Array.isArray(script.raw.arr)).toBe(true);
+            });
+
+            it('should not support setting an item in an array', () => {
+                const ret = (script.raw.arr[0] = 'test');
+
+                const expected = ['test'];
+                expect(ret).toEqual('test');
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toBeUndefined();
+                expect(updateTagMock).not.toBeCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
+            });
+
+            it('should not support pushing an item to an array', () => {
+                const ret = script.raw.arr.push('test');
+
+                const expected = ['hello', 'test'];
+                expect(ret).toBe(2);
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toBeUndefined();
+                expect(updateTagMock).not.toBeCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
+            });
+
+            it('should not support popping an item from an array', () => {
+                const ret = script.raw.arr.pop();
+
+                const expected = [] as any[];
+                expect(ret).toEqual('hello');
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toBeUndefined();
+                expect(updateTagMock).not.toBeCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
+            });
+
+            it('should not support unshifting an item to an array', () => {
+                const ret = script.raw.arr.unshift('test1', 'test2');
+
+                const expected = ['test1', 'test2', 'hello'] as any[];
+                expect(ret).toBe(3);
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toBeUndefined();
+                expect(updateTagMock).not.toBeCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
+            });
+
+            it('should not support shifting an item from an array', () => {
+                const ret = script.raw.arr.shift();
+
+                const expected = [] as any[];
+                expect(ret).toEqual('hello');
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toBeUndefined();
+                expect(updateTagMock).not.toBeCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
+            });
+
+            it('should not support filling an array', () => {
+                precalc.tags.arr = precalc.values.arr = [
+                    'hello',
+                    'test1',
+                    'test2',
+                ];
+                const ret = script.raw.arr.fill(10);
+
+                const expected = [10, 10, 10] as any[];
+                expect(ret).toEqual(expected);
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toBeUndefined();
+                expect(updateTagMock).not.toBeCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
+            });
+
+            it('should not support sorting the array', () => {
+                precalc.tags.arr = precalc.values.arr = ['zyx', 'lhm', 'abc'];
+                const ret = script.raw.arr.sort();
+
+                const expected = ['abc', 'lhm', 'zyx'] as any[];
+                expect(ret).toEqual(expected);
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toBeUndefined();
+                expect(updateTagMock).not.toBeCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
+            });
+
+            it('should not support splicing the array', () => {
+                precalc.tags.arr = precalc.values.arr = ['zyx', 'lhm', 'abc'];
+                const ret = script.raw.arr.splice(1, 1, 'def');
+
+                const expected = ['zyx', 'def', 'abc'] as any[];
+                expect(ret).toEqual(['lhm']);
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toBeUndefined();
+                expect(updateTagMock).not.toBeCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
+            });
+
+            it('should not support expanding an array by setting the length', () => {
+                const ret = (script.raw.arr.length = 5);
+
+                const expected = [
+                    'hello',
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                ] as any[];
+                expect(ret).toBe(5);
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.changes.arr).toBeUndefined();
+                expect(updateTagMock).not.toBeCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
+            });
+        });
     });
 
     describe('signatures', () => {
@@ -672,6 +960,255 @@ describe('RuntimeBot', () => {
                 ['shared', 'tempLocal'],
                 null
             );
+        });
+
+        describe('array', () => {
+            beforeEach(() => {
+                precalc.masks = {
+                    tempLocal: {
+                        arr: ['hello'],
+                    },
+                };
+            });
+
+            it('should return an array-like object', () => {
+                expect(script.masks.arr).toEqual(['hello']);
+                expect(Array.isArray(script.masks.arr)).toBe(true);
+            });
+
+            it('should support setting an item in an array', () => {
+                const ret = (script.masks.arr[0] = 'test');
+
+                const expected = ['test'];
+                expect(ret).toEqual('test');
+                expect(script.masks.arr).toEqual(expected);
+                expect(script.maskChanges).toEqual({
+                    tempLocal: {
+                        arr: expected,
+                    },
+                });
+                expect(updateTagMaskMock).toBeCalledWith(
+                    precalc,
+                    'arr',
+                    ['tempLocal'],
+                    expected
+                );
+                expect(updateTagMock).not.toBeCalled();
+            });
+
+            it('should support pushing an item to an array', () => {
+                const ret = script.masks.arr.push('test');
+
+                const expected = ['hello', 'test'];
+                expect(ret).toBe(2);
+                expect(script.masks.arr).toEqual(expected);
+                expect(script.maskChanges).toEqual({
+                    tempLocal: {
+                        arr: expected,
+                    },
+                });
+                expect(updateTagMaskMock).toBeCalledWith(
+                    precalc,
+                    'arr',
+                    ['tempLocal'],
+                    expected
+                );
+                expect(updateTagMock).not.toBeCalled();
+            });
+
+            it('should support popping an item from an array', () => {
+                const ret = script.masks.arr.pop();
+
+                const expected = [] as any[];
+                expect(ret).toEqual('hello');
+                expect(script.masks.arr).toEqual(expected);
+                expect(script.maskChanges).toEqual({
+                    tempLocal: {
+                        arr: expected,
+                    },
+                });
+                expect(updateTagMaskMock).toBeCalledWith(
+                    precalc,
+                    'arr',
+                    ['tempLocal'],
+                    expected
+                );
+                expect(updateTagMock).not.toBeCalled();
+            });
+
+            it('should support unshifting an item to an array', () => {
+                const ret = script.masks.arr.unshift('test1', 'test2');
+
+                const expected = ['test1', 'test2', 'hello'] as any[];
+                expect(ret).toBe(3);
+                expect(script.masks.arr).toEqual(expected);
+                expect(script.maskChanges).toEqual({
+                    tempLocal: {
+                        arr: expected,
+                    },
+                });
+                expect(updateTagMaskMock).toBeCalledWith(
+                    precalc,
+                    'arr',
+                    ['tempLocal'],
+                    expected
+                );
+                expect(updateTagMock).not.toBeCalled();
+            });
+
+            it('should support shifting an item from an array', () => {
+                const ret = script.masks.arr.shift();
+
+                const expected = [] as any[];
+                expect(ret).toEqual('hello');
+                expect(script.masks.arr).toEqual(expected);
+                expect(script.maskChanges).toEqual({
+                    tempLocal: {
+                        arr: expected,
+                    },
+                });
+                expect(updateTagMaskMock).toBeCalledWith(
+                    precalc,
+                    'arr',
+                    ['tempLocal'],
+                    expected
+                );
+                expect(updateTagMock).not.toBeCalled();
+            });
+
+            it('should support filling an array', () => {
+                precalc.masks = {
+                    tempLocal: {
+                        arr: ['hello', 'test1', 'test2'],
+                    },
+                };
+                const ret = script.masks.arr.fill(10);
+
+                const expected = [10, 10, 10] as any[];
+                expect(ret).toEqual(expected);
+                expect(script.masks.arr).toEqual(expected);
+                expect(script.maskChanges).toEqual({
+                    tempLocal: {
+                        arr: expected,
+                    },
+                });
+                expect(updateTagMaskMock).toBeCalledWith(
+                    precalc,
+                    'arr',
+                    ['tempLocal'],
+                    expected
+                );
+                expect(updateTagMock).not.toBeCalled();
+            });
+
+            it('should support sorting the array', () => {
+                precalc.masks = {
+                    tempLocal: {
+                        arr: ['zyx', 'lhm', 'abc'],
+                    },
+                };
+                const ret = script.masks.arr.sort();
+
+                const expected = ['abc', 'lhm', 'zyx'] as any[];
+                expect(ret).toEqual(expected);
+                expect(script.masks.arr).toEqual(expected);
+                expect(script.maskChanges).toEqual({
+                    tempLocal: {
+                        arr: expected,
+                    },
+                });
+                expect(updateTagMaskMock).toBeCalledWith(
+                    precalc,
+                    'arr',
+                    ['tempLocal'],
+                    expected
+                );
+                expect(updateTagMock).not.toBeCalled();
+            });
+
+            it('should support splicing the array', () => {
+                precalc.masks = {
+                    tempLocal: {
+                        arr: ['zyx', 'lhm', 'abc'],
+                    },
+                };
+                const ret = script.masks.arr.splice(1, 1, 'def');
+
+                const expected = ['zyx', 'def', 'abc'] as any[];
+                expect(ret).toEqual(['lhm']);
+                expect(script.masks.arr).toEqual(expected);
+                expect(script.maskChanges).toEqual({
+                    tempLocal: {
+                        arr: expected,
+                    },
+                });
+                expect(updateTagMaskMock).toBeCalledWith(
+                    precalc,
+                    'arr',
+                    ['tempLocal'],
+                    expected
+                );
+                expect(updateTagMock).not.toBeCalled();
+            });
+
+            it('should support expanding an array by setting the length', () => {
+                const ret = (script.masks.arr.length = 5);
+
+                const expected = [
+                    'hello',
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                ] as any[];
+                expect(ret).toBe(5);
+                expect(script.masks.arr).toEqual(expected);
+                expect(script.maskChanges).toEqual({
+                    tempLocal: {
+                        arr: expected,
+                    },
+                });
+                expect(updateTagMaskMock).toBeCalledWith(
+                    precalc,
+                    'arr',
+                    ['tempLocal'],
+                    expected
+                );
+                expect(updateTagMock).not.toBeCalled();
+            });
+
+            it('should support editing an array that is shared between masks and tags', () => {
+                const arr = ['hello'];
+                precalc.masks = {
+                    tempLocal: {
+                        arr,
+                    },
+                };
+                precalc.values.arr = precalc.tags.arr = arr;
+
+                const ret1 = script.tags.arr.push('test1');
+                const ret2 = script.masks.arr.push('test2');
+
+                const expected = ['hello', 'test1', 'test2'];
+                expect(ret1).toBe(2);
+                expect(ret2).toBe(3);
+                expect(script.tags.arr).toEqual(expected);
+                expect(script.raw.arr).toEqual(expected);
+                expect(script.masks.arr).toEqual(expected);
+                expect(script.changes.arr).toEqual(expected);
+                expect(script.maskChanges).toEqual({
+                    tempLocal: {
+                        arr: expected,
+                    },
+                });
+                expect(updateTagMaskMock).toBeCalledWith(
+                    precalc,
+                    'arr',
+                    ['tempLocal'],
+                    expected
+                );
+                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+            });
         });
     });
 

@@ -87,6 +87,57 @@ export function createRuntimeBot(
     };
     let rawMasks: BotTags = flattenTagMasks(bot.masks || {});
     let changedMasks: BotTagMasks = {};
+
+    const arrayModifyMethods = new Set([
+        'push',
+        'shift',
+        'unshift',
+        'pop',
+        'splice',
+        'fill',
+        'sort',
+    ]);
+    // const arrayModifyProperties = new Set(['length']);
+
+    const wrapValue = (tag: string, value: any) => {
+        const isTagValue = () => value === manager.getValue(bot, tag);
+        const isMaskValue = () => value === manager.getTagMask(bot, tag);
+        if (Array.isArray(value)) {
+            return new Proxy(value, {
+                get(target, key: string, proxy) {
+                    if (arrayModifyMethods.has(key)) {
+                        const func: Function = Reflect.get(target, key, proxy);
+                        return function () {
+                            const ret = func.apply(this, arguments);
+                            if (isMaskValue()) {
+                                updateTagMask(tag, value);
+                            }
+                            if (isTagValue()) {
+                                updateTag(tag, value);
+                            }
+                            return ret;
+                        };
+                    }
+
+                    return Reflect.get(target, key, proxy);
+                },
+                set(target, key: string, proxy) {
+                    const ret = Reflect.set(target, key, proxy);
+                    // if (arrayModifyProperties.has(key)) {
+                    if (isMaskValue()) {
+                        updateTagMask(tag, value);
+                    }
+                    if (isTagValue()) {
+                        updateTag(tag, value);
+                    }
+                    // }
+                    return ret;
+                },
+            });
+        }
+        return value;
+    };
+
     const tagsProxy = new Proxy(rawTags, {
         get(target, key: string, proxy) {
             if (key === 'toJSON') {
@@ -95,19 +146,20 @@ export function createRuntimeBot(
                 return constantTags[<keyof typeof constantTags>key];
             }
 
-            return manager.getValue(bot, key);
+            return wrapValue(key, manager.getValue(bot, key));
         },
         set(target, key: string, value, receiver) {
             if (key in constantTags) {
                 return true;
             }
-            const mode = manager.updateTag(bot, key, value);
-            if (mode === RealtimeEditMode.Immediate) {
-                rawTags[key] = value;
-                changeTag(key, value);
-            } else if (mode === RealtimeEditMode.Delayed) {
-                changeTag(key, value);
-            }
+            updateTag(key, value);
+            // const mode = manager.updateTag(bot, key, value);
+            // if (mode === RealtimeEditMode.Immediate) {
+            //     rawTags[key] = value;
+            //     changeTag(key, value);
+            // } else if (mode === RealtimeEditMode.Delayed) {
+            //     changeTag(key, value);
+            // }
             return true;
         },
         deleteProperty(target, key: string) {
@@ -115,13 +167,14 @@ export function createRuntimeBot(
                 return true;
             }
             const value = null as any;
-            const mode = manager.updateTag(bot, key, value);
-            if (mode === RealtimeEditMode.Immediate) {
-                rawTags[key] = value;
-                changeTag(key, value);
-            } else if (mode === RealtimeEditMode.Delayed) {
-                changeTag(key, value);
-            }
+            updateTag(key, value);
+            // const mode = manager.updateTag(bot, key, value);
+            // if (mode === RealtimeEditMode.Immediate) {
+            //     rawTags[key] = value;
+            //     changeTag(key, value);
+            // } else if (mode === RealtimeEditMode.Delayed) {
+            //     changeTag(key, value);
+            // }
             return true;
         },
         ownKeys(target) {
@@ -147,13 +200,14 @@ export function createRuntimeBot(
             if (key in constantTags) {
                 return true;
             }
-            const mode = manager.updateTag(bot, key, value);
-            if (mode === RealtimeEditMode.Immediate) {
-                rawTags[key] = value;
-                changeTag(key, value);
-            } else if (mode === RealtimeEditMode.Delayed) {
-                changeTag(key, value);
-            }
+            updateTag(key, value);
+            // const mode = manager.updateTag(bot, key, value);
+            // if (mode === RealtimeEditMode.Immediate) {
+            //     rawTags[key] = value;
+            //     changeTag(key, value);
+            // } else if (mode === RealtimeEditMode.Delayed) {
+            //     changeTag(key, value);
+            // }
             return true;
         },
         deleteProperty(target, key: string) {
@@ -161,13 +215,14 @@ export function createRuntimeBot(
                 return true;
             }
             const value = null as any;
-            const mode = manager.updateTag(bot, key, value);
-            if (mode === RealtimeEditMode.Immediate) {
-                rawTags[key] = value;
-                changeTag(key, value);
-            } else if (mode === RealtimeEditMode.Delayed) {
-                changeTag(key, value);
-            }
+            updateTag(key, value);
+            // const mode = manager.updateTag(bot, key, value);
+            // if (mode === RealtimeEditMode.Immediate) {
+            //     rawTags[key] = value;
+            //     changeTag(key, value);
+            // } else if (mode === RealtimeEditMode.Delayed) {
+            //     changeTag(key, value);
+            // }
             return true;
         },
         ownKeys(target) {
@@ -208,20 +263,13 @@ export function createRuntimeBot(
     });
     const maskProxy = new Proxy(rawMasks, {
         get(target, key: string, proxy) {
-            return manager.getTagMask(bot, key);
+            return wrapValue(key, manager.getTagMask(bot, key));
         },
         set(target, key: string, value, proxy) {
             if (key in constantTags) {
                 return true;
             }
-            const spaces = hasValue(value)
-                ? [DEFAULT_TAG_MASK_SPACE]
-                : getTagMaskSpaces(bot, key);
-            const mode = manager.updateTagMask(bot, key, spaces, value);
-            if (mode === RealtimeEditMode.Immediate) {
-                rawMasks[key] = value;
-            }
-            changeTagMask(key, value, spaces);
+            updateTagMask(key, value);
             return true;
         },
         deleteProperty(target: any, key: string) {
@@ -399,6 +447,27 @@ export function createRuntimeBot(
     }
 
     return script;
+
+    function updateTag(tag: string, value: any) {
+        const mode = manager.updateTag(bot, tag, value);
+        if (mode === RealtimeEditMode.Immediate) {
+            rawTags[tag] = value;
+            changeTag(tag, value);
+        } else if (mode === RealtimeEditMode.Delayed) {
+            changeTag(tag, value);
+        }
+    }
+
+    function updateTagMask(tag: string, value: any) {
+        const spaces = hasValue(value)
+            ? [DEFAULT_TAG_MASK_SPACE]
+            : getTagMaskSpaces(bot, tag);
+        const mode = manager.updateTagMask(bot, tag, spaces, value);
+        if (mode === RealtimeEditMode.Immediate) {
+            rawMasks[tag] = value;
+        }
+        changeTagMask(tag, value, spaces);
+    }
 
     function changeTag(tag: string, value: any) {
         if (isTagEdit(value)) {
