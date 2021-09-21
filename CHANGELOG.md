@@ -10,6 +10,7 @@
 -   Improved `os.getRecords(...filters)` to use `authBot.id` if `byAuthID()` is not specified.
 -   Added `labelOpacity` tag.
 -   Added `menuItemLabelStyle` tag.
+-   Added the ability to use the `auto` value in the `scaleY` tag for menu bots. This automatically scales the menu bot height based on the amount of text in the label.
 
 ## V2.0.9
 
