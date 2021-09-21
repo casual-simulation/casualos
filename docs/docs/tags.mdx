@@ -979,6 +979,36 @@ When setting this tag via the sheet, it is useful to utilize DNA tags to ensure 
 }
 ```
 
+### `menuItemLabelStyle`
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the menu item label.
+Only applies to bots that are being shown in the menu portal.
+
+This is useful for styling the label in ways that are not possible using normal tags.
+Overrides conflicting properties like <TagLink tag='color'/> or <TagLink tag='labelColor'/>.
+
+When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the menu item.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Use custom font settings on the menu bot label.
+```typescript
+🧬{
+    "font-size": "36px",
+    "font-weight": "bold"
+}
+```
+
 ### `menuItemHoverMode`
 
 The mode that menu items should use when the cursor hovers over the bot when it is in the menu portal.

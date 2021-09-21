@@ -76,6 +76,7 @@ export default class MenuBot extends Vue {
     backgroundColor: string = '#FFF';
     scaleY: number = 1;
     extraStyle: any = {};
+    extraLabelStyle: any = {};
     icon: string = null;
     iconIsURL: boolean = false;
     progress: number = null;
@@ -105,6 +106,12 @@ export default class MenuBot extends Vue {
             ...this.extraStyle,
             'background-color': this.backgroundColor,
             height: this.scaleY * 40 + 'px',
+        };
+    }
+
+    get labelStyle(): any {
+        return {
+            ...this.extraLabelStyle,
         };
     }
 
@@ -374,6 +381,11 @@ export default class MenuBot extends Vue {
             style = null;
         }
         this.extraStyle = style || {};
+        let labelStyle = calculateBotValue(calc, bot, 'menuItemLabelStyle');
+        if (typeof labelStyle !== 'object') {
+            labelStyle = null;
+        }
+        this.extraLabelStyle = labelStyle || {};
         this.hoverStyle = getMenuBotHoverStyle(calc, bot);
     }
 
