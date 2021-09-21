@@ -264,7 +264,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                         const newVal = event.update.tags[tag];
                         const oldVal = newBot.tags[tag];
 
-                        if (newVal !== oldVal) {
+                        if (newVal !== oldVal || Array.isArray(newVal)) {
                             changedTags.push(tag);
                         }
 

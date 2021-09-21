@@ -533,6 +533,46 @@ export function testPartitionImplementation(
             expect(updated).toEqual([]);
         });
 
+        it('should support updates to arrays that keep the same array instance', async () => {
+            let arr = [] as any[];
+            const bot = createBot('test', {
+                array: arr,
+            });
+
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
+            await partition.applyEvents([
+                botUpdated('test', {
+                    tags: {
+                        array: arr,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(updates.slice(1)).toEqual([
+                stateUpdatedEvent({
+                    test: {
+                        tags: {
+                            array: arr,
+                        },
+                    },
+                }),
+            ]);
+            expect(updated).toEqual([
+                {
+                    bot: createBot('test', {
+                        array: arr,
+                    }),
+                    tags: ['array'],
+                },
+            ]);
+        });
+
         it('should only report tags that changed', async () => {
             const bot = createBot('test', {
                 abc: 'def',

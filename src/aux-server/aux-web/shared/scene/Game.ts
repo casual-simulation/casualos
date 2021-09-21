@@ -504,7 +504,10 @@ export abstract class Game {
         );
         const options = {
             zoom: zoomValue,
-            rotation: rotationValue,
+            rotation: {
+                x: rotationValue.x,
+                y: rotationValue.y,
+            },
             duration: 0,
         };
         if (cameraRig.cancelFocus && cameraRig.focusOnPosition) {

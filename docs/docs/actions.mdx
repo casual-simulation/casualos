@@ -2443,6 +2443,13 @@ let options: {
     rotation?: {
         x: number;
         y: number;
+
+        /**
+         * Whether to normalize the rotation. Normalized rotations are clamped to between 0 and Math.PI*2.
+         * You can set this to false to allow using angles more than Math.PI*2. This would allow the camera to rotate around an object multiple times.
+         * Defaults to true.
+         */
+        normalize?: boolean;
     };
 
     /**
@@ -2545,6 +2552,16 @@ await os.focusOn({
 }, {
     portal: 'map',
     zoom: 10000
+});
+```
+
+7. Rotate the camera around the focus point 3 times.
+```typescript
+await os.focusOn(thisBot, {
+    rotation: {
+        y: (Math.PI * 2) * 3,
+        normalize: false
+    }
 });
 ```
 

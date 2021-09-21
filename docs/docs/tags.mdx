@@ -401,6 +401,21 @@ The color of the text in the label.
   <AnyColorValues/>
 </PossibleValuesTable>
 
+### `labelOpacity`
+
+The opacity of the text in the label.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='1'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number >= 0 and <= 1'>
+    The label will use the given opacity.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `labelFontSize`
 
 The font size of the text in the label.
@@ -597,6 +612,7 @@ Defaults to 1.
 </Badges>
 
 The Y scale (length) of the bot. Combines with the <TagLink tag='scale'/> tag to determine the final length of the bot.
+For menu bots, you can use `auto`. This scales the bot's height to fit its label. 
 
 Defaults to 1.
 
@@ -961,6 +977,39 @@ When setting this tag via the sheet, it is useful to utilize DNA tags to ensure 
 🧬{
     "border-radius": "8px 8px 0 0",
     "margin-top": "8px"
+}
+```
+
+### `menuItemLabelStyle`
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the menu item label.
+Only applies to bots that are being shown in the menu portal.
+
+This is useful for styling the label in ways that are not possible using normal tags.
+Overrides conflicting properties like <TagLink tag='color'/> or <TagLink tag='labelColor'/>.
+
+When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
+
+Note: when using a larger font size you may also need to increase the `line-height`. The default `line-height` is "24px". 
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the menu item.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Use custom font settings on the menu bot label.
+```typescript
+🧬{
+    "font-size": "36px",
+    "line-height": "36px",
+    "font-weight": "bold"
 }
 ```
 

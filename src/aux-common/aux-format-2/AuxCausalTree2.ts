@@ -420,6 +420,7 @@ export function applyEvents(
             if (
                 !currentVal ||
                 val !== currentVal.atom.value.value ||
+                Array.isArray(val) ||
                 first(iterateChildren(currentVal)) !== undefined
             ) {
                 const valueResult = updateTag(node, currentVal, val);
@@ -466,6 +467,7 @@ export function applyEvents(
             if (
                 !currentVal ||
                 val !== currentVal.atom.value.value ||
+                Array.isArray(val) ||
                 first(iterateChildren(currentVal)) !== undefined
             ) {
                 const valueResult = updateTag(node, currentVal, val);

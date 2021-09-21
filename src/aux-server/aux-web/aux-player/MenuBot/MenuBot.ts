@@ -74,8 +74,9 @@ export default class MenuBot extends Vue {
     labelColor: string = '#000';
     labelAlign: BotLabelAlignment = 'center';
     backgroundColor: string = '#FFF';
-    scaleY: number = 1;
+    scaleY: number | 'auto' = 1;
     extraStyle: any = {};
+    extraLabelStyle: any = {};
     icon: string = null;
     iconIsURL: boolean = false;
     progress: number = null;
@@ -104,7 +105,13 @@ export default class MenuBot extends Vue {
         return {
             ...this.extraStyle,
             'background-color': this.backgroundColor,
-            height: this.scaleY * 40 + 'px',
+            height: this.scaleY === 'auto' ? 'auto' : this.scaleY * 40 + 'px',
+        };
+    }
+
+    get labelStyle(): any {
+        return {
+            ...this.extraLabelStyle,
         };
     }
 
@@ -364,8 +371,13 @@ export default class MenuBot extends Vue {
     }
 
     private _updateScale(calc: BotCalculationContext, bot: Bot) {
-        const scale = getBotScale(calc, bot, 1);
-        this.scaleY = scale.y;
+        const isAuto = calculateBotValue(calc, bot, 'auxScaleY') === 'auto';
+        if (isAuto) {
+            this.scaleY = 'auto';
+        } else {
+            const scale = getBotScale(calc, bot, 1);
+            this.scaleY = scale.y;
+        }
     }
 
     private _updateStyle(calc: BotCalculationContext, bot: Bot) {
@@ -374,6 +386,11 @@ export default class MenuBot extends Vue {
             style = null;
         }
         this.extraStyle = style || {};
+        let labelStyle = calculateBotValue(calc, bot, 'menuItemLabelStyle');
+        if (typeof labelStyle !== 'object') {
+            labelStyle = null;
+        }
+        this.extraLabelStyle = labelStyle || {};
         this.hoverStyle = getMenuBotHoverStyle(calc, bot);
     }
 

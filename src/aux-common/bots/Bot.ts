@@ -1724,6 +1724,7 @@ export const KNOWN_TAGS: string[] = [
     'labelFontSize',
     'labelSize',
     'labelSizeMode',
+    'labelOpacity',
     'labelPadding',
     'labelPaddingX',
     'labelPaddingY',
@@ -1755,6 +1756,7 @@ export const KNOWN_TAGS: string[] = [
     'focusable',
     'transformer',
     'menuItemStyle',
+    'menuItemLabelStyle',
     'menuItemHoverMode',
     'menuItemText',
 

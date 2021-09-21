@@ -15,6 +15,7 @@ Make sure you have all the prerequisite tools installed:
             -   Docker Menu (On top bar) -> Preferences... -> File Sharing and add the `./docker/services/data/db` directory.
         -   On Windows:
             -   After running the command in step 4, docker will ask if you want to share the drive with it.
+-   [AWS CLI](https://aws.amazon.com/cli/)
 
 ## First Time Setup
 

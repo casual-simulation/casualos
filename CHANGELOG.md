@@ -1,5 +1,20 @@
 # CasualOS Changelog
 
+## V2.0.10
+
+#### Date: 9/21/2021
+
+### :rocket: Improvements
+
+-   Improved the runtime to track changes to arrays without having to make a copy of the array or save it back to the tag.
+-   Improved `os.getRecords(...filters)` to use `authBot.id` if `byAuthID()` is not specified.
+-   Added `labelOpacity` tag.
+-   Added `menuItemLabelStyle` tag.
+-   Added the ability to use the `auto` value in the `scaleY` tag for menu bots. This automatically scales the menu bot height based on the amount of text in the label.
+-   Added the ability to rotate around an object multiple times with `os.focusOn()` by setting `normalized` to `false` in the `rotation` property.
+    -   By default, rotations passed to `os.focusOn()` are normalized to between 0 and `2π`.
+    -   Setting `normalized` to `false` will skip this process and allow rotations larger than `2π` which in turn means the camera will rotate past `2π`.
+
 ## V2.0.9
 
 #### Date: 9/7/2021
