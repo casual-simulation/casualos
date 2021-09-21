@@ -9,6 +9,7 @@
 -   Improved the runtime to track changes to arrays without having to make a copy of the array or save it back to the tag.
 -   Improved `os.getRecords(...filters)` to use `authBot.id` if `byAuthID()` is not specified.
 -   Added `labelOpacity` tag.
+-   Added `menuItemLabelStyle` tag.
 
 ## V2.0.9
 
