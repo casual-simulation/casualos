@@ -11,6 +11,9 @@
 -   Added `labelOpacity` tag.
 -   Added `menuItemLabelStyle` tag.
 -   Added the ability to use the `auto` value in the `scaleY` tag for menu bots. This automatically scales the menu bot height based on the amount of text in the label.
+-   Added the ability to rotate around an object multiple times with `os.focusOn()` by setting `normalized` to `false` in the `rotation` property.
+    -   By default, rotations passed to `os.focusOn()` are normalized to between 0 and `2π`.
+    -   Setting `normalized` to `false` will skip this process and allow rotations larger than `2π` which in turn means the camera will rotate past `2π`.
 
 ## V2.0.9
 
