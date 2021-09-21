@@ -990,6 +990,8 @@ Overrides conflicting properties like <TagLink tag='color'/> or <TagLink tag='la
 
 When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
 
+Note: when using a larger font size you may also need to increase the `line-height`. The default `line-height` is "24px". 
+
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValueCode value='null'>
@@ -1006,6 +1008,7 @@ When setting this tag via the sheet, it is useful to utilize DNA tags to ensure 
 ```typescript
 🧬{
     "font-size": "36px",
+    "line-height": "36px",
     "font-weight": "bold"
 }
 ```
