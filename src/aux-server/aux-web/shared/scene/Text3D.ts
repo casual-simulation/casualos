@@ -261,6 +261,14 @@ export class Text3D extends Object3D {
     }
 
     /**
+     * Set the text's opacity.
+     * @param number The opacity value either in between 0 and 1.
+     */
+    public setOpacity(number: number) {
+        this._mesh.material.opacity = number;
+    }
+
+    /**
      * Sets the text's font. Returns whether a call to sync() is needed.
      * @param fontUrl The URL to the font file that should be used. Supports .otf and .woff.
      */

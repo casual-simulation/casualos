@@ -149,6 +149,7 @@ export class LabelDecorator
             updateNeeded = this._updateLabelAnchor(calc) || updateNeeded;
             updateNeeded = this._updateWordWrapMode(calc) || updateNeeded;
             this._updateLabelColor(calc);
+            this._updateLabelOpacity(calc);
             this.bot3D.forceComputeBoundingObjects();
 
             updateNeeded = this._updateTextPosition() || updateNeeded;
@@ -298,6 +299,17 @@ export class LabelDecorator
         } else {
             this.text3D.setColor(new Color('#000'));
         }
+    }
+
+    private _updateLabelOpacity(calc: BotCalculationContext) {
+        let labelOpacity = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'auxLabelOpacity',
+            1
+        );
+
+        this.text3D.setOpacity(labelOpacity);
     }
 
     private _updateLabelAnchor(calc: BotCalculationContext) {
