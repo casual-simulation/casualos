@@ -72,8 +72,14 @@ export class TweenCameraToOperation implements IOperation {
         this._zoomValue = options.zoom;
         this._rotValue = hasValue(options.rotation)
             ? {
-                  x: normalizeAngle(options.rotation.x),
-                  y: normalizeAngle(options.rotation.y),
+                  x:
+                      options.rotation?.normalize === false
+                          ? options.rotation.x
+                          : normalizeAngle(options.rotation.x),
+                  y:
+                      options.rotation?.normalize === false
+                          ? options.rotation.y
+                          : normalizeAngle(options.rotation.y),
               }
             : null;
         this._duration = options.duration ?? 1;
@@ -131,11 +137,13 @@ export class TweenCameraToOperation implements IOperation {
             const xDelta = normalizedRotation.x - this._rotValue.x;
             const yDelta = normalizedRotation.y - this._rotValue.y;
 
-            if (Math.abs(xDelta) > Math.PI) {
-                this._rotValue.x += Math.sign(xDelta) * Math.PI * 2;
-            }
-            if (Math.abs(yDelta) > Math.PI) {
-                this._rotValue.y += Math.sign(yDelta) * Math.PI * 2;
+            if (options?.rotation?.normalize !== false) {
+                if (Math.abs(xDelta) > Math.PI) {
+                    this._rotValue.x += Math.sign(xDelta) * Math.PI * 2;
+                }
+                if (Math.abs(yDelta) > Math.PI) {
+                    this._rotValue.y += Math.sign(yDelta) * Math.PI * 2;
+                }
             }
 
             this._rotationTween = new TWEEN.Tween<any>(normalizedRotation)

@@ -684,6 +684,12 @@ export interface FocusOnOptions {
     rotation?: {
         x: number;
         y: number;
+
+        /**
+         * Whether to normalize the rotation values to between 0 and 2*PI.
+         * Defaults to true. Setting this to false can be useful for rotating around a bot multiple times.
+         */
+        normalize?: boolean;
     };
 
     /**
