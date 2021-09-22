@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V2.0.11
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where zooming on menu bots would trigger the browser-provided zoom functionality.
+
 ## V2.0.10
 
 #### Date: 9/21/2021
