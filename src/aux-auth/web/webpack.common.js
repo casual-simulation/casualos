@@ -150,8 +150,9 @@ function commonPlugins(latestTag) {
             GIT_HASH: JSON.stringify(commitHash),
             GIT_TAG: JSON.stringify(latestTag),
 
-            // TODO: Add ability to customize this per build
-            MAGIC_API_KEY: JSON.stringify('pk_live_A17F1F2BC229021E'),
+            MAGIC_API_KEY: JSON.stringify(
+                process.env.MAGIC_API_KEY ?? 'pk_live_3CE2D56694071EC1'
+            ),
         }),
     ];
 }
