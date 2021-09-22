@@ -1596,7 +1596,7 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([showJoinCode()]);
             });
 
-            it('should allow linking to a specific server and dimension', () => {
+            it('should allow linking to a specific inst and dimension', () => {
                 const action = library.api.os.showJoinCode(
                     'server',
                     'dimension'
@@ -2237,7 +2237,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        server: 'channel',
+                        inst: 'channel',
                     },
                     'tempLocal'
                 );
@@ -2543,7 +2543,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        server: 'channel',
+                        inst: 'channel',
                     },
                     'tempLocal'
                 );
@@ -2585,7 +2585,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        server: 'channel',
+                        inst: 'channel',
                     },
                     'tempLocal'
                 );
@@ -2623,13 +2623,13 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return server', () => {
-                player.tags.server = 'server';
+            it('should return inst', () => {
+                player.tags.inst = 'server';
                 const result = library.api.os.getCurrentServer();
                 expect(result).toEqual('server');
             });
 
-            it('should return undefined when server is not set', () => {
+            it('should return undefined when inst is not set', () => {
                 const result = library.api.os.getCurrentServer();
                 expect(result).toBeUndefined();
             });
@@ -2637,8 +2637,38 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.server = given;
+                    player.tags.inst = given;
                     const result = library.api.os.getCurrentServer();
+                    expect(result).toEqual(expected);
+                }
+            );
+        });
+
+        describe('os.getCurrentInst()', () => {
+            let player: RuntimeBot;
+
+            beforeEach(() => {
+                player = createDummyRuntimeBot('player', {}, 'tempLocal');
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            it('should return inst', () => {
+                player.tags.inst = 'inst';
+                const result = library.api.os.getCurrentInst();
+                expect(result).toEqual('inst');
+            });
+
+            it('should return undefined when inst is not set', () => {
+                const result = library.api.os.getCurrentInst();
+                expect(result).toBeUndefined();
+            });
+
+            it.each(numberCases)(
+                'should return "%s" when given %s',
+                (expected, given) => {
+                    player.tags.inst = given;
+                    const result = library.api.os.getCurrentInst();
                     expect(result).toEqual(expected);
                 }
             );
@@ -2926,14 +2956,14 @@ describe('AuxLibrary', () => {
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingServer: 'channel2',
+                    processingInst: 'channel2',
                 });
                 const expected = checkout({
                     publishableKey: 'key',
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingServer: 'channel2',
+                    processingInst: 'channel2',
                 });
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -4286,6 +4316,48 @@ describe('AuxLibrary', () => {
                 uuidMock.mockReturnValueOnce('task1');
                 bot1.tags.abc = true;
                 const action: any = library.api.server.setupServer('channel', {
+                    botTag: bot1,
+                });
+                const expected = remote(
+                    setupServer('channel', {
+                        botTag: createBot(bot1.id, bot1.tags),
+                    }),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.setupInst()', () => {
+            it('should send a SetupChannelAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                bot1.tags.abc = true;
+                const action: any = library.api.os.setupInst('channel', bot1);
+                const expected = remote(
+                    setupServer('channel', createBot(bot1.id, bot1.tags)),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.os.setupInst('channel');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+
+            it('should convert the given bot to a copiable value', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                bot1.tags.abc = true;
+                const action: any = library.api.os.setupInst('channel', {
                     botTag: bot1,
                 });
                 const expected = remote(
@@ -5671,6 +5743,32 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('server.restoreHistoryMarkToInst()', () => {
+            it('should emit a restore_history_mark event', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.restoreHistoryMarkToInst(
+                    'mark',
+                    'inst'
+                );
+                const expected = remote(
+                    restoreHistoryMark('mark', 'inst'),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.restoreHistoryMarkToInst('mark', 'inst');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
         describe('server.loadFile()', () => {
             it('should issue a LoadFileAction in a remote event', () => {
                 uuidMock.mockReturnValueOnce('task1');
@@ -5729,7 +5827,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        server: 'channel',
+                        inst: 'channel',
                     },
                     'tempLocal'
                 );
@@ -5776,6 +5874,58 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.remoteCount()', () => {
+            let player: RuntimeBot;
+
+            beforeEach(() => {
+                player = createDummyRuntimeBot(
+                    'player',
+                    {
+                        inst: 'channel',
+                    },
+                    'tempLocal'
+                );
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            it('should emit a remote action with a get_remote_count action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.remoteCount();
+                const expected = remote(
+                    getRemoteCount('channel'),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept a custom server ID', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.remoteCount('test');
+                const expected = remote(
+                    getRemoteCount('test'),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.os.remoteCount('test');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
         describe('server.totalRemoteCount()', () => {
             it('should emit a remote action with a get_remote_count action', () => {
                 uuidMock.mockReturnValueOnce('uuid');
@@ -5794,6 +5944,30 @@ describe('AuxLibrary', () => {
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 library.api.server.totalRemoteCount();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('os.totalRemoteCount()', () => {
+            it('should emit a remote action with a get_remote_count action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.totalRemoteCount();
+                const expected = remote(
+                    getRemoteCount(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.os.totalRemoteCount();
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -5824,6 +5998,30 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.instances()', () => {
+            it('should emit a remote action with a get_servers action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.instances();
+                const expected = remote(
+                    getServers(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.os.instances();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
         describe('server.serverStatuses()', () => {
             it('should emit a remote action with a get_server_statuses action', () => {
                 uuidMock.mockReturnValueOnce('uuid');
@@ -5848,6 +6046,30 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.instStatuses()', () => {
+            it('should emit a remote action with a get_server_statuses action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.instStatuses();
+                const expected = remote(
+                    getServerStatuses(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.os.instStatuses();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
         describe('server.remotes()', () => {
             it('should emit a remote action with a get_remotes action', () => {
                 uuidMock.mockReturnValueOnce('uuid');
@@ -5866,6 +6088,30 @@ describe('AuxLibrary', () => {
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 library.api.server.remotes();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('os.remotes()', () => {
+            it('should emit a remote action with a get_remotes action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.remotes();
+                const expected = remote(
+                    getRemotes(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.os.remotes();
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);

@@ -2425,7 +2425,7 @@ export function simulationIdToString(id: SimulationIdParseSuccess): string {
     if (id.host) {
         let str = id.host;
         if (id.channel) {
-            str += `?server=${encodeURIComponent(id.channel)}`;
+            str += `?inst=${encodeURIComponent(id.channel)}`;
         }
         return str;
     }
@@ -2436,7 +2436,8 @@ export function simulationIdToString(id: SimulationIdParseSuccess): string {
 export function parseSimulationId(id: string): SimulationIdParseSuccess {
     try {
         let uri = new URL(id);
-        const channel = uri.searchParams.get('server');
+        const channel =
+            uri.searchParams.get('inst') ?? uri.searchParams.get('server');
         if (channel) {
             return {
                 success: true,

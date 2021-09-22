@@ -24,7 +24,7 @@ describe('BotPartition', () => {
         client = new MemoryBotClient();
         subject = createBotClientPartition({
             type: 'bot_client',
-            server: 'server',
+            inst: 'server',
             client: client,
         });
     });
@@ -304,7 +304,7 @@ describe('BotPartition', () => {
     });
 
     describe('clear_space', () => {
-        it('should clear all the bots in the given server', async () => {
+        it('should clear all the bots in the given instance', async () => {
             await client.addBots('server', [
                 createBot('test2', {
                     num: 123,

@@ -3476,11 +3476,11 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should send onServerAction() shouts for each event', async () => {
+        it('should send onAnyAction() shouts for each event', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        onServerAction: '@os.toast(that.action.message)',
+                        onAnyAction: '@os.toast(that.action.message)',
                     }),
                 })
             );
@@ -3509,7 +3509,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        onServerAction: '@action.reject(that.action)',
+                        onAnyAction: '@action.reject(that.action)',
                     }),
                 })
             );
@@ -3524,11 +3524,11 @@ describe('AuxRuntime', () => {
             expect(events).toEqual([]);
         });
 
-        it('should call onServerAction() once per action in a batch', async () => {
+        it('should call onAnyAction() once per action in a batch', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        onServerAction: '@tags.count += 1',
+                        onAnyAction: '@tags.count += 1',
                         wow: '@os.toast("hi")',
                         count: 0,
                     }),
@@ -3592,7 +3592,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        onServerAction: `@if(that.action.type === "action") action.reject(that.action);`,
+                        onAnyAction: `@if(that.action.type === "action") action.reject(that.action);`,
                         test: '@os.toast("hi")',
                     }),
                 })
@@ -3608,7 +3608,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        onServerAction: `@if(that.action.type === "run_script") action.reject(that.action);`,
+                        onAnyAction: `@if(that.action.type === "run_script") action.reject(that.action);`,
                     }),
                 })
             );
@@ -3637,11 +3637,11 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should support dispatching a new shout from inside onServerAction()', async () => {
+        it('should support dispatching a new shout from inside onAnyAction()', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        onServerAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
+                        onAnyAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
                         test: '@tags.hit = true',
                     }),
                 })
@@ -3652,7 +3652,7 @@ describe('AuxRuntime', () => {
 
             expect(events).toEqual([
                 [
-                    // onServerAction is executed before
+                    // onAnyAction is executed before
                     // the device action is executed
                     botUpdated('test1', {
                         tags: {
@@ -3664,11 +3664,11 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should support dispatching a new script from inside onServerAction()', async () => {
+        it('should support dispatching a new script from inside onAnyAction()', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        onServerAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
+                        onAnyAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
                     }),
                 })
             );
@@ -3678,7 +3678,7 @@ describe('AuxRuntime', () => {
 
             expect(events).toEqual([
                 [
-                    // onServerAction is executed before
+                    // onAnyAction is executed before
                     // the device action is executed
                     toast('hi'),
                     device(<any>{}, runScript('os.toast("hi")')),
@@ -3785,7 +3785,7 @@ describe('AuxRuntime', () => {
             uuidMock.mockReturnValueOnce('task1');
             runtime.process([
                 runScript(
-                    'server.serverRemoteCount("test").then(result => os.toast(result))'
+                    'os.remoteCount("test").then(result => os.toast(result))'
                 ),
             ]);
 
@@ -3805,9 +3805,7 @@ describe('AuxRuntime', () => {
         it('should support rejecting device async actions', async () => {
             uuidMock.mockReturnValueOnce('task1');
             runtime.process([
-                runScript(
-                    'server.serverRemoteCount("test").catch(err => os.toast(err))'
-                ),
+                runScript('os.remoteCount("test").catch(err => os.toast(err))'),
             ]);
 
             await waitAsync();
@@ -10366,12 +10364,12 @@ describe('original action tests', () => {
             expect(result.actions).toEqual([showJoinCode()]);
         });
 
-        it('should allow linking to a specific server and dimension', () => {
+        it('should allow linking to a specific instance and dimension', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@os.showJoinCode("server", "dimension")',
+                        test: '@os.showJoinCode("instance", "dimension")',
                     },
                 },
             };
@@ -10382,7 +10380,7 @@ describe('original action tests', () => {
             const result = calculateActionResults(state, botAction);
 
             expect(result.actions).toEqual([
-                showJoinCode('server', 'dimension'),
+                showJoinCode('instance', 'dimension'),
             ]);
         });
     });
@@ -10987,7 +10985,7 @@ describe('original action tests', () => {
                 userBot: {
                     id: 'userBot',
                     tags: {
-                        server: 'channel',
+                        inst: 'channel',
                     },
                 },
             };
@@ -11028,7 +11026,100 @@ describe('original action tests', () => {
                     id: 'userBot',
                     space: 'tempLocal',
                     tags: {
-                        server: 'channel',
+                        inst: 'channel',
+                    },
+                },
+                otherBot: {
+                    id: 'otherBot',
+                    space: 'local',
+                    tags: {
+                        name: 'other',
+                    },
+                },
+                historyBot: {
+                    id: 'historyBot',
+                    space: 'history',
+                    tags: {
+                        name: 'history',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot'], 'userBot');
+            const result = calculateActionResults(state, botAction);
+
+            expect(result.actions).toEqual([
+                download(
+                    JSON.stringify({
+                        version: 1,
+                        state: {
+                            thatBot: state.thatBot,
+                            thisBot: state.thisBot,
+                        },
+                    }),
+                    'channel.aux',
+                    'application/json'
+                ),
+            ]);
+        });
+    });
+
+    describe('os.downloadInst()', () => {
+        it('should emit a DownloadAction with the current state and inst name', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        test: '@os.downloadInst()',
+                    },
+                },
+                userBot: {
+                    id: 'userBot',
+                    tags: {
+                        inst: 'channel',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot'], 'userBot');
+            const result = calculateActionResults(state, botAction);
+
+            expect(result.actions).toEqual([
+                download(
+                    JSON.stringify({
+                        version: 1,
+                        state: state,
+                    }),
+                    'channel.aux',
+                    'application/json'
+                ),
+            ]);
+        });
+
+        it('should only include bots in the shared space', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        test: '@os.downloadInst()',
+                    },
+                },
+                thatBot: {
+                    id: 'thatBot',
+                    space: 'shared',
+                    tags: {
+                        name: 'that',
+                    },
+                },
+                userBot: {
+                    id: 'userBot',
+                    space: 'tempLocal',
+                    tags: {
+                        inst: 'channel',
                     },
                 },
                 otherBot: {
@@ -11530,7 +11621,7 @@ describe('original action tests', () => {
     });
 
     describe('os.getCurrentServer()', () => {
-        it('should return server', () => {
+        it('should return inst', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -11542,7 +11633,7 @@ describe('original action tests', () => {
                 userBot: {
                     id: 'userBot',
                     tags: {
-                        server: 'dimension',
+                        inst: 'dimension',
                     },
                 },
             };
@@ -11607,7 +11698,106 @@ describe('original action tests', () => {
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            server: given,
+                            inst: given,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot'], 'userBot');
+                const result = calculateActionResults(state, botAction);
+
+                expect(result.actions).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            dimension: expected,
+                        },
+                    }),
+                ]);
+            }
+        );
+    });
+
+    describe('os.getCurrentInst()', () => {
+        it('should return inst', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        test:
+                            '@setTag(this, "#dimension", os.getCurrentInst())',
+                    },
+                },
+                userBot: {
+                    id: 'userBot',
+                    tags: {
+                        inst: 'dimension',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot'], 'userBot');
+            const result = calculateActionResults(state, botAction);
+
+            expect(result.actions).toEqual([
+                botUpdated('thisBot', {
+                    tags: {
+                        dimension: 'dimension',
+                    },
+                }),
+            ]);
+        });
+
+        it('should return undefined when inst is not set', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        test:
+                            '@setTag(this, "#dimension", os.getCurrentInst())',
+                    },
+                },
+                userBot: {
+                    id: 'userBot',
+                    tags: {},
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot'], 'userBot');
+            const result = calculateActionResults(state, botAction);
+
+            expect(result.actions).toEqual([
+                botUpdated('thisBot', {
+                    tags: {
+                        dimension: undefined,
+                    },
+                }),
+            ]);
+        });
+
+        it.each(possibleTagValueCases)(
+            'it should support %s',
+            (given, actual) => {
+                const expected = hasValue(actual)
+                    ? actual.toString()
+                    : undefined;
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test:
+                                '@setTag(this, "#dimension", os.getCurrentInst())',
+                        },
+                    },
+                    userBot: {
+                        id: 'userBot',
+                        tags: {
+                            inst: given,
                         },
                     },
                 };
@@ -12251,6 +12441,44 @@ describe('original action tests', () => {
         });
     });
 
+    describe('os.setupInst()', () => {
+        it('should send a SetupChannelAction in a RemoteAction', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        test: '@os.setupInst("channel", this)',
+                    },
+                },
+                userBot: {
+                    id: 'userBot',
+                    tags: {
+                        auxPlayerName: 'testUser',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot'], 'userBot');
+            const result = calculateActionResults(state, botAction);
+
+            expect(result.actions).toEqual([
+                remote(
+                    setupServer(
+                        'channel',
+                        createBot('thisBot', {
+                            test: '@os.setupInst("channel", this)',
+                        })
+                    ),
+                    undefined,
+                    undefined,
+                    'uuid-0'
+                ),
+            ]);
+        });
+    });
+
     describe('server.shell()', () => {
         it('should emit a remote shell event', () => {
             const state: BotsState = {
@@ -12331,7 +12559,7 @@ describe('original action tests', () => {
                             productId: 'ID1',
                             title: 'Product 1',
                             description: '$50.43',
-                            processingServer: 'channel2'
+                            processingInst: 'channel2'
                         })`,
                     },
                 },
@@ -12348,7 +12576,7 @@ describe('original action tests', () => {
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingServer: 'channel2',
+                    processingInst: 'channel2',
                 }),
             ]);
         });
@@ -12514,7 +12742,38 @@ describe('original action tests', () => {
                     <RestoreHistoryMarkAction>{
                         type: 'restore_history_mark',
                         mark: 'mark',
-                        server: 'server',
+                        inst: 'server',
+                    },
+                    undefined,
+                    undefined,
+                    'uuid-0'
+                ),
+            ]);
+        });
+    });
+
+    describe('server.restoreHistoryMarkToInst()', () => {
+        it('should emit a restore_history_mark event', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        test: `@server.restoreHistoryMarkToInst("mark", "server")`,
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot'], 'userBot');
+            const result = calculateActionResults(state, botAction);
+
+            expect(result.actions).toEqual([
+                remote(
+                    <RestoreHistoryMarkAction>{
+                        type: 'restore_history_mark',
+                        mark: 'mark',
+                        inst: 'server',
                     },
                     undefined,
                     undefined,
@@ -12559,14 +12818,14 @@ describe('original action tests', () => {
                 productId: 'ID1',
                 title: 'Product 1',
                 description: '$50.43',
-                processingServer: 'channel2'
+                processingInst: 'channel2'
             })`,
                 checkout({
                     publishableKey: 'my_key',
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingServer: 'channel2',
+                    processingInst: 'channel2',
                 }),
             ] as const,
             ['os.openDevConsole()', openConsole()] as const,

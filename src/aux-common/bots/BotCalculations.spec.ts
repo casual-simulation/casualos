@@ -1119,6 +1119,24 @@ describe('BotCalculations', () => {
                 host: 'https://example.com:3000',
                 channel: 'sim/dimension',
             });
+
+            result = parseSimulationId(
+                'https://example.com:3000?inst=sim/dimension'
+            );
+            expect(result).toEqual({
+                success: true,
+                host: 'https://example.com:3000',
+                channel: 'sim/dimension',
+            });
+
+            result = parseSimulationId(
+                'https://example.com:3000?server=sim&inst=different/dimension'
+            );
+            expect(result).toEqual({
+                success: true,
+                host: 'https://example.com:3000',
+                channel: 'different/dimension',
+            });
         });
     });
 
@@ -1149,7 +1167,7 @@ describe('BotCalculations', () => {
             };
 
             expect(simulationIdToString(id)).toBe(
-                `https://example.com?server=${encodeURIComponent('test/abc')}`
+                `https://example.com?inst=${encodeURIComponent('test/abc')}`
             );
         });
 

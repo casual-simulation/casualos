@@ -179,7 +179,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     private: true,
                     initialState: {
                         [user.id]: createBot(user.id, {
-                            server: id,
+                            inst: id,
                         }),
                     },
                 },

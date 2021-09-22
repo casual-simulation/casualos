@@ -100,7 +100,7 @@ export default class Checkout extends Vue {
         this.title = event.title;
         this.requestBillingAddress = event.requestBillingAddress || false;
         this.productId = event.productId;
-        this.processingServer = event.processingServer;
+        this.processingServer = event.processingInst;
         this.paymentRequest = event.paymentRequest;
         this.publishableKey = event.publishableKey;
     }

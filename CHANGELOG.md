@@ -4,6 +4,29 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Renamed `server` to `inst`.
+    -   This means that you should now `configBot.tags.inst` instead of `configBot.tags.server`.
+    -   It also means that you now should go to `https://casualos.com?inst=my-aux` instead of `https://casualos.com?server=my-aux`.
+-   Renamed some functions:
+    -   `os.downloadServer()` -> `os.downloadInst()`
+    -   `os.loadServer()` -> `os.loadInst()`
+    -   `os.unloadServer()` -> `os.unloadInst()`
+    -   `os.getCurrentServer()` -> `os.getCurrentInst()`
+    -   `server.remotes()` -> `os.remotes()`
+    -   `server.serverRemoteCount()` -> `os.remoteCount()`
+    -   `server.servers()` -> `os.instances()`
+    -   `server.serverStatuses()` -> `os.instStatuses()`
+    -   `server.restoreHistoryMarkToServer()` -> `server.restoreHistoryMarkToInst()`.
+    -   Note that some functions have moved to the `os` namespace from the `server` namespace. This is because most `server` functions do not work on CasualOS.com and are only designed to work with a server-based system (which CasualOS.com is not). To clarify this, functions that work all the time are now in the `os` namespace while the others are in the `server` namespace.
+-   Renamed several listen tags:
+    -   `@onServerJoined` -> `@onInstJoined`
+    -   `@onServerLeave` -> `@onInstLeave`
+    -   `@onServerStreaming` -> `@onInstStreaming`
+    -   `@onServerStreamLost` -> `@onInstStreamLost`
+    -   `@onServerAction` -> `@onAnyAction`
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where zooming on menu bots would trigger the browser-provided zoom functionality.

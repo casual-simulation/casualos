@@ -445,7 +445,7 @@ export interface ReplaceDragBotAction extends Action {
 }
 
 /**
- * An event that is used to request that the server be backed up to github.
+ * An event that is used to request that the instance be backed up to github.
  */
 export interface BackupToGithubAction extends Action {
     type: 'backup_to_github';
@@ -462,7 +462,7 @@ export interface BackupToGithubAction extends Action {
 }
 
 /**
- * An event that is used to request that the server be backed up to a zip bot and downloaded.
+ * An event that is used to request that the instance be backed up to a zip bot and downloaded.
  */
 export interface BackupAsDownloadAction extends Action {
     type: 'backup_as_download';
@@ -479,7 +479,7 @@ export interface BackupAsDownloadAction extends Action {
 }
 
 /**
- * Defines the list of possible options for backing up a server.
+ * Defines the list of possible options for backing up a instance.
  */
 export interface BackupOptions {
     /**
@@ -510,9 +510,9 @@ export interface StartCheckoutOptions {
     description: string;
 
     /**
-     * The server that the payment processing should occur in.
+     * The instance that the payment processing should occur in.
      */
-    processingServer: string;
+    processingInst: string;
 
     /**
      * Whether to request the payer's billing address.
@@ -579,9 +579,9 @@ export interface CheckoutSubmittedAction extends Action {
     token: string;
 
     /**
-     * The channel that processing should happen in.
+     * The inst that processing should happen in.
      */
-    processingServer: string;
+    processingInst: string;
 }
 
 /**
@@ -902,7 +902,7 @@ export interface SuperShoutAction extends Action {
 }
 
 /**
- * Defines an event that sends a web request to a server.
+ * Defines an event that sends a web request to a instance.
  */
 export interface SendWebhookAction extends AsyncAction {
     type: 'send_webhook';
@@ -1069,26 +1069,26 @@ export interface GetRemoteCountAction extends Action {
     type: 'get_remote_count';
 
     /**
-     * The server that the device count should be retrieved for.
+     * The instance that the device count should be retrieved for.
      * If omitted, then the total device count will be returned.
      */
-    server?: string;
+    inst?: string;
 }
 
 /**
- * Defines an event that is used to get the list of servers on the server.
+ * Defines an event that is used to get the list of instances from the server.
  */
 export interface GetServersAction extends Action {
     type: 'get_servers';
 
     /**
-     * Whether to get the server statuses.
+     * Whether to get the instance statuses.
      */
     includeStatuses?: boolean;
 }
 
 /**
- * Defines an event that is used to get the list of remote devices on the server.
+ * Defines an event that is used to get the list of remote devices on the instance.
  */
 export interface GetRemotesAction extends Action {
     type: 'get_remotes';
@@ -2197,7 +2197,7 @@ export interface MarkHistoryAction {
 }
 
 /**
- * Defines an event that loads the history into the server.
+ * Defines an event that loads the history into the instance.
  */
 export interface BrowseHistoryAction {
     type: 'browse_history';
@@ -2215,14 +2215,14 @@ export interface RestoreHistoryMarkAction {
     mark: string;
 
     /**
-     * The server that the mark should be restored to.
-     * If not specified, then the current server will be used.
+     * The instance that the mark should be restored to.
+     * If not specified, then the current instance will be used.
      */
-    server?: string;
+    inst?: string;
 }
 
 /**
- * Defines an event that loads a space into the server.
+ * Defines an event that loads a space into the instance.
  */
 export interface LoadSpaceAction extends Partial<AsyncAction> {
     type: 'load_space';
@@ -2464,15 +2464,15 @@ export interface EnablePOVAction {
 }
 
 /**
- * Defines an event that shows a QR code that is a link to a server & dimension.
+ * Defines an event that shows a QR code that is a link to a instance & dimension.
  */
 export interface ShowJoinCodeAction {
     type: 'show_join_code';
 
     /**
-     * The server that should be joined.
+     * The instance that should be joined.
      */
-    server?: string;
+    inst?: string;
 
     /**
      * The dimension that should be joined.
@@ -3899,13 +3899,13 @@ export function checkout(options: StartCheckoutOptions): StartCheckoutAction {
 export function checkoutSubmitted(
     productId: string,
     token: string,
-    processingServer: string
+    processingInst: string
 ): CheckoutSubmittedAction {
     return {
         type: 'checkout_submitted',
         productId: productId,
         token: token,
-        processingServer: processingServer,
+        processingInst: processingInst,
     };
 }
 
@@ -4009,13 +4009,13 @@ export function saveFile(
 
 /**
  * Creates a new GetRemoteCountAction.
- * @param server The server that the device count should be retrieved for.
+ * @param inst The instance that the device count should be retrieved for.
  */
-export function getRemoteCount(server?: string): GetRemoteCountAction {
-    if (hasValue(server)) {
+export function getRemoteCount(inst?: string): GetRemoteCountAction {
+    if (hasValue(inst)) {
         return {
             type: 'get_remote_count',
-            server,
+            inst,
         };
     } else {
         return {
@@ -5169,13 +5169,13 @@ export function browseHistory(): BrowseHistoryAction {
 /**
  * Creates a RestoreHistoryMarkAction.
  * @param mark The ID of the mark that history should be restored to.
- * @param server The server that the mark should be restored to. If not specified, then the current server will be used.
+ * @param inst The instance that the mark should be restored to. If not specified, then the current instance will be used.
  */
 export function restoreHistoryMark(
     mark: string,
-    server?: string
+    inst?: string
 ): RestoreHistoryMarkAction {
-    if (!server) {
+    if (!inst) {
         return {
             type: 'restore_history_mark',
             mark,
@@ -5184,13 +5184,13 @@ export function restoreHistoryMark(
         return {
             type: 'restore_history_mark',
             mark,
-            server,
+            inst,
         };
     }
 }
 
 /**
- * Loads a space into the server.
+ * Loads a space into the instance.
  * @param space The space to load.
  * @param config The config which specifies how the space should be loaded.
  * @param taskId The ID of the async task.
@@ -5277,16 +5277,16 @@ export function disablePOV(): EnablePOVAction {
 
 /**
  * Creates a ShowJoinCodeAction.
- * @param server The server to link to.
+ * @param inst The instance to link to.
  * @param dimension The dimension to link to.
  */
 export function showJoinCode(
-    server?: string,
+    inst?: string,
     dimension?: string
 ): ShowJoinCodeAction {
     return {
         type: 'show_join_code',
-        server,
+        inst,
         dimension,
     };
 }

@@ -70,8 +70,8 @@ export class BaseSimulation implements Simulation {
     }
 
     /**
-     * Gets whether the app is connected to the server but may
-     * or may not be synced to the serer.
+     * Gets whether the app is connected to the inst but may
+     * or may not be synced to the inst.
      */
     get isOnline(): boolean {
         // return this._aux.channel.isConnected;
@@ -79,7 +79,7 @@ export class BaseSimulation implements Simulation {
     }
 
     /**
-     * Gets whether the app is synced to the server.
+     * Gets whether the app is synced to the inst.
      */
     get isSynced(): boolean {
         return this.isOnline;

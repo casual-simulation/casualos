@@ -252,7 +252,7 @@ export interface UpdatedBot {
  * - "local" means that the bot is stored in the local storage partition.
  * - "tempLocal" means that the bot is stored in the temporary partition.
  * - "history" means that the bot represents a version of another space.
- * - "admin" means that the bot is shared across all servers.
+ * - "admin" means that the bot is shared across all instances.
  * - "tempShared" means that the bot is temporary and shared with other devices.
  * - "remoteTempShared" means that the bot is temporary and shared with this device from a remote device.
  * - "certified" means that the bot is a certificate.
@@ -365,7 +365,7 @@ export interface BotTags {
     ['auxPlayerActive']?: boolean;
     ['pagePortal']?: string | boolean;
     ['sheetPortal']?: string | boolean;
-    ['server']?: string | string[];
+    ['inst']?: string | string[];
     ['miniPortal']?: string;
     ['menuPortal']?: string;
     ['leftWristPortal']?: string;
@@ -986,7 +986,7 @@ export const ADMIN_PARTITION_ID = 'admin';
 export const TEMPORARY_SHARED_PARTITION_ID = 'tempShared';
 
 /**
- * The partition ID for bots that are automatically added to the server.
+ * The partition ID for bots that are automatically added to the instance.
  */
 export const BOOTSTRAP_PARTITION_ID = 'bootstrap';
 
@@ -1233,7 +1233,7 @@ export const ON_SHOUT_ACTION_NAME: string = 'onListen';
 /**
  * The name of the event that is triggered before an action is executed.
  */
-export const ON_ACTION_ACTION_NAME: string = 'onServerAction';
+export const ON_ACTION_ACTION_NAME: string = 'onAnyAction';
 
 /**
  * The name of the event that is triggered when a remote whisper is executed.
@@ -1257,6 +1257,16 @@ export const ON_SERVER_STREAMING_ACTION_NAME: string = 'onServerStreaming';
 export const ON_SERVER_STREAM_LOST_ACTION_NAME: string = 'onServerStreamLost';
 
 /**
+ * The name of the event that is triggered when a inst becomes synced.
+ */
+export const ON_INST_STREAMING_ACTION_NAME: string = 'onInstStreaming';
+
+/**
+ * The name of the event that is triggered when a inst has become unsynced.
+ */
+export const ON_INST_STREAM_LOST_ACTION_NAME: string = 'onInstStreamLost';
+
+/**
  * The name of the event that is triggered when a channel is loaded.
  */
 // TODO: Remove this action
@@ -1266,6 +1276,11 @@ export const ON_SERVER_SUBSCRIBED_ACTION_NAME: string = 'onServerSubscribed';
  * The name of the event that is triggered when a channel is loaded.
  */
 export const ON_SERVER_JOINED_ACTION_NAME: string = 'onServerJoined';
+
+/**
+ * The name of the event that is triggered when a inst is loaded.
+ */
+export const ON_INST_JOINED_ACTION_NAME: string = 'onInstJoined';
 
 /**
  * The name of the event that is triggered when a channel is unloaded.
@@ -1278,6 +1293,11 @@ export const ON_SERVER_UNSUBSCRIBED_ACTION_NAME: string =
  * The name of the event that is triggered when a channel is unloaded.
  */
 export const ON_SERVER_LEAVE_ACTION_NAME: string = 'onServerLeave';
+
+/**
+ * The name of the event that is triggered when a channel is unloaded.
+ */
+export const ON_INST_LEAVE_ACTION_NAME: string = 'onInstLeave';
 
 /**
  * The name of the event that is triggered when portal tag is changed on the config bot.
@@ -1576,7 +1596,7 @@ export const KNOWN_TAGS: string[] = [
     'pagePortal',
     SHEET_PORTAL,
     IDE_PORTAL,
-    'server',
+    'inst',
     MINI_PORTAL,
     'menuPortal',
     MAP_PORTAL,
@@ -1833,11 +1853,11 @@ export const KNOWN_TAGS: string[] = [
     ON_POINTER_UP,
     ON_ANY_POINTER_DOWN,
     ON_ANY_POINTER_UP,
-    ON_SERVER_STREAMING_ACTION_NAME,
-    ON_SERVER_STREAM_LOST_ACTION_NAME,
+    ON_INST_STREAMING_ACTION_NAME,
+    ON_INST_STREAM_LOST_ACTION_NAME,
 
-    ON_SERVER_JOINED_ACTION_NAME,
-    ON_SERVER_LEAVE_ACTION_NAME,
+    ON_INST_JOINED_ACTION_NAME,
+    ON_INST_LEAVE_ACTION_NAME,
 
     ON_PORTAL_CHANGED_ACTION_NAME,
     ON_APP_SETUP_ACTION_NAME,
@@ -1947,24 +1967,28 @@ export function onDropArg(
 export function onServerStreamingArg(server: string) {
     return {
         server,
+        inst: server,
     };
 }
 
 export function onServerStreamLostArg(server: string) {
     return {
         server,
+        inst: server,
     };
 }
 
 export function onServerSubscribedArg(server: string) {
     return {
         server,
+        inst: server,
     };
 }
 
 export function onServerUnsubscribedArg(server: string) {
     return {
         server,
+        inst: server,
     };
 }
 

@@ -64,7 +64,7 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
 
 <PossibleValuesTable>
   <PossibleValueCode value='shared'>
-    The bot is saved on the server and is shared with everyone else. (default)
+    The bot is saved in the inst and is shared with everyone else. (default)
   </PossibleValueCode>
   <PossibleValueCode value='local'>
     The bot is saved on the device it was created from and is not shared with other devices.
@@ -92,7 +92,7 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
     Additionally, the history space is read-only. This means that bots cannot be added or removed from it and they also cannot be edited.
   </PossibleValueCode>
   <PossibleValueCode value='admin'>
-    The bot is saved on the server and is shared across all servers.
+    The bot is saved on the server and is shared across all instances.
     Admin space is initially locked whenever a new session starts. While locked, it is impossible to create, update, or destroy bots in the admin space.
     You must use the <ActionLink action='adminSpace.unlock(password)'/> function to unlock it.
   </PossibleValueCode>
@@ -2364,13 +2364,13 @@ All tags on the config bot will be synced with the URL query parameters.
 This means that setting the `#abc` tag on the config bot to `hello` will update the URL to include `abc=hello`.
 It also means that putting `miniPortal=myDimension` into the query string will set the <TagLink tag='miniPortal'/> tag to `myDimension`.
 
-### `server`
+### `inst`
 
 <Badges>
   <ConfigBotBadge/>
 </Badges>
 
-The server that is loaded into CasualOS.
+The instance that is loaded into CasualOS.
 
 ### `pagePortal`
 
@@ -2517,8 +2517,8 @@ Only available on the config bot.
 
 ### `dataPortal`
 
-The data portal is a special portal that can be used in a web request to get bot data directly from the server.
-Similar to webhooks, you specify the server and data portal in the query string of the URL.
+The data portal is a special portal that can be used in a web request to get bot data directly from the inst.
+Similar to webhooks, you specify the inst and data portal in the query string of the URL.
 
 If given a bot ID, then the bot will be returned as JSON.
 
@@ -2534,17 +2534,17 @@ If there is only one tag and it ends with an extension like specified above then
 
 1. Request the JSON of the Bot with the given ID:
 ```
-https://auxplayer.com?server=my-server&dataPortal=bf68e5cc-993b-42fd-a142-a23de6d2cdcb
+https://auxplayer.com?inst=my-aux&dataPortal=bf68e5cc-993b-42fd-a142-a23de6d2cdcb
 ```
 
 2. Request all the <TagLink tag='label'/> tags values.
 ```
-https://auxplayer.com?server=my-server&dataPortal=label
+https://auxplayer.com?inst=my-aux&dataPortal=label
 ```
 
 3. Request a web page from the `test.html` tag.
 ```
-https://auxplayer.com?server=my-server&dataPortal=test.html
+https://auxplayer.com?inst=my-aux&dataPortal=test.html
 ```
 
 ### `mousePointerPositionX`
@@ -2804,7 +2804,7 @@ Whether to force all shared scripts to have been signed by a certificate in orde
 This option only takes effect if it is set in the query string of the URL.
 Additionally, changing the tag value has no effect.
 
-If the server is loaded with `forceSignedScripts` set to `true`, then scripts will be required to be signed for the entire session.
+If the inst is loaded with `forceSignedScripts` set to `true`, then scripts will be required to be signed for the entire session.
 
 `tempLocal` and `local` spaces are exempt from this requirement.
 

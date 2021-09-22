@@ -186,7 +186,7 @@ export interface CausalRepoPartition extends AuxPartitionBase {
 
 /**
  * Defines a remote causal repo partition.
- * That is, a partition that was loaded from a remote server.
+ * That is, a partition that was loaded from a remote instance.
  */
 export interface RemoteCausalRepoPartition extends CausalRepoPartition {
     /**

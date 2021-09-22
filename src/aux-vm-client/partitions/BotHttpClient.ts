@@ -8,9 +8,9 @@ export class BotHttpClient implements BotClient {
         this.host = host;
     }
 
-    async addBots(server: string, added: Bot[]): Promise<void> {
+    async addBots(inst: string, added: Bot[]): Promise<void> {
         const request = {
-            namespace: server,
+            namespace: inst,
             bots: added,
         };
         try {
@@ -23,9 +23,9 @@ export class BotHttpClient implements BotClient {
         }
     }
 
-    async clearBots(server: string): Promise<void> {
+    async clearBots(inst: string): Promise<void> {
         const request = {
-            namespace: server,
+            namespace: inst,
         };
         try {
             const response = await axios.post(
@@ -37,9 +37,9 @@ export class BotHttpClient implements BotClient {
         }
     }
 
-    async lookupBots(server: string, tags: TagFilter[]): Promise<Bot[]> {
+    async lookupBots(inst: string, tags: TagFilter[]): Promise<Bot[]> {
         const request = {
-            namespace: server,
+            namespace: inst,
             tags: tags,
         };
 
