@@ -444,7 +444,11 @@ export class PlayerGame extends Game {
         // return [...this.miniSimulations];
     }
     getUIHtmlElements(): HTMLElement[] {
-        return [<HTMLElement>this.gameView.$refs.miniPortal, this.slider];
+        return [
+            <HTMLElement>this.gameView.$refs.miniPortal,
+            this.slider,
+            <HTMLElement>this.gameView.$refs.menuElement,
+        ];
     }
     getMiniPortalViewport(): Viewport {
         return this.miniViewport;
