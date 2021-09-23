@@ -2815,7 +2815,7 @@ export const ORIGINAL_OBJECT = Symbol('ORIGINAL_OBJECT');
  * @param obj The object.
  */
 export function getOriginalObject(obj: any): any {
-    if (ORIGINAL_OBJECT in obj) {
+    if (typeof obj === 'object' && !!obj && ORIGINAL_OBJECT in obj) {
         return obj[ORIGINAL_OBJECT];
     }
     return obj;

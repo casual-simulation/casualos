@@ -31,7 +31,9 @@ import {
     CompiledBotListener,
     EDIT_TAG_SYMBOL,
     EDIT_TAG_MASK_SYMBOL,
+    getOriginalObject,
 } from '../bots';
+import { ORIGINAL_OBJECT } from '../bots/BotCalculations';
 import { CompiledBot } from './CompiledBot';
 import { RuntimeStateVersion } from './RuntimeStateVersion';
 
@@ -103,7 +105,7 @@ export function createRuntimeBot(
         if (Array.isArray(value)) {
             const isTagValue = () => value === manager.getRawValue(bot, tag);
             const isMaskValue = () => value === manager.getTagMask(bot, tag);
-            return new Proxy(value, {
+            const proxy = new Proxy(value, {
                 get(target, key: string, proxy) {
                     if (arrayModifyMethods.has(key)) {
                         const func: Function = Reflect.get(target, key, proxy);
@@ -134,6 +136,15 @@ export function createRuntimeBot(
                     return ret;
                 },
             });
+
+            Object.defineProperty(proxy, ORIGINAL_OBJECT, {
+                configurable: true,
+                enumerable: false,
+                writable: false,
+                value: value,
+            });
+
+            return proxy;
         }
         return value;
     };
@@ -152,7 +163,7 @@ export function createRuntimeBot(
             if (key in constantTags) {
                 return true;
             }
-            updateTag(key, value);
+            updateTag(key, getOriginalObject(value));
             // const mode = manager.updateTag(bot, key, value);
             // if (mode === RealtimeEditMode.Immediate) {
             //     rawTags[key] = value;
@@ -200,7 +211,7 @@ export function createRuntimeBot(
             if (key in constantTags) {
                 return true;
             }
-            updateTag(key, value);
+            updateTag(key, getOriginalObject(value));
             // const mode = manager.updateTag(bot, key, value);
             // if (mode === RealtimeEditMode.Immediate) {
             //     rawTags[key] = value;

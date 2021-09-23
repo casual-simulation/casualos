@@ -99,6 +99,7 @@ import { DeepObjectError, formatAuthToken } from './Utils';
 import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { merge } from '../utils';
 import { flatMap } from 'lodash';
+import { SubscriptionLike } from 'rxjs';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -3889,6 +3890,17 @@ describe('AuxRuntime', () => {
         });
 
         describe('onError', () => {
+            let actions = [] as any[];
+            let sub: SubscriptionLike;
+
+            beforeEach(() => {
+                sub = runtime.onActions.subscribe((a) => actions.push(...a));
+            });
+
+            afterEach(() => {
+                sub.unsubscribe();
+            });
+
             it('should emit a onError shout when an error in a script occurs', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
@@ -3896,20 +3908,21 @@ describe('AuxRuntime', () => {
                             hello: '@throw new Error("My Error");',
                         }),
                         test3: createBot('test3', {
-                            onError: '@tags.error = that;',
+                            onError: '@action.perform(that);',
                         }),
                     })
                 );
+
                 runtime.process([action('hello')]);
 
                 await waitAsync();
 
-                const error = runtime.currentState['test3'].tags.error;
+                const errorParam: any = actions[0] as any;
 
-                expect(error).toBeTruthy();
-                expect(isRuntimeBot(error.bot)).toBe(true);
-                expect(error.tag).toBe('hello');
-                expect(error.error).toEqual(new Error('My Error'));
+                expect(errorParam).toBeTruthy();
+                expect(isRuntimeBot(errorParam.bot)).toBe(true);
+                expect(errorParam.tag).toBe('hello');
+                expect(errorParam.error).toEqual(new Error('My Error'));
             });
 
             it('should update the error stack trace to use the correct line numbers', async () => {
@@ -3919,7 +3932,7 @@ describe('AuxRuntime', () => {
                             hello: '@throw new Error("My Error");',
                         }),
                         test3: createBot('test3', {
-                            onError: '@tags.error = that;',
+                            onError: '@action.perform(that)',
                         }),
                     })
                 );
@@ -3927,7 +3940,7 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                const error = runtime.currentState['test3'].tags.error;
+                const error = actions[0];
 
                 expect(error).toBeTruthy();
                 expect(isRuntimeBot(error.bot)).toBe(true);
