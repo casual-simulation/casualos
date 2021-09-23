@@ -4001,16 +4001,16 @@ describe('AuxRuntime', () => {
         describe('register_builtin_portal', () => {
             it('should add a global variable with a new tempLocal bot for the bot included in the action', async () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                runtime.process([registerBuiltinPortal('page')]);
+                runtime.process([registerBuiltinPortal('bot')]);
 
                 await waitAsync();
 
                 expect(allEvents).toEqual([
-                    openCustomPortal('page', 'uuid', null, {}),
+                    openCustomPortal('bot', 'uuid', null, {}),
                     botAdded(createBot('uuid', {}, 'tempLocal')),
                 ]);
 
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['uuid']
                 );
             });
@@ -4027,21 +4027,21 @@ describe('AuxRuntime', () => {
                     })
                 );
                 runtime.process([
-                    openCustomPortal('page', 'test1', 'myTag', {}),
+                    openCustomPortal('bot', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['test1']
                 );
 
-                runtime.process([registerBuiltinPortal('page')]);
+                runtime.process([registerBuiltinPortal('bot')]);
 
                 await waitAsync();
 
                 expect(allEvents).toEqual([
-                    openCustomPortal('page', 'test1', 'myTag', {}),
+                    openCustomPortal('bot', 'test1', 'myTag', {}),
                 ]);
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['test1']
                 );
             });
@@ -4049,16 +4049,16 @@ describe('AuxRuntime', () => {
             it('should remove the global variables that were created by the runtime', () => {
                 uuidMock.mockReturnValueOnce('uuid');
 
-                runtime.process([registerBuiltinPortal('page')]);
+                runtime.process([registerBuiltinPortal('bot')]);
 
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['uuid']
                 );
 
                 runtime.unsubscribe();
 
                 expect(
-                    Object.getOwnPropertyDescriptor(globalThis, 'pageBot')
+                    Object.getOwnPropertyDescriptor(globalThis, 'botBot')
                 ).toBeUndefined();
             });
         });
@@ -4073,10 +4073,10 @@ describe('AuxRuntime', () => {
                     })
                 );
                 runtime.process([
-                    openCustomPortal('page', 'test1', 'myTag', {}),
+                    openCustomPortal('bot', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['test1']
                 );
             });
@@ -4093,18 +4093,18 @@ describe('AuxRuntime', () => {
                     })
                 );
                 runtime.process([
-                    openCustomPortal('page', 'test1', 'myTag', {}),
+                    openCustomPortal('bot', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['test1']
                 );
 
                 runtime.process([
-                    openCustomPortal('page', 'test2', 'myTag', {}),
+                    openCustomPortal('bot', 'test2', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['test2']
                 );
             });
@@ -4118,16 +4118,16 @@ describe('AuxRuntime', () => {
                     })
                 );
                 runtime.process([
-                    openCustomPortal('page', 'test1', 'myTag', {}),
+                    openCustomPortal('bot', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['test1']
                 );
 
-                runtime.process([openCustomPortal('page', null, 'myTag', {})]);
+                runtime.process([openCustomPortal('bot', null, 'myTag', {})]);
 
-                expect((<any>globalThis).pageBot).toBeUndefined();
+                expect((<any>globalThis).botBot).toBeUndefined();
             });
 
             it('should remove the global variables that were created by the runtime', () => {
@@ -4139,17 +4139,17 @@ describe('AuxRuntime', () => {
                     })
                 );
                 runtime.process([
-                    openCustomPortal('page', 'test1', 'myTag', {}),
+                    openCustomPortal('bot', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['test1']
                 );
 
                 runtime.unsubscribe();
 
                 expect(
-                    Object.getOwnPropertyDescriptor(globalThis, 'pageBot')
+                    Object.getOwnPropertyDescriptor(globalThis, 'botBot')
                 ).toBeUndefined();
             });
 
@@ -4158,13 +4158,13 @@ describe('AuxRuntime', () => {
                 runtime.onActions.subscribe((a) => actions.push(...a));
 
                 runtime.process([
-                    openCustomPortal('page', 'test1', 'myTag', {}),
+                    openCustomPortal('bot', 'test1', 'myTag', {}),
                 ]);
 
                 await waitAsync();
 
                 expect(actions).toEqual([
-                    openCustomPortal('page', 'test1', 'myTag', {}),
+                    openCustomPortal('bot', 'test1', 'myTag', {}),
                 ]);
             });
         });
@@ -4178,9 +4178,9 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.process([registerCustomApp('page', 'test1')]);
+                runtime.process([registerCustomApp('bot', 'test1')]);
 
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['test1']
                 );
             });
@@ -4196,15 +4196,15 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.process([registerCustomApp('page', 'test1')]);
+                runtime.process([registerCustomApp('bot', 'test1')]);
 
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['test1']
                 );
 
-                runtime.process([registerCustomApp('page', 'test2')]);
+                runtime.process([registerCustomApp('bot', 'test2')]);
 
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['test2']
                 );
             });
@@ -4217,15 +4217,15 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.process([registerCustomApp('page', 'test1')]);
+                runtime.process([registerCustomApp('bot', 'test1')]);
 
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['test1']
                 );
 
-                runtime.process([registerCustomApp('page', null)]);
+                runtime.process([registerCustomApp('bot', null)]);
 
-                expect((<any>globalThis).pageBot).toBeUndefined();
+                expect((<any>globalThis).botBot).toBeUndefined();
             });
 
             it('should remove the global variables that were created by the runtime', () => {
@@ -4236,16 +4236,16 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.process([registerCustomApp('page', 'test1')]);
+                runtime.process([registerCustomApp('bot', 'test1')]);
 
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['test1']
                 );
 
                 runtime.unsubscribe();
 
                 expect(
-                    Object.getOwnPropertyDescriptor(globalThis, 'pageBot')
+                    Object.getOwnPropertyDescriptor(globalThis, 'botBot')
                 ).toBeUndefined();
             });
 
@@ -4253,11 +4253,11 @@ describe('AuxRuntime', () => {
                 let actions = [] as BotAction[];
                 runtime.onActions.subscribe((a) => actions.push(...a));
 
-                runtime.process([registerCustomApp('page', 'test1')]);
+                runtime.process([registerCustomApp('bot', 'test1')]);
 
                 await waitAsync();
 
-                expect(actions).toEqual([registerCustomApp('page', 'test1')]);
+                expect(actions).toEqual([registerCustomApp('bot', 'test1')]);
             });
         });
 
@@ -4270,9 +4270,9 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.process([defineGlobalBot('page', 'test1')]);
+                runtime.process([defineGlobalBot('bot', 'test1')]);
 
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['test1']
                 );
             });
@@ -4292,14 +4292,12 @@ describe('AuxRuntime', () => {
                     resolved = true;
                 });
 
-                runtime.process([
-                    defineGlobalBot('page', 'test1', task.taskId),
-                ]);
+                runtime.process([defineGlobalBot('bot', 'test1', task.taskId)]);
 
                 await waitAsync();
 
                 expect(resolved).toBe(true);
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['test1']
                 );
             });
@@ -4321,14 +4319,14 @@ describe('AuxRuntime', () => {
                 });
 
                 runtime.process([
-                    defineGlobalBot('page', 'test1', task1.taskId),
-                    defineGlobalBot('page', 'test1', task2.taskId),
+                    defineGlobalBot('bot', 'test1', task1.taskId),
+                    defineGlobalBot('bot', 'test1', task2.taskId),
                 ]);
 
                 await waitAsync();
 
                 expect(resolved).toBe(true);
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['test1']
                 );
             });
@@ -4353,15 +4351,15 @@ describe('AuxRuntime', () => {
                 });
 
                 runtime.process([
-                    defineGlobalBot('page', 'test1', task1.taskId),
-                    defineGlobalBot('page', 'test2', task2.taskId),
+                    defineGlobalBot('bot', 'test1', task1.taskId),
+                    defineGlobalBot('bot', 'test2', task2.taskId),
                 ]);
 
                 await waitAsync();
 
                 expect(resolved).toBe(true);
 
-                expect((<any>globalThis).pageBot).toBe(
+                expect((<any>globalThis).botBot).toBe(
                     runtime.context.state['test2']
                 );
             });
@@ -11479,7 +11477,7 @@ describe('original action tests', () => {
     });
 
     describe('os.isInDimension()', () => {
-        it('should return true when pagePortal equals the given value', () => {
+        it('should return true when botPortal equals the given value', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -11491,7 +11489,7 @@ describe('original action tests', () => {
                 userBot: {
                     id: 'userBot',
                     tags: {
-                        pagePortal: 'dimension',
+                        botPortal: 'dimension',
                     },
                 },
             };
@@ -11510,7 +11508,7 @@ describe('original action tests', () => {
             ]);
         });
 
-        it('should return false when pagePortal does not equal the given value', () => {
+        it('should return false when botPortal does not equal the given value', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -11522,7 +11520,7 @@ describe('original action tests', () => {
                 userBot: {
                     id: 'userBot',
                     tags: {
-                        pagePortal: 'dimension',
+                        botPortal: 'dimension',
                     },
                 },
             };
@@ -11541,7 +11539,7 @@ describe('original action tests', () => {
             ]);
         });
 
-        it('should return false when pagePortal is not set', () => {
+        it('should return false when botPortal is not set', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -11572,7 +11570,7 @@ describe('original action tests', () => {
     });
 
     describe('os.getCurrentDimension()', () => {
-        it('should return pagePortal', () => {
+        it('should return botPortal', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -11584,7 +11582,7 @@ describe('original action tests', () => {
                 userBot: {
                     id: 'userBot',
                     tags: {
-                        pagePortal: 'dimension',
+                        botPortal: 'dimension',
                     },
                 },
             };
@@ -11603,7 +11601,7 @@ describe('original action tests', () => {
             ]);
         });
 
-        it('should return undefined when pagePortal is not set', () => {
+        it('should return undefined when botPortal is not set', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -11833,8 +11831,8 @@ describe('original action tests', () => {
 
     describe('os.getPortalDimension()', () => {
         const cases = [
-            ['page', 'pageDimension'],
-            ['pagePortal', 'pageDimension'],
+            ['bot', 'botDimension'],
+            ['botPortal', 'botDimension'],
             ['inventory', 'inventoryDimension'],
             ['inventoryPortal', 'inventoryDimension'],
             ['mini', 'miniDimension'],
@@ -11860,7 +11858,7 @@ describe('original action tests', () => {
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            pagePortal: 'pageDimension',
+                            botPortal: 'botDimension',
                             inventoryPortal: 'inventoryDimension',
                             miniPortal: 'miniDimension',
                             menuPortal: 'menuDimension',

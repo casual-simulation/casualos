@@ -227,7 +227,7 @@ export function processIndexEvents(
         }
 
         // Check for user bots
-        if (event.tag === 'pagePortal') {
+        if (event.tag === 'botPortal') {
             if (event.type === 'bot_tag_updated') {
                 const currentDimension = calculateStringTagValue(
                     calc,
@@ -331,7 +331,7 @@ function addDimension(
     tag: string
 ) {
     let botsWithDimensionTag = index.findBotsWithTag(dimension);
-    let userBots = index.findBotsWithTag('pagePortal');
+    let userBots = index.findBotsWithTag('botPortal');
     let allBots = union(userBots, botsWithDimensionTag);
     let botsInDimension = allBots.filter((b) =>
         isBotInDimension(calc, b, dimension)

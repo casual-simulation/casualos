@@ -112,15 +112,13 @@ export default class PlayerHome extends Vue {
         if (this.query) {
             // On first load check the inst and load a default
             let inst = this.query['inst'] as string | string[];
+            let update: Dictionary<string | string[]> = {};
             if (!hasValue(inst)) {
                 // if there is no inst tag defined, check for the story tag and then the server tag
                 inst = this.query['story'] ?? this.query['server'];
                 if (hasValue(inst)) {
-                    let update: Dictionary<string | string[]> = {
-                        inst: inst,
-                        story: null,
-                    };
-                    this._updateQuery(update);
+                    update.inst = inst;
+                    update.story = null;
                 } else {
                     // Generate a random inst name
                     const randomName: string = uniqueNamesGenerator(
@@ -130,12 +128,23 @@ export default class PlayerHome extends Vue {
                     if (!appManager.config.disableCollaboration) {
                         update.inst = randomName;
                     }
-                    if (!hasValue(this.query['pagePortal'])) {
-                        update.pagePortal = 'home';
+                    if (!hasValue(this.query['botPortal'])) {
+                        update.botPortal = 'home';
                     }
-                    this._updateQuery(update);
                     inst = randomName;
                 }
+            }
+
+            if (
+                hasValue(this.query['pagePortal']) &&
+                !hasValue(this.query['botPortal'])
+            ) {
+                const portal = this.query['pagePortal'];
+                update.botPortal = Array.isArray(portal) ? portal[0] : portal;
+            }
+
+            if (Object.keys(update).length > 0) {
+                this._updateQuery(update);
             }
             this._setServer(inst);
         }

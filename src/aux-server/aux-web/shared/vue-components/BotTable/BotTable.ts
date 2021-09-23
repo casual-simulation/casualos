@@ -93,7 +93,7 @@ export default class BotTable extends Vue {
     @Prop({ default: 'web_asset' })
     exitSheetIcon: string;
 
-    @Prop({ default: 'Page Portal' })
+    @Prop({ default: 'Bot Portal' })
     exitSheetHint: string;
 
     @Prop({})
@@ -140,7 +140,7 @@ export default class BotTable extends Vue {
         if (hasValue(this.exitSheetHint)) {
             return this.exitSheetHint;
         }
-        return 'Page Portal';
+        return 'Bot Portal';
     }
 
     uiHtmlElements(): HTMLElement[] {

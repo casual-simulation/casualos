@@ -2551,19 +2551,19 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return true when pagePortal equals the given value', () => {
-                player.tags.pagePortal = 'dimension';
+            it('should return true when botPortal equals the given value', () => {
+                player.tags.botPortal = 'dimension';
                 const result = library.api.os.isInDimension('dimension');
                 expect(result).toEqual(true);
             });
 
-            it('should return false when pagePortal does not equal the given value', () => {
-                player.tags.pagePortal = 'dimension';
+            it('should return false when botPortal does not equal the given value', () => {
+                player.tags.botPortal = 'dimension';
                 const result = library.api.os.isInDimension('abc');
                 expect(result).toEqual(false);
             });
 
-            it('should return false when pagePortal is not set', () => {
+            it('should return false when botPortal is not set', () => {
                 const result = library.api.os.isInDimension('dimension');
                 expect(result).toEqual(false);
             });
@@ -2571,7 +2571,7 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should support "%s" when given %s',
                 (expected, given) => {
-                    player.tags.pagePortal = given;
+                    player.tags.botPortal = given;
                     const result = library.api.os.isInDimension(expected);
                     expect(result).toEqual(true);
                 }
@@ -2593,13 +2593,13 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return pagePortal', () => {
-                player.tags.pagePortal = 'dimension';
+            it('should return botPortal', () => {
+                player.tags.botPortal = 'dimension';
                 const result = library.api.os.getCurrentDimension();
                 expect(result).toEqual('dimension');
             });
 
-            it('should return undefined when pagePortal is not set', () => {
+            it('should return undefined when botPortal is not set', () => {
                 const result = library.api.os.getCurrentDimension();
                 expect(result).toBeUndefined();
             });
@@ -2607,7 +2607,7 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.pagePortal = given;
+                    player.tags.botPortal = given;
                     const result = library.api.os.getCurrentDimension();
                     expect(result).toEqual(expected);
                 }
@@ -2734,8 +2734,8 @@ describe('AuxLibrary', () => {
             });
 
             const cases = [
-                ['page', 'pageDimension'],
-                ['pagePortal', 'pageDimension'],
+                ['bot', 'botDimension'],
+                ['botPortal', 'botDimension'],
                 ['inventory', 'inventoryDimension'],
                 ['inventoryPortal', 'inventoryDimension'],
                 ['mini', 'miniDimension'],
@@ -2750,7 +2750,7 @@ describe('AuxLibrary', () => {
 
             describe.each(cases)('%s', (portal, expectedDimension) => {
                 it(`should get the dimension for the ${portal} portal`, () => {
-                    player.tags.pagePortal = 'pageDimension';
+                    player.tags.botPortal = 'botDimension';
                     player.tags.inventoryPortal = 'inventoryDimension';
                     player.tags.miniPortal = 'miniDimension';
                     player.tags.menuPortal = 'menuDimension';
@@ -2764,7 +2764,7 @@ describe('AuxLibrary', () => {
                 it.each(numberCases)(
                     'should return "%s" when given %s',
                     (expected, given) => {
-                        player.tags.pagePortal = given;
+                        player.tags.botPortal = given;
                         player.tags.inventoryPortal = given;
                         player.tags.miniPortal = given;
                         player.tags.menuPortal = given;
@@ -11103,12 +11103,12 @@ describe('AuxLibrary', () => {
     });
 
     describe('os.getCameraPosition()', () => {
-        let pagePortal: RuntimeBot;
+        let botPortal: RuntimeBot;
         let miniPortal: RuntimeBot;
 
         beforeEach(() => {
-            pagePortal = createDummyRuntimeBot(
-                'pagePortal',
+            botPortal = createDummyRuntimeBot(
+                'botPortal',
                 {
                     cameraPositionX: 1,
                     cameraPositionY: 2,
@@ -11125,19 +11125,19 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, pagePortal, miniPortal);
+            addToContext(context, botPortal, miniPortal);
 
-            (<any>globalThis).pagePortalBot = pagePortal;
+            (<any>globalThis).botPortalBot = botPortal;
             (<any>globalThis).miniPortalBot = miniPortal;
         });
 
         afterEach(() => {
-            delete (<any>globalThis).pagePortalBot;
+            delete (<any>globalThis).botPortalBot;
             delete (<any>globalThis).miniPortalBot;
         });
 
-        it('should return NaN for x, y, and z if the page portal bot is null', () => {
-            (<any>globalThis).pagePortalBot = null;
+        it('should return NaN for x, y, and z if the bot portal bot is null', () => {
+            (<any>globalThis).botPortalBot = null;
             const result = library.api.os.getCameraPosition();
 
             expect(result).toEqual({
@@ -11147,7 +11147,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should return the x, y, and z of the camera for the page portal', () => {
+        it('should return the x, y, and z of the camera for the bot portal', () => {
             const result = library.api.os.getCameraPosition();
 
             expect(result).toEqual({
@@ -11167,8 +11167,19 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the page camera position', () => {
-            const result = library.api.os.getCameraPosition('page');
+        it('should be able to get the bot camera position', () => {
+            const result = library.api.os.getCameraPosition('bot');
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+
+        // TODO: Remove when backwards compatability is not needed
+        it('should be able to get the bot camera position using page as the parameter', () => {
+            const result = library.api.os.getCameraPosition('page' as any);
 
             expect(result).toEqual({
                 x: 1,
@@ -11179,12 +11190,12 @@ describe('AuxLibrary', () => {
     });
 
     describe('os.getCameraRotation()', () => {
-        let pagePortal: RuntimeBot;
+        let botPortal: RuntimeBot;
         let miniPortal: RuntimeBot;
 
         beforeEach(() => {
-            pagePortal = createDummyRuntimeBot(
-                'pagePortal',
+            botPortal = createDummyRuntimeBot(
+                'botPortal',
                 {
                     cameraRotationX: 1,
                     cameraRotationY: 2,
@@ -11201,19 +11212,19 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, pagePortal, miniPortal);
+            addToContext(context, botPortal, miniPortal);
 
-            (<any>globalThis).pagePortalBot = pagePortal;
+            (<any>globalThis).botPortalBot = botPortal;
             (<any>globalThis).miniPortalBot = miniPortal;
         });
 
         afterEach(() => {
-            delete (<any>globalThis).pagePortalBot;
+            delete (<any>globalThis).botPortalBot;
             delete (<any>globalThis).miniPortalBot;
         });
 
-        it('should return NaN for x, y, and z if the page portal bot is null', () => {
-            delete (<any>globalThis).pagePortalBot;
+        it('should return NaN for x, y, and z if the bot portal bot is null', () => {
+            delete (<any>globalThis).botPortalBot;
             const result = library.api.os.getCameraRotation();
 
             expect(result).toEqual({
@@ -11223,7 +11234,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should return the x, y, and z of the player camera for the page portal', () => {
+        it('should return the x, y, and z of the player camera for the bot portal', () => {
             const result = library.api.os.getCameraRotation();
 
             expect(result).toEqual({
@@ -11243,8 +11254,19 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the page camera rotation', () => {
-            const result = library.api.os.getCameraRotation('page');
+        it('should be able to get the bot camera rotation', () => {
+            const result = library.api.os.getCameraRotation('bot');
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+
+        // TODO: Remove when backwards compatability is not needed
+        it('should be able to get the bot camera rotation using page as the parameter', () => {
+            const result = library.api.os.getCameraRotation('page' as any);
 
             expect(result).toEqual({
                 x: 1,
@@ -11255,12 +11277,12 @@ describe('AuxLibrary', () => {
     });
 
     describe('os.getFocusPoint()', () => {
-        let pagePortal: RuntimeBot;
+        let botPortal: RuntimeBot;
         let miniPortal: RuntimeBot;
 
         beforeEach(() => {
-            pagePortal = createDummyRuntimeBot(
-                'pagePortal',
+            botPortal = createDummyRuntimeBot(
+                'botPortal',
                 {
                     cameraFocusX: 1,
                     cameraFocusY: 2,
@@ -11277,19 +11299,19 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, pagePortal, miniPortal);
+            addToContext(context, botPortal, miniPortal);
 
-            (<any>globalThis).pagePortalBot = pagePortal;
+            (<any>globalThis).botPortalBot = botPortal;
             (<any>globalThis).miniPortalBot = miniPortal;
         });
 
         afterEach(() => {
-            delete (<any>globalThis).pagePortalBot;
+            delete (<any>globalThis).botPortalBot;
             delete (<any>globalThis).miniPortalBot;
         });
 
-        it('should return NaN for x, y, and z if the page portal bot is null', () => {
-            delete (<any>globalThis).pagePortalBot;
+        it('should return NaN for x, y, and z if the bot portal bot is null', () => {
+            delete (<any>globalThis).botPortalBot;
             const result = library.api.os.getFocusPoint();
 
             expect(result).toEqual({
@@ -11299,7 +11321,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should return the x, y, and z of the player camera for the page portal', () => {
+        it('should return the x, y, and z of the player camera for the bot portal', () => {
             const result = library.api.os.getFocusPoint();
 
             expect(result).toEqual({
@@ -11319,8 +11341,19 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the page camera rotation', () => {
-            const result = library.api.os.getFocusPoint('page');
+        it('should be able to get the bot camera rotation', () => {
+            const result = library.api.os.getFocusPoint('bot');
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+
+        // TODO: Remove when backwards compatability is not needed
+        it('should be able to get the bot camera rotation using page as the parameter', () => {
+            const result = library.api.os.getFocusPoint('page' as any);
 
             expect(result).toEqual({
                 x: 1,

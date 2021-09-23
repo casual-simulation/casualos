@@ -1729,23 +1729,23 @@ export function botCalculationContextTests(
     describe('getPortalConfigBotID()', () => {
         it('should return the bot ID that the config bot tag points to', () => {
             const userBot = createBot('userBot', {
-                pagePortal: 'abc',
-                pagePortalConfigBot: 'test',
+                botPortal: 'abc',
+                botPortalConfigBot: 'test',
             });
 
             const calc = createPrecalculatedContext([userBot]);
-            const id = getPortalConfigBotID(calc, userBot, 'pagePortal');
+            const id = getPortalConfigBotID(calc, userBot, 'botPortal');
 
             expect(id).toEqual('test');
         });
 
         it('should return null if the tag does not exist', () => {
             const userBot = createBot('userBot', {
-                pagePortal: 'abc',
+                botPortal: 'abc',
             });
 
             const calc = createPrecalculatedContext([userBot]);
-            const id = getPortalConfigBotID(calc, userBot, 'pagePortal');
+            const id = getPortalConfigBotID(calc, userBot, 'botPortal');
 
             expect(id).toEqual(null);
         });

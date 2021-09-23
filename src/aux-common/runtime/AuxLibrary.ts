@@ -2197,7 +2197,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getCurrentDimension(): string {
         const user = context.playerBot;
         if (user) {
-            const dimension = getTag(user, 'pagePortal');
+            const dimension = getTag(user, 'botPortal');
             if (hasValue(dimension)) {
                 return dimension.toString();
             }
@@ -6042,8 +6042,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera position should be retrieved for.
      */
     function getCameraPosition(
-        portal: 'page' | 'mini' = 'page'
+        portal: 'bot' | 'mini' = 'bot'
     ): { x: number; y: number; z: number } {
+        // TODO: Remove when backwards compatability is not needed
+        if (portal === ('page' as any)) {
+            portal = 'bot';
+        }
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
             return {
@@ -6065,8 +6069,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera rotation should be retrieved for.
      */
     function getCameraRotation(
-        portal: 'page' | 'mini' = 'page'
+        portal: 'bot' | 'mini' = 'bot'
     ): { x: number; y: number; z: number } {
+        // TODO: Remove when backwards compatability is not needed
+        if (portal === ('page' as any)) {
+            portal = 'bot';
+        }
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
             return {
@@ -6088,8 +6096,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera focus point should be retrieved for.
      */
     function getFocusPoint(
-        portal: 'page' | 'mini' = 'page'
+        portal: 'bot' | 'mini' = 'bot'
     ): { x: number; y: number; z: number } {
+        // TODO: Remove when backwards compatability is not needed
+        if (portal === ('page' as any)) {
+            portal = 'bot';
+        }
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
             return {

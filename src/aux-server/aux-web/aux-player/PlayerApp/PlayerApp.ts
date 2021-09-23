@@ -691,12 +691,12 @@ export default class PlayerApp extends Vue {
                         e.inst || calculateBotValue(calc, player, 'inst');
                     const dimension =
                         e.dimension ||
-                        calculateBotValue(calc, player, 'pagePortal');
+                        calculateBotValue(calc, player, 'botPortal');
                     const code = `${location.protocol}//${
                         location.host
                     }?inst=${encodeURIComponent(
                         server
-                    )}&pagePortal=${encodeURIComponent(dimension)}`;
+                    )}&botPortal=${encodeURIComponent(dimension)}`;
                     this._showQRCode(code);
                 } else if (e.type === 'request_fullscreen_mode') {
                     if (

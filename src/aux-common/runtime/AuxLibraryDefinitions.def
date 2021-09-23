@@ -716,7 +716,7 @@ declare interface HideHtmlAction extends Action {
 
      /**
       * The portal that the bot should be focused in.
-      * If not specified, then the bot will be focused in all supported portals. (page, mini and menu)
+      * If not specified, then the bot will be focused in all supported portals. (bot, mini and menu)
       */
      portal?: PortalType;
 }
@@ -2634,7 +2634,7 @@ export type RecordSpace =
  * The possible portal types.
  */
 declare type PortalType =
-    | 'page'
+    | 'bot'
     | 'mini'
     | 'menu'
     | 'sheet'
@@ -3656,19 +3656,19 @@ declare global {
          * Gets the 3D position of the player's camera.
          * @param portal The portal that the camera position should be retrieved for.
          */
-        getCameraPosition(portal?: 'page' | 'mini'): Point3D;
+        getCameraPosition(portal?: 'bot' | 'mini'): Point3D;
 
         /**
          * Gets the 3D rotation of the player's camera.
          * @param portal The portal that the camera rotation should be retrieved for.
          */
-        getCameraRotation(portal?: 'page' | 'mini'): Point3D;
+        getCameraRotation(portal?: 'bot' | 'mini'): Point3D;
 
         /**
          * Gets the 3D point that the player's camera is focusing on.
          * @param portal The portal that the camera focus point should be retrieved for.
          */
-        getFocusPoint(portal?: 'page' | 'mini'): Point3D;
+        getFocusPoint(portal?: 'bot' | 'mini'): Point3D;
 
         /**
          * Gets the 3D position of the player's pointer.
