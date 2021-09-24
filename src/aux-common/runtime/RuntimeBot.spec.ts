@@ -1269,6 +1269,23 @@ describe('RuntimeBot', () => {
                 );
                 expect(updateTagMock).not.toBeCalled();
             });
+
+            it('should unwrap the array proxy when saving to another tag', () => {
+                const abc = [123];
+                script.tags.arr = abc;
+                script.masks.other = script.tags.arr;
+
+                const expected = [123];
+                expect(script.masks.other).toEqual(expected);
+
+                expect(script.maskChanges?.tempLocal?.other).toBe(abc);
+                expect(updateTagMaskMock).toBeCalledWith(
+                    precalc,
+                    'other',
+                    ['tempLocal'],
+                    expected
+                );
+            });
         });
     });
 
@@ -1381,6 +1398,22 @@ describe('RuntimeBot', () => {
                 },
             });
             expect(script.masks.abc).toBeUndefined();
+        });
+
+        it('should unwrap the array proxy when saving to another tag', () => {
+            const abc = [123];
+            script.tags.arr = abc;
+            script[SET_TAG_MASK_SYMBOL]('other', script.tags.arr);
+
+            const expected = [123];
+            expect(script.masks.other).toEqual(expected);
+            expect(script.maskChanges?.tempLocal?.other).toBe(abc);
+            expect(updateTagMaskMock).toBeCalledWith(
+                precalc,
+                'other',
+                ['tempLocal'],
+                expected
+            );
         });
     });
 

@@ -280,7 +280,7 @@ export function createRuntimeBot(
             if (key in constantTags) {
                 return true;
             }
-            updateTagMask(key, value);
+            updateTagMask(key, getOriginalObject(value));
             return true;
         },
         deleteProperty(target: any, key: string) {
@@ -360,11 +360,12 @@ export function createRuntimeBot(
                     ? [DEFAULT_TAG_MASK_SPACE]
                     : getTagMaskSpaces(bot, key)
                 : [space];
-            const mode = manager.updateTagMask(bot, key, spaces, value);
+            const valueToSet = getOriginalObject(value);
+            const mode = manager.updateTagMask(bot, key, spaces, valueToSet);
             if (mode === RealtimeEditMode.Immediate) {
-                rawMasks[key] = value;
+                rawMasks[key] = valueToSet;
             }
-            changeTagMask(key, value, spaces);
+            changeTagMask(key, valueToSet, spaces);
             return value;
         },
         configurable: false,
