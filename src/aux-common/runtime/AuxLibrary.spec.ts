@@ -11176,17 +11176,6 @@ describe('AuxLibrary', () => {
                 z: 3,
             });
         });
-
-        // TODO: Remove when backwards compatability is not needed
-        it('should be able to get the bot camera position using page as the parameter', () => {
-            const result = library.api.os.getCameraPosition('page' as any);
-
-            expect(result).toEqual({
-                x: 1,
-                y: 2,
-                z: 3,
-            });
-        });
     });
 
     describe('os.getCameraRotation()', () => {
@@ -11263,17 +11252,6 @@ describe('AuxLibrary', () => {
                 z: 3,
             });
         });
-
-        // TODO: Remove when backwards compatability is not needed
-        it('should be able to get the bot camera rotation using page as the parameter', () => {
-            const result = library.api.os.getCameraRotation('page' as any);
-
-            expect(result).toEqual({
-                x: 1,
-                y: 2,
-                z: 3,
-            });
-        });
     });
 
     describe('os.getFocusPoint()', () => {
@@ -11343,17 +11321,6 @@ describe('AuxLibrary', () => {
 
         it('should be able to get the bot camera rotation', () => {
             const result = library.api.os.getFocusPoint('bot');
-
-            expect(result).toEqual({
-                x: 1,
-                y: 2,
-                z: 3,
-            });
-        });
-
-        // TODO: Remove when backwards compatability is not needed
-        it('should be able to get the bot camera rotation using page as the parameter', () => {
-            const result = library.api.os.getFocusPoint('page' as any);
 
             expect(result).toEqual({
                 x: 1,

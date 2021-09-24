@@ -6044,10 +6044,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getCameraPosition(
         portal: 'bot' | 'mini' = 'bot'
     ): { x: number; y: number; z: number } {
-        // TODO: Remove when backwards compatability is not needed
-        if (portal === ('page' as any)) {
-            portal = 'bot';
-        }
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
             return {
@@ -6071,10 +6067,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getCameraRotation(
         portal: 'bot' | 'mini' = 'bot'
     ): { x: number; y: number; z: number } {
-        // TODO: Remove when backwards compatability is not needed
-        if (portal === ('page' as any)) {
-            portal = 'bot';
-        }
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
             return {
@@ -6098,10 +6090,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getFocusPoint(
         portal: 'bot' | 'mini' = 'bot'
     ): { x: number; y: number; z: number } {
-        // TODO: Remove when backwards compatability is not needed
-        if (portal === ('page' as any)) {
-            portal = 'bot';
-        }
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
             return {
