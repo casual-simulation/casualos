@@ -30,6 +30,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where zooming on menu bots would trigger the browser-provided zoom functionality.
+-   Fixed an issue where copying an array from one tag to another tag caused CasualOS to break.
 
 ## V2.0.10
 
