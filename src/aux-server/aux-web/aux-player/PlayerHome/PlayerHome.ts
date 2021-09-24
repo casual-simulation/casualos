@@ -119,6 +119,7 @@ export default class PlayerHome extends Vue {
                 if (hasValue(inst)) {
                     update.inst = inst;
                     update.story = null;
+                    update.server = null;
                 } else {
                     // Generate a random inst name
                     const randomName: string = uniqueNamesGenerator(
@@ -140,6 +141,7 @@ export default class PlayerHome extends Vue {
                 !hasValue(this.query['botPortal'])
             ) {
                 const portal = this.query['pagePortal'];
+                update.pagePortal = null;
                 update.botPortal = Array.isArray(portal) ? portal[0] : portal;
             }
 
