@@ -131,7 +131,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
     }
 
     /**
-     * Gets the pannability of the mini portal camera that the simulation defines.
+     * Gets the pannability of the miniGridPortal camera that the simulation defines.
      */
     get pannable() {
         return this.pageConfig.pannable;
@@ -166,14 +166,14 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
     }
 
     /**
-     * Gets if rotation is allowed in the mini portal that the simulation defines.
+     * Gets if rotation is allowed in the miniGridPortal that the simulation defines.
      */
     get rotatable() {
         return this.pageConfig.rotatable;
     }
 
     /**
-     * Gets if zooming is allowed in the mini portal that the simulation defines.
+     * Gets if zooming is allowed in the miniGridPortal that the simulation defines.
      */
     get zoomable() {
         return this.pageConfig.zoomable;

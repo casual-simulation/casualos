@@ -2222,14 +2222,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the name of the dimension that is used for the current user's mini portal.
+     * Gets the name of the dimension that is used for the current user's miniGridPortal.
      */
     function getMiniPortalDimension(): string {
         const user = context.playerBot;
         if (user) {
-            const miniPortal = getTag(user, MINI_PORTAL);
-            if (hasValue(miniPortal)) {
-                return miniPortal.toString();
+            const miniGridPortal = getTag(user, MINI_PORTAL);
+            if (hasValue(miniGridPortal)) {
+                return miniGridPortal.toString();
             }
             return null;
         } else {
@@ -2466,18 +2466,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Determines whether the player has the given bot in their mini portal.
+     * Determines whether the player has the given bot in their miniGridPortal.
      * @param bots The bot or bots to check.
      */
     function hasBotInMiniPortal(bots: Bot | Bot[]): boolean {
         if (!Array.isArray(bots)) {
             bots = [bots];
         }
-        let miniPortal = getMiniPortalDimension();
-        if (!hasValue(miniPortal)) {
+        let miniGridPortal = getMiniPortalDimension();
+        if (!hasValue(miniGridPortal)) {
             return false;
         }
-        return every(bots, (f) => getTag(f, miniPortal) === true);
+        return every(bots, (f) => getTag(f, miniGridPortal) === true);
     }
 
     /**
@@ -6042,7 +6042,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera position should be retrieved for.
      */
     function getCameraPosition(
-        portal: 'grid' | 'mini' = 'grid'
+        portal: 'grid' | 'miniGrid' = 'grid'
     ): { x: number; y: number; z: number } {
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
@@ -6065,7 +6065,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera rotation should be retrieved for.
      */
     function getCameraRotation(
-        portal: 'grid' | 'mini' = 'grid'
+        portal: 'grid' | 'miniGrid' = 'grid'
     ): { x: number; y: number; z: number } {
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
@@ -6088,7 +6088,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera focus point should be retrieved for.
      */
     function getFocusPoint(
-        portal: 'grid' | 'mini' = 'grid'
+        portal: 'grid' | 'miniGrid' = 'grid'
     ): { x: number; y: number; z: number } {
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {

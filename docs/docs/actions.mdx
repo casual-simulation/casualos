@@ -2412,11 +2412,11 @@ os.toast("this is the code", 5);
 ### `os.focusOn(botOrPosition, options?)`
 
 Focuses on the given bot or position.
-For bots in the bot or mini portals, this animates the camera such that the portal focus point is placed on the given bot or position.
+For bots in the bot or miniGridPortals, this animates the camera such that the portal focus point is placed on the given bot or position.
 For input bots in menu portal, this gives keyboard focus to them.
 
 Returns a promise which resolves when the bot has been focused.
-For the bot and mini portals this is when the animation finishes and rejects if the user takes control of the camera during the animation.
+For the bot and miniGridPortals this is when the animation finishes and rejects if the user takes control of the camera during the animation.
 For menu bots this is when the input field is focused and rejects if the bot is not a input bot.
 
 The **first parameter** is the bot, bot ID, or position that should be focused. If null, then the current focus animation will be canceled.
@@ -2428,7 +2428,7 @@ It should be an object with the following properties:
 let options: {
     /*
     * The zoom value to use.
-    * For the bot and mini portals, possible values are between `0` and `80`. `1` is the default.
+    * For the bot and miniGridPortals, possible values are between `0` and `80`. `1` is the default.
     * For the map portal, this is the scale that the focused point should appear at.
     * For example, 24000 would indicate that the scale is 1:24,000.
     * If no value is specified, then the zoom will remain at its current value.
@@ -3120,15 +3120,15 @@ os.toast(dimension);
 ### `os.getMiniPortalDimension()`
 
 
-Gets the dimension that is loaded into the <TagLink tag='miniPortal'/> portal.
+Gets the dimension that is loaded into the <TagLink tag='miniGridPortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "miniPortal".
+    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "miniGridPortal".
 </Alert>
 
 #### Examples:
 
-1. Show a message of the dimension that is currently in the <TagLink tag='miniPortal'/> portal.
+1. Show a message of the dimension that is currently in the <TagLink tag='miniGridPortal'/> portal.
 ```typescript
 const dimension = os.getMiniPortalDimension();
 os.toast(dimension);
@@ -3137,17 +3137,17 @@ os.toast(dimension);
 ### `os.hasBotInMiniPortal(bot)`
 
 
-Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='miniPortal'/> portal.
+Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='miniGridPortal'/> portal.
 
 The **first parameter** is the bot that should be checked.
 
 #### Examples:
 
-1. Show a message if a bot named bob is in the mini portal.
+1. Show a message if a bot named bob is in the miniGridPortal.
 ```typescript
 const bob = getBot("#name", "bob");
 if (os.hasBotInMiniPortal(bob)) {
-    os.toast("bob is in the miniPortal!");
+    os.toast("bob is in the miniGridPortal!");
 }
 ```
 
@@ -3166,8 +3166,8 @@ Possible values are:
   <PossibleValueCode value='sheet'>
     The <TagLink tag='sheetPortal'/>.
   </PossibleValueCode>
-  <PossibleValueCode value='mini'>
-    The <TagLink tag='miniPortal'/>.
+  <PossibleValueCode value='miniGrid'>
+    The <TagLink tag='miniGridPortal'/>.
   </PossibleValueCode>
   <PossibleValueCode value='menu'>
       The <TagLink tag='menuPortal'/>.
@@ -3181,9 +3181,9 @@ Possible values are:
 const dimension = os.getPortalDimension('grid');
 ```
 
-2. Get the dimension that is currently showing in the <TagLink tag='miniPortal'/>.
+2. Get the dimension that is currently showing in the <TagLink tag='miniGridPortal'/>.
 ```typescript
-const dimension = os.getPortalDimension('mini');
+const dimension = os.getPortalDimension('miniGrid');
 ```
 
 3. Get the dimension that is currently showing in the `#auxCustomPortal` tag.
@@ -3253,8 +3253,8 @@ Possible values are:
   <PossibleValueCode value='grid'>
     The camera position in the grid portal. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='mini'>
-    The camera position in the mini portal.
+  <PossibleValueCode value='miniGrid'>
+    The camera position in the miniGridPortal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -3265,7 +3265,7 @@ Possible values are:
 const position = os.getCameraPosition('grid');
 ```
 
-2. Get the position of the player in the mini portal.
+2. Get the position of the player in the miniGridPortal.
 ```typescript
 const position = os.getCameraPosition("mini");
 ```
@@ -3281,8 +3281,8 @@ Possible values are:
   <PossibleValueCode value='grid'>
     The camera rotation in the grid portal. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='mini'>
-    The camera rotation in the mini portal.
+  <PossibleValueCode value='miniGrid'>
+    The camera rotation in the miniGridPortal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -3293,7 +3293,7 @@ Possible values are:
 const rotation = os.getCameraRotation('grid');
 ```
 
-2. Get the rotation of the player in the mini portal.
+2. Get the rotation of the player in the miniGridPortal.
 ```typescript
 const rotation = os.getCameraRotation("mini");
 ```
@@ -3311,8 +3311,8 @@ Possible values are:
   <PossibleValueCode value='grid'>
     The camera focus point in the grid portal. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='mini'>
-    The camera focus point in the mini portal.
+  <PossibleValueCode value='miniGrid'>
+    The camera focus point in the miniGridPortal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -3323,7 +3323,7 @@ Possible values are:
 const focusPoint = os.getFocusPoint('grid');
 ```
 
-2. Get the focus point of the player in the mini portal.
+2. Get the focus point of the player in the miniGridPortal.
 ```typescript
 const focusPoint = os.getFocusPoint("mini");
 ```
@@ -6541,7 +6541,7 @@ Once the tween is done playing, any change to the bot will reset the position/ro
 The **first parameter** is the bot or ID of the bot that should be tweened.
 
 The **second parameter** is the dimension that the bot should be tweened in.
-Note that the tween will only work if the given dimension is currently in the grid portal or mini portal.
+Note that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal.
 
 The **third parameter** is the position that the bot should be tweened to. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
 
@@ -6640,7 +6640,7 @@ Once the tween is done playing, any change to the bot will reset the position/ro
 The **first parameter** is the bot or ID of the bot that should be tweened.
 
 The **second parameter** is the dimension that the bot should be tweened in.
-Note that the tween will only work if the given dimension is currently in the grid portal or mini portal.
+Note that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal.
 
 The **third parameter** is the rotation that the bot should be tweened to in radians. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
 

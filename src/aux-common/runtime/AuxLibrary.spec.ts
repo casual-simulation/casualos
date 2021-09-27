@@ -2683,8 +2683,8 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return the miniPortal tag from the user bot', () => {
-                player.tags.miniPortal = 'abc';
+            it('should return the miniGridPortal tag from the user bot', () => {
+                player.tags.miniGridPortal = 'abc';
                 const result = library.api.os.getMiniPortalDimension();
                 expect(result).toEqual('abc');
             });
@@ -2692,7 +2692,7 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.miniPortal = given;
+                    player.tags.miniGridPortal = given;
                     const result = library.api.os.getMiniPortalDimension();
                     expect(result).toEqual(expected);
                 }
@@ -2738,8 +2738,8 @@ describe('AuxLibrary', () => {
                 ['gridPortal', 'gridDimension'],
                 ['inventory', 'inventoryDimension'],
                 ['inventoryPortal', 'inventoryDimension'],
-                ['mini', 'miniDimension'],
-                ['miniPortal', 'miniDimension'],
+                ['miniGrid', 'miniDimension'],
+                ['miniGridPortal', 'miniDimension'],
                 ['menu', 'menuDimension'],
                 ['menuPortal', 'menuDimension'],
                 ['sheet', 'sheetDimension'],
@@ -2752,7 +2752,7 @@ describe('AuxLibrary', () => {
                 it(`should get the dimension for the ${portal} portal`, () => {
                     player.tags.gridPortal = 'gridDimension';
                     player.tags.inventoryPortal = 'inventoryDimension';
-                    player.tags.miniPortal = 'miniDimension';
+                    player.tags.miniGridPortal = 'miniDimension';
                     player.tags.menuPortal = 'menuDimension';
                     player.tags.sheetPortal = 'sheetDimension';
                     player.tags.falsy = false;
@@ -2766,7 +2766,7 @@ describe('AuxLibrary', () => {
                     (expected, given) => {
                         player.tags.gridPortal = given;
                         player.tags.inventoryPortal = given;
-                        player.tags.miniPortal = given;
+                        player.tags.miniGridPortal = given;
                         player.tags.menuPortal = given;
                         player.tags.sheetPortal = given;
                         player.tags.falsy = false;
@@ -3020,30 +3020,30 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return true if the given bot is in the users mini portal dimension', () => {
-                player.tags.miniPortal = 'abc';
+            it('should return true if the given bot is in the users miniGridPortal dimension', () => {
+                player.tags.miniGridPortal = 'abc';
                 bot1.tags.abc = true;
                 const result = library.api.os.hasBotInMiniPortal(bot1);
                 expect(result).toEqual(true);
             });
 
-            it('should return true if all the given bots are in the users mini portal dimension', () => {
-                player.tags.miniPortal = 'abc';
+            it('should return true if all the given bots are in the users miniGridPortal dimension', () => {
+                player.tags.miniGridPortal = 'abc';
                 bot1.tags.abc = true;
                 bot2.tags.abc = true;
                 const result = library.api.os.hasBotInMiniPortal([bot1, bot2]);
                 expect(result).toEqual(true);
             });
 
-            it('should return false if one of the given bots are not in the users mini portal dimension', () => {
-                player.tags.miniPortal = 'abc';
+            it('should return false if one of the given bots are not in the users miniGridPortal dimension', () => {
+                player.tags.miniGridPortal = 'abc';
                 bot1.tags.abc = false;
                 bot2.tags.abc = true;
                 const result = library.api.os.hasBotInMiniPortal([bot1, bot2]);
                 expect(result).toEqual(false);
             });
 
-            it('should return false if the player does not have an mini portal', () => {
+            it('should return false if the player does not have an miniGridPortal', () => {
                 bot1.tags.abc = true;
                 bot2.tags.abc = true;
                 const result = library.api.os.hasBotInMiniPortal([bot1, bot2]);
@@ -11104,7 +11104,7 @@ describe('AuxLibrary', () => {
 
     describe('os.getCameraPosition()', () => {
         let gridPortal: RuntimeBot;
-        let miniPortal: RuntimeBot;
+        let miniGridPortal: RuntimeBot;
 
         beforeEach(() => {
             gridPortal = createDummyRuntimeBot(
@@ -11116,8 +11116,8 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            miniPortal = createDummyRuntimeBot(
-                'miniPortal',
+            miniGridPortal = createDummyRuntimeBot(
+                'miniGridPortal',
                 {
                     cameraPositionX: 4,
                     cameraPositionY: 5,
@@ -11125,15 +11125,15 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, gridPortal, miniPortal);
+            addToContext(context, gridPortal, miniGridPortal);
 
             (<any>globalThis).gridPortalBot = gridPortal;
-            (<any>globalThis).miniPortalBot = miniPortal;
+            (<any>globalThis).miniGridPortalBot = miniGridPortal;
         });
 
         afterEach(() => {
             delete (<any>globalThis).gridPortalBot;
-            delete (<any>globalThis).miniPortalBot;
+            delete (<any>globalThis).miniGridPortalBot;
         });
 
         it('should return NaN for x, y, and z if the grid portal bot is null', () => {
@@ -11158,7 +11158,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to get the mini camera position', () => {
-            const result = library.api.os.getCameraPosition('mini');
+            const result = library.api.os.getCameraPosition('miniGrid');
 
             expect(result).toEqual({
                 x: 4,
@@ -11180,7 +11180,7 @@ describe('AuxLibrary', () => {
 
     describe('os.getCameraRotation()', () => {
         let gridPortal: RuntimeBot;
-        let miniPortal: RuntimeBot;
+        let miniGridPortal: RuntimeBot;
 
         beforeEach(() => {
             gridPortal = createDummyRuntimeBot(
@@ -11192,8 +11192,8 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            miniPortal = createDummyRuntimeBot(
-                'miniPortal',
+            miniGridPortal = createDummyRuntimeBot(
+                'miniGridPortal',
                 {
                     cameraRotationX: 4,
                     cameraRotationY: 5,
@@ -11201,15 +11201,15 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, gridPortal, miniPortal);
+            addToContext(context, gridPortal, miniGridPortal);
 
             (<any>globalThis).gridPortalBot = gridPortal;
-            (<any>globalThis).miniPortalBot = miniPortal;
+            (<any>globalThis).miniGridPortalBot = miniGridPortal;
         });
 
         afterEach(() => {
             delete (<any>globalThis).gridPortalBot;
-            delete (<any>globalThis).miniPortalBot;
+            delete (<any>globalThis).miniGridPortalBot;
         });
 
         it('should return NaN for x, y, and z if the grid portal bot is null', () => {
@@ -11233,8 +11233,8 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the mini portal camera rotation', () => {
-            const result = library.api.os.getCameraRotation('mini');
+        it('should be able to get the miniGridPortal camera rotation', () => {
+            const result = library.api.os.getCameraRotation('miniGrid');
 
             expect(result).toEqual({
                 x: 4,
@@ -11256,7 +11256,7 @@ describe('AuxLibrary', () => {
 
     describe('os.getFocusPoint()', () => {
         let gridPortal: RuntimeBot;
-        let miniPortal: RuntimeBot;
+        let miniGridPortal: RuntimeBot;
 
         beforeEach(() => {
             gridPortal = createDummyRuntimeBot(
@@ -11268,8 +11268,8 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            miniPortal = createDummyRuntimeBot(
-                'miniPortal',
+            miniGridPortal = createDummyRuntimeBot(
+                'miniGridPortal',
                 {
                     cameraFocusX: 4,
                     cameraFocusY: 5,
@@ -11277,15 +11277,15 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, gridPortal, miniPortal);
+            addToContext(context, gridPortal, miniGridPortal);
 
             (<any>globalThis).gridPortalBot = gridPortal;
-            (<any>globalThis).miniPortalBot = miniPortal;
+            (<any>globalThis).miniGridPortalBot = miniGridPortal;
         });
 
         afterEach(() => {
             delete (<any>globalThis).gridPortalBot;
-            delete (<any>globalThis).miniPortalBot;
+            delete (<any>globalThis).miniGridPortalBot;
         });
 
         it('should return NaN for x, y, and z if the grid portal bot is null', () => {
@@ -11309,8 +11309,8 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the mini portal camera rotation', () => {
-            const result = library.api.os.getFocusPoint('mini');
+        it('should be able to get the miniGridPortal camera rotation', () => {
+            const result = library.api.os.getFocusPoint('miniGrid');
 
             expect(result).toEqual({
                 x: 4,
