@@ -66,7 +66,7 @@ declare interface DeviceInfo {
 
 /**
  * Defines an interface that represents an event.
- * That is, a time-ordered action in a server.
+ * That is, a time-ordered action in a inst.
  * @deprecated
  */
 declare interface Action {
@@ -136,7 +136,7 @@ declare interface RemoteAction extends Action, DeviceSelector {
 declare type LocalActions = BotActions | ExtraActions | AsyncActions;
 
 /**
- * Defines a union type for all the possible events that can be emitted from a bots server.
+ * Defines a union type for all the possible events that can be emitted from a bot in an inst.
  */
 declare type BotAction =
     | BotActions
@@ -400,7 +400,7 @@ declare interface ApplyStateAction extends Action {
 }
 
 /**
- * The options for pasting bots state into a server.
+ * The options for pasting bots state into a inst.
  */
 declare interface PasteStateOptions {
     /**
@@ -456,7 +456,7 @@ declare interface ReplaceDragBotAction extends Action {
 }
 
 /**
- * An event that is used to request that the server be backed up to github.
+ * An event that is used to request that the inst be backed up to github.
  */
 declare interface BackupToGithubAction extends Action {
     type: 'backup_to_github';
@@ -473,7 +473,7 @@ declare interface BackupToGithubAction extends Action {
 }
 
 /**
- * An event that is used to request that the server be backed up to a zip bot and downloaded.
+ * An event that is used to request that the inst be backed up to a zip bot and downloaded.
  */
 declare interface BackupAsDownloadAction extends Action {
     type: 'backup_as_download';
@@ -490,7 +490,7 @@ declare interface BackupAsDownloadAction extends Action {
 }
 
 /**
- * Defines the list of possible options for backing up a server.
+ * Defines the list of possible options for backing up a inst.
  */
 declare interface BackupOptions {
     /**
@@ -521,9 +521,9 @@ declare interface StartCheckoutOptions {
     description: string;
 
     /**
-     * The server that the payment processing should occur in.
+     * The inst that the payment processing should occur in.
      */
-    processingServer: string;
+    processingInst: string;
 
     /**
      * Whether to request the payer's billing address.
@@ -590,9 +590,9 @@ declare interface CheckoutSubmittedAction extends Action {
     token: string;
 
     /**
-     * The server that processing should happen in.
+     * The inst that processing should happen in.
      */
-    processingServer: string;
+    processingInst: string;
 }
 
 /**
@@ -694,6 +694,12 @@ declare interface HideHtmlAction extends Action {
     rotation?: {
         x: number;
         y: number;
+
+        /**
+         * Whether to normalize the rotation values to between 0 and 2*PI.
+         * Defaults to true. Setting this to false can be useful for rotating around a bot multiple times.
+         */
+         normalize?: boolean;
     };
 
     /**
@@ -710,7 +716,7 @@ declare interface HideHtmlAction extends Action {
 
      /**
       * The portal that the bot should be focused in.
-      * If not specified, then the bot will be focused in all supported portals. (page, mini and menu)
+      * If not specified, then the bot will be focused in all supported portals. (bot, mini and menu)
       */
      portal?: PortalType;
 }
@@ -900,7 +906,7 @@ declare interface SuperShoutAction extends Action {
 }
 
 /**
- * Defines an event that sends a web request to a server.
+ * Defines an event that sends a web request to a website.
  */
 declare interface SendWebhookAction extends Action {
     type: 'send_webhook';
@@ -1307,18 +1313,18 @@ declare interface RejectAction {
 }
 
 /**
- * Defines an event that creates a server if it doesn't exist.
+ * Defines an event that creates a inst if it doesn't exist.
  */
 declare interface SetupChannelAction {
     type: 'setup_server';
 
     /**
-     * The server that should be created.
+     * The inst that should be created.
      */
     channel: string;
 
     /**
-     * The bot or mod that should be cloned into the new server.
+     * The bot or mod that should be cloned into the new inst.
      */
     botOrMod?: Bot | BotTags;
 }
@@ -1454,7 +1460,7 @@ declare interface MarkHistoryAction {
 }
 
 /**
- * Defines an event that loads the history into the server.
+ * Defines an event that loads the history into the inst.
  */
 declare interface BrowseHistoryAction {
     type: 'browse_history';
@@ -1472,14 +1478,14 @@ declare interface RestoreHistoryMarkAction {
     mark: string;
 
     /**
-     * The server that the mark should be restored to.
-     * If not specified, then the current server will be used.
+     * The inst that the mark should be restored to.
+     * If not specified, then the current inst will be used.
      */
-    server?: string;
+    inst?: string;
 }
 
 /**
- * Defines an event that loads a space into the server.
+ * Defines an event that loads a space into the inst.
  */
 declare interface LoadSpaceAction {
     type: 'load_space';
@@ -1723,15 +1729,15 @@ declare interface EnableVRAction {
 }
 
 /**
- * Defines an event that shows a QR code that is a link to a server & dimension.
+ * Defines an event that shows a QR code that is a link to a inst & dimension.
  */
 declare interface ShowJoinCodeAction {
     type: 'show_join_code';
 
     /**
-     * The server that should be joined.
+     * The inst that should be joined.
      */
-    server?: string;
+    inst?: string;
 
     /**
      * The dimension that should be joined.
@@ -2347,9 +2353,9 @@ declare interface CheckoutOptions {
     description: string;
 
     /**
-     * The server that the payment should be processed on.
+     * The inst that the payment should be processed on.
      */
-    processingServer: string;
+    processingInst: string;
 
     /**
      * Whether to request the payer's billing address.
@@ -2595,7 +2601,7 @@ declare interface BotsState {
  * - "local" means that the bot is stored in the local storage partition.
  * - "tempLocal" means that the bot is stored in the temporary partition.
  * - "history" means that the bot represents a version of another space.
- * - "admin" means that the bot is shared across all servers.
+ * - "admin" means that the bot is shared across all instances.
  * - "tempShared" means that the bot is temporary and shared with other devices.
  * - "remoteTempShared" means that the bot is temporary and shared with this device from a remote device.
  * - "certified" means that the bot is a certificate.
@@ -2628,8 +2634,8 @@ export type RecordSpace =
  * The possible portal types.
  */
 declare type PortalType =
-    | 'page'
-    | 'mini'
+    | 'grid'
+    | 'miniGrid'
     | 'menu'
     | 'sheet'
     | string;
@@ -2748,17 +2754,17 @@ declare interface Point3D {
 }
 
 /**
- * Defines an interface that contains performance statistics about a server.
+ * Defines an interface that contains performance statistics about a inst.
  */
 declare interface PerformanceStats {
     /**
-     * The number of bots in the server.
+     * The number of bots in the inst.
      */
     numberOfBots: number;
 
     /**
      * A list of listen tags and the amount of time spent executing them (in miliseconds).
-     * Useful to guage if a listen tag is causing the server to slow down.
+     * Useful to guage if a listen tag is causing the inst to slow down.
      */
     shoutTimes: {
         tag: string;
@@ -2932,7 +2938,7 @@ declare global {
      function priorityShout(eventNames: string[], arg?: any): any;
 
     /**
-     * Asks every bot in the server to run the given action.
+     * Asks every bot in the inst to run the given action.
      * In effect, this is like shouting to a bunch of people in a room.
      *
      * @param name The event name.
@@ -3120,12 +3126,12 @@ declare global {
      * Sends the given operation to all the devices that matches the given selector.
      * In effect, this allows users to send each other events directly without having to edit tags.
      *
-     * Note that currently, devices will only accept events sent from the server.
+     * Note that currently, devices will only accept events sent from the inst.
      *
      * @param event The event that should be executed in the remote session(s).
      * @param selector The selector that indicates where the event should be sent. The event will be sent to all sessions that match the selector.
      *                 For example, specifying a username means that the event will be sent to every active session that the user has open.
-     *                 If a selector is not specified, then the event is sent to the server.
+     *                 If a selector is not specified, then the event is sent to the inst.
      * @param allowBatching Whether to allow batching this remote event with other remote events. This will preserve ordering between remote events but may not preserve ordering
      *                      with respect to other events. Defaults to true.
      *
@@ -3220,7 +3226,7 @@ declare global {
      * Gets a list of all the bots.
      *
      * @example
-     * // Gets all the bots in the server.
+     * // Gets all the bots in the inst.
      * let bots = getBots();
      */
     function getBots(): Bot[];
@@ -3650,19 +3656,19 @@ declare global {
          * Gets the 3D position of the player's camera.
          * @param portal The portal that the camera position should be retrieved for.
          */
-        getCameraPosition(portal?: 'page' | 'mini'): Point3D;
+        getCameraPosition(portal?: 'grid' | 'miniGrid'): Point3D;
 
         /**
          * Gets the 3D rotation of the player's camera.
          * @param portal The portal that the camera rotation should be retrieved for.
          */
-        getCameraRotation(portal?: 'page' | 'mini'): Point3D;
+        getCameraRotation(portal?: 'grid' | 'miniGrid'): Point3D;
 
         /**
          * Gets the 3D point that the player's camera is focusing on.
          * @param portal The portal that the camera focus point should be retrieved for.
          */
-        getFocusPoint(portal?: 'page' | 'mini'): Point3D;
+        getFocusPoint(portal?: 'grid' | 'miniGrid'): Point3D;
 
         /**
          * Gets the 3D position of the player's pointer.
@@ -3764,12 +3770,12 @@ declare global {
         cancelSound(soundID: number): Promise<void>;
 
         /**
-         * Shows a QR Code that contains a link to a server and dimension.
-         * @param server The server that should be joined. Defaults to the current server.
+         * Shows a QR Code that contains a link to a inst and dimension.
+         * @param inst The inst that should be joined. Defaults to the current inst.
          * @param dimension The dimension that should be joined. Defaults to the current dimension.
          */
         showJoinCode(
-            server?: string,
+            inst?: string,
             dimension?: string
         ): ShowJoinCodeAction;
 
@@ -3957,9 +3963,9 @@ declare global {
         downloadBots(bots: Bot[], filename: string): DownloadAction;
 
         /**
-         * Downloads all the shared bots in the server.
+         * Downloads all the shared bots in the inst.
          */
-        downloadServer(): DownloadAction;
+        downloadInst(): DownloadAction;
 
         /**
          * Shows the "Upload AUX File" dialog.
@@ -3972,16 +3978,16 @@ declare global {
         showUploadFiles(): Promise<UploadedFile[]>;
 
         /**
-         * Loads the server with the given ID.
-         * @param id The ID of the server to load.
+         * Loads the inst with the given ID.
+         * @param id The ID of the inst to load.
          */
-        loadServer(id: string): LoadServerAction;
+        loadInst(id: string): LoadServerAction;
 
         /**
-         * Unloads the server with the given ID.
-         * @param id The ID of the server to unload.
+         * Unloads the inst with the given ID.
+         * @param id The ID of the inst to unload.
          */
-        unloadServer(id: string): UnloadServerAction;
+        unloadInst(id: string): UnloadServerAction;
 
         /**
          * Imports the AUX from the given URL or JSON
@@ -4099,9 +4105,9 @@ declare global {
         getCurrentDimension(): string;
 
         /**
-         * Gets the server that the player is currently in.
+         * Gets the inst that the player is currently in.
          */
-        getCurrentServer(): string;
+        getCurrentInst(): string;
 
         /**
          * Gets the distance that the player bot is from the given dimension.
@@ -4113,7 +4119,7 @@ declare global {
         getDimensionalDepth(dimension: string): number;
 
         /**
-         * Determines whether the player has the given bot in their mini portal.
+         * Determines whether the player has the given bot in their miniGridPortal.
          * @param bots The bot or bots to check.
          */
         hasBotInMiniPortal(bots: Bot | Bot[]): boolean;
@@ -4129,7 +4135,7 @@ declare global {
         getMenuDimension(): string;
 
         /**
-         * Gets the name of the dimension that is used for the current user's mini portal.
+         * Gets the name of the dimension that is used for the current user's miniGridPortal.
          */
         getMiniPortalDimension(): string;
 
@@ -4173,7 +4179,7 @@ declare global {
         requestPermanentAuthToken(): Promise<string>;
 
         /**
-         * Publishes a record that can be used across servers.
+         * Publishes a record that can be used across instances.
          * @param recordDefinition The data that should be used to publish the record.
          */
         publishRecord(recordDefinition: PublishableRecord): Promise<void>;
@@ -4219,18 +4225,55 @@ declare global {
          * @param tag The tag that the bundle should be created from.
          */
         buildExecutable(tag: string): Promise<CodeBundle>;
+
+        /**
+         * Gets the number of devices that are viewing the current inst.
+         * @param inst The inst to get the statistics for. If omitted, then the current inst is used.
+         */
+        remoteCount(inst?: string): Promise<number>;
+
+         /**
+         * Gets the list of remote IDs that are connected to the inst.
+         */
+        remotes(): Promise<string[]>;
+
+        /**
+         * Sends an event to the server to setup a new inst if it does not exist.
+         * @param inst The inst.
+         * @param botOrMod The bot or mod that should be cloned into the new inst.
+         */
+        setupInst(inst: string, botOrMod?: Mod): Promise<void>;
+
+         /**
+         * Gets the total number of devices that are connected to the server.
+         */
+        totalRemoteCount(): Promise<number>;
+
+        /**
+         * Gets the list of instances that are on the server.
+         */
+        instances(): Promise<string[]>;
+
+        /**
+         * Gets the list of instances that are on the server.
+         */
+        instStatuses(): Promise<{
+            inst: string,
+            lastUpdateTime: Date
+        }[]>;
     };
 
     /**
      * Defines a set of functions that relate to common server operations.
+     * Typically, these operations are instance-independent.
      */
     const server: {
         /**
-         * Sends an event to the server to setup a new server if it does not exist.
-         * @param server The server.
-         * @param botOrMod The bot or mod that should be cloned into the new server.
+         * Sends an event to the server to setup a new inst if it does not exist.
+         * @param inst The inst.
+         * @param botOrMod The bot or mod that should be cloned into the new inst.
          */
-        setupServer(server: string, botOrMod?: Mod): Promise<void>;
+        setupInst(inst: string, botOrMod?: Mod): Promise<void>;
     
         /**
          * Sends an event to the server to export a pin (BCM) as input or output.
@@ -4264,7 +4307,7 @@ declare global {
          * 
          * @example
          * // Initialize with default settings
-         * server.rpioInit({
+         * inst.rpioInit({
          *   gpiomem: true,
          *   mapping: 'physical',
          *   mock: undefined,
@@ -4627,21 +4670,15 @@ declare global {
         shell(script: string): ShellAction;
     
         /**
-         * Backs up all the AUX servers to a Github Gist.
+         * Backs up all the AUX instances to a Github Gist.
          * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
          */
         backupToGithub(auth: string): BackupToGithubAction;
     
         /**
-         * Backs up all the AUX servers to a zip bot.
+         * Backs up all the AUX instances to a zip bot.
          */
         backupAsDownload(target: SessionSelector): BackupAsDownloadAction;
-
-        /**
-         * Gets the number of devices that are viewing the current server.
-         * @param server The server to get the statistics for. If omitted, then the current server is used.
-         */
-        serverRemoteCount(server?: string): Promise<number>;
 
         /**
          * Gets the total number of devices that are connected to the server.
@@ -4649,22 +4686,17 @@ declare global {
         totalRemoteCount(): Promise<number>;
 
         /**
-         * Gets the list of servers that are on the server.
+         * Gets the list of instances that are on the server.
          */
-        servers(): Promise<string[]>;
+        instances(): Promise<string[]>;
 
         /**
-         * Gets the list of servers that are on the server.
+         * Gets the list of instances that are on the server.
          */
-        serverStatuses(): Promise<{
-            server: string,
+        instStatuses(): Promise<{
+            inst: string,
             lastUpdateTime: Date
         }[]>;
-
-        /**
-         * Gets the list of remote IDs that are connected to the server.
-         */
-        remotes(): Promise<string[]>;
     
         /**
          * Loads a file from the server at the given path.
@@ -4725,11 +4757,11 @@ declare global {
         /**
          * Restores the current state to the given mark.
          * @param mark The bot or bot ID that represents the mark that should be restored.
-         * @param server The server that the mark should be restored to.
+         * @param inst The inst that the mark should be restored to.
          */
-        restoreHistoryMarkToServer(
+        restoreHistoryMarkToInst(
             mark: Bot | string,
-            server: string
+            inst: string
         ): Promise<void>;
     };
 
@@ -5238,7 +5270,7 @@ declare global {
      */
     const perf: {
         /**
-         * Gets the performance stats for the server.
+         * Gets the performance stats for the instance.
          */
         getStats(): PerformanceStats;
     };

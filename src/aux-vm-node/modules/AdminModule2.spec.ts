@@ -116,13 +116,13 @@ describe('AdminModule2', () => {
         });
 
         describe('device', () => {
-            it('should pipe device events through onServerAction()', async () => {
+            it('should pipe device events through onAnyAction()', async () => {
                 await simulation.helper.createBot('test', {
                     testShout: '@setTag(this, "abc", true)',
                 });
 
                 await simulation.helper.createBot('filter', {
-                    onServerAction: `@
+                    onAnyAction: `@
                             if (that.action.type === 'device') {
                                 action.perform(that.action.event);
                             }

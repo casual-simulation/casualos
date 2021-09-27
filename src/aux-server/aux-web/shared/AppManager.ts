@@ -365,7 +365,7 @@ export class AppManager {
     }
 
     private async _setPrimarySimulation(serverId: string) {
-        this._sendProgress('Requesting server...', 0.1);
+        this._sendProgress('Requesting inst...', 0.1);
 
         console.log('[AppManager] Setting primary simulation:', serverId);
 

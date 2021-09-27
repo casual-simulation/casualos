@@ -34,7 +34,7 @@ import { MiniPortalConfig } from './MiniPortalConfig';
 
 export class MiniSimulation3D extends PlayerSimulation3D {
     /**
-     * The mini portal dimension that this simulation is for.
+     * The miniGridPortal dimension that this simulation is for.
      */
     miniDimension: string;
 
@@ -97,14 +97,14 @@ export class MiniSimulation3D extends PlayerSimulation3D {
     }
 
     /**
-     * Gets if rotation is allowed in the mini portal that the simulation defines.
+     * Gets if rotation is allowed in the miniGridPortal that the simulation defines.
      */
     get rotatable() {
         return this.miniConfig.rotatable;
     }
 
     /**
-     * Gets if zooming is allowed in the mini portal that the simulation defines.
+     * Gets if zooming is allowed in the miniGridPortal that the simulation defines.
      */
     get zoomable() {
         return this.miniConfig.zoomable;
@@ -199,7 +199,7 @@ export class MiniSimulation3D extends PlayerSimulation3D {
                         this.miniDimension = userMiniDimensionValue;
                         if (previousDimension !== userMiniDimensionValue) {
                             console.log(
-                                '[MiniSimulation3D] User changed mini portal dimension to: ',
+                                '[MiniSimulation3D] User changed miniGridPortal dimension to: ',
                                 userMiniDimensionValue
                             );
                         }

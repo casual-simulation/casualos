@@ -39,9 +39,9 @@ export interface Config {
     sandbox: SandboxType;
 
     /**
-     * Whether to let the server instantate server-side runtimes for servers that get loaded.
+     * Whether to let the server instantate server-side runtimes for instances that get loaded.
      */
-    executeLoadedStories: boolean;
+    executeLoadedInstances: boolean;
 
     /**
      * Whether to enable GPIO support.
@@ -161,7 +161,7 @@ export interface MongoDBCaualReposConfig {
 export interface BotsServerConfig {
     /**
      * The name of the database that the bots should be stored in.
-     * Each server gets its own collection.
+     * Each instance gets its own collection.
      */
     dbName: string;
 

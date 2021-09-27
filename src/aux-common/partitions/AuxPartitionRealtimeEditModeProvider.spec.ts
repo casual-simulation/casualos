@@ -41,7 +41,7 @@ describe('AuxPartitionRealtimeEditModeProvider', () => {
                 partitions[space] = createBotClientPartition({
                     type: 'bot_client',
                     client: new MemoryBotClient(),
-                    server: 'server',
+                    inst: 'server',
                 });
                 expect(subject.getEditMode(space)).toEqual(
                     RealtimeEditMode.Delayed

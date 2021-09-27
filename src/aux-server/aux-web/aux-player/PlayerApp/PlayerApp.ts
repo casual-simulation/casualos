@@ -32,6 +32,10 @@ import {
     SyntheticVoice,
     hasValue,
     Geolocation,
+    ON_INST_JOINED_ACTION_NAME,
+    ON_INST_LEAVE_ACTION_NAME,
+    ON_INST_STREAMING_ACTION_NAME,
+    ON_INST_STREAM_LOST_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -478,14 +482,14 @@ export default class PlayerApp extends Vue {
         const list = calculateStringListTagValue(
             calc,
             sim.helper.userBot,
-            'server',
+            'inst',
             []
         );
         if (list.indexOf(id) < 0) {
             list.push(id);
             sim.helper.updateBot(sim.helper.userBot, {
                 tags: {
-                    server: list,
+                    inst: list,
                 },
             });
         }
@@ -496,7 +500,7 @@ export default class PlayerApp extends Vue {
         const list = calculateStringListTagValue(
             calc,
             sim.helper.userBot,
-            'server',
+            'inst',
             []
         );
         const index = list.indexOf(id);
@@ -504,7 +508,7 @@ export default class PlayerApp extends Vue {
             list.splice(index, 1);
             sim.helper.updateBot(sim.helper.userBot, {
                 tags: {
-                    server: list,
+                    inst: list,
                 },
             });
         }
@@ -513,7 +517,7 @@ export default class PlayerApp extends Vue {
     removeSimulation(info: SimulationInfo) {
         if (appManager.simulationManager.primary.id === info.id) {
             this.snackbar = {
-                message: `You cannot remove the primary server.`,
+                message: `You cannot remove the primary inst.`,
                 visible: true,
             };
         } else {
@@ -584,13 +588,13 @@ export default class PlayerApp extends Vue {
                     console.log('[PlayerApp] Not authorized.');
                     if (state.authorizationError === 'channel_doesnt_exist') {
                         this.snackbar = {
-                            message: 'This server does not exist.',
+                            message: 'This inst does not exist.',
                             visible: true,
                         };
                     } else {
                         this.snackbar = {
                             message:
-                                'You are not authorized to view this server.',
+                                'You are not authorized to view this inst.',
                             visible: true,
                         };
                     }
@@ -684,15 +688,15 @@ export default class PlayerApp extends Vue {
                     const player = simulation.helper.userBot;
                     const calc = simulation.helper.createContext();
                     const server =
-                        e.server || calculateBotValue(calc, player, 'server');
+                        e.inst || calculateBotValue(calc, player, 'inst');
                     const dimension =
                         e.dimension ||
-                        calculateBotValue(calc, player, 'pagePortal');
+                        calculateBotValue(calc, player, 'gridPortal');
                     const code = `${location.protocol}//${
                         location.host
-                    }?server=${encodeURIComponent(
+                    }?inst=${encodeURIComponent(
                         server
-                    )}&pagePortal=${encodeURIComponent(dimension)}`;
+                    )}&gridPortal=${encodeURIComponent(dimension)}`;
                     this._showQRCode(code);
                 } else if (e.type === 'request_fullscreen_mode') {
                     if (
@@ -1023,6 +1027,10 @@ export default class PlayerApp extends Vue {
                         if (info.subscribed) {
                             info.lostConnection = true;
                             await this._superAction(
+                                ON_INST_STREAM_LOST_ACTION_NAME,
+                                onServerStreamLostArg(simulation.id)
+                            );
+                            await this._superAction(
                                 ON_SERVER_STREAM_LOST_ACTION_NAME,
                                 onServerStreamLostArg(simulation.id)
                             );
@@ -1032,6 +1040,10 @@ export default class PlayerApp extends Vue {
 
                         if (!info.subscribed) {
                             info.subscribed = true;
+                            await this._superAction(
+                                ON_INST_JOINED_ACTION_NAME,
+                                onServerSubscribedArg(simulation.id)
+                            );
                             await this._superAction(
                                 ON_SERVER_JOINED_ACTION_NAME,
                                 onServerSubscribedArg(simulation.id)
@@ -1049,6 +1061,11 @@ export default class PlayerApp extends Vue {
                                     continue;
                                 }
                                 await simulation.helper.action(
+                                    ON_INST_JOINED_ACTION_NAME,
+                                    null,
+                                    onServerSubscribedArg(info.id)
+                                );
+                                await simulation.helper.action(
                                     ON_SERVER_JOINED_ACTION_NAME,
                                     null,
                                     onServerSubscribedArg(info.id)
@@ -1061,6 +1078,10 @@ export default class PlayerApp extends Vue {
                             }
                         }
 
+                        await this._superAction(
+                            ON_INST_STREAMING_ACTION_NAME,
+                            onServerStreamingArg(simulation.id)
+                        );
                         await this._superAction(
                             ON_SERVER_STREAMING_ACTION_NAME,
                             onServerStreamingArg(simulation.id)
@@ -1075,6 +1096,10 @@ export default class PlayerApp extends Vue {
                 recordMessage(m);
             }),
             new Subscription(async () => {
+                await this._superAction(
+                    ON_INST_LEAVE_ACTION_NAME,
+                    onServerUnsubscribedArg(simulation.id)
+                );
                 await this._superAction(
                     ON_SERVER_LEAVE_ACTION_NAME,
                     onServerUnsubscribedArg(simulation.id)
@@ -1185,7 +1210,7 @@ export default class PlayerApp extends Vue {
     private _showConnectionRegained(info: SimulationInfo) {
         this.snackbar = {
             visible: true,
-            message: `Connection to ${info.displayName} regained. You are connected to the server.`,
+            message: `Connection to ${info.displayName} regained. You are connected to the inst.`,
         };
     }
 

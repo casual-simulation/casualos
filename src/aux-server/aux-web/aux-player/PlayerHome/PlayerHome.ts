@@ -63,9 +63,9 @@ export default class PlayerHome extends Vue {
 
     @Watch('query')
     async onQueryChanged() {
-        const server = this.query['server'] as string | string[];
-        if (hasValue(server)) {
-            await this._setServer(server);
+        const inst = this.query['inst'] as string | string[];
+        if (hasValue(inst)) {
+            await this._setServer(inst);
         }
         for (let [sim, sub] of this._simulations) {
             getUserBotAsync(sim).subscribe(
@@ -110,34 +110,44 @@ export default class PlayerHome extends Vue {
         });
 
         if (this.query) {
-            // On first load check the server and load a default
-            let server = this.query['server'] as string | string[];
-            if (!hasValue(server)) {
-                // if there is no server tag defined, check for the story tag
-                server = this.query['story'];
-                if (hasValue(server)) {
-                    let update: Dictionary<string | string[]> = {
-                        server: server,
-                        story: null,
-                    };
-                    this._updateQuery(update);
+            // On first load check the inst and load a default
+            let inst = this.query['inst'] as string | string[];
+            let update: Dictionary<string | string[]> = {};
+            if (!hasValue(inst)) {
+                // if there is no inst tag defined, check for the story tag and then the server tag
+                inst = this.query['story'] ?? this.query['server'];
+                if (hasValue(inst)) {
+                    update.inst = inst;
+                    update.story = null;
+                    update.server = null;
                 } else {
-                    // Generate a random server name
+                    // Generate a random inst name
                     const randomName: string = uniqueNamesGenerator(
                         namesConfig
                     );
-                    let update: Dictionary<string> = {};
                     if (!appManager.config.disableCollaboration) {
-                        update.server = randomName;
+                        update.inst = randomName;
                     }
-                    if (!hasValue(this.query['pagePortal'])) {
-                        update.pagePortal = 'home';
+                    if (!hasValue(this.query['gridPortal'])) {
+                        update.gridPortal = 'home';
                     }
-                    this._updateQuery(update);
-                    server = randomName;
+                    inst = randomName;
                 }
             }
-            this._setServer(server);
+
+            if (
+                hasValue(this.query['pagePortal']) &&
+                !hasValue(this.query['gridPortal'])
+            ) {
+                const portal = this.query['pagePortal'];
+                update.pagePortal = null;
+                update.gridPortal = Array.isArray(portal) ? portal[0] : portal;
+            }
+
+            if (Object.keys(update).length > 0) {
+                this._updateQuery(update);
+            }
+            this._setServer(inst);
         }
     }
 
@@ -152,19 +162,19 @@ export default class PlayerHome extends Vue {
                     if (sim.id === appManager.simulationManager.primary.id) {
                         this._handleQueryUpdates(sim, update);
                         if (
-                            update.tags.has('server') &&
+                            update.tags.has('inst') &&
                             !appManager.config.disableCollaboration
                         ) {
-                            // server changed - update it
+                            // inst changed - update it
                             const calc = sim.helper.createContext();
-                            const server = calculateStringListTagValue(
+                            const inst = calculateStringListTagValue(
                                 calc,
                                 update.bot,
-                                'server',
+                                'inst',
                                 null
                             );
-                            if (hasValue(server)) {
-                                this._setServer(server);
+                            if (hasValue(inst)) {
+                                this._setServer(inst);
                             }
                         }
 

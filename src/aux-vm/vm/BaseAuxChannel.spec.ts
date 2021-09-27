@@ -340,7 +340,7 @@ describe('BaseAuxChannel', () => {
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
-                    builtinPortals: ['pagePortal', 'sheetPortal'],
+                    builtinPortals: ['gridPortal', 'sheetPortal'],
                 },
                 partitions: {
                     shared: {
@@ -362,12 +362,12 @@ describe('BaseAuxChannel', () => {
 
             await channel.initAndWait();
 
-            const pagePortal = channel.helper.botsState['uuid1'];
+            const gridPortal = channel.helper.botsState['uuid1'];
             const sheetPortal = channel.helper.botsState['uuid2'];
-            expect(pagePortal).toEqual(createBot('uuid1', {}, 'tempLocal'));
+            expect(gridPortal).toEqual(createBot('uuid1', {}, 'tempLocal'));
             expect(sheetPortal).toEqual(createBot('uuid2', {}, 'tempLocal'));
 
-            expect(tempLocal.state['uuid1']).toEqual(pagePortal);
+            expect(tempLocal.state['uuid1']).toEqual(gridPortal);
             expect(tempLocal.state['uuid2']).toEqual(sheetPortal);
         });
 
@@ -841,7 +841,7 @@ describe('BaseAuxChannel', () => {
                         config: <SearchPartitionClientConfig>{
                             type: 'bot_client',
                             client: client,
-                            server: 'server',
+                            inst: 'inst',
                         },
                     },
                 ]);

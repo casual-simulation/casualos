@@ -65,10 +65,10 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     protected _miniSimulation3D: MiniSimulation3D;
     protected _mapSimulation3D: MapSimulation3D;
 
-    // Determines if the bot is in the mini portal currently
+    // Determines if the bot is in the miniGridPortal currently
     protected _inMiniPortal: boolean;
 
-    // Determines if the bot was in the mini portal at the beginning of the drag operation
+    // Determines if the bot was in the miniGridPortal at the beginning of the drag operation
     protected _originallyInMiniPortal: boolean;
 
     // Determines if the bot is in the map portal currently

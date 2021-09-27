@@ -890,11 +890,11 @@ describe('RemoteCausalRepoPartition', () => {
                     expect(events).toEqual([
                         asyncResult('task1', [
                             {
-                                server: 'abc',
+                                inst: 'abc',
                                 lastUpdateTime: new Date(2019, 1, 1),
                             },
                             {
-                                server: 'def',
+                                inst: 'def',
                                 lastUpdateTime: new Date(2019, 1, 1),
                             },
                         ]),

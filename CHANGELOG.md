@@ -1,13 +1,71 @@
 # CasualOS Changelog
 
+## V2.0.11
+
+#### Date: 9/27/2021
+
+### :boom: Breaking Changes
+
+-   Renamed `server` to `inst`.
+    -   This means that you should now `configBot.tags.inst` instead of `configBot.tags.server`.
+    -   It also means that you now should go to `https://casualos.com?inst=my-aux` instead of `https://casualos.com?server=my-aux`.
+    -   CasualOS will automatically replace `server` with `inst` on the first load so old links will continue to work.
+-   Renamed `pagePortal` to `gridPortal`
+    -   CasualOS will automatically replace `pagePortal` with `gridPortal` on first load (so old links will continue to work) but any scripts that change `pagePortal` will need to be updated to change `gridPortal`.
+    -   `pagePortal` on the `configBot` should now be `gridPortal`.
+    -   `pagePortalBot` is now `gridPortalBot`.
+    -   Some functions now should reference the bot portal instead of the page portal:
+        -   `os.getCameraPosition('page')` -> `os.getCameraPosition('grid')`
+        -   `os.getCameraRotation('page')` -> `os.getCameraRotation('grid')`
+        -   `os.getFocusPoint('page')` -> `os.getFocusPoint('grid')`
+        -   `os.getPortalDimension('page')` -> `os.getPortalDimension('grid')`
+    -   `@onPortalChanged` now uses `gridPortal` for `that.portal`.
+-   Renamed `miniPortal` to `miniGridPortal`
+    -   `miniPortal` on the `configBot` should now be `miniGridPortal`.
+    -   `miniPortalBot` should now be `miniGridPortalBot`.
+    -   Some functions now should reference the bot portal instead of the page portal:
+        -   `os.getCameraPosition('mini')` -> `os.getCameraPosition('miniGrid')`
+        -   `os.getCameraRotation('mini')` -> `os.getCameraRotation('miniGrid')`
+        -   `os.getFocusPoint('mini')` -> `os.getFocusPoint('miniGrid')`
+        -   `os.getPortalDimension('mini')` -> `os.getPortalDimension('miniGrid')`
+    -   `@onPortalChanged` now uses `miniGridPortal` for `that.portal`.
+-   Renamed some functions:
+    -   `os.downloadServer()` -> `os.downloadInst()`
+    -   `os.loadServer()` -> `os.loadInst()`
+    -   `os.unloadServer()` -> `os.unloadInst()`
+    -   `os.getCurrentServer()` -> `os.getCurrentInst()`
+    -   `server.remotes()` -> `os.remotes()`
+    -   `server.serverRemoteCount()` -> `os.remoteCount()`
+    -   `server.servers()` -> `os.instances()`
+    -   `server.serverStatuses()` -> `os.instStatuses()`
+    -   `server.restoreHistoryMarkToServer()` -> `server.restoreHistoryMarkToInst()`.
+    -   Note that some functions have moved to the `os` namespace from the `server` namespace. This is because most `server` functions do not work on CasualOS.com and are only designed to work with a server-based system (which CasualOS.com is not). To clarify this, functions that work all the time are now in the `os` namespace while the others are in the `server` namespace.
+-   Renamed several listen tags:
+    -   `@onServerJoined` -> `@onInstJoined`
+    -   `@onServerLeave` -> `@onInstLeave`
+    -   `@onServerStreaming` -> `@onInstStreaming`
+    -   `@onServerStreamLost` -> `@onInstStreamLost`
+    -   `@onServerAction` -> `@onAnyAction`
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where zooming on menu bots would trigger the browser-provided zoom functionality.
+-   Fixed an issue where copying an array from one tag to another tag caused CasualOS to break.
+
 ## V2.0.10
 
-#### Date: 9/8/2021
+#### Date: 9/21/2021
 
 ### :rocket: Improvements
 
 -   Improved the runtime to track changes to arrays without having to make a copy of the array or save it back to the tag.
 -   Improved `os.getRecords(...filters)` to use `authBot.id` if `byAuthID()` is not specified.
+-   Added `labelOpacity` tag.
+-   Added `menuItemLabelStyle` tag.
+-   Added the ability to use the `auto` value in the `scaleY` tag for menu bots. This automatically scales the menu bot height based on the amount of text in the label.
+-   Added the ability to rotate around an object multiple times with `os.focusOn()` by setting `normalized` to `false` in the `rotation` property.
+    -   By default, rotations passed to `os.focusOn()` are normalized to between 0 and `2π`.
+    -   Setting `normalized` to `false` will skip this process and allow rotations larger than `2π` which in turn means the camera will rotate past `2π`.
 
 ## V2.0.9
 

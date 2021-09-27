@@ -402,10 +402,10 @@ let that: {
 
 ### `@onBotAdded`
 
-A whisper that is sent when the bot is added to the local server.
+A whisper that is sent when the bot is added to the local inst.
 
-Unlike <TagLink tag='@onCreate'/>, this listen tag is triggered whenever the bot as been added to the current device's server, even if the bot has already been created.
-An example of this happening is when you first load a server. Even though all the bots have already been created, they still need to be added to the server in order for you to interact with them.
+Unlike <TagLink tag='@onCreate'/>, this listen tag is triggered whenever the bot as been added to the current device's inst, even if the bot has already been created.
+An example of this happening is when you first load an inst. Even though all the bots have already been created, they still need to be added to the inst in order for you to interact with them.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script creates multiple bots, `@onBotAdded` will be triggered after all the bots have been created.
 
@@ -415,7 +415,7 @@ There is no `that` argument for this listen tag.
 
 A whisper that is sent when a tag on the bot is updated.
 
-This listen tag is triggered whenever the bot has been updated in the current device's server, even if the bot was not updated locally.
+This listen tag is triggered whenever the bot has been updated in the current device's inst, even if the bot was not updated locally.
 An example of this happening is when another player changes a tag in the sheet portal. Even though the change was made on their device, it will show up on the current device.
 
 Note that this listen tag is triggered after any pending scripts have finished running. This means that if a script updates the same tag multiple times, `@onBotChanged` will still only be triggered once.
@@ -722,57 +722,57 @@ let that: {
 };
 ```
 
-### `@onServerJoined`
+### `@onInstJoined`
 
-A shout that is sent when a server is loaded.
-Sent to every server that is loaded.
-
-#### Arguments:
-```typescript
-let that: {
-  server: string
-};
-```
-
-### `@onServerLeave`
-
-A shout that is sent when a server is unloaded.
-Sent to every server that is loaded.
+A shout that is sent when a inst is loaded.
+Sent to every inst that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  server: string
+  inst: string
 };
 ```
 
-### `@onServerStreaming`
+### `@onInstLeave`
 
-A shout that is sent when a server is connected and fully synced.
+A shout that is sent when a inst is unloaded.
+Sent to every inst that is loaded.
+
+#### Arguments:
+```typescript
+let that: {
+  inst: string
+};
+```
+
+### `@onInstStreaming`
+
+A shout that is sent when a inst is connected and fully synced.
+
+Note that this can occur multiple times throughout the lifetime of a session because the player can lose and regain its connection to the inst.
+
+Sent to every inst that is loaded.
+
+#### Arguments:
+```typescript
+let that: {
+  inst: string
+};
+```
+
+### `@onInstStreamLost`
+
+A shout that is sent when a inst has been temporarily disconnected from the server.
 
 Note that this can occur multiple times throughout the lifetime of a session because the player can lose and regain its connection to the server.
 
-Sent to every server that is loaded.
+Sent to every inst that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  server: string
-};
-```
-
-### `@onServerStreamLost`
-
-A shout that is sent when a server has been temporarily disconnected from the server.
-
-Note that this can occur multiple times throughout the lifetime of a session because the player can lose and regain its connection to the server.
-
-Sent to every server that is loaded.
-
-#### Arguments:
-```typescript
-let that: {
-  server: string
+  inst: string
 };
 ```
 
@@ -1099,7 +1099,7 @@ return {
 };
 ```
 
-### `@onServerAction`
+### `@onAnyAction`
 
 A shout that is sent whenever an action happens.
 

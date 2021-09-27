@@ -6,7 +6,7 @@ import { Atom } from './Atom2';
  * That is, a data structore that stores uncommited changes.
  *
  * For basic operations, an in-memory stage is fine.
- * For servers, a persistent stage like redis is recommended. This helps prevent data loss upon abrupt power loss/shutdown.
+ * For servers, a semi-persistent stage like redis is recommended. This helps prevent data loss upon abrupt power loss/shutdown.
  */
 export interface CausalRepoStageStore {
     /**

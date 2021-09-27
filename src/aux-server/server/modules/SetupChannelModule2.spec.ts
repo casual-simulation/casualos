@@ -258,7 +258,7 @@ describe('SetupChannelModule2', () => {
                 );
             });
 
-            it('should send a remote error if the server already exists', async () => {
+            it('should send a remote error if the inst already exists', async () => {
                 expect.assertions(1);
 
                 // Creates the new channel
@@ -286,7 +286,7 @@ describe('SetupChannelModule2', () => {
                         action: remoteError(
                             {
                                 error: 'failure',
-                                exception: 'The server already exists.',
+                                exception: 'The inst already exists.',
                             },
                             {
                                 sessionId: 'player1',
@@ -325,7 +325,7 @@ describe('SetupChannelModule2', () => {
                 ]);
             });
 
-            it('should only setup a server once when triggered twice in a row', async () => {
+            it('should only setup a inst once when triggered twice in a row', async () => {
                 expect.assertions(3);
 
                 const remoteEvents = [] as SendRemoteActionEvent[];
@@ -397,7 +397,7 @@ describe('SetupChannelModule2', () => {
                         action: remoteError(
                             {
                                 error: 'failure',
-                                exception: 'The server already exists.',
+                                exception: 'The inst already exists.',
                             },
                             {
                                 sessionId: 'player1',

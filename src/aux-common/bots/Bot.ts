@@ -252,7 +252,7 @@ export interface UpdatedBot {
  * - "local" means that the bot is stored in the local storage partition.
  * - "tempLocal" means that the bot is stored in the temporary partition.
  * - "history" means that the bot represents a version of another space.
- * - "admin" means that the bot is shared across all servers.
+ * - "admin" means that the bot is shared across all instances.
  * - "tempShared" means that the bot is temporary and shared with other devices.
  * - "remoteTempShared" means that the bot is temporary and shared with this device from a remote device.
  * - "certified" means that the bot is a certificate.
@@ -289,7 +289,13 @@ export const DEFAULT_RECORD_SPACE: RecordSpace = 'tempRestricted';
 /**
  * The possible portal types.
  */
-export type PortalType = 'page' | 'mini' | 'menu' | 'sheet' | 'meet' | string;
+export type PortalType =
+    | 'grid'
+    | 'miniGrid'
+    | 'menu'
+    | 'sheet'
+    | 'meet'
+    | string;
 
 export interface ScriptTags extends PrecalculatedTags {
     toJSON(): any;
@@ -363,10 +369,10 @@ export interface BotTags {
 
     // User tags
     ['auxPlayerActive']?: boolean;
-    ['pagePortal']?: string | boolean;
+    ['gridPortal']?: string | boolean;
     ['sheetPortal']?: string | boolean;
-    ['server']?: string | string[];
-    ['miniPortal']?: string;
+    ['inst']?: string | string[];
+    ['miniGridPortal']?: string;
     ['menuPortal']?: string;
     ['leftWristPortal']?: string;
     ['rightWristPortal']?: string;
@@ -833,7 +839,7 @@ export const DEFAULT_USER_INACTIVE_TIME = 1000 * 60;
 export const DEFAULT_USER_DELETION_TIME = 1000 * 60 * 60;
 
 /**
- * Whether the mini portal is visible by default.
+ * Whether the miniGridPortal is visible by default.
  */
 export const DEFAULT_MINI_PORTAL_VISIBLE = false;
 
@@ -894,12 +900,12 @@ export const DEFAULT_PORTAL_ZOOMABLE = true;
 export const DEFAULT_PORTAL_SHOW_FOCUS_POINT = false;
 
 /**
- * Whether mini portals are resizable by default.
+ * Whether miniGridPortals are resizable by default.
  */
 export const DEFAULT_MINI_PORTAL_RESIZABLE = true;
 
 /**
- * The default height for mini portals.
+ * The default height for miniGridPortals.
  */
 export const DEFAULT_MINI_PORTAL_HEIGHT = 0.2;
 
@@ -986,7 +992,7 @@ export const ADMIN_PARTITION_ID = 'admin';
 export const TEMPORARY_SHARED_PARTITION_ID = 'tempShared';
 
 /**
- * The partition ID for bots that are automatically added to the server.
+ * The partition ID for bots that are automatically added to the instance.
  */
 export const BOOTSTRAP_PARTITION_ID = 'bootstrap';
 
@@ -1233,7 +1239,7 @@ export const ON_SHOUT_ACTION_NAME: string = 'onListen';
 /**
  * The name of the event that is triggered before an action is executed.
  */
-export const ON_ACTION_ACTION_NAME: string = 'onServerAction';
+export const ON_ACTION_ACTION_NAME: string = 'onAnyAction';
 
 /**
  * The name of the event that is triggered when a remote whisper is executed.
@@ -1257,6 +1263,16 @@ export const ON_SERVER_STREAMING_ACTION_NAME: string = 'onServerStreaming';
 export const ON_SERVER_STREAM_LOST_ACTION_NAME: string = 'onServerStreamLost';
 
 /**
+ * The name of the event that is triggered when a inst becomes synced.
+ */
+export const ON_INST_STREAMING_ACTION_NAME: string = 'onInstStreaming';
+
+/**
+ * The name of the event that is triggered when a inst has become unsynced.
+ */
+export const ON_INST_STREAM_LOST_ACTION_NAME: string = 'onInstStreamLost';
+
+/**
  * The name of the event that is triggered when a channel is loaded.
  */
 // TODO: Remove this action
@@ -1266,6 +1282,11 @@ export const ON_SERVER_SUBSCRIBED_ACTION_NAME: string = 'onServerSubscribed';
  * The name of the event that is triggered when a channel is loaded.
  */
 export const ON_SERVER_JOINED_ACTION_NAME: string = 'onServerJoined';
+
+/**
+ * The name of the event that is triggered when a inst is loaded.
+ */
+export const ON_INST_JOINED_ACTION_NAME: string = 'onInstJoined';
 
 /**
  * The name of the event that is triggered when a channel is unloaded.
@@ -1278,6 +1299,11 @@ export const ON_SERVER_UNSUBSCRIBED_ACTION_NAME: string =
  * The name of the event that is triggered when a channel is unloaded.
  */
 export const ON_SERVER_LEAVE_ACTION_NAME: string = 'onServerLeave';
+
+/**
+ * The name of the event that is triggered when a channel is unloaded.
+ */
+export const ON_INST_LEAVE_ACTION_NAME: string = 'onInstLeave';
 
 /**
  * The name of the event that is triggered when portal tag is changed on the config bot.
@@ -1489,9 +1515,9 @@ export const TAG_PORTAL_SPACE: string = 'tagPortalSpace';
 export const AUX_BOT_VERSION: number = 1;
 
 /**
- * The name of the mini portal.
+ * The name of the miniGridPortal.
  */
-export const MINI_PORTAL: string = 'miniPortal';
+export const MINI_PORTAL: string = 'miniGridPortal';
 
 /**
  * The name of the map portal.
@@ -1542,7 +1568,7 @@ export const DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES: string[] = ['📖'];
  * The list of all portal tags.
  */
 export const KNOWN_PORTALS: string[] = [
-    'pagePortal',
+    'gridPortal',
     SHEET_PORTAL,
     IDE_PORTAL,
     IMU_PORTAL,
@@ -1559,7 +1585,7 @@ export const KNOWN_PORTALS: string[] = [
  * The list of portal tags that should always be represented in the query string.
  */
 export const QUERY_PORTALS: string[] = [
-    'pagePortal',
+    'gridPortal',
     SHEET_PORTAL,
     IDE_PORTAL,
     MEET_PORTAL,
@@ -1573,10 +1599,10 @@ export const QUERY_PORTALS: string[] = [
  */
 export const KNOWN_TAGS: string[] = [
     'playerActive',
-    'pagePortal',
+    'gridPortal',
     SHEET_PORTAL,
     IDE_PORTAL,
-    'server',
+    'inst',
     MINI_PORTAL,
     'menuPortal',
     MAP_PORTAL,
@@ -1724,6 +1750,7 @@ export const KNOWN_TAGS: string[] = [
     'labelFontSize',
     'labelSize',
     'labelSizeMode',
+    'labelOpacity',
     'labelPadding',
     'labelPaddingX',
     'labelPaddingY',
@@ -1755,6 +1782,7 @@ export const KNOWN_TAGS: string[] = [
     'focusable',
     'transformer',
     'menuItemStyle',
+    'menuItemLabelStyle',
     'menuItemHoverMode',
     'menuItemText',
 
@@ -1831,11 +1859,11 @@ export const KNOWN_TAGS: string[] = [
     ON_POINTER_UP,
     ON_ANY_POINTER_DOWN,
     ON_ANY_POINTER_UP,
-    ON_SERVER_STREAMING_ACTION_NAME,
-    ON_SERVER_STREAM_LOST_ACTION_NAME,
+    ON_INST_STREAMING_ACTION_NAME,
+    ON_INST_STREAM_LOST_ACTION_NAME,
 
-    ON_SERVER_JOINED_ACTION_NAME,
-    ON_SERVER_LEAVE_ACTION_NAME,
+    ON_INST_JOINED_ACTION_NAME,
+    ON_INST_LEAVE_ACTION_NAME,
 
     ON_PORTAL_CHANGED_ACTION_NAME,
     ON_APP_SETUP_ACTION_NAME,
@@ -1945,24 +1973,28 @@ export function onDropArg(
 export function onServerStreamingArg(server: string) {
     return {
         server,
+        inst: server,
     };
 }
 
 export function onServerStreamLostArg(server: string) {
     return {
         server,
+        inst: server,
     };
 }
 
 export function onServerSubscribedArg(server: string) {
     return {
         server,
+        inst: server,
     };
 }
 
 export function onServerUnsubscribedArg(server: string) {
     return {
         server,
+        inst: server,
     };
 }
 

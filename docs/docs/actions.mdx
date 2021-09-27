@@ -213,7 +213,7 @@ changeState(bot, "Playing", "playbackState");
 
 Gets an array of bots that match all of the given filter(s). The returned array is sorted alphabetically by the <TagLink tag='id'/> tag.
 
-**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then all bots in the server are returned.
+**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then all bots in the inst are returned.
 If multiple filters are specified, then only the bots that match all of the filters are returned.
 
 #### Examples
@@ -259,7 +259,7 @@ let bots = getBots("#test");
 
 Get the first bot that matches all of the given filter(s). If multiple bots match the given filter(s), then bots are sorted alphabetically by the <TagLink tag='id'/> tag and the first one is returned. If no bots match the given filter(s), then `undefined` is returned.
 
-**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then the first bot in the server is returned.
+**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then the first bot in the inst is returned.
 If multiple filters are specified, then the first bot that matches all of the filters is returned.
 
 #### Examples
@@ -303,7 +303,7 @@ let foundBot = getBot("#test");
 ### `getBotTagValues(tag, filter?)`
 
 
-Gets a list of all the values in the server for the given tag. Optionally accepts a filter for the tag values.
+Gets a list of all the values in the inst for the given tag. Optionally accepts a filter for the tag values.
 
 The **first parameter** is the name of the tag to search for.
 
@@ -1426,7 +1426,7 @@ priorityShout(['myTest', 'mySecondTest'], "blue");
 ### `superShout(name, arg?)`
 
 
-Sends a shout to all of the other servers that are loaded.
+Sends a shout to all of the other instances that are loaded.
 
 The **first parameter** is the name of the shout. e.g. Using `onClick` for the name will trigger all the <TagLink tag='@onClick'/> listeners.
 
@@ -1434,7 +1434,7 @@ The **second parameter** is the optional `that` argument to include with the sho
 
 #### Examples:
 
-1. Send a `hello` super shout to all the loaded servers.
+1. Send a `hello` super shout to all the loaded instances.
 ```typescript
 superShout("hello");
 ```
@@ -1446,11 +1446,11 @@ Sends the given action to another remote.
 In CasualOS, all actions are messages which are placed in a queue and processed one at at time.
 
 For example, the <ActionLink action='os.toast(message, duration?)'/> action queues a message which, when processed, will show a toast message.
-However, before any action is performed, it is run through the <TagLink tag='@onServerAction'/> listener which can decide whether reject an action using <ActionLink action='action.reject(action)'/>.
+However, before any action is performed, it is run through the <TagLink tag='@onAnyAction'/> listener which can decide whether reject an action using <ActionLink action='action.reject(action)'/>.
 This lets you write rules for what actions each player is allowed to take.
 
 There are a couple special cases. First, when you send/receive an action from someone else (i.e. they sent an action to you using the <ActionLink action='remote(action)'/> function), it won't run by default.
-Instead it is wrapped as a `device` action and sent to <TagLink tag='@onServerAction'/> for processing. This lets you decide whether to allow players to send messages to each other and what the effect of those messages are.
+Instead it is wrapped as a `device` action and sent to <TagLink tag='@onAnyAction'/> for processing. This lets you decide whether to allow players to send messages to each other and what the effect of those messages are.
 If you want to perform the action, you can use <ActionLink action='action.perform(action)'/> on the inner device action to queue it for execution.
 
 The **first parameter** is the action to send.
@@ -1498,7 +1498,7 @@ sendRemoteData(otherRemoteId, "custom", "Hello");
 
 2. Send a message to all other remotes.
 ```typescript
-const remotes = await server.remotes();
+const remotes = await os.remotes();
 const remoteId = getID(configBot);
 const otherRemotes = remotes.filter(id => id !== remoteId);
 
@@ -1512,7 +1512,7 @@ sendRemoteData(otherRemotes, "custom", "Hello");
 
 Prevents a previous action from being performed.
 
-This is especially useful when used in a <TagLink tag='@onServerAction'/> listener since it lets you reject actions before they are performed.
+This is especially useful when used in a <TagLink tag='@onAnyAction'/> listener since it lets you reject actions before they are performed.
 
 The **first parameter** is the action that should be prevented/rejected.
 
@@ -1529,7 +1529,7 @@ action.reject(toastAction);
 Publishes a record based on the given options and returns a promise that resolves when the record is published.
 The resolved object can be used with <ActionLink action='os.getRecords(...filters)'/> to retrieve the record.
 
-Records are pieces of data (like JSON) that can be shared between servers.
+Records are pieces of data (like JSON) that can be shared between instances.
 Once created, they cannot be changed and they are only loaded when requested.
 
 Note that in order to publish a record, the auth bot must first be loaded with <ActionLink action='os.requestAuthBot()'/>.
@@ -1786,7 +1786,7 @@ if (location.success) {
 
 
 Shows a payment screen modal that lets the player purchase something.
-Triggers the <TagLink tag='@onCheckout'/> shout on the server inside the given processing server.
+Triggers the <TagLink tag='@onCheckout'/> shout on the server inside the given processing inst.
 
 The **first parameter** is the options to use to setup the checkout screen.
 
@@ -1803,7 +1803,7 @@ os.checkout({
     productId: '10_cookies',
     title: '10 Cookies',
     description: '$5.00',
-    processingServer: 'cookies_checkout'
+    processingInst: 'cookies_checkout'
 });
 ```
 
@@ -2285,7 +2285,7 @@ os.share({
 
 ### `os.openCircleWipe(options?)`
 
-Causes the circular wipe animation to open around the screen. This can be used to reveal the page portal after transitioning between screens.
+Causes the circular wipe animation to open around the screen. This can be used to reveal the grid portal after transitioning between screens.
 Returns a promise that resolves when the animation has finished running.
 The promise will throw an exception if <ActionLink action='os.closeCircleWipe(options?)'/> is called while the animation is running.
 
@@ -2308,13 +2308,13 @@ let options: {
 
 #### Examples:
 
-1. Reveal the page portal with a circular wipe animation.
+1. Reveal the grid portal with a circular wipe animation.
 ```typescript
 await os.openCircleWipe();
 os.toast("Revealed!");
 ```
 
-2. Hide the page portal and show it after an additional second.
+2. Hide the grid portal and show it after an additional second.
 ```typescript
 await os.closeCircleWipe();
 await os.sleep(1000);
@@ -2337,7 +2337,7 @@ await os.openCircleWipe({
 
 ### `os.closeCircleWipe(options?)`
 
-Causes a circular wipe animation to close around the screen. This can be used to cover the page portal while transitioning between scenes.
+Causes a circular wipe animation to close around the screen. This can be used to cover the grid portal while transitioning between scenes.
 Returns a promise that resolves when the animation has finished running.
 The promise will throw an exception if <ActionLink action='os.openCircleWipe(options?)'/> is called while the animation is running.
 
@@ -2360,13 +2360,13 @@ let options: {
 
 #### Examples:
 
-1. Hide the page portal with a circular wipe animation.
+1. Hide the grid portal with a circular wipe animation.
 ```typescript
 await os.closeCircleWipe();
 os.toast("Hidden!");
 ```
 
-2. Hide the page portal and show it after an additional second.
+2. Hide the grid portal and show it after an additional second.
 ```typescript
 await os.closeCircleWipe();
 await os.sleep(1000);
@@ -2412,11 +2412,11 @@ os.toast("this is the code", 5);
 ### `os.focusOn(botOrPosition, options?)`
 
 Focuses on the given bot or position.
-For bots in the page or mini portals, this animates the camera such that the portal focus point is placed on the given bot or position.
+For bots in the bot or miniGridPortals, this animates the camera such that the portal focus point is placed on the given bot or position.
 For input bots in menu portal, this gives keyboard focus to them.
 
 Returns a promise which resolves when the bot has been focused.
-For the page and mini portals this is when the animation finishes and rejects if the user takes control of the camera during the animation.
+For the bot and miniGridPortals this is when the animation finishes and rejects if the user takes control of the camera during the animation.
 For menu bots this is when the input field is focused and rejects if the bot is not a input bot.
 
 The **first parameter** is the bot, bot ID, or position that should be focused. If null, then the current focus animation will be canceled.
@@ -2428,7 +2428,7 @@ It should be an object with the following properties:
 let options: {
     /*
     * The zoom value to use.
-    * For the page and mini portals, possible values are between `0` and `80`. `1` is the default.
+    * For the bot and miniGridPortals, possible values are between `0` and `80`. `1` is the default.
     * For the map portal, this is the scale that the focused point should appear at.
     * For example, 24000 would indicate that the scale is 1:24,000.
     * If no value is specified, then the zoom will remain at its current value.
@@ -2443,6 +2443,13 @@ let options: {
     rotation?: {
         x: number;
         y: number;
+
+        /**
+         * Whether to normalize the rotation. Normalized rotations are clamped to between 0 and Math.PI*2.
+         * You can set this to false to allow using angles more than Math.PI*2. This would allow the camera to rotate around an object multiple times.
+         * Defaults to true.
+         */
+        normalize?: boolean;
     };
 
     /**
@@ -2453,7 +2460,7 @@ let options: {
 
     /**
      * The portal that the bot should be focused in.
-     * If not specified, then the bot will be focused in all the portals it is in. (page, mini and menu)
+     * If not specified, then the bot will be focused in all the portals it is in. (bot, mini and menu)
      * Useful if a bot is in two portals but you only want to focus it in one portal.
      */
     portal?: string;
@@ -2548,6 +2555,16 @@ await os.focusOn({
 });
 ```
 
+7. Rotate the camera around the focus point 3 times.
+```typescript
+await os.focusOn(thisBot, {
+    rotation: {
+        y: (Math.PI * 2) * 3,
+        normalize: false
+    }
+});
+```
+
 ### `os.openQRCodeScanner(camera?)`
 
 
@@ -2617,13 +2634,13 @@ Closes the QR Code popup modal.
 os.hideQRCode();
 ```
 
-### `os.showJoinCode(server?, dimension?)`
+### `os.showJoinCode(inst?, dimension?)`
 
 
-Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) with a link to join the given server and dimension.
-If the server and dimension are omitted, then the current server and dimension will be used.
+Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) with a link to join the given inst and dimension.
+If the inst and dimension are omitted, then the current inst and dimension will be used.
 
-The **first parameter** is the server that the code should be shown for.
+The **first parameter** is the inst that the code should be shown for.
 
 The **second parameter** is the dimension that the code should be shown for.
 
@@ -2634,9 +2651,9 @@ The **second parameter** is the dimension that the code should be shown for.
 os.showJoinCode();
 ```
 
-2. Show a join QR Code for a server and dimension.
+2. Show a join QR Code for a inst and dimension.
 ```typescript
-os.showJoinCode("server", "dimension");
+os.showJoinCode("inst", "dimension");
 ```
 
 ### `os.openBarcodeScanner(camera?)`
@@ -2868,7 +2885,7 @@ os.setClipboard("hello");
 
 ### `os.showUploadFiles()`
 
-Shows the "Upload Files" dialog which lets the user select some files to upload to the server.
+Shows the "Upload Files" dialog which lets the user select some files to upload to the inst.
 Returns a promise that resolves with the list of files that were uploaded.
 
 Each file is an object with the following structure:
@@ -2915,7 +2932,7 @@ os.toast("You uploaded " + files.length + " file(s)!");
 ### `os.showUploadAuxFile()`
 
 
-Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to upload to the server.
+Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to upload to the inst.
 
 #### Examples:
 
@@ -2924,49 +2941,49 @@ Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to u
 os.showUploadAuxFile();
 ```
 
-### `os.loadServer(server)`
+### `os.loadInst(inst)`
 
 
-Loads the given univese into the current browser tab. When the server is loaded, the <TagLink tag='@onServerSubscribed'/> shout will be triggered.
+Loads the given inst into the current browser tab. When the inst is loaded, the <TagLink tag='@onInstJoined'/> shout will be triggered.
 
-Note that separate servers cannot interact directly. They must instead interact via super shouts.
+Note that separate instances cannot interact directly. They must instead interact via super shouts.
 
-The **first parameter** is the name of the server to load.
-
-#### Examples:
-
-1. Load the `fun` server.
-```typescript
-os.loadServer("fun");
-```
-
-### `os.unloadServer()`
-
-Unloads the given server from the current browser tab. When the server is unloaded, the <TagLink tag='@onServerUnsubscribed'/> shout will be triggered.
-
-The **first parameter** is the name of the server to unload.
+The **first parameter** is the name of the inst to load.
 
 #### Examples:
 
-1. Unload the `fun` server.
+1. Load the `fun` inst.
 ```typescript
-os.unloadServer('fun');
+os.loadInst("fun");
 ```
 
-### `os.downloadServer()`
+### `os.unloadInst()`
+
+Unloads the given inst from the current browser tab. When the inst is unloaded, the <TagLink tag='@onInstLeave'/> shout will be triggered.
+
+The **first parameter** is the name of the inst to unload.
+
+#### Examples:
+
+1. Unload the `fun` inst.
+```typescript
+os.unloadInst('fun');
+```
+
+### `os.downloadInst()`
 
 
 Downloads all of the shared bots into a `.aux` file on the player's computer.
-The file will have the same name as the server.
+The file will have the same name as the inst.
 
 Note that this function is almost exactly the same as <ActionLink action='os.downloadBots(bots, filename)'/>.
 The only difference is that all bots in the shared space are included and the file is named for you automatically.
 
 #### Examples:
 
-1. Download the entire server.
+1. Download the entire inst.
 ```typescript
-os.downloadServer();
+os.downloadInst();
 ```
 
 ### `os.enableAR()`
@@ -3019,7 +3036,7 @@ os.disableVR();
 
 ### `os.enablePointOfView(center?)`
 
-Enables Point-of-View mode on the device. Useful for getting a "ground level" view in the page portal.
+Enables Point-of-View mode on the device. Useful for getting a "ground level" view in the grid portal.
 This will move the camera to the given position, set the camera type to `perspective`, and change the camera controls so that dragging the screen causes the camera to look around.
 
 It is not possible to manually move the camera in this mode, however it is still possible to use <ActionLink action='os.focusOn(botOrPosition, options?)'/> to move the camera.
@@ -3054,31 +3071,30 @@ This will return the camera to its original position, set the camera type back t
 os.disablePointOfView();
 ```
 
-### `os.getCurrentServer()`
+### `os.getCurrentInst()`
 
-
-Gets the server that the player is in.
+Gets the inst that is loaded.
 
 #### Examples:
 
-1. Show a message of the current server.
+1. Show a message of the current inst.
 ```typescript
-const server = os.getCurrentServer();
-os.toast(server);
+const inst = os.getCurrentInst();
+os.toast(inst);
 ```
 
 ### `os.getCurrentDimension()`
 
 
-Gets the dimension that is loaded into the <TagLink tag='pagePortal'/> portal.
+Gets the dimension that is loaded into the <TagLink tag='gridPortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "pagePortal".
+    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "gridPortal".
 </Alert>
 
 #### Examples:
 
-1. Show a message of the dimension that is currently in the <TagLink tag='pagePortal'/> portal.
+1. Show a message of the dimension that is currently in the <TagLink tag='gridPortal'/> portal.
 ```typescript
 const dimension = os.getCurrentDimension();
 os.toast(dimension);
@@ -3104,15 +3120,15 @@ os.toast(dimension);
 ### `os.getMiniPortalDimension()`
 
 
-Gets the dimension that is loaded into the <TagLink tag='miniPortal'/> portal.
+Gets the dimension that is loaded into the <TagLink tag='miniGridPortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "miniPortal".
+    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "miniGridPortal".
 </Alert>
 
 #### Examples:
 
-1. Show a message of the dimension that is currently in the <TagLink tag='miniPortal'/> portal.
+1. Show a message of the dimension that is currently in the <TagLink tag='miniGridPortal'/> portal.
 ```typescript
 const dimension = os.getMiniPortalDimension();
 os.toast(dimension);
@@ -3121,17 +3137,17 @@ os.toast(dimension);
 ### `os.hasBotInMiniPortal(bot)`
 
 
-Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='miniPortal'/> portal.
+Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='miniGridPortal'/> portal.
 
 The **first parameter** is the bot that should be checked.
 
 #### Examples:
 
-1. Show a message if a bot named bob is in the mini portal.
+1. Show a message if a bot named bob is in the miniGridPortal.
 ```typescript
 const bob = getBot("#name", "bob");
 if (os.hasBotInMiniPortal(bob)) {
-    os.toast("bob is in the miniPortal!");
+    os.toast("bob is in the miniGridPortal!");
 }
 ```
 
@@ -3144,14 +3160,14 @@ The **first parameter** is the portal that the dimension should be retrieved for
 Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='page'>
-    The <TagLink tag='pagePortal'/>.
+  <PossibleValueCode value='grid'>
+    The <TagLink tag='gridPortal'/>.
   </PossibleValueCode>
   <PossibleValueCode value='sheet'>
     The <TagLink tag='sheetPortal'/>.
   </PossibleValueCode>
-  <PossibleValueCode value='mini'>
-    The <TagLink tag='miniPortal'/>.
+  <PossibleValueCode value='miniGrid'>
+    The <TagLink tag='miniGridPortal'/>.
   </PossibleValueCode>
   <PossibleValueCode value='menu'>
       The <TagLink tag='menuPortal'/>.
@@ -3160,14 +3176,14 @@ Possible values are:
 
 #### Examples:
 
-1. Get the dimension that is currently showing in the <TagLink tag='pagePortal'/>.
+1. Get the dimension that is currently showing in the <TagLink tag='gridPortal'/>.
 ```typescript
-const dimension = os.getPortalDimension('page');
+const dimension = os.getPortalDimension('grid');
 ```
 
-2. Get the dimension that is currently showing in the <TagLink tag='miniPortal'/>.
+2. Get the dimension that is currently showing in the <TagLink tag='miniGridPortal'/>.
 ```typescript
-const dimension = os.getPortalDimension('mini');
+const dimension = os.getPortalDimension('miniGrid');
 ```
 
 3. Get the dimension that is currently showing in the `#auxCustomPortal` tag.
@@ -3234,22 +3250,22 @@ The **first parameter** is optional and is the portal that the camera position s
 Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='page'>
-    The camera position in the page portal. (Default)
+  <PossibleValueCode value='grid'>
+    The camera position in the grid portal. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='mini'>
-    The camera position in the mini portal.
+  <PossibleValueCode value='miniGrid'>
+    The camera position in the miniGridPortal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
 #### Examples:
 
-1. Get the position of the player in the page portal.
+1. Get the position of the player in the grid portal.
 ```typescript
-const position = os.getCameraPosition("page");
+const position = os.getCameraPosition('grid');
 ```
 
-2. Get the position of the player in the mini portal.
+2. Get the position of the player in the miniGridPortal.
 ```typescript
 const position = os.getCameraPosition("mini");
 ```
@@ -3262,22 +3278,22 @@ The **first parameter** is optional and is the portal that the camera rotation s
 Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='page'>
-    The camera rotation in the page portal. (Default)
+  <PossibleValueCode value='grid'>
+    The camera rotation in the grid portal. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='mini'>
-    The camera rotation in the mini portal.
+  <PossibleValueCode value='miniGrid'>
+    The camera rotation in the miniGridPortal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
 #### Examples:
 
-1. Get the rotation of the player in the page portal.
+1. Get the rotation of the player in the grid portal.
 ```typescript
-const rotation = os.getCameraRotation("page");
+const rotation = os.getCameraRotation('grid');
 ```
 
-2. Get the rotation of the player in the mini portal.
+2. Get the rotation of the player in the miniGridPortal.
 ```typescript
 const rotation = os.getCameraRotation("mini");
 ```
@@ -3292,22 +3308,22 @@ The **first parameter** is optional and is the portal that the camera focus poin
 Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='page'>
-    The camera focus point in the page portal. (Default)
+  <PossibleValueCode value='grid'>
+    The camera focus point in the grid portal. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='mini'>
-    The camera focus point in the mini portal.
+  <PossibleValueCode value='miniGrid'>
+    The camera focus point in the miniGridPortal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
 #### Examples:
 
-1. Get the focus point of the player in the page portal.
+1. Get the focus point of the player in the grid portal.
 ```typescript
-const focusPoint = os.getFocusPoint("page");
+const focusPoint = os.getFocusPoint('grid');
 ```
 
-2. Get the focus point of the player in the mini portal.
+2. Get the focus point of the player in the miniGridPortal.
 ```typescript
 const focusPoint = os.getFocusPoint("mini");
 ```
@@ -3512,8 +3528,8 @@ os.toast(state);
 ### `os.goToDimension(dimension)`
 
 
-Loads the given dimension into the <TagLink tag='pagePortal'/> portal.
-Triggers the <TagLink tag='@onPortalChanged'/> shout for the `pagePortal`.
+Loads the given dimension into the <TagLink tag='gridPortal'/> portal.
+Triggers the <TagLink tag='@onPortalChanged'/> shout for the `gridPortal`.
 
 The **first parameter** is the dimension that should be loaded.
 
@@ -3614,7 +3630,7 @@ os.cancelSound(id);
 ### `os.isInDimension(dimension)`
 
 
-Gets whether the given dimension is loaded into the <TagLink tag='pagePortal'/> portal.
+Gets whether the given dimension is loaded into the <TagLink tag='gridPortal'/> portal.
 
 The **first parameter** is the dimension to check for.
 
@@ -3649,7 +3665,7 @@ Imports an AUX file from the given string.
 If the string contains JSON, then the JSON will be imported as if it was a .aux file.
 If the string is a [URL](https://en.wikipedia.org/wiki/URL), then it will be downloaded and imported.
 
-This is useful to quickly download a AUX file and load it into the current server from a site such as https://gist.github.com/.
+This is useful to quickly download a AUX file and load it into the current inst from a site such as https://gist.github.com/.
 
 The **first parameter** is the JSON or URL that the AUX file should be imported from.
 
@@ -3778,7 +3794,7 @@ os.exitFullscreenMode();
 
 ### `os.requestAuthBot()`
 
-Requests that an "authentication" bot be added to the server for the current browser tab. Auth bots are useful for allowing an app bundle to
+Requests that an "authentication" bot be added to the inst for the current browser tab. Auth bots are useful for allowing an app bundle to
 automatically create and access records that are associated with a https://casualos.me user account. Because auth bots are tied to a particular app bundle,
 CasualOS can sometimes skip the manual login process in favor of an automated login system.
 Returns a promise that resolves with a bot that contains information about the signed in user session.
@@ -3812,11 +3828,159 @@ const token = await os.requestPermanentAuthToken();
 os.toast(token);
 ```
 
+### `os.setupInst(inst, botOrMod?)`
+
+Sends an action to the server that will create the given inst if it does not exist and places a clone of the given bot or mod in it.
+The new bot will only be added to the inst if the inst did not exist.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the inst has been setup.
+
+The **first parameter** is the ID of the inst that should be setup.
+
+The **second parameter** is optional and is the bot or mod that should be cloned into the new inst. After the bot is created, <TagLink tag='@onCreate'/> will be triggered.
+
+#### Examples:
+
+Before `os.setupInst()` will work, you need to setup the <TagLink tag='@onAnyAction'/> tag to execute events from remote devices.
+This is because when you run `os.setupInst()` from a PC or phone (a.k.a. A "remote device"), it needs to send an event to the server to actually create the new inst.
+By default, AUX does not perform actions that are received from a remote device. You must instruct AUX to execute these yourself.
+
+Ensure that <TagLink tag='@onAnyAction'/> is setup properly.
+The following script will execute `setup_server` events that were sent from other devices:
+```typescript
+// Device actions are actions that were sent to this computer from another device
+if (that.action.type === 'device') {
+
+    // The setup_server action is the action that is created
+    // from os.setupInst()
+    if (that.action.event.type === 'setup_server') {
+
+        // Execute the setup_server action
+        action.perform(that.action.event);
+    }
+}
+```
+
+1. Create the "test" inst:
+```typescript
+await os.setupInst("test");
+```
+
+2. Create the "test" inst with a bot inside it:
+```typescript
+await os.setupInst("test", {
+    "name": "bob",
+    "color": "red"
+});
+```
+
+3. Create the "test" inst with a bot that places a bot in the "abc" dimension:
+```typescript
+await os.setupInst("test", {
+    "onCreate": `@
+        create({
+            creator: null,
+            label: "This is in the dimension!",
+            color: "blue",
+            abc: true
+        });
+
+        destroy(this);
+    `
+});
+```
+
+### `os.remoteCount(inst?)`
+
+Gets the number of remotes that are viewing the current inst.
+Optionally takes a parameter which is the inst that the number of remotes should be retrieved for. If omitted, then the current inst will be checked.
+Returns a promise that resolves with the number of active remotes.
+
+The **first parameter** is optional and is the name of the inst that the number of remotes should be retrieved for.
+If not specified, then the current inst <ActionLink action="os.getCurrentInst()">current inst</ActionLink> will be used.
+
+#### Examples
+
+1. Get the number of remotes in the current inst.
+```typescript
+const numberOfRemotes = await os.remoteCount();
+
+os.toast("Number of Remotes: " + numberOfRemotes);
+```
+
+2. Get the number of remotes in the `test` inst.
+```typescript
+const numberOfRemotes = await os.remoteCount('test');
+
+os.toast("Number of Remotes: " + numberOfRemotes);
+```
+
+### `os.totalRemoteCount()`
+
+Gets the number of devices that are connected to the server.
+Returns a promise that resolves with the number of active devices.
+
+#### Examples
+
+1. Get the number of devices on the server.
+```typescript
+const numberOfDevices = await os.totalRemoteCount();
+
+os.toast("Number of Devices: " + numberOfDevices);
+```
+
+### `os.instances()`
+
+Gets the list of instances that are stored on the server.
+Returns a promise that resolves with the list of inst names.
+
+#### Examples
+
+1. Get the list of instances on the server.
+```typescript
+const instances = await os.instances();
+
+os.toast("Instances " + instances.join(','));
+```
+
+### `os.instStatuses()`
+
+Gets the list of instances that are stored on the server along with the last time that they were updated.
+Returns a promise that resolves with the list of instances.
+
+The resolved list is sorted by the most recently updated first and the least recently updated last.
+
+#### Examples
+
+1. Get the list of instances on the server along with their status.
+```typescript
+const instances = await os.instStatuses();
+
+os.toast("Instances " + getJSON(instances));
+```
+
+### `os.remotes()`
+
+Gets the list of remote IDs that are connected to the current inst.
+Returns a promise that resolves with the list of remote IDs.
+
+The resolved list will always have at least one value that represents the current remote.
+
+#### Examples
+
+1. Get the list of remote IDs.
+```typescript
+const remotes = await os.remotes();
+
+os.toast("Remotes " + remotes.join(','));
+```
+
 ## Server Actions
 
 ### `server.backupToGithub(auth)`
 
-Saves all the servers to GitHub as a private Gist using the given authentication token.
+Saves all the instances to GitHub as a private Gist using the given authentication token.
 
 Just like <ActionLink action='server.shell(script)'/>, you need 
 
@@ -3824,13 +3988,13 @@ The **first parameter** is the Github Personal Access Token that should be used 
 See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
 
 <Alert type='info'>
-    By default, backing up to GitHub is disabled on a server.
-    To enable it, you have to write a custom <TagLink tag='@onServerAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, backing up to GitHub is disabled on a inst.
+    To enable it, you have to write a custom <TagLink tag='@onAnyAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 #### Examples:
 
-1. Backup all the servers to a Github Gist.
+1. Backup all the instances to a Github Gist.
 ```typescript
 server.backupToGithub('your auth token');
 ```
@@ -3838,13 +4002,13 @@ server.backupToGithub('your auth token');
 ### `server.backupAsDownload(target)`
 
 
-Saves all the servers to a zip file and downloads it to the session matching the given target.
+Saves all the instances to a zip file and downloads it to the session matching the given target.
 
 The **first parameter** is an object that indicates which session the zip file should be downloaded to.
 
 <Alert type='info'>
-    By default, backing up as a download is disabled on a server.
-    To enable it, you have to write a custom <TagLink tag='@onServerAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, backing up as a download is disabled on a inst.
+    To enable it, you have to write a custom <TagLink tag='@onAnyAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 #### Examples:
@@ -3879,75 +4043,11 @@ server.finishCheckout({
 });
 ```
 
-### `server.setupServer(server, botOrMod?)`
-
-
-Sends an action to the server that will create the given server if it does not exist and places a clone of the given bot or mod in it.
-The new bot will only be added to the server if the server did not exist.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the server has been setup.
-
-The **first parameter** is the ID of the server that should be setup.
-
-The **second parameter** is optional and is the bot or mod that should be cloned into the new server. After the bot is created, <TagLink tag='@onCreate'/> will be triggered.
-
-#### Examples:
-
-Before `server.setupServer()` will work, you need to setup the <TagLink tag='@onServerAction'/> tag to execute events from remote devices.
-This is because when you run `server.setupServer()` from a PC or phone (a.k.a. A "remote device"), it needs to send an event to the server to actually create the new server.
-By default, AUX does not perform actions that are received from a remote device. You must instruct AUX to execute these yourself.
-
-Ensure that <TagLink tag='@onServerAction'/> is setup properly.
-The following script will execute `setup_server` events that were sent from other devices:
-```typescript
-// Device actions are actions that were sent to this computer from another device
-if (that.action.type === 'device') {
-
-    // The setup_server action is the action that is created
-    // from server.setupServer()
-    if (that.action.event.type === 'setup_server') {
-
-        // Execute the setup_server action
-        action.perform(that.action.event);
-    }
-}
-```
-
-1. Create the "test" server:
-```typescript
-await server.setupServer("test");
-```
-
-2. Create the "test" server with a bot inside it:
-```typescript
-await server.setupServer("test", {
-    "name": "bob",
-    "color": "red"
-});
-```
-
-3. Create the "test" server with a bot that places a bot in the "abc" dimension:
-```typescript
-await server.setupServer("test", {
-    "onCreate": `@
-        create({
-            creator: null,
-            label: "This is in the dimension!",
-            color: "blue",
-            abc: true
-        });
-
-        destroy(this);
-    `
-});
-```
-
 ### `server.exportGpio(pin, mode)`
 
 
 This exports a GPIO pin (BCM) on the physical server so that you can access them as inputs or outputs.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been exported.
 
@@ -3968,7 +4068,7 @@ server.exportGpio(led_pin, 'out');
 
 
 This unexports a GPIO pin (BCM) on the physical server so that it's freed up once you're done with it.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been unexported.
 
@@ -3989,7 +4089,7 @@ server.unexportGpio(led_pin);
 
 
 This sets a GPIO pin (BCM) on the physical server to either HIGH (1) or LOW (0).
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been set.
 
@@ -4011,7 +4111,7 @@ server.setGpio(led_pin, 0);
 
 
 This reads a given GPIO pin (BCM) and returns the state/value of the pin.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been read.
 
@@ -4033,7 +4133,7 @@ os.shout(state);
 
 
 Initialise the bcm2835 library. This will be called automatically by `.open()` using the default option values if not called explicitly.  
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when rpio has been initialized.
 
@@ -4063,7 +4163,7 @@ server.rpioInit(options);
 
 
 Shuts down the rpio library, unmapping and clearing all memory maps. By default this will happen automatically.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when rpio has been exited.
 
@@ -4080,7 +4180,7 @@ server.rpioExit();
 Open a pin for input or output.
 For input pins, `options` can be used to configure the internal pullup or pulldown resistors.
 For output pins, `options` defines the initial state of the pin, rather than having to issue a separate `.write()` call. 
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been configured.
 
@@ -4115,7 +4215,7 @@ server.rpioOpen(led_pin, 'INPUT', 'PULL_DOWN');
 
 Switch a pin that has already been opened in one mode to a different mode. 
 This is provided primarily for performance reasons, as it avoids some of the setup work done by `.open()`. 
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been configured.
 
@@ -4145,7 +4245,7 @@ server.rpioMode(led_pin, 'INPUT', 'PULL_DOWN');
 
 
 Read the current value of pin, returning either `1` (high) or `0` (low).
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been read.
 
@@ -4168,7 +4268,7 @@ os.shout(state);
 
 Read length bits from pin into buffer as fast as possible.
 This is useful for devices which send out information faster than the JavaScript function call overhead can handle, e.g. if you need microsecond accuracy. 
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been read.
 
@@ -4187,7 +4287,7 @@ server.rpioReadSequence(16, 10);
 
 
 Set the specified pin either high or low.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been set.
 
@@ -4209,7 +4309,7 @@ server.rpioWrite(led_pin, 'HIGH');
 
 
 Write length bits to pin from buffer as fast as possible.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been written to.
 
@@ -4234,7 +4334,7 @@ On current models of Raspberry Pi there are three groups with corresponding defi
 PAD_GROUP_0_27: GPIO0 - GPIO27. Use this for the main GPIO header.
 PAD_GROUP_28_45: GPIO28 - GPIO45. Use this to configure the P5 header.
 PAD_GROUP_46_53: GPIO46 - GPIO53. Internal, you probably won't need this.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 The value returned will be true/false for 'slew' and 'hysteresis'.
 The value returned will be the drive current in mA for 'current'.
@@ -4268,7 +4368,7 @@ On current models of Raspberry Pi there are three groups with corresponding defi
 PAD_GROUP_0_27: GPIO0 - GPIO27. Use this for the main GPIO header.
 PAD_GROUP_28_45: GPIO28 - GPIO45. Use this to configure the P5 header.
 PAD_GROUP_46_53: GPIO46 - GPIO53. Internal, you probably won't need this.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pad control has been written to.
 
@@ -4291,7 +4391,7 @@ server.rpioWritepad('PAD_GROUP_0_27', undefined, true, 12);
 
 
 Configure the pin's internal pullup or pulldown resistors.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been configured.
 
@@ -4318,7 +4418,7 @@ server.rpioPud(led_pin, 'PULL_OFF');
 
 Watch `pin` for changes and execute the callback `cb()` on events.
 To stop watching for `pin` changes, call `.rpioPoll()` again, setting the callback to `null` (or anything else which isn't a function).
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when 
 
@@ -4355,7 +4455,7 @@ server.rpioPoll(16, nuke_button, 'POLL_HIGH');
 
 
 Indicate that the pin will no longer be used, and clear any poll events associated with it.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been closed.
 
@@ -4382,7 +4482,7 @@ server.rpioClose(led_pin, 'PIN_PRESERVE');
 ### `server.rpioI2CBegin()`
 
 Initializes i²c for use.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when i²c has been initialized.
 
@@ -4396,7 +4496,7 @@ server.rpioI2CBegin();
 ### `server.rpioI2CSetSlaveAddress()`
 
 Configure the slave address. This is between `0 - 0x7f`.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the slave address has been set.
 
@@ -4412,7 +4512,7 @@ server.rpioI2CSetSlaveAddress(0x20);
 ### `server.rpioI2CSetBaudRate(rate)`
 
 Set the baud rate. Directly set the speed in hertz.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when rate has been set.
 
@@ -4428,7 +4528,7 @@ server.rpioI2CSetBaudRate(100000);
 ### `server.rpioI2CSetClockDivider(rate)`
 
 Set the baud rate. Set it based on a divisor of the base 250MHz rate.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when rate has been set.
 
@@ -4444,7 +4544,7 @@ server.rpioI2CSetClockDivider(2500);
 ### `server.rpioI2CRead(rx, length?)`
 
 Set the baud rate. Set it based on a divisor of the base 250MHz rate.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when rate has been set.
 
@@ -4462,7 +4562,7 @@ await server.rpioI2CRead([32], 16);
 ### `server.rpioI2CWrite(tx, length?)`
 
 Set the baud rate. Set it based on a divisor of the base 250MHz rate.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when rate has been set.
 
@@ -4480,7 +4580,7 @@ server.rpioI2CWrite([0x0b, 0x0e, 0x0e, 0x0f]);
 ### `server.rpioI2CEnd()`
 
 Turn off the i²c interface and return the pins to GPIO.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when i²c has been turned off.
 
@@ -4495,7 +4595,7 @@ server.rpioI2CEnd();
 
 Set the PWM refresh rate.
 This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the rate has been set.
 
@@ -4513,7 +4613,7 @@ server.rpioPWMSetClockDivider(64);
 
 Set the PWM range for a pin.
 This determines the maximum pulse width.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when maximum width has been set.
 
@@ -4532,7 +4632,7 @@ server.rpioPWMSetRange(12, 1024);
 ### `server.rpioPWMSetData(pin, width)`
 
 Set the PWM width for a pin.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the width has been set.
 
@@ -4554,7 +4654,7 @@ Initiate SPI mode.
 Once SPI is enabled, the SPI pins are unavailable for GPIO use until `server.rpioSPIEnd()` is called.
 SPI requires `gpiomem: false` and root privileges. 
 `server.rpioSPIBegin()` will call `server.rpioInit()` with the appropriate values if you do not explicitly call it yourself.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when SPI mode has been initiated.
 
@@ -4573,7 +4673,7 @@ Value | Pin
   0   | SPI_CE0 (24 / GPIO8)
   1   | SPI_CE1 (26 / GPIO7)
   2   | Both
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when SPI pin(s) have been enabled.
 
@@ -4598,7 +4698,7 @@ Value | Pin
 
 Setting the polarity to 'HIGH' means it will activate on 'HIGH'.
 Setting the polarity to 'LOW' means it will activate on 'LOW'.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when polarity has been set.
 
@@ -4617,7 +4717,7 @@ server.rpioSPISetCSPolarity(0, 'HIGH');
 
 Set the SPI clock speed.
 The rate is an even divisor of the base 250MHz rate ranging between 0 and 65536.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the clock speed has been set.
 
@@ -4641,7 +4741,7 @@ Mode | CPOL | CPHA
   2  |  1   |  0
   3  |  1   |  1
 
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when a data mode has been set.
 
@@ -4657,7 +4757,7 @@ server.rpioSPISetDataMode(0);
 ### `server.rpioSPITransfer(tx)`
 
 Send and recieve data via SPI. 
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a buffer the same size as the buffer sent.
 
@@ -4673,7 +4773,7 @@ await server.rpioSPITransfer([1,1]);
 ### `server.rpioSPIWrite(tx)`
 
 Send data via SPI.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the buffer has been sent.
 
@@ -4689,7 +4789,7 @@ server.rpioSPIWrite([1,1]);
 ### `server.rpioSPIEnd()`
 
 Release the pins back to general purpose use.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the clock speed has been set.
 
@@ -4703,7 +4803,7 @@ server.rpioSPIEnd();
 ### `server.serialConnect()`
 
 Establish the connection to the bluetooth serial device. Currently only one device is supported at a time.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves on the 'open' event.
 
@@ -4738,7 +4838,7 @@ await server.serialConnect("device01", "/dev/rfcomm0", {
 ### `server.serialStream()`
 
 Parses and returns the serial stream to the event tag <TagLink tag='@onSerialData'/>.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Shouts data to the <TagLink tag='@onSerialData'/> event tag.
 
@@ -4764,7 +4864,7 @@ tags.data=that;
 ### `server.serialOpen()`
 
 Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 The **first parameter** is a friendly device name.
 
@@ -4785,7 +4885,7 @@ await server.serialOpen();
 ### `server.serialUpdate()`
 
 Updates the SerialPort object with a new baudRate.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 The **first parameter** is a friendly device name.
 The **second parameter** is an object with the baudRate you want to update the connection with.
@@ -4805,7 +4905,7 @@ await server.serialUpdate("device01", {baudRate: 14400});
 ### `server.serialWrite()`
 
 Writes the provided data/command to the device. Might be single-quote/double-quote sensitive.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 The **first parameter** is a friendly device name.
 The **second parameter** is a string with the data/command to send.
@@ -4826,7 +4926,7 @@ await server.serialWrite("device01", '#READ:0', 'utf8');
 ### `server.serialRead()`
 
 Request a number of bytes from the device.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 If no data is available to be read, null is returned.
 
@@ -4847,7 +4947,7 @@ await server.serialRead("device01", 8);
 ### `server.serialClose()`
 
 Closes an open connection.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves on the 'close' event.
 
@@ -4868,7 +4968,7 @@ await server.serialClose("device01");
 ### `server.serialFlush()`
 
 Flush discards data that has been received but not read, or written but not transmitted by the operating system.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 The **first parameter** is a friendly device name.
 
@@ -4889,7 +4989,7 @@ await server.serialFlush("device01");
 
 Waits until all output data is transmitted to the serial port. 
 After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device. 
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 The **first parameter** is a friendly device name.
 
@@ -4909,7 +5009,7 @@ await server.serialDrain("device01");
 ### `server.serialPause()`
 
 Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 The **first parameter** is a friendly device name.
 
@@ -4927,7 +5027,7 @@ await server.serialPause("device01");
 ### `server.serialResume()`
 
 Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
-The action is only executed if <TagLink tag='@onServerAction'/> has been configured to perform events in `device` actions.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
 
 The **first parameter** is a friendly device name.
 
@@ -4947,8 +5047,8 @@ await server.serialResume("device01");
 ### `server.browseHistory()`
 
 
-Loads the `history` space into the current server.
-The `history` space is read-only and contains all the marks that have been created for the server.
+Loads the `history` space into the current inst.
+The `history` space is read-only and contains all the marks that have been created for the inst.
 Each mark is a bot that is placed in the `#history` dimension.
 
 Returns a promise that resolves when the history bots are loaded.
@@ -4989,7 +5089,7 @@ This will create a new mark with any unsaved changes and another mark with the s
 
 Returns a promise that resolves when the history mark has been restored.
 
-The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current server by using the <ActionLink action='server.browseHistory()'/> action.
+The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current inst by using the <ActionLink action='server.browseHistory()'/> action.
 
 #### Examples:
 
@@ -5002,27 +5102,26 @@ let mark = getBot(byTag("#history", true));
 await server.restoreHistoryMark(mark);
 ```
 
-### `server.restoreHistoryMarkToServer(mark, server)`
+### `server.restoreHistoryMarkToInst(mark, inst)`
 
-
-Restores the state in the given server to the state that was saved by the given mark.
-This will create a new mark with any unsaved changes in the server and another mark with the state that was saved by the given mark.
+Restores the state in the given inst to the state that was saved by the given mark.
+This will create a new mark with any unsaved changes in the inst and another mark with the state that was saved by the given mark.
 
 Returns a promise that resolves when the history mark has been restored.
 
-The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current server by using the <ActionLink action='server.browseHistory()'/> action.
+The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current inst by using the <ActionLink action='server.browseHistory()'/> action.
 
-The **second parameter** is the server that the state should be restored to. If `null` or an empty string, then the current server will be restored.
+The **second parameter** is the inst that the state should be restored to. If `null` or an empty string, then the current inst will be restored.
 
 #### Examples:
 
-1. Restore the state of the `test` server to a given mark.
+1. Restore the state of the `test` inst to a given mark.
 ```typescript
 // Find a random mark that was loaded by server.browseHistory()
 let mark = getBot(byTag("#history", true));
 
 // Restore the current state to the given mark.
-await server.restoreHistoryMarkToServer(mark, "test");
+await server.restoreHistoryMarkToInst(mark, "test");
 ```
 
 ### `server.shell(script)`
@@ -5034,7 +5133,7 @@ The **first parameter** is the shell script that should be executed.
 
 <Alert type='info'>
     By default, shell scripts are disabled on a server.
-    To enable them, you have to write a custom <TagLink tag='@onServerAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    To enable them, you have to write a custom <TagLink tag='@onAnyAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 ### `server.loadFile(path, options?)`
@@ -5054,7 +5153,7 @@ The **second parameter** are the options that should be used for loading the fil
 
 <Alert type='info'>
     By default, loading files is disabled on a server.
-    To enable it, you have to write a custom <TagLink tag='@onServerAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    To enable it, you have to write a custom <TagLink tag='@onAnyAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 #### Examples:
@@ -5099,7 +5198,7 @@ The **third parameter** are the options that should be used for saving the file.
 
 <Alert type='info'>
     By default, saving files is disabled on a server.
-    To enable it, you have to write a custom <TagLink tag='@onServerAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    To enable it, you have to write a custom <TagLink tag='@onAnyAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 #### Examples:
@@ -5126,91 +5225,6 @@ await server.saveFile('/2/book.txt', 'My memoirs', {
 });
 
 os.toast("File Saved!");
-```
-
-### `server.serverRemoteCount(server?)`
-
-Gets the number of remotes that are viewing the current server.
-Optionally takes a parameter which is the server that the number of remotes should be retrieved for. If omitted, then the current server will be checked.
-Returns a promise that resolves with the number of active remotes.
-
-The **first parameter** is optional and is the name of the server that the number of remotes should be retrieved for.
-If not specified, then the current server <ActionLink action="os.getCurrentServer()">current server</ActionLink> will be used.
-
-#### Examples
-
-1. Get the number of remotes in the current server.
-```typescript
-const numberOfRemotes = await server.serverRemoteCount();
-
-os.toast("Number of Remotes: " + numberOfRemotes);
-```
-
-2. Get the number of remotes in the `test` server.
-```typescript
-const numberOfRemotes = await server.serverRemoteCount('test');
-
-os.toast("Number of Remotes: " + numberOfRemotes);
-```
-
-### `server.totalRemoteCount()`
-
-Gets the number of devices that are connected to the server.
-Returns a promise that resolves with the number of active devices.
-
-#### Examples
-
-1. Get the number of devices on the server.
-```typescript
-const numberOfDevices = await server.totalRemoteCount();
-
-os.toast("Number of Devices: " + numberOfDevices);
-```
-
-### `server.servers()`
-
-Gets the list of servers that are stored on the server.
-Returns a promise that resolves with the list of server names.
-
-#### Examples
-
-1. Get the list of servers on the server.
-```typescript
-const servers = await server.servers();
-
-os.toast("Servers " + servers.join(','));
-```
-
-### `server.serverStatuses()`
-
-Gets the list of servers that are stored on the server along with the last time that they were updated.
-Returns a promise that resolves with the list of servers.
-
-The resolved list is sorted by the most recently updated first and the least recently updated last.
-
-#### Examples
-
-1. Get the list of servers on the server along with their status.
-```typescript
-const servers = await server.serverStatuses();
-
-os.toast("Stories " + getJSON(servers));
-```
-
-### `server.remotes()`
-
-Gets the list of remote IDs that are connected to the current server.
-Returns a promise that resolves with the list of remote IDs.
-
-The resolved list will always have at least one value that represents the current remote.
-
-#### Examples
-
-1. Get the list of remote IDs.
-```typescript
-const remotes = await server.remotes();
-
-os.toast("Remotes " + remotes.join(','));
 ```
 
 ## Math Actions
@@ -5354,7 +5368,7 @@ os.toast(pointerDirection);
 
 ### `math.intersectPlane(origin, direction)`
 
-Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the page portal ground plane.
+Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the grid portal ground plane.
 Returns null if the ray does not intersect the ground plane.
 
 Useful for calculating where on the ground something is pointing.
@@ -6001,12 +6015,12 @@ In CasualOS, there are two types of certificates:
 2. Non-root certificates.
 
 _Root certificates_ are certificates that are both signee and signer. This means that the certificate used its own keypair to create the signature.
-As such, the validity of the certificate cannot be checked apart from simply trusting it. Only one root certificate is allowed per server on a first-come first-serve basis.
-Once a root certificate is created for a server, another cannot be created.
+As such, the validity of the certificate cannot be checked apart from simply trusting it. Only one root certificate is allowed per inst on a first-come first-serve basis.
+Once a root certificate is created for a inst, another cannot be created.
 
 _Non-root certificates_ are certificates that are signed by another certificate. This means that another certificate's keypair was used to create the signature.
 As such, the validity of the certificate can be checked by following the chain of trust back to the root certificate.
-If the chain does not end at the root certificate for the server, then the certificate is invalid and any signatures created by it will also be invalid.
+If the chain does not end at the root certificate for the inst, then the certificate is invalid and any signatures created by it will also be invalid.
 
 Use <ActionLink action='crypto.keypair(secret)'/> to create a keypair that can be used to create signatures.
 
@@ -6090,7 +6104,7 @@ if (valid) {
 ### `crypto.revokeCertificate(certificate, secret, signer?)`
 
 Revokes the given certificate and any signatures that it has created.
-In effect, this deletes the certificate bot from the server.
+In effect, this deletes the certificate bot from the inst.
 Additionally, any tags signed with the given certificate will no longer be verified.
 
 Returns a promise that resolves when the certificate has been revoked.
@@ -6527,7 +6541,7 @@ Once the tween is done playing, any change to the bot will reset the position/ro
 The **first parameter** is the bot or ID of the bot that should be tweened.
 
 The **second parameter** is the dimension that the bot should be tweened in.
-Note that the tween will only work if the given dimension is currently in the page portal or mini portal.
+Note that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal.
 
 The **third parameter** is the position that the bot should be tweened to. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
 
@@ -6626,7 +6640,7 @@ Once the tween is done playing, any change to the bot will reset the position/ro
 The **first parameter** is the bot or ID of the bot that should be tweened.
 
 The **second parameter** is the dimension that the bot should be tweened in.
-Note that the tween will only work if the given dimension is currently in the page portal or mini portal.
+Note that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal.
 
 The **third parameter** is the rotation that the bot should be tweened to in radians. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
 
@@ -6977,13 +6991,13 @@ os.toast("Spoken!");
 
 ### `perf.getStats()`
 
-Gets an object that contains statistics about the performance of the server.
+Gets an object that contains statistics about the performance of the inst.
 
 The returned object has the following structure:
 ```typescript
 let stats: {
     /**
-     * The number of bots in the server.
+     * The number of bots in the inst.
      */
     numberOfBots: number,
 

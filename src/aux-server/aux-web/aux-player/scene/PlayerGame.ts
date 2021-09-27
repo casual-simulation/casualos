@@ -90,12 +90,12 @@ const MINI_PORTAL_MIN_PERCENT = 0.1;
 
 const MINI_PORTAL_WIDTH_BREAKPOINT = 700;
 /**
- * The default width percentage of the mini portal.
+ * The default width percentage of the miniGridPortal.
  */
 const MINI_PORTAL_DEFAULT_WIDTH = 0.8;
 
 /**
- * The default width percentage that the mini portal should use on small devices (< breakpoint).
+ * The default width percentage that the miniGridPortal should use on small devices (< breakpoint).
  */
 const MINI_PORTAL_SMALL_WIDTH = 0.9;
 
@@ -139,8 +139,8 @@ export class PlayerGame extends Game {
     private _resizingMiniPortal: boolean = false;
 
     /**
-     * The mouse position that the mini portal resize operation started at.
-     * When resizing, we compare this value against the final value to determine how much larger/smaller the mini portal should be.
+     * The mouse position that the miniGridPortal resize operation started at.
+     * When resizing, we compare this value against the final value to determine how much larger/smaller the miniGridPortal should be.
      */
     private _startResizeClientPos: Vector2 = null;
     private _currentResizeClientPos: Vector2 = null;
@@ -160,25 +160,25 @@ export class PlayerGame extends Game {
     miniPortalVisible: boolean = DEFAULT_MINI_PORTAL_VISIBLE;
 
     /**
-     * The height that was last configured for the mini portal. This can be set directly by the user.
+     * The height that was last configured for the miniGridPortal. This can be set directly by the user.
      * Represented as a percentage of the available height that the portal can take.
      */
     private _miniPortalConfiguredHeight: number;
 
     /**
-     * The current height of the mini portal represented as a percentage of
+     * The current height of the miniGridPortal represented as a percentage of
      * the available height that the portal can take.
      * This can be manipulated by the user via resizing the portal.
      */
     private _miniPortalHeight: number;
 
     /**
-     * The available height that can be used by the mini portal in px.
+     * The available height that can be used by the miniGridPortal in px.
      */
     private _miniPortalAvailableHeight: number;
 
     /**
-     * The maximum width of the mini portal in px.
+     * The maximum width of the miniGridPortal in px.
      */
     private _miniPortalMaxWidth: number = 700;
 
@@ -444,7 +444,11 @@ export class PlayerGame extends Game {
         // return [...this.miniSimulations];
     }
     getUIHtmlElements(): HTMLElement[] {
-        return [<HTMLElement>this.gameView.$refs.miniPortal, this.slider];
+        return [
+            <HTMLElement>this.gameView.$refs.miniGridPortal,
+            this.slider,
+            <HTMLElement>this.gameView.$refs.menuElement,
+        ];
     }
     getMiniPortalViewport(): Viewport {
         return this.miniViewport;
@@ -491,7 +495,7 @@ export class PlayerGame extends Game {
     }
 
     /**
-     * Find MiniPortal Simulation 3D object that is displaying for the given Simulation.
+     * Find miniGridPortal Simulation 3D object that is displaying for the given Simulation.
      * @param sim The simulation to find a simulation 3d for.
      */
     findMiniSimulation3D(sim: Simulation): MiniSimulation3D {
@@ -570,7 +574,7 @@ export class PlayerGame extends Game {
         this.mainScene.add(playerSim3D);
 
         //
-        // Create mini portal Simulation
+        // Create miniGridPortal Simulation
         //
         const miniPortalSim3D = new MiniSimulation3D(this, sim);
         miniPortalSim3D.init();
@@ -601,7 +605,7 @@ export class PlayerGame extends Game {
                         playerSim3D.simulation.helper.userBot,
                         {
                             tags: {
-                                pagePortal: e.dimension,
+                                gridPortal: e.dimension,
                             },
                         }
                     );
@@ -636,7 +640,7 @@ export class PlayerGame extends Game {
                     const sim =
                         targetPortal === 'mapPortal'
                             ? mapPortalSim3D
-                            : targetPortal === 'miniPortal'
+                            : targetPortal === 'miniGridPortal'
                             ? miniPortalSim3D
                             : playerSim3D;
 
@@ -702,7 +706,7 @@ export class PlayerGame extends Game {
             }
         }
 
-        // Default to the page portal dimension
+        // Default to the grid portal dimension
         if (!dimension) {
             dimension = pageSim.dimension;
         }
@@ -770,7 +774,7 @@ export class PlayerGame extends Game {
         }
 
         //
-        // Remove mini portal Simulation
+        // Remove miniGridPortal Simulation
         //
         const invSimIndex = this.miniSimulations.findIndex(
             (s) => s.simulation.id == sim.id
@@ -791,7 +795,7 @@ export class PlayerGame extends Game {
     resetCameras() {
         this.interaction.clearOperationsOfType(TweenCameraToOperation);
         this.interaction.cameraRigControllers.forEach((controller) => {
-            if (controller.rig.name != 'miniPortal')
+            if (controller.rig.name != 'miniGridPortal')
                 controller.controls.reset();
         });
     }
@@ -821,7 +825,7 @@ export class PlayerGame extends Game {
         }
 
         //
-        // [mini portal scene]
+        // [miniGridPortal scene]
         //
         this.renderMiniViewport();
     }
@@ -833,7 +837,7 @@ export class PlayerGame extends Game {
         this.miniCameraRig.mainCamera.updateMatrixWorld(true);
 
         // if (!this.gameView.hasMap) {
-        this.renderer.clearDepth(); // Clear depth buffer so that mini portal scene always appears above the main scene.
+        this.renderer.clearDepth(); // Clear depth buffer so that miniGridPortal scene always appears above the main scene.
         // }
         this.miniSceneBackgroundUpdate();
 
@@ -852,7 +856,7 @@ export class PlayerGame extends Game {
 
         this.renderer.setScissorTest(true);
 
-        // Render the mini portal scene with the mini portal main camera.
+        // Render the miniGridPortal scene with the miniGridPortal main camera.
         this.renderer.render(this.miniScene, this.miniCameraRig.mainCamera);
     }
 
@@ -919,7 +923,7 @@ export class PlayerGame extends Game {
     protected setupRendering() {
         super.setupRendering();
 
-        this.miniViewport = new Viewport('miniPortal', this.mainViewport);
+        this.miniViewport = new Viewport('miniGridPortal', this.mainViewport);
         console.log('Set height initial value: ' + this.miniViewport.height);
         this.miniViewport.layer = 1;
 
@@ -935,7 +939,7 @@ export class PlayerGame extends Game {
         super.setupScenes();
 
         //
-        // [mini portal scene]
+        // [miniGridPortal scene]
         //
         this.setupMiniScene();
         this.setupMapScene();
@@ -949,19 +953,19 @@ export class PlayerGame extends Game {
         this.miniScene = new Scene();
         this.miniScene.autoUpdate = false;
 
-        // mini portal camera.
+        // miniGridPortal camera.
         this.miniCameraRig = createCameraRig(
-            'miniPortal',
+            'miniGridPortal',
             'orthographic',
             this.miniScene,
             this.miniViewport
         );
 
-        // mini portal ambient light.
+        // miniGridPortal ambient light.
         const invAmbient = baseAuxAmbientLight();
         this.miniScene.add(invAmbient);
 
-        // mini portal direction light.
+        // miniGridPortal direction light.
         const invDirectional = baseAuxDirectionalLight();
         this.miniScene.add(invDirectional);
     }
@@ -970,7 +974,7 @@ export class PlayerGame extends Game {
         this.mapScene = new Scene();
         this.mapScene.autoUpdate = false;
 
-        // mini portal camera.
+        // miniGridPortal camera.
         this.mapCameraRig = this._createMapCameraRig(
             'mapPortal',
             'perspective',
@@ -978,11 +982,11 @@ export class PlayerGame extends Game {
             this.mapViewport
         );
 
-        // mini portal ambient light.
+        // miniGridPortal ambient light.
         this.mapAmbientLight = baseAuxAmbientLight();
         this.mapScene.add(this.mapAmbientLight);
 
-        // mini portal direction light.
+        // miniGridPortal direction light.
         this.mapDirectionalLight = baseAuxDirectionalLight();
         this.mapScene.add(this.mapDirectionalLight);
     }
@@ -1064,11 +1068,11 @@ export class PlayerGame extends Game {
     }
 
     /**
-     * Updates the positioning of the resize indicators for the mini portal.
+     * Updates the positioning of the resize indicators for the miniGridPortal.
      */
     private _updateMiniPortalSlider() {
         const height = this.mainViewport.height;
-        // set the new slider's top position to the top of the mini portal viewport
+        // set the new slider's top position to the top of the miniGridPortal viewport
         let sliderTop =
             height -
             this.miniViewport.height -
@@ -1229,7 +1233,7 @@ export class PlayerGame extends Game {
         this.renderer.getSize(renderingSize);
 
         for (let [id, sim] of appManager.simulationManager.simulations) {
-            const portalConfig = getPortalConfigBot(sim, 'pagePortal');
+            const portalConfig = getPortalConfigBot(sim, 'gridPortal');
             if (
                 portalConfig &&
                 (portalConfig.tags['pixelWidth'] !== renderingSize.x ||

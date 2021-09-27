@@ -2071,7 +2071,7 @@ export function getBotTransformer(
  * @param bot The bot to check.
  */
 export function isBotMovable(calc: BotCalculationContext, bot: Bot): boolean {
-    // checks if bot is movable, but we should also allow it if it is pickupable so we can drag it into mini portal if movable is false
+    // checks if bot is movable, but we should also allow it if it is pickupable so we can drag it into miniGridPortal if movable is false
     return calculateBooleanTagValue(calc, bot, 'auxDraggable', true);
 }
 
@@ -2425,7 +2425,7 @@ export function simulationIdToString(id: SimulationIdParseSuccess): string {
     if (id.host) {
         let str = id.host;
         if (id.channel) {
-            str += `?server=${encodeURIComponent(id.channel)}`;
+            str += `?inst=${encodeURIComponent(id.channel)}`;
         }
         return str;
     }
@@ -2436,7 +2436,8 @@ export function simulationIdToString(id: SimulationIdParseSuccess): string {
 export function parseSimulationId(id: string): SimulationIdParseSuccess {
     try {
         let uri = new URL(id);
-        const channel = uri.searchParams.get('server');
+        const channel =
+            uri.searchParams.get('inst') ?? uri.searchParams.get('server');
         if (channel) {
             return {
                 success: true,
@@ -2814,7 +2815,7 @@ export const ORIGINAL_OBJECT = Symbol('ORIGINAL_OBJECT');
  * @param obj The object.
  */
 export function getOriginalObject(obj: any): any {
-    if (ORIGINAL_OBJECT in obj) {
+    if (typeof obj === 'object' && !!obj && ORIGINAL_OBJECT in obj) {
         return obj[ORIGINAL_OBJECT];
     }
     return obj;

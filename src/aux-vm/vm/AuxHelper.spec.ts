@@ -1187,7 +1187,7 @@ describe('AuxHelper', () => {
                 let searchClient = new MemoryBotClient();
                 let error = createBotClientPartition({
                     type: 'bot_client',
-                    server: 'server',
+                    inst: 'inst',
                     client: searchClient,
                 });
                 helper = createHelper({
@@ -1199,7 +1199,7 @@ describe('AuxHelper', () => {
                 });
                 helper.userId = userId;
 
-                await searchClient.addBots('server', [
+                await searchClient.addBots('inst', [
                     createBot('test1', {
                         abc: 'def',
                     }),
@@ -1233,7 +1233,7 @@ describe('AuxHelper', () => {
                 let searchClient = new MemoryBotClient();
                 let error = createBotClientPartition({
                     type: 'bot_client',
-                    server: 'server',
+                    inst: 'inst',
                     client: searchClient,
                 });
                 helper = createHelper({
@@ -1245,7 +1245,7 @@ describe('AuxHelper', () => {
                 });
                 helper.userId = userId;
 
-                await searchClient.addBots('server', [
+                await searchClient.addBots('inst', [
                     createBot('test1', {
                         abc: 'def',
                     }),
@@ -1255,7 +1255,7 @@ describe('AuxHelper', () => {
 
                 await waitAsync();
 
-                expect(searchClient.servers['server']).toEqual({});
+                expect(searchClient.servers['inst']).toEqual({});
             });
         });
 
@@ -1269,7 +1269,7 @@ describe('AuxHelper', () => {
                 let admin = await createCausalRepoClientPartition(
                     {
                         type: 'causal_repo_client',
-                        branch: 'server',
+                        branch: 'inst',
                         client: client,
                         static: true,
                     },
@@ -1298,7 +1298,7 @@ describe('AuxHelper', () => {
                 const value1 = atom(atomId('a', 3), tag1, value('abc'));
 
                 addAtoms.next({
-                    branch: 'server',
+                    branch: 'inst',
                     atoms: [bot1, tag1, value1],
                 });
 
@@ -1312,7 +1312,7 @@ describe('AuxHelper', () => {
                     {
                         name: AUTHENTICATE_BRANCH_WRITES,
                         data: {
-                            branch: 'server',
+                            branch: 'inst',
                             password: '3342',
                         },
                     },
@@ -1350,7 +1350,7 @@ describe('AuxHelper', () => {
                 let admin = await createCausalRepoClientPartition(
                     {
                         type: 'causal_repo_client',
-                        branch: 'server',
+                        branch: 'inst',
                         client: client,
                         static: true,
                     },
@@ -1379,7 +1379,7 @@ describe('AuxHelper', () => {
                 const value1 = atom(atomId('a', 3), tag1, value('abc'));
 
                 addAtoms.next({
-                    branch: 'server',
+                    branch: 'inst',
                     atoms: [bot1, tag1, value1],
                 });
 
@@ -1395,7 +1395,7 @@ describe('AuxHelper', () => {
                     {
                         name: SET_BRANCH_PASSWORD,
                         data: {
-                            branch: 'server',
+                            branch: 'inst',
                             oldPassword: '3342',
                             newPassword: 'password',
                         },
@@ -1424,10 +1424,10 @@ describe('AuxHelper', () => {
             });
         });
 
-        describe('onServerAction()', () => {
-            it('should shout an onServerAction() call', async () => {
+        describe('onAnyAction()', () => {
+            it('should shout an onAnyAction() call', async () => {
                 await helper.createBot('abc', {
-                    onServerAction: '@setTag(this, "hit", true)',
+                    onAnyAction: '@setTag(this, "hit", true)',
                 });
 
                 await helper.transaction({
@@ -1440,15 +1440,15 @@ describe('AuxHelper', () => {
                 expect(helper.botsState['abc']).toMatchObject({
                     id: 'abc',
                     tags: {
-                        onServerAction: '@setTag(this, "hit", true)',
+                        onAnyAction: '@setTag(this, "hit", true)',
                         hit: true,
                     },
                 });
             });
 
-            it('should skip actions that onServerAction() rejects', async () => {
+            it('should skip actions that onAnyAction() rejects', async () => {
                 await helper.createBot('abc', {
-                    onServerAction: '@action.reject(that.action)',
+                    onAnyAction: '@action.reject(that.action)',
                 });
 
                 await helper.createBot('test', {});
@@ -1471,7 +1471,7 @@ describe('AuxHelper', () => {
 
             it('should allow rejecting rejections', async () => {
                 await helper.createBot('abc', {
-                    onServerAction: '@action.reject(that.action)',
+                    onAnyAction: '@action.reject(that.action)',
                 });
 
                 await helper.createBot('test', {});
@@ -1501,10 +1501,10 @@ describe('AuxHelper', () => {
             ];
 
             it.each(falsyTests)(
-                'should allow actions that onServerAction() returns %s for',
+                'should allow actions that onAnyAction() returns %s for',
                 async (val) => {
                     await helper.createBot('abc', {
-                        onServerAction: `@return ${val};`,
+                        onAnyAction: `@return ${val};`,
                     });
 
                     await helper.createBot('test', {});
@@ -1526,9 +1526,9 @@ describe('AuxHelper', () => {
                 }
             );
 
-            it('should allow actions that onServerAction() returns true for', async () => {
+            it('should allow actions that onAnyAction() returns true for', async () => {
                 await helper.createBot('abc', {
-                    onServerAction: '@return true',
+                    onAnyAction: '@return true',
                 });
 
                 await helper.createBot('test', {});
@@ -1549,9 +1549,9 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should allow actions when onServerAction() errors out', async () => {
+            it('should allow actions when onAnyAction() errors out', async () => {
                 await helper.createBot('abc', {
-                    onServerAction: '@throw new Error("Error")',
+                    onAnyAction: '@throw new Error("Error")',
                 });
 
                 await helper.createBot('test', {});
@@ -1574,7 +1574,7 @@ describe('AuxHelper', () => {
 
             it('should be able to filter based on action type', async () => {
                 await helper.createBot('abc', {
-                    onServerAction: `@
+                    onAnyAction: `@
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
                         }
@@ -1602,7 +1602,7 @@ describe('AuxHelper', () => {
 
             it('should filter actions from inside shouts', async () => {
                 await helper.createBot('abc', {
-                    onServerAction: `@
+                    onAnyAction: `@
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
                         }
@@ -1625,7 +1625,7 @@ describe('AuxHelper', () => {
 
             it('should be able to filter out actions before they are run', async () => {
                 await helper.createBot('abc', {
-                    onServerAction: `@
+                    onAnyAction: `@
                         if (that.action.type === 'action') {
                             action.reject(that.action);
                         }
@@ -1646,13 +1646,13 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should allow updates to the onServerAction() handler by default', async () => {
+            it('should allow updates to the onAnyAction() handler by default', async () => {
                 await helper.createBot('abc', {});
 
                 await helper.transaction(
                     botUpdated('abc', {
                         tags: {
-                            onServerAction: `@
+                            onAnyAction: `@
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
                                 }
@@ -1665,7 +1665,7 @@ describe('AuxHelper', () => {
                 expect(helper.botsState['abc']).toMatchObject({
                     id: 'abc',
                     tags: expect.objectContaining({
-                        onServerAction: `@
+                        onAnyAction: `@
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
                                 }
@@ -1675,13 +1675,13 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should allow the entire update and not just the onServerAction() part', async () => {
+            it('should allow the entire update and not just the onAnyAction() part', async () => {
                 await helper.createBot('abc', {});
 
                 await helper.transaction(
                     botUpdated('abc', {
                         tags: {
-                            onServerAction: `@
+                            onAnyAction: `@
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
                                 }
@@ -1695,7 +1695,7 @@ describe('AuxHelper', () => {
                 expect(helper.botsState['abc']).toMatchObject({
                     id: 'abc',
                     tags: expect.objectContaining({
-                        onServerAction: `@
+                        onAnyAction: `@
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
                                 }
@@ -1712,7 +1712,7 @@ describe('AuxHelper', () => {
                     .mockReturnValueOnce('test2');
 
                 await helper.createBot('abc', {
-                    onServerAction: `@
+                    onAnyAction: `@
                         if (that.action.type === 'action') {
                             create({
                                 test: true
@@ -1737,7 +1737,7 @@ describe('AuxHelper', () => {
                     .mockReturnValueOnce('test2');
 
                 await helper.createBot('abc', {
-                    onServerAction: `@
+                    onAnyAction: `@
                         if (that.action.type === 'update_bot') {
                             create({
                                 test: true

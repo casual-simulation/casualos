@@ -1596,7 +1596,7 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([showJoinCode()]);
             });
 
-            it('should allow linking to a specific server and dimension', () => {
+            it('should allow linking to a specific inst and dimension', () => {
                 const action = library.api.os.showJoinCode(
                     'server',
                     'dimension'
@@ -2237,7 +2237,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        server: 'channel',
+                        inst: 'channel',
                     },
                     'tempLocal'
                 );
@@ -2543,7 +2543,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        server: 'channel',
+                        inst: 'channel',
                     },
                     'tempLocal'
                 );
@@ -2551,19 +2551,19 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return true when pagePortal equals the given value', () => {
-                player.tags.pagePortal = 'dimension';
+            it('should return true when gridPortal equals the given value', () => {
+                player.tags.gridPortal = 'dimension';
                 const result = library.api.os.isInDimension('dimension');
                 expect(result).toEqual(true);
             });
 
-            it('should return false when pagePortal does not equal the given value', () => {
-                player.tags.pagePortal = 'dimension';
+            it('should return false when gridPortal does not equal the given value', () => {
+                player.tags.gridPortal = 'dimension';
                 const result = library.api.os.isInDimension('abc');
                 expect(result).toEqual(false);
             });
 
-            it('should return false when pagePortal is not set', () => {
+            it('should return false when gridPortal is not set', () => {
                 const result = library.api.os.isInDimension('dimension');
                 expect(result).toEqual(false);
             });
@@ -2571,7 +2571,7 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should support "%s" when given %s',
                 (expected, given) => {
-                    player.tags.pagePortal = given;
+                    player.tags.gridPortal = given;
                     const result = library.api.os.isInDimension(expected);
                     expect(result).toEqual(true);
                 }
@@ -2585,7 +2585,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        server: 'channel',
+                        inst: 'channel',
                     },
                     'tempLocal'
                 );
@@ -2593,13 +2593,13 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return pagePortal', () => {
-                player.tags.pagePortal = 'dimension';
+            it('should return gridPortal', () => {
+                player.tags.gridPortal = 'dimension';
                 const result = library.api.os.getCurrentDimension();
                 expect(result).toEqual('dimension');
             });
 
-            it('should return undefined when pagePortal is not set', () => {
+            it('should return undefined when gridPortal is not set', () => {
                 const result = library.api.os.getCurrentDimension();
                 expect(result).toBeUndefined();
             });
@@ -2607,7 +2607,7 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.pagePortal = given;
+                    player.tags.gridPortal = given;
                     const result = library.api.os.getCurrentDimension();
                     expect(result).toEqual(expected);
                 }
@@ -2623,13 +2623,13 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return server', () => {
-                player.tags.server = 'server';
+            it('should return inst', () => {
+                player.tags.inst = 'server';
                 const result = library.api.os.getCurrentServer();
                 expect(result).toEqual('server');
             });
 
-            it('should return undefined when server is not set', () => {
+            it('should return undefined when inst is not set', () => {
                 const result = library.api.os.getCurrentServer();
                 expect(result).toBeUndefined();
             });
@@ -2637,8 +2637,38 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.server = given;
+                    player.tags.inst = given;
                     const result = library.api.os.getCurrentServer();
+                    expect(result).toEqual(expected);
+                }
+            );
+        });
+
+        describe('os.getCurrentInst()', () => {
+            let player: RuntimeBot;
+
+            beforeEach(() => {
+                player = createDummyRuntimeBot('player', {}, 'tempLocal');
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            it('should return inst', () => {
+                player.tags.inst = 'inst';
+                const result = library.api.os.getCurrentInst();
+                expect(result).toEqual('inst');
+            });
+
+            it('should return undefined when inst is not set', () => {
+                const result = library.api.os.getCurrentInst();
+                expect(result).toBeUndefined();
+            });
+
+            it.each(numberCases)(
+                'should return "%s" when given %s',
+                (expected, given) => {
+                    player.tags.inst = given;
+                    const result = library.api.os.getCurrentInst();
                     expect(result).toEqual(expected);
                 }
             );
@@ -2653,8 +2683,8 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return the miniPortal tag from the user bot', () => {
-                player.tags.miniPortal = 'abc';
+            it('should return the miniGridPortal tag from the user bot', () => {
+                player.tags.miniGridPortal = 'abc';
                 const result = library.api.os.getMiniPortalDimension();
                 expect(result).toEqual('abc');
             });
@@ -2662,7 +2692,7 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.miniPortal = given;
+                    player.tags.miniGridPortal = given;
                     const result = library.api.os.getMiniPortalDimension();
                     expect(result).toEqual(expected);
                 }
@@ -2704,12 +2734,12 @@ describe('AuxLibrary', () => {
             });
 
             const cases = [
-                ['page', 'pageDimension'],
-                ['pagePortal', 'pageDimension'],
+                ['grid', 'gridDimension'],
+                ['gridPortal', 'gridDimension'],
                 ['inventory', 'inventoryDimension'],
                 ['inventoryPortal', 'inventoryDimension'],
-                ['mini', 'miniDimension'],
-                ['miniPortal', 'miniDimension'],
+                ['miniGrid', 'miniDimension'],
+                ['miniGridPortal', 'miniDimension'],
                 ['menu', 'menuDimension'],
                 ['menuPortal', 'menuDimension'],
                 ['sheet', 'sheetDimension'],
@@ -2720,9 +2750,9 @@ describe('AuxLibrary', () => {
 
             describe.each(cases)('%s', (portal, expectedDimension) => {
                 it(`should get the dimension for the ${portal} portal`, () => {
-                    player.tags.pagePortal = 'pageDimension';
+                    player.tags.gridPortal = 'gridDimension';
                     player.tags.inventoryPortal = 'inventoryDimension';
-                    player.tags.miniPortal = 'miniDimension';
+                    player.tags.miniGridPortal = 'miniDimension';
                     player.tags.menuPortal = 'menuDimension';
                     player.tags.sheetPortal = 'sheetDimension';
                     player.tags.falsy = false;
@@ -2734,9 +2764,9 @@ describe('AuxLibrary', () => {
                 it.each(numberCases)(
                     'should return "%s" when given %s',
                     (expected, given) => {
-                        player.tags.pagePortal = given;
+                        player.tags.gridPortal = given;
                         player.tags.inventoryPortal = given;
-                        player.tags.miniPortal = given;
+                        player.tags.miniGridPortal = given;
                         player.tags.menuPortal = given;
                         player.tags.sheetPortal = given;
                         player.tags.falsy = false;
@@ -2926,14 +2956,14 @@ describe('AuxLibrary', () => {
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingServer: 'channel2',
+                    processingInst: 'channel2',
                 });
                 const expected = checkout({
                     publishableKey: 'key',
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingServer: 'channel2',
+                    processingInst: 'channel2',
                 });
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -2990,30 +3020,30 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return true if the given bot is in the users mini portal dimension', () => {
-                player.tags.miniPortal = 'abc';
+            it('should return true if the given bot is in the users miniGridPortal dimension', () => {
+                player.tags.miniGridPortal = 'abc';
                 bot1.tags.abc = true;
                 const result = library.api.os.hasBotInMiniPortal(bot1);
                 expect(result).toEqual(true);
             });
 
-            it('should return true if all the given bots are in the users mini portal dimension', () => {
-                player.tags.miniPortal = 'abc';
+            it('should return true if all the given bots are in the users miniGridPortal dimension', () => {
+                player.tags.miniGridPortal = 'abc';
                 bot1.tags.abc = true;
                 bot2.tags.abc = true;
                 const result = library.api.os.hasBotInMiniPortal([bot1, bot2]);
                 expect(result).toEqual(true);
             });
 
-            it('should return false if one of the given bots are not in the users mini portal dimension', () => {
-                player.tags.miniPortal = 'abc';
+            it('should return false if one of the given bots are not in the users miniGridPortal dimension', () => {
+                player.tags.miniGridPortal = 'abc';
                 bot1.tags.abc = false;
                 bot2.tags.abc = true;
                 const result = library.api.os.hasBotInMiniPortal([bot1, bot2]);
                 expect(result).toEqual(false);
             });
 
-            it('should return false if the player does not have an mini portal', () => {
+            it('should return false if the player does not have an miniGridPortal', () => {
                 bot1.tags.abc = true;
                 bot2.tags.abc = true;
                 const result = library.api.os.hasBotInMiniPortal([bot1, bot2]);
@@ -4286,6 +4316,48 @@ describe('AuxLibrary', () => {
                 uuidMock.mockReturnValueOnce('task1');
                 bot1.tags.abc = true;
                 const action: any = library.api.server.setupServer('channel', {
+                    botTag: bot1,
+                });
+                const expected = remote(
+                    setupServer('channel', {
+                        botTag: createBot(bot1.id, bot1.tags),
+                    }),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.setupInst()', () => {
+            it('should send a SetupChannelAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                bot1.tags.abc = true;
+                const action: any = library.api.os.setupInst('channel', bot1);
+                const expected = remote(
+                    setupServer('channel', createBot(bot1.id, bot1.tags)),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.os.setupInst('channel');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+
+            it('should convert the given bot to a copiable value', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                bot1.tags.abc = true;
+                const action: any = library.api.os.setupInst('channel', {
                     botTag: bot1,
                 });
                 const expected = remote(
@@ -5671,6 +5743,32 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('server.restoreHistoryMarkToInst()', () => {
+            it('should emit a restore_history_mark event', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.restoreHistoryMarkToInst(
+                    'mark',
+                    'inst'
+                );
+                const expected = remote(
+                    restoreHistoryMark('mark', 'inst'),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.restoreHistoryMarkToInst('mark', 'inst');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
         describe('server.loadFile()', () => {
             it('should issue a LoadFileAction in a remote event', () => {
                 uuidMock.mockReturnValueOnce('task1');
@@ -5729,7 +5827,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        server: 'channel',
+                        inst: 'channel',
                     },
                     'tempLocal'
                 );
@@ -5776,6 +5874,58 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.remoteCount()', () => {
+            let player: RuntimeBot;
+
+            beforeEach(() => {
+                player = createDummyRuntimeBot(
+                    'player',
+                    {
+                        inst: 'channel',
+                    },
+                    'tempLocal'
+                );
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            it('should emit a remote action with a get_remote_count action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.remoteCount();
+                const expected = remote(
+                    getRemoteCount('channel'),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept a custom server ID', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.remoteCount('test');
+                const expected = remote(
+                    getRemoteCount('test'),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.os.remoteCount('test');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
         describe('server.totalRemoteCount()', () => {
             it('should emit a remote action with a get_remote_count action', () => {
                 uuidMock.mockReturnValueOnce('uuid');
@@ -5794,6 +5944,30 @@ describe('AuxLibrary', () => {
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 library.api.server.totalRemoteCount();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('os.totalRemoteCount()', () => {
+            it('should emit a remote action with a get_remote_count action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.totalRemoteCount();
+                const expected = remote(
+                    getRemoteCount(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.os.totalRemoteCount();
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -5824,6 +5998,30 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.instances()', () => {
+            it('should emit a remote action with a get_servers action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.instances();
+                const expected = remote(
+                    getServers(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.os.instances();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
         describe('server.serverStatuses()', () => {
             it('should emit a remote action with a get_server_statuses action', () => {
                 uuidMock.mockReturnValueOnce('uuid');
@@ -5848,6 +6046,30 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.instStatuses()', () => {
+            it('should emit a remote action with a get_server_statuses action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.instStatuses();
+                const expected = remote(
+                    getServerStatuses(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.os.instStatuses();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
         describe('server.remotes()', () => {
             it('should emit a remote action with a get_remotes action', () => {
                 uuidMock.mockReturnValueOnce('uuid');
@@ -5866,6 +6088,30 @@ describe('AuxLibrary', () => {
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 library.api.server.remotes();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('os.remotes()', () => {
+            it('should emit a remote action with a get_remotes action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.remotes();
+                const expected = remote(
+                    getRemotes(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.os.remotes();
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -10857,12 +11103,12 @@ describe('AuxLibrary', () => {
     });
 
     describe('os.getCameraPosition()', () => {
-        let pagePortal: RuntimeBot;
-        let miniPortal: RuntimeBot;
+        let gridPortal: RuntimeBot;
+        let miniGridPortal: RuntimeBot;
 
         beforeEach(() => {
-            pagePortal = createDummyRuntimeBot(
-                'pagePortal',
+            gridPortal = createDummyRuntimeBot(
+                'gridPortal',
                 {
                     cameraPositionX: 1,
                     cameraPositionY: 2,
@@ -10870,8 +11116,8 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            miniPortal = createDummyRuntimeBot(
-                'miniPortal',
+            miniGridPortal = createDummyRuntimeBot(
+                'miniGridPortal',
                 {
                     cameraPositionX: 4,
                     cameraPositionY: 5,
@@ -10879,19 +11125,19 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, pagePortal, miniPortal);
+            addToContext(context, gridPortal, miniGridPortal);
 
-            (<any>globalThis).pagePortalBot = pagePortal;
-            (<any>globalThis).miniPortalBot = miniPortal;
+            (<any>globalThis).gridPortalBot = gridPortal;
+            (<any>globalThis).miniGridPortalBot = miniGridPortal;
         });
 
         afterEach(() => {
-            delete (<any>globalThis).pagePortalBot;
-            delete (<any>globalThis).miniPortalBot;
+            delete (<any>globalThis).gridPortalBot;
+            delete (<any>globalThis).miniGridPortalBot;
         });
 
-        it('should return NaN for x, y, and z if the page portal bot is null', () => {
-            (<any>globalThis).pagePortalBot = null;
+        it('should return NaN for x, y, and z if the grid portal bot is null', () => {
+            (<any>globalThis).gridPortalBot = null;
             const result = library.api.os.getCameraPosition();
 
             expect(result).toEqual({
@@ -10901,7 +11147,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should return the x, y, and z of the camera for the page portal', () => {
+        it('should return the x, y, and z of the camera for the grid portal', () => {
             const result = library.api.os.getCameraPosition();
 
             expect(result).toEqual({
@@ -10912,7 +11158,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to get the mini camera position', () => {
-            const result = library.api.os.getCameraPosition('mini');
+            const result = library.api.os.getCameraPosition('miniGrid');
 
             expect(result).toEqual({
                 x: 4,
@@ -10921,8 +11167,8 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the page camera position', () => {
-            const result = library.api.os.getCameraPosition('page');
+        it('should be able to get the bot camera position', () => {
+            const result = library.api.os.getCameraPosition('grid');
 
             expect(result).toEqual({
                 x: 1,
@@ -10933,12 +11179,12 @@ describe('AuxLibrary', () => {
     });
 
     describe('os.getCameraRotation()', () => {
-        let pagePortal: RuntimeBot;
-        let miniPortal: RuntimeBot;
+        let gridPortal: RuntimeBot;
+        let miniGridPortal: RuntimeBot;
 
         beforeEach(() => {
-            pagePortal = createDummyRuntimeBot(
-                'pagePortal',
+            gridPortal = createDummyRuntimeBot(
+                'gridPortal',
                 {
                     cameraRotationX: 1,
                     cameraRotationY: 2,
@@ -10946,8 +11192,8 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            miniPortal = createDummyRuntimeBot(
-                'miniPortal',
+            miniGridPortal = createDummyRuntimeBot(
+                'miniGridPortal',
                 {
                     cameraRotationX: 4,
                     cameraRotationY: 5,
@@ -10955,19 +11201,19 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, pagePortal, miniPortal);
+            addToContext(context, gridPortal, miniGridPortal);
 
-            (<any>globalThis).pagePortalBot = pagePortal;
-            (<any>globalThis).miniPortalBot = miniPortal;
+            (<any>globalThis).gridPortalBot = gridPortal;
+            (<any>globalThis).miniGridPortalBot = miniGridPortal;
         });
 
         afterEach(() => {
-            delete (<any>globalThis).pagePortalBot;
-            delete (<any>globalThis).miniPortalBot;
+            delete (<any>globalThis).gridPortalBot;
+            delete (<any>globalThis).miniGridPortalBot;
         });
 
-        it('should return NaN for x, y, and z if the page portal bot is null', () => {
-            delete (<any>globalThis).pagePortalBot;
+        it('should return NaN for x, y, and z if the grid portal bot is null', () => {
+            delete (<any>globalThis).gridPortalBot;
             const result = library.api.os.getCameraRotation();
 
             expect(result).toEqual({
@@ -10977,7 +11223,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should return the x, y, and z of the player camera for the page portal', () => {
+        it('should return the x, y, and z of the player camera for the grid portal', () => {
             const result = library.api.os.getCameraRotation();
 
             expect(result).toEqual({
@@ -10987,8 +11233,8 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the mini portal camera rotation', () => {
-            const result = library.api.os.getCameraRotation('mini');
+        it('should be able to get the miniGridPortal camera rotation', () => {
+            const result = library.api.os.getCameraRotation('miniGrid');
 
             expect(result).toEqual({
                 x: 4,
@@ -10997,8 +11243,8 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the page camera rotation', () => {
-            const result = library.api.os.getCameraRotation('page');
+        it('should be able to get the grid camera rotation', () => {
+            const result = library.api.os.getCameraRotation('grid');
 
             expect(result).toEqual({
                 x: 1,
@@ -11009,12 +11255,12 @@ describe('AuxLibrary', () => {
     });
 
     describe('os.getFocusPoint()', () => {
-        let pagePortal: RuntimeBot;
-        let miniPortal: RuntimeBot;
+        let gridPortal: RuntimeBot;
+        let miniGridPortal: RuntimeBot;
 
         beforeEach(() => {
-            pagePortal = createDummyRuntimeBot(
-                'pagePortal',
+            gridPortal = createDummyRuntimeBot(
+                'gridPortal',
                 {
                     cameraFocusX: 1,
                     cameraFocusY: 2,
@@ -11022,8 +11268,8 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            miniPortal = createDummyRuntimeBot(
-                'miniPortal',
+            miniGridPortal = createDummyRuntimeBot(
+                'miniGridPortal',
                 {
                     cameraFocusX: 4,
                     cameraFocusY: 5,
@@ -11031,19 +11277,19 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, pagePortal, miniPortal);
+            addToContext(context, gridPortal, miniGridPortal);
 
-            (<any>globalThis).pagePortalBot = pagePortal;
-            (<any>globalThis).miniPortalBot = miniPortal;
+            (<any>globalThis).gridPortalBot = gridPortal;
+            (<any>globalThis).miniGridPortalBot = miniGridPortal;
         });
 
         afterEach(() => {
-            delete (<any>globalThis).pagePortalBot;
-            delete (<any>globalThis).miniPortalBot;
+            delete (<any>globalThis).gridPortalBot;
+            delete (<any>globalThis).miniGridPortalBot;
         });
 
-        it('should return NaN for x, y, and z if the page portal bot is null', () => {
-            delete (<any>globalThis).pagePortalBot;
+        it('should return NaN for x, y, and z if the grid portal bot is null', () => {
+            delete (<any>globalThis).gridPortalBot;
             const result = library.api.os.getFocusPoint();
 
             expect(result).toEqual({
@@ -11053,7 +11299,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should return the x, y, and z of the player camera for the page portal', () => {
+        it('should return the x, y, and z of the player camera for the grid portal', () => {
             const result = library.api.os.getFocusPoint();
 
             expect(result).toEqual({
@@ -11063,8 +11309,8 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the mini portal camera rotation', () => {
-            const result = library.api.os.getFocusPoint('mini');
+        it('should be able to get the miniGridPortal camera rotation', () => {
+            const result = library.api.os.getFocusPoint('miniGrid');
 
             expect(result).toEqual({
                 x: 4,
@@ -11073,8 +11319,8 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the page camera rotation', () => {
-            const result = library.api.os.getFocusPoint('page');
+        it('should be able to get the grid camera rotation', () => {
+            const result = library.api.os.getFocusPoint('grid');
 
             expect(result).toEqual({
                 x: 1,

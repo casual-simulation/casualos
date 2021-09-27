@@ -58,7 +58,7 @@
                     <helix-icon v-else-if="icon === 'helix'"></helix-icon>
                     <md-icon v-else>{{ icon }}</md-icon>
                 </span>
-                <span>
+                <span :style="labelStyle">
                     {{ label }}
                 </span>
                 <span class="menu-bot-progress" v-if="hasProgress">

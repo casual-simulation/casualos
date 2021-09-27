@@ -1335,7 +1335,10 @@ export class Input {
     }
 
     private _handleWheel(event: WheelEvent) {
-        if (this.isMouseFocusingOnElement(this._game.gameView.gameView)) {
+        if (
+            this.isMouseFocusingOnElement(this._game.gameView.gameView) ||
+            Input.isEventForAnyElement(event, this.htmlElements)
+        ) {
             event.preventDefault();
         }
 
