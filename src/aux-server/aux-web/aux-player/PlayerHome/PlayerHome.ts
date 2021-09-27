@@ -125,7 +125,6 @@ export default class PlayerHome extends Vue {
                     const randomName: string = uniqueNamesGenerator(
                         namesConfig
                     );
-                    let update: Dictionary<string> = {};
                     if (!appManager.config.disableCollaboration) {
                         update.inst = randomName;
                     }
