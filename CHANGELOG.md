@@ -10,16 +10,16 @@
     -   This means that you should now `configBot.tags.inst` instead of `configBot.tags.server`.
     -   It also means that you now should go to `https://casualos.com?inst=my-aux` instead of `https://casualos.com?server=my-aux`.
     -   CasualOS will automatically replace `server` with `inst` on the first load so old links will continue to work.
--   Renamed `pagePortal` to `botPortal`
-    -   CasualOS will automatically replace `pagePortal` with `botPortal` on first load (so old links will continue to work) but any scripts that change `pagePortal` will need to be updated to change `botPortal`.
-    -   `pagePortal` on the `configBot` should now be `botPortal`.
-    -   `pagePortalBot` is now `botPortalBot`.
+-   Renamed `pagePortal` to `gridPortal`
+    -   CasualOS will automatically replace `pagePortal` with `gridPortal` on first load (so old links will continue to work) but any scripts that change `pagePortal` will need to be updated to change `gridPortal`.
+    -   `pagePortal` on the `configBot` should now be `gridPortal`.
+    -   `pagePortalBot` is now `gridPortalBot`.
     -   Some functions now should reference the bot portal instead of the page portal:
-        -   `os.getCameraPosition('page')` -> `os.getCameraPosition('bot')`
-        -   `os.getCameraRotation('page')` -> `os.getCameraRotation('bot')`
-        -   `os.getFocusPoint('page')` -> `os.getFocusPoint('bot')`
-        -   `os.getPortalDimension('page')` -> `os.getPortalDimension('bot')`
-    -   `@onPortalChanged` now uses `botPortal` for `that.portal`.
+        -   `os.getCameraPosition('page')` -> `os.getCameraPosition('grid')`
+        -   `os.getCameraRotation('page')` -> `os.getCameraRotation('grid')`
+        -   `os.getFocusPoint('page')` -> `os.getFocusPoint('grid')`
+        -   `os.getPortalDimension('page')` -> `os.getPortalDimension('grid')`
+    -   `@onPortalChanged` now uses `gridPortal` for `that.portal`.
 -   Renamed some functions:
     -   `os.downloadServer()` -> `os.downloadInst()`
     -   `os.loadServer()` -> `os.loadInst()`
