@@ -44,7 +44,7 @@ import { MapPortalGrid3D } from './MapPortalGrid3D';
 
 export class MapSimulation3D extends PlayerSimulation3D {
     /**
-     * The mini portal dimension that this simulation is for.
+     * The miniGridPortal dimension that this simulation is for.
      */
     mapDimension: string;
 
@@ -114,14 +114,14 @@ export class MapSimulation3D extends PlayerSimulation3D {
     }
 
     /**
-     * Gets if rotation is allowed in the mini portal that the simulation defines.
+     * Gets if rotation is allowed in the miniGridPortal that the simulation defines.
      */
     get rotatable() {
         return this.mapConfig.rotatable;
     }
 
     /**
-     * Gets if zooming is allowed in the mini portal that the simulation defines.
+     * Gets if zooming is allowed in the miniGridPortal that the simulation defines.
      */
     get zoomable() {
         return this.mapConfig.zoomable;

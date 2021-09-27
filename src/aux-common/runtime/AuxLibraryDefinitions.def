@@ -716,7 +716,7 @@ declare interface HideHtmlAction extends Action {
 
      /**
       * The portal that the bot should be focused in.
-      * If not specified, then the bot will be focused in all supported portals. (page, mini and menu)
+      * If not specified, then the bot will be focused in all supported portals. (bot, mini and menu)
       */
      portal?: PortalType;
 }
@@ -2634,8 +2634,8 @@ export type RecordSpace =
  * The possible portal types.
  */
 declare type PortalType =
-    | 'page'
-    | 'mini'
+    | 'grid'
+    | 'miniGrid'
     | 'menu'
     | 'sheet'
     | string;
@@ -3656,19 +3656,19 @@ declare global {
          * Gets the 3D position of the player's camera.
          * @param portal The portal that the camera position should be retrieved for.
          */
-        getCameraPosition(portal?: 'page' | 'mini'): Point3D;
+        getCameraPosition(portal?: 'grid' | 'miniGrid'): Point3D;
 
         /**
          * Gets the 3D rotation of the player's camera.
          * @param portal The portal that the camera rotation should be retrieved for.
          */
-        getCameraRotation(portal?: 'page' | 'mini'): Point3D;
+        getCameraRotation(portal?: 'grid' | 'miniGrid'): Point3D;
 
         /**
          * Gets the 3D point that the player's camera is focusing on.
          * @param portal The portal that the camera focus point should be retrieved for.
          */
-        getFocusPoint(portal?: 'page' | 'mini'): Point3D;
+        getFocusPoint(portal?: 'grid' | 'miniGrid'): Point3D;
 
         /**
          * Gets the 3D position of the player's pointer.
@@ -4119,7 +4119,7 @@ declare global {
         getDimensionalDepth(dimension: string): number;
 
         /**
-         * Determines whether the player has the given bot in their mini portal.
+         * Determines whether the player has the given bot in their miniGridPortal.
          * @param bots The bot or bots to check.
          */
         hasBotInMiniPortal(bots: Bot | Bot[]): boolean;
@@ -4135,7 +4135,7 @@ declare global {
         getMenuDimension(): string;
 
         /**
-         * Gets the name of the dimension that is used for the current user's mini portal.
+         * Gets the name of the dimension that is used for the current user's miniGridPortal.
          */
         getMiniPortalDimension(): string;
 

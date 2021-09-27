@@ -289,7 +289,13 @@ export const DEFAULT_RECORD_SPACE: RecordSpace = 'tempRestricted';
 /**
  * The possible portal types.
  */
-export type PortalType = 'page' | 'mini' | 'menu' | 'sheet' | 'meet' | string;
+export type PortalType =
+    | 'grid'
+    | 'miniGrid'
+    | 'menu'
+    | 'sheet'
+    | 'meet'
+    | string;
 
 export interface ScriptTags extends PrecalculatedTags {
     toJSON(): any;
@@ -363,10 +369,10 @@ export interface BotTags {
 
     // User tags
     ['auxPlayerActive']?: boolean;
-    ['pagePortal']?: string | boolean;
+    ['gridPortal']?: string | boolean;
     ['sheetPortal']?: string | boolean;
     ['inst']?: string | string[];
-    ['miniPortal']?: string;
+    ['miniGridPortal']?: string;
     ['menuPortal']?: string;
     ['leftWristPortal']?: string;
     ['rightWristPortal']?: string;
@@ -833,7 +839,7 @@ export const DEFAULT_USER_INACTIVE_TIME = 1000 * 60;
 export const DEFAULT_USER_DELETION_TIME = 1000 * 60 * 60;
 
 /**
- * Whether the mini portal is visible by default.
+ * Whether the miniGridPortal is visible by default.
  */
 export const DEFAULT_MINI_PORTAL_VISIBLE = false;
 
@@ -894,12 +900,12 @@ export const DEFAULT_PORTAL_ZOOMABLE = true;
 export const DEFAULT_PORTAL_SHOW_FOCUS_POINT = false;
 
 /**
- * Whether mini portals are resizable by default.
+ * Whether miniGridPortals are resizable by default.
  */
 export const DEFAULT_MINI_PORTAL_RESIZABLE = true;
 
 /**
- * The default height for mini portals.
+ * The default height for miniGridPortals.
  */
 export const DEFAULT_MINI_PORTAL_HEIGHT = 0.2;
 
@@ -1509,9 +1515,9 @@ export const TAG_PORTAL_SPACE: string = 'tagPortalSpace';
 export const AUX_BOT_VERSION: number = 1;
 
 /**
- * The name of the mini portal.
+ * The name of the miniGridPortal.
  */
-export const MINI_PORTAL: string = 'miniPortal';
+export const MINI_PORTAL: string = 'miniGridPortal';
 
 /**
  * The name of the map portal.
@@ -1562,7 +1568,7 @@ export const DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES: string[] = ['📖'];
  * The list of all portal tags.
  */
 export const KNOWN_PORTALS: string[] = [
-    'pagePortal',
+    'gridPortal',
     SHEET_PORTAL,
     IDE_PORTAL,
     IMU_PORTAL,
@@ -1579,7 +1585,7 @@ export const KNOWN_PORTALS: string[] = [
  * The list of portal tags that should always be represented in the query string.
  */
 export const QUERY_PORTALS: string[] = [
-    'pagePortal',
+    'gridPortal',
     SHEET_PORTAL,
     IDE_PORTAL,
     MEET_PORTAL,
@@ -1593,7 +1599,7 @@ export const QUERY_PORTALS: string[] = [
  */
 export const KNOWN_TAGS: string[] = [
     'playerActive',
-    'pagePortal',
+    'gridPortal',
     SHEET_PORTAL,
     IDE_PORTAL,
     'inst',

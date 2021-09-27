@@ -2071,7 +2071,7 @@ export function getBotTransformer(
  * @param bot The bot to check.
  */
 export function isBotMovable(calc: BotCalculationContext, bot: Bot): boolean {
-    // checks if bot is movable, but we should also allow it if it is pickupable so we can drag it into mini portal if movable is false
+    // checks if bot is movable, but we should also allow it if it is pickupable so we can drag it into miniGridPortal if movable is false
     return calculateBooleanTagValue(calc, bot, 'auxDraggable', true);
 }
 

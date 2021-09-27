@@ -2285,7 +2285,7 @@ os.share({
 
 ### `os.openCircleWipe(options?)`
 
-Causes the circular wipe animation to open around the screen. This can be used to reveal the page portal after transitioning between screens.
+Causes the circular wipe animation to open around the screen. This can be used to reveal the grid portal after transitioning between screens.
 Returns a promise that resolves when the animation has finished running.
 The promise will throw an exception if <ActionLink action='os.closeCircleWipe(options?)'/> is called while the animation is running.
 
@@ -2308,13 +2308,13 @@ let options: {
 
 #### Examples:
 
-1. Reveal the page portal with a circular wipe animation.
+1. Reveal the grid portal with a circular wipe animation.
 ```typescript
 await os.openCircleWipe();
 os.toast("Revealed!");
 ```
 
-2. Hide the page portal and show it after an additional second.
+2. Hide the grid portal and show it after an additional second.
 ```typescript
 await os.closeCircleWipe();
 await os.sleep(1000);
@@ -2337,7 +2337,7 @@ await os.openCircleWipe({
 
 ### `os.closeCircleWipe(options?)`
 
-Causes a circular wipe animation to close around the screen. This can be used to cover the page portal while transitioning between scenes.
+Causes a circular wipe animation to close around the screen. This can be used to cover the grid portal while transitioning between scenes.
 Returns a promise that resolves when the animation has finished running.
 The promise will throw an exception if <ActionLink action='os.openCircleWipe(options?)'/> is called while the animation is running.
 
@@ -2360,13 +2360,13 @@ let options: {
 
 #### Examples:
 
-1. Hide the page portal with a circular wipe animation.
+1. Hide the grid portal with a circular wipe animation.
 ```typescript
 await os.closeCircleWipe();
 os.toast("Hidden!");
 ```
 
-2. Hide the page portal and show it after an additional second.
+2. Hide the grid portal and show it after an additional second.
 ```typescript
 await os.closeCircleWipe();
 await os.sleep(1000);
@@ -2412,11 +2412,11 @@ os.toast("this is the code", 5);
 ### `os.focusOn(botOrPosition, options?)`
 
 Focuses on the given bot or position.
-For bots in the page or mini portals, this animates the camera such that the portal focus point is placed on the given bot or position.
+For bots in the bot or miniGridPortals, this animates the camera such that the portal focus point is placed on the given bot or position.
 For input bots in menu portal, this gives keyboard focus to them.
 
 Returns a promise which resolves when the bot has been focused.
-For the page and mini portals this is when the animation finishes and rejects if the user takes control of the camera during the animation.
+For the bot and miniGridPortals this is when the animation finishes and rejects if the user takes control of the camera during the animation.
 For menu bots this is when the input field is focused and rejects if the bot is not a input bot.
 
 The **first parameter** is the bot, bot ID, or position that should be focused. If null, then the current focus animation will be canceled.
@@ -2428,7 +2428,7 @@ It should be an object with the following properties:
 let options: {
     /*
     * The zoom value to use.
-    * For the page and mini portals, possible values are between `0` and `80`. `1` is the default.
+    * For the bot and miniGridPortals, possible values are between `0` and `80`. `1` is the default.
     * For the map portal, this is the scale that the focused point should appear at.
     * For example, 24000 would indicate that the scale is 1:24,000.
     * If no value is specified, then the zoom will remain at its current value.
@@ -2460,7 +2460,7 @@ let options: {
 
     /**
      * The portal that the bot should be focused in.
-     * If not specified, then the bot will be focused in all the portals it is in. (page, mini and menu)
+     * If not specified, then the bot will be focused in all the portals it is in. (bot, mini and menu)
      * Useful if a bot is in two portals but you only want to focus it in one portal.
      */
     portal?: string;
@@ -3036,7 +3036,7 @@ os.disableVR();
 
 ### `os.enablePointOfView(center?)`
 
-Enables Point-of-View mode on the device. Useful for getting a "ground level" view in the page portal.
+Enables Point-of-View mode on the device. Useful for getting a "ground level" view in the grid portal.
 This will move the camera to the given position, set the camera type to `perspective`, and change the camera controls so that dragging the screen causes the camera to look around.
 
 It is not possible to manually move the camera in this mode, however it is still possible to use <ActionLink action='os.focusOn(botOrPosition, options?)'/> to move the camera.
@@ -3086,15 +3086,15 @@ os.toast(inst);
 ### `os.getCurrentDimension()`
 
 
-Gets the dimension that is loaded into the <TagLink tag='pagePortal'/> portal.
+Gets the dimension that is loaded into the <TagLink tag='gridPortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "pagePortal".
+    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "gridPortal".
 </Alert>
 
 #### Examples:
 
-1. Show a message of the dimension that is currently in the <TagLink tag='pagePortal'/> portal.
+1. Show a message of the dimension that is currently in the <TagLink tag='gridPortal'/> portal.
 ```typescript
 const dimension = os.getCurrentDimension();
 os.toast(dimension);
@@ -3120,15 +3120,15 @@ os.toast(dimension);
 ### `os.getMiniPortalDimension()`
 
 
-Gets the dimension that is loaded into the <TagLink tag='miniPortal'/> portal.
+Gets the dimension that is loaded into the <TagLink tag='miniGridPortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "miniPortal".
+    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "miniGridPortal".
 </Alert>
 
 #### Examples:
 
-1. Show a message of the dimension that is currently in the <TagLink tag='miniPortal'/> portal.
+1. Show a message of the dimension that is currently in the <TagLink tag='miniGridPortal'/> portal.
 ```typescript
 const dimension = os.getMiniPortalDimension();
 os.toast(dimension);
@@ -3137,17 +3137,17 @@ os.toast(dimension);
 ### `os.hasBotInMiniPortal(bot)`
 
 
-Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='miniPortal'/> portal.
+Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='miniGridPortal'/> portal.
 
 The **first parameter** is the bot that should be checked.
 
 #### Examples:
 
-1. Show a message if a bot named bob is in the mini portal.
+1. Show a message if a bot named bob is in the miniGridPortal.
 ```typescript
 const bob = getBot("#name", "bob");
 if (os.hasBotInMiniPortal(bob)) {
-    os.toast("bob is in the miniPortal!");
+    os.toast("bob is in the miniGridPortal!");
 }
 ```
 
@@ -3160,14 +3160,14 @@ The **first parameter** is the portal that the dimension should be retrieved for
 Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='page'>
-    The <TagLink tag='pagePortal'/>.
+  <PossibleValueCode value='grid'>
+    The <TagLink tag='gridPortal'/>.
   </PossibleValueCode>
   <PossibleValueCode value='sheet'>
     The <TagLink tag='sheetPortal'/>.
   </PossibleValueCode>
-  <PossibleValueCode value='mini'>
-    The <TagLink tag='miniPortal'/>.
+  <PossibleValueCode value='miniGrid'>
+    The <TagLink tag='miniGridPortal'/>.
   </PossibleValueCode>
   <PossibleValueCode value='menu'>
       The <TagLink tag='menuPortal'/>.
@@ -3176,14 +3176,14 @@ Possible values are:
 
 #### Examples:
 
-1. Get the dimension that is currently showing in the <TagLink tag='pagePortal'/>.
+1. Get the dimension that is currently showing in the <TagLink tag='gridPortal'/>.
 ```typescript
-const dimension = os.getPortalDimension('page');
+const dimension = os.getPortalDimension('grid');
 ```
 
-2. Get the dimension that is currently showing in the <TagLink tag='miniPortal'/>.
+2. Get the dimension that is currently showing in the <TagLink tag='miniGridPortal'/>.
 ```typescript
-const dimension = os.getPortalDimension('mini');
+const dimension = os.getPortalDimension('miniGrid');
 ```
 
 3. Get the dimension that is currently showing in the `#auxCustomPortal` tag.
@@ -3250,22 +3250,22 @@ The **first parameter** is optional and is the portal that the camera position s
 Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='page'>
-    The camera position in the page portal. (Default)
+  <PossibleValueCode value='grid'>
+    The camera position in the grid portal. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='mini'>
-    The camera position in the mini portal.
+  <PossibleValueCode value='miniGrid'>
+    The camera position in the miniGridPortal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
 #### Examples:
 
-1. Get the position of the player in the page portal.
+1. Get the position of the player in the grid portal.
 ```typescript
-const position = os.getCameraPosition("page");
+const position = os.getCameraPosition('grid');
 ```
 
-2. Get the position of the player in the mini portal.
+2. Get the position of the player in the miniGridPortal.
 ```typescript
 const position = os.getCameraPosition("mini");
 ```
@@ -3278,22 +3278,22 @@ The **first parameter** is optional and is the portal that the camera rotation s
 Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='page'>
-    The camera rotation in the page portal. (Default)
+  <PossibleValueCode value='grid'>
+    The camera rotation in the grid portal. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='mini'>
-    The camera rotation in the mini portal.
+  <PossibleValueCode value='miniGrid'>
+    The camera rotation in the miniGridPortal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
 #### Examples:
 
-1. Get the rotation of the player in the page portal.
+1. Get the rotation of the player in the grid portal.
 ```typescript
-const rotation = os.getCameraRotation("page");
+const rotation = os.getCameraRotation('grid');
 ```
 
-2. Get the rotation of the player in the mini portal.
+2. Get the rotation of the player in the miniGridPortal.
 ```typescript
 const rotation = os.getCameraRotation("mini");
 ```
@@ -3308,22 +3308,22 @@ The **first parameter** is optional and is the portal that the camera focus poin
 Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='page'>
-    The camera focus point in the page portal. (Default)
+  <PossibleValueCode value='grid'>
+    The camera focus point in the grid portal. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='mini'>
-    The camera focus point in the mini portal.
+  <PossibleValueCode value='miniGrid'>
+    The camera focus point in the miniGridPortal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
 #### Examples:
 
-1. Get the focus point of the player in the page portal.
+1. Get the focus point of the player in the grid portal.
 ```typescript
-const focusPoint = os.getFocusPoint("page");
+const focusPoint = os.getFocusPoint('grid');
 ```
 
-2. Get the focus point of the player in the mini portal.
+2. Get the focus point of the player in the miniGridPortal.
 ```typescript
 const focusPoint = os.getFocusPoint("mini");
 ```
@@ -3528,8 +3528,8 @@ os.toast(state);
 ### `os.goToDimension(dimension)`
 
 
-Loads the given dimension into the <TagLink tag='pagePortal'/> portal.
-Triggers the <TagLink tag='@onPortalChanged'/> shout for the `pagePortal`.
+Loads the given dimension into the <TagLink tag='gridPortal'/> portal.
+Triggers the <TagLink tag='@onPortalChanged'/> shout for the `gridPortal`.
 
 The **first parameter** is the dimension that should be loaded.
 
@@ -3630,7 +3630,7 @@ os.cancelSound(id);
 ### `os.isInDimension(dimension)`
 
 
-Gets whether the given dimension is loaded into the <TagLink tag='pagePortal'/> portal.
+Gets whether the given dimension is loaded into the <TagLink tag='gridPortal'/> portal.
 
 The **first parameter** is the dimension to check for.
 
@@ -5368,7 +5368,7 @@ os.toast(pointerDirection);
 
 ### `math.intersectPlane(origin, direction)`
 
-Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the page portal ground plane.
+Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the grid portal ground plane.
 Returns null if the ray does not intersect the ground plane.
 
 Useful for calculating where on the ground something is pointing.
@@ -6541,7 +6541,7 @@ Once the tween is done playing, any change to the bot will reset the position/ro
 The **first parameter** is the bot or ID of the bot that should be tweened.
 
 The **second parameter** is the dimension that the bot should be tweened in.
-Note that the tween will only work if the given dimension is currently in the page portal or mini portal.
+Note that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal.
 
 The **third parameter** is the position that the bot should be tweened to. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
 
@@ -6640,7 +6640,7 @@ Once the tween is done playing, any change to the bot will reset the position/ro
 The **first parameter** is the bot or ID of the bot that should be tweened.
 
 The **second parameter** is the dimension that the bot should be tweened in.
-Note that the tween will only work if the given dimension is currently in the page portal or mini portal.
+Note that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal.
 
 The **third parameter** is the rotation that the bot should be tweened to in radians. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
 
