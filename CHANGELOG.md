@@ -20,6 +20,15 @@
         -   `os.getFocusPoint('page')` -> `os.getFocusPoint('grid')`
         -   `os.getPortalDimension('page')` -> `os.getPortalDimension('grid')`
     -   `@onPortalChanged` now uses `gridPortal` for `that.portal`.
+-   Renamed `miniPortal` to `miniGridPortal`
+    -   `miniPortal` on the `configBot` should now be `miniGridPortal`.
+    -   `miniPortalBot` should now be `miniGridPortalBot`.
+    -   Some functions now should reference the bot portal instead of the page portal:
+        -   `os.getCameraPosition('mini')` -> `os.getCameraPosition('miniGrid')`
+        -   `os.getCameraRotation('mini')` -> `os.getCameraRotation('miniGrid')`
+        -   `os.getFocusPoint('mini')` -> `os.getFocusPoint('miniGrid')`
+        -   `os.getPortalDimension('mini')` -> `os.getPortalDimension('miniGrid')`
+    -   `@onPortalChanged` now uses `miniGridPortal` for `that.portal`.
 -   Renamed some functions:
     -   `os.downloadServer()` -> `os.downloadInst()`
     -   `os.loadServer()` -> `os.loadInst()`
