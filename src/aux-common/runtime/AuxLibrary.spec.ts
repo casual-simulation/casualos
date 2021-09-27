@@ -2551,19 +2551,19 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return true when botPortal equals the given value', () => {
-                player.tags.botPortal = 'dimension';
+            it('should return true when gridPortal equals the given value', () => {
+                player.tags.gridPortal = 'dimension';
                 const result = library.api.os.isInDimension('dimension');
                 expect(result).toEqual(true);
             });
 
-            it('should return false when botPortal does not equal the given value', () => {
-                player.tags.botPortal = 'dimension';
+            it('should return false when gridPortal does not equal the given value', () => {
+                player.tags.gridPortal = 'dimension';
                 const result = library.api.os.isInDimension('abc');
                 expect(result).toEqual(false);
             });
 
-            it('should return false when botPortal is not set', () => {
+            it('should return false when gridPortal is not set', () => {
                 const result = library.api.os.isInDimension('dimension');
                 expect(result).toEqual(false);
             });
@@ -2571,7 +2571,7 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should support "%s" when given %s',
                 (expected, given) => {
-                    player.tags.botPortal = given;
+                    player.tags.gridPortal = given;
                     const result = library.api.os.isInDimension(expected);
                     expect(result).toEqual(true);
                 }
@@ -2593,13 +2593,13 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return botPortal', () => {
-                player.tags.botPortal = 'dimension';
+            it('should return gridPortal', () => {
+                player.tags.gridPortal = 'dimension';
                 const result = library.api.os.getCurrentDimension();
                 expect(result).toEqual('dimension');
             });
 
-            it('should return undefined when botPortal is not set', () => {
+            it('should return undefined when gridPortal is not set', () => {
                 const result = library.api.os.getCurrentDimension();
                 expect(result).toBeUndefined();
             });
@@ -2607,7 +2607,7 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.botPortal = given;
+                    player.tags.gridPortal = given;
                     const result = library.api.os.getCurrentDimension();
                     expect(result).toEqual(expected);
                 }
@@ -2734,8 +2734,8 @@ describe('AuxLibrary', () => {
             });
 
             const cases = [
-                ['bot', 'botDimension'],
-                ['botPortal', 'botDimension'],
+                ['grid', 'gridDimension'],
+                ['gridPortal', 'gridDimension'],
                 ['inventory', 'inventoryDimension'],
                 ['inventoryPortal', 'inventoryDimension'],
                 ['mini', 'miniDimension'],
@@ -2750,7 +2750,7 @@ describe('AuxLibrary', () => {
 
             describe.each(cases)('%s', (portal, expectedDimension) => {
                 it(`should get the dimension for the ${portal} portal`, () => {
-                    player.tags.botPortal = 'botDimension';
+                    player.tags.gridPortal = 'gridDimension';
                     player.tags.inventoryPortal = 'inventoryDimension';
                     player.tags.miniPortal = 'miniDimension';
                     player.tags.menuPortal = 'menuDimension';
@@ -2764,7 +2764,7 @@ describe('AuxLibrary', () => {
                 it.each(numberCases)(
                     'should return "%s" when given %s',
                     (expected, given) => {
-                        player.tags.botPortal = given;
+                        player.tags.gridPortal = given;
                         player.tags.inventoryPortal = given;
                         player.tags.miniPortal = given;
                         player.tags.menuPortal = given;
@@ -11103,12 +11103,12 @@ describe('AuxLibrary', () => {
     });
 
     describe('os.getCameraPosition()', () => {
-        let botPortal: RuntimeBot;
+        let gridPortal: RuntimeBot;
         let miniPortal: RuntimeBot;
 
         beforeEach(() => {
-            botPortal = createDummyRuntimeBot(
-                'botPortal',
+            gridPortal = createDummyRuntimeBot(
+                'gridPortal',
                 {
                     cameraPositionX: 1,
                     cameraPositionY: 2,
@@ -11125,19 +11125,19 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, botPortal, miniPortal);
+            addToContext(context, gridPortal, miniPortal);
 
-            (<any>globalThis).botPortalBot = botPortal;
+            (<any>globalThis).gridPortalBot = gridPortal;
             (<any>globalThis).miniPortalBot = miniPortal;
         });
 
         afterEach(() => {
-            delete (<any>globalThis).botPortalBot;
+            delete (<any>globalThis).gridPortalBot;
             delete (<any>globalThis).miniPortalBot;
         });
 
-        it('should return NaN for x, y, and z if the bot portal bot is null', () => {
-            (<any>globalThis).botPortalBot = null;
+        it('should return NaN for x, y, and z if the grid portal bot is null', () => {
+            (<any>globalThis).gridPortalBot = null;
             const result = library.api.os.getCameraPosition();
 
             expect(result).toEqual({
@@ -11147,7 +11147,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should return the x, y, and z of the camera for the bot portal', () => {
+        it('should return the x, y, and z of the camera for the grid portal', () => {
             const result = library.api.os.getCameraPosition();
 
             expect(result).toEqual({
@@ -11168,7 +11168,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to get the bot camera position', () => {
-            const result = library.api.os.getCameraPosition('bot');
+            const result = library.api.os.getCameraPosition('grid');
 
             expect(result).toEqual({
                 x: 1,
@@ -11179,12 +11179,12 @@ describe('AuxLibrary', () => {
     });
 
     describe('os.getCameraRotation()', () => {
-        let botPortal: RuntimeBot;
+        let gridPortal: RuntimeBot;
         let miniPortal: RuntimeBot;
 
         beforeEach(() => {
-            botPortal = createDummyRuntimeBot(
-                'botPortal',
+            gridPortal = createDummyRuntimeBot(
+                'gridPortal',
                 {
                     cameraRotationX: 1,
                     cameraRotationY: 2,
@@ -11201,19 +11201,19 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, botPortal, miniPortal);
+            addToContext(context, gridPortal, miniPortal);
 
-            (<any>globalThis).botPortalBot = botPortal;
+            (<any>globalThis).gridPortalBot = gridPortal;
             (<any>globalThis).miniPortalBot = miniPortal;
         });
 
         afterEach(() => {
-            delete (<any>globalThis).botPortalBot;
+            delete (<any>globalThis).gridPortalBot;
             delete (<any>globalThis).miniPortalBot;
         });
 
-        it('should return NaN for x, y, and z if the bot portal bot is null', () => {
-            delete (<any>globalThis).botPortalBot;
+        it('should return NaN for x, y, and z if the grid portal bot is null', () => {
+            delete (<any>globalThis).gridPortalBot;
             const result = library.api.os.getCameraRotation();
 
             expect(result).toEqual({
@@ -11223,7 +11223,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should return the x, y, and z of the player camera for the bot portal', () => {
+        it('should return the x, y, and z of the player camera for the grid portal', () => {
             const result = library.api.os.getCameraRotation();
 
             expect(result).toEqual({
@@ -11243,8 +11243,8 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the bot camera rotation', () => {
-            const result = library.api.os.getCameraRotation('bot');
+        it('should be able to get the grid camera rotation', () => {
+            const result = library.api.os.getCameraRotation('grid');
 
             expect(result).toEqual({
                 x: 1,
@@ -11255,12 +11255,12 @@ describe('AuxLibrary', () => {
     });
 
     describe('os.getFocusPoint()', () => {
-        let botPortal: RuntimeBot;
+        let gridPortal: RuntimeBot;
         let miniPortal: RuntimeBot;
 
         beforeEach(() => {
-            botPortal = createDummyRuntimeBot(
-                'botPortal',
+            gridPortal = createDummyRuntimeBot(
+                'gridPortal',
                 {
                     cameraFocusX: 1,
                     cameraFocusY: 2,
@@ -11277,19 +11277,19 @@ describe('AuxLibrary', () => {
                 },
                 'tempLocal'
             );
-            addToContext(context, botPortal, miniPortal);
+            addToContext(context, gridPortal, miniPortal);
 
-            (<any>globalThis).botPortalBot = botPortal;
+            (<any>globalThis).gridPortalBot = gridPortal;
             (<any>globalThis).miniPortalBot = miniPortal;
         });
 
         afterEach(() => {
-            delete (<any>globalThis).botPortalBot;
+            delete (<any>globalThis).gridPortalBot;
             delete (<any>globalThis).miniPortalBot;
         });
 
-        it('should return NaN for x, y, and z if the bot portal bot is null', () => {
-            delete (<any>globalThis).botPortalBot;
+        it('should return NaN for x, y, and z if the grid portal bot is null', () => {
+            delete (<any>globalThis).gridPortalBot;
             const result = library.api.os.getFocusPoint();
 
             expect(result).toEqual({
@@ -11299,7 +11299,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should return the x, y, and z of the player camera for the bot portal', () => {
+        it('should return the x, y, and z of the player camera for the grid portal', () => {
             const result = library.api.os.getFocusPoint();
 
             expect(result).toEqual({
@@ -11319,8 +11319,8 @@ describe('AuxLibrary', () => {
             });
         });
 
-        it('should be able to get the bot camera rotation', () => {
-            const result = library.api.os.getFocusPoint('bot');
+        it('should be able to get the grid camera rotation', () => {
+            const result = library.api.os.getFocusPoint('grid');
 
             expect(result).toEqual({
                 x: 1,

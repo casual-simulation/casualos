@@ -164,14 +164,14 @@ describe('BotCalculations', () => {
     describe('getPortalTag()', () => {
         const cases = [
             ['page', 'pagePortal'],
-            ['bot', 'botPortal'],
+            ['grid', 'gridPortal'],
             ['inventory', 'inventoryPortal'],
             ['mini', 'miniPortal'],
             ['menu', 'menuPortal'],
             ['sheet', 'sheetPortal'],
             ['other', 'otherPortal'],
             ['pagePortal', 'pagePortal'],
-            ['botPortal', 'botPortal'],
+            ['gridPortal', 'gridPortal'],
             ['inventoryPortal', 'inventoryPortal'],
             ['miniPortal', 'miniPortal'],
             ['menuPortal', 'menuPortal'],

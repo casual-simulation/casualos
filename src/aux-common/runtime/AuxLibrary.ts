@@ -2197,7 +2197,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getCurrentDimension(): string {
         const user = context.playerBot;
         if (user) {
-            const dimension = getTag(user, 'botPortal');
+            const dimension = getTag(user, 'gridPortal');
             if (hasValue(dimension)) {
                 return dimension.toString();
             }
@@ -6042,7 +6042,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera position should be retrieved for.
      */
     function getCameraPosition(
-        portal: 'bot' | 'mini' = 'bot'
+        portal: 'grid' | 'mini' = 'grid'
     ): { x: number; y: number; z: number } {
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
@@ -6065,7 +6065,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera rotation should be retrieved for.
      */
     function getCameraRotation(
-        portal: 'bot' | 'mini' = 'bot'
+        portal: 'grid' | 'mini' = 'grid'
     ): { x: number; y: number; z: number } {
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
@@ -6088,7 +6088,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera focus point should be retrieved for.
      */
     function getFocusPoint(
-        portal: 'bot' | 'mini' = 'bot'
+        portal: 'grid' | 'mini' = 'grid'
     ): { x: number; y: number; z: number } {
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {

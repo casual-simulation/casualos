@@ -605,7 +605,7 @@ export class PlayerGame extends Game {
                         playerSim3D.simulation.helper.userBot,
                         {
                             tags: {
-                                botPortal: e.dimension,
+                                gridPortal: e.dimension,
                             },
                         }
                     );
@@ -706,7 +706,7 @@ export class PlayerGame extends Game {
             }
         }
 
-        // Default to the bot portal dimension
+        // Default to the grid portal dimension
         if (!dimension) {
             dimension = pageSim.dimension;
         }
@@ -1233,7 +1233,7 @@ export class PlayerGame extends Game {
         this.renderer.getSize(renderingSize);
 
         for (let [id, sim] of appManager.simulationManager.simulations) {
-            const portalConfig = getPortalConfigBot(sim, 'botPortal');
+            const portalConfig = getPortalConfigBot(sim, 'gridPortal');
             if (
                 portalConfig &&
                 (portalConfig.tags['pixelWidth'] !== renderingSize.x ||

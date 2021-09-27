@@ -129,8 +129,8 @@ export default class PlayerHome extends Vue {
                     if (!appManager.config.disableCollaboration) {
                         update.inst = randomName;
                     }
-                    if (!hasValue(this.query['botPortal'])) {
-                        update.botPortal = 'home';
+                    if (!hasValue(this.query['gridPortal'])) {
+                        update.gridPortal = 'home';
                     }
                     inst = randomName;
                 }
@@ -138,11 +138,11 @@ export default class PlayerHome extends Vue {
 
             if (
                 hasValue(this.query['pagePortal']) &&
-                !hasValue(this.query['botPortal'])
+                !hasValue(this.query['gridPortal'])
             ) {
                 const portal = this.query['pagePortal'];
                 update.pagePortal = null;
-                update.botPortal = Array.isArray(portal) ? portal[0] : portal;
+                update.gridPortal = Array.isArray(portal) ? portal[0] : portal;
             }
 
             if (Object.keys(update).length > 0) {

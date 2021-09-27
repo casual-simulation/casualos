@@ -75,7 +75,7 @@ export default class IdePortal extends Vue {
         if (hasValue(this.buttonHint)) {
             return this.buttonHint;
         }
-        return 'Bot Portal';
+        return 'Grid Portal';
     }
 
     get searchInput() {

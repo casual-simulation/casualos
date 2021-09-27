@@ -2634,7 +2634,7 @@ export type RecordSpace =
  * The possible portal types.
  */
 declare type PortalType =
-    | 'bot'
+    | 'grid'
     | 'mini'
     | 'menu'
     | 'sheet'
@@ -3656,19 +3656,19 @@ declare global {
          * Gets the 3D position of the player's camera.
          * @param portal The portal that the camera position should be retrieved for.
          */
-        getCameraPosition(portal?: 'bot' | 'mini'): Point3D;
+        getCameraPosition(portal?: 'grid' | 'mini'): Point3D;
 
         /**
          * Gets the 3D rotation of the player's camera.
          * @param portal The portal that the camera rotation should be retrieved for.
          */
-        getCameraRotation(portal?: 'bot' | 'mini'): Point3D;
+        getCameraRotation(portal?: 'grid' | 'mini'): Point3D;
 
         /**
          * Gets the 3D point that the player's camera is focusing on.
          * @param portal The portal that the camera focus point should be retrieved for.
          */
-        getFocusPoint(portal?: 'bot' | 'mini'): Point3D;
+        getFocusPoint(portal?: 'grid' | 'mini'): Point3D;
 
         /**
          * Gets the 3D position of the player's pointer.

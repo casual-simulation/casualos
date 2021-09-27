@@ -2285,7 +2285,7 @@ os.share({
 
 ### `os.openCircleWipe(options?)`
 
-Causes the circular wipe animation to open around the screen. This can be used to reveal the bot portal after transitioning between screens.
+Causes the circular wipe animation to open around the screen. This can be used to reveal the grid portal after transitioning between screens.
 Returns a promise that resolves when the animation has finished running.
 The promise will throw an exception if <ActionLink action='os.closeCircleWipe(options?)'/> is called while the animation is running.
 
@@ -2308,13 +2308,13 @@ let options: {
 
 #### Examples:
 
-1. Reveal the bot portal with a circular wipe animation.
+1. Reveal the grid portal with a circular wipe animation.
 ```typescript
 await os.openCircleWipe();
 os.toast("Revealed!");
 ```
 
-2. Hide the bot portal and show it after an additional second.
+2. Hide the grid portal and show it after an additional second.
 ```typescript
 await os.closeCircleWipe();
 await os.sleep(1000);
@@ -2337,7 +2337,7 @@ await os.openCircleWipe({
 
 ### `os.closeCircleWipe(options?)`
 
-Causes a circular wipe animation to close around the screen. This can be used to cover the bot portal while transitioning between scenes.
+Causes a circular wipe animation to close around the screen. This can be used to cover the grid portal while transitioning between scenes.
 Returns a promise that resolves when the animation has finished running.
 The promise will throw an exception if <ActionLink action='os.openCircleWipe(options?)'/> is called while the animation is running.
 
@@ -2360,13 +2360,13 @@ let options: {
 
 #### Examples:
 
-1. Hide the bot portal with a circular wipe animation.
+1. Hide the grid portal with a circular wipe animation.
 ```typescript
 await os.closeCircleWipe();
 os.toast("Hidden!");
 ```
 
-2. Hide the bot portal and show it after an additional second.
+2. Hide the grid portal and show it after an additional second.
 ```typescript
 await os.closeCircleWipe();
 await os.sleep(1000);
@@ -3036,7 +3036,7 @@ os.disableVR();
 
 ### `os.enablePointOfView(center?)`
 
-Enables Point-of-View mode on the device. Useful for getting a "ground level" view in the bot portal.
+Enables Point-of-View mode on the device. Useful for getting a "ground level" view in the grid portal.
 This will move the camera to the given position, set the camera type to `perspective`, and change the camera controls so that dragging the screen causes the camera to look around.
 
 It is not possible to manually move the camera in this mode, however it is still possible to use <ActionLink action='os.focusOn(botOrPosition, options?)'/> to move the camera.
@@ -3086,15 +3086,15 @@ os.toast(inst);
 ### `os.getCurrentDimension()`
 
 
-Gets the dimension that is loaded into the <TagLink tag='botPortal'/> portal.
+Gets the dimension that is loaded into the <TagLink tag='gridPortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "botPortal".
+    This function behaves exactly like <ActionLink action='os.getPortalDimension(portal)'/> when given "gridPortal".
 </Alert>
 
 #### Examples:
 
-1. Show a message of the dimension that is currently in the <TagLink tag='botPortal'/> portal.
+1. Show a message of the dimension that is currently in the <TagLink tag='gridPortal'/> portal.
 ```typescript
 const dimension = os.getCurrentDimension();
 os.toast(dimension);
@@ -3160,8 +3160,8 @@ The **first parameter** is the portal that the dimension should be retrieved for
 Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='bot'>
-    The <TagLink tag='botPortal'/>.
+  <PossibleValueCode value='grid'>
+    The <TagLink tag='gridPortal'/>.
   </PossibleValueCode>
   <PossibleValueCode value='sheet'>
     The <TagLink tag='sheetPortal'/>.
@@ -3176,9 +3176,9 @@ Possible values are:
 
 #### Examples:
 
-1. Get the dimension that is currently showing in the <TagLink tag='botPortal'/>.
+1. Get the dimension that is currently showing in the <TagLink tag='gridPortal'/>.
 ```typescript
-const dimension = os.getPortalDimension('bot');
+const dimension = os.getPortalDimension('grid');
 ```
 
 2. Get the dimension that is currently showing in the <TagLink tag='miniPortal'/>.
@@ -3250,8 +3250,8 @@ The **first parameter** is optional and is the portal that the camera position s
 Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='bot'>
-    The camera position in the bot portal. (Default)
+  <PossibleValueCode value='grid'>
+    The camera position in the grid portal. (Default)
   </PossibleValueCode>
   <PossibleValueCode value='mini'>
     The camera position in the mini portal.
@@ -3260,9 +3260,9 @@ Possible values are:
 
 #### Examples:
 
-1. Get the position of the player in the bot portal.
+1. Get the position of the player in the grid portal.
 ```typescript
-const position = os.getCameraPosition("bot");
+const position = os.getCameraPosition('grid');
 ```
 
 2. Get the position of the player in the mini portal.
@@ -3278,8 +3278,8 @@ The **first parameter** is optional and is the portal that the camera rotation s
 Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='bot'>
-    The camera rotation in the bot portal. (Default)
+  <PossibleValueCode value='grid'>
+    The camera rotation in the grid portal. (Default)
   </PossibleValueCode>
   <PossibleValueCode value='mini'>
     The camera rotation in the mini portal.
@@ -3288,9 +3288,9 @@ Possible values are:
 
 #### Examples:
 
-1. Get the rotation of the player in the bot portal.
+1. Get the rotation of the player in the grid portal.
 ```typescript
-const rotation = os.getCameraRotation("bot");
+const rotation = os.getCameraRotation('grid');
 ```
 
 2. Get the rotation of the player in the mini portal.
@@ -3308,8 +3308,8 @@ The **first parameter** is optional and is the portal that the camera focus poin
 Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='bot'>
-    The camera focus point in the bot portal. (Default)
+  <PossibleValueCode value='grid'>
+    The camera focus point in the grid portal. (Default)
   </PossibleValueCode>
   <PossibleValueCode value='mini'>
     The camera focus point in the mini portal.
@@ -3318,9 +3318,9 @@ Possible values are:
 
 #### Examples:
 
-1. Get the focus point of the player in the bot portal.
+1. Get the focus point of the player in the grid portal.
 ```typescript
-const focusPoint = os.getFocusPoint("bot");
+const focusPoint = os.getFocusPoint('grid');
 ```
 
 2. Get the focus point of the player in the mini portal.
@@ -3528,8 +3528,8 @@ os.toast(state);
 ### `os.goToDimension(dimension)`
 
 
-Loads the given dimension into the <TagLink tag='botPortal'/> portal.
-Triggers the <TagLink tag='@onPortalChanged'/> shout for the `botPortal`.
+Loads the given dimension into the <TagLink tag='gridPortal'/> portal.
+Triggers the <TagLink tag='@onPortalChanged'/> shout for the `gridPortal`.
 
 The **first parameter** is the dimension that should be loaded.
 
@@ -3630,7 +3630,7 @@ os.cancelSound(id);
 ### `os.isInDimension(dimension)`
 
 
-Gets whether the given dimension is loaded into the <TagLink tag='botPortal'/> portal.
+Gets whether the given dimension is loaded into the <TagLink tag='gridPortal'/> portal.
 
 The **first parameter** is the dimension to check for.
 
@@ -5368,7 +5368,7 @@ os.toast(pointerDirection);
 
 ### `math.intersectPlane(origin, direction)`
 
-Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the bot portal ground plane.
+Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the grid portal ground plane.
 Returns null if the ray does not intersect the ground plane.
 
 Useful for calculating where on the ground something is pointing.
@@ -6541,7 +6541,7 @@ Once the tween is done playing, any change to the bot will reset the position/ro
 The **first parameter** is the bot or ID of the bot that should be tweened.
 
 The **second parameter** is the dimension that the bot should be tweened in.
-Note that the tween will only work if the given dimension is currently in the bot portal or mini portal.
+Note that the tween will only work if the given dimension is currently in the grid portal or mini portal.
 
 The **third parameter** is the position that the bot should be tweened to. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
 
@@ -6640,7 +6640,7 @@ Once the tween is done playing, any change to the bot will reset the position/ro
 The **first parameter** is the bot or ID of the bot that should be tweened.
 
 The **second parameter** is the dimension that the bot should be tweened in.
-Note that the tween will only work if the given dimension is currently in the bot portal or mini portal.
+Note that the tween will only work if the given dimension is currently in the grid portal or mini portal.
 
 The **third parameter** is the rotation that the bot should be tweened to in radians. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
 

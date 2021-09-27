@@ -39,7 +39,7 @@ export const AnyColorValues = ({}) => (<>
 export const AnyCursorValues = ({}) => (<>
   <PossibleValueCode value='auto'>
       The cursor automatically changes its look based on the context.
-      For bot portal bots, this means that the arrow cursor is used.
+      For grid portal bots, this means that the arrow cursor is used.
       For menu portal bots, this means that the pointer is used when the bot has a <TagLink tag='@onClick'/> and the arrow is used otherwise. (default)
   </PossibleValueCode>
   <PossibleValueCode value='default'>
@@ -154,7 +154,7 @@ export const HistoryBotBadge = ({url}) => (<Badge type='primary'>History Bot</Ba
 
 export const AutomaticBadge = ({url}) => (<Badge type='success' title='This tag is automatically set by CasualOS.'>Automatic</Badge>);
 
-export const BotPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the bot portal bot.'>botPortalBot</Badge>);
+export const GridPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the grid portal bot.'>gridPortalBot</Badge>);
 export const MiniPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the mini portal bot.'>miniPortalBot</Badge>);
 export const MapPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the map portal bot.'>mapPortalBot</Badge>);
 export const MenuPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the menu portal bot.'>menuPortalBot</Badge>);

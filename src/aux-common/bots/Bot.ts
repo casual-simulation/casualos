@@ -289,7 +289,7 @@ export const DEFAULT_RECORD_SPACE: RecordSpace = 'tempRestricted';
 /**
  * The possible portal types.
  */
-export type PortalType = 'bot' | 'mini' | 'menu' | 'sheet' | 'meet' | string;
+export type PortalType = 'grid' | 'mini' | 'menu' | 'sheet' | 'meet' | string;
 
 export interface ScriptTags extends PrecalculatedTags {
     toJSON(): any;
@@ -363,7 +363,7 @@ export interface BotTags {
 
     // User tags
     ['auxPlayerActive']?: boolean;
-    ['botPortal']?: string | boolean;
+    ['gridPortal']?: string | boolean;
     ['sheetPortal']?: string | boolean;
     ['inst']?: string | string[];
     ['miniPortal']?: string;
@@ -1562,7 +1562,7 @@ export const DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES: string[] = ['📖'];
  * The list of all portal tags.
  */
 export const KNOWN_PORTALS: string[] = [
-    'botPortal',
+    'gridPortal',
     SHEET_PORTAL,
     IDE_PORTAL,
     IMU_PORTAL,
@@ -1579,7 +1579,7 @@ export const KNOWN_PORTALS: string[] = [
  * The list of portal tags that should always be represented in the query string.
  */
 export const QUERY_PORTALS: string[] = [
-    'botPortal',
+    'gridPortal',
     SHEET_PORTAL,
     IDE_PORTAL,
     MEET_PORTAL,
@@ -1593,7 +1593,7 @@ export const QUERY_PORTALS: string[] = [
  */
 export const KNOWN_TAGS: string[] = [
     'playerActive',
-    'botPortal',
+    'gridPortal',
     SHEET_PORTAL,
     IDE_PORTAL,
     'inst',

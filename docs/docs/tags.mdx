@@ -22,7 +22,7 @@ import {
   ConfigBotBadge,
   HistoryBotBadge,
   AutomaticBadge,
-  BotPortalBadge,
+  GridPortalBadge,
   MiniPortalBadge,
   MenuPortalBadge,
   MeetPortalBadge,
@@ -277,7 +277,7 @@ This is because that is the largest cursor image size that some operating system
 
 ### `cursorHotspotX`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -294,7 +294,7 @@ The top left of the image is (0, 0).
 
 ### `cursorHotspotY`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -939,7 +939,7 @@ When the minimum LOD is exited the <TagLink tag='@onMinLODExit'/> listener is tr
 The ID of the bot that should transform this bot in the bot and mini portals.
 When the transformer bot and this bot are in the same dimension, this bot will inherit the position and rotation of the transformer bot.
 
-When set on a portal bot (like `botPortalBot`), this will transform the portal camera by the specified bot.
+When set on a portal bot (like `gridPortalBot`), this will transform the portal camera by the specified bot.
 
 <PossibleValuesTable>
   <PossibleValueCode value='null'>
@@ -1184,7 +1184,7 @@ Some of them are automatically set by the corresponding portal but most of them 
 
 ### `portalColor`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1200,7 +1200,7 @@ The color of the background of the portal.
 
 ### `portalCursor`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1217,7 +1217,7 @@ This is because that is the largest cursor image size that some operating system
 
 ### `portalCursorHotspotX`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1234,7 +1234,7 @@ The top left of the image is (0, 0).
 
 ### `portalCursorHotspotY`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1251,7 +1251,7 @@ The top left of the image is (0, 0).
 
 ### `portalBackgroundAddress`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1272,7 +1272,7 @@ Additionally, this tag does nothing when in VR.
 
 ### `portalLocked`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1290,7 +1290,7 @@ Determines if the portal can be loaded.
 
 ### `portalPannable`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1308,7 +1308,7 @@ Whether the player will be able to pan the camera inside the portal.
 
 ### `portalPannableMinX`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1323,7 +1323,7 @@ The minimum X value that the camera can pan to in the portal.
 
 ### `portalPannableMaxX`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1338,7 +1338,7 @@ The maximum X value that the camera can pan to in the portal.
 
 ### `portalPannableMinY`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1353,7 +1353,7 @@ The minimum Y value that the camera can pan to in the portal.
 
 ### `portalPannableMaxY`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1368,7 +1368,7 @@ The maximum Y value that the camera can pan to in the portal.
 
 ### `portalRotatable`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1387,7 +1387,7 @@ Whether the player will be able to rotate the camera inside the mini portal.
 ### `portalCameraRotationX`
 <Badges>
     <Example code='portalCameraRotation'/>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1413,7 +1413,7 @@ The Y angle (theta) is used to rotate the camera left and right. Mathematically,
 ### `portalCameraRotationY`
 <Badges>
     <Example code='portalCameraRotation'/>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1438,7 +1438,7 @@ The Y angle (theta) is used to rotate the camera left and right. Mathematically,
 
 ### `portalZoomable`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1456,7 +1456,7 @@ Whether the player will be able to zoom the camera inside the portal.
 
 ### `portalZoomableMin`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1471,7 +1471,7 @@ The minimum value that the camera can zoom to in the portal.
 
 ### `portalZoomableMax`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1486,7 +1486,7 @@ The maximum value that the camera can zoom to in the portal.
 
 ### `portalCameraZoom`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1501,7 +1501,7 @@ The zoom value that the camera starts at in the portal.
 
 ### `portalGridScale`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1516,7 +1516,7 @@ The size of bots in the portal.
 
 ### `portalSurfaceScale`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1531,7 +1531,7 @@ The scale of surfaces.
 
 ### `portalCameraControls`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1550,7 +1550,7 @@ The mode that specifies how the camera controls work in the portal.
 
 ### `portalShowFocusPoint`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -1572,7 +1572,7 @@ When a bot is between the focus point and the camera, then focus events will tri
 
 ### `portalCameraType`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
 </Badges>
 
 The type of camera that should be used for the portal.
@@ -1593,12 +1593,12 @@ The "type" of a camera determines how objects are visualized and how they appear
 
 ### `portalDisableCanvasTransparency`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
 </Badges>
 
 Whether to disable transparency on the [canvas element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/canvas) that the 3D content is displayed on.
 
-Set this tag to `true` on the bot portal to fix rendering issues with 3D models that use alpha cutoff.
+Set this tag to `true` on the grid portal to fix rendering issues with 3D models that use alpha cutoff.
 Note that when this value is `true`, [iframe forms](#iframe-form) will cease to function properly.
 
 #### Possible values are:
@@ -2015,8 +2015,8 @@ The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the
 
 #### Possible values are:
 <PossibleValuesTable>
-  <PossibleValueCode value='Bot Portal'>
-    "Bot Portal" (Default)
+  <PossibleValueCode value='Grid Portal'>
+    "Grid Portal" (Default)
   </PossibleValueCode>
   <PossibleValue value='Any String'>
     The text that should be displayed as a hint when the user hovers their mouse over the button.
@@ -2061,10 +2061,10 @@ The list of tags that should be shown in the sheet even if they do not have a va
 
 <Badges>
     <AutomaticBadge/>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
 </Badges>
 
-The width of the bot portal in pixels. Because the mini portal is contained by the bot portal, this value also applies to the mini portal.
+The width of the grid portal in pixels. Because the mini portal is contained by the grid portal, this value also applies to the mini portal.
 
 Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
 Additionally, a device with a larger width than height does not necessarily mean that it is in landscape mode.
@@ -2073,10 +2073,10 @@ Additionally, a device with a larger width than height does not necessarily mean
 
 <Badges>
     <AutomaticBadge/>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
 </Badges>
 
-The height of the bot portal in pixels. Because the mini portal is contained by the bot portal, this value also applies to the mini portal.
+The height of the grid portal in pixels. Because the mini portal is contained by the grid portal, this value also applies to the mini portal.
 
 Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
 Additionally, a device with a larger height than width does not necessarily mean that it is in portrait mode.
@@ -2085,62 +2085,62 @@ Additionally, a device with a larger height than width does not necessarily mean
 
 <Badges>
     <AutomaticBadge/>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
-The X position of the player's camera in the bot portal.
+The X position of the player's camera in the grid portal.
 
 ### `cameraPositionY`
 
 <Badges>
     <AutomaticBadge/>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
-The Y position of the player's camera in the bot portal.
+The Y position of the player's camera in the grid portal.
 
 ### `cameraPositionZ`
 
 <Badges>
     <AutomaticBadge/>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
-The Z position of the player's camera in the bot portal.
+The Z position of the player's camera in the grid portal.
 
 ### `cameraPositionOffsetX`
 
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
-The offset that should be applied to the X position of the player's camera in the bot portal.
+The offset that should be applied to the X position of the player's camera in the grid portal.
 
 Useful for moving the player around in VR.
 
 ### `cameraPositionOffsetY`
 
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
-The offset that should be applied to the Y position of the player's camera in the bot portal.
+The offset that should be applied to the Y position of the player's camera in the grid portal.
 
 Useful for moving the player around in VR.
 
 ### `cameraPositionOffsetZ`
 
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
-The offset that should be applied to the Z position of the player's camera in the bot portal.
+The offset that should be applied to the Z position of the player's camera in the grid portal.
 
 Useful for moving the player around in VR.
 
@@ -2148,69 +2148,69 @@ Useful for moving the player around in VR.
 
 <Badges>
     <AutomaticBadge/>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
-The X rotation of the player's camera in the bot portal.
+The X rotation of the player's camera in the grid portal.
 
 Units are in radians.
 
 ### `cameraRotationY`
 <Badges>
     <AutomaticBadge/>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
-The Y rotation of the player's camera in the bot portal.
+The Y rotation of the player's camera in the grid portal.
 
 Units are in radians.
 
 ### `cameraRotationZ`
 <Badges>
     <AutomaticBadge/>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
-The Z rotation of the player's camera in the bot portal.
+The Z rotation of the player's camera in the grid portal.
 
 Units are in radians.
 
 ### `cameraRotationOffsetX`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
-The offset that should be applied to the X rotation of the player's camera in the bot portal.
+The offset that should be applied to the X rotation of the player's camera in the grid portal.
 
 Units are in radians.
 
 ### `cameraRotationOffsetY`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
-The offset that should be applied to the Y rotation of the player's camera in the bot portal.
+The offset that should be applied to the Y rotation of the player's camera in the grid portal.
 
 Units are in radians.
 
 ### `cameraRotationOffsetZ`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
-The offset that should be applied to the Z rotation of the player's camera in the bot portal.
+The offset that should be applied to the Z rotation of the player's camera in the grid portal.
 
 Units are in radians.
 
 ### `cameraRotationOffsetW`
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -2223,7 +2223,7 @@ X, Y, Z axis by `cos(W/2) + sin(W/2)(xi + yj + zk)`.
 
 <Badges>
     <AutomaticBadge/>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -2234,7 +2234,7 @@ Larger values indicate that the camera is zoomed in more (objects appear bigger)
 ### `cameraZoomOffset`
 
 <Badges>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
@@ -2246,31 +2246,31 @@ Larger values indicate that the camera is zoomed in more (objects appear bigger)
 
 <Badges>
     <AutomaticBadge/>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
-The X position of the focus point for the player's camera in the bot portal.
+The X position of the focus point for the player's camera in the grid portal.
 
 ### `cameraFocusY`
 
 <Badges>
     <AutomaticBadge/>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
-The Y position of the focus point for the player's camera in the bot portal.
+The Y position of the focus point for the player's camera in the grid portal.
 
 ### `cameraFocusZ`
 
 <Badges>
     <AutomaticBadge/>
-    <BotPortalBadge/>
+    <GridPortalBadge/>
     <MiniPortalBadge/>
 </Badges>
 
-The Z position of the focus point for the player's camera in the bot portal.
+The Z position of the focus point for the player's camera in the grid portal.
 
 ### `imuSupported`
 
@@ -2372,13 +2372,13 @@ It also means that putting `miniPortal=myDimension` into the query string will s
 
 The instance that is loaded into CasualOS.
 
-### `botPortal`
+### `gridPortal`
 
 <Badges>
   <ConfigBotBadge/>
 </Badges>
 
-The dimension that is loaded into the "bot" portal in CasualOS.
+The dimension that is loaded into the 'grid' portal in CasualOS.
 Only available on the config bot.
 
 ### `sheetPortal`

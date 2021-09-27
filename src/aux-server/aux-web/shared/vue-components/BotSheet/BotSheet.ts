@@ -104,12 +104,12 @@ export default class BotSheet extends Vue {
     }
 
     private _exitSheet() {
-        const botPortal = this._simulation.helper.userBot.values.botPortal;
+        const gridPortal = this._simulation.helper.userBot.values.gridPortal;
         let tags: BotTags = {
             sheetPortal: null,
         };
-        if (!hasValue(botPortal)) {
-            tags.botPortal = this.dimension;
+        if (!hasValue(gridPortal)) {
+            tags.gridPortal = this.dimension;
         }
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
             tags: tags,

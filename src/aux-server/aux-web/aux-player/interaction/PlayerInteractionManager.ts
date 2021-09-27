@@ -746,8 +746,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 }
             }
 
-            // We have to postfix with "Portal" because the portal names are "botPortal"
-            // and "miniPortal" but are abbreviated to "bot" and "mini".
+            // We have to postfix with "Portal" because the portal names are "gridPortal"
+            // and "miniPortal" but are abbreviated to 'grid' and "mini".
             const portalBot = getPortalConfigBot(
                 sim.simulation,
                 `${portal}Portal`
@@ -791,10 +791,10 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 }
 
 function portalInfoForSim(sim: Simulation3D) {
-    let portal: 'bot' | 'mini';
+    let portal: 'grid' | 'mini';
     let gridScale: number;
     if (sim instanceof PlayerPageSimulation3D) {
-        portal = 'bot';
+        portal = 'grid';
         gridScale = sim.pageConfig.gridScale;
     } else if (sim instanceof MiniSimulation3D) {
         portal = 'mini';
