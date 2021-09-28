@@ -55,6 +55,7 @@
 
 -   Fixed an issue where zooming on menu bots would trigger the browser-provided zoom functionality.
 -   Fixed an issue where copying an array from one tag to another tag caused CasualOS to break.
+-   Fixed an issue where editing a script via the sheet portal cells would temporarily break the code editor.
 
 ## V2.0.10
 
