@@ -7,8 +7,6 @@ declare var JitsiMeetExternalAPI: {
     new (domain: string, options: JitsiMeetExternalAPIOptions): JitsiApi;
 };
 
-declare const JITSI_APP_NAME: string;
-
 @Component({})
 export default class JitsiMeet extends Vue {
     /**
@@ -54,10 +52,6 @@ export default class JitsiMeet extends Vue {
         const options = {
             ...this.options,
             parentNode: this.$refs.jitsiContainer as Element,
-            roomName:
-                this.options.roomName.indexOf('/') >= 0
-                    ? this.options.roomName
-                    : `${JITSI_APP_NAME}/${this.options.roomName}`,
         };
         this._jitsiApi = new JitsiMeetExternalAPI(
             this.domain,

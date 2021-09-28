@@ -105,6 +105,7 @@ The AUX Server Docker image can be configured using the following environment va
 -   `ARC_GIS_API_KEY`: The API Key that should be used to access the [ArcGIS API](https://developers.arcgis.com/).
 -   `AUTH_ORIGIN`: The HTTP Origin that the Auth site should be loaded from. Defaults to `https://casualos.me` in production and `http://localhost:3002` in development.
 -   `RECORDS_ORIGIN`: The HTTP Origin that records should be loaded from and published to. Defaults to `https://api.casualos.me` in production and `http://localhost:3002` in development.
+-   `JITSI_APP_NAME`: The name of the Jitsi app that the meetPortal should use.
 
 ## Build Configuration
 

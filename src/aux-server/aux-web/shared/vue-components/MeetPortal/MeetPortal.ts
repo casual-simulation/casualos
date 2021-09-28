@@ -45,6 +45,17 @@ export default class MeetPortal extends Vue {
         return hasValue(this.currentMeet);
     }
 
+    get jitsiOptions() {
+        return {
+            roomName:
+                this.currentMeet.indexOf('/') >= 0
+                    ? this.currentMeet
+                    : `${appManager.config.jitsiAppName}/${this.currentMeet}`,
+            interfaceConfigOverwrite: this.interfaceConfig,
+            configOverwrite: this.config,
+        };
+    }
+
     // The override options for the config
     // that the Jitsi Iframe should use.
     // See https://github.com/jitsi/jitsi-meet/blob/master/config.js for options
