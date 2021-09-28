@@ -47,6 +47,10 @@
     -   `@onServerStreamLost` -> `@onInstStreamLost`
     -   `@onServerAction` -> `@onAnyAction`
 
+### :rocket: Improvements
+
+-   Updated the Privacy Policy, Terms of Service, and Acceptable Use Policy.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where zooming on menu bots would trigger the browser-provided zoom functionality.
