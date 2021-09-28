@@ -13,7 +13,7 @@ export default class JitsiMeet extends Vue {
      * The domain used to build the conference URL.
      */
     @Prop({
-        default: 'meet.jit.si',
+        default: '8x8.vc',
     })
     domain: string;
 
@@ -29,7 +29,7 @@ export default class JitsiMeet extends Vue {
     private _removedJitsi: boolean;
 
     mounted() {
-        this._loadScript('https://meet.jit.si/external_api.js', () => {
+        this._loadScript('https://8x8.vc/external_api.js', () => {
             if (!JitsiMeetExternalAPI) {
                 throw new Error('Jitsi Meet API not loaded');
             }

@@ -63,4 +63,9 @@ export interface WebConfig {
      * The API key that should be used for the ArcGIS mapping API.
      */
     arcGisApiKey?: string;
+
+    /**
+     * The app name that should be used for the Jitsi meet portal.
+     */
+    jitsiAppName?: string;
 }

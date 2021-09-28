@@ -2,7 +2,7 @@
 
 ## V2.0.11
 
-#### Date: 9/27/2021
+#### Date: 9/28/2021
 
 ### :boom: Breaking Changes
 
@@ -47,10 +47,16 @@
     -   `@onServerStreamLost` -> `@onInstStreamLost`
     -   `@onServerAction` -> `@onAnyAction`
 
+### :rocket: Improvements
+
+-   Updated the Privacy Policy, Terms of Service, and Acceptable Use Policy.
+-   Changed the meetPortal to use a custom Jitsi deployment.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where zooming on menu bots would trigger the browser-provided zoom functionality.
 -   Fixed an issue where copying an array from one tag to another tag caused CasualOS to break.
+-   Fixed an issue where editing a script via the sheet portal cells would temporarily break the code editor.
 
 ## V2.0.10
 

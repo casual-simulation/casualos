@@ -6,15 +6,7 @@
             :class="{ invisible: !portalVisible }"
             :style="extraStyle"
         >
-            <jitsi-meet
-                v-if="hasPortal"
-                :options="{
-                    roomName: currentMeet,
-                    interfaceConfigOverwrite: interfaceConfig,
-                    configOverwrite: config,
-                }"
-                @closed="onClose"
-            ></jitsi-meet>
+            <jitsi-meet v-if="hasPortal" :options="jitsiOptions" @closed="onClose"></jitsi-meet>
         </div>
         <div ref="otherContainer" class="other-container">
             <slot></slot>

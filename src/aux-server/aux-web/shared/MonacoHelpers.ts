@@ -942,7 +942,8 @@ function watchModel(
                             simulation,
                             model,
                             tag,
-                            getTagValueForSpace(bot, tag, space)
+                            getTagValueForSpace(bot, tag, space),
+                            true
                         );
                     } finally {
                         applyingEdits = false;
@@ -1077,16 +1078,32 @@ function offsetSelections(
     }
 }
 
+/**
+ *
+ * @param simulation
+ * @param model
+ * @param tag
+ * @param value
+ * @param resetInfo Whether to reset the isFormula, isScript, and isCustomPortalScript properties of the info to false before updating decorators.
+ * @returns
+ */
 function updateLanguage(
     simulation: BrowserSimulation,
     model: monaco.editor.ITextModel,
     tag: string,
-    value: string
+    value: string,
+    resetInfo: boolean = false
 ) {
     const info = models.get(model.uri.toString());
     if (!info) {
         return;
     }
+    if (resetInfo) {
+        info.isScript = false;
+        info.isFormula = false;
+        info.isCustomPortalScript = false;
+    }
+
     const currentLanguage = model.getModeId();
     const nextLanguage = tagScriptLanguage(simulation, tag, value);
     info.language = nextLanguage;

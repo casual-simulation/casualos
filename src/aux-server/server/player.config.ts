@@ -32,6 +32,9 @@ const config: ClientConfig = {
         disableCollaboration: process.env.DISABLE_COLLABORATION === 'true',
         ab1BootstrapURL: process.env.AB1_BOOTSTRAP_URL || null,
         arcGisApiKey: process.env.ARC_GIS_API_KEY,
+        jitsiAppName:
+            process.env.JITSI_APP_NAME ||
+            'vpaas-magic-cookie-332b53bd630448a18fcb3be9740f2caf',
     },
 };
 
