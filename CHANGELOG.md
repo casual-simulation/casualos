@@ -50,6 +50,7 @@
 ### :rocket: Improvements
 
 -   Updated the Privacy Policy, Terms of Service, and Acceptable Use Policy.
+-   Changed the meetPortal to use a custom Jitsi deployment.
 
 ### :bug: Bug Fixes
 
