@@ -245,6 +245,9 @@ function commonPlugins(latestTag) {
             GIT_HASH: JSON.stringify(commitHash),
             GIT_TAG: JSON.stringify(latestTag),
             PROXY_CORS_REQUESTS: process.env.PROXY_CORS_REQUESTS !== 'false',
+            JITSI_APP_NAME: JSON.stringify(
+                'vpaas-magic-cookie-332b53bd630448a18fcb3be9740f2caf'
+            ),
         }),
         new webpack.NormalModuleReplacementPlugin(/^esbuild$/, 'esbuild-wasm'),
         new webpack.NormalModuleReplacementPlugin(
