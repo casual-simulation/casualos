@@ -2003,6 +2003,23 @@ describe('AuxLibrary', () => {
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
+
+            it('should be able to specify using the IMU', () => {
+                const action = library.api.os.enablePointOfView(
+                    undefined,
+                    true
+                );
+                const expected = enablePOV(
+                    {
+                        x: 0,
+                        y: 0,
+                        z: 0,
+                    },
+                    true
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
         });
 
         describe('os.disablePointOfView()', () => {

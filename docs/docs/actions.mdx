@@ -3034,7 +3034,7 @@ Disables virtual reality on the device.
 os.disableVR();
 ```
 
-### `os.enablePointOfView(center?)`
+### `os.enablePointOfView(center?, imu?)`
 
 Enables Point-of-View mode on the device. Useful for getting a "ground level" view in the grid portal.
 This will move the camera to the given position, set the camera type to `perspective`, and change the camera controls so that dragging the screen causes the camera to look around.
@@ -3042,6 +3042,8 @@ This will move the camera to the given position, set the camera type to `perspec
 It is not possible to manually move the camera in this mode, however it is still possible to use <ActionLink action='os.focusOn(botOrPosition, options?)'/> to move the camera.
 
 The **first parameter** is optional and is the position that the camera should be placed at. If not specified, then the camera will be placed at `(0, 0, 0)`.
+
+The **second parameter** is optional and determines whether the imuPortal should be used to control the camera rotation while in Point-of-View mode.
 
 #### Examples:
 
@@ -3057,6 +3059,11 @@ os.enablePointOfView({
     y: 0,
     z: 3
 });
+```
+
+3. Enable POV mode with the IMU.
+```typescript
+os.enablePointOfView(undefined, true);
 ```
 
 ### `os.disablePointOfView()`

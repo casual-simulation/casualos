@@ -1895,9 +1895,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Enables Point-of-View mode.
      */
     function enablePointOfView(
-        center: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 }
+        center: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 },
+        imu?: boolean
     ): EnablePOVAction {
-        return addAction(enablePOV(center));
+        return addAction(enablePOV(center, imu));
     }
 
     /**

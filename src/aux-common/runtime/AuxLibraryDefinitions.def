@@ -3612,8 +3612,10 @@ declare global {
 
         /**
          * Enables Point-of-View mode.
+         * @param center The position that the camera should be placed at. Defaults to (0,0,0)
+         * @param imu Whether to use the imuPortal to control the camera rotation while in POV mode. Defaults to false.
          */
-        enablePointOfView(center?: Point3D): EnablePOVAction;
+        enablePointOfView(center?: Point3D, imu?: boolean): EnablePOVAction;
 
         /**
          * Disables Point-of-View mode.
