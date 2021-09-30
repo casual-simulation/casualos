@@ -51,6 +51,9 @@
 
 -   Updated the Privacy Policy, Terms of Service, and Acceptable Use Policy.
 -   Changed the meetPortal to use a custom Jitsi deployment.
+-   Improved `os.enablePointOfView(center?)` to take an additional argument that determines whether to use the device IMU to control the camera rotation while in POV mode.
+    -   The new function signature is `os.enablePointOfView(center?, imu?)`.
+    -   e.g. `os.enablePointOfView(undefined, true)` will enable using the IMU for controlling the camera rotation.
 
 ### :bug: Bug Fixes
 
