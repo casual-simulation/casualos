@@ -38,6 +38,7 @@ import {
     remoteEdit,
     remoteEdits,
 } from '../aux-format-2';
+import { types } from 'util';
 
 describe('RuntimeBot', () => {
     let precalc: CompiledBot;
@@ -514,6 +515,19 @@ describe('RuntimeBot', () => {
                 expect(script.changes.arr).toEqual(expected);
                 expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
             });
+
+            it('should unwrap the array proxy when saving to another tag', () => {
+                const abc = [123];
+                script.tags.arr = abc;
+                script.tags.other = script.tags.arr;
+
+                const expected = [123];
+                expect(script.tags.other).toEqual(expected);
+                expect(script.raw.other).toEqual(expected);
+
+                expect(script.changes.other).toBe(abc);
+                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+            });
         });
     });
 
@@ -818,6 +832,19 @@ describe('RuntimeBot', () => {
                     'arr',
                     expected
                 );
+            });
+
+            it('should unwrap the array proxy when saving to another tag', () => {
+                const abc = [123];
+                script.raw.arr = abc;
+                script.raw.other = script.tags.arr;
+
+                const expected = [123];
+                expect(script.tags.other).toEqual(expected);
+                expect(script.raw.other).toEqual(expected);
+
+                expect(script.changes.other).toBe(abc);
+                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
             });
         });
     });
@@ -1242,6 +1269,23 @@ describe('RuntimeBot', () => {
                 );
                 expect(updateTagMock).not.toBeCalled();
             });
+
+            it('should unwrap the array proxy when saving to another tag', () => {
+                const abc = [123];
+                script.tags.arr = abc;
+                script.masks.other = script.tags.arr;
+
+                const expected = [123];
+                expect(script.masks.other).toEqual(expected);
+
+                expect(script.maskChanges?.tempLocal?.other).toBe(abc);
+                expect(updateTagMaskMock).toBeCalledWith(
+                    precalc,
+                    'other',
+                    ['tempLocal'],
+                    expected
+                );
+            });
         });
     });
 
@@ -1354,6 +1398,22 @@ describe('RuntimeBot', () => {
                 },
             });
             expect(script.masks.abc).toBeUndefined();
+        });
+
+        it('should unwrap the array proxy when saving to another tag', () => {
+            const abc = [123];
+            script.tags.arr = abc;
+            script[SET_TAG_MASK_SYMBOL]('other', script.tags.arr);
+
+            const expected = [123];
+            expect(script.masks.other).toEqual(expected);
+            expect(script.maskChanges?.tempLocal?.other).toBe(abc);
+            expect(updateTagMaskMock).toBeCalledWith(
+                precalc,
+                'other',
+                ['tempLocal'],
+                expected
+            );
         });
     });
 

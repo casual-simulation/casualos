@@ -571,17 +571,17 @@ export interface TweenOptions {
 }
 
 /**
- * Defines an interface that contains performance statistics about a server.
+ * Defines an interface that contains performance statistics about a inst.
  */
 export interface PerformanceStats {
     /**
-     * The number of bots in the server.
+     * The number of bots in the inst.
      */
     numberOfBots: number;
 
     /**
      * A list of listen tags and the amount of time spent executing them (in miliseconds).
-     * Useful to guage if a listen tag is causing the server to slow down.
+     * Useful to guage if a listen tag is causing the inst to slow down.
      */
     shoutTimes: {
         tag: string;
@@ -794,7 +794,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 disablePointOfView,
                 download: downloadData,
                 downloadBots,
+
                 downloadServer,
+                downloadInst: downloadServer,
+
                 showUploadAuxFile,
                 showUploadFiles,
                 openQRCodeScanner,
@@ -805,14 +808,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 closeBarcodeScanner,
                 showBarcode,
                 hideBarcode,
+
                 loadServer,
                 unloadServer,
+                loadInst: loadServer,
+                unloadInst: unloadServer,
+
                 importAUX,
                 parseBotsFromData,
                 replaceDragBot,
                 isInDimension,
                 getCurrentDimension,
                 getCurrentServer,
+                getCurrentInst: getCurrentServer,
                 getMenuDimension,
                 getMiniPortalDimension,
                 getPortalDimension,
@@ -861,6 +869,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 publishRecord,
                 getRecords,
                 destroyRecord,
+
+                setupInst: setupServer,
+                remotes,
+                instances: servers,
+                remoteCount: serverRemoteCount,
+                totalRemoteCount: totalRemoteCount,
+                instStatuses: serverStatuses,
             },
 
             portal: {
@@ -927,6 +942,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 browseHistory,
                 restoreHistoryMark,
                 restoreHistoryMarkToServer,
+                restoreHistoryMarkToInst: restoreHistoryMarkToServer,
                 loadFile,
                 saveFile,
                 serverRemoteCount,
@@ -1146,7 +1162,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets a list of all the bots.
      *
      * @example
-     * // Gets all the bots in the server.
+     * // Gets all the bots in the inst.
      * let bots = getBots();
      */
     function getBots(...args: any[]): RuntimeBot[] {
@@ -1636,15 +1652,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows a QR Code that contains a link to a server and dimension.
-     * @param server The server that should be joined. Defaults to the current server.
+     * Shows a QR Code that contains a link to a inst and dimension.
+     * @param inst The inst that should be joined. Defaults to the current inst.
      * @param dimension The dimension that should be joined. Defaults to the current dimension.
      */
     function showJoinCode(
-        server?: string,
+        inst?: string,
         dimension?: string
     ): ShowJoinCodeAction {
-        return addAction(calcShowJoinCode(server, dimension));
+        return addAction(calcShowJoinCode(inst, dimension));
     }
 
     /**
@@ -1879,9 +1895,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Enables Point-of-View mode.
      */
     function enablePointOfView(
-        center: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 }
+        center: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 },
+        imu?: boolean
     ): EnablePOVAction {
-        return addAction(enablePOV(center));
+        return addAction(enablePOV(center, imu));
     }
 
     /**
@@ -1978,7 +1995,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Downloads all the shared bots in the server.
+     * Downloads all the shared bots in the inst.
      */
     function downloadServer(): DownloadAction {
         return downloadBots(
@@ -2076,8 +2093,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Loads the server with the given ID.
-     * @param id The ID of the server to load.
+     * Loads the instance with the given ID.
+     * @param id The ID of the inst to load.
      */
     function loadServer(id: string): LoadServerAction {
         const event = loadSimulation(id);
@@ -2085,8 +2102,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Unloads the server with the given ID.
-     * @param id The ID of the server to unload.
+     * Unloads the instance with the given ID.
+     * @param id The ID of the instance to unload.
      */
     function unloadServer(id: string): UnloadServerAction {
         const event = unloadSimulation(id);
@@ -2181,7 +2198,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getCurrentDimension(): string {
         const user = context.playerBot;
         if (user) {
-            const dimension = getTag(user, 'pagePortal');
+            const dimension = getTag(user, 'gridPortal');
             if (hasValue(dimension)) {
                 return dimension.toString();
             }
@@ -2191,14 +2208,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the server that the player is currently in.
+     * Gets the instance that the player is currently in.
      */
     function getCurrentServer(): string {
         const user = context.playerBot;
         if (user) {
-            let server = getTag(user, 'server');
-            if (hasValue(server)) {
-                return server.toString();
+            let inst = getTag(user, 'inst');
+            if (hasValue(inst)) {
+                return inst.toString();
             }
             return undefined;
         }
@@ -2206,14 +2223,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the name of the dimension that is used for the current user's mini portal.
+     * Gets the name of the dimension that is used for the current user's miniGridPortal.
      */
     function getMiniPortalDimension(): string {
         const user = context.playerBot;
         if (user) {
-            const miniPortal = getTag(user, MINI_PORTAL);
-            if (hasValue(miniPortal)) {
-                return miniPortal.toString();
+            const miniGridPortal = getTag(user, MINI_PORTAL);
+            if (hasValue(miniGridPortal)) {
+                return miniGridPortal.toString();
             }
             return null;
         } else {
@@ -2450,18 +2467,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Determines whether the player has the given bot in their mini portal.
+     * Determines whether the player has the given bot in their miniGridPortal.
      * @param bots The bot or bots to check.
      */
     function hasBotInMiniPortal(bots: Bot | Bot[]): boolean {
         if (!Array.isArray(bots)) {
             bots = [bots];
         }
-        let miniPortal = getMiniPortalDimension();
-        if (!hasValue(miniPortal)) {
+        let miniGridPortal = getMiniPortalDimension();
+        if (!hasValue(miniGridPortal)) {
             return false;
         }
-        return every(bots, (f) => getTag(f, miniPortal) === true);
+        return every(bots, (f) => getTag(f, miniGridPortal) === true);
     }
 
     /**
@@ -2704,7 +2721,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Publishes a record that can be used across servers.
+     * Publishes a record that can be used across instances.
      * @param recordDefinition The data that should be used to publish the record.
      */
     function publishRecord(
@@ -2879,14 +2896,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sends an event to the server to setup a new server if it does not exist.
-     * @param server The server.
-     * @param botOrMod The bot or mod that should be cloned into the new server.
+     * Sends an event to the server to setup a new instance if it does not exist.
+     * @param inst The instance.
+     * @param botOrMod The bot or mod that should be cloned into the new inst.
      */
-    function setupServer(server: string, botOrMod?: Mod) {
+    function setupServer(inst: string, botOrMod?: Mod) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            calcSetupServer(server, convertToCopiableValue(botOrMod)),
+            calcSetupServer(inst, convertToCopiableValue(botOrMod)),
             undefined,
             undefined,
             task.taskId
@@ -3749,7 +3766,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Backs up all the AUX servers to a Github Gist.
+     * Backs up all the AUX instances to a Github Gist.
      * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
      */
     function backupToGithub(auth: string): RemoteAction | RemoteAction[] {
@@ -3757,7 +3774,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Backs up all the AUX servers to a zip bot.
+     * Backs up all the AUX instances to a zip bot.
      */
     function backupAsDownload(
         target: SessionSelector
@@ -3772,7 +3789,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Finish the checkout process
-     * server.finishCheckout({
+     * inst.finishCheckout({
      *   secretKey: 'YOUR_SECRET_API_KEY',
      *   token: 'token from onCheckout',
      *
@@ -3802,7 +3819,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Bookmark the current state with a message
-     * server.markHistory({
+     * inst.markHistory({
      *   message: "Save recent changes"
      * });
      */
@@ -3818,7 +3835,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Loads the "history" space into the server.
+     * Loads the "history" space into the inst.
      */
     function browseHistory(): Promise<void> {
         const task = context.createTask(true, true);
@@ -3850,16 +3867,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Restores the current state to the given mark.
      * @param mark The bot or bot ID that represents the mark that should be restored.
-     * @param server The server that the mark should be restored to.
+     * @param inst The inst that the mark should be restored to.
      */
     function restoreHistoryMarkToServer(
         mark: Bot | string,
-        server: string
+        inst: string
     ): Promise<void> {
         const id = getID(mark);
         const task = context.createTask(true, true);
         const event = calcRemote(
-            calcRestoreHistoryMark(id, server),
+            calcRestoreHistoryMark(id, inst),
             undefined,
             undefined,
             task.taskId
@@ -3912,12 +3929,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the number of remotes that are viewing the current server.
-     * @param server The server to get the statistics for. If omitted, then the current server is used.
+     * Gets the number of remotes that are viewing the current inst.
+     * @param inst The instance to get the statistics for. If omitted, then the current instance is used.
      */
-    function serverRemoteCount(server?: string): Promise<number> {
+    function serverRemoteCount(inst?: string): Promise<number> {
         const task = context.createTask(true, true);
-        const actualServer = hasValue(server) ? server : getCurrentServer();
+        const actualServer = hasValue(inst) ? inst : getCurrentServer();
         const event = calcRemote(
             getRemoteCount(actualServer),
             undefined,
@@ -3942,7 +3959,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the list of servers that are on the server.
+     * Gets the list of instances that are on the server.
      */
     function servers(): Promise<string[]> {
         const task = context.createTask(true, true);
@@ -3956,11 +3973,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the list of servers that are on the server.
+     * Gets the list of instances that are on the server.
      */
     function serverStatuses(): Promise<
         {
-            server: string;
+            inst: string;
             lastUpdateTime: Date;
         }[]
     > {
@@ -3975,7 +3992,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the list of remote IDs that are connected to the server.
+     * Gets the list of remote IDs that are connected to the instance.
      */
     function remotes(): Promise<string[]> {
         const task = context.createTask(true, true);
@@ -3992,12 +4009,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Sends the given operation to all the devices that matches the given selector.
      * In effect, this allows users to send each other events directly without having to edit tags.
      *
-     * Note that currently, devices will only accept events sent from the server.
+     * Note that currently, devices will only accept events sent from the inst.
      *
      * @param event The event that should be executed in the remote session(s).
      * @param selector The selector that indicates where the event should be sent. The event will be sent to all sessions that match the selector.
      *                 For example, specifying a username means that the event will be sent to every active session that the user has open.
-     *                 If a selector is not specified, then the event is sent to the server.
+     *                 If a selector is not specified, then the event is sent to the inst.
      * @param allowBatching Whether to allow batching this remote event with other remote events. This will preserve ordering between remote events but may not preserve ordering
      *                      with respect to other events. Defaults to true.
      *
@@ -5324,7 +5341,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Revokes the given certificate using the given secret.
-     * In effect, this deletes the certificate bot from the server.
+     * In effect, this deletes the certificate bot from the inst.
      * Additionally, any tags signed with the given certificate will no longer be verified.
      *
      * If given a signer, then the specified certificate will be used to sign the revocation.
@@ -5953,7 +5970,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Asks every bot in the server to run the given action.
+     * Asks every bot in the inst to run the given action.
      * In effect, this is like shouting to a bunch of people in a room.
      *
      * @param name The event name.
@@ -6026,7 +6043,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera position should be retrieved for.
      */
     function getCameraPosition(
-        portal: 'page' | 'mini' = 'page'
+        portal: 'grid' | 'miniGrid' = 'grid'
     ): { x: number; y: number; z: number } {
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
@@ -6049,7 +6066,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera rotation should be retrieved for.
      */
     function getCameraRotation(
-        portal: 'page' | 'mini' = 'page'
+        portal: 'grid' | 'miniGrid' = 'grid'
     ): { x: number; y: number; z: number } {
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {
@@ -6072,7 +6089,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the camera focus point should be retrieved for.
      */
     function getFocusPoint(
-        portal: 'page' | 'mini' = 'page'
+        portal: 'grid' | 'miniGrid' = 'grid'
     ): { x: number; y: number; z: number } {
         const bot = (<any>globalThis)[`${portal}PortalBot`];
         if (!bot) {

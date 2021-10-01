@@ -24,7 +24,7 @@ import { startWith } from 'rxjs/operators';
 import { values } from 'lodash';
 
 /**
- * Attempts to create a proxy client partition that is loaded from a remote server.
+ * Attempts to create a proxy client partition that is loaded from a remote inst.
  * @param options The options to use.
  * @param config The config to use.
  */

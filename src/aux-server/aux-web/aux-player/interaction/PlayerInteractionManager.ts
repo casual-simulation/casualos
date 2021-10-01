@@ -193,7 +193,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 this._game.getSimulations(),
                 (s) => s.dimensions
             );
-            // Sort between mini portal colliders and other colliders.
+            // Sort between miniGridPortal colliders and other colliders.
             let miniPortalColliders: Object3D[] = [];
             let otherColliders: Object3D[] = [];
             let mapPortalColliders: Object3D[] = [];
@@ -215,7 +215,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 }
             }
 
-            // Put mini portal colliders in front of other colliders so that they take priority in input testing.
+            // Put miniGridPortal colliders in front of other colliders so that they take priority in input testing.
             this._draggableGroups = [
                 {
                     objects: miniPortalColliders,
@@ -386,7 +386,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             mainCameraRigControls.controls.screenSpacePanning = true;
         }
 
-        // mini portal camera
+        // miniGridPortal camera
         let invCameraRigControls: CameraRigControls = {
             rig: this._game.getMiniPortalCameraRig(),
             controls: new CameraControls(
@@ -746,8 +746,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 }
             }
 
-            // We have to postfix with "Portal" because the portal names are "pagePortal"
-            // and "miniPortal" but are abbreviated to "page" and "mini".
+            // We have to postfix with "Portal" because the portal names are "gridPortal"
+            // and "miniGridPortal" but are abbreviated to 'grid' and "mini".
             const portalBot = getPortalConfigBot(
                 sim.simulation,
                 `${portal}Portal`
@@ -791,13 +791,13 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 }
 
 function portalInfoForSim(sim: Simulation3D) {
-    let portal: 'page' | 'mini';
+    let portal: 'grid' | 'miniGrid';
     let gridScale: number;
     if (sim instanceof PlayerPageSimulation3D) {
-        portal = 'page';
+        portal = 'grid';
         gridScale = sim.pageConfig.gridScale;
     } else if (sim instanceof MiniSimulation3D) {
-        portal = 'mini';
+        portal = 'miniGrid';
         gridScale = sim.miniConfig.gridScale;
     }
     let inverseScale = 1 / gridScale;

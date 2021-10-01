@@ -29,13 +29,13 @@ export interface Simulation extends Initable {
     parsedId: SimulationIdParseSuccess;
 
     /**
-     * Gets whether the app is connected to the server but may
-     * or may not be synced to the serer.
+     * Gets whether the app is connected to the inst but may
+     * or may not be synced to the inst.
      */
     isOnline: boolean;
 
     /**
-     * Gets whether the app is synced to the server.
+     * Gets whether the app is synced to the inst.
      */
     isSynced: boolean;
 
@@ -61,7 +61,7 @@ export interface Simulation extends Initable {
     watcher: BotWatcher;
 
     /**
-     * Gets the manager in charge of the server connection status.
+     * Gets the manager in charge of the inst connection status.
      */
     connection: ConnectionManager;
 

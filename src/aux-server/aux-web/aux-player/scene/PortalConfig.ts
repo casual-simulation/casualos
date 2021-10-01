@@ -80,7 +80,7 @@ export class PortalConfig implements SubscriptionLike {
     }
 
     /**
-     * Gets the pannability of the mini portal camera that the simulation defines.
+     * Gets the pannability of the miniGridPortal camera that the simulation defines.
      */
     get pannable() {
         if (this._pannable != null) {
@@ -135,7 +135,7 @@ export class PortalConfig implements SubscriptionLike {
     }
 
     /**
-     * Gets if rotation is allowed in the mini portal that the simulation defines.
+     * Gets if rotation is allowed in the miniGridPortal that the simulation defines.
      */
     get rotatable() {
         if (this._rotatable != null) {
@@ -146,7 +146,7 @@ export class PortalConfig implements SubscriptionLike {
     }
 
     /**
-     * Gets if zooming is allowed in the mini portal that the simulation defines.
+     * Gets if zooming is allowed in the miniGridPortal that the simulation defines.
      */
     get zoomable() {
         if (this._zoomable != null) {

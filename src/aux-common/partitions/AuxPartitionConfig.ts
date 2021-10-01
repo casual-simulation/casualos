@@ -308,9 +308,9 @@ export interface BotPartitionConfig extends PartitionConfigBase {
     host: string;
 
     /**
-     * The server that should be used from the host.
+     * The instance that should be used from the host.
      */
-    server: string;
+    inst: string;
 }
 
 /**
@@ -320,9 +320,9 @@ export interface SearchPartitionClientConfig extends PartitionConfigBase {
     type: 'bot_client';
 
     /**
-     * The server that should be used.
+     * The instance that should be used.
      */
-    server: string;
+    inst: string;
 
     /**
      * The client that the partition should connect with.

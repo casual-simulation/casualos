@@ -1,5 +1,66 @@
 # CasualOS Changelog
 
+## V2.0.11
+
+#### Date: 10/1/2021
+
+### :boom: Breaking Changes
+
+-   Renamed `server` to `inst`.
+    -   This means that you should now `configBot.tags.inst` instead of `configBot.tags.server`.
+    -   It also means that you now should go to `https://casualos.com?inst=my-aux` instead of `https://casualos.com?server=my-aux`.
+    -   CasualOS will automatically replace `server` with `inst` on the first load so old links will continue to work.
+-   Renamed `pagePortal` to `gridPortal`
+    -   CasualOS will automatically replace `pagePortal` with `gridPortal` on first load (so old links will continue to work) but any scripts that change `pagePortal` will need to be updated to change `gridPortal`.
+    -   `pagePortal` on the `configBot` should now be `gridPortal`.
+    -   `pagePortalBot` is now `gridPortalBot`.
+    -   Some functions now should reference the bot portal instead of the page portal:
+        -   `os.getCameraPosition('page')` -> `os.getCameraPosition('grid')`
+        -   `os.getCameraRotation('page')` -> `os.getCameraRotation('grid')`
+        -   `os.getFocusPoint('page')` -> `os.getFocusPoint('grid')`
+        -   `os.getPortalDimension('page')` -> `os.getPortalDimension('grid')`
+    -   `@onPortalChanged` now uses `gridPortal` for `that.portal`.
+-   Renamed `miniPortal` to `miniGridPortal`
+    -   `miniPortal` on the `configBot` should now be `miniGridPortal`.
+    -   `miniPortalBot` should now be `miniGridPortalBot`.
+    -   Some functions now should reference the bot portal instead of the page portal:
+        -   `os.getCameraPosition('mini')` -> `os.getCameraPosition('miniGrid')`
+        -   `os.getCameraRotation('mini')` -> `os.getCameraRotation('miniGrid')`
+        -   `os.getFocusPoint('mini')` -> `os.getFocusPoint('miniGrid')`
+        -   `os.getPortalDimension('mini')` -> `os.getPortalDimension('miniGrid')`
+    -   `@onPortalChanged` now uses `miniGridPortal` for `that.portal`.
+-   Renamed some functions:
+    -   `os.downloadServer()` -> `os.downloadInst()`
+    -   `os.loadServer()` -> `os.loadInst()`
+    -   `os.unloadServer()` -> `os.unloadInst()`
+    -   `os.getCurrentServer()` -> `os.getCurrentInst()`
+    -   `server.remotes()` -> `os.remotes()`
+    -   `server.serverRemoteCount()` -> `os.remoteCount()`
+    -   `server.servers()` -> `os.instances()`
+    -   `server.serverStatuses()` -> `os.instStatuses()`
+    -   `server.restoreHistoryMarkToServer()` -> `server.restoreHistoryMarkToInst()`.
+    -   Note that some functions have moved to the `os` namespace from the `server` namespace. This is because most `server` functions do not work on CasualOS.com and are only designed to work with a server-based system (which CasualOS.com is not). To clarify this, functions that work all the time are now in the `os` namespace while the others are in the `server` namespace.
+-   Renamed several listen tags:
+    -   `@onServerJoined` -> `@onInstJoined`
+    -   `@onServerLeave` -> `@onInstLeave`
+    -   `@onServerStreaming` -> `@onInstStreaming`
+    -   `@onServerStreamLost` -> `@onInstStreamLost`
+    -   `@onServerAction` -> `@onAnyAction`
+
+### :rocket: Improvements
+
+-   Updated the Privacy Policy, Terms of Service, and Acceptable Use Policy.
+-   Changed the meetPortal to use a custom Jitsi deployment.
+-   Improved `os.enablePointOfView(center?)` to take an additional argument that determines whether to use the device IMU to control the camera rotation while in POV mode.
+    -   The new function signature is `os.enablePointOfView(center?, imu?)`.
+    -   e.g. `os.enablePointOfView(undefined, true)` will enable using the IMU for controlling the camera rotation.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where zooming on menu bots would trigger the browser-provided zoom functionality.
+-   Fixed an issue where copying an array from one tag to another tag caused CasualOS to break.
+-   Fixed an issue where editing a script via the sheet portal cells would temporarily break the code editor.
+
 ## V2.0.10
 
 #### Date: 9/21/2021

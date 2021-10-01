@@ -336,7 +336,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
             if (event.type === 'remote') {
                 if (event.event.type === 'get_remote_count') {
                     const action = <GetRemoteCountAction>event.event;
-                    this._client.deviceCount(action.server).subscribe(
+                    this._client.deviceCount(action.inst).subscribe(
                         (count) => {
                             this._onEvents.next([
                                 asyncResult(event.taskId, count),
@@ -361,7 +361,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                                                 (b) => !b.branch.startsWith('$')
                                             )
                                             .map((b) => ({
-                                                server: b.branch,
+                                                inst: b.branch,
                                                 lastUpdateTime:
                                                     b.lastUpdateTime,
                                             }))

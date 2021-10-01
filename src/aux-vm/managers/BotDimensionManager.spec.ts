@@ -183,10 +183,10 @@ describe('BotDimensionManager', () => {
                 });
             });
 
-            it('should not include user bots with pagePortal set to the dimension', () => {
+            it('should not include user bots with gridPortal set to the dimension', () => {
                 const user = createPrecalculatedBot('user', {
                     auxPlayerName: 'user',
-                    pagePortal: 'abc',
+                    gridPortal: 'abc',
                 });
                 const test = createPrecalculatedBot('test', {
                     auxDimensionConfig: 'abc',
@@ -215,7 +215,7 @@ describe('BotDimensionManager', () => {
                     updatedBots: [
                         {
                             bot: user,
-                            tags: new Set(['auxPlayerName', 'pagePortal']),
+                            tags: new Set(['auxPlayerName', 'gridPortal']),
                         },
                         {
                             bot: test,
@@ -531,12 +531,12 @@ describe('BotDimensionManager', () => {
 
                 const userFinal = createPrecalculatedBot('user', {
                     auxPlayerName: 'user',
-                    pagePortal: 'abc',
+                    gridPortal: 'abc',
                 });
                 indexEvents = index.updateBots([
                     {
                         bot: userFinal,
-                        tags: new Set(['pagePortal']),
+                        tags: new Set(['gridPortal']),
                     },
                 ]);
                 let [result, state] = processIndexEvents(
@@ -553,7 +553,7 @@ describe('BotDimensionManager', () => {
                     updatedBots: [
                         {
                             bot: userFinal,
-                            tags: new Set(['pagePortal']),
+                            tags: new Set(['gridPortal']),
                         },
                     ],
                 });
@@ -622,7 +622,7 @@ describe('BotDimensionManager', () => {
                 });
                 const user = createPrecalculatedBot('user', {
                     auxPlayerName: 'user',
-                    pagePortal: 'abc',
+                    gridPortal: 'abc',
                 });
                 let calc = createPrecalculatedContext([test]);
                 let indexEvents = index.addBots([test, user]);
@@ -637,12 +637,12 @@ describe('BotDimensionManager', () => {
 
                 const userFinal = createPrecalculatedBot('user', {
                     auxPlayerName: 'user',
-                    pagePortal: 'different',
+                    gridPortal: 'different',
                 });
                 indexEvents = index.updateBots([
                     {
                         bot: userFinal,
-                        tags: new Set(['pagePortal']),
+                        tags: new Set(['gridPortal']),
                     },
                 ]);
                 let [result, state] = processIndexEvents(
@@ -659,7 +659,7 @@ describe('BotDimensionManager', () => {
                     updatedBots: [
                         {
                             bot: userFinal,
-                            tags: new Set(['pagePortal']),
+                            tags: new Set(['gridPortal']),
                         },
                     ],
                 });
@@ -711,21 +711,21 @@ describe('BotDimensionManager', () => {
             let events = [] as BotDimensionsUpdate[];
 
             dimensions
-                .watchDimensions(['pagePortal'], () => true)
+                .watchDimensions(['gridPortal'], () => true)
                 .subscribe((e) => events.push(e));
 
             const test = createPrecalculatedBot('test', {
-                pagePortal: 'abc',
+                gridPortal: 'abc',
             });
             index.addBots([test]);
 
             const test2 = createPrecalculatedBot('test', {
-                pagePortal: '123',
+                gridPortal: '123',
             });
             index.updateBots([
                 {
                     bot: test2,
-                    tags: new Set(['pagePortal']),
+                    tags: new Set(['gridPortal']),
                 },
             ]);
 
@@ -735,7 +735,7 @@ describe('BotDimensionManager', () => {
                     events: [
                         {
                             type: 'dimension_added',
-                            dimensionTag: 'pagePortal',
+                            dimensionTag: 'gridPortal',
                             dimensionBot: test,
                             dimension: 'abc',
                             existingBots: [],
@@ -744,7 +744,7 @@ describe('BotDimensionManager', () => {
                     updatedBots: [
                         {
                             bot: test,
-                            tags: new Set(['pagePortal']),
+                            tags: new Set(['gridPortal']),
                         },
                     ],
                 },
@@ -753,14 +753,14 @@ describe('BotDimensionManager', () => {
                     events: [
                         {
                             type: 'dimension_added',
-                            dimensionTag: 'pagePortal',
+                            dimensionTag: 'gridPortal',
                             dimensionBot: test2,
                             dimension: '123',
                             existingBots: [],
                         },
                         {
                             type: 'dimension_removed',
-                            dimensionTag: 'pagePortal',
+                            dimensionTag: 'gridPortal',
                             dimensionBot: test2,
                             dimension: 'abc',
                         },
@@ -768,7 +768,7 @@ describe('BotDimensionManager', () => {
                     updatedBots: [
                         {
                             bot: test2,
-                            tags: new Set(['pagePortal']),
+                            tags: new Set(['gridPortal']),
                         },
                     ],
                 },

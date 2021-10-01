@@ -151,3 +151,7 @@
 .md-dialog.alert-dialog + .md-overlay.md-dialog-overlay {
     z-index: 14;
 }
+
+.md-tooltip {
+    z-index: 20;
+}

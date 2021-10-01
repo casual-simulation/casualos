@@ -138,7 +138,7 @@
             <html-modal></html-modal>
             <clipboard-modal></clipboard-modal>
             <upload-server-modal></upload-server-modal>
-            <imu-portal></imu-portal>
+            <imu-portal :streamImu="streamImu"></imu-portal>
         </load-app>
     </div>
 </template>

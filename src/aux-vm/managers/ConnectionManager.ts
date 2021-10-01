@@ -10,7 +10,7 @@ import {
 import { AuxVM } from '../vm/AuxVM';
 
 /**
- * Defines a class that manages the connection status to the server.
+ * Defines a class that manages the connection status to the inst.
  */
 export class ConnectionManager implements SubscriptionLike {
     private _vm: AuxVM;
@@ -66,8 +66,8 @@ export class ConnectionManager implements SubscriptionLike {
                 },
                 { synced: false, init: false }
             ),
-            skipWhile(a => !a.init),
-            map(a => a.synced),
+            skipWhile((a) => !a.init),
+            map((a) => a.synced),
             distinctUntilChanged(),
             shareReplay(1)
         );

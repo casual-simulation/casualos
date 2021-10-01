@@ -120,7 +120,7 @@ export class SetupChannelModule2 implements AuxModule2 {
                         remoteError(
                             {
                                 error: 'failure',
-                                exception: 'The server already exists.',
+                                exception: 'The inst already exists.',
                             },
                             {
                                 sessionId: event.playerId,

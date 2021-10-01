@@ -121,7 +121,7 @@ export class BotPartitionImpl implements BotPartition {
         config: BotPartitionConfig | SearchPartitionClientConfig
     ) {
         this.private = hasValue(config.private) ? config.private : true;
-        this._server = config.server;
+        this._server = config.inst;
         this._client = client;
         this.state = {};
     }
