@@ -264,6 +264,11 @@ export abstract class Game {
     abstract getUIHtmlElements(): HTMLElement[];
 
     /**
+     * Gets the HTML elements that the input should prevent browser zooming on.
+     */
+    abstract getUIZoomElements(): HTMLElement[];
+
+    /**
      * Finds the list of bot visualizers for the given bot ID.
      * First tries to match bots that have an exact match to the given ID.
      * If no bots are found, then it will search again but this time searching for bots

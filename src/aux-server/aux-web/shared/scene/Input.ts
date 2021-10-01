@@ -67,6 +67,7 @@ export class Input {
     events: Set<Event> = new Set();
 
     private _htmlElements: () => HTMLElement[];
+    private _zoomElements: () => HTMLElement[];
 
     get time() {
         return this._game.getTime();
@@ -74,6 +75,10 @@ export class Input {
 
     get htmlElements() {
         return this._htmlElements();
+    }
+
+    get zoomElements() {
+        return this._zoomElements();
     }
 
     /**
@@ -313,6 +318,8 @@ export class Input {
             game.gameView.gameView,
             ...game.getUIHtmlElements(),
         ];
+
+        this._zoomElements = () => [...game.getUIZoomElements()];
 
         this._mouseData = {
             leftButtonState: new InputState(),
@@ -1337,7 +1344,7 @@ export class Input {
     private _handleWheel(event: WheelEvent) {
         if (
             this.isMouseFocusingOnElement(this._game.gameView.gameView) ||
-            Input.isEventForAnyElement(event, this.htmlElements)
+            Input.isEventForAnyElement(event, this.zoomElements)
         ) {
             event.preventDefault();
         }
