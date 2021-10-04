@@ -203,7 +203,14 @@ export default class MeetPortal extends Vue {
             const widthRatio = portalSize.width / window.innerWidth;
 
             // Calculate whether to fill the rest of the height or width
-            if (widthRatio > heightRatio) {
+            if (widthRatio === 0 && heightRatio === 0) {
+                this.othersElement.style.height = null;
+                this.othersElement.style.width = null;
+                this.othersElement.style.left = null;
+                this.othersElement.style.right = null;
+                this.othersElement.style.top = null;
+                this.othersElement.style.bottom = null;
+            } else if (widthRatio > heightRatio) {
                 this.othersElement.style.height =
                     window.innerHeight - portalSize.height + 'px';
                 this.othersElement.style.width = null;
