@@ -7057,6 +7057,26 @@ describe('AuxRuntime', () => {
                 ),
             ]);
         });
+
+        it('should be able to get errors', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@throw new Error("abc");' }); d.shout('test'); return d.getErrors()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let errors = result.results[0];
+            expect(errors).toEqual([
+                {
+                    bot: expect.any(Object),
+                    tag: 'test',
+                    error: new Error('abc'),
+                },
+            ]);
+        });
     });
 });
 

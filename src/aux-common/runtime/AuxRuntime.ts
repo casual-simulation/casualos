@@ -310,6 +310,7 @@ export class AuxRuntime
             };
         }
         let allActions = [] as BotAction[];
+        let allErrors = [] as ScriptError[];
 
         let create = runtime._library.tagSpecificApi.create({
             bot: null,
@@ -341,6 +342,11 @@ export class AuxRuntime
             },
             getBotActions: () => {
                 return getAllActions().filter((a) => !isCommonAction(a));
+            },
+            getErrors: () => {
+                const errors = runtime._processUnbatchedErrors();
+                allErrors.push(...errors);
+                return allErrors;
             },
             create,
         };

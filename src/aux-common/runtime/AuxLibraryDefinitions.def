@@ -3577,6 +3577,11 @@ interface Debugger {
     getBotActions(): BotAction[];
 
     /**
+     * Gets the list of errors that occurred while bots were executing scripts in this debugger.
+     */
+    getErrors(): any[];
+
+    /**
      * Creates a new bot and returns it.
      * @param parent The bot that should be the parent of the new bot.
      * @param mods The mods which specify the new bot's tag values. If given a mod with no tags, then an error will be thrown.
