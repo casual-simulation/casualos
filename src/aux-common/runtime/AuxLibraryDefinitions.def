@@ -2825,6 +2825,16 @@ export interface CodeBundle {
     f: any;
 }
 
+/** 
+ * Defines an interface that contains options for a debugger.
+*/
+export interface DebuggerOptions {
+    /**
+     * Whether to use "real" UUIDs instead of predictable ones.
+     */
+    useRealUUIDs: boolean;
+}
+
 declare global {
 
     /**
@@ -3036,53 +3046,7 @@ declare global {
      *   responseShout: 'requestFinished'
      * });
      */
-    const web: {
-
-        /**
-         * Sends an HTTP GET request for the given URL using the given options.
-         * @param url The URL to request.
-         * @param options The options to use.
-         * 
-         * @example
-         * 
-         * // Send a HTTP GET request for https://www.example.com
-         * const result = await web.get('https://www.example.com');
-         */
-        get(url: string, options?: WebhookOptions): Promise<WebhookResult>;
-
-        /**
-         * Sends a HTTP POST request to the given URL with the given data.
-         *
-         * @param url The URL that the request should be sent to.
-         * @param data That that should be sent.
-         * @param options The options that should be included in the request.
-         *
-         * @example
-         * 
-         * // Send a HTTP POST request to https://www.example.com/api/createThing
-         * const result = await web.post('https://www.example.com/api/createThing', {
-         *   hello: 'world'
-         * });
-         * 
-         */
-        post(url: string, data?: any, options?: WebhookOptions): Promise<WebhookResult>;
-
-        /**
-         * Sends a web request based on the given options.
-         * @param options The options that specify where and what to send in the web request.
-         *
-         * @example
-         * 
-         * // Send a HTTP GET request to https://example.com
-         * const result = await web.hook({
-         *   method: 'GET',
-         *   url: 'https://example.com'
-         * });
-         * 
-         * os.toast(result);
-         */
-        hook(options: WebhookOptions): Promise<WebhookResult>;
-    };
+    const web: Web;
     
     /**
     * Creates a Universally Unique IDentifier (UUID).
@@ -3552,1544 +3516,2271 @@ declare global {
     /**
      * Defines a set of functions that relate to common OS operations.
      */
-    const os: {
-
-        /**
-         * Sleeps for time in ms.
-         * @param time Time in ms. 1 second is 1000ms.
-         */
-        sleep(time: number): Promise<void>;
-
-        /**
-         * Derermines whether the player is in the given dimension.
-         * @param dimension The dimension.
-         */
-        isInDimension(dimension: string): string;
-
-        /**
-         * Redirects the user to the given dimension.
-         * @param dimension The dimension to go to.
-         *
-         * @example
-         * // Send the player to the "welcome" dimension.
-         * os.goToDimension("welcome");
-         */
-        goToDimension(dimension: string): GoToDimensionAction;
-
-        /**
-         * Instructs CasualOS to open the built-in developer console.
-         * The dev console provides easy access to error messages and debug logs for formulas and actions.
-         */
-        openDevConsole(): OpenConsoleAction;
-
-        /**
-         * Changes the state that the given bot is in.
-         * @param bot The bot to change.
-         * @param stateName The state that the bot should move to.
-         * @param groupName The group of states that the bot's state should change in. (Defaults to "state")
-         */
-        changeState(bot: Bot, stateName: string, groupName?: string): void;
-
-        /**
-         * Enables Augmented Reality features.
-         */
-        enableAR(): EnableARAction;
-
-        /**
-         * Enables Virtual Reality features.
-         */
-        enableVR(): EnableVRAction;
-
-        /**
-         * Disables Augmented Reality features.
-         */
-        disableAR(): EnableARAction;
-
-        /**
-         * Disables Virtual Reality features.
-         */
-        disableVR(): EnableVRAction;
-
-        /**
-         * Enables Point-of-View mode.
-         */
-        enablePointOfView(center?: Point3D): EnablePOVAction;
-
-        /**
-         * Disables Point-of-View mode.
-         */
-        disablePointOfView(): EnablePOVAction;
-
-        /**
-         * Gets the dimension that is loaded into the given portal for the player.
-         * If no dimension is loaded, then null is returned.
-         * @param portal The portal type.
-         */
-        getPortalDimension(portal: PortalType): string;
-
-        /**
-         * Gets information about the version of AUX that is running.
-         */
-        version(): AuxVersion;
-
-        /**
-         * Gets information about the device that the player is using.
-         */
-        device(): AuxDevice;
-
-        /**
-         * Gets whether this device has enabled collaborative features.
-         */
-        isCollaborative(): boolean;
-
-        /**
-         * Gets the URL that AB1 should be bootstrapped from.
-         */
-        getAB1BootstrapURL(): string;
-
-        /**
-         * Gets whether the player is in the sheet dimension.
-         */
-        inSheet(): boolean;
-
-        /**
-         * Gets the 3D position of the player's camera.
-         * @param portal The portal that the camera position should be retrieved for.
-         */
-        getCameraPosition(portal?: 'grid' | 'miniGrid'): Point3D;
-
-        /**
-         * Gets the 3D rotation of the player's camera.
-         * @param portal The portal that the camera rotation should be retrieved for.
-         */
-        getCameraRotation(portal?: 'grid' | 'miniGrid'): Point3D;
-
-        /**
-         * Gets the 3D point that the player's camera is focusing on.
-         * @param portal The portal that the camera focus point should be retrieved for.
-         */
-        getFocusPoint(portal?: 'grid' | 'miniGrid'): Point3D;
-
-        /**
-         * Gets the 3D position of the player's pointer.
-         * @param pointer The position of the pointer to retrieve.
-         */
-        getPointerPosition(pointer?: 'mouse' | 'left' | 'right'): Point3D;
-
-        /**
-         * Gets the 3D rotation of the player's pointer.
-         * @param pointer The rotation of the pointer to retrieve.
-         */
-        getPointerRotation(pointer?: 'mouse' | 'left' | 'right'): Point3D;
-
-        /**
-         * Gets the 3D direction that the given pointer is pointing in.
-         * @param pointer The pointer to get the direction of.
-         */
-        getPointerDirection(pointer?: 'mouse' | 'left' | 'right'): Point3D;
-
-        /**
-         * Gets the input state of the given button on the mouse.
-         * @param controller The name of the controller that should be checked.
-         * @param button The name of the button on the controller.
-         */
-        getInputState(controller: 'mousePointer', button: 'left' | 'right' | 'middle'): null | 'down' | 'held';
-
-        /**
-         * Gets the input state of the given button on the left or right controller.
-         * @param controller The name of the controller that should be checked.
-         * @param button The name of the button on the controller.
-         */
-        getInputState(controller: 'leftPointer' | 'rightPointer', button: 'primary' | 'squeeze'): null | 'down' | 'held';
-
-        /**
-         * Gets the input state of the given button on the keyboard.
-         * @param controller The name of the controller that should be checked.
-         * @param button The name of the button on the controller.
-         */
-        getInputState(controller: 'keyboard', button: string): null | 'down' | 'held';
-
-        /**
-         * Gets the input state of the given touch.
-         * @param controller The name of the controller that should be checked.
-         * @param button The index of the finger.
-         */
-        getInputState(controller: 'touch', button: '0' | '1' | '2' | '3' | '4'): null | 'down' | 'held';
-
-        /**
-         * Gets the input state of the given button on the given controller.
-         * @param controller The name of the controller that should be checked.
-         * @param button The name of the button on the controller.
-         */
-        getInputState(controller: string, button: string): null | 'down' | 'held';
-
-        /**
-         * Gets the list of inputs that are currently available.
-         */
-        getInputList(): string[];
-
-        /**
-         * Shows a toast message to the user.
-         * @param message The message to show.
-         * @param duration The number of seconds the message should be on the screen. (Defaults to 2)
-         */
-        toast(message: string | number | boolean | object | Array<any> | null, duration?: number): ShowToastAction;
-
-        /**
-         * Play the given url's audio.
-         * Returns a promise that resolves with the sound ID when the sound starts playing.
-         * @param url The URL to play.
-         * 
-         * @example
-         * // Play a cow "moo"
-         * os.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
-         */
-        playSound(url: string): Promise<string>;
-
-        /**
-         * Preloads the audio for the given URL.
-         * Returns a promise that resolves when the audio has finished loading.
-         * @param url The URl to preload.
-         * 
-         * @example
-         * // Preload a cow "moo"
-         * os.bufferSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
-         */
-        bufferSound(url: string): Promise<void>;
-
-        /**
-         * Cancels the sound with the given ID.
-         * Returns a promise that resolves when the audio has been canceled.
-         * @param soundID The ID of the sound that is being canceled.
-         *
-         * @example
-         * // Play and cancel a sound
-         * const id = await os.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
-         * os.cancelSound(id);
-         */
-        cancelSound(soundID: number): Promise<void>;
-
-        /**
-         * Shows a QR Code that contains a link to a inst and dimension.
-         * @param inst The inst that should be joined. Defaults to the current inst.
-         * @param dimension The dimension that should be joined. Defaults to the current dimension.
-         */
-        showJoinCode(
-            inst?: string,
-            dimension?: string
-        ): ShowJoinCodeAction;
-
-        /**
-         * Requests that AUX enters fullscreen mode.
-         * Depending on the web browser, this may ask the player for permission.
-         */
-        requestFullscreenMode(): RequestFullscreenAction;
-
-        /**
-         * Exits fullscreen mode.
-         */
-        exitFullscreenMode(): ExitFullscreenAction;
-
-        /**
-         * Shares some information via the device's social sharing functionality.
-         * @param options The options.
-         */
-        share(options: ShareOptions): ShareAction;
-
-        /**
-         * Closes the circle wipe transition effect.
-         * @param options The options that should be used for the effect.
-         */
-        closeCircleWipe(options?: Partial<OpenCircleWipeOptions>): Promise<void>;
-
-        /**
-         * Opens the circle wipe transition effect.
-         * @param options The options that should be used for the effect.
-         */
-        openCircleWipe(options?: Partial<OpenCircleWipeOptions>): Promise<void>;
-
-        /**
-         * Adds the given list of snap targets to the current drag operation.
-         * @param targets The list of targets to add.
-         */
-        addDropSnap(...targets: SnapTarget[]): AddDropSnapTargetsAction;
-
-        /**
-         * Adds the given list of snap targets for when the specified bot is being dropped on.
-         * @param bot The bot.
-         * @param targets The targets that should be enabled when the bot is being dropped on.
-         */
-        addBotDropSnap(bot: Bot | string, ...targets: SnapTarget[]): AddDropSnapTargetsAction;
-
-        /**
-         * Enables custom dragging for the current drag operation.
-         * This will disable the built-in logic that moves the bot(s) and
-         * enables the "onDragging" and "onAnyBotDragging" listen tags.
-         */
-        enableCustomDragging(): EnableCustomDraggingAction;
-
-        /**
-         * Logs the given data to the developer console.
-         * @param args The data to log.
-         */
-        log(...args: any[]): void;
-
-        /**
-         * Gets the geolocation of the device.
-         * Returns a promise that resolves with the location.
-         */
-        getGeolocation(): Promise<GeoLocation>;
-
-        /**
-         * Shows some HTML to the user.
-         * @param html The HTML to show.
-         */
-        showHtml(html: string): ShowHtmlAction;
-
-        /**
-         * Hides the HTML from the user.
-         */
-        hideHtml(): HideHtmlAction;
-
-        /**
-         * Moves the camera to view the given bot.
-         * Returns a promise that resolves when the bot is focused.
-         * @param botOrPosition The bot, bot ID, or position to view.
-         * @param options The options to use for moving the camera.
-         */
-        focusOn(
-            botOrPosition: Bot | string | { x: number, y: number },
-            options: FocusOnOptions
-        ): Promise<void>;
-
-        /**
-         * Opens the QR Code Scanner.
-         * @param camera The camera that should be used.
-         */
-        openQRCodeScanner(camera?: CameraType): OpenQRCodeScannerAction;
-
-        /**
-         * Closes the QR Code Scanner.
-         */
-        closeQRCodeScanner(): OpenQRCodeScannerAction;
-
-        /**
-         * Shows the given QR Code.
-         * @param code The code to show.
-         */
-        showQRCode(code: string): ShowQRCodeAction;
-
-        /**
-         * Hides the QR Code.
-         */
-        hideQRCode(): ShowQRCodeAction;
-
-        /**
-         * Opens the barcode scanner.
-         * @param camera The camera that should be used.
-         */
-        openBarcodeScanner(camera?: CameraType): OpenBarcodeScannerAction;
-
-        /**
-         * Closes the barcode scanner.
-         */
-        closeBarcodeScanner(): OpenBarcodeScannerAction;
-
-        /**
-         * Shows the given barcode.
-         * @param code The code that should be shown.
-         * @param format The format that the barcode should be shown in.
-         */
-        showBarcode(code: string, format?: BarcodeFormat): ShowBarcodeAction;
-
-        /**
-         * Hides the barcode.
-         */
-        hideBarcode(): ShowBarcodeAction;
-
-        /**
-         * Shows the chat bar.
-         */
-        showChat(): ShowChatBarAction;
-
-        /**
-         * Shows the chat bar with the given placeholder.
-         * @param placeholder The placeholder text that should be in the chat bar.
-         */
-        showChat(placeholder: string): ShowChatBarAction;
-
-        /**
-         * Shows the chat bar with the given options.
-         * @param options The options that should be used to show the chat bar.
-         */
-        showChat(options: ShowChatOptions): ShowChatBarAction;
-
-        /**
-         * Shows the run bar.
-         * @param placeholderOrOptions The placeholder text or options. (optional)
-         */
-        showChat(
-            placeholderOrOptions?: string | ShowChatOptions
-        ): ShowChatBarAction;
-
-        /**
-         * Hides the run bar.
-         */
-        hideChat(): ShowChatBarAction;
-
-        /**
-         * Enqueues the given script to execute after this script is done running.
-         * @param script The script that should be executed.
-         */
-        run(script: string): Promise<any>;
-
-        /**
-         * Downloads the given data.
-         * @param data The data to download. Objects will be formatted as JSON before downloading.
-         * @param filename The name of the file that the data should be downloaded as.
-         * @param mimeType The MIME type that should be used. If not specified then it will be inferred from the filename.
-         */
-        download(
-            data: string | object | ArrayBuffer | Blob,
-            filename: string,
-            mimeType?: string
-        ): DownloadAction;
-
-        /**
-         * Downloads the given list of bots.
-         * @param bots The bots that should be downloaded.
-         * @param filename The name of the file that the bots should be downloaded as.
-         */
-        downloadBots(bots: Bot[], filename: string): DownloadAction;
-
-        /**
-         * Downloads all the shared bots in the inst.
-         */
-        downloadInst(): DownloadAction;
-
-        /**
-         * Shows the "Upload AUX File" dialog.
-         */
-        showUploadAuxFile(): ShowUploadAuxFileAction;
-
-        /**
-         * Shows the "Upload Files" dialog.
-         */
-        showUploadFiles(): Promise<UploadedFile[]>;
-
-        /**
-         * Loads the inst with the given ID.
-         * @param id The ID of the inst to load.
-         */
-        loadInst(id: string): LoadServerAction;
-
-        /**
-         * Unloads the inst with the given ID.
-         * @param id The ID of the inst to unload.
-         */
-        unloadInst(id: string): UnloadServerAction;
-
-        /**
-         * Imports the AUX from the given URL or JSON
-         * @param urlOrJSON The URL or JSON to load.
-         *                  If given JSON, then it will be imported as if it was a .aux file.
-         *                  If given a URL, then it will be downloaded and then imported.
-         */
-        importAUX(urlOrJSON: string): ImportAUXAction | ApplyStateAction;
-
-        /**
-         * Parses the given JSON or PDF data and returns the list of bots that were contained in it.
-         * @param jsonOrPdf The JSON or PDF data to parse.
-         */
-        parseBotsFromData(jsonOrPdf: string): Bot[];
-
-        /**
-         * Replaces the bot that the user is beginning to drag.
-         * Only works from inside a onDrag() or onAnyBotDrag() listen tag.
-         * @param bot The bot or mod that should be dragged instead of the original.
-         */
-        replaceDragBot(bot: Mod): ReplaceDragBotAction;
-
-        /**
-         * Sets the text stored in the player's clipboard.
-         * @param text The text to set to the clipboard.
-         */
-        setClipboard(text: string): SetClipboardAction;
-
-        /**
-         * Redirects the user to the given URL.
-         * @param url The URL to go to.
-         *
-         * @example
-         * // Send the player to wikipedia.
-         * os.goToURL("https://wikipedia.org");
-         */
-        goToURL(url: string): GoToURLAction;
-
-        /**
-         * Redirects the user to the given URL.
-         * @param url The URL to go to.
-         *
-         * @example
-         * // Open wikipedia in a new tab.
-         * os.openURL("https://wikipedia.org");
-         */
-        openURL(url: string): OpenURLAction;
-
-        /**
-         * Shows an input box to edit the given bot and tag.
-         *
-         * @param bot The bot or bot ID that should be edited.
-         * @param tag The tag which should be edited on the bot.
-         * @param options The options that indicate how the input box should be customized.
-         *
-         * @example
-         * // Show an input box for `this` bot's label.
-         * os.showInputForTag(this, "label", {
-         *            title: "Change the label",
-         *            type: "text"
-         * });
-         *
-         * @example
-         * // Show a color picker for the bot's color.
-         * os.showInputForTag(this, "color", {
-         *            title: "Change the color",
-         *            type: "color",
-         *            subtype: "advanced"
-         * });
-         */
-        showInputForTag(
-            bot: Bot | string,
-            tag: string,
-            options?: Partial<ShowInputOptions>
-        ): ShowInputForTagAction;
-
-        /**
-         * Shows an input box. Returns a promise that resolves with the new value.
-         *
-         * @param currentValue The value that the input box should be prefilled with.
-         * @param options The options that indicate how the input box should be customized.
-         *
-         * @example
-         * // Show an input box.
-         * const result = await os.showInput({
-         *    title: "Change the label",
-         *    type: "text"
-         * });
-         */
-        showInput(
-            currentValue?: any,
-            options?: Partial<ShowInputOptions>
-        ): Promise<string>;
-
-        /**
-         * Shows a checkout screen that lets the user purchase something.
-         *
-         * @param options The options for the payment box.
-         *
-         * @example
-         * // Show a checkout box for 10 cookies
-         * os.checkout({
-         *   productId: '10_cookies',
-         *   title: '10 Cookies',
-         *   description: '$5.00',
-         *   processingServer: 'cookies_checkout'
-         * });
-         *
-         */
-        checkout(options: CheckoutOptions): StartCheckoutAction;
-
-        /**
-         * Gets the dimension that the player is currently viewing.
-         */
-        getCurrentDimension(): string;
-
-        /**
-         * Gets the inst that the player is currently in.
-         */
-        getCurrentInst(): string;
-
-        /**
-         * Gets the distance that the player bot is from the given dimension.
-         *
-         * Returns 0 if the player bot is in the dimension, 1 if the dimension is in a portal, and -1 if neither are true.
-         *
-         * @param dimension The dimension to check for.
-         */
-        getDimensionalDepth(dimension: string): number;
-
-        /**
-         * Determines whether the player has the given bot in their miniGridPortal.
-         * @param bots The bot or bots to check.
-         */
-        hasBotInMiniPortal(bots: Bot | Bot[]): boolean;
-
-        /**
-         * Gets the current user's bot.
-         */
-        getBot(): Bot;
-
-        /**
-         * Gets the name of the dimension that is used for the current user's menu.
-         */
-        getMenuDimension(): string;
-
-        /**
-         * Gets the name of the dimension that is used for the current user's miniGridPortal.
-         */
-        getMiniPortalDimension(): string;
-
-        /**
-         * Registers a custom app for the given bot with the given options.
-         * Apps allow you add custom functionality to the CasualOS frontend and are deeply integrated into the CasualOS platform.
-         * 
-         * @param id The ID of the app.
-         * @param bot The bot that should be used to control the app.
-         */
-         registerApp(
-            id: string,
-            bot: Bot | string
-        ): Promise<void>;
-
-        /**
-         * Removes a custom app from the session.
-         * 
-         * @param id The ID of the app.
-         */
-        unregisterApp(
-            id: string
-        ): Promise<void>;
-
-        /**
-         * Sets the output of the given app.
-         * @param id The ID of the app.
-         * @param output The output that the app should display.
-         */
-        compileApp(id: string, output: any): SetAppOutputAction;
-
-        /**
-         * Requests that the current session be authorized and for a global bot to be created
-         * to contain information about the authorized user.
-         */
-        requestAuthBot(): Promise<Bot>;
-
-        /**
-         * Requests an auth token that does not expire and can be used to authorize other app bundles to publish records for this app bundle.
-         */
-        requestPermanentAuthToken(): Promise<string>;
-
-        /**
-         * Publishes a record that can be used across instances.
-         * @param recordDefinition The data that should be used to publish the record.
-         */
-        publishRecord(recordDefinition: PublishableRecord): Promise<void>;
-
-        /**
-         * Retrives a list of records using the given filters.
-         * @param filters The list of filters that should be used to retrieve some records.
-         */
-        getRecords(...filters: RecordFilters[]): Promise<GetRecordsResult>;
-
-        /**
-         * Requests that the given record be destroyed.
-         * @param record The record that should be deleted.
-         */
-        destroyRecord(record: DeletableRecord): Promise<void>;
-
-        /**
-         * Specifies that the given prefix should be interpreted as code.
-         * @param prefix The prefix that code tags should start with.
-         * @param options The options that should be used for the prefix.
-         */
-         registerTagPrefix(prefix: string, options?: RegisterPrefixOptions): Promise<void>;
-
-        /**
-         * Registers a custom executable with the given source code.
-         * Executables can contain arbitrary code that can run anywhere.
-         * As such, executables allow you to add custom functionality that is not deeply integrated into the CasualOS platform.
-         * 
-         * @param id The ID of the executable.
-         * @param bot The bot that should be used to configure the executable.
-         * @param tagOrSource The tag or source code that the executable should be created from.
-         * @param options The options for the executable.
-         */
-        registerExecutable(
-            id: string,
-            bot: Bot | string,
-            tagOrSource?: string,
-            options?: OpenCustomPortalOptions
-        ): Promise<void>;
-
-        /**
-         * Builds an executable bundle from the given tag.
-         * @param tag The tag that the bundle should be created from.
-         */
-        buildExecutable(tag: string): Promise<CodeBundle>;
-
-        /**
-         * Gets the number of devices that are viewing the current inst.
-         * @param inst The inst to get the statistics for. If omitted, then the current inst is used.
-         */
-        remoteCount(inst?: string): Promise<number>;
-
-         /**
-         * Gets the list of remote IDs that are connected to the inst.
-         */
-        remotes(): Promise<string[]>;
-
-        /**
-         * Sends an event to the server to setup a new inst if it does not exist.
-         * @param inst The inst.
-         * @param botOrMod The bot or mod that should be cloned into the new inst.
-         */
-        setupInst(inst: string, botOrMod?: Mod): Promise<void>;
-
-         /**
-         * Gets the total number of devices that are connected to the server.
-         */
-        totalRemoteCount(): Promise<number>;
-
-        /**
-         * Gets the list of instances that are on the server.
-         */
-        instances(): Promise<string[]>;
-
-        /**
-         * Gets the list of instances that are on the server.
-         */
-        instStatuses(): Promise<{
-            inst: string,
-            lastUpdateTime: Date
-        }[]>;
-    };
+    const os: Os;
 
     /**
      * Defines a set of functions that relate to common server operations.
      * Typically, these operations are instance-independent.
      */
-    const server: {
-        /**
-         * Sends an event to the server to setup a new inst if it does not exist.
-         * @param inst The inst.
-         * @param botOrMod The bot or mod that should be cloned into the new inst.
-         */
-        setupInst(inst: string, botOrMod?: Mod): Promise<void>;
-    
-        /**
-         * Sends an event to the server to export a pin (BCM) as input or output.
-         * @param pin The physical pin (BCM) number.
-         * @param mode The mode of the pin (BCM).
-         */
-        exportGpio(pin: number, mode: 'in' | 'out'): Promise<void>;
-
-        /**
-         * Sends an event to the server to unexport a pin (BCM).
-         * @param pin The physical pin (BCM) number.
-         */
-        unexportGpio(pin: number): Promise<void>;
-
-        /**
-         * Sends an event to the server to set a pin (BCM) as HIGH or LOW.
-         * @param pin The physical pin (BCM) number.
-         * @param value The mode of the pin (BCM).
-         */
-        setGpio(pin: number, value: 0 | 1): Promise<void>;
-
-        /**
-         * Sends an event to the server to get the value of a pin (BCM).
-         * @param pin The physical pin (BCM) number.
-         */
-        getGpio(pin: number): Promise<void>;
-
-        /**
-         * Sends an event to the server to initialize rpio with provided settings
-         * @param options An object containing values to initilize with.
-         * 
-         * @example
-         * // Initialize with default settings
-         * inst.rpioInit({
-         *   gpiomem: true,
-         *   mapping: 'physical',
-         *   mock: undefined,
-         *   close_on_exit: false
-         * }); 
-         */
-        rpioInit(options?: object): Promise<void>;
-
-        /**
-         * Shuts down rpio, unmaps, and clears everything.
-         */
-        rpioExit(): Promise<void>;
-
-        /**
-         * Sends an event to the server to open a pin as input or output and set its initial state.
-         * @param pin The physical pin number.
-         * @param mode The mode of the pin.
-         * @param options The initial state of the pin.
-         */
-        rpioOpen(pin: number, mode: 'INPUT' | 'OUTPUT' | 'PWM', options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'): Promise<void>;
-
-        /**
-         * Sends an event to the server to change the mode and optionally the state, of a previously opened pin.
-         * @param pin The physical pin number.
-         * @param mode The mode of the pin.
-         * @param options The initial state of the pin.
-         */
-        rpioMode(pin: number, mode: 'INPUT' | 'OUTPUT' | 'PWM', options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'): Promise<void>;
-
-        /**
-         * Sends an event to the server to read the value of a pin.
-         * @param pin The physical pin number.
-         */
-        rpioRead(pin: number): Promise<void>;
-
-        /**
-         * Sends an event to the server to read the pin's buffer.
-         * @param pin The physical pin number.
-         * @param buffer The buffer to read.
-         * @param length The length of the buffer.
-         */
-        rpioReadSequence(pin: number, buffer: number, length?: number): Promise<void>;
-
-        /**
-         * Sends an event to the server to write to a pin and set it as HIGH or LOW.
-         * @param pin The physical pin number.
-         * @param value The mode of the pin.
-         */
-        rpioWrite(pin: number, value: 'HIGH' | 'LOW'): Promise<void>;
-
-        /**
-         * Sends an event to the server to write to the pin's buffer.
-         * @param pin The physical pin number.
-         * @param buffer The buffer to write to.
-         * @param length The length of the buffer.
-         */
-        rpioWriteSequence(pin: number, buffer: number[], length?: number): Promise<void>;
-
-        /**
-         * Read the current state of the GPIO pad control for the specified GPIO group.
-         * On current models of Raspberry Pi there are three groups.
-         * 
-         * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
-         * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
-         * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
-         * 
-         * @param group The GPIO group to be read.
-         * @param bitmask The bitmask you want to check.
-         */
-        rpioReadpad(group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53', bitmask: 'slew' | 'hysteresis' | 'current'): Promise<void>;
-
-        /**
-         * Write `control` settings to the pad control for `group`.
-         * 
-         * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
-         * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
-         * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
-         * 
-         * @param group The GPIO group to be read.
-         * @param slew Slew rate unlimited if set to true.
-         * @param hysteresis Hysteresis is enabled if set to true.
-         * @param current Drive current set in mA. Must be an even number 2-16.
-         */
-        rpioWritepad(group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53', slew?: boolean, hysteresis?: boolean, current?: 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16): Promise<void>;
-
-        /**
-         * Configure the pin's internal pullup or pulldown resistors.
-         * @param pin The pin that you want to use.
-         * @param state Configure the pin's resistors as: 'PULL_OFF', 'PULL_DOWN' or 'PULL_UP'
-         */
-        rpioPud(pin: number, state: 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'): Promise<void>;
-
-        /**
-         * Watch `pin` for changes and execute the callback `cb()` on events.
-         * @param pin The pin that you want to use.
-         * @param cb The callback executed on events.
-         * @param options Optional. Used to watch for specific events.
-         */
-        rpioPoll(pin: number, cb: any, options?: 'POLL_LOW' | 'POLL_HIGH' | 'POLL_BOTH'): Promise<void>;
-
-        /**
-         * Sends an event to the server to close a pin and what state to leave it in.
-         * @param pin The physical pin number.
-         * @param options The state to leave the pin in upon closing.
-         */
-        rpioClose(pin: number, options: 'PIN_RESET' | 'PIN_PRESERVE'): Promise<void>;
-
-        /**
-         * Initializes i2c for use.
-         */
-        rpioI2CBegin(): Promise<void>;
-        
-        /**
-         * Configure the slave address.
-         * @param address The slave address to set.
-         */
-        rpioI2CSetSlaveAddress(address: number): Promise<void>;
-        
-        /**
-         * Set the baud rate. Directly set the speed in hertz.
-         * @param rate The i2c refresh rate in hertz.
-         */
-        rpioI2CSetBaudRate(rate: number): Promise<void>;
-        
-        /**
-         * Set the baud rate. Set it based on a divisor of the base 250MHz rate.
-         * @param rate The i2c refresh rate based on a divisor of the base 250MHz rate.
-         */
-        rpioI2CSetClockDivider(rate: number): Promise<void>;
-        
-        /**
-         * Read from the i2c slave.
-         * @param rx Buffer to read.
-         * @param length Optional. Length of the buffer to read.
-         */
-        rpioI2CRead(rx: number[], length?: number): Promise<void>;
-        
-        /**
-         * Write to the i2c slave.
-         * @param tx Buffer to write.
-         * @param length Optional. Length of the buffer to write.
-         */
-        rpioI2CWrite(tx: number[], length?: number): Promise<void>;
-        
-        /**
-         * 
-         */
-        // rpioI2CReadRegisterRestart(): Promise<void>;
-        
-        /**
-         * 
-         */
-        // rpioI2CWriteReadRestart(): Promise<void>;
-        
-        /**
-         * Turn off the i²c interface and return the pins to GPIO.
-         */
-        rpioI2CEnd(): Promise<void>;
-        
-        
-        /**
-         * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
-         * @param rate The PWM refresh rate.
-         */
-        rpioPWMSetClockDivider(rate: number): Promise<void>;
-        
-        /**
-         * This determines the maximum pulse width.
-         * @param pin The physical pin number.
-         * @param range The PWM range for a pin.
-         */
-        rpioPWMSetRange(pin: number, range: number): Promise<void>;
-        
-        
-        /**
-         * Set the width for a given pin.
-         * @param pin The physical pin number.
-         * @param width The PWM width for a pin.
-         */
-        rpioPWMSetData(pin: number, width: number): Promise<void>;
-        
-        /**
-         * Initiate SPI mode.
-         */
-        rpioSPIBegin(): Promise<void>;
-        
-        /**
-         * Choose which of the chip select / chip enable pins to control.
-         *  Value | Pin
-         *  ------|---------------------
-         *    0   | SPI_CE0 (24 / GPIO8)
-         *    1   | SPI_CE1 (26 / GPIO7)
-         *    2   | Both
-         * @param value The value correlating to pin(s) to control.
-         */
-        rpioSPIChipSelect(value: 0 | 1 | 2): Promise<void>;
-        
-        /**
-         * If your device's CE pin is active high, use this to change the polarity.
-         * *  Value | Pin
-         *  ------|---------------------
-         *    0   | SPI_CE0 (24 / GPIO8)
-         *    1   | SPI_CE1 (26 / GPIO7)
-         *    2   | Both
-         * @param value The value correlating to pin(s) to control.
-         * @param polarity Set the polarity it activates on. HIGH or LOW
-         */
-        rpioSPISetCSPolarity(value: 0 | 1 | 2, polarity: 'HIGH' | 'LOW'): Promise<void>;
-        
-        /**
-         * Set the SPI clock speed.
-         * @param rate It is an even divisor of the base 250MHz rate ranging between 0 and 65536.
-         */
-        rpioSPISetClockDivider(rate: number): Promise<void>;
-        
-        /**
-         * Set the SPI Data Mode.
-         *  Mode | CPOL | CPHA
-         *  -----|------|-----
-         *    0  |  0   |  0
-         *    1  |  0   |  1
-         *    2  |  1   |  0
-         *    3  |  1   |  1
-         * @param mode The SPI Data Mode.
-         */
-        rpioSPISetDataMode(mode: 0 | 1 | 2 | 3): Promise<void>;
-        
-        /**
-         * 
-         */
-        rpioSPITransfer(tx: number[]): Promise<void>;
-        
-        /**
-         * 
-         */
-        rpioSPIWrite(tx: number[]): Promise<void>;
-        
-        /**
-         * Release the pins back to general purpose use.
-         */
-        rpioSPIEnd(): Promise<void>;
-        
-        /**
-         * Establish the connection to the bluetooth serial device
-         * @param name A friendly device name. Example: Brush01
-         * @param device The device path. Example: /dev/rfcomm0
-         * @param mac The device MAC address. Example: AA:BB:CC:DD:EE
-         * @param channel The device channel. Example: 1
-         * @param options 
-         * {boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
-         * 
-         * {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
-         * 
-         * {number} [dataBits=8] Must be one of these: 8, 7, 6, or 5.
-         * 
-         * {number} [highWaterMark=65536] The size of the read and write buffers defaults to 64k.
-         * 
-         * {boolean} [lock=true] Prevent other processes from opening the port. Windows does not currently support `false`.
-         * 
-         * {number} [stopBits=1] Must be one of these: 1 or 2.
-         * 
-         * {string} [parity=none] Must be one of these: 'none', 'even', 'mark', 'odd', 'space'.
-         * 
-         * {boolean} [rtscts=false] flow control setting
-         * 
-         * {boolean} [xon=false] flow control setting
-         * 
-         * {boolean} [xoff=false] flow control setting
-         * 
-         * {boolean} [xany=false] flow control setting
-         * 
-         * {object=} bindingOptions sets binding-specific options
-         * 
-         * {Binding=} Binding The hardware access binding. `Bindings` are how Node-Serialport talks to the underlying system. Will default to the static property `Serialport.Binding`.
-         * 
-         * {number} [bindingOptions.vmin=1] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
-         * 
-         * {number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
-         */
-        serialConnect(name: string, device: string, mac: string, channel: number, options?: object, cb?: any): Promise<void>;
-        
-        /**
-         * Parses and returns the serial stream to the event tag 'onSerialData'.
-         * @param bot The id of the bot you want data streamed to. The bot needs the 'onSerialData' tag.
-         * @param name A friendly device name. Example: Brush01
-         */
-        serialStream(bot: string, name: string): Promise<void>;
-
-        /**
-         * Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
-         * @param name A friendly device name. Example: Brush01
-         */
-        serialOpen(name: string): Promise<void>;
-
-        /**
-         * Updates the SerialPort object with a new baudRate.
-         * @param name A friendly device name. Example: Brush01
-         * @param options {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
-         * @param cb
-         */
-        serialUpdate(name: string, options: object, cb?: any): Promise<void>;
-        
-        /**
-         * Writes the provided data/command to the device
-         * @param name A friendly device name. Example: Brush01
-         * @param data The data/command to send
-         * @param encoding The encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
-         * @param cb
-         * @param taskId The ID of the async task.
-         */
-        serialWrite(name: string, data: string|number[], encoding?: string, cb?: any): Promise<void>;
-        
-        /**
-         * Request a number of bytes from the SerialPort.
-         * @param name A friendly device name. Example: Brush01
-         * @param size Specify how many bytes of data to return, if available.
-         * @param taskId The ID of the async task.
-         */
-        serialRead(name: string, size?: number): Promise<void>;
-        
-        /**
-         * Closes an open connection. 
-         * @param name A friendly device name. Example: Brush01
-         * @param cb
-         * @param device The device path. Example: /dev/rfcomm0
-         * @param taskId The ID of the async task.
-         */
-        serialClose(name: string, device: string, cb?: any): Promise<void>;
-        
-        /**
-         * Flush discards data that has been received but not read, or written but not transmitted by the operating system. 
-         * @param name A friendly device name. Example: Brush01
-         * @param taskId The ID of the async task.
-         */
-        serialFlush(name: string): Promise<void>;
-        
-        /**
-         * Waits until all output data is transmitted to the serial port. After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device. 
-         * @param name A friendly device name. Example: Brush01
-         * @param taskId The ID of the async task.
-         */
-        serialDrain(name: string): Promise<void>;
-        
-        /**
-         * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
-         * @param name A friendly device name. Example: Brush01
-         */
-        serialPause(name: string): Promise<void>;
-        
-        /**
-         * Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
-         * @param name A friendly device name. Example: Brush01
-         */
-        serialResume(name: string): Promise<void>;
-        
-        /**
-         * Executes the given shell script on the server.
-         * @param script The shell script that should be executed.
-         */
-        shell(script: string): ShellAction;
-    
-        /**
-         * Backs up all the AUX instances to a Github Gist.
-         * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
-         */
-        backupToGithub(auth: string): BackupToGithubAction;
-    
-        /**
-         * Backs up all the AUX instances to a zip bot.
-         */
-        backupAsDownload(target: SessionSelector): BackupAsDownloadAction;
-
-        /**
-         * Gets the total number of devices that are connected to the server.
-         */
-        totalRemoteCount(): Promise<number>;
-
-        /**
-         * Gets the list of instances that are on the server.
-         */
-        instances(): Promise<string[]>;
-
-        /**
-         * Gets the list of instances that are on the server.
-         */
-        instStatuses(): Promise<{
-            inst: string,
-            lastUpdateTime: Date
-        }[]>;
-    
-        /**
-         * Loads a file from the server at the given path.
-         * @param path The path of the file.
-         * @param options The options.
-         */
-        loadFile(path: string, options?: LoadFileOptions): Promise<LoadFileResult>;
-    
-        /**
-         * Saves a file on the server at the given path.
-         * @param path The path of the file.
-         * @param options The options.
-         */
-        saveFile(path: string, data: string, options?: SaveFileOptions): Promise<SaveFileResult>;
-    
-        /**
-         * Finishes the checkout process by charging the payment fee to the user.
-         *
-         * @param options The options for finishing the checkout.
-         *
-         * @example
-         * // Finish the checkout process
-         * server.finishCheckout({
-         *   secretKey: 'YOUR_SECRET_API_KEY',
-         *   token: 'token from onCheckout',
-         *
-         *   // 1000 cents == $10.00
-         *   amount: 1000,
-         *   currency: 'usd',
-         *   description: 'Description for purchase'
-         * });
-         */
-        finishCheckout(options: FinishCheckoutOptions): FinishCheckoutOptions;
-    
-        /**
-         * Saves the current state as a history mark.
-         * @param options The options that describe what information the mark should contain.
-         *
-         * @example
-         * // Bookmark the current state with a message
-         * server.markHistory({
-         *   message: "Save recent changes"
-         * });
-         */
-        markHistory(options: MarkHistoryOptions): MarkHistoryAction;
-    
-        /**
-         * Loads the "history" space into the server.
-         */
-        browseHistory(): Promise<void>;
-    
-        /**
-         * Restores the current state to the given mark.
-         * @param mark The bot or bot ID that represents the mark that should be restored.
-         */
-        restoreHistoryMark(mark: Bot | string): Promise<void>;
-    
-        /**
-         * Restores the current state to the given mark.
-         * @param mark The bot or bot ID that represents the mark that should be restored.
-         * @param inst The inst that the mark should be restored to.
-         */
-        restoreHistoryMarkToInst(
-            mark: Bot | string,
-            inst: string
-        ): Promise<void>;
-    };
+    const server: Server;
 
     /**
      * Defines a set of functions that handle actions.
      */
-    const action: {
-        /**
-         * Performs the given action.
-         * @param action The action to perform.
-         */
-        perform(action: any): BotAction;
-    
-        /**
-         * Rejects the given action.
-         * @param action The action to reject.
-         */
-        reject(action: any): BotAction;
-    };
+    const action: Actions;
 
     /**
      * Defines a set of functions that manage admin space.
      */
-    const adminSpace: {
-        /**
-         * Unlocks admin space using the given password.
-         * Returns a promise that resolves when the space is unlocked.
-         * @param password The password to use to unlock admin space.
-         */
-        unlock(): Promise<void>;
-
-        /**
-         * Sets the password that should be used for admin space.
-         * @param oldPassword The old password for the admin space.
-         * @param newPassword The new password that should be used.
-         */
-        setPassword(oldPassword: string, newPassword: string): Promise<void>;
-    };
+    const adminSpace: AdminSpace;
 
     /**
      * Defines a set of functions that relate to common math operations.
      */
-    const math: {
-        /**
-         * Sums the given array of numbers and returns the result.
-         * If any value in the list is not a number, it will be converted to one.
-         * If the given value is not an array, then it will be converted to a number and returned.
-         *
-         * @param list The value that should be summed. If it is a list, then the result will be the sum of the items in the list.
-         *             If it is not a list, then the result will be the value converted to a number.
-         */
-        sum(list: any): number;
-
-        /**
-         * Calculates the average of the numbers in the given list and returns the result.
-         * @param list The value that should be averaged.
-         *             If it is a list, then the result will be sum(list)/list.length.
-         *             If it is not a list, then the result will be the value converted to a number.
-         */
-        avg(list: any): number;
-
-        /**
-         * Calculates the square root of the given number.
-         * @param value The number.
-         */
-        sqrt(value: any): number;
-
-        /**
-         * Calculates the absolute value of a number.
-         * @param number The number to get the absolute value of.
-         */
-        abs(number: any): number;
-
-        /**
-         * Calculates the standard deviation of the numbers in the given list and returns the result.
-         *
-         * @param list The value that the standard deviation should be calculated for.
-         */
-        stdDev(list: any): number;
-
-        /**
-         * Generates a random integer number between min and max.
-         * @param min The smallest allowed value.
-         * @param max The largest allowed value.
-         */
-        randomInt(min?: number, max?: number): number;
-
-        /**
-         * Generates a random number between min and max.
-         * @param min The smallest allowed value.
-         * @param max The largest allowed value.
-         */
-        random(min?: number, max?: number): number;
-
-        /**
-         * Gets the forward direction for the given rotation.
-         * @param pointerRotation The rotation that the pointer has represented in radians.
-         */
-        getForwardDirection(pointerRotation: Point3D): Point3D;
-
-        /**
-         * Finds the point at which the the given ray and ground plane intersect.
-         * Returns null if the ray does not intersect the ground plane.
-         * @param origin The origin of the ray.
-         * @param direction The direction that the ray is pointing.
-         */
-        intersectPlane(origin: Point3D, direction: Point3D): Point3D;
-
-        /**
-         * Gets the position offset for the given bot anchor point.
-         * This is useful for doing custom math using anchor points.
-         * @param anchorPoint The anchor point to get the offset for.
-         */
-        getAnchorPointOffset(anchorPoint: BotAnchorPoint): Point3D;
-
-        /**
-         * Adds the given vectors together and returns the result.
-         * @param vectors The vectors that should be added together.
-         */
-        addVectors<T>(...vectors: T[]): T;
-
-        /**
-         * Subtracts the given vectors from each other and returns the result.
-         * @param vectors The vectors that should be subtracted from each other.
-         */
-        subtractVectors<T>(...vectors: T[]): T;
-
-        /**
-         * Negates the given vector and returns the result.
-         * @param vector The vector that should be negated.
-         */
-        negateVector<T>(vector: T): T;
-
-        /**
-         * Normalizes the given vector and returns the result.
-         * @param vector The vector that should be normalized.
-         */
-        normalizeVector<T>(vector: T): T;
-
-        /**
-         * Calculates the length of the given vector.
-         * @param vector The vector to calculate the length of.
-         */
-        vectorLength<T>(vector: T): number;
-
-        /**
-         * Multiplies each component of the given vector by the given scale and returns the result.
-         * @param vector The vector that should be scaled.
-         * @param scale The number that the vector should be multiplied by.
-         */
-        scaleVector<T>(vector: T, scale: number): T;
-    };
+    const math: Math;
 
     /**
      * Defines a set of functions that are used to create and transform mods.
      */
-    const mod: {
-        /**
-         * Converts the given 3D point into a mod that sets the cameraPositionOffset tags.
-         * @param point The mod that represents the 3D point.
-         */
-        cameraPositionOffset(point: Partial<Point3D>): {
-            cameraPositionOffsetX: number,
-            cameraPositionOffsetY: number,
-            cameraPositionOffsetZ: number,
-        };
-
-        /**
-         * Converts the given 3D rotation into a mod that sets the cameraRotationOffset tags.
-         * @param rotation The mod that represents the 3D rotation.
-         */
-        cameraRotationOffset(rotation: Partial<Point3D>): {
-            cameraRotationOffsetX: number,
-            cameraRotationOffsetY: number,
-            cameraRotationOffsetZ: number,
-        };
-    };
+    const mod: ModFuncs;
 
     // @ts-ignore: Ignore redeclaration
-    const crypto: {
-        /**
-         * Calculates the SHA-256 hash of the given data.
-         * Returns the hexadecimal string of the hash.
-         * @param data The data that should be hashed.
-         */
-        sha256(...data: unknown[]): string;
+    const crypto: Crypto;
 
-        /**
-         * Calculates the SHA-512 hash of the given data.
-         * Returns the hexadecimal string of the hash.
-         * @param data The data that should be hashed.
-         */
-        sha512(...data: unknown[]): string;
+    /**
+     * Defines a set of experimental functions.
+     */
+    const experiment: Experiment;
 
-        /**
-         * Calculates the HMAC SHA-256 hash of the given data.
-         * HMAC is commonly used to verify that a message was created with a specific key.
-         * Returns the hexadecimal string of the hash.
-         * @param key The key that should be used to sign the message.
-         * @param data The data that should be hashed.
-         */
-        hmacSha256(key: string, ...data: unknown[]): string;
+    /**
+     * Defines a set of performance related functions.
+     */
+    const perf: Perf;
+}
 
-        /**
-         * Calculates the HMAC SHA-512 hash of the given data.
-         * HMAC is commonly used to verify that a message was created with a specific key.
-         * Returns the hexadecimal string of the hash.
-         * @param key The key that should be used to sign the message.
-         * @param data The data that should be hashed.
-         */
-        hmacSha512(key: string, ...data: unknown[]): string;
+interface Debugger {
+    /**
+     * Gets the list of actions that have been performed by bots in this debugger.
+     */
+    getAllActions(): BotAction[];
 
+    /**
+     * Gets the list of common actions that have been performed by bots in this debugger.
+     * Common actions are actions that don't directly change bots or bot tags.
+     */
+    getCommonActions(): BotAction[];
+
+     /**
+     * Gets the list of bot actions that have been performed by bots in this debugger.
+     * Bot actions are actions that directly create/destroy/update bots or bot tags.
+     */
+    getBotActions(): BotAction[];
+
+    /**
+     * Gets the list of errors that occurred while bots were executing scripts in this debugger.
+     */
+    getErrors(): any[];
+
+    /**
+     * Creates a new bot and returns it.
+     * @param parent The bot that should be the parent of the new bot.
+     * @param mods The mods which specify the new bot's tag values. If given a mod with no tags, then an error will be thrown.
+     * @returns The bot(s) that were created.
+     *
+     * @example
+     * // Create a red bot without a parent.
+     * let redBot = create(null, { "color": "red" });
+     *
+     * @example
+     * // Create a red bot and a blue bot with `this` as the parent.
+     * let [redBot, blueBot] = create(this, [
+     *    { "color": "red" },
+     *    { "color": "blue" }
+     * ]);
+     *
+     */
+     create(...mods: Mod[]): Bot | Bot[];
+
+     /**
+      * Destroys the given bot, bot ID, or list of bots.
+      * @param bot The bot, bot ID, or list of bots to destroy.
+      */
+     destroy(bot: Bot | string | Bot[]): void;
+ 
+     /**
+      * Removes tags from the given list of bots.
+      * @param bot The bot, bot ID, or list of bots that should have their matching tags removed.
+      * @param tagSection The tag section which should be removed from the bot(s). If given a string, then all the tags
+      *                   starting with the given name will be removed. If given a RegExp, then all the tags matching the regex will be removed.
+      *
+      * @example
+      * // Remove tags named starting with "abc" from the `this` bot.
+      * removeTags(this, "abc");
+      *
+      * @example
+      * // Remove tags named "hello" using a case-insensitive regex from the `this` bot.
+      * removeTags(this, /^hello$/gi);
+      *
+      */
+     removeTags(bot: Bot | Bot[], tagSection: string | RegExp): void;
+ 
+     /**
+      * Renames the given original tag to the given new tag using the given bot or list of bots.
+      * @param bot The bot or list of bots that the tag should be renamed on.
+      * @param originalTag The original tag to rename.
+      * @param newTag The new tag name.
+      * 
+      * @example
+      * // Rename the "abc" tag to "def"
+      * renameTag(this, "abc", "def")
+      */
+     renameTag(bot: Bot | Bot[], originalTag: string, newTag: string): void;
+ 
+     /**
+      * Gets the ID from the given bot.
+      * @param bot The bot or string.
+      */
+     getID(bot: Bot | string): string;
+ 
+     /**
+      * Gets JSON for the given data.
+      * @param data The data.
+      */
+     getJSON(data: any): string;
+ 
+     /**
+      * Shouts the given events in order until a bot returns a result.
+      * Returns the result that was produced or undefined if no result was produced.
+      * @param eventNames The names of the events to shout.
+      * @param arg The argument to shout.
+      */
+      priorityShout(eventNames: string[], arg?: any): any;
+ 
+     /**
+      * Asks every bot in the inst to run the given action.
+      * In effect, this is like shouting to a bunch of people in a room.
+      *
+      * @param name The event name.
+      * @param arg The optional argument to include in the shout.
+      * @returns Returns a list which contains the values returned from each script that was run for the shout.
+      *
+      * @example
+      * // Tell every bot to reset themselves.
+      * shout("reset()");
+      *
+      * @example
+      * // Ask every bot for its name.
+      * const names = shout("getName()");
+      *
+      * @example
+      * // Tell every bot say "Hi" to you.
+      * shout("sayHi()", "My Name");
+      */
+     shout(name: string, arg?: any): any[];
+ 
+     /**
+      * Asks the given bots to run the given action.
+      * In effect, this is like whispering to a specific set of people in a room.
+      *
+      * @param bot The bot(s) to send the event to.
+      * @param eventName The name of the event to send.
+      * @param arg The optional argument to include.
+      * @returns Returns a list which contains the values returned from each script that was run for the shout.
+      *
+      * @example
+      * // Tell all the red bots to reset themselves.
+      * whisper(getBots("#color", "red"), "reset()");
+      *
+      * @example
+      * // Ask all the tall bots for their names.
+      * const names = whisper(getBots("scaleZ", height => height >= 2), "getName()");
+      *
+      * @example
+      * // Tell every friendly bot to say "Hi" to you.
+      * whisper(getBots("friendly", true), "sayHi()", "My Name");
+      */
+     whisper(
+         bot: (Bot | string)[] | Bot | string,
+         eventName: string,
+         arg?: any
+     ): any;
+ 
+     /**
+      * Shouts the given event to every bot in every loaded simulation.
+      * @param eventName The name of the event to shout.
+      * @param arg The argument to shout. This gets passed as the `that` variable to the other scripts.
+      */
+     superShout(eventName: string, arg?: any): SuperShoutAction;
+ 
+     /**
+      * Watches the given bot or list of bots for changes and calls the given callback when the bot is changed or destroyed.
+      * Returns a number that can be passed to clearWatchBot() to stop watching the bot.
+      * @param bot The bot or list of bots that should be watched for changes.
+      * @param callback The function that should be called when the bot is changed or destroyed.
+      */
+     watchBot(bot: (Bot | string)[] | Bot | string, callback: () => void): number;
+ 
+     /**
+      * Cancels watching a bot using the given ID number that was returned from watchBot().
+      * @param watchId The ID number that should be used to cancel the watch callbacks.
+      */
+     clearWatchBot(watchId: number): void;
+ 
+     /**
+      * Watches the given portal for when bots are added and removed from it and calls the given function.
+      * Returns a number that can be passed to clearWatchPortal() to stop watching the portal.
+      * @param portalId The ID of the portal to watch.
+      * @param callback The function that should be called when the portal changes.
+      */
+     watchPortal(portalId: string, callback: () => void): number;
+ 
+     /**
+      * Cancels watching a portal using the given ID number that was returned from watchPortal().
+      * @param watchId The ID number that should be used to cancel the watch callbacks.
+      */
+     clearWatchPortal(watchId: number): void;
+ 
+     /**
+      * Sends a web request based on the given options.
+      * @param options The options that specify where and what to send in the web request.
+      *
+      * @example
+      * // Send a HTTP POST request to https://www.example.com/api/createThing
+      * webhook({
+      *   method: 'POST',
+      *   url: 'https://www.example.com/api/createThing',
+      *   data: {
+      *     hello: 'world'
+      *   },
+      *   responseShout: 'requestFinished'
+      * });
+      */
+     web: Web;
+     
+     /**
+     * Creates a Universally Unique IDentifier (UUID).
+     */
+     uuid(): string;
+ 
+     /**
+      * Animates the given tag. Returns a promise when the animation is finished.
+      * @param bot The bot or list of bots that should be animated.
+      * @param tag The tag that should be animated.
+      * @param options The options for the animation. If given null, then any running animations for the given tag will be canceled.
+      */
+      animateTag(bot: Bot | (Bot | string)[] | string, tag: string, options: AnimateTagFunctionOptions): Promise<void>;
+ 
+      /**
+       * Animates the given tags. Returns a promise when the animation is finished.
+       * @param bot The bot or list of bots that should be animated.
+       * @param options The options for the animation. fromValue should be an object which contains the starting tag values and toValue should be an object that contains the ending tag values.
+       */
+       animateTag(bot: Bot | (Bot | string)[] | string, options: AnimateTagFunctionOptions): Promise<void>;
+      /**
+       * Animates the given tag. Returns a promise when the animation is finished.
+       * @param bot The bot or list of bots that should be animated.
+       * @param tag The tag that should be animated.
+       * @param options The options for the animation.
+       */
+      animateTag(
+          bot: Bot | (Bot | string)[] | string,
+          tagOrOptions: string | AnimateTagFunctionOptions,
+          options?: AnimateTagFunctionOptions
+      ): Promise<void>;
+ 
+     /**
+      * Cancels the animations that are running on the given bot(s).
+      * @param bot The bot or list of bots that should cancel their animations.
+      * @param tag The tag that the animations should be canceld for. If omitted then all tags will be canceled.
+      */
+     clearAnimations(bot: Bot | (Bot | string)[] | string, tag?: string): void;
+ 
+     /**
+      * Sends the given operation to all the devices that matches the given selector.
+      * In effect, this allows users to send each other events directly without having to edit tags.
+      *
+      * Note that currently, devices will only accept events sent from the inst.
+      *
+      * @param event The event that should be executed in the remote session(s).
+      * @param selector The selector that indicates where the event should be sent. The event will be sent to all sessions that match the selector.
+      *                 For example, specifying a username means that the event will be sent to every active session that the user has open.
+      *                 If a selector is not specified, then the event is sent to the inst.
+      * @param allowBatching Whether to allow batching this remote event with other remote events. This will preserve ordering between remote events but may not preserve ordering
+      *                      with respect to other events. Defaults to true.
+      *
+      * @example
+      * // Send a toast to all sessions for the username "bob"
+      * remote(os.toast("Hello, Bob!"), { username: "bob" });
+      */
+     remote(
+         event: BotAction,
+         selector?: SessionSelector | string | (SessionSelector | string)[],
+         allowBatching?: boolean
+     ): RemoteAction | RemoteAction[];
+ 
+     /**
+      * Sends an event to the given remote or list of remotes.
+      * The other remotes will recieve an onRemoteData shout for this whisper.
+      * 
+      * In effect, this allows remotes to communicate with each other by sending arbitrary events.
+      * 
+      * @param remoteId The ID of the other remote or remotes to whisper to.
+      * @param name The name of the event.
+      * @param arg The optional argument to include in the event.
+      */
+     sendRemoteData(remoteId: string | string[], name: string, arg?: any): RemoteAction | RemoteAction[];
+ 
+     /**
+      * Gets the first bot which matches all of the given filters.
+      * @param filters The filter functions that the bot needs to match.
+      * @returns The first bot that matches all the given filters.
+      *
+      * @example
+      * // Get a bot by the "name" tag.
+      * let bot = getBot(byTag("name", "The bot's name"));
+      */
+     getBot(...filters: BotFilterFunction[]): Bot;
+ 
+     /**
+      * Gets the first bot ordered by ID which matches the given tag and filter.
+      * @param tag The tag the bot should match.
+      * @param filter The optional value or filter the bot should match.
+      *
+      * @example
+      * // Get a bot with the "name" tag.
+      * // Shorthand for getBot(byTag("name"))
+      * let bot = getBot("name");
+      *
+      * @example
+      * // Get a bot by the "name" tag.
+      * // Shorthand for getBot(byTag("name", "The bot's name"))
+      * let bot = getBot("name", "The bot's name");
+      *
+      * @example
+      * // Get a bot where the "name" tag starts with the letter "N".
+      * // Shorthand for getBot(byTag("name", name => name.startsWith("N")))
+      * let bot = getBot("name", name => name.startsWith("N"));
+      */
+     getBot(tag: string, filter?: any | TagFilter): Bot;
+ 
+     /**
+      * Gets the first bot ordered by ID.
+      * @returns The bot with the first ID when sorted alphebetically.
+      *
+      * @example
+      * let firstBot = getBot();
+      */
+     getBot(): Bot;
+ 
+     /**
+      * Gets the list of bots which match all of the given filters.
+      * @param filters The filter functions that the bots need to match.
+      * @returns A list of bots that match all the given filters. If no bots match then an empty list is returned.
+      *
+      * @example
+      * // Get all the bots that are red.
+      * let bots = getBots(byTag("color", "red"));
+      */
+     getBots(...filters: ((bot: Bot) => boolean)[]): Bot[];
+ 
+     /**
+      * Gets the list of bots that have the given tag matching the given filter value.
+      * @param tag The tag the bot should match.
+      * @param filter The value or filter the bot should match.
+      *
+      * @example
+      * // Get all the bots that are red.
+      * // Shorthand for getBots(byTag("color", "red"))
+      * let bots = getBots("color", "red");
+      */
+     getBots(tag: string, filter?: any | TagFilter): Bot[];
+ 
+     /**
+      * Gets a list of all the bots.
+      *
+      * @example
+      * // Gets all the bots in the inst.
+      * let bots = getBots();
+      */
+     getBots(): Bot[];
+ 
+     /**
+      * Gets the list of tag values from bots that have the given tag.
+      * @param tag The tag.
+      * @param filter THe optional filter to use for the values.
+      */
+     getBotTagValues(tag: string, filter?: TagFilter): any[];
+ 
+     /**
+      * Creates a filter function that checks whether bots have the given tag and value.
+      * @param tag The tag to check.
+      * @param filter The value or filter that the tag should match.
+      *
+      * @example
+      * // Find all the bots with a "name" of "bob".
+      * let bobs = getBots(byTag("name", "bob"));
+      *
+      * @example
+      * // Find all bots with a height larger than 2.
+      * let bots = getBots(byTag("height", height => height > 2));
+      *
+      * @example
+      * // Find all the bots with the "test" tag.
+      * let bots = getBots(byTag("test"));
+      */
+     byTag(tag: string, filter?: TagFilter): BotFilterFunction;
+ 
+     /**
+      * Creates a filter function that checks whether bots have the given ID.
+      * @param id The ID to check for.
+      * 
+      * @example
+      * // Find all the bots with the ID "bob".
+      * let bobs = getBots(byId("bob"));
+      */
+     byID(id: string): IDRecordFilter;
+ 
+     /**
+      * Creates a filter function that checks whether bots match the given mod.
+      * @param mod The mod that bots should be checked against.
+      *
+      * @example
+      * // Find all the bots with a height set to 1 and color set to "red".
+      * let bots = getBots(byMod({
+      *      "color": "red",
+      *      height: 1
+      * }));
+      */
+     byMod(mod: Mod): BotFilterFunction;
+ 
+     /**
+      * Creates a filter function that checks whether bots are in the given dimension.
+      * @param dimension The dimension to check.
+      * @returns A function that returns true if the given bot is in the dimension and false if it is not.
+      *
+      * @example
+      * // Find all the bots in the "test" dimension.
+      * let bots = getBots(inDimension("test"));
+      */
+     inDimension(dimension: string): BotFilterFunction;
+ 
+     /**
+      * Creates a filter function that checks whether bots are at the given position in the given dimension.
+      * @param dimension The dimension that the bots should be in.
+      * @param x The X position in the dimension that the bots should be at.
+      * @param y The Y position in the dimension that the bots should be at.
+      * @returns A function that returns true if the given bot is at the given position and false if it is not.
+      *
+      * @example
+      * // Find all the bots at (1, 2) in the "test" dimension.
+      * let bots = getBots(atPosition("test", 1, 2));
+      */
+     atPosition(
+         dimension: string,
+         x: number,
+         y: number
+     ): BotFilterFunction;
+ 
+     /**
+      * Creates a filter function that checks whether bots were created by the given bot.
+      * @param bot The bot to determine weather the bots have been created by it or not.
+      * @returns A function that returns true if the bot was created by the given bot.
+      *
+      * @example
+      * // Find all the bots created by the yellow bot.
+      * let bots = getBots(byCreator(getBot('color','yellow')));
+      */
+     byCreator(bot: Bot | string): BotFilterFunction;
+ 
+     /**
+      * Creates a filter function that checks whether bots are in the same stack as the given bot.
+      * @param bot The bot that other bots should be checked against.
+      * @param dimension The dimension that other bots should be checked in.
+      * @returns A function that returns true if the given bot is in the same stack as the original bot.
+      *
+      * @example
+      * // Find all bots in the same stack as `this` in the "test" dimension.
+      * let bots = getBots(inStack(this, "test"));
+      *
+      */
+     inStack(bot: Bot, dimension: string): BotFilterFunction;
+ 
+     /**
+      * Creates a function that filters bots by whether they are in the given space.
+      * @param space The space that the bots should be in.
+      */
+     bySpace(space: string): BotFilterFunction;
+ 
+     /**
+      * Creates a function that filters bots by whether they are neighboring the given bot.
+      * @param bot The bot that other bots should be checked against.
+      * @param dimension The dimension that other bots should be checked in.
+      * @param direction The neighboring direction to check.
+      * @returns A function that returns true if the given bot is next to the original bot.
+      *
+      * @example
+      * // Find all bots in front of `this` bot in the "test" dimension.
+      * let bots = getBots(neighboring(this, "test", "front"));
+      */
+     neighboring(
+         bot: Bot,
+         dimension: string,
+         direction: 'front' | 'left' | 'right' | 'back'
+     ): BotFilterFunction;
+ 
+     /**
+      * Creates a function that filters bots by whether they match any of the given filters.
+      * @param filters The filter functions that a bot should be tested against.
+      *
+      * @example
+      * // Find all bots with the name "bob" or height 2.
+      * let bots = getBots(
+      *   either(
+      *     byTag("name", "bob"),
+      *     byTag("height", height => height === 2)
+      *   )
+      * );
+      */
+     either(...filters: BotFilterFunction[]): BotFilterFunction;
+ 
+     /**
+      * Creates a function that negates the result of the given function.
+      * @param filter The function whose results should be negated.
+      *
+      * @example
+      * // Find all bots that are not in the "test" dimension.
+      * let bots = getBots(not(inDimension("test")));
+      */
+     not(filter: BotFilterFunction): BotFilterFunction;
+ 
+     /**
+      * Creates a record filter that retrieves records created by the given Auth ID.
+      * @param authID The ID of the creator of the records.
+      */
+      byAuthID(authID: string): AuthIdRecordFilter;
+ 
+     /**
+      * Creates a record filter that retrieves records with the given address.
+      * @param address The address that the record was stored at.
+      */
+      byAddress(address: string): AddressRecordFilter;
+ 
+     /**
+      * Creates a record filter that retrieves records with the given address.
+      * @param token The auth token that should be used to authenticate the getRecords() request.
+      */
+     withAuthToken(token: string): AuthTokenRecordFilter;
+ 
+     /**
+      * Creates a record filter that retrieves records with the given prefix in their address.
+      * @param prefix The prefix that should be matched to record addresses.
+      */
+     byPrefix(prefix: string): PrefixRecordFilter;
+ 
+     /**
+      * Gets the value of the given tag stored in the given bot.
+      * @param bot The bot.
+      * @param tag The tag.
+      *
+      * @example
+      * // Get the "color" tag from the `this` bot.
+      * let color = getTag(this, "color");
+      */
+     getTag(bot: Bot, ...tags: string[]): any;
+ 
+     /**
+      * Sets the value of the given tag stored in the given bot.
+      * @param bot The bot.
+      * @param tag The tag to set.
+      * @param value The value to set.
+      *
+      * @example
+      * // Set a bot's color to "green".
+      * setTag(this, "color", "green");
+      */
+     setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any;
+ 
+     /**
+      * Sets the value of the given tag mask in the given bot.
+      * @param bot The bot.
+      * @param tag The tag to set.
+      * @param value The value to set.
+      * @param space The space that the tag mask should be placed in. If not specified, then the tempLocal space will be used.
+      * 
+      * @example
+      * // Set a bot's color to "green".
+      * setTagMask(this, "color", "green")
+      */
+     setTagMask(bot: Bot | Bot[], tag: string, value: any, space?: BotSpace): any;
+ 
+     /**
+      * Clears the tag masks from the given bot.
+      * @param bot The bot or bots that the tag masks should be cleared from.
+      * @param space The space that the tag masks should be cleared from. If not specified, then all spaces will be cleared.
+      */
+     clearTagMasks(bot: Bot | Bot[], space?: BotSpace): void;
+ 
+     /**
+      * Inserts the given text into the given tag at the given index.
+      * Returns the resulting raw tag value.
+      * @param bot The bot that should be edited.
+      * @param tag The tag that should be edited.
+      * @param index The index that the text should be inserted at.
+      * @param text The text that should be inserted.
+      */
+     insertTagText(
+         bot: Bot,
+         tag: string,
+         index: number,
+         text: string
+     ): string;
+ 
+     /**
+      * Inserts the given text into the given tag and space at the given index.
+      * Returns the resulting raw tag mask value.
+      * @param bot The bot that should be edited.
+      * @param tag The tag that should be edited.
+      * @param index The index that the text should be inserted at.
+      * @param text The text that should be inserted.
+      * @param space The space that the tag exists in. If not specified then the tempLocal space will be used.
+      */
+     insertTagMaskText(
+         bot: Bot,
+         tag: string,
+         index: number,
+         text: string,
+         space?: BotSpace
+     ): string;
+ 
+     /**
+      * Deletes the specified number of characters from the given tag.
+      * Returns the resulting raw tag value.
+      * @param bot The bot that should be edited.
+      * @param tag The tag that should be edited.
+      * @param index The index that the text should be deleted at.
+      * @param count The number of characters to delete.
+      */
+     deleteTagText(
+         bot: Bot,
+         tag: string,
+         index: number,
+         count: number
+     ): string;
+ 
+     /**
+      * Deletes the specified number of characters from the given tag mask.
+      * Returns the resulting raw tag mask value.
+      * @param bot The bot that should be edited.
+      * @param tag The tag that should be edited.
+      * @param index The index that the text should be deleted at.
+      * @param count The number of characters to delete.
+      * @param space The space that the tag mask exists in. If not specified then the tempLocal space will be used.
+      */
+     deleteTagMaskText(
+         bot: Bot,
+         tag: string,
+         index: number,
+         count: number,
+         space?: string
+     ): string;
+ 
+     /**
+      * Creates a mod from declareed mod data.
+      * @param bot The mod data that should be loaded.
+      * @param tags The tags that should be included in the output mod.
+      * @returns The mod that was loaded from the data.
+      */
+     getMod(bot: any, ...tags: (string | RegExp)[]): Mod;
+ 
+     /**
+      * Gets the position that the given bot is at in the given dimension.
+      * @param bot The bot or bot ID.
+      * @param dimension The dimension that the bot's position should be retrieved for.
+      */
+      getBotPosition(
+         bot: Bot | string,
+         dimension: string
+     ): Point3D;
+ 
+     /**
+      * Applies the given diff to the given bot.
+      * @param bot The bot.
+      * @param diff The diff to apply.
+      */
+     applyMod(bot: any, ...diffs: Mod[]): void;
+ 
+     /**
+      * subrtacts the given diff from the given bot.
+      * @param bot The bot.
+      * @param diff The diff to apply.
+      */
+     subtractMods(bot: any, ...diffs: Mod[]): void;
+ 
+     /**
+      * Produces HTML from the given HTML strings and expressions.
+      * Best used with a tagged template string.
+      */
+     html: HtmlFunction;
+ 
+     /**
+      * Defines a set of functions that relate to common OS operations.
+      */
+     os: Os;
+ 
+     /**
+      * Defines a set of functions that relate to common server operations.
+      * Typically, these operations are instance-independent.
+      */
+     server: Server;
+ 
+     /**
+      * Defines a set of functions that handle actions.
+      */
+     action: Actions;
+ 
+     /**
+      * Defines a set of functions that manage admin space.
+      */
+     adminSpace: AdminSpace;
+ 
+     /**
+      * Defines a set of functions that relate to common math operations.
+      */
+     math: Math;
+ 
+     /**
+      * Defines a set of functions that are used to create and transform mods.
+      */
+     mod: ModFuncs;
+ 
+     // @ts-ignore: Ignore redeclaration
+     crypto: Crypto;
+ 
+     /**
+      * Defines a set of experimental functions.
+      */
+     experiment: Experiment;
+ 
+     /**
+      * Defines a set of performance related functions.
+      */
+     perf: Perf;
+}
+
+interface Os {
+    /**
+         * Sleeps for time in ms.
+         * @param time Time in ms. 1 second is 1000ms.
+         */
+     sleep(time: number): Promise<void>;
+
+     /**
+      * Derermines whether the player is in the given dimension.
+      * @param dimension The dimension.
+      */
+     isInDimension(dimension: string): string;
+
+     /**
+      * Redirects the user to the given dimension.
+      * @param dimension The dimension to go to.
+      *
+      * @example
+      * // Send the player to the "welcome" dimension.
+      * os.goToDimension("welcome");
+      */
+     goToDimension(dimension: string): GoToDimensionAction;
+
+     /**
+      * Instructs CasualOS to open the built-in developer console.
+      * The dev console provides easy access to error messages and debug logs for formulas and actions.
+      */
+     openDevConsole(): OpenConsoleAction;
+
+     /**
+      * Changes the state that the given bot is in.
+      * @param bot The bot to change.
+      * @param stateName The state that the bot should move to.
+      * @param groupName The group of states that the bot's state should change in. (Defaults to "state")
+      */
+     changeState(bot: Bot, stateName: string, groupName?: string): void;
+
+     /**
+      * Enables Augmented Reality features.
+      */
+     enableAR(): EnableARAction;
+
+     /**
+      * Enables Virtual Reality features.
+      */
+     enableVR(): EnableVRAction;
+
+     /**
+      * Disables Augmented Reality features.
+      */
+     disableAR(): EnableARAction;
+
+     /**
+      * Disables Virtual Reality features.
+      */
+     disableVR(): EnableVRAction;
+
+     /**
+      * Enables Point-of-View mode.
+      * @param center The position that the camera should be placed at. Defaults to (0,0,0)
+      * @param imu Whether to use the imuPortal to control the camera rotation while in POV mode. Defaults to false.
+      */
+     enablePointOfView(center?: Point3D, imu?: boolean): EnablePOVAction;
+
+     /**
+      * Disables Point-of-View mode.
+      */
+     disablePointOfView(): EnablePOVAction;
+
+     /**
+      * Gets the dimension that is loaded into the given portal for the player.
+      * If no dimension is loaded, then null is returned.
+      * @param portal The portal type.
+      */
+     getPortalDimension(portal: PortalType): string;
+
+     /**
+      * Gets information about the version of AUX that is running.
+      */
+     version(): AuxVersion;
+
+     /**
+      * Gets information about the device that the player is using.
+      */
+     device(): AuxDevice;
+
+     /**
+      * Gets whether this device has enabled collaborative features.
+      */
+     isCollaborative(): boolean;
+
+     /**
+      * Gets the URL that AB1 should be bootstrapped from.
+      */
+     getAB1BootstrapURL(): string;
+
+     /**
+      * Gets whether the player is in the sheet dimension.
+      */
+     inSheet(): boolean;
+
+     /**
+      * Gets the 3D position of the player's camera.
+      * @param portal The portal that the camera position should be retrieved for.
+      */
+     getCameraPosition(portal?: 'grid' | 'miniGrid'): Point3D;
+
+     /**
+      * Gets the 3D rotation of the player's camera.
+      * @param portal The portal that the camera rotation should be retrieved for.
+      */
+     getCameraRotation(portal?: 'grid' | 'miniGrid'): Point3D;
+
+     /**
+      * Gets the 3D point that the player's camera is focusing on.
+      * @param portal The portal that the camera focus point should be retrieved for.
+      */
+     getFocusPoint(portal?: 'grid' | 'miniGrid'): Point3D;
+
+     /**
+      * Gets the 3D position of the player's pointer.
+      * @param pointer The position of the pointer to retrieve.
+      */
+     getPointerPosition(pointer?: 'mouse' | 'left' | 'right'): Point3D;
+
+     /**
+      * Gets the 3D rotation of the player's pointer.
+      * @param pointer The rotation of the pointer to retrieve.
+      */
+     getPointerRotation(pointer?: 'mouse' | 'left' | 'right'): Point3D;
+
+     /**
+      * Gets the 3D direction that the given pointer is pointing in.
+      * @param pointer The pointer to get the direction of.
+      */
+     getPointerDirection(pointer?: 'mouse' | 'left' | 'right'): Point3D;
+
+     /**
+      * Gets the input state of the given button on the mouse.
+      * @param controller The name of the controller that should be checked.
+      * @param button The name of the button on the controller.
+      */
+     getInputState(controller: 'mousePointer', button: 'left' | 'right' | 'middle'): null | 'down' | 'held';
+
+     /**
+      * Gets the input state of the given button on the left or right controller.
+      * @param controller The name of the controller that should be checked.
+      * @param button The name of the button on the controller.
+      */
+     getInputState(controller: 'leftPointer' | 'rightPointer', button: 'primary' | 'squeeze'): null | 'down' | 'held';
+
+     /**
+      * Gets the input state of the given button on the keyboard.
+      * @param controller The name of the controller that should be checked.
+      * @param button The name of the button on the controller.
+      */
+     getInputState(controller: 'keyboard', button: string): null | 'down' | 'held';
+
+     /**
+      * Gets the input state of the given touch.
+      * @param controller The name of the controller that should be checked.
+      * @param button The index of the finger.
+      */
+     getInputState(controller: 'touch', button: '0' | '1' | '2' | '3' | '4'): null | 'down' | 'held';
+
+     /**
+      * Gets the input state of the given button on the given controller.
+      * @param controller The name of the controller that should be checked.
+      * @param button The name of the button on the controller.
+      */
+     getInputState(controller: string, button: string): null | 'down' | 'held';
+
+     /**
+      * Gets the list of inputs that are currently available.
+      */
+     getInputList(): string[];
+
+     /**
+      * Shows a toast message to the user.
+      * @param message The message to show.
+      * @param duration The number of seconds the message should be on the screen. (Defaults to 2)
+      */
+     toast(message: string | number | boolean | object | Array<any> | null, duration?: number): ShowToastAction;
+
+     /**
+      * Play the given url's audio.
+      * Returns a promise that resolves with the sound ID when the sound starts playing.
+      * @param url The URL to play.
+      * 
+      * @example
+      * // Play a cow "moo"
+      * os.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+      */
+     playSound(url: string): Promise<string>;
+
+     /**
+      * Preloads the audio for the given URL.
+      * Returns a promise that resolves when the audio has finished loading.
+      * @param url The URl to preload.
+      * 
+      * @example
+      * // Preload a cow "moo"
+      * os.bufferSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+      */
+     bufferSound(url: string): Promise<void>;
+
+     /**
+      * Cancels the sound with the given ID.
+      * Returns a promise that resolves when the audio has been canceled.
+      * @param soundID The ID of the sound that is being canceled.
+      *
+      * @example
+      * // Play and cancel a sound
+      * const id = await os.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+      * os.cancelSound(id);
+      */
+     cancelSound(soundID: number): Promise<void>;
+
+     /**
+      * Shows a QR Code that contains a link to a inst and dimension.
+      * @param inst The inst that should be joined. Defaults to the current inst.
+      * @param dimension The dimension that should be joined. Defaults to the current dimension.
+      */
+     showJoinCode(
+         inst?: string,
+         dimension?: string
+     ): ShowJoinCodeAction;
+
+     /**
+      * Requests that AUX enters fullscreen mode.
+      * Depending on the web browser, this may ask the player for permission.
+      */
+     requestFullscreenMode(): RequestFullscreenAction;
+
+     /**
+      * Exits fullscreen mode.
+      */
+     exitFullscreenMode(): ExitFullscreenAction;
+
+     /**
+      * Shares some information via the device's social sharing functionality.
+      * @param options The options.
+      */
+     share(options: ShareOptions): ShareAction;
+
+     /**
+      * Closes the circle wipe transition effect.
+      * @param options The options that should be used for the effect.
+      */
+     closeCircleWipe(options?: Partial<OpenCircleWipeOptions>): Promise<void>;
+
+     /**
+      * Opens the circle wipe transition effect.
+      * @param options The options that should be used for the effect.
+      */
+     openCircleWipe(options?: Partial<OpenCircleWipeOptions>): Promise<void>;
+
+     /**
+      * Adds the given list of snap targets to the current drag operation.
+      * @param targets The list of targets to add.
+      */
+     addDropSnap(...targets: SnapTarget[]): AddDropSnapTargetsAction;
+
+     /**
+      * Adds the given list of snap targets for when the specified bot is being dropped on.
+      * @param bot The bot.
+      * @param targets The targets that should be enabled when the bot is being dropped on.
+      */
+     addBotDropSnap(bot: Bot | string, ...targets: SnapTarget[]): AddDropSnapTargetsAction;
+
+     /**
+      * Enables custom dragging for the current drag operation.
+      * This will disable the built-in logic that moves the bot(s) and
+      * enables the "onDragging" and "onAnyBotDragging" listen tags.
+      */
+     enableCustomDragging(): EnableCustomDraggingAction;
+
+     /**
+      * Logs the given data to the developer console.
+      * @param args The data to log.
+      */
+     log(...args: any[]): void;
+
+     /**
+      * Gets the geolocation of the device.
+      * Returns a promise that resolves with the location.
+      */
+     getGeolocation(): Promise<GeoLocation>;
+
+     /**
+      * Shows some HTML to the user.
+      * @param html The HTML to show.
+      */
+     showHtml(html: string): ShowHtmlAction;
+
+     /**
+      * Hides the HTML from the user.
+      */
+     hideHtml(): HideHtmlAction;
+
+     /**
+      * Moves the camera to view the given bot.
+      * Returns a promise that resolves when the bot is focused.
+      * @param botOrPosition The bot, bot ID, or position to view.
+      * @param options The options to use for moving the camera.
+      */
+     focusOn(
+         botOrPosition: Bot | string | { x: number, y: number },
+         options: FocusOnOptions
+     ): Promise<void>;
+
+     /**
+      * Opens the QR Code Scanner.
+      * @param camera The camera that should be used.
+      */
+     openQRCodeScanner(camera?: CameraType): OpenQRCodeScannerAction;
+
+     /**
+      * Closes the QR Code Scanner.
+      */
+     closeQRCodeScanner(): OpenQRCodeScannerAction;
+
+     /**
+      * Shows the given QR Code.
+      * @param code The code to show.
+      */
+     showQRCode(code: string): ShowQRCodeAction;
+
+     /**
+      * Hides the QR Code.
+      */
+     hideQRCode(): ShowQRCodeAction;
+
+     /**
+      * Opens the barcode scanner.
+      * @param camera The camera that should be used.
+      */
+     openBarcodeScanner(camera?: CameraType): OpenBarcodeScannerAction;
+
+     /**
+      * Closes the barcode scanner.
+      */
+     closeBarcodeScanner(): OpenBarcodeScannerAction;
+
+     /**
+      * Shows the given barcode.
+      * @param code The code that should be shown.
+      * @param format The format that the barcode should be shown in.
+      */
+     showBarcode(code: string, format?: BarcodeFormat): ShowBarcodeAction;
+
+     /**
+      * Hides the barcode.
+      */
+     hideBarcode(): ShowBarcodeAction;
+
+     /**
+      * Shows the chat bar.
+      */
+     showChat(): ShowChatBarAction;
+
+     /**
+      * Shows the chat bar with the given placeholder.
+      * @param placeholder The placeholder text that should be in the chat bar.
+      */
+     showChat(placeholder: string): ShowChatBarAction;
+
+     /**
+      * Shows the chat bar with the given options.
+      * @param options The options that should be used to show the chat bar.
+      */
+     showChat(options: ShowChatOptions): ShowChatBarAction;
+
+     /**
+      * Shows the run bar.
+      * @param placeholderOrOptions The placeholder text or options. (optional)
+      */
+     showChat(
+         placeholderOrOptions?: string | ShowChatOptions
+     ): ShowChatBarAction;
+
+     /**
+      * Hides the run bar.
+      */
+     hideChat(): ShowChatBarAction;
+
+     /**
+      * Enqueues the given script to execute after this script is done running.
+      * @param script The script that should be executed.
+      */
+     run(script: string): Promise<any>;
+
+     /**
+      * Downloads the given data.
+      * @param data The data to download. Objects will be formatted as JSON before downloading.
+      * @param filename The name of the file that the data should be downloaded as.
+      * @param mimeType The MIME type that should be used. If not specified then it will be inferred from the filename.
+      */
+     download(
+         data: string | object | ArrayBuffer | Blob,
+         filename: string,
+         mimeType?: string
+     ): DownloadAction;
+
+     /**
+      * Downloads the given list of bots.
+      * @param bots The bots that should be downloaded.
+      * @param filename The name of the file that the bots should be downloaded as.
+      */
+     downloadBots(bots: Bot[], filename: string): DownloadAction;
+
+     /**
+      * Downloads all the shared bots in the inst.
+      */
+     downloadInst(): DownloadAction;
+
+     /**
+      * Shows the "Upload AUX File" dialog.
+      */
+     showUploadAuxFile(): ShowUploadAuxFileAction;
+
+     /**
+      * Shows the "Upload Files" dialog.
+      */
+     showUploadFiles(): Promise<UploadedFile[]>;
+
+     /**
+      * Loads the inst with the given ID.
+      * @param id The ID of the inst to load.
+      */
+     loadInst(id: string): LoadServerAction;
+
+     /**
+      * Unloads the inst with the given ID.
+      * @param id The ID of the inst to unload.
+      */
+     unloadInst(id: string): UnloadServerAction;
+
+     /**
+      * Imports the AUX from the given URL or JSON
+      * @param urlOrJSON The URL or JSON to load.
+      *                  If given JSON, then it will be imported as if it was a .aux file.
+      *                  If given a URL, then it will be downloaded and then imported.
+      */
+     importAUX(urlOrJSON: string): ImportAUXAction | ApplyStateAction;
+
+     /**
+      * Parses the given JSON or PDF data and returns the list of bots that were contained in it.
+      * @param jsonOrPdf The JSON or PDF data to parse.
+      */
+     parseBotsFromData(jsonOrPdf: string): Bot[];
+
+     /**
+      * Replaces the bot that the user is beginning to drag.
+      * Only works from inside a onDrag() or onAnyBotDrag() listen tag.
+      * @param bot The bot or mod that should be dragged instead of the original.
+      */
+     replaceDragBot(bot: Mod): ReplaceDragBotAction;
+
+     /**
+      * Sets the text stored in the player's clipboard.
+      * @param text The text to set to the clipboard.
+      */
+     setClipboard(text: string): SetClipboardAction;
+
+     /**
+      * Redirects the user to the given URL.
+      * @param url The URL to go to.
+      *
+      * @example
+      * // Send the player to wikipedia.
+      * os.goToURL("https://wikipedia.org");
+      */
+     goToURL(url: string): GoToURLAction;
+
+     /**
+      * Redirects the user to the given URL.
+      * @param url The URL to go to.
+      *
+      * @example
+      * // Open wikipedia in a new tab.
+      * os.openURL("https://wikipedia.org");
+      */
+     openURL(url: string): OpenURLAction;
+
+     /**
+      * Shows an input box to edit the given bot and tag.
+      *
+      * @param bot The bot or bot ID that should be edited.
+      * @param tag The tag which should be edited on the bot.
+      * @param options The options that indicate how the input box should be customized.
+      *
+      * @example
+      * // Show an input box for `this` bot's label.
+      * os.showInputForTag(this, "label", {
+      *            title: "Change the label",
+      *            type: "text"
+      * });
+      *
+      * @example
+      * // Show a color picker for the bot's color.
+      * os.showInputForTag(this, "color", {
+      *            title: "Change the color",
+      *            type: "color",
+      *            subtype: "advanced"
+      * });
+      */
+     showInputForTag(
+         bot: Bot | string,
+         tag: string,
+         options?: Partial<ShowInputOptions>
+     ): ShowInputForTagAction;
+
+     /**
+      * Shows an input box. Returns a promise that resolves with the new value.
+      *
+      * @param currentValue The value that the input box should be prefilled with.
+      * @param options The options that indicate how the input box should be customized.
+      *
+      * @example
+      * // Show an input box.
+      * const result = await os.showInput({
+      *    title: "Change the label",
+      *    type: "text"
+      * });
+      */
+     showInput(
+         currentValue?: any,
+         options?: Partial<ShowInputOptions>
+     ): Promise<string>;
+
+     /**
+      * Shows a checkout screen that lets the user purchase something.
+      *
+      * @param options The options for the payment box.
+      *
+      * @example
+      * // Show a checkout box for 10 cookies
+      * os.checkout({
+      *   productId: '10_cookies',
+      *   title: '10 Cookies',
+      *   description: '$5.00',
+      *   processingServer: 'cookies_checkout'
+      * });
+      *
+      */
+     checkout(options: CheckoutOptions): StartCheckoutAction;
+
+     /**
+      * Gets the dimension that the player is currently viewing.
+      */
+     getCurrentDimension(): string;
+
+     /**
+      * Gets the inst that the player is currently in.
+      */
+     getCurrentInst(): string;
+
+     /**
+      * Gets the distance that the player bot is from the given dimension.
+      *
+      * Returns 0 if the player bot is in the dimension, 1 if the dimension is in a portal, and -1 if neither are true.
+      *
+      * @param dimension The dimension to check for.
+      */
+     getDimensionalDepth(dimension: string): number;
+
+     /**
+      * Determines whether the player has the given bot in their miniGridPortal.
+      * @param bots The bot or bots to check.
+      */
+     hasBotInMiniPortal(bots: Bot | Bot[]): boolean;
+
+     /**
+      * Gets the current user's bot.
+      */
+     getBot(): Bot;
+
+     /**
+      * Gets the name of the dimension that is used for the current user's menu.
+      */
+     getMenuDimension(): string;
+
+     /**
+      * Gets the name of the dimension that is used for the current user's miniGridPortal.
+      */
+     getMiniPortalDimension(): string;
+
+     /**
+      * Registers a custom app for the given bot with the given options.
+      * Apps allow you add custom functionality to the CasualOS frontend and are deeply integrated into the CasualOS platform.
+      * 
+      * @param id The ID of the app.
+      * @param bot The bot that should be used to control the app.
+      */
+      registerApp(
+         id: string,
+         bot: Bot | string
+     ): Promise<void>;
+
+     /**
+      * Removes a custom app from the session.
+      * 
+      * @param id The ID of the app.
+      */
+     unregisterApp(
+         id: string
+     ): Promise<void>;
+
+     /**
+      * Sets the output of the given app.
+      * @param id The ID of the app.
+      * @param output The output that the app should display.
+      */
+     compileApp(id: string, output: any): SetAppOutputAction;
+
+     /**
+      * Requests that the current session be authorized and for a global bot to be created
+      * to contain information about the authorized user.
+      */
+     requestAuthBot(): Promise<Bot>;
+
+     /**
+      * Requests an auth token that does not expire and can be used to authorize other app bundles to publish records for this app bundle.
+      */
+     requestPermanentAuthToken(): Promise<string>;
+
+     /**
+      * Publishes a record that can be used across instances.
+      * @param recordDefinition The data that should be used to publish the record.
+      */
+     publishRecord(recordDefinition: PublishableRecord): Promise<void>;
+
+     /**
+      * Retrives a list of records using the given filters.
+      * @param filters The list of filters that should be used to retrieve some records.
+      */
+     getRecords(...filters: RecordFilters[]): Promise<GetRecordsResult>;
+
+     /**
+      * Requests that the given record be destroyed.
+      * @param record The record that should be deleted.
+      */
+     destroyRecord(record: DeletableRecord): Promise<void>;
+
+     /**
+      * Specifies that the given prefix should be interpreted as code.
+      * @param prefix The prefix that code tags should start with.
+      * @param options The options that should be used for the prefix.
+      */
+      registerTagPrefix(prefix: string, options?: RegisterPrefixOptions): Promise<void>;
+
+     /**
+      * Registers a custom executable with the given source code.
+      * Executables can contain arbitrary code that can run anywhere.
+      * As such, executables allow you to add custom functionality that is not deeply integrated into the CasualOS platform.
+      * 
+      * @param id The ID of the executable.
+      * @param bot The bot that should be used to configure the executable.
+      * @param tagOrSource The tag or source code that the executable should be created from.
+      * @param options The options for the executable.
+      */
+     registerExecutable(
+         id: string,
+         bot: Bot | string,
+         tagOrSource?: string,
+         options?: OpenCustomPortalOptions
+     ): Promise<void>;
+
+     /**
+      * Builds an executable bundle from the given tag.
+      * @param tag The tag that the bundle should be created from.
+      */
+     buildExecutable(tag: string): Promise<CodeBundle>;
+
+     /**
+      * Gets the number of devices that are viewing the current inst.
+      * @param inst The inst to get the statistics for. If omitted, then the current inst is used.
+      */
+     remoteCount(inst?: string): Promise<number>;
+
+      /**
+      * Gets the list of remote IDs that are connected to the inst.
+      */
+     remotes(): Promise<string[]>;
+
+     /**
+      * Sends an event to the server to setup a new inst if it does not exist.
+      * @param inst The inst.
+      * @param botOrMod The bot or mod that should be cloned into the new inst.
+      */
+     setupInst(inst: string, botOrMod?: Mod): Promise<void>;
+
+      /**
+      * Gets the total number of devices that are connected to the server.
+      */
+     totalRemoteCount(): Promise<number>;
+
+     /**
+      * Gets the list of instances that are on the server.
+      */
+     instances(): Promise<string[]>;
+
+     /**
+      * Gets the list of instances that are on the server.
+      */
+     instStatuses(): Promise<{
+         inst: string,
+         lastUpdateTime: Date
+     }[]>;
+
+     /**
+      * Creates a new debugger that can be used to test and simulate bots.
+      * @param options The options that should be used for the debugger.
+      */
+     createDebugger(options?: DebuggerOptions): Debugger;
+}
+
+interface Server {
+    /**
+     * Sends an event to the server to setup a new inst if it does not exist.
+     * @param inst The inst.
+     * @param botOrMod The bot or mod that should be cloned into the new inst.
+     */
+    setupInst(inst: string, botOrMod?: Mod): Promise<void>;
+
+    /**
+     * Sends an event to the server to export a pin (BCM) as input or output.
+     * @param pin The physical pin (BCM) number.
+     * @param mode The mode of the pin (BCM).
+     */
+    exportGpio(pin: number, mode: 'in' | 'out'): Promise<void>;
+
+    /**
+     * Sends an event to the server to unexport a pin (BCM).
+     * @param pin The physical pin (BCM) number.
+     */
+    unexportGpio(pin: number): Promise<void>;
+
+    /**
+     * Sends an event to the server to set a pin (BCM) as HIGH or LOW.
+     * @param pin The physical pin (BCM) number.
+     * @param value The mode of the pin (BCM).
+     */
+    setGpio(pin: number, value: 0 | 1): Promise<void>;
+
+    /**
+     * Sends an event to the server to get the value of a pin (BCM).
+     * @param pin The physical pin (BCM) number.
+     */
+    getGpio(pin: number): Promise<void>;
+
+    /**
+     * Sends an event to the server to initialize rpio with provided settings
+     * @param options An object containing values to initilize with.
+     * 
+     * @example
+     * // Initialize with default settings
+     * inst.rpioInit({
+     *   gpiomem: true,
+     *   mapping: 'physical',
+     *   mock: undefined,
+     *   close_on_exit: false
+     * }); 
+     */
+    rpioInit(options?: object): Promise<void>;
+
+    /**
+     * Shuts down rpio, unmaps, and clears everything.
+     */
+    rpioExit(): Promise<void>;
+
+    /**
+     * Sends an event to the server to open a pin as input or output and set its initial state.
+     * @param pin The physical pin number.
+     * @param mode The mode of the pin.
+     * @param options The initial state of the pin.
+     */
+    rpioOpen(pin: number, mode: 'INPUT' | 'OUTPUT' | 'PWM', options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'): Promise<void>;
+
+    /**
+     * Sends an event to the server to change the mode and optionally the state, of a previously opened pin.
+     * @param pin The physical pin number.
+     * @param mode The mode of the pin.
+     * @param options The initial state of the pin.
+     */
+    rpioMode(pin: number, mode: 'INPUT' | 'OUTPUT' | 'PWM', options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'): Promise<void>;
+
+    /**
+     * Sends an event to the server to read the value of a pin.
+     * @param pin The physical pin number.
+     */
+    rpioRead(pin: number): Promise<void>;
+
+    /**
+     * Sends an event to the server to read the pin's buffer.
+     * @param pin The physical pin number.
+     * @param buffer The buffer to read.
+     * @param length The length of the buffer.
+     */
+    rpioReadSequence(pin: number, buffer: number, length?: number): Promise<void>;
+
+    /**
+     * Sends an event to the server to write to a pin and set it as HIGH or LOW.
+     * @param pin The physical pin number.
+     * @param value The mode of the pin.
+     */
+    rpioWrite(pin: number, value: 'HIGH' | 'LOW'): Promise<void>;
+
+    /**
+     * Sends an event to the server to write to the pin's buffer.
+     * @param pin The physical pin number.
+     * @param buffer The buffer to write to.
+     * @param length The length of the buffer.
+     */
+    rpioWriteSequence(pin: number, buffer: number[], length?: number): Promise<void>;
+
+    /**
+     * Read the current state of the GPIO pad control for the specified GPIO group.
+     * On current models of Raspberry Pi there are three groups.
+     * 
+     * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+     * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+     * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+     * 
+     * @param group The GPIO group to be read.
+     * @param bitmask The bitmask you want to check.
+     */
+    rpioReadpad(group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53', bitmask: 'slew' | 'hysteresis' | 'current'): Promise<void>;
+
+    /**
+     * Write `control` settings to the pad control for `group`.
+     * 
+     * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+     * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+     * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+     * 
+     * @param group The GPIO group to be read.
+     * @param slew Slew rate unlimited if set to true.
+     * @param hysteresis Hysteresis is enabled if set to true.
+     * @param current Drive current set in mA. Must be an even number 2-16.
+     */
+    rpioWritepad(group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53', slew?: boolean, hysteresis?: boolean, current?: 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16): Promise<void>;
+
+    /**
+     * Configure the pin's internal pullup or pulldown resistors.
+     * @param pin The pin that you want to use.
+     * @param state Configure the pin's resistors as: 'PULL_OFF', 'PULL_DOWN' or 'PULL_UP'
+     */
+    rpioPud(pin: number, state: 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'): Promise<void>;
+
+    /**
+     * Watch `pin` for changes and execute the callback `cb()` on events.
+     * @param pin The pin that you want to use.
+     * @param cb The callback executed on events.
+     * @param options Optional. Used to watch for specific events.
+     */
+    rpioPoll(pin: number, cb: any, options?: 'POLL_LOW' | 'POLL_HIGH' | 'POLL_BOTH'): Promise<void>;
+
+    /**
+     * Sends an event to the server to close a pin and what state to leave it in.
+     * @param pin The physical pin number.
+     * @param options The state to leave the pin in upon closing.
+     */
+    rpioClose(pin: number, options: 'PIN_RESET' | 'PIN_PRESERVE'): Promise<void>;
+
+    /**
+     * Initializes i2c for use.
+     */
+    rpioI2CBegin(): Promise<void>;
+    
+    /**
+     * Configure the slave address.
+     * @param address The slave address to set.
+     */
+    rpioI2CSetSlaveAddress(address: number): Promise<void>;
+    
+    /**
+     * Set the baud rate. Directly set the speed in hertz.
+     * @param rate The i2c refresh rate in hertz.
+     */
+    rpioI2CSetBaudRate(rate: number): Promise<void>;
+    
+    /**
+     * Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+     * @param rate The i2c refresh rate based on a divisor of the base 250MHz rate.
+     */
+    rpioI2CSetClockDivider(rate: number): Promise<void>;
+    
+    /**
+     * Read from the i2c slave.
+     * @param rx Buffer to read.
+     * @param length Optional. Length of the buffer to read.
+     */
+    rpioI2CRead(rx: number[], length?: number): Promise<void>;
+    
+    /**
+     * Write to the i2c slave.
+     * @param tx Buffer to write.
+     * @param length Optional. Length of the buffer to write.
+     */
+    rpioI2CWrite(tx: number[], length?: number): Promise<void>;
+    
+    /**
+     * 
+     */
+    // rpioI2CReadRegisterRestart(): Promise<void>;
+    
+    /**
+     * 
+     */
+    // rpioI2CWriteReadRestart(): Promise<void>;
+    
+    /**
+     * Turn off the i²c interface and return the pins to GPIO.
+     */
+    rpioI2CEnd(): Promise<void>;
+    
+    
+    /**
+     * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
+     * @param rate The PWM refresh rate.
+     */
+    rpioPWMSetClockDivider(rate: number): Promise<void>;
+    
+    /**
+     * This determines the maximum pulse width.
+     * @param pin The physical pin number.
+     * @param range The PWM range for a pin.
+     */
+    rpioPWMSetRange(pin: number, range: number): Promise<void>;
+    
+    
+    /**
+     * Set the width for a given pin.
+     * @param pin The physical pin number.
+     * @param width The PWM width for a pin.
+     */
+    rpioPWMSetData(pin: number, width: number): Promise<void>;
+    
+    /**
+     * Initiate SPI mode.
+     */
+    rpioSPIBegin(): Promise<void>;
+    
+    /**
+     * Choose which of the chip select / chip enable pins to control.
+     *  Value | Pin
+     *  ------|---------------------
+     *    0   | SPI_CE0 (24 / GPIO8)
+     *    1   | SPI_CE1 (26 / GPIO7)
+     *    2   | Both
+     * @param value The value correlating to pin(s) to control.
+     */
+    rpioSPIChipSelect(value: 0 | 1 | 2): Promise<void>;
+    
+    /**
+     * If your device's CE pin is active high, use this to change the polarity.
+     * *  Value | Pin
+     *  ------|---------------------
+     *    0   | SPI_CE0 (24 / GPIO8)
+     *    1   | SPI_CE1 (26 / GPIO7)
+     *    2   | Both
+     * @param value The value correlating to pin(s) to control.
+     * @param polarity Set the polarity it activates on. HIGH or LOW
+     */
+    rpioSPISetCSPolarity(value: 0 | 1 | 2, polarity: 'HIGH' | 'LOW'): Promise<void>;
+    
+    /**
+     * Set the SPI clock speed.
+     * @param rate It is an even divisor of the base 250MHz rate ranging between 0 and 65536.
+     */
+    rpioSPISetClockDivider(rate: number): Promise<void>;
+    
+    /**
+     * Set the SPI Data Mode.
+     *  Mode | CPOL | CPHA
+     *  -----|------|-----
+     *    0  |  0   |  0
+     *    1  |  0   |  1
+     *    2  |  1   |  0
+     *    3  |  1   |  1
+     * @param mode The SPI Data Mode.
+     */
+    rpioSPISetDataMode(mode: 0 | 1 | 2 | 3): Promise<void>;
+    
+    /**
+     * 
+     */
+    rpioSPITransfer(tx: number[]): Promise<void>;
+    
+    /**
+     * 
+     */
+    rpioSPIWrite(tx: number[]): Promise<void>;
+    
+    /**
+     * Release the pins back to general purpose use.
+     */
+    rpioSPIEnd(): Promise<void>;
+    
+    /**
+     * Establish the connection to the bluetooth serial device
+     * @param name A friendly device name. Example: Brush01
+     * @param device The device path. Example: /dev/rfcomm0
+     * @param mac The device MAC address. Example: AA:BB:CC:DD:EE
+     * @param channel The device channel. Example: 1
+     * @param options 
+     * {boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
+     * 
+     * {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
+     * 
+     * {number} [dataBits=8] Must be one of these: 8, 7, 6, or 5.
+     * 
+     * {number} [highWaterMark=65536] The size of the read and write buffers defaults to 64k.
+     * 
+     * {boolean} [lock=true] Prevent other processes from opening the port. Windows does not currently support `false`.
+     * 
+     * {number} [stopBits=1] Must be one of these: 1 or 2.
+     * 
+     * {string} [parity=none] Must be one of these: 'none', 'even', 'mark', 'odd', 'space'.
+     * 
+     * {boolean} [rtscts=false] flow control setting
+     * 
+     * {boolean} [xon=false] flow control setting
+     * 
+     * {boolean} [xoff=false] flow control setting
+     * 
+     * {boolean} [xany=false] flow control setting
+     * 
+     * {object=} bindingOptions sets binding-specific options
+     * 
+     * {Binding=} Binding The hardware access binding. `Bindings` are how Node-Serialport talks to the underlying system. Will default to the static property `Serialport.Binding`.
+     * 
+     * {number} [bindingOptions.vmin=1] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
+     * 
+     * {number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
+     */
+    serialConnect(name: string, device: string, mac: string, channel: number, options?: object, cb?: any): Promise<void>;
+    
+    /**
+     * Parses and returns the serial stream to the event tag 'onSerialData'.
+     * @param bot The id of the bot you want data streamed to. The bot needs the 'onSerialData' tag.
+     * @param name A friendly device name. Example: Brush01
+     */
+    serialStream(bot: string, name: string): Promise<void>;
+
+    /**
+     * Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
+     * @param name A friendly device name. Example: Brush01
+     */
+    serialOpen(name: string): Promise<void>;
+
+    /**
+     * Updates the SerialPort object with a new baudRate.
+     * @param name A friendly device name. Example: Brush01
+     * @param options {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
+     * @param cb
+     */
+    serialUpdate(name: string, options: object, cb?: any): Promise<void>;
+    
+    /**
+     * Writes the provided data/command to the device
+     * @param name A friendly device name. Example: Brush01
+     * @param data The data/command to send
+     * @param encoding The encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
+     * @param cb
+     * @param taskId The ID of the async task.
+     */
+    serialWrite(name: string, data: string|number[], encoding?: string, cb?: any): Promise<void>;
+    
+    /**
+     * Request a number of bytes from the SerialPort.
+     * @param name A friendly device name. Example: Brush01
+     * @param size Specify how many bytes of data to return, if available.
+     * @param taskId The ID of the async task.
+     */
+    serialRead(name: string, size?: number): Promise<void>;
+    
+    /**
+     * Closes an open connection. 
+     * @param name A friendly device name. Example: Brush01
+     * @param cb
+     * @param device The device path. Example: /dev/rfcomm0
+     * @param taskId The ID of the async task.
+     */
+    serialClose(name: string, device: string, cb?: any): Promise<void>;
+    
+    /**
+     * Flush discards data that has been received but not read, or written but not transmitted by the operating system. 
+     * @param name A friendly device name. Example: Brush01
+     * @param taskId The ID of the async task.
+     */
+    serialFlush(name: string): Promise<void>;
+    
+    /**
+     * Waits until all output data is transmitted to the serial port. After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device. 
+     * @param name A friendly device name. Example: Brush01
+     * @param taskId The ID of the async task.
+     */
+    serialDrain(name: string): Promise<void>;
+    
+    /**
+     * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
+     * @param name A friendly device name. Example: Brush01
+     */
+    serialPause(name: string): Promise<void>;
+    
+    /**
+     * Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
+     * @param name A friendly device name. Example: Brush01
+     */
+    serialResume(name: string): Promise<void>;
+    
+    /**
+     * Executes the given shell script on the server.
+     * @param script The shell script that should be executed.
+     */
+    shell(script: string): ShellAction;
+
+    /**
+     * Backs up all the AUX instances to a Github Gist.
+     * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
+     */
+    backupToGithub(auth: string): BackupToGithubAction;
+
+    /**
+     * Backs up all the AUX instances to a zip bot.
+     */
+    backupAsDownload(target: SessionSelector): BackupAsDownloadAction;
+
+    /**
+     * Gets the total number of devices that are connected to the server.
+     */
+    totalRemoteCount(): Promise<number>;
+
+    /**
+     * Gets the list of instances that are on the server.
+     */
+    instances(): Promise<string[]>;
+
+    /**
+     * Gets the list of instances that are on the server.
+     */
+    instStatuses(): Promise<{
+        inst: string,
+        lastUpdateTime: Date
+    }[]>;
+
+    /**
+     * Loads a file from the server at the given path.
+     * @param path The path of the file.
+     * @param options The options.
+     */
+    loadFile(path: string, options?: LoadFileOptions): Promise<LoadFileResult>;
+
+    /**
+     * Saves a file on the server at the given path.
+     * @param path The path of the file.
+     * @param options The options.
+     */
+    saveFile(path: string, data: string, options?: SaveFileOptions): Promise<SaveFileResult>;
+
+    /**
+     * Finishes the checkout process by charging the payment fee to the user.
+     *
+     * @param options The options for finishing the checkout.
+     *
+     * @example
+     * // Finish the checkout process
+     * server.finishCheckout({
+     *   secretKey: 'YOUR_SECRET_API_KEY',
+     *   token: 'token from onCheckout',
+     *
+     *   // 1000 cents == $10.00
+     *   amount: 1000,
+     *   currency: 'usd',
+     *   description: 'Description for purchase'
+     * });
+     */
+    finishCheckout(options: FinishCheckoutOptions): FinishCheckoutOptions;
+
+    /**
+     * Saves the current state as a history mark.
+     * @param options The options that describe what information the mark should contain.
+     *
+     * @example
+     * // Bookmark the current state with a message
+     * server.markHistory({
+     *   message: "Save recent changes"
+     * });
+     */
+    markHistory(options: MarkHistoryOptions): MarkHistoryAction;
+
+    /**
+     * Loads the "history" space into the server.
+     */
+    browseHistory(): Promise<void>;
+
+    /**
+     * Restores the current state to the given mark.
+     * @param mark The bot or bot ID that represents the mark that should be restored.
+     */
+    restoreHistoryMark(mark: Bot | string): Promise<void>;
+
+    /**
+     * Restores the current state to the given mark.
+     * @param mark The bot or bot ID that represents the mark that should be restored.
+     * @param inst The inst that the mark should be restored to.
+     */
+    restoreHistoryMarkToInst(
+        mark: Bot | string,
+        inst: string
+    ): Promise<void>;
+};
+
+interface Web {
+
+    /**
+     * Sends an HTTP GET request for the given URL using the given options.
+     * @param url The URL to request.
+     * @param options The options to use.
+     * 
+     * @example
+     * 
+     * // Send a HTTP GET request for https://www.example.com
+     * const result = await web.get('https://www.example.com');
+     */
+    get(url: string, options?: WebhookOptions): Promise<WebhookResult>;
+
+    /**
+     * Sends a HTTP POST request to the given URL with the given data.
+     *
+     * @param url The URL that the request should be sent to.
+     * @param data That that should be sent.
+     * @param options The options that should be included in the request.
+     *
+     * @example
+     * 
+     * // Send a HTTP POST request to https://www.example.com/api/createThing
+     * const result = await web.post('https://www.example.com/api/createThing', {
+     *   hello: 'world'
+     * });
+     * 
+     */
+    post(url: string, data?: any, options?: WebhookOptions): Promise<WebhookResult>;
+
+    /**
+     * Sends a web request based on the given options.
+     * @param options The options that specify where and what to send in the web request.
+     *
+     * @example
+     * 
+     * // Send a HTTP GET request to https://example.com
+     * const result = await web.hook({
+     *   method: 'GET',
+     *   url: 'https://example.com'
+     * });
+     * 
+     * os.toast(result);
+     */
+    hook(options: WebhookOptions): Promise<WebhookResult>;
+};
+
+
+interface Actions {
+    /**
+     * Performs the given action.
+     * @param action The action to perform.
+     */
+    perform(action: any): BotAction;
+
+    /**
+     * Rejects the given action.
+     * @param action The action to reject.
+     */
+    reject(action: any): BotAction;
+};
+
+interface AdminSpace {
+    /**
+     * Unlocks admin space using the given password.
+     * Returns a promise that resolves when the space is unlocked.
+     * @param password The password to use to unlock admin space.
+     */
+    unlock(): Promise<void>;
+
+    /**
+     * Sets the password that should be used for admin space.
+     * @param oldPassword The old password for the admin space.
+     * @param newPassword The new password that should be used.
+     */
+    setPassword(oldPassword: string, newPassword: string): Promise<void>;
+};
+
+interface Math {
+    /**
+     * Sums the given array of numbers and returns the result.
+     * If any value in the list is not a number, it will be converted to one.
+     * If the given value is not an array, then it will be converted to a number and returned.
+     *
+     * @param list The value that should be summed. If it is a list, then the result will be the sum of the items in the list.
+     *             If it is not a list, then the result will be the value converted to a number.
+     */
+    sum(list: any): number;
+
+    /**
+     * Calculates the average of the numbers in the given list and returns the result.
+     * @param list The value that should be averaged.
+     *             If it is a list, then the result will be sum(list)/list.length.
+     *             If it is not a list, then the result will be the value converted to a number.
+     */
+    avg(list: any): number;
+
+    /**
+     * Calculates the square root of the given number.
+     * @param value The number.
+     */
+    sqrt(value: any): number;
+
+    /**
+     * Calculates the absolute value of a number.
+     * @param number The number to get the absolute value of.
+     */
+    abs(number: any): number;
+
+    /**
+     * Calculates the standard deviation of the numbers in the given list and returns the result.
+     *
+     * @param list The value that the standard deviation should be calculated for.
+     */
+    stdDev(list: any): number;
+
+    /**
+     * Generates a random integer number between min and max.
+     * @param min The smallest allowed value.
+     * @param max The largest allowed value.
+     */
+    randomInt(min?: number, max?: number): number;
+
+    /**
+     * Generates a random number between min and max.
+     * @param min The smallest allowed value.
+     * @param max The largest allowed value.
+     */
+    random(min?: number, max?: number): number;
+
+    /**
+     * Gets the forward direction for the given rotation.
+     * @param pointerRotation The rotation that the pointer has represented in radians.
+     */
+    getForwardDirection(pointerRotation: Point3D): Point3D;
+
+    /**
+     * Finds the point at which the the given ray and ground plane intersect.
+     * Returns null if the ray does not intersect the ground plane.
+     * @param origin The origin of the ray.
+     * @param direction The direction that the ray is pointing.
+     */
+    intersectPlane(origin: Point3D, direction: Point3D): Point3D;
+
+    /**
+     * Gets the position offset for the given bot anchor point.
+     * This is useful for doing custom math using anchor points.
+     * @param anchorPoint The anchor point to get the offset for.
+     */
+    getAnchorPointOffset(anchorPoint: BotAnchorPoint): Point3D;
+
+    /**
+     * Adds the given vectors together and returns the result.
+     * @param vectors The vectors that should be added together.
+     */
+    addVectors<T>(...vectors: T[]): T;
+
+    /**
+     * Subtracts the given vectors from each other and returns the result.
+     * @param vectors The vectors that should be subtracted from each other.
+     */
+    subtractVectors<T>(...vectors: T[]): T;
+
+    /**
+     * Negates the given vector and returns the result.
+     * @param vector The vector that should be negated.
+     */
+    negateVector<T>(vector: T): T;
+
+    /**
+     * Normalizes the given vector and returns the result.
+     * @param vector The vector that should be normalized.
+     */
+    normalizeVector<T>(vector: T): T;
+
+    /**
+     * Calculates the length of the given vector.
+     * @param vector The vector to calculate the length of.
+     */
+    vectorLength<T>(vector: T): number;
+
+    /**
+     * Multiplies each component of the given vector by the given scale and returns the result.
+     * @param vector The vector that should be scaled.
+     * @param scale The number that the vector should be multiplied by.
+     */
+    scaleVector<T>(vector: T, scale: number): T;
+};
+
+interface ModFuncs {
+    /**
+     * Converts the given 3D point into a mod that sets the cameraPositionOffset tags.
+     * @param point The mod that represents the 3D point.
+     */
+    cameraPositionOffset(point: Partial<Point3D>): {
+        cameraPositionOffsetX: number,
+        cameraPositionOffsetY: number,
+        cameraPositionOffsetZ: number,
+    };
+
+    /**
+     * Converts the given 3D rotation into a mod that sets the cameraRotationOffset tags.
+     * @param rotation The mod that represents the 3D rotation.
+     */
+    cameraRotationOffset(rotation: Partial<Point3D>): {
+        cameraRotationOffsetX: number,
+        cameraRotationOffsetY: number,
+        cameraRotationOffsetZ: number,
+    };
+};
+
+interface Crypto{
+    /**
+     * Calculates the SHA-256 hash of the given data.
+     * Returns the hexadecimal string of the hash.
+     * @param data The data that should be hashed.
+     */
+    sha256(...data: unknown[]): string;
+
+    /**
+     * Calculates the SHA-512 hash of the given data.
+     * Returns the hexadecimal string of the hash.
+     * @param data The data that should be hashed.
+     */
+    sha512(...data: unknown[]): string;
+
+    /**
+     * Calculates the HMAC SHA-256 hash of the given data.
+     * HMAC is commonly used to verify that a message was created with a specific key.
+     * Returns the hexadecimal string of the hash.
+     * @param key The key that should be used to sign the message.
+     * @param data The data that should be hashed.
+     */
+    hmacSha256(key: string, ...data: unknown[]): string;
+
+    /**
+     * Calculates the HMAC SHA-512 hash of the given data.
+     * HMAC is commonly used to verify that a message was created with a specific key.
+     * Returns the hexadecimal string of the hash.
+     * @param key The key that should be used to sign the message.
+     * @param data The data that should be hashed.
+     */
+    hmacSha512(key: string, ...data: unknown[]): string;
+
+    /**
+     * Encrypts the given data with the given secret and returns the result.
+     * 
+     * @description Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to
+     * help you create and keep track of them.
+     * 
+     * Assuming the above, this method will return a string of encrypted data that is confidential (unreadable without the secret),
+     * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the secret was used to encrypt the data).
+     * 
+     * As a consequence, encrypting the same data with the same secret will produce different results.
+     * This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
+     * 
+     * Encrypts the given data using an authenticated encryption mechanism 
+     * based on XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
+     * 
+     * @param secret The secret to use to secure the data.
+     * @param data The data to encrypt.
+     */
+    encrypt(secret: string, data: string): string;
+
+    /**
+     * Decrypts the given data using the given secret and returns the result.
+     * If the data was unable to be decrypted, null will be returned.
+     *
+     * @param secret The secret to use to decrypt the data.
+     * @param data The data to decrypt.
+     */
+    decrypt(secret: string, data: string): string;
+
+    /**
+     * Determines if the given value has been encrypted with symmetric encryption.
+     * @param cyphertext The value to test to see if it is encrypted.
+     */
+     isEncrypted(cyphertext: string): boolean;
+
+    /**
+     * Contains functions useful for asymmetric encryption.
+     */
+    asymmetric: {
         /**
-         * Encrypts the given data with the given secret and returns the result.
-         * 
+         * Creates a new keypair that can be used for encrypting and decrypting data.
+         *
          * @description Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to
          * help you create and keep track of them.
          * 
-         * Assuming the above, this method will return a string of encrypted data that is confidential (unreadable without the secret),
-         * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the secret was used to encrypt the data).
-         * 
-         * As a consequence, encrypting the same data with the same secret will produce different results.
-         * This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
-         * 
-         * Encrypts the given data using an authenticated encryption mechanism 
-         * based on XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
-         * 
-         * @param secret The secret to use to secure the data.
-         * @param data The data to encrypt.
-         */
-        encrypt(secret: string, data: string): string;
-
-        /**
-         * Decrypts the given data using the given secret and returns the result.
-         * If the data was unable to be decrypted, null will be returned.
-         *
-         * @param secret The secret to use to decrypt the data.
-         * @param data The data to decrypt.
-         */
-        decrypt(secret: string, data: string): string;
-
-        /**
-         * Determines if the given value has been encrypted with symmetric encryption.
-         * @param cyphertext The value to test to see if it is encrypted.
-         */
-         isEncrypted(cyphertext: string): boolean;
-
-        /**
-         * Contains functions useful for asymmetric encryption.
-         */
-        asymmetric: {
-            /**
-             * Creates a new keypair that can be used for encrypting and decrypting data.
-             *
-             * @description Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to
-             * help you create and keep track of them.
-             * 
-             * Keypairs are made up of a private key and a public key.
-             * The public key is a special value that can be used to encrypt data and 
-             * the private key is a related value that can be used to decrypt data that was encrypted by the public key.
-             *
-             * The private key is called "private" because it is encrypted using the given secret
-             * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
-             *
-             * Note that both the private and public keys are randomly generated, so while the public key is unencrypted, it won't be able to be used by someone else unless
-             * they have access to it.
-             *
-             * @param secret The secret that should be used to encrypt the private key.
-             */
-            keypair(secret: string): string;
-
-            /**
-             * Determines if the given value is a keypair that can be used to encrypt and decrypt data using
-             * asymmetric encryption.
-             * @param keypair The value to test to see if it is a keypair that can be used for asymmetric encryption.
-             */
-             isKeypair(keypair: string): boolean;
-
-            /**
-             * Encrypts the given data with the given keypair and returns the result.
-             *
-             * @description This method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it),
-             * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).
-             *
-             * As a consequence, encrypting the same data with the same keypair will produce different results.
-             * This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
-             *
-             * Encrypts the given data using an asymmetric authenticated encryption mechanism
-             * based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
-             * 
-             * You may notice that this function does not need a secret to decrypt the keypair.
-             * This is because the public key of the keypair is used to encrypt the data.
-             * Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.
-             *
-             * @param keypair The keypair to use to secure the data.
-             * @param data The data to encrypt.
-             */
-            encrypt(keypair: string, data: string): string;
-
-            /**
-             * Decrypts the given data with the given keypair and secret and returns the result.
-             * If the data was unable to be decrypted, null will be returned.
-             *
-             * @param keypair The keypair to use to decrypt the data.
-             * @param secret The secret to use to decrypt the keypair's private key.
-             * @param data The data to decrypt.
-             */
-            decrypt(keypair: string, secret: string, data: string): string;
-
-            /**
-             * Determines if the given value is encrypted using asymmetric encryption.
-             * @param cyphertext The value to test to see if it is encrypted.
-             */
-             isEncrypted(cyphertext: string): boolean;
-        };
-
-        /**
-         * Creates a new keypair that can be used for signing and verifying data.
-         *
-         * @description
          * Keypairs are made up of a private key and a public key.
-         * The private key is a special value that can be used to create digital signatures and
-         * the public key is a related value that can be used to verify that a digitital signature was created by the private key.
+         * The public key is a special value that can be used to encrypt data and 
+         * the private key is a related value that can be used to decrypt data that was encrypted by the public key.
          *
          * The private key is called "private" because it is encrypted using the given secret
          * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
          *
-         * Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
+         * Note that both the private and public keys are randomly generated, so while the public key is unencrypted, it won't be able to be used by someone else unless
          * they have access to it.
          *
          * @param secret The secret that should be used to encrypt the private key.
@@ -5097,181 +5788,237 @@ declare global {
         keypair(secret: string): string;
 
         /**
-         * Creates a digital signature for the given data using the private key from the given keypair.
+         * Determines if the given value is a keypair that can be used to encrypt and decrypt data using
+         * asymmetric encryption.
+         * @param keypair The value to test to see if it is a keypair that can be used for asymmetric encryption.
+         */
+         isKeypair(keypair: string): boolean;
+
+        /**
+         * Encrypts the given data with the given keypair and returns the result.
          *
-         * @description
-         * Digital signatures are used to verifying the authenticity and integrity of data.
+         * @description This method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it),
+         * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).
          *
-         * This works by leveraging asymetric encryption but in reverse.
-         * 
-         * If we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that
-         * the data was encrypted (i.e. signed) by the corresponding private key.
-         * 
-         * And since the public key is available to everyone but the private
-         * key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.
+         * As a consequence, encrypting the same data with the same keypair will produce different results.
+         * This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
          *
-         * @param keypair The keypair that should be used to create the signature.
-         * @param secret The secret that was used when creating the keypair. Used to decrypt the private key.
-         * @param data The data to sign.
-         */
-        sign(keypair: string, secret: string, data: string): string;
-
-        /**
-         * Validates that the given signature for the given data was created by the given keypair.
-         * @param keypair The keypair that should be used to validate the signature.
-         * @param signature The signature that was returned by the sign() operation.
-         * @param data The data that was used in the sign() operation.
-         */
-        verify(keypair: string, signature: string, data: string): boolean;
-
-        /**
-         * Creates a new certified bot that is signed using the given certified bot.
-         * @param certificate The certified bot that the new certificate should be signed with. 
-         *                    This is commonly known as the signing certificate.
-         *                    If given null, then the new certificate will be self-signed.
-         * @param secret The signing certificate's secret. This is the secret that was used to create
-         *                 the keypair for the signing certificate. If the new certificate will be self-signed, then this
-         *                 is the secret that was used to create the given keypair.
-         * @param keypair The keypair that the new certificate should use.
-         */
-        createCertificate(certificate: Bot | string, secret: string, keypair: string): Promise<Bot>;
-
-        /**
-         * Signs the tag on the given bot using the given certificate and secret.
-         * @param certificate The certificate to use to create the signature.
-         * @param secret The secret to use to decrypt the certificate's private key.
-         * @param bot The bot that should be signed.
-         * @param tag The tag that should be signed.
-         */
-        signTag(certificate: Bot | string, secret: string, bot: Bot | string, tag: string): Promise<void>;
-
-        /**
-         * Verifies that the given tag on the given bot has been signed by a certificate.
-         * @param bot The bot.
-         * @param tag The tag to check.
-         */
-        verifyTag(bot: Bot | string, tag: string): boolean;
-
-        /**
-         * Revokes the given certificate using the given secret.
-         * In effect, this deletes the certificate bot from the server.
-         * Additionally, any tags signed with the given certificate will no longer be verified.
+         * Encrypts the given data using an asymmetric authenticated encryption mechanism
+         * based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
          * 
-         * If given a signer, then the specified certificate will be used to sign the revocation.
-         * This lets you use a parent or grandparent certificate to remove the child.
-         * 
-         * If no signer is given, then the certificate will be used to revoke itself.
-         * 
-         * @param certificate The certificate that should be revoked.
-         * @param secret The secret that should be used to decrypt the corresponding certificate's private key.
-         *                 If given a signer, then this is the secret for the signer certificate. If no signer is given,
-         *                 then this is the secret for the revoked certificate.
-         * @param signer The certificate that should be used to revoke the aforementioned certificate. If not specified then the revocation will be self-signed.
+         * You may notice that this function does not need a secret to decrypt the keypair.
+         * This is because the public key of the keypair is used to encrypt the data.
+         * Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.
+         *
+         * @param keypair The keypair to use to secure the data.
+         * @param data The data to encrypt.
          */
-        revokeCertificate(certificate: Bot | string, secret: string, signer?: Bot | string): Promise<void>;
+        encrypt(keypair: string, data: string): string;
+
+        /**
+         * Decrypts the given data with the given keypair and secret and returns the result.
+         * If the data was unable to be decrypted, null will be returned.
+         *
+         * @param keypair The keypair to use to decrypt the data.
+         * @param secret The secret to use to decrypt the keypair's private key.
+         * @param data The data to decrypt.
+         */
+        decrypt(keypair: string, secret: string, data: string): string;
+
+        /**
+         * Determines if the given value is encrypted using asymmetric encryption.
+         * @param cyphertext The value to test to see if it is encrypted.
+         */
+         isEncrypted(cyphertext: string): boolean;
     };
 
     /**
-     * Defines a set of experimental functions.
+     * Creates a new keypair that can be used for signing and verifying data.
+     *
+     * @description
+     * Keypairs are made up of a private key and a public key.
+     * The private key is a special value that can be used to create digital signatures and
+     * the public key is a related value that can be used to verify that a digitital signature was created by the private key.
+     *
+     * The private key is called "private" because it is encrypted using the given secret
+     * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
+     *
+     * Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
+     * they have access to it.
+     *
+     * @param secret The secret that should be used to encrypt the private key.
      */
-    const experiment: {
-        /**
-         * Plays the given animation on the given bot locally.
-         * Reverts back to the original animation when done playing.
-         * @param bot The bot.
-         * @param animation The animation to play.
-         */
-        localFormAnimation(
-            bot: Bot | string,
-            animation: string | number
-        ): LocalFormAnimationAction;
-
-        /**
-         * Tweens the position of the given bot.
-         * @param bot The bot or bot ID to tween.
-         * @param dimension The dimension that the bot should be tweened in.
-         * @param position The position that the bot should be tweened to.
-         * @param options The options that should be used for the tween.
-         */
-        localPositionTween(
-            bot: Bot | string,
-            dimension: string,
-            position: { x?: number, y?: number, z?: number },
-            options?: TweenOptions
-        ): LocalPositionTweenAction;
-
-        /**
-         * Tweens the rotation of the given bot.
-         * @param bot The bot or bot ID to tween.
-         * @param dimension The dimension that the bot should be tweened in.
-         * @param rotation The rotation that the bot should be tweened to.
-         * @param options The options that should be used for the tween.
-         */
-        localRotationTween(
-            bot: Bot | string,
-            dimension: string,
-            rotation: { x?: number, y?: number, z?: number },
-            options?: TweenOptions
-        ): LocalRotationTweenAction;
-
-        /**
-         * Gets the position that the center of the given bot would placed at if the bot was using the given anchor point.
-         * @param bot The bot.
-         * @param dimension The dimension to get the position of.
-         * @param anchorPoint The anchor point.
-         */
-        getAnchorPointPosition(
-            bot: Bot,
-            dimension: string,
-            anchorPoint: BotAnchorPoint
-        ): {x: number, y: number, z: number};
-
-        /**
-         * Starts a new audio recording.
-         */
-        beginAudioRecording(): Promise<void>;
-
-        /**
-         * Finishes an audio recording.
-         * Returns a promise that resolves with the recorded blob.
-         */
-        endAudioRecording(): Promise<Blob>;
-
-        /**
-         * Starts a new recording.
-         * @param options The options for the recording.
-         * @returns A promise that resolves when the recording has started.
-         */
-        beginRecording(options?: RecordingOptions): Promise<void>;
-
-        /**
-         * Finishes a recording.
-         * Returns a promise that resolves with the recorded data.
-         */
-        endRecording(): Promise<Recording>;
-
-        /**
-         * Speaks the given text.
-         * Returns a promise that resolves when the text has been spoken.
-         * @param text The text that should be spoken.
-         * @param options The options that should be used.
-         */
-        speakText(text: string, options?: { rate?: number, pitch?: number, voice?: string | SyntheticVoice }): Promise<void>;
-
-        /**
-         * Gets the list of synthetic voices that are supported by the system.
-         * Returns a promise that resolves with the voices.
-         */
-        getVoices(): Promise<SyntheticVoice[]>;
-    };
+    keypair(secret: string): string;
 
     /**
-     * Defines a set of performance related functions.
+     * Creates a digital signature for the given data using the private key from the given keypair.
+     *
+     * @description
+     * Digital signatures are used to verifying the authenticity and integrity of data.
+     *
+     * This works by leveraging asymetric encryption but in reverse.
+     * 
+     * If we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that
+     * the data was encrypted (i.e. signed) by the corresponding private key.
+     * 
+     * And since the public key is available to everyone but the private
+     * key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.
+     *
+     * @param keypair The keypair that should be used to create the signature.
+     * @param secret The secret that was used when creating the keypair. Used to decrypt the private key.
+     * @param data The data to sign.
      */
-    const perf: {
-        /**
-         * Gets the performance stats for the instance.
-         */
-        getStats(): PerformanceStats;
-    };
-}
+    sign(keypair: string, secret: string, data: string): string;
+
+    /**
+     * Validates that the given signature for the given data was created by the given keypair.
+     * @param keypair The keypair that should be used to validate the signature.
+     * @param signature The signature that was returned by the sign() operation.
+     * @param data The data that was used in the sign() operation.
+     */
+    verify(keypair: string, signature: string, data: string): boolean;
+
+    /**
+     * Creates a new certified bot that is signed using the given certified bot.
+     * @param certificate The certified bot that the new certificate should be signed with. 
+     *                    This is commonly known as the signing certificate.
+     *                    If given null, then the new certificate will be self-signed.
+     * @param secret The signing certificate's secret. This is the secret that was used to create
+     *                 the keypair for the signing certificate. If the new certificate will be self-signed, then this
+     *                 is the secret that was used to create the given keypair.
+     * @param keypair The keypair that the new certificate should use.
+     */
+    createCertificate(certificate: Bot | string, secret: string, keypair: string): Promise<Bot>;
+
+    /**
+     * Signs the tag on the given bot using the given certificate and secret.
+     * @param certificate The certificate to use to create the signature.
+     * @param secret The secret to use to decrypt the certificate's private key.
+     * @param bot The bot that should be signed.
+     * @param tag The tag that should be signed.
+     */
+    signTag(certificate: Bot | string, secret: string, bot: Bot | string, tag: string): Promise<void>;
+
+    /**
+     * Verifies that the given tag on the given bot has been signed by a certificate.
+     * @param bot The bot.
+     * @param tag The tag to check.
+     */
+    verifyTag(bot: Bot | string, tag: string): boolean;
+
+    /**
+     * Revokes the given certificate using the given secret.
+     * In effect, this deletes the certificate bot from the server.
+     * Additionally, any tags signed with the given certificate will no longer be verified.
+     * 
+     * If given a signer, then the specified certificate will be used to sign the revocation.
+     * This lets you use a parent or grandparent certificate to remove the child.
+     * 
+     * If no signer is given, then the certificate will be used to revoke itself.
+     * 
+     * @param certificate The certificate that should be revoked.
+     * @param secret The secret that should be used to decrypt the corresponding certificate's private key.
+     *                 If given a signer, then this is the secret for the signer certificate. If no signer is given,
+     *                 then this is the secret for the revoked certificate.
+     * @param signer The certificate that should be used to revoke the aforementioned certificate. If not specified then the revocation will be self-signed.
+     */
+    revokeCertificate(certificate: Bot | string, secret: string, signer?: Bot | string): Promise<void>;
+};
+
+interface Experiment {
+    /**
+     * Plays the given animation on the given bot locally.
+     * Reverts back to the original animation when done playing.
+     * @param bot The bot.
+     * @param animation The animation to play.
+     */
+    localFormAnimation(
+        bot: Bot | string,
+        animation: string | number
+    ): LocalFormAnimationAction;
+
+    /**
+     * Tweens the position of the given bot.
+     * @param bot The bot or bot ID to tween.
+     * @param dimension The dimension that the bot should be tweened in.
+     * @param position The position that the bot should be tweened to.
+     * @param options The options that should be used for the tween.
+     */
+    localPositionTween(
+        bot: Bot | string,
+        dimension: string,
+        position: { x?: number, y?: number, z?: number },
+        options?: TweenOptions
+    ): LocalPositionTweenAction;
+
+    /**
+     * Tweens the rotation of the given bot.
+     * @param bot The bot or bot ID to tween.
+     * @param dimension The dimension that the bot should be tweened in.
+     * @param rotation The rotation that the bot should be tweened to.
+     * @param options The options that should be used for the tween.
+     */
+    localRotationTween(
+        bot: Bot | string,
+        dimension: string,
+        rotation: { x?: number, y?: number, z?: number },
+        options?: TweenOptions
+    ): LocalRotationTweenAction;
+
+    /**
+     * Gets the position that the center of the given bot would placed at if the bot was using the given anchor point.
+     * @param bot The bot.
+     * @param dimension The dimension to get the position of.
+     * @param anchorPoint The anchor point.
+     */
+    getAnchorPointPosition(
+        bot: Bot,
+        dimension: string,
+        anchorPoint: BotAnchorPoint
+    ): {x: number, y: number, z: number};
+
+    /**
+     * Starts a new audio recording.
+     */
+    beginAudioRecording(): Promise<void>;
+
+    /**
+     * Finishes an audio recording.
+     * Returns a promise that resolves with the recorded blob.
+     */
+    endAudioRecording(): Promise<Blob>;
+
+    /**
+     * Starts a new recording.
+     * @param options The options for the recording.
+     * @returns A promise that resolves when the recording has started.
+     */
+    beginRecording(options?: RecordingOptions): Promise<void>;
+
+    /**
+     * Finishes a recording.
+     * Returns a promise that resolves with the recorded data.
+     */
+    endRecording(): Promise<Recording>;
+
+    /**
+     * Speaks the given text.
+     * Returns a promise that resolves when the text has been spoken.
+     * @param text The text that should be spoken.
+     * @param options The options that should be used.
+     */
+    speakText(text: string, options?: { rate?: number, pitch?: number, voice?: string | SyntheticVoice }): Promise<void>;
+
+    /**
+     * Gets the list of synthetic voices that are supported by the system.
+     * Returns a promise that resolves with the voices.
+     */
+    getVoices(): Promise<SyntheticVoice[]>;
+};
+
+interface Perf {
+    /**
+     * Gets the performance stats for the instance.
+     */
+    getStats(): PerformanceStats;
+};

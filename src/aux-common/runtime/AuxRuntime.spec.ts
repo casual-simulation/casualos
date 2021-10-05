@@ -6904,6 +6904,180 @@ describe('AuxRuntime', () => {
             expect(result.actions).toEqual([toast('abc')]);
         });
     });
+
+    describe('os.createDebugger()', () => {
+        it('should return an object that contains library functions', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@return os.createDebugger();`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            expect(typeof result.results[0]).toBe('object');
+        });
+
+        it('should use fake UUIDs', () => {
+            uuidMock.mockReturnValueOnce('myUUID');
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@let d = os.createDebugger(); return d.uuid();`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            expect(result.results[0]).toBe('uuid-1');
+        });
+
+        it('should use real UUIDs when specified', () => {
+            uuidMock.mockReturnValueOnce('myUUID');
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@let d = os.createDebugger({ useRealUUIDs: true }); return d.uuid();`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            expect(result.results[0]).toBe('myUUID');
+        });
+
+        it('should be able to create bots in the debugger', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@let d = os.createDebugger(); d.create({ color: 'red' }); return d.getAllActions();`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let updates = result.results[0];
+            expect(updates).toEqual([
+                // fake UUIDs for bots
+                botAdded(
+                    createBot('uuid-1', {
+                        color: 'red',
+                    })
+                ),
+            ]);
+        });
+
+        it('should be able to get actions', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@let d = os.createDebugger(); d.os.toast("abc"); return d.getAllActions();`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let updates = result.results[0];
+            expect(updates).toEqual([toast('abc')]);
+        });
+
+        it('should be able to update new bots', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@let d = os.createDebugger(); let b = d.create({ color: 'red' }); b.tags.num = 123; return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let updates = result.results[0];
+            expect(updates).toEqual([
+                botAdded(
+                    createBot('uuid-1', {
+                        color: 'red',
+                        num: 123,
+                    })
+                ),
+            ]);
+        });
+
+        it('should be able to shout in the debugger', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let updates = result.results[0];
+            expect(updates).toEqual([
+                botAdded(
+                    createBot('uuid-1', {
+                        test: '@os.toast("hello")',
+                    })
+                ),
+                toast('hello'),
+            ]);
+        });
+
+        it('should be able to get only common actions', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getCommonActions()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let updates = result.results[0];
+            expect(updates).toEqual([toast('hello')]);
+        });
+
+        it('should be able to get only bot actions', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getBotActions()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let updates = result.results[0];
+            expect(updates).toEqual([
+                botAdded(
+                    createBot('uuid-1', {
+                        test: '@os.toast("hello")',
+                    })
+                ),
+            ]);
+        });
+
+        it('should be able to get errors', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@throw new Error("abc");' }); d.shout('test'); return d.getErrors()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let errors = result.results[0];
+            expect(errors).toEqual([
+                {
+                    bot: expect.any(Object),
+                    tag: 'test',
+                    error: new Error('abc'),
+                },
+            ]);
+        });
+    });
 });
 
 function calculateActionResults(

@@ -20,6 +20,8 @@ import {
     getPortalTag,
     asyncResult,
     asyncError,
+    EnablePOVAction,
+    IMU_PORTAL,
 } from '@casual-simulation/aux-common';
 import {
     CameraRig,
@@ -48,6 +50,7 @@ import { AuxBot3D } from './AuxBot3D';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { convertCasualOSPositionToThreePosition } from './grid/Grid';
 import { FocusCameraRigOnOperation } from '../interaction/FocusCameraRigOnOperation';
+import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -107,6 +110,7 @@ export abstract class Game {
     }
 
     private _isPOV: boolean = false;
+    private _povImu: boolean = false;
 
     /**
      * Gets whether the game is currently in an immersive viewing mode.
@@ -114,6 +118,13 @@ export abstract class Game {
      */
     get isImmersive() {
         return !!this.xrSession || this._isPOV;
+    }
+
+    /**
+     * Gets whether to allow immersive controls while in an immersive viewing mode.
+     */
+    get allowImmersiveControls() {
+        return !this._povImu;
     }
 
     private _onUpdate: Subject<void> = new Subject<void>();
@@ -251,6 +262,11 @@ export abstract class Game {
      * Gets the HTML elements that the interaction manager should be able to handle events for.
      */
     abstract getUIHtmlElements(): HTMLElement[];
+
+    /**
+     * Gets the HTML elements that the input should prevent browser zooming on.
+     */
+    abstract getUIZoomElements(): HTMLElement[];
 
     /**
      * Finds the list of bot visualizers for the given bot ID.
@@ -626,6 +642,19 @@ export abstract class Game {
         this.input.update(xrFrame);
         this.updateInteraction();
 
+        if (this._isPOV && this._povImu) {
+            const sim = this.findSimulationForCameraRig(this.mainCameraRig);
+            const bot = getPortalConfigBot(sim.simulation, IMU_PORTAL);
+            if (bot) {
+                this.mainCameraRig.mainCamera.quaternion.set(
+                    bot.values.deviceRotationX,
+                    bot.values.deviceRotationZ,
+                    bot.values.deviceRotationY,
+                    bot.values.deviceRotationW
+                );
+            }
+        }
+
         const simulations = this.getSimulations();
         if (simulations) {
             for (let i = 0; i < simulations.length; i++) {
@@ -827,7 +856,7 @@ export abstract class Game {
         );
     }
 
-    protected startPOV(center: { x: number; y: number; z: number }) {
+    protected startPOV(event: EnablePOVAction) {
         if (this._isPOV) {
             console.log('[Game] POV already started!');
             return;
@@ -835,6 +864,7 @@ export abstract class Game {
         console.log('[Game] Start POV');
 
         this._isPOV = true;
+        this._povImu = event.imu;
 
         // POV requires that we be using a perspective camera.
         this.setCameraType('perspective');
@@ -844,7 +874,7 @@ export abstract class Game {
 
         document.documentElement.classList.add('pov-app');
 
-        if (center) {
+        if (event.center) {
             const sims = this.getSimulations();
             const gridScale =
                 sims.length > 0
@@ -852,9 +882,9 @@ export abstract class Game {
                     : DEFAULT_WORKSPACE_GRID_SCALE;
             this.mainCameraRig.cameraParent.position.copy(
                 convertCasualOSPositionToThreePosition(
-                    center.x,
-                    center.y,
-                    center.z,
+                    event.center.x,
+                    event.center.y,
+                    event.center.z,
                     gridScale
                 )
             );
@@ -873,6 +903,7 @@ export abstract class Game {
         console.log('[Game] Stop POV');
 
         this._isPOV = false;
+        this._povImu = false;
 
         // Go back to the orthographic camera type when exiting XR.
         this.setCameraType('orthographic');

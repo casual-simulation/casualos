@@ -258,7 +258,6 @@ import {
     DeviceSelector,
     RemoteAction,
 } from '@casual-simulation/causal-trees';
-import { v4 as uuidv4 } from 'uuid';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
@@ -680,6 +679,16 @@ export interface GetRecordsResult {
      * Gets the set page of records.
      */
     getMoreRecords(): Promise<GetRecordsResult>;
+}
+
+/**
+ * Defines an interface that contains options for an aux debugger.
+ */
+export interface AuxDebuggerOptions {
+    /**
+     * Whether to use "real" UUIDs instead of predictable ones.
+     */
+    useRealUUIDs: boolean;
 }
 
 /**
@@ -1895,9 +1904,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Enables Point-of-View mode.
      */
     function enablePointOfView(
-        center: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 }
+        center: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 },
+        imu?: boolean
     ): EnablePOVAction {
-        return addAction(enablePOV(center));
+        return addAction(enablePOV(center, imu));
     }
 
     /**
@@ -4129,7 +4139,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Creates a Universally Unique IDentifier (UUID).
      */
     function uuid(): string {
-        return uuidv4();
+        return context.uuid();
     }
 
     /**
@@ -5729,7 +5739,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      */
     function create(botId: string, ...mods: Mod[]) {
-        return createBase(botId, () => uuidv4(), ...mods);
+        return createBase(botId, () => context.uuid(), ...mods);
     }
 
     function createBase(

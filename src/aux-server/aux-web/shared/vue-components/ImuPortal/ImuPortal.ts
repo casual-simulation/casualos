@@ -42,8 +42,22 @@ export default class ImuPortal extends Vue {
 
     showRequestDeviceMotionPermission: boolean = false;
 
+    /**
+     * Whether the IMU data should be streamed to the imuPortalBot even if the IMU portal
+     * is not open.
+     */
+    @Prop({}) streamImu: boolean;
+
     constructor() {
         super();
+    }
+
+    @Watch('streamImu')
+    streamImuUpdated() {
+        this._onUserBotUpdated(
+            appManager.simulationManager.primary,
+            appManager.simulationManager.primary.helper.userBot
+        );
     }
 
     created() {
@@ -136,14 +150,17 @@ export default class ImuPortal extends Vue {
         user: PrecalculatedBot
     ) {
         const portal = calculateBotValue(null, user, IMU_PORTAL);
-        if (portal) {
+        if (
+            portal ||
+            (sim === appManager.simulationManager.primary && this.streamImu)
+        ) {
             let sub = this._portals.get(sim);
             if (!sub) {
                 sub = new Subscription();
                 this._portals.set(sim, sub);
 
-                if (!(await this._startOrientationSensor(sim, sub, portal))) {
-                    if (!(await this._startDeviceMotion(sim, sub, portal))) {
+                if (!(await this._startOrientationSensor(sim, sub))) {
+                    if (!(await this._startDeviceMotion(sim, sub))) {
                         console.log(
                             '[ImuPortal] IMU data is not supported on this browser.'
                         );
@@ -166,8 +183,7 @@ export default class ImuPortal extends Vue {
 
     private async _startOrientationSensor(
         sim: RemoteSimulation,
-        sub: Subscription,
-        portal: string
+        sub: Subscription
     ): Promise<boolean> {
         if (typeof AbsoluteOrientationSensor === 'undefined') {
             return false;
@@ -201,14 +217,15 @@ export default class ImuPortal extends Vue {
 
                     quaternion.setFromRotationMatrix(rotation);
 
+                    let update = {
+                        imuSupported: true,
+                        deviceRotationX: quaternion.x,
+                        deviceRotationY: quaternion.y,
+                        deviceRotationZ: quaternion.z,
+                        deviceRotationW: quaternion.w,
+                    };
                     sim.helper.updateBot(portalBot, {
-                        tags: {
-                            imuSupported: true,
-                            deviceRotationX: quaternion.x,
-                            deviceRotationY: quaternion.y,
-                            deviceRotationZ: quaternion.z,
-                            deviceRotationW: quaternion.w,
-                        },
+                        tags: update,
                     });
                 }
             };
@@ -260,7 +277,7 @@ export default class ImuPortal extends Vue {
 
                     if (results.every((r) => r.state === 'granted')) {
                         await sim.helper.transaction(
-                            registerBuiltinPortal(portal)
+                            registerBuiltinPortal(IMU_PORTAL)
                         );
                         console.log('[ImuPortal] Starting sensor...');
                         sensor.start();
@@ -287,11 +304,7 @@ export default class ImuPortal extends Vue {
         }
     }
 
-    private async _startDeviceMotion(
-        sim: RemoteSimulation,
-        sub: Subscription,
-        portal: string
-    ) {
+    private async _startDeviceMotion(sim: RemoteSimulation, sub: Subscription) {
         if (typeof DeviceMotionEvent === 'undefined') {
             return false;
         }
@@ -398,14 +411,15 @@ export default class ImuPortal extends Vue {
                         let quaternion = new Quaternion();
                         quaternion.setFromRotationMatrix(rotation);
 
+                        const update = {
+                            imuSupported: true,
+                            deviceRotationX: quaternion.x,
+                            deviceRotationY: quaternion.y,
+                            deviceRotationZ: quaternion.z,
+                            deviceRotationW: quaternion.w,
+                        };
                         sim.helper.updateBot(portalBot, {
-                            tags: {
-                                imuSupported: true,
-                                deviceRotationX: quaternion.x,
-                                deviceRotationY: quaternion.y,
-                                deviceRotationZ: quaternion.z,
-                                deviceRotationW: quaternion.w,
-                            },
+                            tags: update,
                         });
                     }
                 };
@@ -422,7 +436,7 @@ export default class ImuPortal extends Vue {
                     );
                 });
 
-                await sim.helper.transaction(registerBuiltinPortal(portal));
+                await sim.helper.transaction(registerBuiltinPortal(IMU_PORTAL));
                 console.log('[ImuPortal] Starting sensor...');
 
                 return true;

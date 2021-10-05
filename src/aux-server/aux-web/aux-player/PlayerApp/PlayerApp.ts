@@ -222,6 +222,8 @@ export default class PlayerApp extends Vue {
     loginInfo: DeviceInfo = null;
     loginState: LoginState = null;
 
+    streamImu: boolean = false;
+
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
 
@@ -994,6 +996,8 @@ export default class PlayerApp extends Vue {
                             asyncError(e.taskId, ex.toString())
                         );
                     }
+                } else if (e.type === 'enable_pov') {
+                    this.streamImu = e.enabled && e.imu;
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(

@@ -2461,6 +2461,11 @@ export interface EnablePOVAction {
      * The point that the camera should be placed at for POV.
      */
     center?: { x: number; y: number; z: number };
+
+    /**
+     * Whether IMU features should be enabled while in POV mode.
+     */
+    imu?: boolean;
 }
 
 /**
@@ -5253,15 +5258,19 @@ export function disableVR(): EnableVRAction {
  * @param center
  * @returns
  */
-export function enablePOV(center: {
-    x: number;
-    y: number;
-    z: number;
-}): EnablePOVAction {
+export function enablePOV(
+    center: {
+        x: number;
+        y: number;
+        z: number;
+    },
+    imu?: boolean
+): EnablePOVAction {
     return {
         type: 'enable_pov',
         enabled: true,
         center,
+        imu,
     };
 }
 

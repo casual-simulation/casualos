@@ -292,6 +292,7 @@ export abstract class BaseInteractionManager {
     }
 
     protected _updateCameraController(controller: CameraRigControls) {
+        controller.controls.enableImmersive = this._game.allowImmersiveControls;
         controller.controls.update();
     }
 

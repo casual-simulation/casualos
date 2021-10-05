@@ -444,11 +444,10 @@ export class PlayerGame extends Game {
         // return [...this.miniSimulations];
     }
     getUIHtmlElements(): HTMLElement[] {
-        return [
-            <HTMLElement>this.gameView.$refs.miniGridPortal,
-            this.slider,
-            <HTMLElement>this.gameView.$refs.menuElement,
-        ];
+        return [<HTMLElement>this.gameView.$refs.miniGridPortal, this.slider];
+    }
+    getUIZoomElements(): HTMLElement[] {
+        return [<HTMLElement>this.gameView.$refs.menuElement];
     }
     getMiniPortalViewport(): Viewport {
         return this.miniViewport;
@@ -678,7 +677,7 @@ export class PlayerGame extends Game {
                     sim.helper.transaction(asyncResult(e.taskId, null));
                 } else if (e.type === 'enable_pov') {
                     if (e.enabled) {
-                        this.startPOV(e.center);
+                        this.startPOV(e);
                     } else {
                         this.stopPOV();
                     }

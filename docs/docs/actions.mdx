@@ -3034,7 +3034,7 @@ Disables virtual reality on the device.
 os.disableVR();
 ```
 
-### `os.enablePointOfView(center?)`
+### `os.enablePointOfView(center?, imu?)`
 
 Enables Point-of-View mode on the device. Useful for getting a "ground level" view in the grid portal.
 This will move the camera to the given position, set the camera type to `perspective`, and change the camera controls so that dragging the screen causes the camera to look around.
@@ -3042,6 +3042,8 @@ This will move the camera to the given position, set the camera type to `perspec
 It is not possible to manually move the camera in this mode, however it is still possible to use <ActionLink action='os.focusOn(botOrPosition, options?)'/> to move the camera.
 
 The **first parameter** is optional and is the position that the camera should be placed at. If not specified, then the camera will be placed at `(0, 0, 0)`.
+
+The **second parameter** is optional and determines whether the imuPortal should be used to control the camera rotation while in Point-of-View mode.
 
 #### Examples:
 
@@ -3057,6 +3059,11 @@ os.enablePointOfView({
     y: 0,
     z: 3
 });
+```
+
+3. Enable POV mode with the IMU.
+```typescript
+os.enablePointOfView(undefined, true);
 ```
 
 ### `os.disablePointOfView()`
@@ -3997,6 +4004,64 @@ See https://help.github.com/en/articles/creating-a-personal-access-token-for-the
 1. Backup all the instances to a Github Gist.
 ```typescript
 server.backupToGithub('your auth token');
+```
+
+### `os.createDebugger(options?)`
+
+Creates a debug environment that can be used to simulate bots in isolation from the rest of the inst.
+Returns an object that contains all of the action functions.
+
+One of the special things about debug environments is that the bots in the environment are totally isolated from regular bots.
+This means that functions like <ActionLink action='getBots(..filters)'/> can only access bots that have been created in the debugger
+and actions like <ActionLink action='os.toast(message, duration?)'/> don't do anything automatically.
+This can be useful for automated testing where you want to see what some bots will do without actually letting them do anything.
+
+The returned object can be used to create/find bots in the debug environment and simulate interactions.
+The debug environment also contains several functions that make it easy to observe what has happened inside the environment and therefore determine if everything was performed correctly.
+
+The **first parameter** is optional and is the options that should be used to configure the debugger. It is an object and should have the following structure:
+```typescript
+let options: {
+    /**
+     * Whether to use real UUIDs for Bot IDs and the uuid() function.
+     * If set to false, then UUIDs will be predictable starting with "uuid-1" and continuing up ("uuid-2", "uuid-3", etc.).
+     * If set to true, then UUIDs will be unpredictable and unique.
+     * Defaults to false.
+     */
+    useRealUUIDs?: boolean;
+};
+```
+
+#### Examples:
+
+```typescript title='Create a debugger and copy this bot into it.'
+const debugger = os.createDebugger();
+const debuggerBot = debugger.create(thisBot);
+```
+
+```typescript title='Test a script in the debugger'
+const debugger = os.createDebugger();
+const debuggerBot = debugger.create({
+    test: '@tags.hit = true;'
+});
+debugger.shout('test');
+
+if (debuggerBot.tags.hit) {
+    os.toast('Success!');
+} else {
+    os.toast('Failed!');
+}
+```
+
+```typescript title='Find out what actions a script performs'
+const debugger = os.createDebugger();
+const debuggerBot = debugger.create({
+    test: '@os.toast("hello!")'
+});
+debugger.shout('test');
+
+const actions = debugger.getCommonActions();
+os.toast(actions);
 ```
 
 ### `server.backupAsDownload(target)`

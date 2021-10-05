@@ -1,8 +1,30 @@
 # CasualOS Changelog
 
+## V2.0.12
+
+#### Date: 10/5/2021
+
+### :rocket: Improvements
+
+-   Added the `os.createDebugger(options?)` function.
+    -   `os.createDebugger()` can be used to create a separate sandbox area where bots can be tested without causing external effects.
+    -   This is useful for automated testing scenarios where you want to validate how a script works (e.g. that a toast is shown) without actually performing the script results (i.e. actually showing the toast).
+    -   Works by returning an object that contains a separate set of actions (like `create()` and `getBots()`) that can be used like normal.
+        For example:
+        ```typescript
+        const debugger = os.createDebugger();
+        const debugBot = debugger.create({ home: true, color: 'red' });
+        ```
+        Creates a bot that is contained in the debugger. Therefore, scripts on the `debugBot` will only affect bots that were created in the debugger.
+    -   See the documentation for more information.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting `meetPortalAnchorPoint` to `left` or `right` would not shift the `gridPortal` to the remaining space.
+
 ## V2.0.11
 
-#### Date: 9/28/2021
+#### Date: 10/1/2021
 
 ### :boom: Breaking Changes
 
@@ -51,6 +73,9 @@
 
 -   Updated the Privacy Policy, Terms of Service, and Acceptable Use Policy.
 -   Changed the meetPortal to use a custom Jitsi deployment.
+-   Improved `os.enablePointOfView(center?)` to take an additional argument that determines whether to use the device IMU to control the camera rotation while in POV mode.
+    -   The new function signature is `os.enablePointOfView(center?, imu?)`.
+    -   e.g. `os.enablePointOfView(undefined, true)` will enable using the IMU for controlling the camera rotation.
 
 ### :bug: Bug Fixes
 
