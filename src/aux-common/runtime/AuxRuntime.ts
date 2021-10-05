@@ -51,6 +51,7 @@ import {
     action,
     isBotInDimension,
     asyncResult,
+    BotActions,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -61,7 +62,11 @@ import {
     removeFromContext,
     isInContext,
 } from './AuxGlobalContext';
-import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
+import {
+    AuxDebuggerOptions,
+    AuxLibrary,
+    createDefaultLibrary,
+} from './AuxLibrary';
 import {
     RuntimeBotInterface,
     RuntimeBotFactory,
@@ -143,6 +148,13 @@ export class AuxRuntime
      */
     private _botFunctionMap: Map<string, Set<string>> = new Map();
 
+    /**
+     * Whether changes should be automatically batched.
+     */
+    private _autoBatch: boolean = true;
+
+    private _libraryFactory: (context: AuxGlobalContext) => AuxLibrary;
+
     get forceSignedScripts() {
         return this._forceSignedScripts;
     }
@@ -171,13 +183,20 @@ export class AuxRuntime
         forceSignedScripts: boolean = false,
         exemptSpaces: BotSpace[] = ['local', 'tempLocal']
     ) {
+        this._libraryFactory = libraryFactory;
         this._globalContext = new MemoryGlobalContext(
             version,
             device,
             this,
             this
         );
-        this._library = libraryFactory(this._globalContext);
+        this._library = merge(libraryFactory(this._globalContext), {
+            api: {
+                os: {
+                    createDebugger: this._createDebugger.bind(this),
+                },
+            },
+        });
         this._editModeProvider = editModeProvider;
         this._forceSignedScripts = forceSignedScripts;
         this._exemptSpaces = exemptSpaces;
@@ -271,6 +290,43 @@ export class AuxRuntime
     process(actions: BotAction[]) {
         this._processCore(actions);
         this._processBatch();
+    }
+
+    private _createDebugger(options?: AuxDebuggerOptions) {
+        const runtime = new AuxRuntime(
+            this._globalContext.version,
+            this._globalContext.device,
+            this._libraryFactory,
+            this._editModeProvider,
+            this._forceSignedScripts,
+            this._exemptSpaces
+        );
+        runtime._autoBatch = false;
+        let idCount = 0;
+        if (!options?.useRealUUIDs) {
+            runtime._globalContext.uuid = () => {
+                idCount += 1;
+                return `uuid-${idCount}`;
+            };
+        }
+        let allActions = [] as BotAction[];
+
+        let create = runtime._library.tagSpecificApi.create({
+            bot: null,
+            config: null,
+            creator: null,
+            tag: null,
+        });
+
+        return {
+            ...runtime._library.api,
+            getActions: () => {
+                const actions = runtime._processUnbatchedActions();
+                allActions.push(...actions);
+                return allActions;
+            },
+            create,
+        };
     }
 
     private _processCore(actions: BotAction[]) {
@@ -1029,7 +1085,7 @@ export class AuxRuntime
     }
 
     notifyChange(): void {
-        if (!this._batchPending) {
+        if (!this._batchPending && this._autoBatch) {
             this._batchPending = true;
             queueMicrotask(() => {
                 this._processBatch();
