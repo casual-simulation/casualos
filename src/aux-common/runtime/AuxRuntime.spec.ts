@@ -6951,7 +6951,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        test: `@let d = os.createDebugger(); d.create({ color: 'red' }); return d.getActions();`,
+                        test: `@let d = os.createDebugger(); d.create({ color: 'red' }); return d.getAllActions();`,
                     }),
                 })
             );
@@ -6972,7 +6972,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        test: `@let d = os.createDebugger(); d.os.toast("abc"); return d.getActions();`,
+                        test: `@let d = os.createDebugger(); d.os.toast("abc"); return d.getAllActions();`,
                     }),
                 })
             );
@@ -6986,7 +6986,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        test: `@let d = os.createDebugger(); let b = d.create({ color: 'red' }); b.tags.num = 123; return d.getActions()`,
+                        test: `@let d = os.createDebugger(); let b = d.create({ color: 'red' }); b.tags.num = 123; return d.getAllActions()`,
                     }),
                 })
             );
@@ -7007,7 +7007,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getActions()`,
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getAllActions()`,
                     }),
                 })
             );
@@ -7021,6 +7021,40 @@ describe('AuxRuntime', () => {
                     })
                 ),
                 toast('hello'),
+            ]);
+        });
+
+        it('should be able to get only common actions', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getCommonActions()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let updates = result.results[0];
+            expect(updates).toEqual([toast('hello')]);
+        });
+
+        it('should be able to get only bot actions', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getBotActions()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let updates = result.results[0];
+            expect(updates).toEqual([
+                botAdded(
+                    createBot('uuid-1', {
+                        test: '@os.toast("hello")',
+                    })
+                ),
             ]);
         });
     });

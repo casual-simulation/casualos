@@ -318,12 +318,29 @@ export class AuxRuntime
             tag: null,
         });
 
+        const isCommonAction = (action: BotAction) => {
+            return !(
+                action.type === 'add_bot' ||
+                action.type === 'remove_bot' ||
+                action.type === 'update_bot' ||
+                action.type === 'apply_state'
+            );
+        };
+
+        const getAllActions = () => {
+            const actions = runtime._processUnbatchedActions();
+            allActions.push(...actions);
+            return allActions;
+        };
+
         return {
             ...runtime._library.api,
-            getActions: () => {
-                const actions = runtime._processUnbatchedActions();
-                allActions.push(...actions);
-                return allActions;
+            getAllActions,
+            getCommonActions: () => {
+                return getAllActions().filter(isCommonAction);
+            },
+            getBotActions: () => {
+                return getAllActions().filter((a) => !isCommonAction(a));
             },
             create,
         };

@@ -3562,7 +3562,19 @@ interface Debugger {
     /**
      * Gets the list of actions that have been performed by bots in this debugger.
      */
-    getActions(): BotAction[];
+    getAllActions(): BotAction[];
+
+    /**
+     * Gets the list of common actions that have been performed by bots in this debugger.
+     * Common actions are actions that don't directly change bots or bot tags.
+     */
+    getCommonActions(): BotAction[];
+
+     /**
+     * Gets the list of bot actions that have been performed by bots in this debugger.
+     * Bot actions are actions that directly create/destroy/update bots or bot tags.
+     */
+    getBotActions(): BotAction[];
 
     /**
      * Creates a new bot and returns it.
