@@ -773,6 +773,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             clearInterval,
             clearWatchBot,
             clearWatchPortal,
+            assert,
 
             html,
 
@@ -1165,6 +1166,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     function clearWatchPortal(id: number) {
         context.cancelAndRemoveTimers(id, 'watch_portal');
+    }
+
+    /**
+     * Asserts that the given condition is true.
+     * Throws an error if the condition is not true.
+     * @param condition The condition to check.
+     * @param message The message to use in the error if the condition is not true.
+     */
+    function assert(condition: boolean, message?: string) {
+        if (!condition) {
+            if (hasValue(message)) {
+                throw new Error('Assertion failed. ' + message);
+            } else {
+                throw new Error('Assertion failed.');
+            }
+        }
     }
 
     /**

@@ -10838,6 +10838,26 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('assert()', () => {
+        it('should throw an error if the given condition is false', () => {
+            expect(() => {
+                library.api.assert(false);
+            }).toThrowError('Assertion failed.');
+        });
+
+        it('should not throw an error if the given condition is true', () => {
+            expect(() => {
+                library.api.assert(true);
+            }).not.toThrowError('Assertion failed.');
+        });
+
+        it('should throw errors with the given message', () => {
+            expect(() => {
+                library.api.assert(false, 'Failed with reason.');
+            }).toThrowError('Assertion failed. Failed with reason.');
+        });
+    });
+
     describe('os.watchBot()', () => {
         let tagContext: TagSpecificApiOptions;
         let bot1: RuntimeBot;
