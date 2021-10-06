@@ -38,8 +38,8 @@ jobs:
                   npm run build
             - name: Publish NPM Packages
               run: |
-                  echo "@casual-simulation:registry=http://registry.npmjs.org/" > .npmrc
-                  echo "registry=http://registry.npmjs.org/" >> .npmrc
+                  echo "@casual-simulation:registry=https://registry.npmjs.org/" > .npmrc
+                  echo "registry=https://registry.npmjs.org/" >> .npmrc
                   echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> .npmrc
                   npm whoami
                   echo "Publishing NPM Packages..."
