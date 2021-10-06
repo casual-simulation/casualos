@@ -4035,16 +4035,17 @@ let options: {
 #### Examples:
 
 ```typescript title='Create a debugger and copy this bot into it.'
-const debugger = os.createDebugger();
-const debuggerBot = debugger.create(thisBot);
+// Note: variables cannot be named "debugger" so we use the name "debug" instead.
+const debug = os.createDebugger();
+const debuggerBot = debug.create(thisBot);
 ```
 
 ```typescript title='Test a script in the debugger'
-const debugger = os.createDebugger();
-const debuggerBot = debugger.create({
+const debug = os.createDebugger();
+const debuggerBot = debug.create({
     test: '@tags.hit = true;'
 });
-debugger.shout('test');
+debug.shout('test');
 
 if (debuggerBot.tags.hit) {
     os.toast('Success!');
@@ -4054,13 +4055,13 @@ if (debuggerBot.tags.hit) {
 ```
 
 ```typescript title='Find out what actions a script performs'
-const debugger = os.createDebugger();
-const debuggerBot = debugger.create({
+const debug = os.createDebugger();
+const debuggerBot = debug.create({
     test: '@os.toast("hello!")'
 });
-debugger.shout('test');
+debug.shout('test');
 
-const actions = debugger.getCommonActions();
+const actions = debug.getCommonActions();
 os.toast(actions);
 ```
 

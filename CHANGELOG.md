@@ -12,8 +12,8 @@
     -   Works by returning an object that contains a separate set of actions (like `create()` and `getBots()`) that can be used like normal.
         For example:
         ```typescript
-        const debugger = os.createDebugger();
-        const debugBot = debugger.create({ home: true, color: 'red' });
+        const debug = os.createDebugger();
+        const debugBot = debug.create({ home: true, color: 'red' });
         ```
         Creates a bot that is contained in the debugger. Therefore, scripts on the `debugBot` will only affect bots that were created in the debugger.
     -   See the documentation for more information.
