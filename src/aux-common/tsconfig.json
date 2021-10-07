@@ -10,5 +10,9 @@
     },
     "include": ["**/*.ts"],
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
-    "references": [{ "path": "../causal-trees" }, { "path": "../crypto" }]
+    "references": [
+        { "path": "../causal-trees" },
+        { "path": "../crypto" },
+        { "path": "../fast-json-stable-stringify" }
+    ]
 }

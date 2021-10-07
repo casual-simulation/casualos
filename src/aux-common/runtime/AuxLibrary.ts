@@ -269,7 +269,7 @@ import {
     getEmbeddedBase64FromPdf,
 } from './Utils';
 import { sha256 as hashSha256, sha512 as hashSha512, hmac } from 'hash.js';
-import stableStringify from 'fast-json-stable-stringify';
+import stableStringify from '@casual-simulation/fast-json-stable-stringify';
 import {
     encrypt as realEncrypt,
     decrypt as realDecrypt,
