@@ -3032,6 +3032,22 @@ declare global {
     function clearWatchPortal(watchId: number): void;
 
     /**
+     * Asserts that the given condition is true.
+     * Throws an error if the condition is not true.
+     * @param condition The condition to check.
+     * @param message The message to use in the error if the condition is not true.
+     */
+    function assert(condition: boolean, message?: string): void;
+
+     /**
+      * Asserts that the given values contain the same data.
+      * Throws an error if they are not equal.
+      * @param first The first value to test.
+      * @param second The second value to test.
+      */
+    function assertEqual(first: any, second: any): void;
+
+    /**
      * Sends a web request based on the given options.
      * @param options The options that specify where and what to send in the web request.
      *
@@ -3739,7 +3755,23 @@ interface Debugger {
       * @param watchId The ID number that should be used to cancel the watch callbacks.
       */
      clearWatchPortal(watchId: number): void;
+
+     /**
+     * Asserts that the given condition is true.
+     * Throws an error if the condition is not true.
+     * @param condition The condition to check.
+     * @param message The message to use in the error if the condition is not true.
+     */
+     assert(condition: boolean, message?: string): void;
  
+    /**
+     * Asserts that the given values contain the same data.
+     * Throws an error if they are not equal.
+     * @param first The first value to test.
+     * @param second The second value to test.
+     */
+    assertEqual(first: any, second: any): void;
+
      /**
       * Sends a web request based on the given options.
       * @param options The options that specify where and what to send in the web request.

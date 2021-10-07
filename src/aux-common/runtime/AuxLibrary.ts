@@ -774,6 +774,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             clearWatchBot,
             clearWatchPortal,
             assert,
+            assertEqual,
 
             html,
 
@@ -1181,6 +1182,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             } else {
                 throw new Error('Assertion failed.');
             }
+        }
+    }
+
+    /**
+     * Asserts that the given values contain the same data.
+     * Throws an error if they are not equal.
+     * @param first The first value to test.
+     * @param second The second value to test.
+     */
+    function assertEqual(first: any, second: any) {
+        const json = getPrettyJSON(first);
+        const json2 = getPrettyJSON(second);
+
+        if (json !== json2) {
+            throw new Error(
+                `Assertion failed.\n\nExpected: ${json2}\nReceived: ${json}`
+            );
         }
     }
 
@@ -1655,10 +1673,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param data The data.
      */
     function getJSON(data: any): string {
-        if (hasValue(data[ORIGINAL_OBJECT])) {
-            return JSON.stringify(data[ORIGINAL_OBJECT]);
+        if (hasValue(data?.[ORIGINAL_OBJECT])) {
+            return stableStringify(data[ORIGINAL_OBJECT]);
         }
-        return JSON.stringify(data);
+        return stableStringify(data);
+    }
+
+    /**
+     * Gets JSON for the given data.
+     * @param data The data.
+     */
+    function getPrettyJSON(data: any): string {
+        if (hasValue(data?.[ORIGINAL_OBJECT])) {
+            return stableStringify(data[ORIGINAL_OBJECT], { space: 2 });
+        }
+        return stableStringify(data, { space: 2 });
     }
 
     // Actions

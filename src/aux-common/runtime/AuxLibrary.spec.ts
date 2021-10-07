@@ -1320,6 +1320,20 @@ describe('AuxLibrary', () => {
             const json = library.api.getJSON(obj);
             expect(json).toEqual(JSON.stringify(obj[ORIGINAL_OBJECT]));
         });
+
+        const commonCases: [string, any][] = [
+            ['object', { abc: 'def' }],
+            ['array', ['abc', 'def']],
+            ['number', 123],
+            ['string', 'abc'],
+            ['boolean', true],
+            ['null', null],
+        ];
+
+        it.each(commonCases)('should support %s', (type, value) => {
+            const json = library.api.getJSON(value);
+            expect(json).toEqual(JSON.stringify(value));
+        });
     });
 
     describe('getTag()', () => {
@@ -10856,6 +10870,42 @@ describe('AuxLibrary', () => {
                 library.api.assert(false, 'Failed with reason.');
             }).toThrowError('Assertion failed. Failed with reason.');
         });
+    });
+
+    describe('assertEqual()', () => {
+        it('should throw an error if the given values are not equal', () => {
+            // expect(true).toEqual(false);
+            expect(() => {
+                library.api.assertEqual(true, false);
+            }).toThrowError(
+                `Assertion failed.\n\nExpected: false\nReceived: true`
+            );
+        });
+
+        it('should pretty print objects', () => {
+            expect(() => {
+                library.api.assertEqual({ abc: 123 }, { def: 456 });
+            }).toThrowError(
+                `Assertion failed.\n\nExpected: {\n  "def": 456\n}\nReceived: {\n  "abc": 123\n}`
+            );
+        });
+
+        const noThrowCases: [string, any, any][] = [
+            ['objects', { abc: 123 }, { abc: 123 }],
+            ['arrays', [1, 2, 3], [1, 2, 3]],
+            ['numbers', 123, 123],
+            ['booleans', true, true],
+            ['nulls', null, null],
+        ];
+
+        it.each(noThrowCases)(
+            'should not throw when %s serialize to the same value',
+            (name, value1, value2) => {
+                expect(() => {
+                    library.api.assertEqual(value1, value2);
+                }).not.toThrowError();
+            }
+        );
     });
 
     describe('os.watchBot()', () => {
