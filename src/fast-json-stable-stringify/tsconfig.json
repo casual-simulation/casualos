@@ -8,11 +8,7 @@
         "composite": true,
         "incremental": true
     },
-    "include": ["**/*.ts"],
+    "include": ["./**/*"],
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
-    "references": [
-        { "path": "../causal-trees" },
-        { "path": "../crypto" },
-        { "path": "../fast-json-stable-stringify" }
-    ]
+    "references": []
 }

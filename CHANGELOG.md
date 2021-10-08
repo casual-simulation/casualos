@@ -1,5 +1,31 @@
 # CasualOS Changelog
 
+## V2.0.12
+
+#### Date: 10/8/2021
+
+### :rocket: Improvements
+
+-   Added the `os.createDebugger(options?)` function.
+    -   `os.createDebugger()` can be used to create a separate sandbox area where bots can be tested without causing external effects.
+    -   This is useful for automated testing scenarios where you want to validate how a script works (e.g. that a toast is shown) without actually performing the script results (i.e. actually showing the toast).
+    -   Works by returning an object that contains a separate set of actions (like `create()` and `getBots()`) that can be used like normal.
+        For example:
+        ```typescript
+        const debug = os.createDebugger();
+        const debugBot = debug.create({ home: true, color: 'red' });
+        ```
+        Creates a bot that is contained in the debugger. Therefore, scripts on the `debugBot` will only affect bots that were created in the debugger.
+    -   See the documentation for more information.
+-   Added the `assert(condition, message?)` and `assertEqual(received, expected)` functions.
+    -   These functions check that the given condition is true or that the values are equal to each other and throw an error if they are not.
+    -   They can be useful for automated testing.
+    -   See the documentation for examples.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting `meetPortalAnchorPoint` to `left` or `right` would not shift the `gridPortal` to the remaining space.
+
 ## V2.0.11
 
 #### Date: 10/1/2021

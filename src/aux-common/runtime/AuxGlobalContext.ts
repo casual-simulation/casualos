@@ -18,12 +18,12 @@ import {
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { ScriptError, RanOutOfEnergyError } from './AuxResults';
-import { v4 as uuid } from 'uuid';
 import { sortBy, sortedIndex, sortedIndexOf, sortedIndexBy } from 'lodash';
 import './PerformanceNowPolyfill';
 import { Observable, Subscription, SubscriptionLike } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import TWEEN from '@tweenjs/tween.js';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * The interval between animation frames in miliseconds when using setInterval().
@@ -245,6 +245,11 @@ export interface AuxGlobalContext {
      * Starts the animation loop for the context.
      */
     startAnimationLoop(): SubscriptionLike;
+
+    /**
+     * Creates a UUID.
+     */
+    uuid(): string;
 }
 
 /**
@@ -503,6 +508,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      * The current energy that the context has.
      */
     energy: number = DEFAULT_ENERGY;
+
+    uuid = uuidv4;
 
     get localTime() {
         return performance.now() - this._startTime;
@@ -878,7 +885,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             reject = rej;
         });
         const task: AsyncTask = {
-            taskId: !unguessableId ? (this._taskCounter += 1) : uuid(),
+            taskId: !unguessableId ? (this._taskCounter += 1) : this.uuid(),
             allowRemoteResolution: allowRemoteResolution || false,
             resolve: resolve,
             reject: reject,

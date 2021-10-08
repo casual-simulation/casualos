@@ -258,7 +258,6 @@ import {
     DeviceSelector,
     RemoteAction,
 } from '@casual-simulation/causal-trees';
-import { v4 as uuidv4 } from 'uuid';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
@@ -270,7 +269,7 @@ import {
     getEmbeddedBase64FromPdf,
 } from './Utils';
 import { sha256 as hashSha256, sha512 as hashSha512, hmac } from 'hash.js';
-import stableStringify from 'fast-json-stable-stringify';
+import stableStringify from '@casual-simulation/fast-json-stable-stringify';
 import {
     encrypt as realEncrypt,
     decrypt as realDecrypt,
@@ -683,6 +682,16 @@ export interface GetRecordsResult {
 }
 
 /**
+ * Defines an interface that contains options for an aux debugger.
+ */
+export interface AuxDebuggerOptions {
+    /**
+     * Whether to use "real" UUIDs instead of predictable ones.
+     */
+    useRealUUIDs: boolean;
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
@@ -764,6 +773,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             clearInterval,
             clearWatchBot,
             clearWatchPortal,
+            assert,
+            assertEqual,
 
             html,
 
@@ -1156,6 +1167,46 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     function clearWatchPortal(id: number) {
         context.cancelAndRemoveTimers(id, 'watch_portal');
+    }
+
+    /**
+     * Asserts that the given condition is true.
+     * Throws an error if the condition is not true.
+     * @param condition The condition to check.
+     * @param message The message to use in the error if the condition is not true.
+     */
+    function assert(condition: boolean, message?: string) {
+        if (!condition) {
+            if (hasValue(message)) {
+                throw new Error('Assertion failed. ' + message);
+            } else {
+                throw new Error('Assertion failed.');
+            }
+        }
+    }
+
+    function getAssertionValue(value: any) {
+        if (value instanceof Error) {
+            return value.toString();
+        }
+        return value;
+    }
+
+    /**
+     * Asserts that the given values contain the same data.
+     * Throws an error if they are not equal.
+     * @param first The first value to test.
+     * @param second The second value to test.
+     */
+    function assertEqual(first: any, second: any) {
+        const json = getPrettyJSON(getAssertionValue(first));
+        const json2 = getPrettyJSON(getAssertionValue(second));
+
+        if (json !== json2) {
+            throw new Error(
+                `Assertion failed.\n\nExpected: ${json2}\nReceived: ${json}`
+            );
+        }
     }
 
     /**
@@ -1629,10 +1680,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param data The data.
      */
     function getJSON(data: any): string {
-        if (hasValue(data[ORIGINAL_OBJECT])) {
-            return JSON.stringify(data[ORIGINAL_OBJECT]);
+        if (hasValue(data?.[ORIGINAL_OBJECT])) {
+            return stableStringify(data[ORIGINAL_OBJECT]);
         }
-        return JSON.stringify(data);
+        return stableStringify(data);
+    }
+
+    /**
+     * Gets JSON for the given data.
+     * @param data The data.
+     */
+    function getPrettyJSON(data: any): string {
+        if (hasValue(data?.[ORIGINAL_OBJECT])) {
+            return stableStringify(data[ORIGINAL_OBJECT], { space: 2 });
+        }
+        return stableStringify(data, { space: 2 });
     }
 
     // Actions
@@ -4130,7 +4192,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Creates a Universally Unique IDentifier (UUID).
      */
     function uuid(): string {
-        return uuidv4();
+        return context.uuid();
     }
 
     /**
@@ -5730,7 +5792,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      */
     function create(botId: string, ...mods: Mod[]) {
-        return createBase(botId, () => uuidv4(), ...mods);
+        return createBase(botId, () => context.uuid(), ...mods);
     }
 
     function createBase(

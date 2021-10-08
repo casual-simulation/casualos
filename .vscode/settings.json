@@ -42,6 +42,9 @@
         "src/stacktrace/**/*.d.ts": { "when": "$(basename).ts" },
         "src/tunnel/**/*.d.ts": { "when": "$(basename).ts" },
         "src/undom/**/*.d.ts": { "when": "$(basename).ts" },
+        "src/fast-json-stable-stringify/**/*.d.ts": {
+            "when": "$(basename).ts"
+        },
         "src/**/*.d.ts.map": true
     },
     "files.associations": {
