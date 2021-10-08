@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-common",
-    "version": "2.0.11",
+    "version": "2.0.12",
     "description": "Common library for AUX projects",
     "main": "index.js",
     "types": "index.d.ts",
@@ -33,12 +33,12 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/causal-trees": "^2.0.11",
-        "@casual-simulation/crypto": "^2.0.0",
+        "@casual-simulation/causal-trees": "^2.0.12",
+        "@casual-simulation/crypto": "^2.0.12",
         "@casual-simulation/error-stack-parser": "^2.0.7",
+        "@casual-simulation/fast-json-stable-stringify": "^2.0.12",
         "@casual-simulation/stacktrace": "^2.0.0",
         "@casual-simulation/three": "^0.125.4",
-        "@casual-simulation/fast-json-stable-stringify": "^2.0.11",
         "@tweenjs/tween.js": "18.6.0",
         "@types/acorn": "^4.0.5",
         "@types/astring": "1.3.0",
