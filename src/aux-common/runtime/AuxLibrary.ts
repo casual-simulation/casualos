@@ -1185,6 +1185,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
     }
 
+    function getAssertionValue(value: any) {
+        if (value instanceof Error) {
+            return value.toString();
+        }
+        return value;
+    }
+
     /**
      * Asserts that the given values contain the same data.
      * Throws an error if they are not equal.
@@ -1192,8 +1199,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param second The second value to test.
      */
     function assertEqual(first: any, second: any) {
-        const json = getPrettyJSON(first);
-        const json2 = getPrettyJSON(second);
+        const json = getPrettyJSON(getAssertionValue(first));
+        const json2 = getPrettyJSON(getAssertionValue(second));
 
         if (json !== json2) {
             throw new Error(

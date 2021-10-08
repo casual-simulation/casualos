@@ -3767,10 +3767,10 @@ interface Debugger {
     /**
      * Asserts that the given values contain the same data.
      * Throws an error if they are not equal.
-     * @param first The first value to test.
-     * @param second The second value to test.
+     * @param received The value to test.
+     * @param expected The value that the first should be equal to.
      */
-    assertEqual(first: any, second: any): void;
+    assertEqual(received: any, expected: any): void;
 
      /**
       * Sends a web request based on the given options.

@@ -10906,6 +10906,34 @@ describe('AuxLibrary', () => {
                 }).not.toThrowError();
             }
         );
+
+        it('should support bots', () => {
+            let bot1 = createDummyRuntimeBot('test1');
+            let bot2 = createDummyRuntimeBot('test1');
+            let bot3 = createDummyRuntimeBot('test3');
+
+            bot1.tags.abc = 'def';
+            bot2.tags.abc = 'def';
+            bot3.tags.abc = 'def';
+
+            expect(() => {
+                library.api.assertEqual(bot1, bot2);
+            }).not.toThrow();
+            expect(() => {
+                library.api.assertEqual(bot1, bot3);
+            }).toThrow();
+        });
+
+        it('should support errors', () => {
+            expect(() => {
+                library.api.assertEqual(new Error('abc'), new Error('abc'));
+            }).not.toThrow();
+            expect(() => {
+                library.api.assertEqual(new Error('abc'), new Error('def'));
+            }).toThrowError(
+                'Assertion failed.\n\nExpected: "Error: def"\nReceived: "Error: abc"'
+            );
+        });
     });
 
     describe('os.watchBot()', () => {
