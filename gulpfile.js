@@ -25,6 +25,7 @@ let folders = [
     `${__dirname}/src/crypto-browser`,
     `${__dirname}/src/tunnel`,
     `${__dirname}/src/undom`,
+    `${__dirname}/src/fast-json-stable-stringify`,
 ];
 
 let patterns = [
