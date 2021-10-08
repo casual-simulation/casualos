@@ -17,6 +17,10 @@
         ```
         Creates a bot that is contained in the debugger. Therefore, scripts on the `debugBot` will only affect bots that were created in the debugger.
     -   See the documentation for more information.
+-   Added the `assert(condition, message?)` and `assertEqual(received, expected)` functions.
+    -   These functions check that the given condition is true or that the values are equal to each other and throw an error if they are not.
+    -   They can be useful for automated testing.
+    -   See the documentation for examples.
 
 ### :bug: Bug Fixes
 
