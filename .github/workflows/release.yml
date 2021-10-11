@@ -42,7 +42,7 @@ jobs:
                   npm whoami
                   echo "Publishing NPM Packages..."
                   ls -la
-                  npx lerna publish from-package --yes
+                  npx lerna publish from-package --yes --no-verify-access
 
                   echo "Updating package-lock.json..."
                   # Sleep for 5 seconds to hopefully give NPM time to update the package listing
