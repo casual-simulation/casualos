@@ -96,7 +96,7 @@ export const DataTagLink = ({tag}) => (
 );
 
 export const ListenTagLink = ({tag}) => (
-  <a href={useBaseUrl('docs/listen-tags/tags') + '#' + tag.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}>
+  <a href={useBaseUrl('docs/listen-tags') + '#' + tag.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}>
     <NormalCode>{tag}</NormalCode>
   </a>
 );
