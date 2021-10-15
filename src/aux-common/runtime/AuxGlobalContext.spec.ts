@@ -797,4 +797,77 @@ describe('AuxGlobalContext', () => {
             ]);
         });
     });
+
+    describe('mockAsyncActions', () => {
+        it('should return true if the context is configured to use syncronous actions', () => {
+            context.mockAsyncActions = true;
+            expect(context.mockAsyncActions).toBe(true);
+        });
+
+        it('should return false if the context is configured to use asyncronous actions', () => {
+            context.mockAsyncActions = false;
+            expect(context.mockAsyncActions).toBe(false);
+        });
+    });
+
+    describe('mocks', () => {
+        it('should set the list of values that should be used to mock the given function', () => {
+            let func = jest.fn();
+            context.setMockReturns(func, [123, 'abc']);
+
+            expect(context.getNextMockReturn(func, 'func', [])).toBe(123);
+            expect(context.getNextMockReturn(func, 'func', [])).toBe('abc');
+        });
+
+        it('should be able to set a return value for a specific set of inputs', () => {
+            let func = jest.fn();
+            context.setMockReturn(func, [123, 'abc'], 'return value');
+
+            expect(context.getNextMockReturn(func, 'func', [123, 'abc'])).toBe(
+                'return value'
+            );
+            expect(() => {
+                context.getNextMockReturn(func, 'func', [
+                    'wrong',
+                    'also wrong',
+                ]);
+            }).toThrowError(
+                'No mock data for function (no matching input): func("wrong", "also wrong")'
+            );
+        });
+
+        it('should pretty print the argument list for missing functions', () => {
+            let func = jest.fn();
+
+            expect(() => {
+                context.getNextMockReturn(func, 'func', [
+                    'wrong',
+                    { abc: 'def' },
+                ]);
+            }).toThrowError(
+                'No mock data for function: func("wrong", {\n  "abc": "def"\n})'
+            );
+        });
+
+        it('should fail when getting mocks for a function that has nothing set', () => {
+            let func = jest.fn();
+
+            expect(() => {
+                context.getNextMockReturn(func, 'func', []);
+            }).toThrowError('No mock data for function: func()');
+        });
+
+        it('should fail when the return value list has been exhausted', () => {
+            let func = jest.fn();
+            context.setMockReturns(func, [123, 'abc']);
+
+            expect(context.getNextMockReturn(func, 'func', [])).toBe(123);
+            expect(context.getNextMockReturn(func, 'func', [])).toBe('abc');
+            expect(() => {
+                context.getNextMockReturn(func, 'func', []);
+            }).toThrowError(
+                'No mock data for function (out of return values): func()'
+            );
+        });
+    });
 });

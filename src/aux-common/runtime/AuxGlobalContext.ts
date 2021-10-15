@@ -8,6 +8,8 @@ import {
     botRemoved,
     DEFAULT_ENERGY,
     RuntimeBot,
+    getOriginalObject,
+    ORIGINAL_OBJECT,
 } from '../bots';
 import {
     RuntimeBotFactory,
@@ -24,6 +26,7 @@ import { Observable, Subscription, SubscriptionLike } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import TWEEN from '@tweenjs/tween.js';
 import { v4 as uuidv4 } from 'uuid';
+import stableStringify from '@casual-simulation/fast-json-stable-stringify';
 
 /**
  * The interval between animation frames in miliseconds when using setInterval().
@@ -68,6 +71,11 @@ export interface AuxGlobalContext {
      * The number of miliseconds since the session has started.
      */
     localTime: number;
+
+    /**
+     * Whether async API actions should be mocked.
+     */
+    mockAsyncActions: boolean;
 
     /**
      * Enqueues the given action.
@@ -250,6 +258,27 @@ export interface AuxGlobalContext {
      * Creates a UUID.
      */
     uuid(): string;
+
+    /**
+     * Sets the data that should be used to mock the given function.
+     * @param func The function that the return values should be set for.
+     * @param returnValues The list of return values that should be used for the mock.
+     */
+    setMockReturns(func: any, returnValues: any[]): void;
+
+    /**
+     * Sets the data that should be used to mock the given function for the given arguments.
+     * @param func The function.
+     * @param args The arguments that should be matched against.
+     * @param returnValue The return value that should be used for the mock.
+     */
+    setMockReturn(func: any, args: any[], returnValue: any): void;
+
+    /**
+     * Gets the data that should be used as the function's return value.
+     * @param func The function.
+     */
+    getNextMockReturn(func: any, functionName: string, args: any[]): any;
 }
 
 /**
@@ -509,6 +538,11 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      */
     energy: number = DEFAULT_ENERGY;
 
+    /**
+     * Whether async API actions should be mocked.
+     */
+    mockAsyncActions: boolean;
+
     uuid = uuidv4;
 
     get localTime() {
@@ -528,6 +562,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     private _numberOfTimers: number = 0;
     private _startTime: number;
     private _animationLoop: Subscription;
+    private _mocks: Map<any, any[] | Map<string, any>>;
 
     /**
      * Creates a new global context.
@@ -550,6 +585,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this._botTimerMap = new Map();
         this._botWatcherMap = new Map();
         this._portalWatcherMap = new Map();
+        this._mocks = new Map();
         this._startTime = performance.now();
     }
 
@@ -952,6 +988,80 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         }
 
         return this._animationLoop;
+    }
+
+    /**
+     * Sets the data that should be used to mock the given function.
+     * @param func The function that the return values should be set for.
+     * @param returnValues The list of return values that should be used for the mock.
+     */
+    setMockReturns(func: any, returnValues: any[]): void {
+        if (ORIGINAL_OBJECT in func) {
+            func = func[ORIGINAL_OBJECT];
+        }
+        this._mocks.set(func, returnValues.slice());
+    }
+
+    /**
+     * Sets the data that should be used to mock the given function for the given arguments.
+     * @param func The function.
+     * @param args The arguments that should be matched against.
+     * @param returnValue The return value that should be used for the mock.
+     */
+    setMockReturn(func: any, args: any[], returnValue: any): void {
+        if (ORIGINAL_OBJECT in func) {
+            func = func[ORIGINAL_OBJECT];
+        }
+
+        let mocks = this._mocks.get(func);
+        let map: Map<string, any>;
+        if (mocks instanceof Map) {
+            map = mocks;
+        } else {
+            map = new Map();
+            this._mocks.set(func, map);
+        }
+        const argJson = stableStringify(args, { space: 2 });
+        map.set(argJson, returnValue);
+    }
+
+    /**
+     * Gets the data that should be used as the function's return value.
+     * @param func The function.
+     */
+    getNextMockReturn(func: any, functionName: string, args: any[]): any {
+        if (ORIGINAL_OBJECT in func) {
+            func = func[ORIGINAL_OBJECT];
+        }
+        if (!this._mocks.has(func)) {
+            throw new Error(`No mock data for function: ${functionCall()}`);
+        }
+        let arrayOrMap = this._mocks.get(func);
+        if (arrayOrMap instanceof Map) {
+            const argJson = stableStringify(args, { space: 2 });
+            if (arrayOrMap.has(argJson)) {
+                return arrayOrMap.get(argJson);
+            } else {
+                throw new Error(
+                    `No mock data for function (no matching input): ${functionCall()}`
+                );
+            }
+        } else {
+            if (arrayOrMap.length > 0) {
+                return arrayOrMap.shift();
+            } else {
+                throw new Error(
+                    `No mock data for function (out of return values): ${functionCall()}`
+                );
+            }
+        }
+
+        function functionCall() {
+            const argList = args
+                .map((a) => stableStringify(a, { space: 2 }))
+                .join(', ');
+            return `${functionName}(${argList})`;
+        }
     }
 
     private _updateAnimationLoop() {
