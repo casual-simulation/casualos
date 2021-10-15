@@ -153,6 +153,8 @@ export class AuxRuntime
      */
     private _autoBatch: boolean = true;
 
+    private _forceSyncScripts: boolean = false;
+
     private _libraryFactory: (context: AuxGlobalContext) => AuxLibrary;
 
     get forceSignedScripts() {
@@ -181,7 +183,8 @@ export class AuxRuntime
         ) => AuxLibrary = createDefaultLibrary,
         editModeProvider: AuxRealtimeEditModeProvider = new DefaultRealtimeEditModeProvider(),
         forceSignedScripts: boolean = false,
-        exemptSpaces: BotSpace[] = ['local', 'tempLocal']
+        exemptSpaces: BotSpace[] = ['local', 'tempLocal'],
+        forceSyncScripts: boolean = false
     ) {
         this._libraryFactory = libraryFactory;
         this._globalContext = new MemoryGlobalContext(
@@ -190,6 +193,8 @@ export class AuxRuntime
             this,
             this
         );
+        this._forceSyncScripts = forceSyncScripts;
+        this._globalContext.mockAsyncActions = forceSyncScripts;
         this._library = merge(libraryFactory(this._globalContext), {
             api: {
                 os: {
@@ -299,7 +304,8 @@ export class AuxRuntime
             this._libraryFactory,
             this._editModeProvider,
             this._forceSignedScripts,
-            this._exemptSpaces
+            this._exemptSpaces,
+            !options?.allowAsynchronousScripts
         );
         runtime._autoBatch = false;
         let idCount = 0;
@@ -1600,7 +1606,7 @@ export class AuxRuntime
             functionName: functionName,
             diagnosticFunctionName: diagnosticFunctionName,
             fileName: fileName,
-
+            forceSync: this._forceSyncScripts,
             context: {
                 bot,
                 tag,

@@ -689,6 +689,13 @@ export interface AuxDebuggerOptions {
      * Whether to use "real" UUIDs instead of predictable ones.
      */
     useRealUUIDs: boolean;
+
+    /**
+     * Whether to allow scripts to be asynchronous.
+     * If false, then all scripts will be forced to be synchronous.
+     * Defaults to false.
+     */
+    allowAsynchronousScripts: boolean;
 }
 
 export interface MaskableFunction {

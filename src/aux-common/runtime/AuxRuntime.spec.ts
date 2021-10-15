@@ -7077,6 +7077,45 @@ describe('AuxRuntime', () => {
                 },
             ]);
         });
+
+        it('should make async listeners synchronous by default', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@await 123; throw new Error("abc")',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let errors = result.results[0];
+            expect(errors).toEqual([
+                {
+                    bot: expect.any(Object),
+                    tag: 'test',
+                    error: new Error('abc'),
+                },
+            ]);
+        });
+
+        it('should allow async listeners if specified', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@await 123; throw new Error("abc")',
+                        test: `@let d = os.createDebugger({ allowAsynchronousScripts: true }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let errors = result.results[0];
+
+            // error does not get listed because it doesn't get caught by d.shout()
+            // because it is wrapped in a promise
+            expect(errors).toEqual([]);
+        });
     });
 });
 
