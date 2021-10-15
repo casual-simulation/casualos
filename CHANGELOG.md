@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V2.0.13
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where floating labels on billboarded bots did not work.
+
 ## V2.0.12
 
 #### Date: 10/8/2021
