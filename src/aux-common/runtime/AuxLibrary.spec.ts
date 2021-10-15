@@ -2937,6 +2937,33 @@ describe('AuxLibrary', () => {
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    context.setMockReturns(library.api.os.showInput, [
+                        {
+                            test: 123,
+                        },
+                        {
+                            abc: 'def',
+                        },
+                    ]);
+                    const result1: any = library.api.os.showInput('test');
+                    const result2: any = library.api.os.showInput('test');
+
+                    expect(result1).toEqual({
+                        test: 123,
+                    });
+                    expect(result2).toEqual({
+                        abc: 'def',
+                    });
+                });
+            });
         });
 
         describe('os.goToDimension()', () => {
@@ -6325,6 +6352,43 @@ describe('AuxLibrary', () => {
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    context.setMockReturns(library.api.web.get, [
+                        {
+                            test: 123,
+                        },
+                        {
+                            abc: 'def',
+                        },
+                    ]);
+                    const result1: any = library.api.web.get(
+                        'https://example.com',
+                        {
+                            responseShout: 'test.response()',
+                        }
+                    );
+                    const result2: any = library.api.web.get(
+                        'https://example.com',
+                        {
+                            responseShout: 'test.response()',
+                        }
+                    );
+
+                    expect(result1).toEqual({
+                        test: 123,
+                    });
+                    expect(result2).toEqual({
+                        abc: 'def',
+                    });
+                });
+            });
         });
 
         describe('web.post()', () => {
@@ -6348,6 +6412,45 @@ describe('AuxLibrary', () => {
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    context.setMockReturns(library.api.web.post, [
+                        {
+                            test: 123,
+                        },
+                        {
+                            abc: 'def',
+                        },
+                    ]);
+                    const result1: any = library.api.web.post(
+                        'https://example.com',
+                        { data: true },
+                        {
+                            responseShout: 'test.response()',
+                        }
+                    );
+                    const result2: any = library.api.web.post(
+                        'https://example.com',
+                        { data: true },
+                        {
+                            responseShout: 'test.response()',
+                        }
+                    );
+
+                    expect(result1).toEqual({
+                        test: 123,
+                    });
+                    expect(result2).toEqual({
+                        abc: 'def',
+                    });
+                });
+            });
         });
 
         describe('web.hook()', () => {
@@ -6369,6 +6472,43 @@ describe('AuxLibrary', () => {
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    context.setMockReturns(library.api.web.hook, [
+                        {
+                            test: 123,
+                        },
+                        {
+                            abc: 'def',
+                        },
+                    ]);
+                    const result1: any = library.api.web.hook({
+                        method: 'TEST',
+                        data: { myData: 'abc' },
+                        url: 'https://example.com',
+                        responseShout: 'test.response()',
+                    });
+                    const result2: any = library.api.web.hook({
+                        method: 'TEST',
+                        data: { myData: 'abc' },
+                        url: 'https://example.com',
+                        responseShout: 'test.response()',
+                    });
+
+                    expect(result1).toEqual({
+                        test: 123,
+                    });
+                    expect(result2).toEqual({
+                        abc: 'def',
+                    });
+                });
             });
         });
 
@@ -6396,6 +6536,47 @@ describe('AuxLibrary', () => {
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    context.setMockReturns(library.api.webhook, [
+                        {
+                            test: 123,
+                        },
+                        {
+                            abc: 'def',
+                        },
+                    ]);
+                    const result1: any = library.api.webhook({
+                        method: 'POST',
+                        url: 'https://example.com',
+                        data: {
+                            test: 'abc',
+                        },
+                        responseShout: 'test.response()',
+                    });
+                    const result2: any = library.api.webhook({
+                        method: 'POST',
+                        url: 'https://example.com',
+                        data: {
+                            test: 'abc',
+                        },
+                        responseShout: 'test.response()',
+                    });
+
+                    expect(result1).toEqual({
+                        test: 123,
+                    });
+                    expect(result2).toEqual({
+                        abc: 'def',
+                    });
+                });
+            });
         });
 
         describe('webhook.post()', () => {
@@ -6420,6 +6601,45 @@ describe('AuxLibrary', () => {
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    context.setMockReturns(library.api.webhook.post, [
+                        {
+                            test: 123,
+                        },
+                        {
+                            abc: 'def',
+                        },
+                    ]);
+                    const result1: any = library.api.webhook.post(
+                        'https://example.com',
+                        { test: 'abc' },
+                        {
+                            responseShout: 'test.response()',
+                        }
+                    );
+                    const result2: any = library.api.webhook.post(
+                        'https://example.com',
+                        { test: 'abc' },
+                        {
+                            responseShout: 'test.response()',
+                        }
+                    );
+
+                    expect(result1).toEqual({
+                        test: 123,
+                    });
+                    expect(result2).toEqual({
+                        abc: 'def',
+                    });
+                });
             });
         });
 

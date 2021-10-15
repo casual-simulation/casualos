@@ -710,6 +710,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         });
     };
 
+    const webhookFunc = makeMockableFunction(webhook, 'webhook');
+    webhookFunc.post = makeMockableFunction(webhook.post, 'webhook.post');
+
     return {
         api: {
             getBots,
@@ -765,7 +768,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             clearAnimations,
 
             // TODO: Remove deprecated functions
-            webhook,
+            webhook: webhookFunc,
             sleep,
 
             __energyCheck,
@@ -837,7 +840,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPortalDimension,
                 getDimensionalDepth,
                 showInputForTag,
-                showInput,
+                showInput: makeMockableFunction(showInput, 'os.showInput'),
                 goToDimension,
                 goToURL,
                 openURL,
@@ -1046,9 +1049,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             },
 
             web: {
-                get: webGet,
-                post: webPost,
-                hook: webhook,
+                get: makeMockableFunction(webGet, 'web.get'),
+                post: makeMockableFunction(webPost, 'web.post'),
+                hook: makeMockableFunction(webhook, 'web.hook'),
             },
         },
 
@@ -4176,6 +4179,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             url,
             data,
         });
+    }
+
+    /**
+     * Creates a new function that is mockable based on if the context is currently mocking async actions.
+     * @param func The function to mock.
+     * @param functionName The name of the function.
+     * @returns
+     */
+    function makeMockableFunction<T>(func: T, functionName: string): T {
+        if (context.mockAsyncActions) {
+            let mock: any = (...args: any[]) => {
+                return context.getNextMockReturn(func, functionName, args);
+            };
+            mock[ORIGINAL_OBJECT] = func;
+            return mock;
+        } else {
+            return func;
+        }
     }
 
     /**
