@@ -68,8 +68,7 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
             return;
         }
 
-        let arrowPoint = new Vector3();
-        botBoundingBox.getCenter(arrowPoint);
+        let arrowPoint = this.bot3D.position.clone();
 
         let size = new Vector3();
         botBoundingBox.getSize(size);
