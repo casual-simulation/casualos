@@ -386,6 +386,10 @@ export class AuxCompiler {
             functionCode = `async ` + functionCode;
         }
         try {
+            if (options.forceSync) {
+                async = false;
+            }
+            this._transpiler.forceSync = options.forceSync ?? false;
             const transpiled = this._transpiler.transpileWithMetadata(
                 functionCode
             );
@@ -628,6 +632,12 @@ export interface AuxCompileOptions<T> {
      * The file name that should be used for transformed error stack traces.
      */
     fileName?: string;
+
+    /**
+     * Whether to force the output function to be synchronous.
+     * This will compile out any async/await code.
+     */
+    forceSync?: boolean;
 }
 
 // export class CompiledScriptError extends Error {

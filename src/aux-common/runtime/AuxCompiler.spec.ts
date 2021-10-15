@@ -397,6 +397,50 @@ describe('AuxCompiler', () => {
             expect(result).toBe(symbol);
         });
 
+        it('should be able to compile scripts without async', () => {
+            let symbol = Symbol('return value');
+            let fn = compiler.compile('return await value;', {
+                invoke(fn, ctx) {
+                    return fn();
+                },
+                constants: {
+                    value: symbol,
+                },
+                forceSync: true,
+            });
+
+            const result = fn();
+
+            expect(result).toBe(symbol);
+        });
+
+        it('should be able to compile normal functions after sync functions', async () => {
+            let symbol = Symbol('return value');
+            let fn = compiler.compile('return await value;', {
+                invoke(fn, ctx) {
+                    return fn();
+                },
+                constants: {
+                    value: symbol,
+                },
+                forceSync: true,
+            });
+
+            let fn2 = compiler.compile('return await abc;', {
+                variables: {
+                    abc: () => symbol,
+                },
+                forceSync: false,
+            });
+
+            const result = fn();
+            const result2 = fn2();
+
+            expect(result).toBe(symbol);
+            expect(result2).toBeInstanceOf(Promise);
+            expect(await result2).toBe(symbol);
+        });
+
         describe('calculateOriginalLineLocation()', () => {
             it('should return (0, 0) if given a location before the user script actually starts', () => {
                 const script = 'return str + num + abc;';
