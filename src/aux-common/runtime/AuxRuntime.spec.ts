@@ -4010,9 +4010,8 @@ describe('AuxRuntime', () => {
                     botAdded(createBot('uuid', {}, 'tempLocal')),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['uuid']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['uuid']);
             });
 
             it('should not override previous variables', async () => {
@@ -4030,9 +4029,8 @@ describe('AuxRuntime', () => {
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
 
                 runtime.process([registerBuiltinPortal('grid')]);
 
@@ -4041,25 +4039,41 @@ describe('AuxRuntime', () => {
                 expect(allEvents).toEqual([
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+
+                const result2 = runtime.execute('return gridBot;');
+                expect(result2.result).toBe(runtime.context.state['test1']);
             });
 
-            it('should remove the global variables that were created by the runtime', () => {
+            it('should not create global variables', () => {
                 uuidMock.mockReturnValueOnce('uuid');
 
                 runtime.process([registerBuiltinPortal('grid')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['uuid']
-                );
-
-                runtime.unsubscribe();
-
                 expect(
                     Object.getOwnPropertyDescriptor(globalThis, 'gridBot')
                 ).toBeUndefined();
+            });
+
+            it('should recompile scripts when a new portal bot is registered', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            run: '@return gridBot;',
+                        }),
+                    })
+                );
+
+                const result1 = runtime.shout('run');
+
+                expect(result1.results[0]).toBeUndefined();
+
+                runtime.process([registerBuiltinPortal('grid')]);
+
+                await waitAsync();
+
+                const result2 = runtime.shout('run');
+                expect(result2.results[0]).toBe(runtime.context.state['uuid']);
             });
         });
 
@@ -4076,9 +4090,8 @@ describe('AuxRuntime', () => {
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
             });
 
             it('should override previous variables', () => {
@@ -4096,17 +4109,15 @@ describe('AuxRuntime', () => {
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
 
                 runtime.process([
                     openCustomPortal('grid', 'test2', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test2']
-                );
+                const result2 = runtime.execute('return gridBot;');
+                expect(result2.result).toBe(runtime.context.state['test2']);
             });
 
             it('should remove the variable if given no bot to use for configuration', () => {
@@ -4121,16 +4132,16 @@ describe('AuxRuntime', () => {
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
 
                 runtime.process([openCustomPortal('grid', null, 'myTag', {})]);
 
-                expect((<any>globalThis).gridBot).toBeUndefined();
+                const result2 = runtime.execute('return gridBot;');
+                expect(result2.result).toBeUndefined();
             });
 
-            it('should remove the global variables that were created by the runtime', () => {
+            it('should not create variables on globalThis', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
@@ -4141,12 +4152,6 @@ describe('AuxRuntime', () => {
                 runtime.process([
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
-
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
-
-                runtime.unsubscribe();
 
                 expect(
                     Object.getOwnPropertyDescriptor(globalThis, 'gridBot')
@@ -4180,9 +4185,8 @@ describe('AuxRuntime', () => {
                 );
                 runtime.process([registerCustomApp('grid', 'test1')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
             });
 
             it('should override previous variables', () => {
@@ -4198,15 +4202,13 @@ describe('AuxRuntime', () => {
                 );
                 runtime.process([registerCustomApp('grid', 'test1')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
 
                 runtime.process([registerCustomApp('grid', 'test2')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test2']
-                );
+                const result2 = runtime.execute('return gridBot;');
+                expect(result2.result).toBe(runtime.context.state['test2']);
             });
 
             it('should remove the variable if given no bot to use for configuration', () => {
@@ -4219,16 +4221,16 @@ describe('AuxRuntime', () => {
                 );
                 runtime.process([registerCustomApp('grid', 'test1')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
 
                 runtime.process([registerCustomApp('grid', null)]);
 
-                expect((<any>globalThis).gridBot).toBeUndefined();
+                const result2 = runtime.execute('return gridBot;');
+                expect(result2.result).toBeUndefined();
             });
 
-            it('should remove the global variables that were created by the runtime', () => {
+            it('should not create variables on globalThis', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
@@ -4237,12 +4239,6 @@ describe('AuxRuntime', () => {
                     })
                 );
                 runtime.process([registerCustomApp('grid', 'test1')]);
-
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
-
-                runtime.unsubscribe();
 
                 expect(
                     Object.getOwnPropertyDescriptor(globalThis, 'gridBot')
@@ -4272,9 +4268,8 @@ describe('AuxRuntime', () => {
                 );
                 runtime.process([defineGlobalBot('grid', 'test1')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
             });
 
             it('should resolve the task when the bot is defined', async () => {
@@ -4299,9 +4294,8 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(resolved).toBe(true);
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
             });
 
             it('should resolve the task even if the bot is already globally defined', async () => {
@@ -4328,9 +4322,8 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(resolved).toBe(true);
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
             });
 
             it('should be able to re-define a global bot', async () => {
@@ -4361,9 +4354,8 @@ describe('AuxRuntime', () => {
 
                 expect(resolved).toBe(true);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test2']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test2']);
             });
 
             it('should be able to resolve the task when completed via an async result', async () => {
