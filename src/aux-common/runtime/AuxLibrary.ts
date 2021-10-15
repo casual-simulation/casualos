@@ -691,6 +691,24 @@ export interface AuxDebuggerOptions {
     useRealUUIDs: boolean;
 }
 
+export interface MaskableFunction {
+    mask(...args: any[]): MaskedFunction;
+}
+
+export interface MaskedFunction {
+    returns(value: any): void;
+}
+
+export interface WebhookInterface extends MaskableFunction {
+    (options: WebhookOptions): void;
+    post: ((
+        url: string,
+        data?: any,
+        options?: WebhookOptions
+    ) => Promise<any>) &
+        MaskableFunction;
+}
+
 /**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
@@ -768,7 +786,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             clearAnimations,
 
             // TODO: Remove deprecated functions
-            webhook: webhookFunc,
+            webhook: <WebhookInterface>(<any>webhookFunc),
             sleep,
 
             __energyCheck,
@@ -4187,15 +4205,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param functionName The name of the function.
      * @returns
      */
-    function makeMockableFunction<T>(func: T, functionName: string): T {
+    function makeMockableFunction<T>(
+        func: T,
+        functionName: string
+    ): T & MaskableFunction {
         if (context.mockAsyncActions) {
             let mock: any = (...args: any[]) => {
                 return context.getNextMockReturn(func, functionName, args);
             };
+            mock.mask = (...args: any) => ({
+                returns(value: any) {
+                    context.setMockReturn(func, args, value);
+                },
+            });
             mock[ORIGINAL_OBJECT] = func;
             return mock;
         } else {
-            return func;
+            return func as any;
         }
     }
 
