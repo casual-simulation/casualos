@@ -53,6 +53,7 @@ import {
     asyncResult,
     BotActions,
     registerBuiltinPortal,
+    botAdded,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -343,9 +344,15 @@ export class AuxRuntime
             return allActions;
         };
 
+        // The config bot is always ID 0 in debuggers
+        const configBotId = options?.useRealUUIDs
+            ? runtime.context.uuid()
+            : 'uuid-0';
+        runtime.context.createBot(createBot(configBotId, {}, 'tempLocal'));
         runtime.process(
             this._builtinPortalBots.map((b) => registerBuiltinPortal(b))
         );
+        runtime.userId = configBotId;
 
         return {
             ...runtime._library.api,

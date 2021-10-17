@@ -6926,7 +6926,9 @@ describe('AuxRuntime', () => {
         });
 
         it('should use real UUIDs when specified', () => {
-            uuidMock.mockReturnValueOnce('myUUID');
+            uuidMock
+                .mockReturnValueOnce('configBotId')
+                .mockReturnValueOnce('myUUID');
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
@@ -7162,6 +7164,33 @@ describe('AuxRuntime', () => {
                             '@tags.hasBot = typeof testPortalBot !== "undefined";',
                     })
                 ),
+            ]);
+        });
+
+        it('should define a configBot', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@configBot.tags.hit = true;',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let actions = result.results[0];
+
+            expect(actions).toEqual([
+                botAdded(
+                    createBot('uuid-1', {
+                        test: '@configBot.tags.hit = true;',
+                    })
+                ),
+                botUpdated('uuid-0', {
+                    tags: {
+                        hit: true,
+                    },
+                }),
             ]);
         });
     });
