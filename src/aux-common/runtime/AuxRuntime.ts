@@ -52,6 +52,7 @@ import {
     isBotInDimension,
     asyncResult,
     BotActions,
+    registerBuiltinPortal,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -132,6 +133,7 @@ export class AuxRuntime
     private _batchPending: boolean = false;
     private _processingErrors: boolean = false;
     private _portalBots: Map<string, string> = new Map();
+    private _builtinPortalBots: string[] = [];
     private _globalVariables: { [key: string]: () => any } = {};
 
     /**
@@ -341,6 +343,10 @@ export class AuxRuntime
             return allActions;
         };
 
+        runtime.process(
+            this._builtinPortalBots.map((b) => registerBuiltinPortal(b))
+        );
+
         return {
             ...runtime._library.api,
             getAllActions,
@@ -442,8 +448,9 @@ export class AuxRuntime
         } else if (action.type === 'register_builtin_portal') {
             if (!this._portalBots.has(action.portalId)) {
                 const newBot = this.context.createBot(
-                    createBot(undefined, undefined, 'tempLocal')
+                    createBot(this.context.uuid(), undefined, 'tempLocal')
                 );
+                this._builtinPortalBots.push(action.portalId);
                 this._registerPortalBot(action.portalId, newBot.id);
                 this._actionBatch.push(
                     openCustomPortal(action.portalId, newBot.id, null, {})

@@ -7108,6 +7108,62 @@ describe('AuxRuntime', () => {
             // because it is wrapped in a promise
             expect(errors).toEqual([]);
         });
+
+        it('should define variables for builtin portals', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@gridPortalBot.tags.hit = true;',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            runtime.process([registerBuiltinPortal('gridPortal')]);
+
+            const result = runtime.shout('test');
+            let actions = result.results[0];
+
+            expect(actions).toEqual([
+                botAdded(
+                    createBot('uuid-2', {
+                        test: '@gridPortalBot.tags.hit = true;',
+                    })
+                ),
+                botUpdated('uuid-1', {
+                    tags: {
+                        hit: true,
+                    },
+                }),
+            ]);
+        });
+
+        it('should not define variables for custom portals', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error:
+                            '@tags.hasBot = typeof testPortalBot !== "undefined";',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            runtime.process([defineGlobalBot('testPortal', 'test')]);
+
+            const result = runtime.shout('test');
+            let actions = result.results[0];
+
+            expect(actions).toEqual([
+                botAdded(
+                    createBot('uuid-1', {
+                        hasBot: false,
+                        test:
+                            '@tags.hasBot = typeof testPortalBot !== "undefined";',
+                    })
+                ),
+            ]);
+        });
     });
 });
 
