@@ -917,9 +917,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 requestAuthBot,
                 requestPermanentAuthToken,
 
-                publishRecord,
-                getRecords,
-                destroyRecord,
+                publishRecord: makeMockableFunction(
+                    publishRecord,
+                    'os.publishRecord'
+                ),
+                getRecords: makeMockableFunction(getRecords, 'os.getRecords'),
+                destroyRecord: makeMockableFunction(
+                    destroyRecord,
+                    'os.destroyRecord'
+                ),
 
                 setupInst: setupServer,
                 remotes,

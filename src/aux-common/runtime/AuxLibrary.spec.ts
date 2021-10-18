@@ -3922,6 +3922,30 @@ describe('AuxLibrary', () => {
                     });
                 }).toThrowError();
             });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    library.api.os.publishRecord
+                        .mask({
+                            address: 'myAddress',
+                            record: null,
+                            authToken: 'myToken',
+                        })
+                        .returns('mocked');
+                    const result: any = library.api.os.publishRecord({
+                        address: 'myAddress',
+                        record: null,
+                        authToken: 'myToken',
+                    });
+
+                    expect(result).toEqual('mocked');
+                });
+            });
         });
 
         describe('os.getRecords()', () => {
@@ -4311,6 +4335,36 @@ describe('AuxLibrary', () => {
                     },
                 ]);
             });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    library.api.os.getRecords
+                        .mask(
+                            library.api.withAuthToken('myToken'),
+                            library.api.byAuthID('myID'),
+                            library.api.bySpace('permanentGlobal'),
+                            library.api.byPrefix('myPrefix'),
+                            library.api.byID('id'),
+                            library.api.byAddress('address')
+                        )
+                        .returns('mocked');
+                    const result: any = library.api.os.getRecords(
+                        { recordFilter: true, authToken: 'myToken' },
+                        { recordFilter: true, authID: 'myID' },
+                        { recordFilter: true, space: 'permanentGlobal' } as any,
+                        { recordFilter: true, prefix: 'myPrefix' },
+                        { recordFilter: true, id: 'id' } as any,
+                        { recordFilter: true, address: 'address' }
+                    );
+
+                    expect(result).toEqual('mocked');
+                });
+            });
         });
 
         describe('os.destroyRecord()', () => {
@@ -4373,6 +4427,30 @@ describe('AuxLibrary', () => {
                 } finally {
                     delete (<any>globalThis).authBot;
                 }
+            });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    library.api.os.destroyRecord
+                        .mask({
+                            space: 'tempRestricted',
+                            address: 'myAddress',
+                            authToken: 'myToken',
+                        })
+                        .returns('mocked');
+                    const result: any = library.api.os.destroyRecord({
+                        space: 'tempRestricted',
+                        address: 'myAddress',
+                        authToken: 'myToken',
+                    });
+
+                    expect(result).toEqual('mocked');
+                });
             });
         });
 
