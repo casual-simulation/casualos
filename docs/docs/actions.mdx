@@ -4249,6 +4249,38 @@ const actions = debug.getCommonActions();
 os.toast(actions);
 ```
 
+```typescript title='Create a debugger with a custom configBot'
+const debug = os.createDebugger({
+    configBot: {
+        test: '@console.log("Hello, World!");'
+    }
+});
+debug.shout('test');
+```
+
+```typescript title='Mask the web.get() function.'
+const debug = os.createDebugger();
+let url = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/The_star_formation_region_Messier_17.jpg/1200px-The_star_formation_region_Messier_17.jpg";
+const debuggerBot = debug.create({
+    url,
+    test: '@return await web.get(tags.url)'
+});
+
+debug.web.get.mask(url)
+    .returns({
+        data: 'test data',
+        status: 200
+    });
+
+const [result] = debug.shout('test');
+
+assertEqual(result, {
+    data: 'test data',
+    status: 200
+});
+os.toast("Success!");
+```
+
 ### `server.backupAsDownload(target)`
 
 
