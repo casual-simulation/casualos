@@ -5004,6 +5004,79 @@ describe('AuxRuntime', () => {
             expect(result.results).toMatchSnapshot();
         });
 
+        describe('globalThis', () => {
+            it('should intercept changes to globalThis', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@globalThis.testValue = true;',
+                            test2: '@return globalThis.testValue;',
+                        }),
+                    })
+                );
+                runtime.shout('test');
+                let result = runtime.shout('test2');
+
+                expect('testValue' in globalThis).toBe(false);
+                expect(result.results).toEqual([true]);
+            });
+
+            it('should be able to get properties from the normal globalThis', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@return globalThis.Map;',
+                        }),
+                    })
+                );
+                let result = runtime.shout('test');
+                expect(result.results[0]).toBe(Map);
+            });
+
+            it('should not allow deleting properties from globalThis', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@delete globalThis.Map;',
+                        }),
+                    })
+                );
+                let result = runtime.shout('test');
+                expect(result).toMatchSnapshot();
+            });
+
+            it('should be able to test if a added property is in globalThis', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: `@globalThis.testValue = true; return [
+                                "testValue" in globalThis,
+                                "otherValue" in globalThis
+                            ];`,
+                        }),
+                    })
+                );
+                let result = runtime.shout('test');
+                expect(result.results[0]).toEqual([true, false]);
+            });
+
+            it('should be able to list added properties with Object.keys()', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: `@globalThis.testValue = true; return Object.keys(globalThis)`,
+                        }),
+                    })
+                );
+                let result = runtime.shout('test');
+                let keys = result.results[0];
+                keys.sort();
+                expect(keys).toEqual(
+                    [...Object.keys(globalThis), 'testValue'].sort()
+                );
+            });
+        });
+
         describe('bot_added', () => {
             it('should produce an event when a bot is created', async () => {
                 uuidMock.mockReturnValueOnce('uuid');
@@ -7192,6 +7265,20 @@ describe('AuxRuntime', () => {
                     },
                 }),
             ]);
+        });
+
+        it('should allow setting globalThis variables without affecting everything else', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@globalThis.testValue = 123;',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return globalThis.testValue;`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            expect(result.results[0]).toBeUndefined();
         });
     });
 });

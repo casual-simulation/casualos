@@ -441,6 +441,58 @@ describe('AuxCompiler', () => {
             expect(await result2).toBe(symbol);
         });
 
+        it('should be able to compile with a custom global object', async () => {
+            let symbol = Symbol('return value');
+            let globalObj = {
+                value: symbol,
+            };
+            let fn = compiler.compile('return value;', {
+                constants: {
+                    globalThis: globalObj,
+                },
+            });
+
+            const result = fn();
+
+            expect(result).toBe(symbol);
+        });
+
+        it('should not override other constants with the custom global object', async () => {
+            let symbol = Symbol('return value');
+            let globalObj = {
+                value: 123,
+            };
+            let fn = compiler.compile('return value;', {
+                constants: {
+                    value: symbol,
+                    globalThis: globalObj,
+                },
+            });
+
+            const result = fn();
+
+            expect(result).toBe(symbol);
+        });
+
+        it('should not override other variables with the custom global object', async () => {
+            let symbol = Symbol('return value');
+            let globalObj = {
+                value: 123,
+            };
+            let fn = compiler.compile('return value;', {
+                constants: {
+                    globalThis: globalObj,
+                },
+                variables: {
+                    value: () => symbol,
+                },
+            });
+
+            const result = fn();
+
+            expect(result).toBe(symbol);
+        });
+
         describe('calculateOriginalLineLocation()', () => {
             it('should return (0, 0) if given a location before the user script actually starts', () => {
                 const script = 'return str + num + abc;';

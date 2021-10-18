@@ -89,7 +89,7 @@ import {
     SpaceRealtimeEditModeMap,
     DefaultRealtimeEditModeProvider,
 } from './AuxRealtimeEditModeProvider';
-import { sortBy, forOwn, merge } from 'lodash';
+import { sortBy, forOwn, merge, union } from 'lodash';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { applyEdit, isTagEdit, mergeVersions } from '../aux-format-2';
 import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
@@ -136,6 +136,8 @@ export class AuxRuntime
     private _portalBots: Map<string, string> = new Map();
     private _builtinPortalBots: string[] = [];
     private _globalVariables: { [key: string]: () => any } = {};
+    private _globalChanges: { [key: string]: any } = {};
+    private _globalObject: any;
 
     /**
      * The counter that is used to generate function names.
@@ -236,6 +238,41 @@ export class AuxRuntime
                 );
             });
         }
+
+        this._globalObject = new Proxy(globalThis, {
+            get: (target: any, key: string, receiver: any) => {
+                if (key in this._globalChanges) {
+                    return Reflect.get(this._globalChanges, key);
+                }
+                return Reflect.get(target, key, receiver);
+            },
+            set: (target: any, key: string, value: any, receiver: any) => {
+                return Reflect.set(this._globalChanges, key, value);
+            },
+            deleteProperty: (target: any, key: string) => {
+                return Reflect.deleteProperty(this._globalChanges, key);
+            },
+            ownKeys: (target: any) => {
+                const addedKeys = Reflect.ownKeys(this._globalChanges);
+                const otherKeys = Reflect.ownKeys(target);
+                return union(addedKeys, otherKeys);
+            },
+            has: (target: any, key: string) => {
+                return (
+                    Reflect.has(this._globalChanges, key) ||
+                    Reflect.has(target, key)
+                );
+            },
+            getOwnPropertyDescriptor: (target: any, key: string) => {
+                if (key in this._globalChanges) {
+                    return Reflect.getOwnPropertyDescriptor(
+                        this._globalChanges,
+                        key
+                    );
+                }
+                return Reflect.getOwnPropertyDescriptor(target, key);
+            },
+        });
     }
 
     getShoutTimers(): { [shout: string]: number } {
@@ -1639,6 +1676,7 @@ export class AuxRuntime
             constants: {
                 ...this._library.api,
                 tagName: tag,
+                globalThis: this._globalObject,
             },
             variables: {
                 ...this._globalVariables,

@@ -338,12 +338,14 @@ export class AuxCompiler {
         script = this._parseScript(script);
         let scriptLineOffset = 0;
         let constantsLineOffset = 0;
+        let customGlobalThis = false;
 
         let constantsCode = '';
         if (options.constants) {
             const lines = Object.keys(options.constants)
                 .filter((v) => v !== 'this')
                 .map((v) => `const ${v} = constants["${v}"];`);
+            customGlobalThis = 'globalThis' in options.constants;
             constantsCode = lines.join('\n') + '\n';
             constantsLineOffset += 1 + Math.max(lines.length - 1, 0);
         }
@@ -377,6 +379,14 @@ export class AuxCompiler {
         scriptCode = `\n { \n${script}\n }`;
         scriptLineOffset += 2;
 
+        let withCodeStart = '';
+        let withCodeEnd = '';
+        if (customGlobalThis) {
+            withCodeStart = 'with(__globalObj) {\n';
+            withCodeEnd = '}';
+            scriptLineOffset += 1;
+        }
+
         // Function needs a name because acorn doesn't understand
         // that this function is allowed to be anonymous.
         let functionCode = `function ${
@@ -395,7 +405,7 @@ export class AuxCompiler {
             );
 
             scriptLineOffset += constantsLineOffset;
-            const finalCode = `${constantsCode}return ${transpiled.code};`;
+            const finalCode = `${withCodeStart}return function(constants, variables, context) { ${constantsCode}return ${transpiled.code}; }${withCodeEnd}`;
 
             let func = this._buildFunction(finalCode, options);
             (<any>func)[COMPILED_SCRIPT_SYMBOL] = true;
@@ -443,27 +453,22 @@ export class AuxCompiler {
         options: AuxCompileOptions<T>
     ) {
         return this.__constructFunction<T>(finalCode)(
-            options.constants,
-            options.variables,
-            options.context
-        );
+            options.constants?.globalThis
+        )(options.constants, options.variables, options.context);
     }
 
     private __constructFunction<T>(
         finalCode: string
     ): (
+        globalObj: any
+    ) => (
         constants: AuxCompileOptions<T>['constants'],
         variables: AuxCompileOptions<T>['variables'],
         context: AuxCompileOptions<T>['context']
     ) => Function {
         let existing = this._functionCache.get(finalCode) as any;
         if (!existing) {
-            existing = Function(
-                'constants',
-                'variables',
-                'context',
-                finalCode
-            ) as any;
+            existing = Function('__globalObj', finalCode) as any;
 
             this._functionCache.set(finalCode, existing);
         }
@@ -638,6 +643,12 @@ export interface AuxCompileOptions<T> {
      * This will compile out any async/await code.
      */
     forceSync?: boolean;
+
+    /**
+     * The global object that the function should be compiled to reference.
+     *
+     */
+    globalObj?: any;
 }
 
 // export class CompiledScriptError extends Error {

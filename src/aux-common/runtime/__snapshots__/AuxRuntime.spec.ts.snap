@@ -1,5 +1,16 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`AuxRuntime shout() globalThis should not allow deleting properties from globalThis 1`] = `
+Object {
+  "actions": Array [],
+  "errors": Array [],
+  "listeners": Array [],
+  "results": Array [
+    undefined,
+  ],
+}
+`;
+
 exports[`AuxRuntime shout() should compile listeners to use the html.h() function for JSX 1`] = `
 Array [
   Object {
