@@ -833,7 +833,7 @@ describe('AuxGlobalContext', () => {
                     'also wrong',
                 ]);
             }).toThrowError(
-                'No mock data for function (no matching input): func("wrong", "also wrong")'
+                'No mask data for function (no matching input): func("wrong", "also wrong")'
             );
         });
 
@@ -846,7 +846,7 @@ describe('AuxGlobalContext', () => {
                     { abc: 'def' },
                 ]);
             }).toThrowError(
-                'No mock data for function: func("wrong", {\n  "abc": "def"\n})'
+                'No mask data for function: func("wrong", {\n  "abc": "def"\n})'
             );
         });
 
@@ -858,7 +858,7 @@ describe('AuxGlobalContext', () => {
                     'wrong',
                     { abc: 'def', [DEBUG_STRING]: 'abc()' },
                 ]);
-            }).toThrowError('No mock data for function: func("wrong", abc())');
+            }).toThrowError('No mask data for function: func("wrong", abc())');
         });
 
         it('should fail when getting mocks for a function that has nothing set', () => {
@@ -866,7 +866,7 @@ describe('AuxGlobalContext', () => {
 
             expect(() => {
                 context.getNextMockReturn(func, 'func', []);
-            }).toThrowError('No mock data for function: func()');
+            }).toThrowError('No mask data for function: func()');
         });
 
         it('should fail when the return value list has been exhausted', () => {
@@ -878,7 +878,7 @@ describe('AuxGlobalContext', () => {
             expect(() => {
                 context.getNextMockReturn(func, 'func', []);
             }).toThrowError(
-                'No mock data for function (out of return values): func()'
+                'No mask data for function (out of return values): func()'
             );
         });
     });

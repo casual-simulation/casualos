@@ -1041,7 +1041,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         }
         if (!this._mocks.has(func)) {
             throw new Error(
-                `No mock data for function: ${debugStringifyFunction(
+                `No mask data for function: ${debugStringifyFunction(
                     functionName,
                     args
                 )}`
@@ -1054,7 +1054,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
                 return arrayOrMap.get(argJson);
             } else {
                 throw new Error(
-                    `No mock data for function (no matching input): ${debugStringifyFunction(
+                    `No mask data for function (no matching input): ${debugStringifyFunction(
                         functionName,
                         args
                     )}`
@@ -1065,7 +1065,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
                 return arrayOrMap.shift();
             } else {
                 throw new Error(
-                    `No mock data for function (out of return values): ${debugStringifyFunction(
+                    `No mask data for function (out of return values): ${debugStringifyFunction(
                         functionName,
                         args
                     )}`
