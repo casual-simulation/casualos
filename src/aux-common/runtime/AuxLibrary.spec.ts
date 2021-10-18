@@ -3736,6 +3736,22 @@ describe('AuxLibrary', () => {
 
                 expect(result).toBe('abc.def');
             });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    library.api.os.requestPermanentAuthToken
+                        .mask()
+                        .returns('mocked');
+                    const result: any = library.api.os.requestPermanentAuthToken();
+
+                    expect(result).toEqual('mocked');
+                });
+            });
         });
 
         describe('os.publishRecord()', () => {

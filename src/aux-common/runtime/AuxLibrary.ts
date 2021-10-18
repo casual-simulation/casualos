@@ -915,7 +915,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 unregisterApp,
                 compileApp: setAppContent,
                 requestAuthBot,
-                requestPermanentAuthToken,
+                requestPermanentAuthToken: makeMockableFunction(
+                    requestPermanentAuthToken,
+                    'os.requestPermanentAuthToken'
+                ),
 
                 publishRecord: makeMockableFunction(
                     publishRecord,

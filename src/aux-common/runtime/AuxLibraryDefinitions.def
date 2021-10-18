@@ -4956,7 +4956,7 @@ interface Os {
      /**
       * Requests an auth token that does not expire and can be used to authorize other app bundles to publish records for this app bundle.
       */
-     requestPermanentAuthToken(): Promise<string>;
+     requestPermanentAuthToken: MaskFunc<() => Promise<string>>;
 
      /**
       * Publishes a record that can be used across instances.
