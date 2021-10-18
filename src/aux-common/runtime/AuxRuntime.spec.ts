@@ -7267,6 +7267,61 @@ describe('AuxRuntime', () => {
             ]);
         });
 
+        it('should be able to create the configBot with specific tags', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@action.perform(configBot.tags.abc)',
+                        test: `@let d = os.createDebugger({
+                            configBot: {
+                                abc: 'def'
+                            }
+                        }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let actions = result.results[0];
+
+            expect(actions).toEqual([
+                botAdded(
+                    createBot('uuid-1', {
+                        test: '@action.perform(configBot.tags.abc)',
+                    })
+                ),
+                'def',
+            ]);
+        });
+
+        it('should be able to create the configBot with another bot', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    other: createBot('other', {
+                        abc: 'def',
+                    }),
+                    test: createBot('test', {
+                        error: '@action.perform(configBot.tags.abc)',
+                        test: `@let d = os.createDebugger({
+                            configBot: getBot('id', 'other')
+                        }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let actions = result.results[0];
+
+            expect(actions).toEqual([
+                botAdded(
+                    createBot('uuid-1', {
+                        test: '@action.perform(configBot.tags.abc)',
+                    })
+                ),
+                'def',
+            ]);
+        });
+
         it('should allow setting globalThis variables without affecting everything else', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({

@@ -696,6 +696,12 @@ export interface AuxDebuggerOptions {
      * Defaults to false.
      */
     allowAsynchronousScripts: boolean;
+
+    /**
+     * The data that the configBot should be created from.
+     * Can be a mod or another bot.
+     */
+    configBot: Bot | BotTags;
 }
 
 export interface MaskableFunction {

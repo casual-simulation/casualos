@@ -385,7 +385,14 @@ export class AuxRuntime
         const configBotId = options?.useRealUUIDs
             ? runtime.context.uuid()
             : 'uuid-0';
-        runtime.context.createBot(createBot(configBotId, {}, 'tempLocal'));
+        const configBotTags = options?.configBot
+            ? isBot(options?.configBot)
+                ? options.configBot.tags
+                : options.configBot
+            : {};
+        runtime.context.createBot(
+            createBot(configBotId, configBotTags, 'tempLocal')
+        );
         runtime.process(
             this._builtinPortalBots.map((b) => registerBuiltinPortal(b))
         );
