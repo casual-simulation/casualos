@@ -4199,6 +4199,20 @@ let options: {
      * Defaults to false.
      */
     useRealUUIDs?: boolean;
+
+    /**
+     * Whether to allow scripts to be asynchronous.
+     * If false, then all scripts will be forced to be synchronous.
+     * Defaults to false.
+     * Synchronous scripts are easier to test because they don't rely on back-and-forth (two-way) communication to handle things like web.hook().
+     */
+     allowAsynchronousScripts: boolean;
+
+     /**
+     * The data that the configBot should be created from.
+     * Can be a mod or another bot.
+     */
+    configBot: Bot | BotTags;
 };
 ```
 
