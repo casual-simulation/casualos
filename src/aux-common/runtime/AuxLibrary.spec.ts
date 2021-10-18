@@ -10,6 +10,7 @@ import {
     MemoryGlobalContext,
     SET_INTERVAL_ANIMATION_FRAME_TIME,
     WatchBotTimer,
+    DEBUG_STRING,
 } from './AuxGlobalContext';
 import {
     toast,
@@ -731,6 +732,17 @@ describe('AuxLibrary', () => {
             it('should return false if the bot has a different ID', () => {
                 const filter = library.api.byID('wrong');
                 expect(filter(bot1)).toBe(false);
+            });
+
+            it('should contain a toJSON() function that returns the record filter object', () => {
+                const result: any = library.api.byID('myID');
+
+                expect(result.toJSON).toBeInstanceOf(Function);
+                expect(result[DEBUG_STRING]).toBe('byID("myID")');
+                expect(result.toJSON()).toEqual({
+                    recordFilter: true,
+                    id: 'myID',
+                });
             });
         });
 
@@ -3920,6 +3932,7 @@ describe('AuxLibrary', () => {
                     expect(result).toEqual({
                         recordFilter: true,
                         authID: 'myAuthID',
+                        [DEBUG_STRING]: 'byAuthID("myAuthID")',
                     });
                 });
             });
@@ -3937,6 +3950,17 @@ describe('AuxLibrary', () => {
                     expect(result1.recordFilter).toBe(true);
                     expect(result1.space).toBe('mySpace');
                 });
+
+                it('should contain a toJSON() function that returns the record filter object', () => {
+                    const result: any = library.api.bySpace('mySpace');
+
+                    expect(result[DEBUG_STRING]).toBe('bySpace("mySpace")');
+                    expect(result.toJSON).toBeInstanceOf(Function);
+                    expect(result.toJSON()).toEqual({
+                        recordFilter: true,
+                        space: 'mySpace',
+                    });
+                });
             });
 
             describe('byAddress()', () => {
@@ -3946,6 +3970,7 @@ describe('AuxLibrary', () => {
                     expect(result).toEqual({
                         recordFilter: true,
                         address: 'byAddress',
+                        [DEBUG_STRING]: 'byAddress("byAddress")',
                     });
                 });
             });
@@ -3957,6 +3982,7 @@ describe('AuxLibrary', () => {
                     expect(result).toEqual({
                         recordFilter: true,
                         authToken: 'myToken',
+                        [DEBUG_STRING]: 'withAuthToken("myToken")',
                     });
                 });
             });
@@ -3968,6 +3994,7 @@ describe('AuxLibrary', () => {
                     expect(result).toEqual({
                         recordFilter: true,
                         prefix: 'myPrefix',
+                        [DEBUG_STRING]: 'byPrefix("myPrefix")',
                     });
                 });
             });

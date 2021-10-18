@@ -34,6 +34,12 @@ import stableStringify from '@casual-simulation/fast-json-stable-stringify';
 export const SET_INTERVAL_ANIMATION_FRAME_TIME: number = 16;
 
 /**
+ * A symbol that can be specified on objects to influence how they are stringified
+ * when printed for debug/mock/error purposes.
+ */
+export const DEBUG_STRING = Symbol('debug_string');
+
+/**
  * Holds global values that need to be accessible from the runtime.
  */
 export interface AuxGlobalContext {
@@ -1034,7 +1040,12 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             func = func[ORIGINAL_OBJECT];
         }
         if (!this._mocks.has(func)) {
-            throw new Error(`No mock data for function: ${functionCall()}`);
+            throw new Error(
+                `No mock data for function: ${debugStringifyFunction(
+                    functionName,
+                    args
+                )}`
+            );
         }
         let arrayOrMap = this._mocks.get(func);
         if (arrayOrMap instanceof Map) {
@@ -1043,7 +1054,10 @@ export class MemoryGlobalContext implements AuxGlobalContext {
                 return arrayOrMap.get(argJson);
             } else {
                 throw new Error(
-                    `No mock data for function (no matching input): ${functionCall()}`
+                    `No mock data for function (no matching input): ${debugStringifyFunction(
+                        functionName,
+                        args
+                    )}`
                 );
             }
         } else {
@@ -1051,22 +1065,47 @@ export class MemoryGlobalContext implements AuxGlobalContext {
                 return arrayOrMap.shift();
             } else {
                 throw new Error(
-                    `No mock data for function (out of return values): ${functionCall()}`
+                    `No mock data for function (out of return values): ${debugStringifyFunction(
+                        functionName,
+                        args
+                    )}`
                 );
             }
-        }
-
-        function functionCall() {
-            const argList = args
-                .map((a) => stableStringify(a, { space: 2 }))
-                .join(', ');
-            return `${functionName}(${argList})`;
         }
     }
 
     private _updateAnimationLoop() {
         TWEEN.update(this.localTime);
     }
+}
+
+/**
+ * Creates a debug string that is useful for visualizing a function call.
+ * @param functionName The name of the function.
+ * @param args The arguments that were passed to the function.
+ * @returns
+ */
+export function debugStringifyFunction(
+    functionName: string,
+    args: any[]
+): string {
+    const argList = args.map((a) => debugStringify(a)).join(', ');
+    return `${functionName}(${argList})`;
+}
+
+/**
+ * Creates a debug string from the given value.
+ * @param value
+ * @returns
+ */
+export function debugStringify(value: any): string {
+    if (
+        (typeof value === 'object' || typeof value === 'function') &&
+        DEBUG_STRING in value
+    ) {
+        return value[DEBUG_STRING];
+    }
+    return stableStringify(value, { space: 2 });
 }
 
 function animationLoop(): Observable<void> {

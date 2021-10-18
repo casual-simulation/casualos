@@ -3,6 +3,8 @@ import {
     AsyncTask,
     BotTimer,
     TimeoutOrIntervalTimer,
+    DEBUG_STRING,
+    debugStringifyFunction,
 } from './AuxGlobalContext';
 import {
     hasValue,
@@ -515,10 +517,12 @@ export interface AnimateTagFunctionOptions {
 export interface BotFilterFunction {
     (bot: Bot): boolean;
     sort?: (bot: Bot) => any;
+    [DEBUG_STRING]?: string;
 }
 
 export interface RecordFilter {
     recordFilter: true;
+    [DEBUG_STRING]?: string;
 }
 
 export interface AuthIdRecordFilter extends RecordFilter {
@@ -527,6 +531,7 @@ export interface AuthIdRecordFilter extends RecordFilter {
 
 export interface SpaceFilter extends BotFilterFunction, RecordFilter {
     space: string;
+    toJSON: () => RecordFilter;
 }
 
 export interface AddressRecordFilter extends RecordFilter {
@@ -543,6 +548,7 @@ export interface PrefixRecordFilter extends RecordFilter {
 
 export interface IDRecordFilter extends BotFilterFunction, RecordFilter {
     id: string;
+    toJSON: () => RecordFilter;
 }
 
 export type RecordFilters =
@@ -1454,6 +1460,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         filter.recordFilter = true;
         filter.id = id;
+        filter.toJSON = () => {
+            return {
+                recordFilter: true,
+                id: id,
+            };
+        };
+        filter[DEBUG_STRING] = debugStringifyFunction('byID', [id]);
 
         return filter;
     }
@@ -1582,6 +1595,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let func = byTag(BOT_SPACE_TAG, space) as SpaceFilter;
         func.recordFilter = true;
         func.space = space;
+        func.toJSON = () => {
+            return {
+                recordFilter: true,
+                space: space,
+            };
+        };
+        func[DEBUG_STRING] = debugStringifyFunction('bySpace', [space]);
         return func;
     }
 
@@ -1636,6 +1656,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return {
             recordFilter: true,
             authID,
+            [DEBUG_STRING]: debugStringifyFunction('byAuthID', [authID]),
         };
     }
 
@@ -1647,6 +1668,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return {
             recordFilter: true,
             address,
+            [DEBUG_STRING]: debugStringifyFunction('byAddress', [address]),
         };
     }
 
@@ -1658,6 +1680,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return {
             recordFilter: true,
             authToken: token,
+            [DEBUG_STRING]: debugStringifyFunction('withAuthToken', [token]),
         };
     }
 
@@ -1669,6 +1692,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return {
             recordFilter: true,
             prefix,
+            [DEBUG_STRING]: debugStringifyFunction('byPrefix', [prefix]),
         };
     }
 

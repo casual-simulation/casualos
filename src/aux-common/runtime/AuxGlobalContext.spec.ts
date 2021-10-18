@@ -3,6 +3,7 @@ import {
     addToContext,
     MemoryGlobalContext,
     removeFromContext,
+    DEBUG_STRING,
 } from './AuxGlobalContext';
 import {
     createDummyRuntimeBot,
@@ -847,6 +848,17 @@ describe('AuxGlobalContext', () => {
             }).toThrowError(
                 'No mock data for function: func("wrong", {\n  "abc": "def"\n})'
             );
+        });
+
+        it('should be able to use debug strings that are specified on arguments', () => {
+            let func = jest.fn();
+
+            expect(() => {
+                context.getNextMockReturn(func, 'func', [
+                    'wrong',
+                    { abc: 'def', [DEBUG_STRING]: 'abc()' },
+                ]);
+            }).toThrowError('No mock data for function: func("wrong", abc())');
         });
 
         it('should fail when getting mocks for a function that has nothing set', () => {
