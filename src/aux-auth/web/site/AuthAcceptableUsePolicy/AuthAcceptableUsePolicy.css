@@ -1,4 +1,4 @@
-.terms-container {
+.acceptable-use-policy-container {
     max-width: 1100px;
     margin: 0 auto;
     margin-top: 24px;
@@ -9,19 +9,19 @@
     padding-right: 40px;
 }
 
-.terms-container .md-card-content {
+.acceptable-use-policy-container .md-card-content {
     font-size: 16px;
 }
 
-.terms-container h3 ol {
+.acceptable-use-policy-container h3 ol {
     padding-inline-start: 40px;
 }
 
-.terms-container .terms-of-service-content ul {
+.acceptable-use-policy-container .acceptable-use-policy-content ul {
     padding-inline-start: 80px;
 }
 
-.terms-container .terms-of-service-content p {
+.acceptable-use-policy-container .acceptable-use-policy-content p {
     padding-left: 40px;
     padding-right: 40px;
     text-align: justify;

@@ -6,6 +6,10 @@
             </md-card-header>
             <md-card-content>
                 <p><em>Last updated on September 27th, 2021</em></p>
+                <p>
+                    You can find a plain-text version of this privacy policy
+                    <a href="/privacy-policy.txt">here</a>.
+                </p>
 
                 <div class="privacy-policy-content">
                     <h3 id="toc">
@@ -68,30 +72,36 @@
                     </p>
                     <p>
                         <strong>Magic.link</strong>: we use
-                        <a href="https://magic.link/">magic.link</a> for authentication and only
-                        provide them your email. Please review magic.link&rsquo;s Terms of Service
-                        (<a href="https://magic.link/legal/user-terms"
+                        <a target="_blank" href="https://magic.link/">magic.link</a> for
+                        authentication and only provide them your email. Please review
+                        magic.link&rsquo;s Terms of Service (<a
+                            target="_blank"
+                            href="https://magic.link/legal/user-terms"
                             >https://magic.link/legal/user-terms</a
                         >) for more information on how
-                        <a href="https://magic.link/">magic.link</a> may use your data.
+                        <a target="_blank" href="https://magic.link/">magic.link</a> may use your
+                        data.
                     </p>
                     <p>
                         <strong>Readyplayer.me</strong>: we use
-                        <a href="https://readyplayer.me">readyplayer.me</a>&rsquo;s avatar services
-                        to create avatars for your use. We provide readyplayer.me your name and
-                        email to do so.
+                        <a target="_blank" href="https://readyplayer.me">readyplayer.me</a>&rsquo;s
+                        avatar services to create avatars for your use. We provide readyplayer.me
+                        your name and email to do so.
                         <br />
-                        Please review <a href="https://readyplayer.me">readyplayer.me</a>'s Terms of
-                        Service (<a
+                        Please review
+                        <a target="_blank" href="https://readyplayer.me">readyplayer.me</a>'s Terms
+                        of Service (<a
                             href="https://drive.google.com/file/d/1ER3gBvx1UwXMDiOaZk8akzPmO6LAFfTp/view"
                             >https://drive.google.com/file/d/1ER3gBvx1UwXMDiOaZk8akzPmO6LAFfTp/view</a
                         >) for more information on how
-                        <a href="https://readyplayer.me">readyplayer.me</a> may use your data.
+                        <a target="_blank" href="https://readyplayer.me">readyplayer.me</a> may use
+                        your data.
                     </p>
                     <p>
                         After creating an account and logging in, your User Content you publish via
                         app bundles are stored &ldquo;as is&rdquo; by use of the os.publishRecord
                         tag (<a
+                            target="_blank"
                             href="https://docs.casualos.com/docs/actions/#ospublishrecordoptions"
                             >https://docs.casualos.com/docs/actions/#ospublishrecordoptions</a
                         >). This means any unencrypted data you publish is publically available and

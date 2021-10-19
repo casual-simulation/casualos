@@ -29,7 +29,7 @@
                             </md-checkbox>
                             <label for="terms-of-service">
                                 I accept the
-                                <a target="_blank" href="/terms-of-service.txt">Terms of Service</a>
+                                <a target="_blank" href="/terms">Terms of Service</a>
                             </label>
                         </div>
                     </div>

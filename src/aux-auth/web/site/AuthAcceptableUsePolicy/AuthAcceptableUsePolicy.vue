@@ -1,5 +1,5 @@
 <template>
-    <div class="terms-container">
+    <div class="acceptable-use-policy-container">
         <md-card>
             <md-card-header>
                 <h1 class="md-title">{{ hostname }} Acceptable Use Policy</h1>
@@ -7,17 +7,21 @@
             <md-card-content>
                 <p><em>Last updated on September 27th, 2021</em></p>
                 <p>
+                    You can find a plain-text version of this acceptable use policy
+                    <a href="/acceptable-use-policy.txt">here</a>.
+                </p>
+                <p>
                     By using our products or services, you agree to this Acceptable Use Policy as
                     well as our Terms of Service and Privacy Policy.
                 </p>
                 <p>
                     We welcome you to use CasualOS, a tool to casually author open source
                     experiences. To that end, we provide you with these terms of service to advise
-                    you of the legal obligations you assume when you access or use this website
-                    (www.casualos.com) and any services related to this website
-                    (&ldquo;Services&rdquo;).
+                    you of the legal obligations you assume when you access or use this website ({{
+                        hostname
+                    }}) and any services related to this website (&ldquo;Services&rdquo;).
                 </p>
-                <div class="terms-of-service-content">
+                <div class="acceptable-use-policy-content">
                     <h3 id="toc">
                         <ol start="0">
                             <li>Table of Contents</li>
@@ -66,7 +70,7 @@
                     </p>
                     <p>
                         The intent of this document is to clarify what we consider to be acceptable
-                        use of any website or service provided on CasualOS.com or any affiliated
+                        use of any website or service provided on {{ hostname }} or any affiliated
                         website or service.
                     </p>
                     <p>
@@ -112,7 +116,7 @@
                     </p>
                     <h3 id="spam">
                         <ol start="2">
-                            Spam
+                            <li>Spam</li>
                         </ol>
                     </h3>
                     <p>
@@ -159,7 +163,7 @@
                     </p>
                     <h3 id="copyright">
                         <ol start="6">
-                            Copyright
+                            <li>Copyright</li>
                         </ol>
                     </h3>
                     <p>

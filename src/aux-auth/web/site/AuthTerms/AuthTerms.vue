@@ -7,6 +7,10 @@
             <md-card-content>
                 <p><em>Last updated on September 27th, 2021</em></p>
                 <p>
+                    You can find a plain-text version of these terms
+                    <a href="/terms-of-service.txt">here</a>.
+                </p>
+                <p>
                     By using our products or services, you agree to these Terms of Service as well
                     as our <a href="/acceptable-use-policy">Acceptable Use Policy</a>
                     and
