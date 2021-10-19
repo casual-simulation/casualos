@@ -2,7 +2,7 @@
     <div class="terms-container">
         <md-card>
             <md-card-header>
-                <h1 class="md-title">Terms of Service</h1>
+                <h1 class="md-title">{{ hostname }} Terms of Service</h1>
             </md-card-header>
             <md-card-content>
                 <p><em>Last updated on September 27th, 2021</em></p>
