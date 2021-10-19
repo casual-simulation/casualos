@@ -3,6 +3,8 @@ import {
     AsyncTask,
     BotTimer,
     TimeoutOrIntervalTimer,
+    DEBUG_STRING,
+    debugStringifyFunction,
 } from './AuxGlobalContext';
 import {
     hasValue,
@@ -515,10 +517,12 @@ export interface AnimateTagFunctionOptions {
 export interface BotFilterFunction {
     (bot: Bot): boolean;
     sort?: (bot: Bot) => any;
+    [DEBUG_STRING]?: string;
 }
 
 export interface RecordFilter {
     recordFilter: true;
+    [DEBUG_STRING]?: string;
 }
 
 export interface AuthIdRecordFilter extends RecordFilter {
@@ -527,6 +531,7 @@ export interface AuthIdRecordFilter extends RecordFilter {
 
 export interface SpaceFilter extends BotFilterFunction, RecordFilter {
     space: string;
+    toJSON: () => RecordFilter;
 }
 
 export interface AddressRecordFilter extends RecordFilter {
@@ -543,6 +548,7 @@ export interface PrefixRecordFilter extends RecordFilter {
 
 export interface IDRecordFilter extends BotFilterFunction, RecordFilter {
     id: string;
+    toJSON: () => RecordFilter;
 }
 
 export type RecordFilters =
@@ -689,6 +695,37 @@ export interface AuxDebuggerOptions {
      * Whether to use "real" UUIDs instead of predictable ones.
      */
     useRealUUIDs: boolean;
+
+    /**
+     * Whether to allow scripts to be asynchronous.
+     * If false, then all scripts will be forced to be synchronous.
+     * Defaults to false.
+     */
+    allowAsynchronousScripts: boolean;
+
+    /**
+     * The data that the configBot should be created from.
+     * Can be a mod or another bot.
+     */
+    configBot: Bot | BotTags;
+}
+
+export interface MaskableFunction {
+    mask(...args: any[]): MaskedFunction;
+}
+
+export interface MaskedFunction {
+    returns(value: any): void;
+}
+
+export interface WebhookInterface extends MaskableFunction {
+    (options: WebhookOptions): void;
+    post: ((
+        url: string,
+        data?: any,
+        options?: WebhookOptions
+    ) => Promise<any>) &
+        MaskableFunction;
 }
 
 /**
@@ -709,6 +746,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             data: data,
         });
     };
+
+    const webhookFunc = makeMockableFunction(webhook, 'webhook');
+    webhookFunc.post = makeMockableFunction(webhook.post, 'webhook.post');
 
     return {
         api: {
@@ -765,7 +805,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             clearAnimations,
 
             // TODO: Remove deprecated functions
-            webhook,
+            webhook: <WebhookInterface>(<any>webhookFunc),
             sleep,
 
             __energyCheck,
@@ -837,7 +877,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPortalDimension,
                 getDimensionalDepth,
                 showInputForTag,
-                showInput,
+                showInput: makeMockableFunction(showInput, 'os.showInput'),
                 goToDimension,
                 goToURL,
                 openURL,
@@ -875,11 +915,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 unregisterApp,
                 compileApp: setAppContent,
                 requestAuthBot,
-                requestPermanentAuthToken,
+                requestPermanentAuthToken: makeMockableFunction(
+                    requestPermanentAuthToken,
+                    'os.requestPermanentAuthToken'
+                ),
 
-                publishRecord,
-                getRecords,
-                destroyRecord,
+                publishRecord: makeMockableFunction(
+                    publishRecord,
+                    'os.publishRecord'
+                ),
+                getRecords: makeMockableFunction(getRecords, 'os.getRecords'),
+                destroyRecord: makeMockableFunction(
+                    destroyRecord,
+                    'os.destroyRecord'
+                ),
 
                 setupInst: setupServer,
                 remotes,
@@ -1046,9 +1095,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             },
 
             web: {
-                get: webGet,
-                post: webPost,
-                hook: webhook,
+                get: makeMockableFunction(webGet, 'web.get'),
+                post: makeMockableFunction(webPost, 'web.post'),
+                hook: makeMockableFunction(webhook, 'web.hook'),
             },
         },
 
@@ -1420,6 +1469,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         filter.recordFilter = true;
         filter.id = id;
+        filter.toJSON = () => {
+            return {
+                recordFilter: true,
+                id: id,
+            };
+        };
+        filter[DEBUG_STRING] = debugStringifyFunction('byID', [id]);
 
         return filter;
     }
@@ -1548,6 +1604,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let func = byTag(BOT_SPACE_TAG, space) as SpaceFilter;
         func.recordFilter = true;
         func.space = space;
+        func.toJSON = () => {
+            return {
+                recordFilter: true,
+                space: space,
+            };
+        };
+        func[DEBUG_STRING] = debugStringifyFunction('bySpace', [space]);
         return func;
     }
 
@@ -1602,6 +1665,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return {
             recordFilter: true,
             authID,
+            [DEBUG_STRING]: debugStringifyFunction('byAuthID', [authID]),
         };
     }
 
@@ -1613,6 +1677,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return {
             recordFilter: true,
             address,
+            [DEBUG_STRING]: debugStringifyFunction('byAddress', [address]),
         };
     }
 
@@ -1624,6 +1689,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return {
             recordFilter: true,
             authToken: token,
+            [DEBUG_STRING]: debugStringifyFunction('withAuthToken', [token]),
         };
     }
 
@@ -1635,6 +1701,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return {
             recordFilter: true,
             prefix,
+            [DEBUG_STRING]: debugStringifyFunction('byPrefix', [prefix]),
         };
     }
 
@@ -4176,6 +4243,32 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             url,
             data,
         });
+    }
+
+    /**
+     * Creates a new function that is mockable based on if the context is currently mocking async actions.
+     * @param func The function to mock.
+     * @param functionName The name of the function.
+     * @returns
+     */
+    function makeMockableFunction<T>(
+        func: T,
+        functionName: string
+    ): T & MaskableFunction {
+        if (context.mockAsyncActions) {
+            let mock: any = (...args: any[]) => {
+                return context.getNextMockReturn(func, functionName, args);
+            };
+            mock.mask = (...args: any) => ({
+                returns(value: any) {
+                    context.setMockReturn(func, args, value);
+                },
+            });
+            mock[ORIGINAL_OBJECT] = func;
+            return mock;
+        } else {
+            return func as any;
+        }
     }
 
     /**
