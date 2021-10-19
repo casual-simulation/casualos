@@ -102,30 +102,6 @@ function authConfig(latestTag, prod, apiEndpoint) {
                         from: path.resolve(__dirname, 'shared', 'legal'),
                         to: path.resolve(__dirname, 'dist'),
                     },
-                    {
-                        from: path.resolve(
-                            __dirname,
-                            'shared',
-                            'legal',
-                            'privacy-policy.txt'
-                        ),
-                        to: path.resolve(__dirname, 'dist', 'privacy-policy'),
-                        toType: 'file',
-                    },
-                    {
-                        from: path.resolve(
-                            __dirname,
-                            'shared',
-                            'legal',
-                            'acceptable-use-policy.txt'
-                        ),
-                        to: path.resolve(
-                            __dirname,
-                            'dist',
-                            'acceptable-use-policy'
-                        ),
-                        toType: 'file',
-                    },
                 ],
             }),
         ],
