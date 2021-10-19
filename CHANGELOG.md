@@ -42,6 +42,9 @@
         -   This means that the portal bots like `gridPortalBot`, `mapPortalBot`, etc. are available in debuggers.
     -   Debuggers now automatically setup a `configBot`.
         -   You can override this configBot by using the `configBot` property in the options object that is passed to `os.createDebugger()`.
+-   Updated the sidebar on the documentation site to be easier to use.
+-   Updated the auth site branding.
+-   Added well-formatted pages for the terms of service, privacy policy, and acceptable use policy to the auth website.
 
 ### :bug: Bug Fixes
 
