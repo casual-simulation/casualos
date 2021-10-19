@@ -48,7 +48,6 @@ function authConfig(latestTag, prod, apiEndpoint) {
                 chunks: ['site', 'vendors'],
                 // inject: false,
                 template: path.resolve(__dirname, 'site', 'index.html'),
-                title: 'CasualOS.me',
                 filename: 'index.html',
                 favicon: path.resolve(__dirname, 'shared', 'favicon.ico'),
 
@@ -64,7 +63,6 @@ function authConfig(latestTag, prod, apiEndpoint) {
                 chunks: ['iframe', 'vendors'],
                 // inject: false,
                 template: path.resolve(__dirname, 'iframe', 'index.html'),
-                title: 'CasualOS.me',
                 filename: 'iframe.html',
                 favicon: path.resolve(__dirname, 'shared', 'favicon.ico'),
 

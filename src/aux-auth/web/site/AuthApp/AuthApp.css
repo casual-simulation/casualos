@@ -1,6 +1,7 @@
 .title-img {
     width: 32px;
     height: 32px;
+    vertical-align: middle;
 }
 
 .title-link:hover {
