@@ -1,6 +1,7 @@
 const allowedOrigins = new Set([
     'http://localhost:3002',
     'https://casualos.me',
+    'https://ab1.link',
 ]);
 
 function findHeader(request, header) {

@@ -4010,9 +4010,8 @@ describe('AuxRuntime', () => {
                     botAdded(createBot('uuid', {}, 'tempLocal')),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['uuid']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['uuid']);
             });
 
             it('should not override previous variables', async () => {
@@ -4030,9 +4029,8 @@ describe('AuxRuntime', () => {
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
 
                 runtime.process([registerBuiltinPortal('grid')]);
 
@@ -4041,25 +4039,41 @@ describe('AuxRuntime', () => {
                 expect(allEvents).toEqual([
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+
+                const result2 = runtime.execute('return gridBot;');
+                expect(result2.result).toBe(runtime.context.state['test1']);
             });
 
-            it('should remove the global variables that were created by the runtime', () => {
+            it('should not create global variables', () => {
                 uuidMock.mockReturnValueOnce('uuid');
 
                 runtime.process([registerBuiltinPortal('grid')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['uuid']
-                );
-
-                runtime.unsubscribe();
-
                 expect(
                     Object.getOwnPropertyDescriptor(globalThis, 'gridBot')
                 ).toBeUndefined();
+            });
+
+            it('should recompile scripts when a new portal bot is registered', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            run: '@return gridBot;',
+                        }),
+                    })
+                );
+
+                const result1 = runtime.shout('run');
+
+                expect(result1.results[0]).toBeUndefined();
+
+                runtime.process([registerBuiltinPortal('grid')]);
+
+                await waitAsync();
+
+                const result2 = runtime.shout('run');
+                expect(result2.results[0]).toBe(runtime.context.state['uuid']);
             });
         });
 
@@ -4076,9 +4090,8 @@ describe('AuxRuntime', () => {
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
             });
 
             it('should override previous variables', () => {
@@ -4096,17 +4109,15 @@ describe('AuxRuntime', () => {
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
 
                 runtime.process([
                     openCustomPortal('grid', 'test2', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test2']
-                );
+                const result2 = runtime.execute('return gridBot;');
+                expect(result2.result).toBe(runtime.context.state['test2']);
             });
 
             it('should remove the variable if given no bot to use for configuration', () => {
@@ -4121,16 +4132,16 @@ describe('AuxRuntime', () => {
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
 
                 runtime.process([openCustomPortal('grid', null, 'myTag', {})]);
 
-                expect((<any>globalThis).gridBot).toBeUndefined();
+                const result2 = runtime.execute('return gridBot;');
+                expect(result2.result).toBeUndefined();
             });
 
-            it('should remove the global variables that were created by the runtime', () => {
+            it('should not create variables on globalThis', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
@@ -4141,12 +4152,6 @@ describe('AuxRuntime', () => {
                 runtime.process([
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
-
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
-
-                runtime.unsubscribe();
 
                 expect(
                     Object.getOwnPropertyDescriptor(globalThis, 'gridBot')
@@ -4180,9 +4185,8 @@ describe('AuxRuntime', () => {
                 );
                 runtime.process([registerCustomApp('grid', 'test1')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
             });
 
             it('should override previous variables', () => {
@@ -4198,15 +4202,13 @@ describe('AuxRuntime', () => {
                 );
                 runtime.process([registerCustomApp('grid', 'test1')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
 
                 runtime.process([registerCustomApp('grid', 'test2')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test2']
-                );
+                const result2 = runtime.execute('return gridBot;');
+                expect(result2.result).toBe(runtime.context.state['test2']);
             });
 
             it('should remove the variable if given no bot to use for configuration', () => {
@@ -4219,16 +4221,16 @@ describe('AuxRuntime', () => {
                 );
                 runtime.process([registerCustomApp('grid', 'test1')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
 
                 runtime.process([registerCustomApp('grid', null)]);
 
-                expect((<any>globalThis).gridBot).toBeUndefined();
+                const result2 = runtime.execute('return gridBot;');
+                expect(result2.result).toBeUndefined();
             });
 
-            it('should remove the global variables that were created by the runtime', () => {
+            it('should not create variables on globalThis', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
@@ -4237,12 +4239,6 @@ describe('AuxRuntime', () => {
                     })
                 );
                 runtime.process([registerCustomApp('grid', 'test1')]);
-
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
-
-                runtime.unsubscribe();
 
                 expect(
                     Object.getOwnPropertyDescriptor(globalThis, 'gridBot')
@@ -4272,9 +4268,8 @@ describe('AuxRuntime', () => {
                 );
                 runtime.process([defineGlobalBot('grid', 'test1')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
             });
 
             it('should resolve the task when the bot is defined', async () => {
@@ -4299,9 +4294,8 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(resolved).toBe(true);
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
             });
 
             it('should resolve the task even if the bot is already globally defined', async () => {
@@ -4328,9 +4322,8 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(resolved).toBe(true);
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
             });
 
             it('should be able to re-define a global bot', async () => {
@@ -4361,9 +4354,8 @@ describe('AuxRuntime', () => {
 
                 expect(resolved).toBe(true);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test2']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test2']);
             });
 
             it('should be able to resolve the task when completed via an async result', async () => {
@@ -5010,6 +5002,79 @@ describe('AuxRuntime', () => {
             let result = runtime.shout('test');
 
             expect(result.results).toMatchSnapshot();
+        });
+
+        describe('globalThis', () => {
+            it('should intercept changes to globalThis', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@globalThis.testValue = true;',
+                            test2: '@return globalThis.testValue;',
+                        }),
+                    })
+                );
+                runtime.shout('test');
+                let result = runtime.shout('test2');
+
+                expect('testValue' in globalThis).toBe(false);
+                expect(result.results).toEqual([true]);
+            });
+
+            it('should be able to get properties from the normal globalThis', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@return globalThis.Map;',
+                        }),
+                    })
+                );
+                let result = runtime.shout('test');
+                expect(result.results[0]).toBe(Map);
+            });
+
+            it('should not allow deleting properties from globalThis', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@delete globalThis.Map;',
+                        }),
+                    })
+                );
+                let result = runtime.shout('test');
+                expect(result).toMatchSnapshot();
+            });
+
+            it('should be able to test if a added property is in globalThis', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: `@globalThis.testValue = true; return [
+                                "testValue" in globalThis,
+                                "otherValue" in globalThis
+                            ];`,
+                        }),
+                    })
+                );
+                let result = runtime.shout('test');
+                expect(result.results[0]).toEqual([true, false]);
+            });
+
+            it('should be able to list added properties with Object.keys()', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: `@globalThis.testValue = true; return Object.keys(globalThis)`,
+                        }),
+                    })
+                );
+                let result = runtime.shout('test');
+                let keys = result.results[0];
+                keys.sort();
+                expect(keys).toEqual(
+                    [...Object.keys(globalThis), 'testValue'].sort()
+                );
+            });
         });
 
         describe('bot_added', () => {
@@ -6934,7 +6999,9 @@ describe('AuxRuntime', () => {
         });
 
         it('should use real UUIDs when specified', () => {
-            uuidMock.mockReturnValueOnce('myUUID');
+            uuidMock
+                .mockReturnValueOnce('configBotId')
+                .mockReturnValueOnce('myUUID');
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
@@ -7076,6 +7143,197 @@ describe('AuxRuntime', () => {
                     error: new Error('abc'),
                 },
             ]);
+        });
+
+        it('should make async listeners synchronous by default', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@await 123; throw new Error("abc")',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let errors = result.results[0];
+            expect(errors).toEqual([
+                {
+                    bot: expect.any(Object),
+                    tag: 'test',
+                    error: new Error('abc'),
+                },
+            ]);
+        });
+
+        it('should allow async listeners if specified', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@await 123; throw new Error("abc")',
+                        test: `@let d = os.createDebugger({ allowAsynchronousScripts: true }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let errors = result.results[0];
+
+            // error does not get listed because it doesn't get caught by d.shout()
+            // because it is wrapped in a promise
+            expect(errors).toEqual([]);
+        });
+
+        it('should define variables for builtin portals', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@gridPortalBot.tags.hit = true;',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            runtime.process([registerBuiltinPortal('gridPortal')]);
+
+            const result = runtime.shout('test');
+            let actions = result.results[0];
+
+            expect(actions).toEqual([
+                botAdded(
+                    createBot('uuid-2', {
+                        test: '@gridPortalBot.tags.hit = true;',
+                    })
+                ),
+                botUpdated('uuid-1', {
+                    tags: {
+                        hit: true,
+                    },
+                }),
+            ]);
+        });
+
+        it('should not define variables for custom portals', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error:
+                            '@tags.hasBot = typeof testPortalBot !== "undefined";',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            runtime.process([defineGlobalBot('testPortal', 'test')]);
+
+            const result = runtime.shout('test');
+            let actions = result.results[0];
+
+            expect(actions).toEqual([
+                botAdded(
+                    createBot('uuid-1', {
+                        hasBot: false,
+                        test:
+                            '@tags.hasBot = typeof testPortalBot !== "undefined";',
+                    })
+                ),
+            ]);
+        });
+
+        it('should define a configBot', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@configBot.tags.hit = true;',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let actions = result.results[0];
+
+            expect(actions).toEqual([
+                botAdded(
+                    createBot('uuid-1', {
+                        test: '@configBot.tags.hit = true;',
+                    })
+                ),
+                botUpdated('uuid-0', {
+                    tags: {
+                        hit: true,
+                    },
+                }),
+            ]);
+        });
+
+        it('should be able to create the configBot with specific tags', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@action.perform(configBot.tags.abc)',
+                        test: `@let d = os.createDebugger({
+                            configBot: {
+                                abc: 'def'
+                            }
+                        }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let actions = result.results[0];
+
+            expect(actions).toEqual([
+                botAdded(
+                    createBot('uuid-1', {
+                        test: '@action.perform(configBot.tags.abc)',
+                    })
+                ),
+                'def',
+            ]);
+        });
+
+        it('should be able to create the configBot with another bot', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    other: createBot('other', {
+                        abc: 'def',
+                    }),
+                    test: createBot('test', {
+                        error: '@action.perform(configBot.tags.abc)',
+                        test: `@let d = os.createDebugger({
+                            configBot: getBot('id', 'other')
+                        }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let actions = result.results[0];
+
+            expect(actions).toEqual([
+                botAdded(
+                    createBot('uuid-1', {
+                        test: '@action.perform(configBot.tags.abc)',
+                    })
+                ),
+                'def',
+            ]);
+        });
+
+        it('should allow setting globalThis variables without affecting everything else', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@globalThis.testValue = 123;',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return globalThis.testValue;`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            expect(result.results[0]).toBeUndefined();
         });
     });
 });

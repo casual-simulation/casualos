@@ -75,4 +75,21 @@ module.exports = {
       },
     ],
   ],
+  plugins: [
+      [
+        '@docusaurus/plugin-client-redirects',
+        {
+            redirects: [
+                {
+                  to: '/docs/listen-tags', // string
+                  from: '/docs/listen-tags/tags', // string | string[]
+                },
+                {
+                    to: '/docs/variables', // string
+                    from: '/docs/listen-tags/variables', // string | string[]
+                },
+              ],
+        },
+      ]
+  ]
 };

@@ -78,7 +78,7 @@ export default class MonacoTagEditor extends Vue {
             const tagLink = this.tag
                 .replace(/[\.\(\)\@\[\]]/g, '')
                 .toLowerCase();
-            return `https://docs.casualos.com/docs/listen-tags/tags#${encodeURIComponent(
+            return `https://docs.casualos.com/docs/listen-tags#${encodeURIComponent(
                 tagLink
             )}`;
         } else {

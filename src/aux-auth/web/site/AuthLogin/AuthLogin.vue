@@ -20,6 +20,19 @@
                             </md-field>
                         </div>
                     </div>
+                    <div class="terms-of-service-container">
+                        <div v-show="showTermsOfServiceError" class="terms-of-service-error">
+                            Please accept the terms of service.
+                        </div>
+                        <div class="terms-of-service-wrapper">
+                            <md-checkbox v-model="acceptedTerms" id="terms-of-service">
+                            </md-checkbox>
+                            <label for="terms-of-service">
+                                I accept the
+                                <a target="_blank" href="/terms">Terms of Service</a>
+                            </label>
+                        </div>
+                    </div>
                 </md-card-content>
 
                 <md-card-actions>

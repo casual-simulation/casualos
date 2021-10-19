@@ -1,3 +1,22 @@
+
+type MaskFunc<Func extends ((...args: any[]) => any)> = {
+    (...args: Parameters<Func>): ReturnType<Func>;
+
+    /**
+     * Masks this function so that it can return a value when called with the specified parameters.
+     */
+    mask(...args: Parameters<Func>): MaskedFunction;
+}
+
+
+export interface MaskedFunction {
+    /**
+     * Specifies the value that should be returned when this function is called with the parameters specified to mask().
+     * @param value The value that should be returned.
+     */
+    returns(value: any): void;
+}
+
 /**
  * Contains information about the version of AUX that is running.
  */
@@ -2833,6 +2852,19 @@ export interface DebuggerOptions {
      * Whether to use "real" UUIDs instead of predictable ones.
      */
     useRealUUIDs: boolean;
+
+    /**
+     * Whether to allow scripts to be asynchronous.
+     * If false, then all scripts will be forced to be synchronous.
+     * Defaults to false.
+     */
+     allowAsynchronousScripts: boolean;
+
+     /**
+     * The data that the configBot should be created from.
+     * Can be a mod or another bot.
+     */
+    configBot: Bot | BotTags;
 }
 
 declare global {
@@ -3807,7 +3839,7 @@ interface Debugger {
        * @param bot The bot or list of bots that should be animated.
        * @param options The options for the animation. fromValue should be an object which contains the starting tag values and toValue should be an object that contains the ending tag values.
        */
-       animateTag(bot: Bot | (Bot | string)[] | string, options: AnimateTagFunctionOptions): Promise<void>;
+      animateTag(bot: Bot | (Bot | string)[] | string, options: AnimateTagFunctionOptions): Promise<void>;
       /**
        * Animates the given tag. Returns a promise when the animation is finished.
        * @param bot The bot or list of bots that should be animated.
@@ -4825,10 +4857,10 @@ interface Os {
       *    type: "text"
       * });
       */
-     showInput(
+     showInput: MaskFunc<(
          currentValue?: any,
          options?: Partial<ShowInputOptions>
-     ): Promise<string>;
+     ) => Promise<string>>;
 
      /**
       * Shows a checkout screen that lets the user purchase something.
@@ -4924,25 +4956,25 @@ interface Os {
      /**
       * Requests an auth token that does not expire and can be used to authorize other app bundles to publish records for this app bundle.
       */
-     requestPermanentAuthToken(): Promise<string>;
+     requestPermanentAuthToken: MaskFunc<() => Promise<string>>;
 
      /**
       * Publishes a record that can be used across instances.
       * @param recordDefinition The data that should be used to publish the record.
       */
-     publishRecord(recordDefinition: PublishableRecord): Promise<void>;
+     publishRecord: MaskFunc<(recordDefinition: PublishableRecord) => Promise<void>>;
 
      /**
       * Retrives a list of records using the given filters.
       * @param filters The list of filters that should be used to retrieve some records.
       */
-     getRecords(...filters: RecordFilters[]): Promise<GetRecordsResult>;
+     getRecords: MaskFunc<(...filters: RecordFilters[]) => Promise<GetRecordsResult>>;
 
      /**
       * Requests that the given record be destroyed.
       * @param record The record that should be deleted.
       */
-     destroyRecord(record: DeletableRecord): Promise<void>;
+     destroyRecord: MaskFunc<(record: DeletableRecord) => Promise<void>>;
 
      /**
       * Specifies that the given prefix should be interpreted as code.
@@ -5527,7 +5559,7 @@ interface Web {
      * // Send a HTTP GET request for https://www.example.com
      * const result = await web.get('https://www.example.com');
      */
-    get(url: string, options?: WebhookOptions): Promise<WebhookResult>;
+    get: MaskFunc<(url: string, options?: WebhookOptions) => Promise<WebhookResult>>;
 
     /**
      * Sends a HTTP POST request to the given URL with the given data.
@@ -5544,7 +5576,7 @@ interface Web {
      * });
      * 
      */
-    post(url: string, data?: any, options?: WebhookOptions): Promise<WebhookResult>;
+    post: MaskFunc<(url: string, data?: any, options?: WebhookOptions) => Promise<WebhookResult>>;
 
     /**
      * Sends a web request based on the given options.
@@ -5560,7 +5592,7 @@ interface Web {
      * 
      * os.toast(result);
      */
-    hook(options: WebhookOptions): Promise<WebhookResult>;
+    hook: MaskFunc<(options: WebhookOptions) => Promise<WebhookResult>>;
 };
 
 

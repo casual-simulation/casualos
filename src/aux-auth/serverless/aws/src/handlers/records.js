@@ -44,6 +44,8 @@ const allowedOrigins = new Set([
     'http://player.localhost:3000',
     'https://casualos.com',
     'https://casualos.me',
+    'https://ab1.link',
+    'https://publicos.com',
 ]);
 
 function returnResult(event, result) {

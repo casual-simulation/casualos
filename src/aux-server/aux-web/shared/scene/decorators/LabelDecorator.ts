@@ -17,6 +17,7 @@ import {
     calculateLabelWordWrapMode,
     BotLabelFontSize,
     getBotLabelPadding,
+    getBotOrientationMode,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
 import {
@@ -31,6 +32,7 @@ import { Orthographic_FrustrumSize } from '../CameraRigFactory';
 import { calculateScale, buildSRGBColor } from '../SceneUtils';
 import NotoSansKR from '@casual-simulation/aux-components/fonts/NotoSansKR/NotoSansKR-Regular.otf';
 import Roboto from '@casual-simulation/aux-components/fonts/Roboto/roboto-v18-latin-regular.woff';
+import { WordBubbleDecorator } from './WordBubbleDecorator';
 
 export class LabelDecorator
     extends AuxBot3DDecoratorBase
@@ -86,11 +88,24 @@ export class LabelDecorator
         if (label) {
             if (!this.text3D) {
                 this.text3D = new Text3D();
-                // Parent the labels directly to the bot.
-                // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that
-                // without worrying about what the AuxBot3D scale is etc.
-                this.bot3D.container.add(this.text3D);
                 this._initialSetup = true;
+            }
+
+            // Parent the labels directly to the bot.
+            // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that
+            // without worrying about what the AuxBot3D scale is etc.
+            // For billboarded bots and floating labels, we need to parent the label directly to the bot so that it does not rotate with the bot.
+            const orientationMode = getBotOrientationMode(calc, this.bot3D.bot);
+            const targetContainer =
+                anchor === 'floating' &&
+                (orientationMode === 'billboard' ||
+                    orientationMode === 'billboardTop' ||
+                    orientationMode === 'billboardFront')
+                    ? this.bot3D
+                    : this.bot3D.container;
+            if (this.text3D.parent !== targetContainer) {
+                this.text3D.parent?.remove(this.text3D);
+                targetContainer.add(this.text3D);
             }
 
             const labelPadding = getBotLabelPadding(calc, this.bot3D.bot);
@@ -168,11 +183,18 @@ export class LabelDecorator
                         2 * Text3D.defaultFontSize,
                         0.025
                     )
-                    .then((size) => {
+                    .then(async (size) => {
                         if (this.text3D) {
                             this.text3D.setFontSize(size);
                             this.text3D.visible = true;
-                            this.text3D.sync();
+                            await this.text3D.sync();
+                            this.text3D.updateBoundingBox();
+
+                            for (let d of this.bot3D.decorators) {
+                                if (d instanceof WordBubbleDecorator) {
+                                    d.botUpdated(calc);
+                                }
+                            }
                         }
                     })
                     .catch((err) => {

@@ -1,5 +1,55 @@
 # CasualOS Changelog
 
+## V2.0.13
+
+#### Date: 10/19/2021
+
+### :rocket: Improvements
+
+-   Added several features to make testing asynchronous scripts easier.
+    -   Debuggers now automatically convert asynchronous scripts to synchronous scripts by default.
+        -   This makes testing easier because your test code no longer needs to be aware of if a script runs asynchronously in order to observe errors or results.
+        -   You can override this default behavior by setting `allowAsynchronousScripts` to `true` in the options object that is passed to `os.createDebugger()`.
+    -   Some functions are now "maskable".
+        -   Maskable functions are useful for testing and debugging because they let you modify how a function works simply by using `function.mask().returns()` instead of `function()`.
+            -   For example, the `web.get()` function sends an actual web request based on the options that you give it. When testing we don't want to send a real web request (since that takes time and can fail), so instead we can mask it with the following code:
+            ```typescript
+            web.get.mask('https://example.com').returns({
+                status: 200,
+                data: 'hello world!',
+            });
+            ```
+            Then, the next time we call `web.get()` with `https://example.com` it will return the value we have set:
+            ```typescript
+            console.log(web.get('https://example.com));
+            ```
+        -   Maskable functions currently only work when scripts are running inside a debugger with `allowAsychronousScripts` set to `false`.
+        -   Here is a list of maskable functions (more are coming):
+            -   `web.get()`
+            -   `web.post()`
+            -   `web.hook()`
+            -   `webhook()`
+            -   `webhook.post()`
+            -   `os.showInput()`
+            -   `os.getRecords()`
+            -   `os.publishRecord()`
+            -   `os.destroyRecord()`
+            -   `os.requestPermanentAuthToken()`
+    -   Properties added to `globalThis` are now separated per-debugger.
+        -   This means that you can set `globalThis.myVariable = 123;` and it won't affect debuggers.
+        -   It also means that testing with global variables are easier because you don't have to set and reset them before each test anymore.
+    -   Debuggers now automatically setup `tempLocal` bots for built-in portals.
+        -   This means that the portal bots like `gridPortalBot`, `mapPortalBot`, etc. are available in debuggers.
+    -   Debuggers now automatically setup a `configBot`.
+        -   You can override this configBot by using the `configBot` property in the options object that is passed to `os.createDebugger()`.
+-   Updated the sidebar on the documentation site to be easier to use.
+-   Updated the auth site branding.
+-   Added well-formatted pages for the terms of service, privacy policy, and acceptable use policy to the auth website.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where floating labels on billboarded bots did not work.
+
 ## V2.0.12
 
 #### Date: 10/8/2021

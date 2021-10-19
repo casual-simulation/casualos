@@ -505,6 +505,115 @@ describe('Transpiler', () => {
             const result = transpiler.transpile('import("test");');
             expect(result.trim()).toEqual('import("test");');
         });
+
+        describe('async', () => {
+            let transpiler: Transpiler;
+
+            beforeEach(() => {
+                transpiler = new Transpiler({
+                    forceSync: true,
+                });
+            });
+
+            it('should be able to compile out async/await keywords on function declarations', () => {
+                const result = transpiler.transpile(
+                    `async function abc() {
+                        await test();
+                    }`
+                );
+
+                expect(result).toBe(
+                    `function abc() {
+                        test();
+                    }`
+                );
+            });
+
+            it('should be able to compile out async/await keywords in lambda functions', () => {
+                const result = transpiler.transpile(
+                    `let abc = async () => {
+                        await test();
+                    };`
+                );
+
+                expect(result).toBe(
+                    `let abc = () => {
+                        test();
+                    };`
+                );
+            });
+
+            it('should be able to compile out await keywords in complex expressions', () => {
+                const result = transpiler.transpile(
+                    `async function abc() {
+                        let result = await fun() + await test();
+                    }`
+                );
+
+                expect(result).toBe(
+                    `function abc() {
+                        let result = fun() + test();
+                    }`
+                );
+            });
+
+            it('should be able to compile out nested awaits', () => {
+                const result = transpiler.transpile(
+                    `async function abc() {
+                        await (await (await abc()));
+                    }`
+                );
+
+                expect(result).toBe(
+                    `function abc() {
+                        ((abc()));
+                    }`
+                );
+            });
+
+            it('should be able to compile out async function expressions', () => {
+                const result = transpiler.transpile(
+                    `let abc = async function() {}`
+                );
+
+                expect(result).toBe(`let abc = function() {}`);
+            });
+
+            it('should be able to compile out async functions in object declarations', () => {
+                const result = transpiler.transpile(
+                    `let abc = {
+                        fun: 123,
+                        async test() {},
+                        cool: true,
+                    }`
+                );
+
+                expect(result).toBe(
+                    `let abc = {
+                        fun: 123,
+                        test() {},
+                        cool: true,
+                    }`
+                );
+            });
+
+            it('should do nothing if forceSync is not specified', () => {
+                transpiler = new Transpiler({
+                    forceSync: false,
+                });
+                const result = transpiler.transpile(
+                    `async function abc() {
+                        await test();
+                    }`
+                );
+
+                expect(result).toBe(
+                    `async function abc() {
+                        await test();
+                    }`
+                );
+            });
+        });
     });
 
     describe('replaceMacros()', () => {

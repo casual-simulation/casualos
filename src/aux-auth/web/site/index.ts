@@ -68,6 +68,9 @@ import {
 } from '@casual-simulation/aux-vm-browser/html/IFrameHelpers';
 import { skip } from 'rxjs/operators';
 import AuthSelect from './AuthSelect/AuthSelect';
+import AuthTerms from './AuthTerms/AuthTerms';
+import AuthPrivacyPolicy from './AuthPrivacyPolicy/AuthPrivacyPolicy';
+import AuthAcceptableUsePolicy from './AuthAcceptableUsePolicy/AuthAcceptableUsePolicy';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -108,6 +111,21 @@ const routes: RouteConfig[] = [
         props: (route) => ({
             defaultService: route.query['service'],
         }),
+    },
+    {
+        path: '/terms',
+        name: 'terms',
+        component: AuthTerms,
+    },
+    {
+        path: '/privacy-policy',
+        name: 'privacy-policy',
+        component: AuthPrivacyPolicy,
+    },
+    {
+        path: '/acceptable-use-policy',
+        name: 'acceptable-use-policy',
+        component: AuthAcceptableUsePolicy,
     },
     {
         path: '/',
@@ -177,6 +195,13 @@ router.beforeEach((to, from, next) => {
     next();
 });
 
+const publicPages = new Set([
+    'login',
+    'terms',
+    'privacy-policy',
+    'acceptable-use-policy',
+]);
+
 router.beforeEach(async (to, from, next) => {
     try {
         const loggedIn = await manager.magic.user.isLoggedIn();
@@ -221,7 +246,7 @@ router.beforeEach(async (to, from, next) => {
             }
         }
 
-        if (to.name !== 'login' && !loggedIn) {
+        if (!publicPages.has(to.name) && !loggedIn) {
             console.log('[index] Not Logged In and. Redirecting to Login.');
             next({ name: 'login' });
             return;

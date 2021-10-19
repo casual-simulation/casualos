@@ -52,6 +52,8 @@ import {
     isBotInDimension,
     asyncResult,
     BotActions,
+    registerBuiltinPortal,
+    botAdded,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -87,7 +89,7 @@ import {
     SpaceRealtimeEditModeMap,
     DefaultRealtimeEditModeProvider,
 } from './AuxRealtimeEditModeProvider';
-import { sortBy, forOwn, merge } from 'lodash';
+import { sortBy, forOwn, merge, union } from 'lodash';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { applyEdit, isTagEdit, mergeVersions } from '../aux-format-2';
 import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
@@ -132,6 +134,10 @@ export class AuxRuntime
     private _batchPending: boolean = false;
     private _processingErrors: boolean = false;
     private _portalBots: Map<string, string> = new Map();
+    private _builtinPortalBots: string[] = [];
+    private _globalVariables: { [key: string]: () => any } = {};
+    private _globalChanges: { [key: string]: any } = {};
+    private _globalObject: any;
 
     /**
      * The counter that is used to generate function names.
@@ -152,6 +158,8 @@ export class AuxRuntime
      * Whether changes should be automatically batched.
      */
     private _autoBatch: boolean = true;
+
+    private _forceSyncScripts: boolean = false;
 
     private _libraryFactory: (context: AuxGlobalContext) => AuxLibrary;
 
@@ -181,7 +189,8 @@ export class AuxRuntime
         ) => AuxLibrary = createDefaultLibrary,
         editModeProvider: AuxRealtimeEditModeProvider = new DefaultRealtimeEditModeProvider(),
         forceSignedScripts: boolean = false,
-        exemptSpaces: BotSpace[] = ['local', 'tempLocal']
+        exemptSpaces: BotSpace[] = ['local', 'tempLocal'],
+        forceSyncScripts: boolean = false
     ) {
         this._libraryFactory = libraryFactory;
         this._globalContext = new MemoryGlobalContext(
@@ -190,6 +199,8 @@ export class AuxRuntime
             this,
             this
         );
+        this._forceSyncScripts = forceSyncScripts;
+        this._globalContext.mockAsyncActions = forceSyncScripts;
         this._library = merge(libraryFactory(this._globalContext), {
             api: {
                 os: {
@@ -227,6 +238,41 @@ export class AuxRuntime
                 );
             });
         }
+
+        this._globalObject = new Proxy(globalThis, {
+            get: (target: any, key: string, receiver: any) => {
+                if (key in this._globalChanges) {
+                    return Reflect.get(this._globalChanges, key);
+                }
+                return Reflect.get(target, key, receiver);
+            },
+            set: (target: any, key: string, value: any, receiver: any) => {
+                return Reflect.set(this._globalChanges, key, value);
+            },
+            deleteProperty: (target: any, key: string) => {
+                return Reflect.deleteProperty(this._globalChanges, key);
+            },
+            ownKeys: (target: any) => {
+                const addedKeys = Reflect.ownKeys(this._globalChanges);
+                const otherKeys = Reflect.ownKeys(target);
+                return union(addedKeys, otherKeys);
+            },
+            has: (target: any, key: string) => {
+                return (
+                    Reflect.has(this._globalChanges, key) ||
+                    Reflect.has(target, key)
+                );
+            },
+            getOwnPropertyDescriptor: (target: any, key: string) => {
+                if (key in this._globalChanges) {
+                    return Reflect.getOwnPropertyDescriptor(
+                        this._globalChanges,
+                        key
+                    );
+                }
+                return Reflect.getOwnPropertyDescriptor(target, key);
+            },
+        });
     }
 
     getShoutTimers(): { [shout: string]: number } {
@@ -299,7 +345,8 @@ export class AuxRuntime
             this._libraryFactory,
             this._editModeProvider,
             this._forceSignedScripts,
-            this._exemptSpaces
+            this._exemptSpaces,
+            !options?.allowAsynchronousScripts
         );
         runtime._autoBatch = false;
         let idCount = 0;
@@ -333,6 +380,23 @@ export class AuxRuntime
             allActions.push(...actions);
             return allActions;
         };
+
+        // The config bot is always ID 0 in debuggers
+        const configBotId = options?.useRealUUIDs
+            ? runtime.context.uuid()
+            : 'uuid-0';
+        const configBotTags = options?.configBot
+            ? isBot(options?.configBot)
+                ? options.configBot.tags
+                : options.configBot
+            : {};
+        runtime.context.createBot(
+            createBot(configBotId, configBotTags, 'tempLocal')
+        );
+        runtime.process(
+            this._builtinPortalBots.map((b) => registerBuiltinPortal(b))
+        );
+        runtime.userId = configBotId;
 
         return {
             ...runtime._library.api,
@@ -435,8 +499,9 @@ export class AuxRuntime
         } else if (action.type === 'register_builtin_portal') {
             if (!this._portalBots.has(action.portalId)) {
                 const newBot = this.context.createBot(
-                    createBot(undefined, undefined, 'tempLocal')
+                    createBot(this.context.uuid(), undefined, 'tempLocal')
                 );
+                this._builtinPortalBots.push(action.portalId);
                 this._registerPortalBot(action.portalId, newBot.id);
                 this._actionBatch.push(
                     openCustomPortal(action.portalId, newBot.id, null, {})
@@ -464,31 +529,22 @@ export class AuxRuntime
     }
 
     private _registerPortalBot(portalId: string, botId: string) {
+        const hadPortalBot = this._portalBots.has(portalId);
         this._portalBots.set(portalId, botId);
-        let anyGlobal: any = globalThis;
-        const variableName = `${portalId}Bot`;
-        if (hasValue(botId)) {
-            Object.defineProperty(anyGlobal, variableName, {
-                get: () => this.context.state[botId],
-                enumerable: false,
-                configurable: true,
-            });
-        } else {
-            delete anyGlobal[variableName];
-        }
-
-        this._sub.add(() => {
-            if (this._portalBots.get(portalId) === botId) {
-                const descriptor = Object.getOwnPropertyDescriptor(
-                    anyGlobal,
-                    variableName
-                );
-                if (descriptor) {
-                    delete anyGlobal[variableName];
-                    this._portalBots.delete(portalId);
+        if (!hadPortalBot) {
+            const variableName = `${portalId}Bot`;
+            this._globalVariables[variableName] = () => {
+                const botId = this._portalBots.get(portalId);
+                if (hasValue(botId)) {
+                    return this.context.state[botId];
+                } else {
+                    return undefined;
                 }
-            }
-        });
+            };
+
+            // recompile all scripts
+            this._recompileScripts();
+        }
     }
 
     private _rejectAction(
@@ -1513,6 +1569,15 @@ export class AuxRuntime
         this._compileTagValue(bot, tag, tagValue);
     }
 
+    private _recompileScripts() {
+        for (let id in this._compiledState) {
+            let bot = this._compiledState[id];
+            for (let listener in bot.listeners) {
+                this._compileTagValue(bot, listener, bot.values[listener]);
+            }
+        }
+    }
+
     private _compileTagValue(bot: CompiledBot, tag: string, tagValue: any) {
         let { value, listener } = this._compileValue(bot, tag, tagValue);
         if (listener) {
@@ -1600,7 +1665,7 @@ export class AuxRuntime
             functionName: functionName,
             diagnosticFunctionName: diagnosticFunctionName,
             fileName: fileName,
-
+            forceSync: this._forceSyncScripts,
             context: {
                 bot,
                 tag,
@@ -1618,8 +1683,10 @@ export class AuxRuntime
             constants: {
                 ...this._library.api,
                 tagName: tag,
+                globalThis: this._globalObject,
             },
             variables: {
+                ...this._globalVariables,
                 ...this._library.tagSpecificApi,
                 this: (ctx) => (ctx.bot ? ctx.bot.script : null),
                 thisBot: (ctx) => (ctx.bot ? ctx.bot.script : null),

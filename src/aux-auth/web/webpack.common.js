@@ -48,7 +48,6 @@ function authConfig(latestTag, prod, apiEndpoint) {
                 chunks: ['site', 'vendors'],
                 // inject: false,
                 template: path.resolve(__dirname, 'site', 'index.html'),
-                title: 'CasualOS.me',
                 filename: 'index.html',
                 favicon: path.resolve(__dirname, 'shared', 'favicon.ico'),
 
@@ -64,7 +63,6 @@ function authConfig(latestTag, prod, apiEndpoint) {
                 chunks: ['iframe', 'vendors'],
                 // inject: false,
                 template: path.resolve(__dirname, 'iframe', 'index.html'),
-                title: 'CasualOS.me',
                 filename: 'iframe.html',
                 favicon: path.resolve(__dirname, 'shared', 'favicon.ico'),
 
@@ -103,40 +101,6 @@ function authConfig(latestTag, prod, apiEndpoint) {
                     {
                         from: path.resolve(__dirname, 'shared', 'legal'),
                         to: path.resolve(__dirname, 'dist'),
-                    },
-                    {
-                        from: path.resolve(
-                            __dirname,
-                            'shared',
-                            'legal',
-                            'terms-of-service.txt'
-                        ),
-                        to: path.resolve(__dirname, 'dist', 'terms'),
-                        toType: 'file',
-                    },
-                    {
-                        from: path.resolve(
-                            __dirname,
-                            'shared',
-                            'legal',
-                            'privacy-policy.txt'
-                        ),
-                        to: path.resolve(__dirname, 'dist', 'privacy-policy'),
-                        toType: 'file',
-                    },
-                    {
-                        from: path.resolve(
-                            __dirname,
-                            'shared',
-                            'legal',
-                            'acceptable-use-policy.txt'
-                        ),
-                        to: path.resolve(
-                            __dirname,
-                            'dist',
-                            'acceptable-use-policy'
-                        ),
-                        toType: 'file',
                     },
                 ],
             }),
