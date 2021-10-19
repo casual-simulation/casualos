@@ -19,7 +19,7 @@ export default class AuthLogin extends Vue {
 
     async created() {
         this.email = authManager.savedEmail || '';
-        this.acceptedTerms = false;
+        this.acceptedTerms = authManager.hasAcceptedTerms;
         this.processing = false;
         this._loggedIn = false;
     }
