@@ -107,16 +107,6 @@ function authConfig(latestTag, prod, apiEndpoint) {
                             __dirname,
                             'shared',
                             'legal',
-                            'terms-of-service.txt'
-                        ),
-                        to: path.resolve(__dirname, 'dist', 'terms'),
-                        toType: 'file',
-                    },
-                    {
-                        from: path.resolve(
-                            __dirname,
-                            'shared',
-                            'legal',
                             'privacy-policy.txt'
                         ),
                         to: path.resolve(__dirname, 'dist', 'privacy-policy'),

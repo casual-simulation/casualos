@@ -68,6 +68,7 @@ import {
 } from '@casual-simulation/aux-vm-browser/html/IFrameHelpers';
 import { skip } from 'rxjs/operators';
 import AuthSelect from './AuthSelect/AuthSelect';
+import AuthTerms from './AuthTerms/AuthTerms';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -108,6 +109,11 @@ const routes: RouteConfig[] = [
         props: (route) => ({
             defaultService: route.query['service'],
         }),
+    },
+    {
+        path: '/terms',
+        name: 'terms',
+        component: AuthTerms,
     },
     {
         path: '/',
@@ -221,7 +227,7 @@ router.beforeEach(async (to, from, next) => {
             }
         }
 
-        if (to.name !== 'login' && !loggedIn) {
+        if ((to.name !== 'login' && to.name !== 'terms') && !loggedIn) {
             console.log('[index] Not Logged In and. Redirecting to Login.');
             next({ name: 'login' });
             return;
