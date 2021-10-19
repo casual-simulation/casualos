@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Provide } from 'vue-property-decorator';
+import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/AuthManager';
 
 @Component({
@@ -10,12 +10,16 @@ export default class AuthLogin extends Vue {
     email: string;
     processing: boolean;
 
+    acceptedTerms: boolean = false;
+    showTermsOfServiceError: boolean = false;
+
     @Prop({ default: null }) after: string;
 
     private _loggedIn: boolean;
 
     async created() {
         this.email = authManager.savedEmail || '';
+        this.acceptedTerms = false;
         this.processing = false;
         this._loggedIn = false;
     }
@@ -40,10 +44,22 @@ export default class AuthLogin extends Vue {
         }
     }
 
+    @Watch('acceptedTerms')
+    termsOfServiceAccepted() {
+        if (this.acceptedTerms) {
+            this.showTermsOfServiceError = false;
+        }
+    }
+
     async login() {
+        if (!this.acceptedTerms) {
+            this.showTermsOfServiceError = true;
+            return;
+        }
         if (!this.email) {
             return;
         }
+        this.showTermsOfServiceError = false;
         this.processing = true;
 
         try {
