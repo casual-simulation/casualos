@@ -1,7 +1,7 @@
 ---
-id: tags
+id: listen-tags
 title: Listen Tags
-sidebar_label: Tags
+sidebar_label: Listen Tags
 description: Listen tags are tags that can receive shouts and whispers from other bots and actoins that happen from the user.
 ---
 
@@ -20,7 +20,7 @@ import {
   NormalCode,
   ConfigBotBadge,
   ActionLink,
-} from '../components.mdx';
+} from './components.mdx';
 
 Listen tags are tags that can receive shouts and whispers from other bots and actions that happen from the user.
 To create a listen tag, you make a normal tag and enter a "@" as the first character of the tag's value.
@@ -386,7 +386,7 @@ let that: {
 
 ### `@onSetupApp`
 
-A whisper that is sent when a [custom app](../actions.mdx#app-actions) has been setup.
+A whisper that is sent when a [custom app](./actions.mdx#app-actions) has been setup.
 Called when <ActionLink action='os.registerApp(appId, bot)'/> has completed its work.
 
 #### Arguments:
