@@ -10,6 +10,8 @@ tasks:
     - name: Dev
       init: |
           npm run bootstrap
+          cd docs
+          yarn
       command: |
           npm run watch
 
@@ -17,7 +19,11 @@ tasks:
 ports:
     - port: 3000
       onOpen: open-browser
+    - port: 3001
+      onOpen: open-browser
     - port: 3002
+      onOpen: ignore
+    - port: 3003
       onOpen: ignore
     - port: 27017
       onOpen: ignore
