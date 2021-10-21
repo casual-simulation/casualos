@@ -1,19 +1,27 @@
 # List the start up tasks. Learn more https://www.gitpod.io/docs/config-start-tasks/
+image:
+    file: .gitpod.Dockerfile
+
 tasks:
-  - init: |
-      npm install -g lerna
-      npm run bootstrap
-      docker-compose -f docker/docker-compose.dev.yml pull
-  - name: Docker Services
-    command: |
-      docker-compose -f docker/docker-compose.dev.yml up
-  - name: Test
-    command: |
-      npm run test:watch
+    - name: Docker Services
+      init: docker-compose -f docker/docker-compose.dev.yml pull
+      command: |
+          docker-compose -f docker/docker-compose.dev.yml up
+    - name: Dev
+      init: |
+          npm run bootstrap
+      command: |
+          npm run test:watch
 
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
-  - port: 3000
-    onOpen: open-browser
-  - port: 3002
-    onOpen: ignore
+    - port: 3000
+      onOpen: open-browser
+    - port: 3002
+      onOpen: ignore
+    - port: 27017
+      onOpen: ignore
+    - port: 6379
+      onOpen: ignore
+    - port: 9125
+      onOpen: ignore
