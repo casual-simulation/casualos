@@ -51,7 +51,8 @@
         "bench": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm run bench",
         "bench:profile": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm run bench:profile",
         "cloc": "cloc src --exclude-dir=node_modules --exclude-ext=js,json,def",
-        "import-typescript": "lerna exec --scope @casual-simulation/aux-custom-portals -- npm run import-typescript"
+        "import-typescript": "lerna exec --scope @casual-simulation/aux-custom-portals -- npm run import-typescript",
+        "esbuild": "node ./script/dev-server.js"
     },
     "husky": {
         "hooks": {
@@ -159,7 +160,9 @@
         "@testing-library/vue": "5.6.1",
         "@testing-library/jest-dom": "5.11.9",
         "@casual-simulation/typescript": "^4.2.7",
-        "browserslist": ">=4.16.5"
+        "browserslist": ">=4.16.5",
+        "vite": "2.6.10",
+        "esbuild": "^0.13.8"
     },
     "dependencies": {}
 }
