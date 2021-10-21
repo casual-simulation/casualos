@@ -25,3 +25,10 @@ ports:
       onOpen: ignore
     - port: 9125
       onOpen: ignore
+
+vscode:
+    extensions:
+        - octref.vetur
+        - orta.vscode-jest
+        - eamodio.gitlens
+        - jolaleye.horizon-theme-vscode
