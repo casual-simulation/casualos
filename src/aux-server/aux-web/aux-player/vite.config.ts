@@ -2,10 +2,22 @@ import path from 'path';
 import fs from 'fs';
 import { defineConfig } from 'vite';
 import { createVuePlugin } from 'vite-plugin-vue2';
+import copy from 'rollup-plugin-copy';
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats';
 
 const distDir = path.resolve(__dirname, '..', 'dist');
+const webxrProfilesDir = path.posix.resolve(
+    __dirname,
+    '..',
+    '..',
+    '..',
+    '..',
+    'node_modules/@webxr-input-profiles/assets/dist/profiles'
+);
+
+const publicDir = path.resolve(__dirname, '..', 'shared', 'static');
+
 const casualOsPackages = fs
     .readdirSync(
         // src folder
@@ -14,11 +26,26 @@ const casualOsPackages = fs
     .map((folder) => `@casual-simulation/${folder}`);
 
 export default defineConfig({
-    plugins: [createVuePlugin()],
     build: {
         outDir: distDir,
         emptyOutDir: false,
     },
+    plugins: [
+        createVuePlugin(),
+        {
+            ...copy({
+                targets: [
+                    {
+                        src: `${webxrProfilesDir}/**/*`,
+                        dest: path.resolve(publicDir, 'webxr-profiles'),
+                    },
+                ],
+                hook: 'buildStart',
+                copyOnce: true,
+            }),
+            enforce: 'pre',
+        },
+    ],
     assetsInclude: ['**/*.gltf', '**/*.glb'],
     define: {
         GIT_HASH: JSON.stringify(GIT_HASH),

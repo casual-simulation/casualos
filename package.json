@@ -170,7 +170,8 @@
         "chalk": "4.1.2",
         "vite-plugin-vue2": "1.7.3",
         "wait-on": "6.0.0",
-        "chokidar": "3.5.2"
+        "chokidar": "3.5.2",
+        "rollup-plugin-copy": "3.4.0"
     },
     "dependencies": {}
 }
