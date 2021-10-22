@@ -7,6 +7,8 @@
         "bootstrap": "lerna bootstrap --hoist && npm run bootstrap:dynamodb",
         "bootstrap:dynamodb": "node src/aux-auth/scripts/bootstrap.js",
         "reset:dynamodb": "node src/aux-auth/scripts/bootstrap.js --reset",
+        "dev": "npm run clean && npm run fastbuild:portals && npm run build:libs && concurrently --names \"Libs,CustomPortals,Server\" \"npm run watch:libs\" \"npm run watch:portals\" \"npm run dev:server\"",
+        "dev:server": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run dev",
         "watch": "npm run clean && npm run fastbuild:portals && npm run build:libs && concurrently --names \"Libs,CustomPortals,Server\" \"npm run watch:libs\" \"npm run watch:portals\" \"npm run watch:server\" \"npm run watch:auth\"",
         "watch:docs": "cd docs && npm start",
         "watch:player": "npm run build:libs && concurrently \"npm run watch:libs\" \"npm run watch:server:player\"",

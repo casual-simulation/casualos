@@ -6,8 +6,8 @@ const {
     getExternals,
     replaceEsbuildPlugin,
     replaceThreePlugin,
-} = require('./build-helpers');
-const { GIT_HASH, GIT_TAG } = require('./git-stats');
+} = require('../../../script/build-helpers');
+const { GIT_HASH, GIT_TAG } = require('../../../script/git-stats');
 
 const src = path.resolve(paths.root, 'src');
 const auxServer = path.resolve(src, 'aux-server');
