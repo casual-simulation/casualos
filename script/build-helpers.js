@@ -24,8 +24,8 @@ const loader = {
 };
 
 module.exports = {
-    setup,
-    watch,
+    setupWatch,
+    build,
     cleanDirectory,
     root,
     getExternals,
@@ -48,7 +48,30 @@ function cleanDirectory(dir) {
     }
 }
 
-async function setup(builds) {
+async function build(builds) {
+    let builders = await Promise.all(
+        builds.map(([name, options]) => {
+            return esbuild
+                .build({
+                    bundle: true,
+                    metafile: true,
+                    logLevel: 'silent',
+                    loader,
+                    ...options,
+                })
+                .then((result) => {
+                    return [true, name, result];
+                })
+                .catch((result) => {
+                    return [false, name, result];
+                });
+        })
+    );
+
+    logBuilders(builders);
+}
+
+async function setupWatch(builds) {
     const watcher = chokidar.watch(src, {
         ignored: [
             /node_modules/,
@@ -84,7 +107,7 @@ async function setup(builds) {
         })
     );
 
-    logBuilders();
+    logBuilders(builders);
     const build = _.debounce(async () => {
         console.log('[dev-server] Rebuilding...');
         builders = await Promise.all(
@@ -99,7 +122,7 @@ async function setup(builds) {
                     });
             })
         );
-        logBuilders();
+        logBuilders(builders);
     }, 1000);
 
     watcher.on('all', async (event, path) => {
@@ -126,20 +149,16 @@ async function setup(builds) {
             });
         }
     });
-
-    function logBuilders() {
-        for (let [success, name, result] of builders) {
-            if (success) {
-                logBuildFinish(name, result);
-            } else {
-                logBuildFailure(name, result);
-            }
-        }
-    }
 }
 
-function watch(name, options) {
-    return;
+function logBuilders(builders) {
+    for (let [success, name, result] of builders) {
+        if (success) {
+            logBuildFinish(name, result);
+        } else {
+            logBuildFailure(name, result);
+        }
+    }
 }
 
 function logBuildFinish(name, result) {
