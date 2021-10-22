@@ -51,7 +51,7 @@ function cleanDirectory(dir) {
 async function setup(builds) {
     const watcher = chokidar.watch(src, {
         ignored: [
-            '**/node_modules/**',
+            /node_modules/,
             '**/package.json',
             '**/tsconfig.tsbuildinfo',
             '**/*.js',
