@@ -1,4 +1,4 @@
-import Worker from '../vm/AuxWorker';
+import Worker from './AuxChannel.worker?worker';
 import { setupWorker } from './WorkerEntryHelpers';
 
 const instance = new Worker();

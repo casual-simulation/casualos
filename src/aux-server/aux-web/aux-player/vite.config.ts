@@ -20,9 +20,6 @@ export default defineConfig({
         GIT_TAG: JSON.stringify(GIT_TAG),
         PRODUCTION: JSON.stringify(false),
     },
-    optimizeDeps: {
-        exclude: [...casualOsPackages],
-    },
     resolve: {
         extensions: ['.vue', '.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
         alias: {
@@ -59,5 +56,22 @@ export default defineConfig({
             three: '@casual-simulation/three',
             esbuild: 'esbuild-wasm',
         },
+    },
+    server: {
+        watch: {
+            ignored: [
+                ...casualOsPackages.map((p) => `!**/node_modules/${p}/**`),
+            ],
+        },
+        proxy: {
+            '/api': 'http://localhost:2999',
+            '/socket.io': {
+                target: 'http://localhost:2999',
+                ws: true,
+            },
+        },
+    },
+    optimizeDeps: {
+        exclude: [...casualOsPackages],
     },
 });

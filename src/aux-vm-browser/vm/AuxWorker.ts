@@ -6,7 +6,6 @@ export interface WebpackWorker {
 // load worker by require().
 // For some reason, loading relative imports with worker-loader fails when using the import syntax
 // but the require syntax works.
-// const w: WebpackWorker = require('./AuxChannel.worker').default;
-import w from './AuxChannel.worker?worker';
+const w: WebpackWorker = require('./AuxChannel.worker').default;
 
 export default w;

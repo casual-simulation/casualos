@@ -50,7 +50,7 @@ export class AuxVMImpl implements AuxVM {
     private _channel: MessageChannel;
     private _proxy: Remote<AuxChannel>;
     private _initialUser: AuxUser;
-    private _manifest: { [key: string]: string };
+    // private _manifest: { [key: string]: string };
     closed: boolean;
 
     /**
@@ -97,11 +97,11 @@ export class AuxVMImpl implements AuxVM {
             progress: 0.05,
         });
 
-        await this._initManifest();
+        // await this._initManifest();
 
         // TODO: Decide which origin to use
-        const workerUrl = new URL(this._manifest['worker.js'], location.origin)
-            .href;
+        // const workerUrl = new URL(this._manifest['worker.js'], location.origin)
+        //     .href;
 
         this._connectionStateChanged.next({
             type: 'progress',
@@ -119,11 +119,11 @@ export class AuxVMImpl implements AuxVM {
 
         await promise;
 
-        await loadScriptFromUrl(
-            this._iframe.contentWindow,
-            'default',
-            workerUrl
-        );
+        // await loadScriptFromUrl(
+        //     this._iframe.contentWindow,
+        //     'default',
+        //     workerUrl
+        // );
 
         this._channel = setupChannel(this._iframe.contentWindow);
 
@@ -261,80 +261,80 @@ export class AuxVMImpl implements AuxVM {
         this._localEvents = null;
     }
 
-    private async _initManifest() {
-        console.log('[AuxVMImpl] Fetching manifest...');
-        this._manifest = await this._getManifest();
-        await this._saveConfig();
-        if (!this._config) {
-            console.warn(
-                '[AuxVMImpl] Manifest not able to be fetched from the server or local storage.'
-            );
-        }
-    }
+    // private async _initManifest() {
+    //     console.log('[AuxVMImpl] Fetching manifest...');
+    //     this._manifest = await this._getManifest();
+    //     await this._saveConfig();
+    //     if (!this._config) {
+    //         console.warn(
+    //             '[AuxVMImpl] Manifest not able to be fetched from the server or local storage.'
+    //         );
+    //     }
+    // }
 
-    private async _getManifest(): Promise<any> {
-        const serverConfig = await this._fetchManifestFromServer();
-        if (serverConfig) {
-            return serverConfig;
-        } else {
-            return await this._fetchConfigFromLocalStorage();
-        }
-    }
+    // private async _getManifest(): Promise<any> {
+    //     const serverConfig = await this._fetchManifestFromServer();
+    //     if (serverConfig) {
+    //         return serverConfig;
+    //     } else {
+    //         return await this._fetchConfigFromLocalStorage();
+    //     }
+    // }
 
-    private async _fetchManifestFromServer(): Promise<any> {
-        try {
-            const result = await axios.get<any>(`/assets-manifest.json`);
-            if (result.status === 200) {
-                return result.data;
-            } else {
-                console.error(
-                    '[AuxVMImpl] Unable to fetch manifest from server.'
-                );
-                return null;
-            }
-        } catch (err) {
-            console.error(
-                '[AuxVMImpl] Unable to fetch manifest from server: ',
-                err
-            );
-            return null;
-        }
-    }
+    // private async _fetchManifestFromServer(): Promise<any> {
+    //     try {
+    //         const result = await axios.get<any>(`/assets-manifest.json`);
+    //         if (result.status === 200) {
+    //             return result.data;
+    //         } else {
+    //             console.error(
+    //                 '[AuxVMImpl] Unable to fetch manifest from server.'
+    //             );
+    //             return null;
+    //         }
+    //     } catch (err) {
+    //         console.error(
+    //             '[AuxVMImpl] Unable to fetch manifest from server: ',
+    //             err
+    //         );
+    //         return null;
+    //     }
+    // }
 
-    private async _saveConfig() {
-        try {
-            if (this._manifest) {
-                globalThis.localStorage.setItem(
-                    'manifest',
-                    JSON.stringify(this._manifest)
-                );
-            } else {
-                globalThis.localStorage.removeItem('manifest');
-            }
-        } catch (err) {
-            console.error('Unable to save manifest: ', err);
-        }
-    }
+    // private async _saveConfig() {
+    //     try {
+    //         if (this._manifest) {
+    //             globalThis.localStorage.setItem(
+    //                 'manifest',
+    //                 JSON.stringify(this._manifest)
+    //             );
+    //         } else {
+    //             globalThis.localStorage.removeItem('manifest');
+    //         }
+    //     } catch (err) {
+    //         console.error('Unable to save manifest: ', err);
+    //     }
+    // }
 
-    private async _fetchConfigFromLocalStorage(): Promise<any> {
-        try {
-            const val = globalThis.localStorage.getItem('manifest');
-            if (val) {
-                return JSON.parse(val);
-            } else {
-                console.error(
-                    '[AuxVMImpl] Unable to fetch manifest from storage.'
-                );
-                return null;
-            }
-        } catch (err) {
-            console.error(
-                '[AuxVMImpl] Unable to fetch manifest from storage',
-                err
-            );
-            return null;
-        }
-    }
+    // private async _fetchConfigFromLocalStorage(): Promise<any> {
+    //     try {
+    //         const val = globalThis.localStorage.getItem('manifest');
+    //         if (val) {
+    //             return JSON.parse(val);
+    //         } else {
+    //             console.error(
+    //                 '[AuxVMImpl] Unable to fetch manifest from storage.'
+    //             );
+    //             return null;
+    //         }
+    //     } catch (err) {
+    //         console.error(
+    //             '[AuxVMImpl] Unable to fetch manifest from storage',
+    //             err
+    //         );
+    //         return null;
+    //     }
+    // }
 }
 
 function processPartitions(config: AuxConfig): AuxConfig {

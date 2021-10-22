@@ -7,7 +7,7 @@ const {
     replaceEsbuildPlugin,
     replaceThreePlugin,
 } = require('./build-helpers');
-import { GIT_HASH, GIT_TAG } from './git-stats';
+const { GIT_HASH, GIT_TAG } = require('./git-stats');
 
 const src = path.resolve(paths.root, 'src');
 const auxServer = path.resolve(src, 'aux-server');

@@ -10,7 +10,7 @@ const config: Config = {
         serveClient: false,
     },
     socketPort: 4567,
-    httpPort: 3000,
+    httpPort: 2999,
     tls: null,
     player: playerConfig,
     mongodb: {
@@ -45,7 +45,7 @@ const config: Config = {
             webhook: null,
         },
         client: {
-            upstream: 'http://localhost:3000',
+            upstream: 'http://localhost:2999',
             tunnel: null,
         },
         dbName: 'aux-directory',
