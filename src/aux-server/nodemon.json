@@ -1,3 +1,11 @@
 {
-    "ignore": ["aux-web/*"]
+    "ignore": [
+        "aux-web/*",
+        "node_modules/*",
+        "script/*",
+        "loaders/*",
+        "drives/*",
+        "typings/*"
+    ],
+    "delay": 2500
 }

@@ -4,7 +4,7 @@
     "description": "Common library for AUX Vue components and Misc",
     "main": "index.js",
     "types": "index.d.ts",
-    "module": "index.js",
+    "module": "index",
     "private": true,
     "scripts": {
         "watch": "tsc --build --watch",

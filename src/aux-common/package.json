@@ -4,7 +4,7 @@
     "description": "Common library for AUX projects",
     "main": "index.js",
     "types": "index.d.ts",
-    "module": "index.js",
+    "module": "index",
     "scripts": {
         "watch": "tsc --build --watch",
         "watch:player": "npm run watch",

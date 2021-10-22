@@ -21,7 +21,7 @@ export default defineConfig({
         PRODUCTION: JSON.stringify(false),
     },
     resolve: {
-        extensions: ['.vue', '.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
+        extensions: ['.vue', '.ts', '.mjs', '.js', '.tsx', '.jsx', '.json'],
         alias: {
             'vue-json-tree-view': path.resolve(
                 __dirname,
