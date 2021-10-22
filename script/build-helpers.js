@@ -2,13 +2,18 @@ const esbuild = require('esbuild');
 const path = require('path');
 const fs = require('fs');
 const chalk = require('chalk');
+const chokidar = require('chokidar');
+const _ = require('lodash');
 
 const root = path.resolve(__dirname, '..');
+const src = path.resolve(root, 'src');
 const nodeModules = path.resolve(root, 'node_modules');
 const gltfLoaders = loaders(['.gltf', '.glb'], 'file');
 const imageLoaders = loaders(['.png', '.jpg', '.gif', '.webp'], 'file');
 const fontLoaders = loaders(['.ttf', '.woff', '.woff2', '.otf'], 'file');
 const wasmLoaders = loaders(['.wasm'], 'file');
+
+const SIXTY_SECONDS_MS = 60 * 1000;
 
 const loader = {
     ...gltfLoaders,
@@ -19,6 +24,7 @@ const loader = {
 };
 
 module.exports = {
+    setup,
     watch,
     cleanDirectory,
     root,
@@ -42,29 +48,98 @@ function cleanDirectory(dir) {
     }
 }
 
+async function setup(builds) {
+    const watcher = chokidar.watch(src, {
+        ignored: [
+            '**/node_modules/**',
+            '**/package.json',
+            '**/tsconfig.tsbuildinfo',
+            '**/*.js',
+            '**/*.js.map',
+            '**/*.d.ts',
+            '**/*.d.ts.map',
+            '**/dist',
+        ],
+        ignoreInitial: true,
+        followSymlinks: false,
+    });
+
+    let builders = await Promise.all(
+        builds.map(([name, options]) => {
+            return esbuild
+                .build({
+                    bundle: true,
+                    metafile: true,
+                    logLevel: 'silent',
+                    incremental: true,
+                    loader,
+                    ...options,
+                })
+                .then((result) => {
+                    return [true, name, result];
+                })
+                .catch((result) => {
+                    return [false, name, result];
+                });
+        })
+    );
+
+    logBuilders();
+    const build = _.debounce(async () => {
+        console.log('[dev-server] Rebuilding...');
+        builders = await Promise.all(
+            builders.map(([success, name, result]) => {
+                return result
+                    .rebuild()
+                    .then((result) => {
+                        return [true, name, result];
+                    })
+                    .catch((result) => {
+                        return [false, name, result];
+                    });
+            })
+        );
+        logBuilders();
+    }, 1000);
+
+    watcher.on('all', async (event, path) => {
+        if (event === 'unlink') {
+            console.log('[dev-server] File deleted:', path);
+            build();
+        } else if (event === 'add') {
+            console.log('[dev-server] File added:', path);
+            build();
+        } else {
+            fs.stat(path, (err, stats) => {
+                if (err) {
+                    return;
+                }
+                // Only run builds for files that come back
+                // as having been modified within the last minute.
+                // A lot of times, the watcher will return when a file has been accessed ("touched")
+                // when we only care about changes.
+                const timeSinceModify = Math.abs(Date.now() - stats.mtimeMs);
+                if (timeSinceModify < SIXTY_SECONDS_MS) {
+                    console.log('[dev-server] File changed:', event, path);
+                    build();
+                }
+            });
+        }
+    });
+
+    function logBuilders() {
+        for (let [success, name, result] of builders) {
+            if (success) {
+                logBuildFinish(name, result);
+            } else {
+                logBuildFailure(name, result);
+            }
+        }
+    }
+}
+
 function watch(name, options) {
-    return esbuild
-        .build({
-            bundle: true,
-            watch: {
-                onRebuild(error, result) {
-                    if (error) {
-                        logBuildFailure(name, error);
-                    } else {
-                        logBuildFinish(name, result);
-                    }
-                },
-            },
-            logLevel: 'silent',
-            loader,
-            ...options,
-        })
-        .then((result) => {
-            logBuildFinish(name, result);
-        })
-        .catch((result) => {
-            logBuildFailure(name, result);
-        });
+    return;
 }
 
 function logBuildFinish(name, result) {

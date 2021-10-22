@@ -3,6 +3,7 @@ const {
     paths,
     cleanDirectory,
     watch,
+    setup,
     getExternals,
     replaceEsbuildPlugin,
     replaceThreePlugin,
@@ -34,33 +35,33 @@ const developmentVariables = {
 cleanDirectory(serverDist);
 cleanDirectory(auxWebDist);
 
-watchServer();
-watchDeno();
-
-function watchServer() {
-    return watch('Server', {
-        entryPoints: [path.resolve(server, 'index.ts')],
-        outfile: path.resolve(serverDist, 'main.js'),
-        platform: 'node',
-        target: ['node12.16'],
-        external: serverExternals,
-        define: {
-            ...versionVariables,
-            ...developmentVariables,
+setup([
+    [
+        'Server',
+        {
+            entryPoints: [path.resolve(server, 'index.ts')],
+            outfile: path.resolve(serverDist, 'main.js'),
+            platform: 'node',
+            target: ['node12.16'],
+            external: serverExternals,
+            define: {
+                ...versionVariables,
+                ...developmentVariables,
+            },
+            plugins: [replaceThreePlugin()],
         },
-        plugins: [replaceThreePlugin()],
-    });
-}
-
-function watchDeno() {
-    return watch('Deno', {
-        entryPoints: [denoEntry],
-        outfile: path.resolve(auxWebDist, 'deno.js'),
-        platform: 'browser',
-        define: {
-            ...versionVariables,
-            ...developmentVariables,
+    ],
+    [
+        'Deno',
+        {
+            entryPoints: [denoEntry],
+            outfile: path.resolve(auxWebDist, 'deno.js'),
+            platform: 'browser',
+            define: {
+                ...versionVariables,
+                ...developmentVariables,
+            },
+            plugins: [replaceThreePlugin(), replaceEsbuildPlugin()],
         },
-        plugins: [replaceThreePlugin(), replaceEsbuildPlugin()],
-    });
-}
+    ],
+]);
