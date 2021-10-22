@@ -63,6 +63,10 @@ export default defineConfig({
                 ...casualOsPackages.map((p) => `!**/node_modules/${p}/**`),
             ],
         },
+        fs: {
+            strict: true,
+            allow: [path.resolve(__dirname, '..', '..', '..')],
+        },
         proxy: {
             '/api': 'http://localhost:2999',
             '/socket.io': {
