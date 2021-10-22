@@ -26,7 +26,7 @@ const casualOsPackages = fs
     )
     .map((folder) => `@casual-simulation/${folder}`);
 
-export default defineConfig({
+export default defineConfig(({ command, mode }) => ({
     build: {
         outDir: distDir,
         emptyOutDir: false,
@@ -72,8 +72,10 @@ export default defineConfig({
     assetsInclude: ['**/*.gltf', '**/*.glb'],
     define: {
         GIT_HASH: JSON.stringify(GIT_HASH),
-        GIT_TAG: JSON.stringify(GIT_TAG),
-        PRODUCTION: JSON.stringify(false),
+        GIT_TAG: JSON.stringify(
+            command === 'serve' ? 'v9.9.9-dev:alpha' : GIT_TAG
+        ),
+        PRODUCTION: JSON.stringify(command === 'build'),
     },
     publicDir,
     resolve: {
@@ -134,4 +136,4 @@ export default defineConfig({
     optimizeDeps: {
         exclude: [...casualOsPackages],
     },
-});
+}));
