@@ -193,26 +193,35 @@ function logWarnings(name, warnings) {
 }
 
 function logMessage(name, message, type, color) {
-    const lineNumberText = `${message.location.file} ${message.location.line}`;
-    const lineText = message.location.lineText;
+    const lineNumberText = !message.location
+        ? ''
+        : `${message.location.file} ${message.location.line}`;
+    const lineText = !message.location ? '' : message.location.lineText;
     console.log(
         `[dev-server] ${name} ${lineNumberText} | ${chalk[color](type)}: ${
             message.text
         }`
     );
 
-    const highlightedText =
-        chalk.hex('eee')(lineText.substr(0, message.location.column)) +
-        chalk.green.underline(
-            lineText.substr(message.location.column, message.location.length)
-        ) +
-        chalk.hex('eee')(
-            lineText.substr(message.location.column + message.location.length)
-        );
+    if (message.location) {
+        const highlightedText =
+            chalk.hex('eee')(lineText.substr(0, message.location.column)) +
+            chalk.green.underline(
+                lineText.substr(
+                    message.location.column,
+                    message.location.length
+                )
+            ) +
+            chalk.hex('eee')(
+                lineText.substr(
+                    message.location.column + message.location.length
+                )
+            );
 
-    console.log(
-        `[dev-server] ${name} ${lineNumberText} | ${highlightedText}\n`
-    );
+        console.log(
+            `[dev-server] ${name} ${lineNumberText} | ${highlightedText}\n`
+        );
+    }
 }
 
 function getExternals(packageJson) {

@@ -36,7 +36,7 @@ function cleanDirectories() {
 function createConfigs(dev, version) {
     const versionVariables = {
         GIT_HASH: JSON.stringify(GIT_HASH),
-        GIT_TAG: version ?? JSON.stringify(GIT_TAG),
+        GIT_TAG: JSON.stringify(version ?? GIT_TAG),
     };
     const developmentVariables = {
         DEVELOPMENT: dev ?? JSON.stringify(true),
