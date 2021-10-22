@@ -123,7 +123,18 @@ export default defineConfig(({ command, mode }) => ({
         },
         fs: {
             strict: true,
-            allow: [path.resolve(__dirname, '..', '..', '..')],
+            allow: [
+                path.resolve(__dirname, '..', '..', '..'), // src folder
+                path.resolve(
+                    __dirname,
+                    '..',
+                    '..',
+                    '..',
+                    '..',
+                    'node_modules',
+                    'monaco-editor'
+                ), // node_modules/monaco-editor
+            ],
         },
         proxy: {
             '/api': 'http://localhost:2999',
