@@ -182,6 +182,7 @@ export interface PortalBundler {
  * It listens for state updates and is able to asynchrounously emit bundles that should be injected into custom portals.
  */
 export class ESBuildPortalBundler implements PortalBundler {
+    // @ts-ignore
     private _esbuildService: ESBuild.Service;
     private _baseModuleUrl: string = DEFAULT_BASE_MODULE_URL;
     private _httpCache: Map<string, Promise<AxiosResponse<string>>>;
@@ -261,10 +262,12 @@ export class ESBuildPortalBundler implements PortalBundler {
         bots: Bot[]
     ): Promise<CodeBundle> {
         if (!this._esbuildService) {
+            // @ts-ignore
             let options: ESBuild.ServiceOptions = {};
             if (this._esbuildWasmUrl) {
                 options.wasmURL = this._esbuildWasmUrl;
             }
+            // @ts-ignore
             this._esbuildService = await esbuild.startService(options);
         }
 
@@ -296,7 +299,7 @@ export class ESBuildPortalBundler implements PortalBundler {
                 final += file.text;
             }
 
-            const warnings = result.warnings.map((w) => w.text);
+            const warnings = result.warnings.map((w: any) => w.text);
 
             return {
                 tag,

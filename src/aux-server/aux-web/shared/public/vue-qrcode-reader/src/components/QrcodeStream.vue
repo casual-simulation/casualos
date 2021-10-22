@@ -1,4 +1,4 @@
-<template lang="html">
+<template>
   <div class="wrapper">
     <!--
     Note that the order of DOM elements matters.

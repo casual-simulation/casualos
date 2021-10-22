@@ -21,10 +21,10 @@ import {
     DNA_TAG_PREFIX,
     hasPortalScript,
 } from '@casual-simulation/aux-common';
-import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
-import HtmlWorker from 'worker-loader!monaco-editor/esm/vs/language/html/html.worker';
-import CssWorker from 'worker-loader!monaco-editor/esm/vs/language/css/css.worker';
-import JsonWorker from 'worker-loader!monaco-editor/esm/vs/language/json/json.worker';
+import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
+import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
+import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
+import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import { calculateFormulaDefinitions } from './FormulaHelpers';
 import { libFileMap } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
 import { SimpleEditorModelResolverService } from 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';

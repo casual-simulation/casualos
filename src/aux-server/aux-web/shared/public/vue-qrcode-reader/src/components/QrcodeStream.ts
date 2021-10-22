@@ -2,7 +2,7 @@ import { keepScanning } from "../misc/scanner";
 import { thinSquare } from "../misc/track-func";
 import Camera from "../misc/camera";
 import CommonAPI from "../mixins/CommonAPI";
-import Worker from "worker-loader!../worker/jsqr";
+import Worker from "../worker/jsqr?worker";
 
 export default {
   name: "qrcode-stream",

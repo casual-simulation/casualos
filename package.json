@@ -52,7 +52,8 @@
         "bench:profile": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm run bench:profile",
         "cloc": "cloc src --exclude-dir=node_modules --exclude-ext=js,json,def",
         "import-typescript": "lerna exec --scope @casual-simulation/aux-custom-portals -- npm run import-typescript",
-        "esbuild": "node ./script/dev-server.js"
+        "esbuild": "node ./script/dev-server.js",
+        "vite": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run vite"
     },
     "husky": {
         "hooks": {
@@ -163,7 +164,8 @@
         "browserslist": ">=4.16.5",
         "vite": "2.6.10",
         "esbuild": "^0.13.8",
-        "chalk": "4.1.2"
+        "chalk": "4.1.2",
+        "vite-plugin-vue2": "1.7.3"
     },
     "dependencies": {}
 }

@@ -1,11 +1,13 @@
 const path = require('path');
-const childProcess = require('child_process');
 const {
     paths,
     cleanDirectory,
     watch,
     getExternals,
+    replaceEsbuildPlugin,
+    replaceThreePlugin,
 } = require('./build-helpers');
+import { GIT_HASH, GIT_TAG } from './git-stats';
 
 const src = path.resolve(paths.root, 'src');
 const auxServer = path.resolve(src, 'aux-server');
@@ -20,18 +22,9 @@ const auxWebDist = path.resolve(auxWeb, 'dist');
 const auxVmDeno = path.resolve(src, 'aux-vm-deno');
 const denoEntry = path.resolve(auxVmDeno, 'vm', 'DenoAuxChannel.worker.js');
 
-const commitHash = childProcess
-    .execSync('git rev-parse HEAD')
-    .toString()
-    .trim();
-const latestTag = childProcess
-    .execSync('git describe --abbrev=0 --tags')
-    .toString()
-    .trim();
-
 const versionVariables = {
-    GIT_HASH: JSON.stringify(commitHash),
-    GIT_TAG: JSON.stringify(latestTag),
+    GIT_HASH: JSON.stringify(GIT_HASH),
+    GIT_TAG: JSON.stringify(GIT_TAG),
 };
 
 const developmentVariables = {
