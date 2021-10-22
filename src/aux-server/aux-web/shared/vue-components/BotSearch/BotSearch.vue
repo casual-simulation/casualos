@@ -26,7 +26,7 @@
         </div>
         <div v-else class="search-count">
             <md-button class="md-icon-button num-bots" @click="toggleOpen()">
-                <cubeSearch-icon></cubeSearch-icon>
+                <svg-icon name="CubeSearch"></svg-icon>
             </md-button>
 
             <div class="testThis">

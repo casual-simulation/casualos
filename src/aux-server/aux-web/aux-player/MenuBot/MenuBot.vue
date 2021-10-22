@@ -7,9 +7,9 @@
             <div class="menu-bot-input" :style="inputStyleVariables">
                 <span class="menu-bot-icon" v-if="hasIcon">
                     <img v-if="iconIsURL" :src="icon" />
-                    <cube-icon v-else-if="icon === 'cube'"></cube-icon>
-                    <egg-icon v-else-if="icon === 'egg'"></egg-icon>
-                    <helix-icon v-else-if="icon === 'helix'"></helix-icon>
+                    <svg-icon v-else-if="icon === 'cube'" name="Cube"></svg-icon>
+                    <svg-icon v-else-if="icon === 'egg'" name="Egg"></svg-icon>
+                    <svg-icon v-else-if="icon === 'helix'" name="Helix"></svg-icon>
                     <md-icon v-else>{{ icon }}</md-icon>
                 </span>
                 <md-field class="menu-input" md-inline>
@@ -53,9 +53,9 @@
             <div class="menu-bot-text" v-show="label">
                 <span class="menu-bot-icon" v-if="hasIcon">
                     <img v-if="iconIsURL" :src="icon" />
-                    <cube-icon v-else-if="icon === 'cube'"></cube-icon>
-                    <egg-icon v-else-if="icon === 'egg'"></egg-icon>
-                    <helix-icon v-else-if="icon === 'helix'"></helix-icon>
+                    <svg-icon v-else-if="icon === 'cube'" name="Cube"></svg-icon>
+                    <svg-icon v-else-if="icon === 'egg'" name="Egg"></svg-icon>
+                    <svg-icon v-else-if="icon === 'helix'" name="Helix"></svg-icon>
                     <md-icon v-else>{{ icon }}</md-icon>
                 </span>
                 <span :style="labelStyle">

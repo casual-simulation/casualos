@@ -13,14 +13,14 @@ import { appManager } from '../../AppManager';
 import { SubscriptionLike } from 'rxjs';
 import MiniBot from '../MiniBot/MiniBot';
 import { BotRenderer, getRenderer } from '../../scene/BotRenderer';
-import Cube from '../../public/icons/NewBot.svg';
-import CubeSearch from '../../public/icons/CubeSearch.svg';
+import SvgIcon from '@casual-simulation/aux-components';
 
 @Component({
     components: {
         'mini-bot': MiniBot,
-        'cube-icon': Cube,
-        'cubeSearch-icon': CubeSearch,
+        'svg-icon': SvgIcon,
+        // 'cube-icon': Cube,
+        // 'cubeSearch-icon': CubeSearch,
     },
 })
 export default class BotSearch extends Vue {

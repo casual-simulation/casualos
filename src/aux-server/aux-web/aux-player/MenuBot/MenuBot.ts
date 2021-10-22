@@ -50,17 +50,16 @@ import { first } from '@casual-simulation/causal-trees';
 import { safeParseURL } from '../PlayerUtils';
 import PieProgress from '../../shared/vue-components/PieProgress/PieProgress';
 import { Input } from '../../shared/scene/Input';
-import CubeIcon from '@casual-simulation/aux-components/icons/Cube.svg';
-import EggIcon from '@casual-simulation/aux-components/icons/Egg.svg';
-import HelixIcon from '@casual-simulation/aux-components/icons/Helix.svg';
+import { SvgIcon } from '@casual-simulation/aux-components';
 import { Subscription } from 'rxjs';
 import { BotManager } from '@casual-simulation/aux-vm-browser';
 
 @Component({
     components: {
-        'cube-icon': CubeIcon,
-        'egg-icon': EggIcon,
-        'helix-icon': HelixIcon,
+        'svg-icon': SvgIcon,
+        // 'cube-icon': CubeIcon,
+        // 'egg-icon': EggIcon,
+        // 'helix-icon': HelixIcon,
         'pie-progress': PieProgress,
     },
 })

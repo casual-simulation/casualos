@@ -3,6 +3,7 @@ import fs from 'fs';
 import { defineConfig } from 'vite';
 import { createVuePlugin } from 'vite-plugin-vue2';
 import copy from 'rollup-plugin-copy';
+import viteSvgIcons from 'vite-plugin-svg-icons';
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats';
 
@@ -39,6 +40,21 @@ export default defineConfig({
     },
     plugins: [
         createVuePlugin(),
+        viteSvgIcons({
+            iconDirs: [
+                path.resolve(
+                    __dirname,
+                    '..',
+                    '..',
+                    '..',
+                    'aux-components',
+                    'icons'
+                ),
+                path.resolve(__dirname, '..', 'shared', 'public', 'icons'),
+            ],
+            symbolId: 'icon-[name]',
+            svgoOptions: false,
+        }),
         {
             ...copy({
                 targets: [

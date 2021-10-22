@@ -40,10 +40,7 @@ import BotTag from '../BotTag/BotTag';
 import BotID from '../BotID/BotID';
 import { TreeView } from 'vue-json-tree-view';
 import { downloadAuxState } from '../../DownloadHelpers';
-import NewBot from '../../public/icons/NewBot.svg';
-import Hexagon from '../../public/icons/Hexagon.svg';
-import ResizeIcon from '../../public/icons/Resize.svg';
-import MultiIcon from '../../public/icons/Multi.svg';
+import { SvgIcon } from '@casual-simulation/aux-components';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import Bowser from 'bowser';
@@ -60,10 +57,11 @@ import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrappe
         'bot-tag': BotTag,
         'tag-editor': TagEditor,
         'tree-view': TreeView,
-        'new-bot-icon': NewBot,
-        'hex-icon': Hexagon,
-        'resize-icon': ResizeIcon,
-        'multi-icon': MultiIcon,
+        'svg-icon': SvgIcon,
+        // 'new-bot-icon': NewBot,
+        // 'hex-icon': Hexagon,
+        // 'resize-icon': ResizeIcon,
+        // 'multi-icon': MultiIcon,
         'mini-bot': BotTagMini,
         'tag-value-editor': TagValueEditor,
         'tag-value-editor-wrapper': TagValueEditorWrapper,

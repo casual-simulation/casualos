@@ -3,13 +3,13 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Provide } from 'vue-property-decorator';
 import { authManager } from '../../shared/AuthManager';
-import CubeIcon from '@casual-simulation/aux-components/icons/Cube.svg';
+import { Svg } from '@casual-simulation/aux-components';
 
 document.title = location.hostname;
 
 @Component({
     components: {
-        'cube-icon': CubeIcon,
+        'svg-icon': Svg,
     },
 })
 export default class AuthApp extends Vue {

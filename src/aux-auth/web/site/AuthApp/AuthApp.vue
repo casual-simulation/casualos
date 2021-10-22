@@ -2,7 +2,7 @@
     <div id="app">
         <md-toolbar>
             <a class="title-link md-title" href="/" style="flex: 1">
-                <cube-icon class="title-img"></cube-icon>
+                <svg-icon name="Cube" class="title-img"></svg-icon>
                 <strong>{{ title }}</strong>
             </a>
             <md-button v-if="showLogout" @click="logout">Logout</md-button>
