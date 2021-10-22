@@ -29,6 +29,13 @@ export default defineConfig({
     build: {
         outDir: distDir,
         emptyOutDir: false,
+        rollupOptions: {
+            input: {
+                main: path.resolve(__dirname, 'index.html'),
+                player: path.resolve(__dirname, 'player.html'),
+                vm: path.resolve(__dirname, 'aux-vm-iframe.html'),
+            },
+        },
     },
     plugins: [
         createVuePlugin(),
