@@ -4,6 +4,8 @@ import { defineConfig } from 'vite';
 import { createVuePlugin } from 'vite-plugin-vue2';
 import copy from 'rollup-plugin-copy';
 import viteSvgIcons from 'vite-plugin-svg-icons';
+import { VitePWA } from 'vite-plugin-pwa';
+
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats';
 
@@ -68,6 +70,25 @@ export default defineConfig(({ command, mode }) => ({
             }),
             enforce: 'pre',
         },
+        VitePWA({
+            strategies: 'injectManifest',
+            srcDir: '.',
+            filename: 'sw.ts',
+            injectManifest: {
+                maximumFileSizeToCacheInBytes: 15728640, // 5MiB
+                globDirectory: distDir,
+                globPatterns: [
+                    '**/*.{html,css,js,json,png,glb,ico,ttf,webp}',
+                    '**/roboto-v18-latin-*.woff2',
+                ],
+                globIgnores: [
+                    '**/webxr-profiles/**',
+                    '**/deno.js',
+                    '**/*.map*',
+                    '**/NotoSansKR*',
+                ],
+            },
+        }),
     ],
     assetsInclude: ['**/*.gltf', '**/*.glb'],
     define: {
