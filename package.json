@@ -175,7 +175,10 @@
         "vite-plugin-svg-icons": "1.0.5",
         "vite-plugin-pwa": "0.11.3",
         "workbox-precaching": "6.3.0",
-        "workbox-core": "6.3.0"
+        "workbox-core": "6.3.0",
+        "workbox-routing": "6.3.0",
+        "workbox-strategies": "6.3.0",
+        "workbox-expiration": "6.3.0"
     },
     "dependencies": {}
 }
