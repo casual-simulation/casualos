@@ -31,6 +31,7 @@ import {
 import { fromByteArray } from 'base64-js';
 import builder from './builder/builder.v1.json';
 import bootstrap from './builder/ab-1.bootstrap.json';
+import { registerSW } from 'virtual:pwa-register';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -325,7 +326,7 @@ export class AppManager {
 
     private _initOffline() {
         if ('serviceWorker' in navigator) {
-            console.log('[AppManager] Registering Service Worker')
+            console.log('[AppManager] Registering Service Worker');
             const updateSW = registerSW({
                 onNeedRefresh: () => {
                     console.log('[ServiceWorker]: Updated.');
@@ -340,7 +341,7 @@ export class AppManager {
                 onOfflineReady: () => {
                     console.log('[ServiceWorker] Registered.');
                 },
-              });
+            });
         }
     }
 
