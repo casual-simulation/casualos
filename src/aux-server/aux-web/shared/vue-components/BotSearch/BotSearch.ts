@@ -19,8 +19,6 @@ import SvgIcon from '@casual-simulation/aux-components';
     components: {
         'mini-bot': MiniBot,
         'svg-icon': SvgIcon,
-        // 'cube-icon': Cube,
-        // 'cubeSearch-icon': CubeSearch,
     },
 })
 export default class BotSearch extends Vue {
