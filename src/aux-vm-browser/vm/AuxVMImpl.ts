@@ -50,7 +50,6 @@ export class AuxVMImpl implements AuxVM {
     private _channel: MessageChannel;
     private _proxy: Remote<AuxChannel>;
     private _initialUser: AuxUser;
-    // private _manifest: { [key: string]: string };
     closed: boolean;
 
     /**
