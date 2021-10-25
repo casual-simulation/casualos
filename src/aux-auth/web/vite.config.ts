@@ -39,15 +39,7 @@ export default defineConfig(({ command, mode }) => {
                     iframe: path.resolve(__dirname, 'iframe.html'),
                 },
             },
-            terserOptions: {
-                output: {
-                    // Force ASCII characters so that Safari
-                    // can load the worker blobs. (Safari loads them in ASCII mode)
-                    ascii_only: true,
-                    comments: false,
-                },
-            },
-            sourcemap: 'inline',
+            sourcemap: true,
         },
         plugins: [
             createVuePlugin(),
@@ -89,40 +81,7 @@ export default defineConfig(({ command, mode }) => {
         publicDir,
         resolve: {
             extensions: ['.vue', '.ts', '.mjs', '.js', '.tsx', '.jsx', '.json'],
-            alias: {
-                'vue-json-tree-view': path.resolve(
-                    __dirname,
-                    '..',
-                    'shared/public/VueJsonTreeView/index.ts'
-                ),
-                'three-legacy-gltf-loader': path.resolve(
-                    __dirname,
-                    '..',
-                    'shared/public/three-legacy-gltf-loader/LegacyGLTFLoader.js'
-                ),
-                'three-vrcontroller-module': path.resolve(
-                    __dirname,
-                    '..',
-                    'shared/public/three-vrcontroller-module/VRController.js'
-                ),
-                callforth: path.resolve(
-                    __dirname,
-                    '..',
-                    'shared/public/callforth/index.js'
-                ),
-                'vue-qrcode-reader': path.resolve(
-                    __dirname,
-                    '..',
-                    'shared/public/vue-qrcode-reader/'
-                ),
-                'clipboard-polyfill': path.resolve(
-                    __dirname,
-                    '..',
-                    'shared/public/clipboard-polyfill/clipboard-polyfill.js'
-                ),
-                three: '@casual-simulation/three',
-                esbuild: 'esbuild-wasm',
-            },
+            alias: {},
         },
         server: {
             port: 3002,

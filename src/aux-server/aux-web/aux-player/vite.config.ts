@@ -39,6 +39,7 @@ export default defineConfig(({ command, mode }) => ({
                 vm: path.resolve(__dirname, 'aux-vm-iframe.html'),
             },
         },
+        sourcemap: true,
     },
     plugins: [
         createVuePlugin(),
