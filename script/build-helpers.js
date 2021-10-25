@@ -127,10 +127,10 @@ async function setupWatch(builds) {
 
     watcher.on('all', async (event, path) => {
         if (event === 'unlink') {
-            console.log('[dev-server] File deleted:', path);
+            console.log('[dev-server] File was deleted:', path);
             build();
         } else if (event === 'add') {
-            console.log('[dev-server] File added:', path);
+            console.log('[dev-server] File was added:', path);
             build();
         } else {
             fs.stat(path, (err, stats) => {
@@ -143,7 +143,7 @@ async function setupWatch(builds) {
                 // when we only care about changes.
                 const timeSinceModify = Math.abs(Date.now() - stats.mtimeMs);
                 if (timeSinceModify < SIXTY_SECONDS_MS) {
-                    console.log('[dev-server] File changed:', event, path);
+                    console.log('[dev-server] File was changed:', event, path);
                     build();
                 }
             });
