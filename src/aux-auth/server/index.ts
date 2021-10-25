@@ -414,7 +414,7 @@ async function start() {
         res.sendFile(path.join(dist, 'index.html'));
     });
 
-    app.listen(3002, () => {
+    app.listen(2998, () => {
         console.log('[AuxAuth] Listening on port 3002');
     });
 

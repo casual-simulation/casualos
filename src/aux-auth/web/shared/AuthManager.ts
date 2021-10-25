@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { Magic } from 'magic-sdk';
 import { Subject, BehaviorSubject, Observable } from 'rxjs';
-import { listenForChannel } from '../../../aux-vm-browser';
 import { AppMetadata } from '../../shared/AuthMetadata';
 
 const EMAIL_KEY = 'userEmail';
@@ -101,16 +100,6 @@ export class AuthManager {
      */
     async isServiceAuthorized(service: string) {
         return true;
-        // try {
-        //     const response = await axios.get(
-        //         `/api/${encodeURIComponent(
-        //             this.userId
-        //         )}/services/${encodeURIComponent(service)}`
-        //     );
-        //     return !!response.data;
-        // } catch {
-        //     return false;
-        // }
     }
 
     async authorizeService(service: string) {
