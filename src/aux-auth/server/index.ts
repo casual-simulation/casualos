@@ -335,7 +335,9 @@ async function start() {
                 if (hasValue(address)) {
                     query.address = address;
                 } else if (hasValue(prefix)) {
-                    query.address = { $regex: `^${escapeRegExp(prefix)}` };
+                    query.address = {
+                        $regex: `^${escapeRegExp(prefix as string)}`,
+                    };
                 }
 
                 if (visibility === 'restricted' && hasValue(authToken)) {
@@ -344,7 +346,7 @@ async function start() {
 
                 let findQuery = { ...query };
                 if (hasValue(cursor)) {
-                    findQuery._id = { $gt: new ObjectId(cursor) };
+                    findQuery._id = { $gt: new ObjectId(cursor as string) };
                 }
 
                 const batchSize = 25;
@@ -391,7 +393,7 @@ async function start() {
                     r.visibility === visibility &&
                     hasValue(address)
                         ? r.address === address
-                        : r.address.startsWith(prefix) &&
+                        : r.address.startsWith(prefix as string) &&
                           (visibility !== 'restricted' ||
                               r.authorizedUsers.includes(authToken))
                 );

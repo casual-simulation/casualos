@@ -4,20 +4,19 @@
         "baseUrl": ".",
         "outDir": "../../temp/aux-auth/",
         "composite": true,
-        "incremental": true
+        "incremental": true,
+
+        // We need this because @magic-sdk/admin breaks our build
+        "skipLibCheck": true
     },
     "include": [
         "./server/**/*",
-        // "./serverless/**/*",
+        "./serverless/**/*",
         "./web/**/*",
         "./shared/**/*",
         "../aux-server/typings/*"
-        // "./node_modules/@casual-simulation/aux-common/**/*"
     ],
-    "exclude": [
-        "**/node_modules/**",
-        "./web/vite.config.ts"
-    ],
+    "exclude": ["**/node_modules/**", "./web/vite.config.ts"],
     "references": [
         { "path": "../aux-vm-browser" },
         { "path": "../aux-components" },
