@@ -56,5 +56,6 @@
     "javascript.preferences.quoteStyle": "single",
     "typescript.preferences.quoteStyle": "single",
     "workbench.colorCustomizations": {},
-    "deno.enable": false
+    "deno.enable": false,
+    "typescript.tsdk": "node_modules\\typescript\\lib"
 }
