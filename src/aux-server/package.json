@@ -17,7 +17,7 @@
         "build": "npm run build:clean && npm run build:server && npm run build:web",
         "build:profile": "npm run build:web:profile && npm run build:server:profile",
         "build:dev:profile": "npm run build:web:dev:profile && npm run build:server:dev:profile",
-        "build:web": "vite build ./aux-web/aux-player",
+        "build:web": "node --max_old_space_size=6144 ../../node_modules/vite/bin/vite.js build ./aux-web/aux-player",
         "build:web:old": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config aux-web/webpack.prod.js",
         "build:web:profile": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config aux-web/webpack.prod.js --profile --json > web_bundle_stats.json",
         "build:server:profile": "node --max_old_space_size=6144 ../../node_modules/webpack/bin/webpack --config server/webpack.prod.js --profile --json > server_bundle_stats.json",

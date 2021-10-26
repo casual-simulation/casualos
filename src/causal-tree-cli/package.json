@@ -26,9 +26,9 @@
         "url": "git+https://github.com/casual-simulation/casualos.git"
     },
     "scripts": {
-        "watch": "webpack --config webpack.dev.js --watch",
-        "build": "webpack --config webpack.dev.js",
-        "build:prod": "webpack --config webpack.prod.js",
+        "watch": "node ./script/dev-cli.js",
+        "build": "node ./script/build-cli.js dev",
+        "build:prod": "node ./script/build-cli.js",
         "start": "node bin/causal-tree-cli.js"
     },
     "bugs": {

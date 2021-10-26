@@ -27,7 +27,7 @@
         "url": "git+https://github.com/casual-simulation/casualos.git"
     },
     "scripts": {
-        "build": "npm run webpack",
+        "build": "node ./script/build-redirector.js",
         "webpack": "webpack --config webpack.config.js",
         "package": "docker build -t casualsimulation/aux-redirector -f Dockerfile .",
         "start": "node dist/main.js"
