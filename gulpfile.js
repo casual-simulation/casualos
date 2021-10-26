@@ -26,6 +26,8 @@ let folders = [
     `${__dirname}/src/tunnel`,
     `${__dirname}/src/undom`,
     `${__dirname}/src/fast-json-stable-stringify`,
+    `${__dirname}/temp/aux-auth`,
+    `${__dirname}/temp/aux-server`,
 ];
 
 let patterns = [
