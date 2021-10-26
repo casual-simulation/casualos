@@ -2,7 +2,7 @@
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "baseUrl": ".",
-        "outDir": "../../temp/aux-server/",
+        "outDir": "../../../../temp/aux-server/dom/",
         "composite": true,
         "incremental": true,
         "paths": {
@@ -13,7 +13,7 @@
                 "aux-web/shared/public/three-legacy-gltf-loader/index.d.ts"
             ]
         },
-        "lib": ["es2015", "es5", "dom", "webworker"]
+        "lib": ["es2015", "es5", "dom"]
     },
     "include": [
         "./aux-web/**/*",
@@ -24,6 +24,7 @@
     ],
     "exclude": [
         "**/node_modules/**",
+        "./aux-web/aux-player/sw.ts",
         "./aux-web/aux-player/vite.config.ts"
     ],
     "references": [
@@ -31,7 +32,7 @@
         { "path": "../aux-vm-browser" },
         { "path": "../aux-components" },
         { "path": "../aux-vm-node" },
-        { "path": "../aux-vm-deno" },
-        { "path": "../aux-custom-portals" }
+        { "path": "../aux-vm-deno" }
+        // { "path": "../aux-custom-portals" }
     ]
 }

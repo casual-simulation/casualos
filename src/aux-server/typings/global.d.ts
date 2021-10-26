@@ -9,6 +9,8 @@ declare module 'jsbarcode';
 declare module 'quagga';
 declare module 'clipboard-polyfill';
 declare module 'rollup-plugin-copy';
+declare module 'virtual:pwa-register';
+// declare module 'monaco-editor-core';
 
 declare module '*.jpg' {
     const url: string;
@@ -66,3 +68,29 @@ declare var PRODUCTION: boolean;
 declare var GIT_HASH: string;
 declare var GIT_TAG: string;
 declare var PROXY_CORS_REQUESTS: boolean;
+
+interface Navigator {
+    getUserMedia(
+        options: { video?: boolean; audio?: boolean },
+        success: (stream: any) => void,
+        error?: (error: string) => void
+    ): void;
+}
+
+interface DeviceMotionEventExtras {
+    requestPermission(): Promise<'granted' | 'denied'>;
+}
+
+interface FetchEvent extends Event {
+    clientId: string;
+    request: Request;
+
+    respondWith(response: Response | Promise<Response>): void;
+    waitUntil(promise: Promise<any>): void;
+}
+
+interface Window {
+    addEventListener(name: 'fetch', handler: (event: FetchEvent) => any): void;
+}
+
+declare function importScripts(...scripts: string[]): void;

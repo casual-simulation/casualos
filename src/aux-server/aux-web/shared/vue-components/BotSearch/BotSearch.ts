@@ -13,7 +13,7 @@ import { appManager } from '../../AppManager';
 import { SubscriptionLike } from 'rxjs';
 import MiniBot from '../MiniBot/MiniBot';
 import { BotRenderer, getRenderer } from '../../scene/BotRenderer';
-import SvgIcon from '@casual-simulation/aux-components';
+import { SvgIcon } from '@casual-simulation/aux-components';
 
 @Component({
     components: {

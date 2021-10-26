@@ -70,7 +70,7 @@ export default defineConfig(({ command, mode }) => ({
                 copyOnce: true,
             }),
             enforce: 'pre',
-        },
+        } as any,
         VitePWA({
             strategies: 'injectManifest',
             srcDir: '.',
