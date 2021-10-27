@@ -5,7 +5,7 @@
     "main": "dist/index.js",
     "private": true,
     "scripts": {
-        "build": "webpack --config webpack.config.js",
+        "build": "node ./script/build-bench.js",
         "exec": "node dist/index.js",
         "exec:profile": "0x -o dist/index.js",
         "bench": "npm run build && npm run exec",

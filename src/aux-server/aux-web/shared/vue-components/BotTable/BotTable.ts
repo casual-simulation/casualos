@@ -40,10 +40,7 @@ import BotTag from '../BotTag/BotTag';
 import BotID from '../BotID/BotID';
 import { TreeView } from 'vue-json-tree-view';
 import { downloadAuxState } from '../../DownloadHelpers';
-import NewBot from '../../public/icons/NewBot.svg';
-import Hexagon from '../../public/icons/Hexagon.svg';
-import ResizeIcon from '../../public/icons/Resize.svg';
-import MultiIcon from '../../public/icons/Multi.svg';
+import { SvgIcon } from '@casual-simulation/aux-components';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import Bowser from 'bowser';
@@ -60,10 +57,7 @@ import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrappe
         'bot-tag': BotTag,
         'tag-editor': TagEditor,
         'tree-view': TreeView,
-        'new-bot-icon': NewBot,
-        'hex-icon': Hexagon,
-        'resize-icon': ResizeIcon,
-        'multi-icon': MultiIcon,
+        'svg-icon': SvgIcon,
         'mini-bot': BotTagMini,
         'tag-value-editor': TagValueEditor,
         'tag-value-editor-wrapper': TagValueEditorWrapper,
@@ -148,8 +142,8 @@ export default class BotTable extends Vue {
             return [
                 ...(<BotTag[]>this.$refs.tags)
                     .filter((t) => t.allowCloning)
-                    .map((t) => t.$el),
-                ...(<BotID[]>this.$refs.tags).map((t) => t.$el),
+                    .map((t) => t.$el as HTMLElement),
+                ...(<BotID[]>this.$refs.tags).map((t) => t.$el as HTMLElement),
             ];
         } else {
             return [];
@@ -304,7 +298,7 @@ export default class BotTable extends Vue {
                 const tags = this.$refs.tagValues as BotValue[];
                 for (let tag of tags) {
                     if (tag.tag === this.lastTag) {
-                        tag.$el.focus();
+                        (tag.$el as HTMLElement).focus();
 
                         break;
                     }
@@ -549,7 +543,7 @@ export default class BotTable extends Vue {
             const tags = this.$refs.tagValues as BotValue[];
             for (let tag of tags) {
                 if (tag.tag === addedTag) {
-                    tag.$el.focus();
+                    (tag.$el as HTMLElement).focus();
                     // This is a super hacky way to pre-fill the first bot's tag with an @ symbol
                     if (isScript) {
                         tag.setInitialValue('@');

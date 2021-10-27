@@ -10,7 +10,7 @@
     "license": "MIT",
     "main": "index.js",
     "types": "index.d.ts",
-    "module": "index.js",
+    "module": "index",
     "directories": {
         "lib": "."
     },
@@ -53,7 +53,5 @@
         "rxjs": "^6.5.2",
         "uuid": "^8.3.2"
     },
-    "devDependencies": {
-        "worker-loader": "^3.0.6"
-    }
+    "devDependencies": {}
 }

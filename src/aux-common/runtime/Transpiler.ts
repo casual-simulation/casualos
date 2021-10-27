@@ -1,7 +1,7 @@
 import * as Acorn from 'acorn';
 import AcornJSX from 'acorn-jsx';
-import { generate, baseGenerator } from 'astring';
-import LRU from 'lru-cache';
+import { generate, GENERATOR } from 'astring';
+import LRUCache from 'lru-cache';
 import { traverse } from 'estraverse';
 import {
     createAbsolutePositionFromRelativePosition,
@@ -63,7 +63,7 @@ export interface ObjectValueNode extends Acorn.Node {
     identifier: Acorn.Node;
 }
 
-const exJsGenerator = Object.assign({}, baseGenerator, {
+const exJsGenerator = Object.assign({}, GENERATOR, {
     ImportExpression: function (node: any, state: any) {
         state.write('import(');
         this[node.source.type](node.source, state);
@@ -127,7 +127,7 @@ export class Transpiler {
     private _jsxFactory: string;
     private _jsxFragment: string;
     private _forceSync: boolean;
-    private _cache: LRU.Cache<string, TranspilerResult>;
+    private _cache: LRUCache<string, TranspilerResult>;
 
     get forceSync() {
         return this._forceSync;
@@ -138,7 +138,7 @@ export class Transpiler {
     }
 
     constructor(options?: TranspilerOptions) {
-        this._cache = new LRU<string, TranspilerResult>({
+        this._cache = new LRUCache<string, TranspilerResult>({
             max: 1000,
         });
         this._parser = Acorn.Parser.extend(AcornJSX());
@@ -658,21 +658,15 @@ export class Transpiler {
         );
 
         // Delete the opening "{"
-        const absoluteValueStartBegin = createAbsolutePositionFromRelativePosition(
-            valueStartBegin,
-            doc
-        );
-        const absoluteValueStartEnd = createAbsolutePositionFromRelativePosition(
-            valueStartEnd,
-            doc
-        );
+        const absoluteValueStartBegin =
+            createAbsolutePositionFromRelativePosition(valueStartBegin, doc);
+        const absoluteValueStartEnd =
+            createAbsolutePositionFromRelativePosition(valueStartEnd, doc);
         text.delete(absoluteValueStartBegin.index, 1);
 
         // Delete the closing "}"
-        const absoluteValueEndBegin = createAbsolutePositionFromRelativePosition(
-            valueEndBegin,
-            doc
-        );
+        const absoluteValueEndBegin =
+            createAbsolutePositionFromRelativePosition(valueEndBegin, doc);
         const absoluteValueEndEnd = createAbsolutePositionFromRelativePosition(
             valueEndEnd,
             doc
@@ -818,14 +812,10 @@ export class Transpiler {
 
         if (closeElement) {
             // remove closing tag
-            const closingStartAbsolute = createAbsolutePositionFromRelativePosition(
-                closingStart,
-                doc
-            );
-            const closingEndAbsolute = createAbsolutePositionFromRelativePosition(
-                closingEnd,
-                doc
-            );
+            const closingStartAbsolute =
+                createAbsolutePositionFromRelativePosition(closingStart, doc);
+            const closingEndAbsolute =
+                createAbsolutePositionFromRelativePosition(closingEnd, doc);
             text.delete(
                 closingStartAbsolute.index,
                 closingEndAbsolute.index - closingStartAbsolute.index
@@ -933,10 +923,8 @@ export class Transpiler {
             undefined,
             true
         );
-        const functionStartAbsolute = createAbsolutePositionFromRelativePosition(
-            functionStart,
-            doc
-        );
+        const functionStartAbsolute =
+            createAbsolutePositionFromRelativePosition(functionStart, doc);
 
         text.delete(functionStartAbsolute.index, 'async '.length);
     }

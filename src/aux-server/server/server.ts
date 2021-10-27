@@ -175,7 +175,7 @@ export class ClientServer {
         this._app.use(
             '/proxy',
             asyncMiddleware(async (req, res) => {
-                const url = req.query.url;
+                const url = req.query.url as string;
                 try {
                     if (this._hgetall) {
                         const cached = await this._hgetall(url);
@@ -191,18 +191,16 @@ export class ClientServer {
                             const optimizedContentType =
                                 cached.optimizedContentType;
 
-                            let [
-                                retContentType,
-                                retData,
-                            ] = this._getDataForBrowser(
-                                req,
-                                contentType,
-                                data,
-                                optimizedContentType
-                                    ? optimizedContentType.toString()
-                                    : null,
-                                optimized
-                            );
+                            let [retContentType, retData] =
+                                this._getDataForBrowser(
+                                    req,
+                                    contentType,
+                                    data,
+                                    optimizedContentType
+                                        ? optimizedContentType.toString()
+                                        : null,
+                                    optimized
+                                );
                             res.status(status);
                             res.contentType(retContentType);
                             res.send(retData);
@@ -231,10 +229,8 @@ export class ClientServer {
                             console.log('[Server] Optimizing image...');
                             const beforeSize = data.length;
                             const beforeContentType = contentType;
-                            [
-                                optimizedContentType,
-                                optimizedData,
-                            ] = await this._optimizeImage(contentType, data);
+                            [optimizedContentType, optimizedData] =
+                                await this._optimizeImage(contentType, data);
                             const afterSize = optimizedData.length;
 
                             const sizeDifference = beforeSize - afterSize;
@@ -289,9 +285,8 @@ export class ClientServer {
                         };
                     }
 
-                    let cacheControlHeader = formatCacheControlHeader(
-                        cacheControl
-                    );
+                    let cacheControlHeader =
+                        formatCacheControlHeader(cacheControl);
                     if (cacheControlHeader && cacheControlHeader.length > 0) {
                         res.setHeader('Cache-Control', cacheControlHeader);
                     }
@@ -513,7 +508,8 @@ export class Server {
                 };
             } else {
                 options.contactPoints = this._config.cassandradb.contactPoints;
-                options.localDataCenter = this._config.cassandradb.localDataCenter;
+                options.localDataCenter =
+                    this._config.cassandradb.localDataCenter;
                 if (this._config.cassandradb.requireTLS) {
                     options.sslOptions = {
                         rejectUnauthorized: this._config.cassandradb.requireTLS,
@@ -667,13 +663,13 @@ export class Server {
     }
 
     private async _handleDataPortal(req: Request, res: Response) {
-        const id = req.query.inst ?? req.query.server;
+        const id = (req.query.inst ?? req.query.server) as string;
         if (!id) {
             res.sendStatus(400);
             return;
         }
 
-        const portal = req.query[DATA_PORTAL];
+        const portal = req.query[DATA_PORTAL] as string;
         if (!portal) {
             res.sendStatus(400);
             return;
@@ -732,10 +728,9 @@ export class Server {
                 }
             });
             const portalContentType = mime.getType(portal);
-            const contentType =
-                req.query[`${DATA_PORTAL}ContentType`] ||
+            const contentType = (req.query[`${DATA_PORTAL}ContentType`] ||
                 portalContentType ||
-                'application/json';
+                'application/json') as string;
 
             if (hasValue(contentType)) {
                 res.set('Content-Type', contentType);
@@ -752,7 +747,7 @@ export class Server {
     }
 
     private async _handleWebhook(req: Request, res: Response) {
-        const id = req.query.inst ?? req.query.server;
+        const id = (req.query.inst ?? req.query.server) as string;
         if (!id) {
             res.sendStatus(400);
             return;
@@ -954,11 +949,8 @@ export class Server {
         const serverDevice = deviceInfoFromUser(serverUser);
 
         if (this._config.executeLoadedInstances) {
-            const {
-                connections,
-                manager,
-                webhooksClient,
-            } = this._createRepoManager(serverDevice, serverUser);
+            const { connections, manager, webhooksClient } =
+                this._createRepoManager(serverDevice, serverUser);
             const fixedServer = new FixedConnectionServer(connections);
             const multiServer = new MultiConnectionServer([
                 socketIOServer,

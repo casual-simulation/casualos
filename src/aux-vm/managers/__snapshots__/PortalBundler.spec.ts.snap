@@ -92,7 +92,7 @@ Object {
 
 exports[`ESBuildPortalBundler bundleTag() library emoji imports should report errors that occur while fetching data 1`] = `
 "Error: Build failed with 1 error:
-aux-ns:📖bot1.main?auxmodule:1:20: error: [casualos] Error: Get failed."
+aux-ns:📖bot1.main?auxmodule:1:20: error: [plugin: casualos] Error: Get failed."
 `;
 
 exports[`ESBuildPortalBundler bundleTag() library emoji should resolve with a bundle that contains the specified tags 1`] = `
@@ -138,7 +138,7 @@ aux-ns:📖bot1.main?auxmodule:1:15: error: Unterminated string literal",
 
 exports[`ESBuildPortalBundler bundleTag() multiple emoji imports should report errors that occur while fetching data 1`] = `
 "Error: Build failed with 1 error:
-aux-ns:🙂bot1.main?auxmodule:1:20: error: [casualos] Error: Get failed."
+aux-ns:🙂bot1.main?auxmodule:1:20: error: [plugin: casualos] Error: Get failed."
 `;
 
 exports[`ESBuildPortalBundler bundleTag() multiple emoji should resolve with a bundle that contains the specified tags 1`] = `
@@ -195,9 +195,7 @@ Object {
 })();
 ",
   "tag": "main",
-  "warnings": Array [
-    "Ignoring this import because \\"aux-ns:📖bot1.main?auxmodule\\" was marked as having no side effects",
-  ],
+  "warnings": Array [],
 }
 `;
 
@@ -254,7 +252,7 @@ Object {
 
 exports[`ESBuildPortalBundler bundleTag() smile emoji imports should report errors that occur while fetching data 1`] = `
 "Error: Build failed with 1 error:
-aux-ns:🙂bot1.main?auxmodule:1:20: error: [casualos] Error: Get failed."
+aux-ns:🙂bot1.main?auxmodule:1:20: error: [plugin: casualos] Error: Get failed."
 `;
 
 exports[`ESBuildPortalBundler bundleTag() smile emoji should resolve with a bundle that contains the specified tags 1`] = `

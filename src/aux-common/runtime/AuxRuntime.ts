@@ -103,7 +103,8 @@ import { replaceMacros } from './Transpiler';
  * This means taking state updates events, shouts and whispers, and emitting additional events to affect the future state.
  */
 export class AuxRuntime
-    implements RuntimeBotInterface, RuntimeBotFactory, SubscriptionLike {
+    implements RuntimeBotInterface, RuntimeBotFactory, SubscriptionLike
+{
     private _compiledState: CompiledBotsState = {};
     private _existingMasks: { [id: string]: BotTagMasks } = {};
     private _compiler = new AuxCompiler();
@@ -547,9 +548,10 @@ export class AuxRuntime
         }
     }
 
-    private _rejectAction(
-        action: BotAction
-    ): { rejected: boolean; newActions: BotAction[] } {
+    private _rejectAction(action: BotAction): {
+        rejected: boolean;
+        newActions: BotAction[];
+    } {
         const result = this._shout(
             ON_ACTION_ACTION_NAME,
             null,
@@ -675,13 +677,11 @@ export class AuxRuntime
         let newBots = null as [CompiledBot, PrecalculatedBot][];
         let updates = null as UpdatedBot[];
         if (update.addedBots.length > 0) {
-            const {
-                newBots: addedNewBots,
-                newBotIDs: addedBotIds,
-            } = this._addBotsToState(
-                update.addedBots.map((id) => update.state[id] as Bot),
-                nextUpdate
-            );
+            const { newBots: addedNewBots, newBotIDs: addedBotIds } =
+                this._addBotsToState(
+                    update.addedBots.map((id) => update.state[id] as Bot),
+                    nextUpdate
+                );
 
             newBots = addedNewBots;
             newBotIds = addedBotIds;
@@ -916,9 +916,8 @@ export class AuxRuntime
             }
 
             if (hasChange) {
-                const watchers = this._globalContext.getWatchersForPortal(
-                    portal
-                );
+                const watchers =
+                    this._globalContext.getWatchersForPortal(portal);
                 for (let watcher of watchers) {
                     watcher.handler();
                 }
@@ -1648,6 +1647,8 @@ export class AuxRuntime
                 }
             }
         }
+
+        script = replaceMacros(script);
 
         let functionName: string;
         let diagnosticFunctionName: string;

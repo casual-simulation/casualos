@@ -8,7 +8,7 @@
     "license": "MIT",
     "main": "index.js",
     "types": "index.d.ts",
-    "module": "index.js",
+    "module": "index",
     "bin": {
         "tunnel": "bin/tunnel.js"
     },
