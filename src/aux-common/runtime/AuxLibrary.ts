@@ -1102,8 +1102,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         },
 
         tagSpecificApi: {
-            create: (options: TagSpecificApiOptions) => (...args: any[]) =>
-                create(options.bot?.id, ...args),
+            create:
+                (options: TagSpecificApiOptions) =>
+                (...args: any[]) =>
+                    create(options.bot?.id, ...args),
             setTimeout: botTimer('timeout', setTimeout, true),
             setInterval: botTimer('interval', setInterval, false),
             watchPortal: watchPortalBots(),
@@ -2881,7 +2883,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const space = recordDefinition.space ?? DEFAULT_RECORD_SPACE;
         const token =
             recordDefinition.authToken ??
-            (<any>globalThis).authBot?.tags?.authToken;
+            context.global.authBot?.tags?.authToken;
 
         if (!hasValue(token)) {
             throw new Error('authToken is required when there is no authBot.');
@@ -2913,10 +2915,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getRecords(
         ...filters: RecordFilters[]
     ): Promise<GetRecordsResult> {
-        let token = (<any>globalThis).authBot?.tags?.authToken ?? null;
+        let token = context.global.authBot?.tags?.authToken ?? null;
         let address: string;
         let prefix: string;
-        let authID: string = (<any>globalThis).authBot?.id ?? null;
+        let authID: string = context.global.authBot?.id ?? null;
         let id: string;
         let space: RecordSpace = 'tempRestricted';
 
@@ -3013,7 +3015,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const space = record.space;
 
         const token =
-            record.authToken ?? (<any>globalThis).authBot?.tags?.authToken;
+            record.authToken ?? context.global.authBot?.tags?.authToken;
 
         if (!hasValue(token)) {
             throw new Error('authToken is required when there is no authBot.');
@@ -4478,11 +4480,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             ? getBots('id', bot)
             : [bot];
 
-        let tags = (!hasValue(tag)
-            ? null
-            : Array.isArray(tag)
-            ? tag
-            : [tag]) as string[];
+        let tags = (
+            !hasValue(tag) ? null : Array.isArray(tag) ? tag : [tag]
+        ) as string[];
 
         let groups = [] as string[];
         for (let bot of bots) {
@@ -4969,9 +4969,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the position offset for the given bot anchor point.
      * @param anchorPoint The anchor point to get the offset for.
      */
-    function getAnchorPointOffset(
-        anchorPoint: BotAnchorPoint
-    ): { x: number; y: number; z: number } {
+    function getAnchorPointOffset(anchorPoint: BotAnchorPoint): {
+        x: number;
+        y: number;
+        z: number;
+    } {
         const value = calculateAnchorPoint(anchorPoint);
         const offset = calculateAnchorPointOffset(value);
         return {
@@ -6197,10 +6199,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the 3D position of the player's camera.
      * @param portal The portal that the camera position should be retrieved for.
      */
-    function getCameraPosition(
-        portal: 'grid' | 'miniGrid' = 'grid'
-    ): { x: number; y: number; z: number } {
-        const bot = (<any>globalThis)[`${portal}PortalBot`];
+    function getCameraPosition(portal: 'grid' | 'miniGrid' = 'grid'): {
+        x: number;
+        y: number;
+        z: number;
+    } {
+        const bot = context.global[`${portal}PortalBot`];
         if (!bot) {
             return {
                 x: NaN,
@@ -6220,10 +6224,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the 3D rotation of the player's camera.
      * @param portal The portal that the camera rotation should be retrieved for.
      */
-    function getCameraRotation(
-        portal: 'grid' | 'miniGrid' = 'grid'
-    ): { x: number; y: number; z: number } {
-        const bot = (<any>globalThis)[`${portal}PortalBot`];
+    function getCameraRotation(portal: 'grid' | 'miniGrid' = 'grid'): {
+        x: number;
+        y: number;
+        z: number;
+    } {
+        const bot = context.global[`${portal}PortalBot`];
         if (!bot) {
             return {
                 x: NaN,
@@ -6243,10 +6249,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the 3D point that the player's camera is focusing on.
      * @param portal The portal that the camera focus point should be retrieved for.
      */
-    function getFocusPoint(
-        portal: 'grid' | 'miniGrid' = 'grid'
-    ): { x: number; y: number; z: number } {
-        const bot = (<any>globalThis)[`${portal}PortalBot`];
+    function getFocusPoint(portal: 'grid' | 'miniGrid' = 'grid'): {
+        x: number;
+        y: number;
+        z: number;
+    } {
+        const bot = context.global[`${portal}PortalBot`];
         if (!bot) {
             return {
                 x: NaN,
@@ -6484,9 +6492,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return promise;
     }
 
-    function getDownloadState(
-        state: BotsState
-    ): { version: number; state: BotsState } {
+    function getDownloadState(state: BotsState): {
+        version: number;
+        state: BotsState;
+    } {
         return {
             version: 1,
             state,

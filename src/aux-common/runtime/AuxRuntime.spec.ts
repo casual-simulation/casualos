@@ -187,6 +187,10 @@ describe('AuxRuntime', () => {
         }
     }
 
+    it('should share the global object with the context', () => {
+        expect(runtime.globalObject).toBe(runtime.context.global);
+    });
+
     describe('stateUpdated()', () => {
         describe('added bots', () => {
             it('should return a state update for the new bot', () => {

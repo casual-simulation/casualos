@@ -175,6 +175,10 @@ export class AuxRuntime
         return this._currentVersion;
     }
 
+    get globalObject() {
+        return this._globalObject;
+    }
+
     /**
      * Creates a new AuxRuntime using the given library factory.
      * @param libraryFactory
@@ -280,6 +284,7 @@ export class AuxRuntime
                 return Reflect.getOwnPropertyDescriptor(target, key);
             },
         });
+        this._globalContext.global = this._globalObject;
     }
 
     getShoutTimers(): { [shout: string]: number } {
