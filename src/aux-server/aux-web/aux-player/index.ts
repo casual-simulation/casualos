@@ -51,6 +51,7 @@ import {
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
+import 'virtual:svg-icons-register';
 import MdImmediateInput from '../shared/public/MdImmediateInput';
 import VueClipboard from 'vue-clipboard2';
 import VueShortkey from 'vue-shortkey';

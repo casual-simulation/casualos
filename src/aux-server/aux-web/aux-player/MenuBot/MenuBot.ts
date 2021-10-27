@@ -50,17 +50,16 @@ import { first } from '@casual-simulation/causal-trees';
 import { safeParseURL } from '../PlayerUtils';
 import PieProgress from '../../shared/vue-components/PieProgress/PieProgress';
 import { Input } from '../../shared/scene/Input';
-import CubeIcon from '@casual-simulation/aux-components/icons/Cube.svg';
-import EggIcon from '@casual-simulation/aux-components/icons/Egg.svg';
-import HelixIcon from '@casual-simulation/aux-components/icons/Helix.svg';
+import { SvgIcon } from '@casual-simulation/aux-components';
 import { Subscription } from 'rxjs';
 import { BotManager } from '@casual-simulation/aux-vm-browser';
 
 @Component({
     components: {
-        'cube-icon': CubeIcon,
-        'egg-icon': EggIcon,
-        'helix-icon': HelixIcon,
+        'svg-icon': SvgIcon,
+        // 'cube-icon': CubeIcon,
+        // 'egg-icon': EggIcon,
+        // 'helix-icon': HelixIcon,
         'pie-progress': PieProgress,
     },
 })
@@ -288,7 +287,9 @@ export default class MenuBot extends Vue {
     }
 
     async touchStart(event: TouchEvent) {
-        const isForThisElement = Input.isEventForAnyElement(event, [this.$el]);
+        const isForThisElement = Input.isEventForAnyElement(event, [
+            this.$el as HTMLElement,
+        ]);
         if (isForThisElement) {
             event.target.addEventListener('touchend', this.touchEnd);
             event.target.addEventListener('touchcancel', this.touchCancel);
@@ -332,7 +333,7 @@ export default class MenuBot extends Vue {
         if (dropFocus) {
             const input = <Vue>this.$refs.textInput;
             if (input) {
-                input.$el.blur();
+                (input.$el as HTMLElement).blur();
             }
         }
         const simulation = _simulation(this.item);
@@ -481,7 +482,7 @@ export default class MenuBot extends Vue {
                             const input = <Vue>this.$refs.textInput;
                             if (input) {
                                 try {
-                                    input.$el.focus();
+                                    (input.$el as HTMLElement).focus();
                                     if (
                                         hasValue(e.taskId) &&
                                         hasValue(e.portal)

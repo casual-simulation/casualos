@@ -39,7 +39,7 @@ export default class BotChat extends Vue {
         if (dropFocus) {
             const input = <Vue>this.$refs.searchInput;
             if (input) {
-                input.$el.blur();
+                (input.$el as HTMLElement).blur();
             }
         }
         await this._ignoreTextUpdates(async (text) => {
@@ -95,7 +95,7 @@ export default class BotChat extends Vue {
     focus() {
         const search = <Vue>this.$refs.searchInput;
         if (search) {
-            search.$el.focus();
+            (search.$el as HTMLElement).focus();
         }
     }
 

@@ -97,7 +97,9 @@ export default class ImuPortal extends Vue {
 
     async onConfirmDeviceMotion() {
         try {
-            const permission = await DeviceMotionEvent.requestPermission();
+            const permission = await (<DeviceMotionEventExtras>(
+                (<any>DeviceMotionEvent)
+            )).requestPermission();
             if (permission === 'granted') {
                 this._resolveDevicePermissions();
             } else {
@@ -261,13 +263,13 @@ export default class ImuPortal extends Vue {
                 try {
                     const results = await Promise.all([
                         navigator.permissions.query({
-                            name: 'accelerometer',
+                            name: 'accelerometer' as PermissionName,
                         }),
                         navigator.permissions.query({
-                            name: 'magnetometer',
+                            name: 'magnetometer' as PermissionName,
                         }),
                         navigator.permissions.query({
-                            name: 'gyroscope',
+                            name: 'gyroscope' as PermissionName,
                         }),
                     ]);
 
@@ -309,7 +311,10 @@ export default class ImuPortal extends Vue {
             return false;
         }
 
-        if (!DeviceMotionEvent.requestPermission) {
+        if (
+            !(<DeviceMotionEventExtras>(<any>DeviceMotionEvent))
+                .requestPermission
+        ) {
             return false;
         }
 
@@ -319,7 +324,9 @@ export default class ImuPortal extends Vue {
             let hasPermission = false;
 
             try {
-                const permission = await DeviceMotionEvent.requestPermission();
+                const permission = await (<DeviceMotionEventExtras>(
+                    (<any>DeviceMotionEvent)
+                )).requestPermission();
                 hasPermission = permission === 'granted';
             } catch (ex) {
                 console.log('[ImuPortal] Requesting permissions via dialog.');

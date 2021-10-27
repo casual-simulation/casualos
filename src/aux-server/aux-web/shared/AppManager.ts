@@ -31,6 +31,7 @@ import {
 import { fromByteArray } from 'base64-js';
 import builder from './builder/builder.v1.json';
 import bootstrap from './builder/ab-1.bootstrap.json';
+import { registerSW } from 'virtual:pwa-register';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -325,27 +326,22 @@ export class AppManager {
 
     private _initOffline() {
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker
-                .register('/sw.js')
-                .then((registration) => {
-                    this._registration = registration;
-
-                    this._registration.onupdatefound = (e) => {
-                        console.log('[ServiceWorker]: Updated.');
-                        Sentry.addBreadcrumb({
-                            message: 'Updated service worker.',
-                            level: Sentry.Severity.Info,
-                            category: 'app',
-                            type: 'default',
-                        });
-                        this._updateAvailable.next(true);
-                    };
-
+            console.log('[AppManager] Registering Service Worker');
+            const updateSW = registerSW({
+                onNeedRefresh: () => {
+                    console.log('[ServiceWorker]: Updated.');
+                    Sentry.addBreadcrumb({
+                        message: 'Updated service worker.',
+                        level: Sentry.Severity.Info,
+                        category: 'app',
+                        type: 'default',
+                    });
+                    this._updateAvailable.next(true);
+                },
+                onOfflineReady: () => {
                     console.log('[ServiceWorker] Registered.');
-                })
-                .catch((err) => {
-                    console.error('[ServiceWorker] Registration Failed.', err);
-                });
+                },
+            });
         }
     }
 

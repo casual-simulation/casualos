@@ -33,8 +33,7 @@ import BotTag from '../BotTag/BotTag';
 import { debounce } from 'lodash';
 import { onMonacoLoaded } from '../../MonacoAsync';
 import Hotkey from '../Hotkey/Hotkey';
-
-export const onFocusSearch = new Subject<void>();
+import { onFocusSearch } from './IdePortalHelpers';
 
 @Component({
     components: {
