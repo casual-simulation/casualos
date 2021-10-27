@@ -3,7 +3,6 @@
         "aux-web/*",
         "node_modules/*",
         "script/*",
-        "loaders/*",
         "drives/*",
         "typings/*"
     ],

@@ -28,7 +28,6 @@
     },
     "scripts": {
         "build": "node ./script/build-redirector.js",
-        "webpack": "webpack --config webpack.config.js",
         "package": "docker build -t casualsimulation/aux-redirector -f Dockerfile .",
         "start": "node dist/main.js"
     },

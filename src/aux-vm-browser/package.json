@@ -54,7 +54,5 @@
         "socket.io-client": "2.1.1",
         "uuid": "^8.3.2"
     },
-    "devDependencies": {
-        "worker-loader": "^3.0.6"
-    }
+    "devDependencies": {}
 }

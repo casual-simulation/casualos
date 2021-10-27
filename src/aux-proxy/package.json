@@ -28,7 +28,6 @@
     },
     "scripts": {
         "build": "node ./script/build-proxy.js",
-        "webpack": "webpack --config webpack.config.js",
         "package": "docker build -t casualsimulation/aux-proxy -f Dockerfile .",
         "start": "node dist/main.js"
     },

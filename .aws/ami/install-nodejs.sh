@@ -14,4 +14,4 @@ export NVM_DIR="$HOME/.nvm"
 nvm install $NODE_VERSION
 
 # Install some common utilities
-npm install -g yarn webpack
+npm install -g yarn
