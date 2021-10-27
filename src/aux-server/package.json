@@ -6,8 +6,8 @@
     "private": true,
     "scripts": {
         "start": "node server/dist/main.js",
-        "watch": "concurrently --names \"Server,Player\" \"npm:dev:server\" \"npm:dev:player\"",
-        "watch:server": "concurrently --names \"Build,Inst\" \"node ./script/dev-server.js\" \"npm:dev:inst\"",
+        "watch": "concurrently --names \"Server,Player\" \"npm:watch:server\" \"npm:watch:player\"",
+        "watch:server": "concurrently --names \"Build,Inst\" \"node ./script/dev-server.js\" \"npm:watch:inst\"",
         "watch:player": "vite serve ./aux-web/aux-player",
         "watch:inst": "wait-on server/dist/main.js && nodemon server/dist/main.js",
         "vite": "vite serve ./aux-web/aux-player",
