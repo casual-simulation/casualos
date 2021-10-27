@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Improved the `local` space to delete the oldest inst when localStorage is full.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the built-in portal bots would cause all scripts to be recompiled.
