@@ -287,7 +287,9 @@ export default class MenuBot extends Vue {
     }
 
     async touchStart(event: TouchEvent) {
-        const isForThisElement = Input.isEventForAnyElement(event, [this.$el]);
+        const isForThisElement = Input.isEventForAnyElement(event, [
+            this.$el as HTMLElement,
+        ]);
         if (isForThisElement) {
             event.target.addEventListener('touchend', this.touchEnd);
             event.target.addEventListener('touchcancel', this.touchCancel);
@@ -331,7 +333,7 @@ export default class MenuBot extends Vue {
         if (dropFocus) {
             const input = <Vue>this.$refs.textInput;
             if (input) {
-                input.$el.blur();
+                (input.$el as HTMLElement).blur();
             }
         }
         const simulation = _simulation(this.item);
@@ -480,7 +482,7 @@ export default class MenuBot extends Vue {
                             const input = <Vue>this.$refs.textInput;
                             if (input) {
                                 try {
-                                    input.$el.focus();
+                                    (input.$el as HTMLElement).focus();
                                     if (
                                         hasValue(e.taskId) &&
                                         hasValue(e.portal)

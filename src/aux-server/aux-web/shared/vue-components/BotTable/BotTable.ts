@@ -142,8 +142,8 @@ export default class BotTable extends Vue {
             return [
                 ...(<BotTag[]>this.$refs.tags)
                     .filter((t) => t.allowCloning)
-                    .map((t) => t.$el),
-                ...(<BotID[]>this.$refs.tags).map((t) => t.$el),
+                    .map((t) => t.$el as HTMLElement),
+                ...(<BotID[]>this.$refs.tags).map((t) => t.$el as HTMLElement),
             ];
         } else {
             return [];
@@ -298,7 +298,7 @@ export default class BotTable extends Vue {
                 const tags = this.$refs.tagValues as BotValue[];
                 for (let tag of tags) {
                     if (tag.tag === this.lastTag) {
-                        tag.$el.focus();
+                        (tag.$el as HTMLElement).focus();
 
                         break;
                     }
@@ -543,7 +543,7 @@ export default class BotTable extends Vue {
             const tags = this.$refs.tagValues as BotValue[];
             for (let tag of tags) {
                 if (tag.tag === addedTag) {
-                    tag.$el.focus();
+                    (tag.$el as HTMLElement).focus();
                     // This is a super hacky way to pre-fill the first bot's tag with an @ symbol
                     if (isScript) {
                         tag.setInitialValue('@');

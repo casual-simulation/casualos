@@ -113,7 +113,7 @@ export default class BotSearch extends Vue {
     startSearch() {
         const search = <Vue>this.$refs.searchInput;
         if (search) {
-            search.$el.focus();
+            (search.$el as HTMLElement).focus();
         }
     }
 }

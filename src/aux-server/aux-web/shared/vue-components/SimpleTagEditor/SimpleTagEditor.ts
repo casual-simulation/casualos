@@ -63,14 +63,14 @@ export default class SimpleTagEditor extends Vue {
     }
 
     private _updateBot(bot: Bot, tag: string, value: any) {
-        if (!isFocused(this.$el)) {
+        if (!isFocused(this.$el as HTMLElement)) {
             return;
         }
         this._simulation.editBot(bot, tag, value);
     }
 
     private _updateValue() {
-        if (isFocused(this.$el)) {
+        if (isFocused(this.$el as HTMLElement)) {
             return;
         }
 
