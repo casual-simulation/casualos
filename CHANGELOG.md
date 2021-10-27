@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V2.0.14
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the built-in portal bots would cause all scripts to be recompiled.
+-   Fixed an issue where functions that retrieve data from portal bots (like `os.getFocusPoint()`) would always return null data.
+
 ## V2.0.13
 
 #### Date: 10/19/2021
