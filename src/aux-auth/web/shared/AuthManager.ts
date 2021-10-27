@@ -76,11 +76,8 @@ export class AuthManager {
     }
 
     async loadUserInfo() {
-        const {
-            email,
-            issuer,
-            publicAddress,
-        } = await this.magic.user.getMetadata();
+        const { email, issuer, publicAddress } =
+            await this.magic.user.getMetadata();
         this._idToken = await this.magic.user.getIdToken();
         this._email = email;
         this._userId = issuer;

@@ -127,8 +127,8 @@ export class AppManager {
             builder: JSON.stringify(builder),
             bootstrapState: bootstrap,
             forceSignedScripts: options.forceSignedScripts,
-            causalRepoConnectionProtocol: this._config
-                .causalRepoConnectionProtocol,
+            causalRepoConnectionProtocol:
+                this._config.causalRepoConnectionProtocol,
             causalRepoConnectionUrl: this._config.causalRepoConnectionUrl,
             sharedPartitionsVersion: this._config.sharedPartitionsVersion,
             vmOrigin: this._config.vmOrigin,

@@ -1,5 +1,8 @@
 # Development Setup
 
+> Note: you can [open this repository using Gitpod.io](https://gitpod.io/#https://github.com/casual-simulation/casualos)
+> for a cloud development environment that is setup with everything you need.
+
 ## Prerequisites
 
 Make sure you have all the prerequisite tools installed:

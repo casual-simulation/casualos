@@ -111,9 +111,8 @@ export default class IdePortal extends Vue {
                 }),
                 this._simulation.localEvents.subscribe((e) => {
                     if (e.type === 'go_to_tag') {
-                        const targetBot = this._simulation.helper.botsState[
-                            e.botId
-                        ];
+                        const targetBot =
+                            this._simulation.helper.botsState[e.botId];
                         if (targetBot) {
                             this.currentBot = targetBot;
                             this.currentTag = e.tag;

@@ -658,21 +658,15 @@ export class Transpiler {
         );
 
         // Delete the opening "{"
-        const absoluteValueStartBegin = createAbsolutePositionFromRelativePosition(
-            valueStartBegin,
-            doc
-        );
-        const absoluteValueStartEnd = createAbsolutePositionFromRelativePosition(
-            valueStartEnd,
-            doc
-        );
+        const absoluteValueStartBegin =
+            createAbsolutePositionFromRelativePosition(valueStartBegin, doc);
+        const absoluteValueStartEnd =
+            createAbsolutePositionFromRelativePosition(valueStartEnd, doc);
         text.delete(absoluteValueStartBegin.index, 1);
 
         // Delete the closing "}"
-        const absoluteValueEndBegin = createAbsolutePositionFromRelativePosition(
-            valueEndBegin,
-            doc
-        );
+        const absoluteValueEndBegin =
+            createAbsolutePositionFromRelativePosition(valueEndBegin, doc);
         const absoluteValueEndEnd = createAbsolutePositionFromRelativePosition(
             valueEndEnd,
             doc
@@ -818,14 +812,10 @@ export class Transpiler {
 
         if (closeElement) {
             // remove closing tag
-            const closingStartAbsolute = createAbsolutePositionFromRelativePosition(
-                closingStart,
-                doc
-            );
-            const closingEndAbsolute = createAbsolutePositionFromRelativePosition(
-                closingEnd,
-                doc
-            );
+            const closingStartAbsolute =
+                createAbsolutePositionFromRelativePosition(closingStart, doc);
+            const closingEndAbsolute =
+                createAbsolutePositionFromRelativePosition(closingEnd, doc);
             text.delete(
                 closingStartAbsolute.index,
                 closingEndAbsolute.index - closingStartAbsolute.index
@@ -933,10 +923,8 @@ export class Transpiler {
             undefined,
             true
         );
-        const functionStartAbsolute = createAbsolutePositionFromRelativePosition(
-            functionStart,
-            doc
-        );
+        const functionStartAbsolute =
+            createAbsolutePositionFromRelativePosition(functionStart, doc);
 
         text.delete(functionStartAbsolute.index, 'async '.length);
     }

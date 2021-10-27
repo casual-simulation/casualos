@@ -399,19 +399,17 @@ export function watchEditor(
         editor
     );
 
-    const modelChangeObservable = new Observable<
-        monaco.editor.IModelChangedEvent
-    >((sub) => {
-        return toSubscription(editor.onDidChangeModel((e) => sub.next(e)));
-    });
+    const modelChangeObservable =
+        new Observable<monaco.editor.IModelChangedEvent>((sub) => {
+            return toSubscription(editor.onDidChangeModel((e) => sub.next(e)));
+        });
 
-    const modelChangeLanguageObservable = new Observable<
-        monaco.editor.IModelLanguageChangedEvent
-    >((sub) => {
-        return toSubscription(
-            editor.onDidChangeModelLanguage((e) => sub.next(e))
-        );
-    });
+    const modelChangeLanguageObservable =
+        new Observable<monaco.editor.IModelLanguageChangedEvent>((sub) => {
+            return toSubscription(
+                editor.onDidChangeModelLanguage((e) => sub.next(e))
+            );
+        });
 
     const decorators = modelChangeObservable.pipe(
         delay(100),
@@ -461,7 +459,8 @@ export function watchEditor(
 
             const botDecorators = debouncedStates.pipe(
                 map((state) => {
-                    let decorators = [] as monaco.editor.IModelDeltaDecoration[];
+                    let decorators =
+                        [] as monaco.editor.IModelDeltaDecoration[];
                     let offset = info.editOffset;
                     for (let bot of getActiveObjects(state)) {
                         const cursorStart = calculateNumericalTagValue(
