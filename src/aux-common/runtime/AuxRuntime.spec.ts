@@ -187,6 +187,10 @@ describe('AuxRuntime', () => {
         }
     }
 
+    it('should share the global object with the context', () => {
+        expect(runtime.globalObject).toBe(runtime.context.global);
+    });
+
     describe('stateUpdated()', () => {
         describe('added bots', () => {
             it('should return a state update for the new bot', () => {
@@ -4010,9 +4014,8 @@ describe('AuxRuntime', () => {
                     botAdded(createBot('uuid', {}, 'tempLocal')),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['uuid']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['uuid']);
             });
 
             it('should not override previous variables', async () => {
@@ -4030,9 +4033,8 @@ describe('AuxRuntime', () => {
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
 
                 runtime.process([registerBuiltinPortal('grid')]);
 
@@ -4041,25 +4043,41 @@ describe('AuxRuntime', () => {
                 expect(allEvents).toEqual([
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+
+                const result2 = runtime.execute('return gridBot;');
+                expect(result2.result).toBe(runtime.context.state['test1']);
             });
 
-            it('should remove the global variables that were created by the runtime', () => {
+            it('should not create global variables', () => {
                 uuidMock.mockReturnValueOnce('uuid');
 
                 runtime.process([registerBuiltinPortal('grid')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['uuid']
-                );
-
-                runtime.unsubscribe();
-
                 expect(
                     Object.getOwnPropertyDescriptor(globalThis, 'gridBot')
                 ).toBeUndefined();
+            });
+
+            it('should recompile scripts when a new portal bot is registered', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            run: '@return gridBot;',
+                        }),
+                    })
+                );
+
+                const result1 = runtime.shout('run');
+
+                expect(result1.results[0]).toBeUndefined();
+
+                runtime.process([registerBuiltinPortal('grid')]);
+
+                await waitAsync();
+
+                const result2 = runtime.shout('run');
+                expect(result2.results[0]).toBe(runtime.context.state['uuid']);
             });
         });
 
@@ -4076,9 +4094,8 @@ describe('AuxRuntime', () => {
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
             });
 
             it('should override previous variables', () => {
@@ -4096,17 +4113,15 @@ describe('AuxRuntime', () => {
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
 
                 runtime.process([
                     openCustomPortal('grid', 'test2', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test2']
-                );
+                const result2 = runtime.execute('return gridBot;');
+                expect(result2.result).toBe(runtime.context.state['test2']);
             });
 
             it('should remove the variable if given no bot to use for configuration', () => {
@@ -4121,16 +4136,16 @@ describe('AuxRuntime', () => {
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
 
                 runtime.process([openCustomPortal('grid', null, 'myTag', {})]);
 
-                expect((<any>globalThis).gridBot).toBeUndefined();
+                const result2 = runtime.execute('return gridBot;');
+                expect(result2.result).toBeUndefined();
             });
 
-            it('should remove the global variables that were created by the runtime', () => {
+            it('should not create variables on globalThis', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
@@ -4141,12 +4156,6 @@ describe('AuxRuntime', () => {
                 runtime.process([
                     openCustomPortal('grid', 'test1', 'myTag', {}),
                 ]);
-
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
-
-                runtime.unsubscribe();
 
                 expect(
                     Object.getOwnPropertyDescriptor(globalThis, 'gridBot')
@@ -4180,9 +4189,8 @@ describe('AuxRuntime', () => {
                 );
                 runtime.process([registerCustomApp('grid', 'test1')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
             });
 
             it('should override previous variables', () => {
@@ -4198,15 +4206,13 @@ describe('AuxRuntime', () => {
                 );
                 runtime.process([registerCustomApp('grid', 'test1')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
 
                 runtime.process([registerCustomApp('grid', 'test2')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test2']
-                );
+                const result2 = runtime.execute('return gridBot;');
+                expect(result2.result).toBe(runtime.context.state['test2']);
             });
 
             it('should remove the variable if given no bot to use for configuration', () => {
@@ -4219,16 +4225,16 @@ describe('AuxRuntime', () => {
                 );
                 runtime.process([registerCustomApp('grid', 'test1')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
 
                 runtime.process([registerCustomApp('grid', null)]);
 
-                expect((<any>globalThis).gridBot).toBeUndefined();
+                const result2 = runtime.execute('return gridBot;');
+                expect(result2.result).toBeUndefined();
             });
 
-            it('should remove the global variables that were created by the runtime', () => {
+            it('should not create variables on globalThis', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
@@ -4237,12 +4243,6 @@ describe('AuxRuntime', () => {
                     })
                 );
                 runtime.process([registerCustomApp('grid', 'test1')]);
-
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
-
-                runtime.unsubscribe();
 
                 expect(
                     Object.getOwnPropertyDescriptor(globalThis, 'gridBot')
@@ -4272,9 +4272,8 @@ describe('AuxRuntime', () => {
                 );
                 runtime.process([defineGlobalBot('grid', 'test1')]);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
             });
 
             it('should resolve the task when the bot is defined', async () => {
@@ -4299,9 +4298,8 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(resolved).toBe(true);
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
             });
 
             it('should resolve the task even if the bot is already globally defined', async () => {
@@ -4328,9 +4326,8 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(resolved).toBe(true);
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test1']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test1']);
             });
 
             it('should be able to re-define a global bot', async () => {
@@ -4361,17 +4358,15 @@ describe('AuxRuntime', () => {
 
                 expect(resolved).toBe(true);
 
-                expect((<any>globalThis).gridBot).toBe(
-                    runtime.context.state['test2']
-                );
+                const result = runtime.execute('return gridBot;');
+                expect(result.result).toBe(runtime.context.state['test2']);
             });
 
             it('should be able to resolve the task when completed via an async result', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            abc:
-                                '@await os.requestAuthBot(); os.toast("Hello");',
+                            abc: '@await os.requestAuthBot(); os.toast("Hello");',
                         }),
                     })
                 );
@@ -4449,6 +4444,22 @@ describe('AuxRuntime', () => {
 
             expect(events).toEqual([[toast('hello')]]);
         });
+
+        const quoteCases = [
+            ['“', '”'],
+            ['‘', '’'],
+        ];
+
+        it.each(quoteCases)(
+            'should replace special quotes (%s%s) in scripts',
+            async (open, close) => {
+                runtime.execute(`os.toast(${open}hello${close})`);
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast('hello')]]);
+            }
+        );
 
         it('should emit an error if the script has a syntax error', async () => {
             runtime.execute('os.toast(');
@@ -4747,8 +4758,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            hello:
-                                '@const abc = setInterval(() => os.toast("abc"), 100); clearInterval(abc);',
+                            hello: '@const abc = setInterval(() => os.toast("abc"), 100); clearInterval(abc);',
                         }),
                     })
                 );
@@ -4788,8 +4798,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            hello:
-                                '@let abc = setTimeout(() => os.toast("abc"), 100); clearTimeout(abc);',
+                            hello: '@let abc = setTimeout(() => os.toast("abc"), 100); clearTimeout(abc);',
                         }),
                     })
                 );
@@ -4857,8 +4866,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        hello:
-                            '@Promise.resolve(0).then(() => os.toast("abc")).then(() => os.toast("abc2"))',
+                        hello: '@Promise.resolve(0).then(() => os.toast("abc")).then(() => os.toast("abc2"))',
                     }),
                 })
             );
@@ -4970,8 +4978,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        create:
-                            '@let newBot = create({ test: true }); newBot.tags.abc = 456; setTagMask(newBot, "myTag", 123);',
+                        create: '@let newBot = create({ test: true }); newBot.tags.abc = 456; setTagMask(newBot, "myTag", 123);',
                     }),
                 })
             );
@@ -5010,6 +5017,79 @@ describe('AuxRuntime', () => {
             let result = runtime.shout('test');
 
             expect(result.results).toMatchSnapshot();
+        });
+
+        describe('globalThis', () => {
+            it('should intercept changes to globalThis', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@globalThis.testValue = true;',
+                            test2: '@return globalThis.testValue;',
+                        }),
+                    })
+                );
+                runtime.shout('test');
+                let result = runtime.shout('test2');
+
+                expect('testValue' in globalThis).toBe(false);
+                expect(result.results).toEqual([true]);
+            });
+
+            it('should be able to get properties from the normal globalThis', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@return globalThis.Map;',
+                        }),
+                    })
+                );
+                let result = runtime.shout('test');
+                expect(result.results[0]).toBe(Map);
+            });
+
+            it('should not allow deleting properties from globalThis', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@delete globalThis.Map;',
+                        }),
+                    })
+                );
+                let result = runtime.shout('test');
+                expect(result).toMatchSnapshot();
+            });
+
+            it('should be able to test if a added property is in globalThis', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: `@globalThis.testValue = true; return [
+                                "testValue" in globalThis,
+                                "otherValue" in globalThis
+                            ];`,
+                        }),
+                    })
+                );
+                let result = runtime.shout('test');
+                expect(result.results[0]).toEqual([true, false]);
+            });
+
+            it('should be able to list added properties with Object.keys()', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: `@globalThis.testValue = true; return Object.keys(globalThis)`,
+                        }),
+                    })
+                );
+                let result = runtime.shout('test');
+                let keys = result.results[0];
+                keys.sort();
+                expect(keys).toEqual(
+                    [...Object.keys(globalThis), 'testValue'].sort()
+                );
+            });
         });
 
         describe('bot_added', () => {
@@ -5108,8 +5188,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            hello:
-                                '@Promise.resolve(0).then(() => create({ abc: "def" })).then(() => create({ abc: "def" }))',
+                            hello: '@Promise.resolve(0).then(() => create({ abc: "def" })).then(() => create({ abc: "def" }))',
                         }),
                     })
                 );
@@ -5197,8 +5276,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            create:
-                                '@create({ abc: "@os.toast(`Hi`);" }); shout("abc");',
+                            create: '@create({ abc: "@os.toast(`Hi`);" }); shout("abc");',
                         }),
                     })
                 );
@@ -5224,8 +5302,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            create:
-                                '@let created = create({ abc: "@os.toast(`Hi`);" }); whisper(created, "abc");',
+                            create: '@let created = create({ abc: "@os.toast(`Hi`);" }); whisper(created, "abc");',
                         }),
                     })
                 );
@@ -5280,8 +5357,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            create:
-                                '@await testPromise; let created = create({ abc: "@os.toast(`Hi`);" }); whisper(created, "abc");',
+                            create: '@await testPromise; let created = create({ abc: "@os.toast(`Hi`);" }); whisper(created, "abc");',
                         }),
                     })
                 );
@@ -5326,8 +5402,7 @@ describe('AuxRuntime', () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
-                                hello:
-                                    '@setTimeout(() => create({ abc: "def" }), 100)',
+                                hello: '@setTimeout(() => create({ abc: "def" }), 100)',
                             }),
                         })
                     );
@@ -5358,8 +5433,7 @@ describe('AuxRuntime', () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
-                                hello:
-                                    '@setInterval(() => create({ abc: "def" }), 100)',
+                                hello: '@setInterval(() => create({ abc: "def" }), 100)',
                             }),
                         })
                     );
@@ -5396,8 +5470,7 @@ describe('AuxRuntime', () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
-                                hello:
-                                    '@setTimeout(() => create({ abc: "def" }), 100)',
+                                hello: '@setTimeout(() => create({ abc: "def" }), 100)',
                             }),
                         })
                     );
@@ -5498,8 +5571,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            hello:
-                                '@Promise.resolve(0).then(() => destroy("test2")).then(() => destroy("test3"))',
+                            hello: '@Promise.resolve(0).then(() => destroy("test2")).then(() => destroy("test3"))',
                         }),
                         test2: createBot('test2'),
                         test3: createBot('test3'),
@@ -5535,8 +5607,7 @@ describe('AuxRuntime', () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
-                                hello:
-                                    '@setInterval(() => destroy("test2"), 100)',
+                                hello: '@setInterval(() => destroy("test2"), 100)',
                             }),
                             test2: createBot('test2'),
                             test3: createBot('test3'),
@@ -5558,8 +5629,7 @@ describe('AuxRuntime', () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
-                                hello:
-                                    '@setTimeout(() => destroy("test2"), 100)',
+                                hello: '@setTimeout(() => destroy("test2"), 100)',
                             }),
                             test2: createBot('test2'),
                             test3: createBot('test3'),
@@ -5847,8 +5917,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            hello:
-                                '@Promise.resolve(0).then(() => tags.hit = 1).then(() => tags.hit = 2)',
+                            hello: '@Promise.resolve(0).then(() => tags.hit = 1).then(() => tags.hit = 2)',
                         }),
                     })
                 );
@@ -6016,8 +6085,7 @@ describe('AuxRuntime', () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
-                                hello:
-                                    '@setInterval(() => tags.count += 1, 100)',
+                                hello: '@setInterval(() => tags.count += 1, 100)',
                                 count: 0,
                             }),
                         })
@@ -6056,8 +6124,7 @@ describe('AuxRuntime', () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
-                                hello:
-                                    '@setTimeout(() => tags.hit = true, 100)',
+                                hello: '@setTimeout(() => tags.hit = true, 100)',
                             }),
                         })
                     );
@@ -6934,7 +7001,9 @@ describe('AuxRuntime', () => {
         });
 
         it('should use real UUIDs when specified', () => {
-            uuidMock.mockReturnValueOnce('myUUID');
+            uuidMock
+                .mockReturnValueOnce('configBotId')
+                .mockReturnValueOnce('myUUID');
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
@@ -7076,6 +7145,209 @@ describe('AuxRuntime', () => {
                     error: new Error('abc'),
                 },
             ]);
+        });
+
+        it('should make async listeners synchronous by default', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@await 123; throw new Error("abc")',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let errors = result.results[0];
+            expect(errors).toEqual([
+                {
+                    bot: expect.any(Object),
+                    tag: 'test',
+                    error: new Error('abc'),
+                },
+            ]);
+        });
+
+        it('should allow async listeners if specified', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@await 123; throw new Error("abc")',
+                        test: `@let d = os.createDebugger({ allowAsynchronousScripts: true }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let errors = result.results[0];
+
+            // error does not get listed because it doesn't get caught by d.shout()
+            // because it is wrapped in a promise
+            expect(errors).toEqual([]);
+        });
+
+        it('should define variables for builtin portals', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@gridPortalBot.tags.hit = true;',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            runtime.process([registerBuiltinPortal('gridPortal')]);
+
+            const result = runtime.shout('test');
+            let actions = result.results[0];
+
+            expect(actions).toEqual([
+                botAdded(
+                    createBot('uuid-2', {
+                        test: '@gridPortalBot.tags.hit = true;',
+                    })
+                ),
+                botUpdated('uuid-1', {
+                    tags: {
+                        hit: true,
+                    },
+                }),
+            ]);
+        });
+
+        it('should not define variables for custom portals', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@tags.hasBot = typeof testPortalBot !== "undefined";',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            runtime.process([defineGlobalBot('testPortal', 'test')]);
+
+            const result = runtime.shout('test');
+            let actions = result.results[0];
+
+            expect(actions).toEqual([
+                botAdded(
+                    createBot('uuid-1', {
+                        hasBot: false,
+                        test: '@tags.hasBot = typeof testPortalBot !== "undefined";',
+                    })
+                ),
+            ]);
+        });
+
+        it('should define a configBot', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@configBot.tags.hit = true;',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let actions = result.results[0];
+
+            expect(actions).toEqual([
+                botAdded(
+                    createBot('uuid-1', {
+                        test: '@configBot.tags.hit = true;',
+                    })
+                ),
+                botUpdated('uuid-0', {
+                    tags: {
+                        hit: true,
+                    },
+                }),
+            ]);
+        });
+
+        it('should be able to create the configBot with specific tags', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@action.perform(configBot.tags.abc)',
+                        test: `@let d = os.createDebugger({
+                            configBot: {
+                                abc: 'def'
+                            }
+                        }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let actions = result.results[0];
+
+            expect(actions).toEqual([
+                botAdded(
+                    createBot('uuid-1', {
+                        test: '@action.perform(configBot.tags.abc)',
+                    })
+                ),
+                'def',
+            ]);
+        });
+
+        it('should be able to create the configBot with another bot', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    other: createBot('other', {
+                        abc: 'def',
+                    }),
+                    test: createBot('test', {
+                        error: '@action.perform(configBot.tags.abc)',
+                        test: `@let d = os.createDebugger({
+                            configBot: getBot('id', 'other')
+                        }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            let actions = result.results[0];
+
+            expect(actions).toEqual([
+                botAdded(
+                    createBot('uuid-1', {
+                        test: '@action.perform(configBot.tags.abc)',
+                    })
+                ),
+                'def',
+            ]);
+        });
+
+        it('should allow setting globalThis variables without affecting everything else', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@globalThis.testValue = 123;',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return globalThis.testValue;`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            expect(result.results[0]).toBeUndefined();
+        });
+
+        it('should allow defining globalThis properties without affecting everything else', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@Object.defineProperty(globalThis, "testValue", { value: 42, writable: false });',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return globalThis.testValue;`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            expect(result.results[0]).toBeUndefined();
         });
     });
 });
@@ -7641,8 +7913,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "hasCreator", creatorBot !== null)',
+                        test: '@setTag(this, "hasCreator", creatorBot !== null)',
                     },
                 },
                 thatBot: {
@@ -7673,8 +7944,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         creator: 'none',
-                        test:
-                            '@setTag(this, "hasCreator", creatorBot !== null)',
+                        test: '@setTag(this, "hasCreator", creatorBot !== null)',
                     },
                 },
                 thatBot: {
@@ -7969,8 +8239,7 @@ describe('original action tests', () => {
                 tags: {
                     _position: { x: 0, y: 0, z: 0 },
                     _workspace: 'abc',
-                    abcdef:
-                        '@setTag(this, "#val", 10); setTag(this, "#nested.value", true)',
+                    abcdef: '@setTag(this, "#val", 10); setTag(this, "#nested.value", true)',
                 },
             },
         };
@@ -8691,8 +8960,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@that[0].tags.hi = "changed"; this.tags.l = that.length',
+                        test: '@that[0].tags.hi = "changed"; this.tags.l = that.length',
                     },
                 },
                 otherBot: {
@@ -9138,8 +9406,7 @@ describe('original action tests', () => {
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        abcdef:
-                            '@let o = { other: getBot("#name", "other") }; shout("sayHello", o)',
+                        abcdef: '@let o = { other: getBot("#name", "other") }; shout("sayHello", o)',
                         sayHello: '@setTag(that.other, "#hello", "test")',
                     },
                 },
@@ -9199,8 +9466,7 @@ describe('original action tests', () => {
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        abcdef:
-                            '@shout("sayHello", getBot("#name", "other")); setTag(this, "#value", getTag(getBot("#name", "other"), "#hello"))',
+                        abcdef: '@shout("sayHello", getBot("#name", "other")); setTag(this, "#value", getTag(getBot("#name", "other"), "#hello"))',
                         sayHello: '@setTag(that, "#hello", "test")',
                     },
                 },
@@ -9238,8 +9504,7 @@ describe('original action tests', () => {
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        abcdef:
-                            '@let results = shout("sayHello", "test"); setTag(this, "result", results);',
+                        abcdef: '@let results = shout("sayHello", "test"); setTag(this, "result", results);',
                         sayHello: '@return "Wrong, " + that;',
                     },
                 },
@@ -9451,8 +9716,7 @@ describe('original action tests', () => {
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        abcdef:
-                            '@let results = whisper(["bBot", "aBot"], "sayHello", "test"); setTag(this, "result", results);',
+                        abcdef: '@let results = whisper(["bBot", "aBot"], "sayHello", "test"); setTag(this, "result", results);',
                         sayHello: '@return "Wrong, " + that',
                     },
                 },
@@ -9588,8 +9852,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        create:
-                            '@let newBot = create({ creator: getID(this) }, { stay: "def", "leaveX": 0, "leaveY": 0 }); removeTags(newBot, "leave");',
+                        create: '@let newBot = create({ creator: getID(this) }, { stay: "def", "leaveX": 0, "leaveY": 0 }); removeTags(newBot, "leave");',
                     },
                 },
             };
@@ -9633,8 +9896,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        create:
-                            '@let bots = getBots("abc", true); removeTags(bots, "abc");',
+                        create: '@let bots = getBots("abc", true); removeTags(bots, "abc");',
                     },
                 },
             };
@@ -10102,8 +10364,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "depth", os.getDimensionalDepth("dimension"))',
+                        test: '@setTag(this, "depth", os.getDimensionalDepth("dimension"))',
                     },
                 },
                 userBot: {
@@ -10137,8 +10398,7 @@ describe('original action tests', () => {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test:
-                                '@setTag(this, "depth", os.getDimensionalDepth("dimension"))',
+                            test: '@setTag(this, "depth", os.getDimensionalDepth("dimension"))',
                         },
                     },
                     userBot: {
@@ -10173,8 +10433,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "depth", os.getDimensionalDepth("dimension"))',
+                        test: '@setTag(this, "depth", os.getDimensionalDepth("dimension"))',
                     },
                 },
                 userBot: {
@@ -10248,8 +10507,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@applyMod(this, { abc: "def", ghi: true, num: 1 })',
+                        test: '@applyMod(this, { abc: "def", ghi: true, num: 1 })',
                     },
                 },
             };
@@ -10275,8 +10533,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@applyMod(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
+                        test: '@applyMod(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
                     },
                 },
             };
@@ -10303,8 +10560,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         abc: 123,
-                        test:
-                            '@applyMod(this, { abc: "def", ghi: true, num: 1 }); applyMod(this, { "abc": getTag(this, "#abc") })',
+                        test: '@applyMod(this, { abc: "def", ghi: true, num: 1 }); applyMod(this, { "abc": getTag(this, "#abc") })',
                     },
                 },
             };
@@ -10332,8 +10588,7 @@ describe('original action tests', () => {
                     tags: {
                         abc: 123,
                         onModDrop: '@setTag(this, "#diffed", true)',
-                        test:
-                            '@applyMod(this, { abc: "def", ghi: true, num: 1 });',
+                        test: '@applyMod(this, { abc: "def", ghi: true, num: 1 });',
                     },
                 },
             };
@@ -10485,8 +10740,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#dimension", os.getMenuDimension())',
+                        test: '@setTag(this, "#dimension", os.getMenuDimension())',
                     },
                 },
                 userBot: {
@@ -10714,8 +10968,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@os.tweenTo("test", undefined, undefined, undefined, 10)',
+                        test: '@os.tweenTo("test", undefined, undefined, undefined, 10)',
                     },
                 },
             };
@@ -11054,8 +11307,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@os.downloadBots(getBots(inDimension("abc")), "test")',
+                        test: '@os.downloadBots(getBots(inDimension("abc")), "test")',
                     },
                 },
                 funBot: {
@@ -11099,8 +11351,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@os.downloadBots(getBots(inDimension("abc")), "test.aux")',
+                        test: '@os.downloadBots(getBots(inDimension("abc")), "test.aux")',
                     },
                 },
                 funBot: {
@@ -11658,8 +11909,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#inDimension", os.isInDimension("dimension"))',
+                        test: '@setTag(this, "#inDimension", os.isInDimension("dimension"))',
                     },
                 },
                 userBot: {
@@ -11689,8 +11939,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#inDimension", os.isInDimension("abc"))',
+                        test: '@setTag(this, "#inDimension", os.isInDimension("abc"))',
                     },
                 },
                 userBot: {
@@ -11720,8 +11969,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#inDimension", os.isInDimension("abc"))',
+                        test: '@setTag(this, "#inDimension", os.isInDimension("abc"))',
                     },
                 },
                 userBot: {
@@ -11751,8 +11999,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#dimension", os.getCurrentDimension())',
+                        test: '@setTag(this, "#dimension", os.getCurrentDimension())',
                     },
                 },
                 userBot: {
@@ -11782,8 +12029,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#dimension", os.getCurrentDimension())',
+                        test: '@setTag(this, "#dimension", os.getCurrentDimension())',
                     },
                 },
                 userBot: {
@@ -11813,8 +12059,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#dimension", os.getCurrentServer())',
+                        test: '@setTag(this, "#dimension", os.getCurrentServer())',
                     },
                 },
                 userBot: {
@@ -11844,8 +12089,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#dimension", os.getCurrentServer())',
+                        test: '@setTag(this, "#dimension", os.getCurrentServer())',
                     },
                 },
                 userBot: {
@@ -11878,8 +12122,7 @@ describe('original action tests', () => {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test:
-                                '@setTag(this, "#dimension", os.getCurrentServer())',
+                            test: '@setTag(this, "#dimension", os.getCurrentServer())',
                         },
                     },
                     userBot: {
@@ -11912,8 +12155,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#dimension", os.getCurrentInst())',
+                        test: '@setTag(this, "#dimension", os.getCurrentInst())',
                     },
                 },
                 userBot: {
@@ -11943,8 +12185,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#dimension", os.getCurrentInst())',
+                        test: '@setTag(this, "#dimension", os.getCurrentInst())',
                     },
                 },
                 userBot: {
@@ -11977,8 +12218,7 @@ describe('original action tests', () => {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test:
-                                '@setTag(this, "#dimension", os.getCurrentInst())',
+                            test: '@setTag(this, "#dimension", os.getCurrentInst())',
                         },
                     },
                     userBot: {
@@ -12103,8 +12343,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@os.showInputForTag("test", "##abc"); os.showInputForTag("test", "#abc")',
+                        test: '@os.showInputForTag("test", "##abc"); os.showInputForTag("test", "#abc")',
                     },
                 },
             };
@@ -12125,8 +12364,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@os.showInputForTag("test", "abc", { backgroundColor: "red", foregroundColor: "green" })',
+                        test: '@os.showInputForTag("test", "abc", { backgroundColor: "red", foregroundColor: "green" })',
                     },
                 },
             };
@@ -12249,8 +12487,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@applyMod(this, getMod(getBot("#name", "bob"), "val", /test\\..+/))',
+                        test: '@applyMod(this, getMod(getBot("#name", "bob"), "val", /test\\..+/))',
                     },
                 },
                 otherBot: {
@@ -12288,8 +12525,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@applyMod(this, getMod(getBots("name", "bob").first()))',
+                        test: '@applyMod(this, getMod(getBots("name", "bob").first()))',
                     },
                 },
                 otherBot: {
@@ -12329,8 +12565,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@applyMod(this, getMod({abc: true, val: 123}, "val"))',
+                        test: '@applyMod(this, getMod({abc: true, val: 123}, "val"))',
                     },
                 },
             };
@@ -12441,8 +12676,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#name", "bob"); setTag(this, "#abc", getTag(this, "#name"))',
+                        test: '@setTag(this, "#name", "bob"); setTag(this, "#abc", getTag(this, "#name"))',
                     },
                 },
             };
@@ -12712,8 +12946,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@server.backupAsDownload({ username: "abc", device: "123", session: "def" })',
+                        test: '@server.backupAsDownload({ username: "abc", device: "123", session: "def" })',
                     },
                 },
             };

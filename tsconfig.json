@@ -16,6 +16,8 @@
     "files": [],
     "references": [
         { "path": "./src/crypto" },
+        { "path": "./src/aux-server" },
+        { "path": "./src/aux-auth" },
         { "path": "./src/aux-common" },
         { "path": "./src/aux-components" },
         { "path": "./src/aux-vm" },
@@ -33,6 +35,7 @@
         { "path": "./src/crypto-node" },
         { "path": "./src/stacktrace" },
         { "path": "./src/tunnel" },
-        { "path": "./src/undom" }
+        { "path": "./src/undom" },
+        { "path": "./src/fast-json-stable-stringify" }
     ]
 }

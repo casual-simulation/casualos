@@ -1,5 +1,8 @@
 # Development Setup
 
+> Note: you can [open this repository using Gitpod.io](https://gitpod.io/#https://github.com/casual-simulation/casualos)
+> for a cloud development environment that is setup with everything you need.
+
 ## Prerequisites
 
 Make sure you have all the prerequisite tools installed:
@@ -50,11 +53,11 @@ Most of them are NPM scripts, so they're easy to run.
 
 -   Build & Run in Watch Mode
     -   `npm run watch`
-    -   This will trigger webpack to start in watch mode and run nodemon.
+    -   This will trigger Vite to start in watch mode and run nodemon.
     -   When ready, the server will be available at http://localhost:3000.
 -   Build in Production Mode
     -   `npm run build`
-    -   This will trigger Webpack in production mode.
+    -   This will trigger Vite in production mode.
     -   The output files will be in the `dist` folders of each project.
 -   Run tests In Watch Mode
     -   `npm run test:watch`
@@ -159,25 +162,9 @@ Here's a list of the tools and packages that we're using to build CasualOS.
 
 -   Dev tools
     -   [TypeScript](https://github.com/Microsoft/TypeScript) for type checking.
-    -   [Webpack](https://webpack.js.org/) for bundling assets.
-        -   [webpack-merge](https://github.com/survivejs/webpack-merge) for dev/production configs.
-        -   Loaders
-            -   [ts-loader](https://github.com/TypeStrong/ts-loader) for TypeScript integration.
-            -   [vue-loader](https://github.com/vuejs/vue-loader) for Vue.js integration.
-            -   [vue-svg-loader](https://github.com/visualfanatic/vue-svg-loader) for loading SVG files as Vue components.
-            -   [css-loader](https://github.com/webpack-contrib/css-loader) for loading CSS in .vue files.
-            -   [file-loader](https://github.com/webpack-contrib/file-loader) for loading arbitary files.
-            -   [babel-loader](https://github.com/babel/babel-loader) for transpiling ES6 features to ES5. (some of our dependencies are ES6 only)
-            -   [source-map-loader](https://github.com/webpack-contrib/source-map-loader) for loading sourcemaps from pre-compiled JS.
-        -   Plugins
-            -   [workbox-webpack-plugin](https://github.com/GoogleChrome/workbox/tree/v6/packages/workbox-webpack-plugin) for service worker support.
-            -   [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) for generating index.html files.
-            -   [terser-webpack-plugin](https://github.com/webpack-contrib/terser-webpack-plugin) for minifying JS.
-            -   [clean-webpack-plugin](https://github.com/johnagan/clean-webpack-plugin) for clean builds.
-            -   [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin) for splitting CSS into its own bundle.
-            -   [optimize-css-assets-webpack-plugin](https://github.com/NMFR/optimize-css-assets-webpack-plugin) for minifying CSS.
+    -   [Vite](https://vitejs.dev/) and [esbuild](https://esbuild.github.io/) for bundling assets.
     -   [Lerna](https://github.com/lerna/lerna) for managing multiple NPM packages.
-    -   [Gulp](https://gulpjs.com/) for minor tasks that Webpack doesn't handle.
+    -   [Gulp](https://gulpjs.com/) for minor tasks that Vite doesn't handle.
     -   [Jest](https://jestjs.io/) for testing.
         -   [ts-jest](https://kulshekhar.github.io/ts-jest/) for using TypeScript.
     -   [concurrently](https://github.com/kimmobrunfeldt/concurrently) for running multiple things at a time.

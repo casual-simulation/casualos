@@ -1,0 +1,69 @@
+﻿CasualOS.com Privacy Policy
+
+
+Last updated on September 27th, 2021
+
+
+1. Introduction
+
+
+We at Casual Simulation Inc. strive to respect the privacy of everyone who uses this website CasualOS.com  (www.casualos.com) and any services related to this website (“Services”). Casual Simulation Inc. is a 501(c)(3) not for profit company registered in Michigan whose address is 879 4 Mile RD NE, Grand Rapids, MI 49525 (“Casual Simulation,” “we,” “us,” or “our”). This document describes how we collect, process, and store personal data. If you are using the Services on behalf of you personally, “you” means you individually; if you represent an organization, “you” means your organization. You agree that by accessing our Services, you are agreeing to these terms. If you do not agree with these terms THEN YOU SHOULD NOT ACCESS OUR SERVICES.
+
+
+2. Personal Information
+
+
+WE DO NOT SHARE OR SELL YOUR DATA OR USER CONTENT INCLUDING ANONYMOUS DATA OR USER CONTENT. 
+
+
+If you wish to use the Services anonymously and free of charge simply launch any instance of CasualOS, create any User Content, and then download your User Content. Your anonymous usage data will not be shared or sold. 
+
+
+If you access the Services at all we reserve the collect anonymous usage data regarding your use of the Services debugging purposes and to improve the Services. WE DO NOT SHARE OR SELL THIS DATA
+
+
+You must create an account and login to publish User Content via app bundles that are not deleted every 24 hours. If you create an account we collect your name and email address and provide your name and email address the following affiliates:
+
+
+Magic.link: we use magic.link for authentication and only provide them your email. Please review magic.link’s Terms of Service (https://magic.link/legal/user-terms) for more information on how magic.link may use your data.
+
+
+Readyplayer.me: we use readyplayer.me’s avatar services to create avatars for your use. We provide readyplayer.me your name and email to do so. Please review readyplayer.me’s Terms of Service (https://drive.google.com/file/d/1ER3gBvx1UwXMDiOaZk8akzPmO6LAFfTp/view) for more information on how readyplayer.me may use your data.
+
+
+After creating an account and logging in, your User Content you publish via app bundles are stored “as is” by use of the os.publishRecord tag (https://docs.casualos.com/docs/actions/#ospublishrecordoptions). This means any unencrypted data you publish is publically available and can be accessed by anyone who discovers it. ANY ENCRYPTED DATA YOU PUBLISHED IS STORED “AS IS” AND WE DO NOT HAVE THE MEANS TO UNENCRYPT IT NOR WILL WE ATTEMPT TO. 
+
+
+We reserve the right to provide any of your data or User Content to a government or government’s lawful authorities only when mandated or compelled by law, and we may or may not notify you of this as may be required by law.
+
+
+3. Cashed Data 
+
+
+We sometimes create and utilize cashed data on your device as may be necessary, at times, to use our Services or otherwise make our Services easier to use. Cashed data is similar to Cookies in that data is stored locally on your device depending upon what portions of the Services you use.
+
+
+We will NOT use cashed data or similar technologies to:
+* identify your IP address or track you
+* store any personally identifiable information except as may be temporarily necessary to facilitate a transaction. 
+
+
+We or those who use are Services may use cashed data and similar technologies:
+* to provide you with a better experience via reduced loading times and allow for offline capability
+* to store local data on your device related to a specific experience contained within our Services
+* to allow our Services to interact with a third party social network or platform;
+* to allow a payment processor to process your payment instructions;
+* to provide you with more customized Services, for example to provide our Services in the correct language;
+* to obtain data which will allow us to understand how people are using our Services so that we can improve them.
+
+
+By accessing or using our Services you consent to our use of cashed data in accordance with this Privacy Policy. You can clear cashed data by deleting it from your device. 
+
+
+YOU ACCESS USER CREATED CONTENT AT YOUR OWN RISK AND USER CREATED CONTENT MAY TRACK YOU, PUT ANY KIND OF CASHED DATA ON YOUR DEVICE (INCLUDING MALICIOUS CODE) OR USE YOUR DATA IN OTHER WAYS WE CANNOT FORESEE OR PREVENT. 
+
+
+4. Links from our Services
+
+
+We may provide links to third party websites or services from our Services. You understand that when you click on these links any data which you provide thereafter is subject to such a third party's privacy policy and not to ours. Although we will endeavor only to link to reputable Services, we take no responsibility for the content, safety, or security of any third party Services.

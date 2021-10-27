@@ -42,6 +42,9 @@
         "src/stacktrace/**/*.d.ts": { "when": "$(basename).ts" },
         "src/tunnel/**/*.d.ts": { "when": "$(basename).ts" },
         "src/undom/**/*.d.ts": { "when": "$(basename).ts" },
+        "src/fast-json-stable-stringify/**/*.d.ts": {
+            "when": "$(basename).ts"
+        },
         "src/**/*.d.ts.map": true
     },
     "files.associations": {
@@ -53,5 +56,8 @@
     "javascript.preferences.quoteStyle": "single",
     "typescript.preferences.quoteStyle": "single",
     "workbench.colorCustomizations": {},
-    "deno.enable": false
+    "deno.enable": false,
+    "jest.autoEnable": false,
+    "typescript.tsdk": "node_modules\\typescript\\lib",
+    "typescript.tsserver.maxTsServerMemory": 4096
 }

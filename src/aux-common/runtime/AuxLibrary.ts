@@ -3,6 +3,8 @@ import {
     AsyncTask,
     BotTimer,
     TimeoutOrIntervalTimer,
+    DEBUG_STRING,
+    debugStringifyFunction,
 } from './AuxGlobalContext';
 import {
     hasValue,
@@ -269,7 +271,7 @@ import {
     getEmbeddedBase64FromPdf,
 } from './Utils';
 import { sha256 as hashSha256, sha512 as hashSha512, hmac } from 'hash.js';
-import stableStringify from 'fast-json-stable-stringify';
+import stableStringify from '@casual-simulation/fast-json-stable-stringify';
 import {
     encrypt as realEncrypt,
     decrypt as realDecrypt,
@@ -515,10 +517,12 @@ export interface AnimateTagFunctionOptions {
 export interface BotFilterFunction {
     (bot: Bot): boolean;
     sort?: (bot: Bot) => any;
+    [DEBUG_STRING]?: string;
 }
 
 export interface RecordFilter {
     recordFilter: true;
+    [DEBUG_STRING]?: string;
 }
 
 export interface AuthIdRecordFilter extends RecordFilter {
@@ -527,6 +531,7 @@ export interface AuthIdRecordFilter extends RecordFilter {
 
 export interface SpaceFilter extends BotFilterFunction, RecordFilter {
     space: string;
+    toJSON: () => RecordFilter;
 }
 
 export interface AddressRecordFilter extends RecordFilter {
@@ -543,6 +548,7 @@ export interface PrefixRecordFilter extends RecordFilter {
 
 export interface IDRecordFilter extends BotFilterFunction, RecordFilter {
     id: string;
+    toJSON: () => RecordFilter;
 }
 
 export type RecordFilters =
@@ -689,6 +695,37 @@ export interface AuxDebuggerOptions {
      * Whether to use "real" UUIDs instead of predictable ones.
      */
     useRealUUIDs: boolean;
+
+    /**
+     * Whether to allow scripts to be asynchronous.
+     * If false, then all scripts will be forced to be synchronous.
+     * Defaults to false.
+     */
+    allowAsynchronousScripts: boolean;
+
+    /**
+     * The data that the configBot should be created from.
+     * Can be a mod or another bot.
+     */
+    configBot: Bot | BotTags;
+}
+
+export interface MaskableFunction {
+    mask(...args: any[]): MaskedFunction;
+}
+
+export interface MaskedFunction {
+    returns(value: any): void;
+}
+
+export interface WebhookInterface extends MaskableFunction {
+    (options: WebhookOptions): void;
+    post: ((
+        url: string,
+        data?: any,
+        options?: WebhookOptions
+    ) => Promise<any>) &
+        MaskableFunction;
 }
 
 /**
@@ -709,6 +746,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             data: data,
         });
     };
+
+    const webhookFunc = makeMockableFunction(webhook, 'webhook');
+    webhookFunc.post = makeMockableFunction(webhook.post, 'webhook.post');
 
     return {
         api: {
@@ -765,7 +805,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             clearAnimations,
 
             // TODO: Remove deprecated functions
-            webhook,
+            webhook: <WebhookInterface>(<any>webhookFunc),
             sleep,
 
             __energyCheck,
@@ -773,6 +813,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             clearInterval,
             clearWatchBot,
             clearWatchPortal,
+            assert,
+            assertEqual,
 
             html,
 
@@ -835,7 +877,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPortalDimension,
                 getDimensionalDepth,
                 showInputForTag,
-                showInput,
+                showInput: makeMockableFunction(showInput, 'os.showInput'),
                 goToDimension,
                 goToURL,
                 openURL,
@@ -873,11 +915,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 unregisterApp,
                 compileApp: setAppContent,
                 requestAuthBot,
-                requestPermanentAuthToken,
+                requestPermanentAuthToken: makeMockableFunction(
+                    requestPermanentAuthToken,
+                    'os.requestPermanentAuthToken'
+                ),
 
-                publishRecord,
-                getRecords,
-                destroyRecord,
+                publishRecord: makeMockableFunction(
+                    publishRecord,
+                    'os.publishRecord'
+                ),
+                getRecords: makeMockableFunction(getRecords, 'os.getRecords'),
+                destroyRecord: makeMockableFunction(
+                    destroyRecord,
+                    'os.destroyRecord'
+                ),
 
                 setupInst: setupServer,
                 remotes,
@@ -1044,15 +1095,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             },
 
             web: {
-                get: webGet,
-                post: webPost,
-                hook: webhook,
+                get: makeMockableFunction(webGet, 'web.get'),
+                post: makeMockableFunction(webPost, 'web.post'),
+                hook: makeMockableFunction(webhook, 'web.hook'),
             },
         },
 
         tagSpecificApi: {
-            create: (options: TagSpecificApiOptions) => (...args: any[]) =>
-                create(options.bot?.id, ...args),
+            create:
+                (options: TagSpecificApiOptions) =>
+                (...args: any[]) =>
+                    create(options.bot?.id, ...args),
             setTimeout: botTimer('timeout', setTimeout, true),
             setInterval: botTimer('interval', setInterval, false),
             watchPortal: watchPortalBots(),
@@ -1165,6 +1218,46 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     function clearWatchPortal(id: number) {
         context.cancelAndRemoveTimers(id, 'watch_portal');
+    }
+
+    /**
+     * Asserts that the given condition is true.
+     * Throws an error if the condition is not true.
+     * @param condition The condition to check.
+     * @param message The message to use in the error if the condition is not true.
+     */
+    function assert(condition: boolean, message?: string) {
+        if (!condition) {
+            if (hasValue(message)) {
+                throw new Error('Assertion failed. ' + message);
+            } else {
+                throw new Error('Assertion failed.');
+            }
+        }
+    }
+
+    function getAssertionValue(value: any) {
+        if (value instanceof Error) {
+            return value.toString();
+        }
+        return value;
+    }
+
+    /**
+     * Asserts that the given values contain the same data.
+     * Throws an error if they are not equal.
+     * @param first The first value to test.
+     * @param second The second value to test.
+     */
+    function assertEqual(first: any, second: any) {
+        const json = getPrettyJSON(getAssertionValue(first));
+        const json2 = getPrettyJSON(getAssertionValue(second));
+
+        if (json !== json2) {
+            throw new Error(
+                `Assertion failed.\n\nExpected: ${json2}\nReceived: ${json}`
+            );
+        }
     }
 
     /**
@@ -1378,6 +1471,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         filter.recordFilter = true;
         filter.id = id;
+        filter.toJSON = () => {
+            return {
+                recordFilter: true,
+                id: id,
+            };
+        };
+        filter[DEBUG_STRING] = debugStringifyFunction('byID', [id]);
 
         return filter;
     }
@@ -1506,6 +1606,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let func = byTag(BOT_SPACE_TAG, space) as SpaceFilter;
         func.recordFilter = true;
         func.space = space;
+        func.toJSON = () => {
+            return {
+                recordFilter: true,
+                space: space,
+            };
+        };
+        func[DEBUG_STRING] = debugStringifyFunction('bySpace', [space]);
         return func;
     }
 
@@ -1560,6 +1667,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return {
             recordFilter: true,
             authID,
+            [DEBUG_STRING]: debugStringifyFunction('byAuthID', [authID]),
         };
     }
 
@@ -1571,6 +1679,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return {
             recordFilter: true,
             address,
+            [DEBUG_STRING]: debugStringifyFunction('byAddress', [address]),
         };
     }
 
@@ -1582,6 +1691,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return {
             recordFilter: true,
             authToken: token,
+            [DEBUG_STRING]: debugStringifyFunction('withAuthToken', [token]),
         };
     }
 
@@ -1593,6 +1703,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return {
             recordFilter: true,
             prefix,
+            [DEBUG_STRING]: debugStringifyFunction('byPrefix', [prefix]),
         };
     }
 
@@ -1638,10 +1749,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param data The data.
      */
     function getJSON(data: any): string {
-        if (hasValue(data[ORIGINAL_OBJECT])) {
-            return JSON.stringify(data[ORIGINAL_OBJECT]);
+        if (hasValue(data?.[ORIGINAL_OBJECT])) {
+            return stableStringify(data[ORIGINAL_OBJECT]);
         }
-        return JSON.stringify(data);
+        return stableStringify(data);
+    }
+
+    /**
+     * Gets JSON for the given data.
+     * @param data The data.
+     */
+    function getPrettyJSON(data: any): string {
+        if (hasValue(data?.[ORIGINAL_OBJECT])) {
+            return stableStringify(data[ORIGINAL_OBJECT], { space: 2 });
+        }
+        return stableStringify(data, { space: 2 });
     }
 
     // Actions
@@ -2761,7 +2883,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const space = recordDefinition.space ?? DEFAULT_RECORD_SPACE;
         const token =
             recordDefinition.authToken ??
-            (<any>globalThis).authBot?.tags?.authToken;
+            context.global.authBot?.tags?.authToken;
 
         if (!hasValue(token)) {
             throw new Error('authToken is required when there is no authBot.');
@@ -2793,10 +2915,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getRecords(
         ...filters: RecordFilters[]
     ): Promise<GetRecordsResult> {
-        let token = (<any>globalThis).authBot?.tags?.authToken ?? null;
+        let token = context.global.authBot?.tags?.authToken ?? null;
         let address: string;
         let prefix: string;
-        let authID: string = (<any>globalThis).authBot?.id ?? null;
+        let authID: string = context.global.authBot?.id ?? null;
         let id: string;
         let space: RecordSpace = 'tempRestricted';
 
@@ -2893,7 +3015,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const space = record.space;
 
         const token =
-            record.authToken ?? (<any>globalThis).authBot?.tags?.authToken;
+            record.authToken ?? context.global.authBot?.tags?.authToken;
 
         if (!hasValue(token)) {
             throw new Error('authToken is required when there is no authBot.');
@@ -4126,6 +4248,32 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Creates a new function that is mockable based on if the context is currently mocking async actions.
+     * @param func The function to mock.
+     * @param functionName The name of the function.
+     * @returns
+     */
+    function makeMockableFunction<T>(
+        func: T,
+        functionName: string
+    ): T & MaskableFunction {
+        if (context.mockAsyncActions) {
+            let mock: any = (...args: any[]) => {
+                return context.getNextMockReturn(func, functionName, args);
+            };
+            mock.mask = (...args: any) => ({
+                returns(value: any) {
+                    context.setMockReturn(func, args, value);
+                },
+            });
+            mock[ORIGINAL_OBJECT] = func;
+            return mock;
+        } else {
+            return func as any;
+        }
+    }
+
+    /**
      * Sends an HTTP request based on the given options.
      * @param options The options that should be used to send the webhook.
      */
@@ -4332,11 +4480,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             ? getBots('id', bot)
             : [bot];
 
-        let tags = (!hasValue(tag)
-            ? null
-            : Array.isArray(tag)
-            ? tag
-            : [tag]) as string[];
+        let tags = (
+            !hasValue(tag) ? null : Array.isArray(tag) ? tag : [tag]
+        ) as string[];
 
         let groups = [] as string[];
         for (let bot of bots) {
@@ -4823,9 +4969,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the position offset for the given bot anchor point.
      * @param anchorPoint The anchor point to get the offset for.
      */
-    function getAnchorPointOffset(
-        anchorPoint: BotAnchorPoint
-    ): { x: number; y: number; z: number } {
+    function getAnchorPointOffset(anchorPoint: BotAnchorPoint): {
+        x: number;
+        y: number;
+        z: number;
+    } {
         const value = calculateAnchorPoint(anchorPoint);
         const offset = calculateAnchorPointOffset(value);
         return {
@@ -6051,10 +6199,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the 3D position of the player's camera.
      * @param portal The portal that the camera position should be retrieved for.
      */
-    function getCameraPosition(
-        portal: 'grid' | 'miniGrid' = 'grid'
-    ): { x: number; y: number; z: number } {
-        const bot = (<any>globalThis)[`${portal}PortalBot`];
+    function getCameraPosition(portal: 'grid' | 'miniGrid' = 'grid'): {
+        x: number;
+        y: number;
+        z: number;
+    } {
+        const bot = context.global[`${portal}PortalBot`];
         if (!bot) {
             return {
                 x: NaN,
@@ -6074,10 +6224,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the 3D rotation of the player's camera.
      * @param portal The portal that the camera rotation should be retrieved for.
      */
-    function getCameraRotation(
-        portal: 'grid' | 'miniGrid' = 'grid'
-    ): { x: number; y: number; z: number } {
-        const bot = (<any>globalThis)[`${portal}PortalBot`];
+    function getCameraRotation(portal: 'grid' | 'miniGrid' = 'grid'): {
+        x: number;
+        y: number;
+        z: number;
+    } {
+        const bot = context.global[`${portal}PortalBot`];
         if (!bot) {
             return {
                 x: NaN,
@@ -6097,10 +6249,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the 3D point that the player's camera is focusing on.
      * @param portal The portal that the camera focus point should be retrieved for.
      */
-    function getFocusPoint(
-        portal: 'grid' | 'miniGrid' = 'grid'
-    ): { x: number; y: number; z: number } {
-        const bot = (<any>globalThis)[`${portal}PortalBot`];
+    function getFocusPoint(portal: 'grid' | 'miniGrid' = 'grid'): {
+        x: number;
+        y: number;
+        z: number;
+    } {
+        const bot = context.global[`${portal}PortalBot`];
         if (!bot) {
             return {
                 x: NaN,
@@ -6338,9 +6492,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return promise;
     }
 
-    function getDownloadState(
-        state: BotsState
-    ): { version: number; state: BotsState } {
+    function getDownloadState(state: BotsState): {
+        version: number;
+        state: BotsState;
+    } {
         return {
             version: 1,
             state,

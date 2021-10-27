@@ -165,16 +165,19 @@ export class AuxHelper extends BaseHelper<Bot> {
             const bots = getPartitionState(partition);
             this._partitionStates.set(key, bots);
 
-            const finalBots = transform<Bot, Bot>(bots, (result, value, id) => {
-                // ignore partial bots
-                // (like bots that live in another partition but have a tag mask set in this partition)
-                if (isBot(value)) {
-                    result[id] = {
-                        ...value,
-                        space: <any>key,
-                    };
+            const finalBots = transform<Bot, BotsState>(
+                bots,
+                (result, value, id) => {
+                    // ignore partial bots
+                    // (like bots that live in another partition but have a tag mask set in this partition)
+                    if (isBot(value)) {
+                        result[id] = {
+                            ...value,
+                            space: <any>key,
+                        };
+                    }
                 }
-            });
+            );
             if (!state) {
                 state = { ...finalBots };
             } else {

@@ -2,21 +2,24 @@
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "baseUrl": ".",
-        "outDir": "./dist/",
-        "paths": {
-            "vue-json-tree-view": [
-                "aux-web/shared/public/VueJsonTreeView/index.ts"
-            ],
-            "three-legacy-gltf-loader": [
-                "aux-web/shared/public/three-legacy-gltf-loader/index.d.ts"
-            ]
-        },
-        "lib": ["es2015", "es5", "dom", "webworker"]
+        "outDir": "../../temp/aux-auth/",
+        "composite": true,
+        "incremental": true,
+
+        // We need this because @magic-sdk/admin breaks our build
+        "skipLibCheck": true
     },
     "include": [
-        "./**/*",
+        "./server/**/*",
+        "./serverless/**/*",
+        "./web/**/*",
+        "./shared/**/*",
         "../aux-server/typings/*"
-        // "./node_modules/@casual-simulation/aux-common/**/*"
     ],
-    "exclude": ["node_modules"]
+    "exclude": ["**/node_modules/**", "./web/vite.config.ts"],
+    "references": [
+        { "path": "../aux-vm-browser" },
+        { "path": "../aux-components" },
+        { "path": "../aux-common" }
+    ]
 }

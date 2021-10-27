@@ -528,6 +528,12 @@ export class Text3D extends Object3D {
      */
     public sync(): Promise<void> {
         return new Promise((resolve, reject) => {
+            if (!(<any>this._mesh)._needsSync) {
+                // Resolve immediately if the mesh does not need to sync
+                // mesh.sync() will not call the given callback if it does not need to sync.
+                resolve();
+                return;
+            }
             this._mesh.sync(() => {
                 this._onSync();
                 resolve();

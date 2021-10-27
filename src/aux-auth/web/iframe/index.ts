@@ -22,7 +22,7 @@
  * SOFTWARE.
  * @license MIT
  */
-import { authManager } from '../shared/AuthManager';
+// import { authManager } from '../shared/AuthManager';
 import { expose } from 'comlink';
 import { AuthHandler } from './AuthHandler';
 import { listenForChannel } from '@casual-simulation/aux-vm-browser/html/IFrameHelpers';

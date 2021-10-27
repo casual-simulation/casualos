@@ -8,3 +8,12 @@
     margin: 0 auto;
     margin-top: 24px;
 }
+
+.terms-of-service-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.terms-of-service-error {
+    color: #c93131;
+}

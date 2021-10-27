@@ -3,12 +3,21 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Provide } from 'vue-property-decorator';
 import { authManager } from '../../shared/AuthManager';
+import { SvgIcon } from '@casual-simulation/aux-components';
+
+document.title = location.hostname;
 
 @Component({
-    components: {},
+    components: {
+        'svg-icon': SvgIcon,
+    },
 })
 export default class AuthApp extends Vue {
     showLogout: boolean;
+
+    get title() {
+        return location.hostname;
+    }
 
     created() {
         this.showLogout = false;

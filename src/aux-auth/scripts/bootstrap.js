@@ -5,6 +5,10 @@ const YAML = require('yaml');
 
 AWS.config.update({
     region: 'us-east-1',
+
+    // Dummy credentials
+    accessKeyId: 'xxxx',
+    secretAccessKey: 'xxxx',
 });
 
 const ddb = new AWS.DynamoDB({

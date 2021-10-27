@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/crypto-browser",
-    "version": "2.0.0",
+    "version": "2.0.12",
     "description": "An implemenation of @casual-simulation/crypto for web browsers.",
     "keywords": [
         "crypto"
@@ -10,7 +10,7 @@
     "license": "MIT",
     "main": "index.js",
     "types": "index.d.ts",
-    "module": "index.js",
+    "module": "index",
     "directories": {
         "lib": "."
     },
@@ -40,7 +40,7 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/crypto": "^2.0.0",
+        "@casual-simulation/crypto": "^2.0.12",
         "bowser": "^2.4.0"
     }
 }

@@ -8,9 +8,7 @@ import MonacoLoaderError from '../MonacoLoaderError/MonacoLoaderError';
 import type MonacoTagEditor from '../MonacoTagEditor/MonacoTagEditor';
 
 const MonacoAsync = () => ({
-    component: import(
-        /* webpackChunkName: "monaco-tag-editor" */ '../MonacoTagEditor/MonacoTagEditor'
-    ).catch((err) => {
+    component: import('../MonacoTagEditor/MonacoTagEditor').catch((err) => {
         console.error('Unable to load Monaco editor:', err);
         throw err;
     }),

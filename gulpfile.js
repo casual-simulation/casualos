@@ -25,6 +25,9 @@ let folders = [
     `${__dirname}/src/crypto-browser`,
     `${__dirname}/src/tunnel`,
     `${__dirname}/src/undom`,
+    `${__dirname}/src/fast-json-stable-stringify`,
+    `${__dirname}/temp/aux-auth`,
+    `${__dirname}/temp/aux-server`,
 ];
 
 let patterns = [
@@ -54,38 +57,4 @@ gulp.task('clean', function () {
 
 gulp.task('clean:cache', function () {
     return del([`${__dirname}/src/aux-server/node_modules/.cache`]);
-});
-
-gulp.task('view:web:profile', function () {
-    const projectDir = path.resolve(__dirname, 'src', 'aux-server');
-    const source = path.resolve(projectDir, 'web_bundle_stats.json');
-    const dest = path.resolve(
-        projectDir,
-        'aux-web',
-        'dist',
-        'web_bundle_stats.json'
-    );
-    fs.copyFileSync(source, dest);
-
-    const proc = childProcess.exec('webpack-bundle-analyzer ' + dest);
-    proc.stdout.pipe(process.stdout);
-    proc.stderr.pipe(process.stderr);
-    process.stdin.pipe(proc.stdin);
-});
-
-gulp.task('view:server:profile', function () {
-    const projectDir = path.resolve(__dirname, 'src', 'aux-server');
-    const source = path.resolve(projectDir, 'server_bundle_stats.json');
-    const dest = path.resolve(
-        projectDir,
-        'server',
-        'dist',
-        'server_bundle_stats.json'
-    );
-    fs.copyFileSync(source, dest);
-
-    const proc = childProcess.exec('webpack-bundle-analyzer ' + dest);
-    proc.stdout.pipe(process.stdout);
-    proc.stderr.pipe(process.stderr);
-    process.stdin.pipe(proc.stdin);
 });

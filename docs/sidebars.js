@@ -6,20 +6,18 @@
  */
 
 module.exports = {
-    docs: {
-      'Reference Documentation': [
-            'tags', 
-            { 
-                type: 'category',
-                label: 'Listen Tags',
-                items: [
-                    'listen-tags/tags',
-                    'listen-tags/variables'
-                ]
-            },
-            'actions'
-        ],
-        'Custom Executables': ['custom-executables/introduction']
-    },
+    docs: [
+        'tags',
+        'listen-tags',
+        'variables',
+        'actions',
+        {
+            type: 'category',
+            label: 'Custom Executables',
+            items: [
+                'custom-executables/introduction',
+            ]
+        }
+    ],
   };
   

@@ -64,7 +64,7 @@ export default class UploadFiles extends Vue {
         if (
             Input.isElementContainedByOrEqual(
                 <Element>event.target,
-                this.$parent.$el
+                this.$parent.$el as HTMLElement
             )
         ) {
             if (event.dataTransfer.types.indexOf('Files') >= 0) {
@@ -80,7 +80,7 @@ export default class UploadFiles extends Vue {
         if (
             Input.isElementContainedByOrEqual(
                 <Element>event.target,
-                this.$parent.$el
+                this.$parent.$el as HTMLElement
             )
         ) {
             if (event.dataTransfer.types.indexOf('Files') >= 0) {
@@ -96,7 +96,7 @@ export default class UploadFiles extends Vue {
         if (
             Input.isElementContainedByOrEqual(
                 <Element>event.target,
-                this.$parent.$el
+                this.$parent.$el as HTMLElement
             )
         ) {
             this._counter -= 1;
@@ -114,7 +114,7 @@ export default class UploadFiles extends Vue {
         if (
             Input.isElementContainedByOrEqual(
                 <Element>event.target,
-                this.$parent.$el
+                this.$parent.$el as HTMLElement
             )
         ) {
             event.preventDefault();

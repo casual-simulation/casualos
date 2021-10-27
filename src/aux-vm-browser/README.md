@@ -12,7 +12,7 @@ A set of utilities required to run an AUX in a web browser.
 npm install @casual-simulation/aux-vm-browser
 ```
 
-2. Add the `IframeEntry.ts` file to your Webpack config:
+2. Add the `WorkerEntry.js` file to your Webpack config:
 
 ```
 entry: {
@@ -22,7 +22,7 @@ entry: {
         '@casual-simulation',
         'aux-vm-browser',
         'html',
-        'IframeEntry.ts'
+        'WorkerEntry.js'
     ),
 },
 ```
@@ -44,6 +44,8 @@ new HtmlWebpackPlugin({
     filename: 'aux-vm-iframe.html',
 }),
 ```
+
+4. Ensure that `aux-vm-iframe.html` is available at the root path of the site.
 
 ## Usage
 
@@ -90,7 +92,7 @@ async function start() {
     // and we can communicate our changes to the server.
     // Note that this will not fire if we are not allowed to connect.
     // This may happen if we are not authenticated/authorized.
-    sim.connection.syncStateChanged.subscribe(synced => {
+    sim.connection.syncStateChanged.subscribe((synced) => {
         if (synced) {
             console.log("We're synced!");
 

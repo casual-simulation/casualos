@@ -13,14 +13,12 @@ import { appManager } from '../../AppManager';
 import { SubscriptionLike } from 'rxjs';
 import MiniBot from '../MiniBot/MiniBot';
 import { BotRenderer, getRenderer } from '../../scene/BotRenderer';
-import Cube from '../../public/icons/NewBot.svg';
-import CubeSearch from '../../public/icons/CubeSearch.svg';
+import { SvgIcon } from '@casual-simulation/aux-components';
 
 @Component({
     components: {
         'mini-bot': MiniBot,
-        'cube-icon': Cube,
-        'cubeSearch-icon': CubeSearch,
+        'svg-icon': SvgIcon,
     },
 })
 export default class BotSearch extends Vue {
@@ -115,7 +113,7 @@ export default class BotSearch extends Vue {
     startSearch() {
         const search = <Vue>this.$refs.searchInput;
         if (search) {
-            search.$el.focus();
+            (search.$el as HTMLElement).focus();
         }
     }
 }

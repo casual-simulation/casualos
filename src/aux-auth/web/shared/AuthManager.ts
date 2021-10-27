@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { Magic } from 'magic-sdk';
 import { Subject, BehaviorSubject, Observable } from 'rxjs';
-import { listenForChannel } from '../../../aux-vm-browser';
 import { AppMetadata } from '../../shared/AuthMetadata';
 
 const EMAIL_KEY = 'userEmail';
+const ACCEPTED_TERMS_KEY = 'acceptedTerms';
 
 // 1000 years
 const PERMANENT_TOKEN_LIFESPAN_SECONDS = 1000 * 365 * 24 * 60 * 60;
@@ -76,15 +76,13 @@ export class AuthManager {
     }
 
     async loadUserInfo() {
-        const {
-            email,
-            issuer,
-            publicAddress,
-        } = await this.magic.user.getMetadata();
+        const { email, issuer, publicAddress } =
+            await this.magic.user.getMetadata();
         this._idToken = await this.magic.user.getIdToken();
         this._email = email;
         this._userId = issuer;
 
+        this._saveAcceptedTerms(true);
         if (this._email) {
             this._saveEmail(this._email);
         }
@@ -99,16 +97,6 @@ export class AuthManager {
      */
     async isServiceAuthorized(service: string) {
         return true;
-        // try {
-        //     const response = await axios.get(
-        //         `/api/${encodeURIComponent(
-        //             this.userId
-        //         )}/services/${encodeURIComponent(service)}`
-        //     );
-        //     return !!response.data;
-        // } catch {
-        //     return false;
-        // }
     }
 
     async authorizeService(service: string) {
@@ -157,6 +145,10 @@ export class AuthManager {
         return localStorage.getItem(EMAIL_KEY);
     }
 
+    get hasAcceptedTerms(): boolean {
+        return localStorage.getItem(ACCEPTED_TERMS_KEY) === 'true';
+    }
+
     async changeEmail(newEmail: string) {
         // TODO: Handle errors
         await this.magic.user.updateEmail({
@@ -189,6 +181,14 @@ export class AuthManager {
             localStorage.setItem(EMAIL_KEY, email);
         } else {
             localStorage.removeItem(EMAIL_KEY);
+        }
+    }
+
+    private _saveAcceptedTerms(acceptedTerms: boolean) {
+        if (acceptedTerms) {
+            localStorage.setItem(ACCEPTED_TERMS_KEY, 'true');
+        } else {
+            localStorage.removeItem(ACCEPTED_TERMS_KEY);
         }
     }
 

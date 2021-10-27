@@ -3983,6 +3983,176 @@ const remotes = await os.remotes();
 os.toast("Remotes " + remotes.join(','));
 ```
 
+## Debug Actions
+
+Debug actions are actions that are either useful for automated testing/debugging or only available when run inside a debugger.
+
+### `assert(condition, message?)`
+
+Verifies that the given condition is true. If it is not, then an error is thrown with the given message.
+This function is useful for automated testing since tests should ideally throw an error if the test fails.
+It can also be useful to make sure that some important code is only run if a precondition is met.
+
+The **first paramater** is the condition that should be verified.
+
+The **second parameter** is optional and is the message that should be included in the error.
+
+#### Examples
+
+```typescript title='Assert that the tag color is "blue"'
+assert(tags.color === "blue", "The tag color is not blue!");
+```
+
+### `assertEqual(received, expected)`
+
+Verifies that the given values are equal to each other. If they are not, then an error is thrown.
+This function is useful for automated testing since tests should ideally throw an error if the test fails.
+It can also be useful to make sure that some important code is only run if a precondition is met.
+
+#### Examples
+
+```typescript title='Assert that the tag color is "blue"'
+assertEqual(tags.color, "blue");
+```
+
+```typescript title='Assert that the bot contains some specific tag values'
+assertEqual(tags, {
+    color: "blue",
+    home: true,
+    homeX: 0,
+    homeY: 0
+});
+```
+
+### `getAllActions()`
+
+Gets the list of action objects that have been performed by bots in the current debugger.
+Action objects are used by CasualOS to represent changes to bots or external effects that should be performed.
+Examples of this are <ActionLink action='create(...mods)'/>, <ActionLink action='os.toast(message, duration?)'/> and <ActionLink action='os.enableVR()'/>.
+
+This function is useful for automated testing because you can use it to validate the actions that a script has performed.
+
+Only available inside a debugger that was created using <ActionLink action='os.createDebugger(options?)'/>.
+
+#### Examples:
+
+```typescript title='Get the list of bot changes and actions that have been performed in a debugger'
+const debug = os.createDebugger();
+debug.create({
+    test: '@os.toast("Hello")'
+});
+debug.shout("test");
+
+const actions = debug.getAllActions();
+
+assertEqual(actions, [
+    {
+        type: 'add_bot',
+        id: 'uuid-1',
+        bot: {
+            id: 'uuid-1',
+            tags: {
+                test: '@os.toast("Hello")'
+            }
+        }
+    },
+    {
+        type: 'show_toast',
+        message: 'Hello',
+        duration: 2000
+    }
+]);
+```
+
+### `getCommonActions()`
+
+Gets the list of common action objects that have been performed by bots in the current debugger.
+Action objects are used by CasualOS to represent changes to bots or external effects that should be performed.
+Common actions are actions that do not immediately change bots or bot tags or masks.
+
+Examples of common actions are <ActionLink action='os.toast(message, duration?)'/> and <ActionLink action='os.enableVR()'/>.
+
+Only available inside a debugger that was created using <ActionLink action='os.createDebugger(options?)'/>.
+
+#### Examples:
+
+```typescript title='Get the list of actions that have been performed in a debugger'
+const debug = os.createDebugger();
+debug.create({
+    test: '@os.toast("Hello")'
+});
+debug.shout("test");
+
+const actions = debug.getCommonActions();
+
+assertEqual(actions, [
+    {
+        type: 'show_toast',
+        message: 'Hello',
+        duration: 2000
+    }
+]);
+```
+
+### `getBotActions()`
+
+Gets the list of bot actions that have been performed by bots in the current debugger.
+Action objects are used by CasualOS to represent changes to bots or external effects that should be performed.
+Bot actions are actions that immediately change bots or bot tags or masks.
+
+Examples of bot actions are <ActionLink action='create(...mods)'/>, <ActionLink action='destroy(bot)'/> or <ActionLink action='setTagMask(bot, tag, value, space?)'/>.
+
+Only available inside a debugger that was created using <ActionLink action='os.createDebugger(options?)'/>.
+
+#### Examples:
+
+```typescript title='Get the list of bot changes that have been performed in a debugger'
+const debug = os.createDebugger();
+debug.create({
+    test: '@os.toast("Hello")'
+});
+debug.shout("test");
+
+const actions = debug.getBotActions();
+
+assertEqual(actions, [
+    {
+        type: 'add_bot',
+        id: 'uuid-1',
+        bot: {
+            id: 'uuid-1',
+            tags: {
+                test: '@os.toast("Hello")'
+            }
+        }
+    },
+]);
+```
+
+### `getErrors()`
+
+Gets the list of errors that have occurred in the current debugger.
+Errors occur when an exceptional event happens in a script and prevents the rest of the script from executing.
+
+Debuggers capture these errors and let you inspect them afterwards.
+Only available inside a debugger that was created using <ActionLink action='os.createDebugger(options?)'/>.
+
+#### Examples:
+
+```typescript title='Get the list of errors that have happened in a debugger'
+const debug = os.createDebugger();
+debug.create({
+    test: '@throw new Error("My Error")'
+});
+debug.shout("test");
+
+const errors = debug.getErrors();
+
+assertEqual(errors.length, 1);
+assertEqual(errors[0].error, new Error("My Error"));
+assertEqual(errors[0].tag, "test");
+```
+
 ## Server Actions
 
 ### `server.backupToGithub(auth)`
@@ -4029,22 +4199,37 @@ let options: {
      * Defaults to false.
      */
     useRealUUIDs?: boolean;
+
+    /**
+     * Whether to allow scripts to be asynchronous.
+     * If false, then all scripts will be forced to be synchronous.
+     * Defaults to false.
+     * Synchronous scripts are easier to test because they don't rely on back-and-forth (two-way) communication to handle things like web.hook().
+     */
+     allowAsynchronousScripts: boolean;
+
+     /**
+     * The data that the configBot should be created from.
+     * Can be a mod or another bot.
+     */
+    configBot: Bot | BotTags;
 };
 ```
 
 #### Examples:
 
 ```typescript title='Create a debugger and copy this bot into it.'
-const debugger = os.createDebugger();
-const debuggerBot = debugger.create(thisBot);
+// Note: variables cannot be named "debugger" so we use the name "debug" instead.
+const debug = os.createDebugger();
+const debuggerBot = debug.create(thisBot);
 ```
 
 ```typescript title='Test a script in the debugger'
-const debugger = os.createDebugger();
-const debuggerBot = debugger.create({
+const debug = os.createDebugger();
+const debuggerBot = debug.create({
     test: '@tags.hit = true;'
 });
-debugger.shout('test');
+debug.shout('test');
 
 if (debuggerBot.tags.hit) {
     os.toast('Success!');
@@ -4054,14 +4239,46 @@ if (debuggerBot.tags.hit) {
 ```
 
 ```typescript title='Find out what actions a script performs'
-const debugger = os.createDebugger();
-const debuggerBot = debugger.create({
+const debug = os.createDebugger();
+const debuggerBot = debug.create({
     test: '@os.toast("hello!")'
 });
-debugger.shout('test');
+debug.shout('test');
 
-const actions = debugger.getCommonActions();
+const actions = debug.getCommonActions();
 os.toast(actions);
+```
+
+```typescript title='Create a debugger with a custom configBot'
+const debug = os.createDebugger({
+    configBot: {
+        test: '@console.log("Hello, World!");'
+    }
+});
+debug.shout('test');
+```
+
+```typescript title='Mask the web.get() function.'
+const debug = os.createDebugger();
+let url = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/The_star_formation_region_Messier_17.jpg/1200px-The_star_formation_region_Messier_17.jpg";
+const debuggerBot = debug.create({
+    url,
+    test: '@return await web.get(tags.url)'
+});
+
+debug.web.get.mask(url)
+    .returns({
+        data: 'test data',
+        status: 200
+    });
+
+const [result] = debug.shout('test');
+
+assertEqual(result, {
+    data: 'test data',
+    status: 200
+});
+os.toast("Success!");
 ```
 
 ### `server.backupAsDownload(target)`
@@ -7092,4 +7309,4 @@ const slowestTags = stats.shoutTimers.slice(0, 5).map(timer => timer.tag)
 os.toast(slowestTags.join());
 ```
 
-[listen-tag]: listen-tags/tags
+[listen-tag]: listen-tags

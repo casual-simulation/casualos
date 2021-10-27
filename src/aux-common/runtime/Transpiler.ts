@@ -1,7 +1,7 @@
 import * as Acorn from 'acorn';
 import AcornJSX from 'acorn-jsx';
-import { generate, baseGenerator } from 'astring';
-import LRU from 'lru-cache';
+import { generate, GENERATOR } from 'astring';
+import LRUCache from 'lru-cache';
 import { traverse } from 'estraverse';
 import {
     createAbsolutePositionFromRelativePosition,
@@ -63,7 +63,7 @@ export interface ObjectValueNode extends Acorn.Node {
     identifier: Acorn.Node;
 }
 
-const exJsGenerator = Object.assign({}, baseGenerator, {
+const exJsGenerator = Object.assign({}, GENERATOR, {
     ImportExpression: function (node: any, state: any) {
         state.write('import(');
         this[node.source.type](node.source, state);
@@ -110,6 +110,12 @@ export function replaceMacros(text: string) {
     return text;
 }
 
+export interface TranspilerOptions {
+    jsxFactory?: string;
+    jsxFragment?: string;
+    forceSync?: boolean;
+}
+
 /**
  * Defines a class that is able to compile code from AUX's custom JavaScript dialect
  * into pure ES6 JavaScript. Does not preserve spacing or comments.
@@ -120,15 +126,25 @@ export class Transpiler {
     private _parser: typeof Acorn.Parser;
     private _jsxFactory: string;
     private _jsxFragment: string;
-    private _cache: LRU.Cache<string, TranspilerResult>;
+    private _forceSync: boolean;
+    private _cache: LRUCache<string, TranspilerResult>;
 
-    constructor(options?: { jsxFactory?: string; jsxFragment?: string }) {
-        this._cache = new LRU<string, TranspilerResult>({
+    get forceSync() {
+        return this._forceSync;
+    }
+
+    set forceSync(value: boolean) {
+        this._forceSync = value;
+    }
+
+    constructor(options?: TranspilerOptions) {
+        this._cache = new LRUCache<string, TranspilerResult>({
             max: 1000,
         });
         this._parser = Acorn.Parser.extend(AcornJSX());
         this._jsxFactory = options?.jsxFactory ?? 'h';
         this._jsxFragment = options?.jsxFragment ?? 'Fragment';
+        this._forceSync = options?.forceSync ?? false;
     }
 
     parse(code: string): any {
@@ -261,6 +277,30 @@ export class Transpiler {
                     this._replaceJSXExpressionContainer(n, doc, text);
                 } else if (n.type === 'JSXFragment') {
                     this._replaceJSXFragment(n, doc, text);
+                } else if (
+                    this._forceSync &&
+                    n.type === 'FunctionDeclaration' &&
+                    n.async
+                ) {
+                    this._replaceAsyncFunction(n, doc, text);
+                } else if (
+                    this._forceSync &&
+                    n.type === 'ArrowFunctionExpression' &&
+                    n.async
+                ) {
+                    this._replaceAsyncFunction(n, doc, text);
+                } else if (
+                    this._forceSync &&
+                    n.type === 'FunctionExpression' &&
+                    n.async
+                ) {
+                    if (parent.type === 'Property' && parent.method) {
+                        this._replaceAsyncFunction(parent, doc, text);
+                    } else {
+                        this._replaceAsyncFunction(n, doc, text);
+                    }
+                } else if (this._forceSync && n.type === 'AwaitExpression') {
+                    this._replaceAwaitExpression(n, doc, text);
                 }
             }),
 
@@ -618,21 +658,15 @@ export class Transpiler {
         );
 
         // Delete the opening "{"
-        const absoluteValueStartBegin = createAbsolutePositionFromRelativePosition(
-            valueStartBegin,
-            doc
-        );
-        const absoluteValueStartEnd = createAbsolutePositionFromRelativePosition(
-            valueStartEnd,
-            doc
-        );
+        const absoluteValueStartBegin =
+            createAbsolutePositionFromRelativePosition(valueStartBegin, doc);
+        const absoluteValueStartEnd =
+            createAbsolutePositionFromRelativePosition(valueStartEnd, doc);
         text.delete(absoluteValueStartBegin.index, 1);
 
         // Delete the closing "}"
-        const absoluteValueEndBegin = createAbsolutePositionFromRelativePosition(
-            valueEndBegin,
-            doc
-        );
+        const absoluteValueEndBegin =
+            createAbsolutePositionFromRelativePosition(valueEndBegin, doc);
         const absoluteValueEndEnd = createAbsolutePositionFromRelativePosition(
             valueEndEnd,
             doc
@@ -778,14 +812,10 @@ export class Transpiler {
 
         if (closeElement) {
             // remove closing tag
-            const closingStartAbsolute = createAbsolutePositionFromRelativePosition(
-                closingStart,
-                doc
-            );
-            const closingEndAbsolute = createAbsolutePositionFromRelativePosition(
-                closingEnd,
-                doc
-            );
+            const closingStartAbsolute =
+                createAbsolutePositionFromRelativePosition(closingStart, doc);
+            const closingEndAbsolute =
+                createAbsolutePositionFromRelativePosition(closingEnd, doc);
             text.delete(
                 closingStartAbsolute.index,
                 closingEndAbsolute.index - closingStartAbsolute.index
@@ -880,6 +910,42 @@ export class Transpiler {
             );
             text.insert(absolute.index, '}');
         }
+    }
+
+    private _replaceAsyncFunction(node: any, doc: Doc, text: Text) {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const functionStart = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.start,
+            undefined,
+            true
+        );
+        const functionStartAbsolute =
+            createAbsolutePositionFromRelativePosition(functionStart, doc);
+
+        text.delete(functionStartAbsolute.index, 'async '.length);
+    }
+
+    private _replaceAwaitExpression(node: any, doc: Doc, text: Text) {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const keywordStart = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.start,
+            undefined,
+            true
+        );
+        const keywordStartAbsolute = createAbsolutePositionFromRelativePosition(
+            keywordStart,
+            doc
+        );
+
+        text.delete(keywordStartAbsolute.index, 'await '.length);
     }
 }
 

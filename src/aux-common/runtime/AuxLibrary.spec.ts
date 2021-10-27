@@ -10,6 +10,7 @@ import {
     MemoryGlobalContext,
     SET_INTERVAL_ANIMATION_FRAME_TIME,
     WatchBotTimer,
+    DEBUG_STRING,
 } from './AuxGlobalContext';
 import {
     toast,
@@ -266,6 +267,24 @@ describe('AuxLibrary', () => {
         ['@ symbol', '@sayHello'] as const,
         ['@ symbol and parenthesis', '@sayHello()'] as const,
     ];
+
+    describe('<mock func>.mask().returns()', () => {
+        beforeEach(() => {
+            context.mockAsyncActions = true;
+            library = createDefaultLibrary(context);
+        });
+
+        it('should setup a mock for the given arguments that returns the given value', () => {
+            library.api.webhook.mask('hello').returns('world');
+
+            const value = context.getNextMockReturn(
+                library.api.webhook,
+                'webhook',
+                ['hello']
+            );
+            expect(value).toBe('world');
+        });
+    });
 
     describe('getBots()', () => {
         let bot1: RuntimeBot;
@@ -713,6 +732,17 @@ describe('AuxLibrary', () => {
             it('should return false if the bot has a different ID', () => {
                 const filter = library.api.byID('wrong');
                 expect(filter(bot1)).toBe(false);
+            });
+
+            it('should contain a toJSON() function that returns the record filter object', () => {
+                const result: any = library.api.byID('myID');
+
+                expect(result.toJSON).toBeInstanceOf(Function);
+                expect(result[DEBUG_STRING]).toBe('byID("myID")');
+                expect(result.toJSON()).toEqual({
+                    recordFilter: true,
+                    id: 'myID',
+                });
             });
         });
 
@@ -1319,6 +1349,20 @@ describe('AuxLibrary', () => {
 
             const json = library.api.getJSON(obj);
             expect(json).toEqual(JSON.stringify(obj[ORIGINAL_OBJECT]));
+        });
+
+        const commonCases: [string, any][] = [
+            ['object', { abc: 'def' }],
+            ['array', ['abc', 'def']],
+            ['number', 123],
+            ['string', 'abc'],
+            ['boolean', true],
+            ['null', null],
+        ];
+
+        it.each(commonCases)('should support %s', (type, value) => {
+            const json = library.api.getJSON(value);
+            expect(json).toEqual(JSON.stringify(value));
         });
     });
 
@@ -2788,9 +2832,8 @@ describe('AuxLibrary', () => {
                         player.tags.sheetPortal = given;
                         player.tags.falsy = false;
                         player.tags.number = 0;
-                        const result = library.api.os.getPortalDimension(
-                            portal
-                        );
+                        const result =
+                            library.api.os.getPortalDimension(portal);
 
                         if (expectedDimension) {
                             expect(result).toEqual(expected);
@@ -2823,9 +2866,8 @@ describe('AuxLibrary', () => {
                 'should return 1 when the dimension is in the %s portal',
                 (portal) => {
                     player.tags[portal] = 'dimension';
-                    const result = library.api.os.getDimensionalDepth(
-                        'dimension'
-                    );
+                    const result =
+                        library.api.os.getDimensionalDepth('dimension');
                     expect(result).toEqual(1);
                 }
             );
@@ -2922,6 +2964,20 @@ describe('AuxLibrary', () => {
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    library.api.os.showInput.mask('test').returns('mocked');
+                    const result: any = library.api.os.showInput('test');
+
+                    expect(result).toEqual('mocked');
+                });
             });
         });
 
@@ -3678,6 +3734,23 @@ describe('AuxLibrary', () => {
 
                 expect(result).toBe('abc.def');
             });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    library.api.os.requestPermanentAuthToken
+                        .mask()
+                        .returns('mocked');
+                    const result: any =
+                        library.api.os.requestPermanentAuthToken();
+
+                    expect(result).toEqual('mocked');
+                });
+            });
         });
 
         describe('os.publishRecord()', () => {
@@ -3725,31 +3798,27 @@ describe('AuxLibrary', () => {
             });
 
             it('should use the authToken tag in the auth bot by default', () => {
-                try {
-                    (<any>globalThis).authBot = createBot('authBot', {
-                        authToken: 'myToken',
-                    });
-                    const action: any = library.api.os.publishRecord({
-                        space: 'tempRestricted',
-                        address: 'myAddress',
-                        record: {
-                            test1: true,
-                        },
-                    });
-                    const expected = publishRecord(
-                        'myToken',
-                        'myAddress',
-                        {
-                            test1: true,
-                        },
-                        'tempRestricted',
-                        context.tasks.size
-                    );
-                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                    expect(context.actions).toEqual([expected]);
-                } finally {
-                    delete (<any>globalThis).authBot;
-                }
+                context.global.authBot = createBot('authBot', {
+                    authToken: 'myToken',
+                });
+                const action: any = library.api.os.publishRecord({
+                    space: 'tempRestricted',
+                    address: 'myAddress',
+                    record: {
+                        test1: true,
+                    },
+                });
+                const expected = publishRecord(
+                    'myToken',
+                    'myAddress',
+                    {
+                        test1: true,
+                    },
+                    'tempRestricted',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
 
             it('should throw an error if no token is specified and there is no auth bot', () => {
@@ -3864,6 +3933,30 @@ describe('AuxLibrary', () => {
                     });
                 }).toThrowError();
             });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    library.api.os.publishRecord
+                        .mask({
+                            address: 'myAddress',
+                            record: null,
+                            authToken: 'myToken',
+                        })
+                        .returns('mocked');
+                    const result: any = library.api.os.publishRecord({
+                        address: 'myAddress',
+                        record: null,
+                        authToken: 'myToken',
+                    });
+
+                    expect(result).toEqual('mocked');
+                });
+            });
         });
 
         describe('os.getRecords()', () => {
@@ -3874,6 +3967,7 @@ describe('AuxLibrary', () => {
                     expect(result).toEqual({
                         recordFilter: true,
                         authID: 'myAuthID',
+                        [DEBUG_STRING]: 'byAuthID("myAuthID")',
                     });
                 });
             });
@@ -3891,6 +3985,17 @@ describe('AuxLibrary', () => {
                     expect(result1.recordFilter).toBe(true);
                     expect(result1.space).toBe('mySpace');
                 });
+
+                it('should contain a toJSON() function that returns the record filter object', () => {
+                    const result: any = library.api.bySpace('mySpace');
+
+                    expect(result[DEBUG_STRING]).toBe('bySpace("mySpace")');
+                    expect(result.toJSON).toBeInstanceOf(Function);
+                    expect(result.toJSON()).toEqual({
+                        recordFilter: true,
+                        space: 'mySpace',
+                    });
+                });
             });
 
             describe('byAddress()', () => {
@@ -3900,6 +4005,7 @@ describe('AuxLibrary', () => {
                     expect(result).toEqual({
                         recordFilter: true,
                         address: 'byAddress',
+                        [DEBUG_STRING]: 'byAddress("byAddress")',
                     });
                 });
             });
@@ -3911,6 +4017,7 @@ describe('AuxLibrary', () => {
                     expect(result).toEqual({
                         recordFilter: true,
                         authToken: 'myToken',
+                        [DEBUG_STRING]: 'withAuthToken("myToken")',
                     });
                 });
             });
@@ -3922,6 +4029,7 @@ describe('AuxLibrary', () => {
                     expect(result).toEqual({
                         recordFilter: true,
                         prefix: 'myPrefix',
+                        [DEBUG_STRING]: 'byPrefix("myPrefix")',
                     });
                 });
             });
@@ -4116,54 +4224,46 @@ describe('AuxLibrary', () => {
             });
 
             it('should default the auth token to the token from the auth bot', () => {
-                try {
-                    (<any>globalThis).authBot = createBot('authBot', {
-                        authToken: 'authToken',
-                    });
-                    const action: any = library.api.os.getRecords(
-                        library.api.byAuthID('myID'),
-                        library.api.byAddress('myAddress')
-                    );
-                    const expected = getRecords(
-                        'authToken',
-                        'myID',
-                        'tempRestricted',
-                        {
-                            address: 'myAddress',
-                        },
-                        context.tasks.size
-                    );
-                    expect(context.actions).toEqual([expected]);
-                } finally {
-                    delete (<any>globalThis).authBot;
-                }
+                context.global.authBot = createBot('authBot', {
+                    authToken: 'authToken',
+                });
+                const action: any = library.api.os.getRecords(
+                    library.api.byAuthID('myID'),
+                    library.api.byAddress('myAddress')
+                );
+                const expected = getRecords(
+                    'authToken',
+                    'myID',
+                    'tempRestricted',
+                    {
+                        address: 'myAddress',
+                    },
+                    context.tasks.size
+                );
+                expect(context.actions).toEqual([expected]);
             });
 
             it('should default the auth ID to the ID of the auth bot', () => {
-                try {
-                    (<any>globalThis).authBot = createBot('authBotID', {
-                        authToken: 'authToken',
-                    });
-                    const action: any = library.api.os.getRecords(
-                        library.api.byAddress('myAddress')
-                    );
-                    const expected = getRecords(
-                        'authToken',
-                        'authBotID',
-                        'tempRestricted',
-                        {
-                            address: 'myAddress',
-                        },
-                        context.tasks.size
-                    );
-                    expect(context.actions).toEqual([expected]);
-                } finally {
-                    delete (<any>globalThis).authBot;
-                }
+                context.global.authBot = createBot('authBotID', {
+                    authToken: 'authToken',
+                });
+                const action: any = library.api.os.getRecords(
+                    library.api.byAddress('myAddress')
+                );
+                const expected = getRecords(
+                    'authToken',
+                    'authBotID',
+                    'tempRestricted',
+                    {
+                        address: 'myAddress',
+                    },
+                    context.tasks.size
+                );
+                expect(context.actions).toEqual([expected]);
             });
 
             it('should resolve with an object that can make additional requests', async () => {
-                (<any>globalThis).authBot = createBot('authBot', {
+                context.global.authBot = createBot('authBot', {
                     authToken: 'authToken',
                 });
                 let result: GetRecordsResult;
@@ -4238,6 +4338,36 @@ describe('AuxLibrary', () => {
                     },
                 ]);
             });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    library.api.os.getRecords
+                        .mask(
+                            library.api.withAuthToken('myToken'),
+                            library.api.byAuthID('myID'),
+                            library.api.bySpace('permanentGlobal'),
+                            library.api.byPrefix('myPrefix'),
+                            library.api.byID('id'),
+                            library.api.byAddress('address')
+                        )
+                        .returns('mocked');
+                    const result: any = library.api.os.getRecords(
+                        { recordFilter: true, authToken: 'myToken' },
+                        { recordFilter: true, authID: 'myID' },
+                        { recordFilter: true, space: 'permanentGlobal' } as any,
+                        { recordFilter: true, prefix: 'myPrefix' },
+                        { recordFilter: true, id: 'id' } as any,
+                        { recordFilter: true, address: 'address' }
+                    );
+
+                    expect(result).toEqual('mocked');
+                });
+            });
         });
 
         describe('os.destroyRecord()', () => {
@@ -4258,48 +4388,64 @@ describe('AuxLibrary', () => {
             });
 
             it('should use the authToken tag in the auth bot by default', () => {
-                try {
-                    (<any>globalThis).authBot = createBot('authBot', {
-                        authToken: 'myToken',
-                    });
-                    const action: any = library.api.os.destroyRecord({
-                        space: 'tempRestricted',
-                        address: 'myAddress',
-                    });
-                    const expected = deleteRecord(
-                        'myToken',
-                        'myAddress',
-                        'tempRestricted',
-                        context.tasks.size
-                    );
-                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                    expect(context.actions).toEqual([expected]);
-                } finally {
-                    delete (<any>globalThis).authBot;
-                }
+                context.global.authBot = createBot('authBot', {
+                    authToken: 'myToken',
+                });
+                const action: any = library.api.os.destroyRecord({
+                    space: 'tempRestricted',
+                    address: 'myAddress',
+                });
+                const expected = deleteRecord(
+                    'myToken',
+                    'myAddress',
+                    'tempRestricted',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
 
             it('should be able to use a record reference', () => {
-                try {
-                    (<any>globalThis).authBot = createBot('authBot', {
+                context.global.authBot = createBot('authBot', {
+                    authToken: 'myToken',
+                });
+                const action: any = library.api.os.destroyRecord(<any>{
+                    authID: 'myID',
+                    address: 'myAddress',
+                    space: 'permanentGlobal',
+                });
+                const expected = deleteRecord(
+                    'myToken',
+                    'myAddress',
+                    'permanentGlobal',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    library.api.os.destroyRecord
+                        .mask({
+                            space: 'tempRestricted',
+                            address: 'myAddress',
+                            authToken: 'myToken',
+                        })
+                        .returns('mocked');
+                    const result: any = library.api.os.destroyRecord({
+                        space: 'tempRestricted',
+                        address: 'myAddress',
                         authToken: 'myToken',
                     });
-                    const action: any = library.api.os.destroyRecord(<any>{
-                        authID: 'myID',
-                        address: 'myAddress',
-                        space: 'permanentGlobal',
-                    });
-                    const expected = deleteRecord(
-                        'myToken',
-                        'myAddress',
-                        'permanentGlobal',
-                        context.tasks.size
-                    );
-                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                    expect(context.actions).toEqual([expected]);
-                } finally {
-                    delete (<any>globalThis).authBot;
-                }
+
+                    expect(result).toEqual('mocked');
+                });
             });
         });
 
@@ -4652,10 +4798,10 @@ describe('AuxLibrary', () => {
         describe('server.rpioWriteSequence()', () => {
             it('should send a RpioWriteSequenceAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.rpioWriteSequence(99, [
-                    10,
-                    10,
-                ]);
+                const action: any = library.api.server.rpioWriteSequence(
+                    99,
+                    [10, 10]
+                );
                 const expected = remote(
                     rpioWriteSequencePin(99, [10, 10]),
                     undefined,
@@ -4832,9 +4978,8 @@ describe('AuxLibrary', () => {
         describe('server.rpioI2CSetSlaveAddress()', () => {
             it('should send a RpioI2CSetSlaveAddressAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.rpioI2CSetSlaveAddress(
-                    0xff
-                );
+                const action: any =
+                    library.api.server.rpioI2CSetSlaveAddress(0xff);
                 const expected = remote(
                     rpioI2CSetSlaveAddressPin(0xff),
                     undefined,
@@ -4857,9 +5002,8 @@ describe('AuxLibrary', () => {
         describe('server.rpioI2CSetBaudRate()', () => {
             it('should send a RpioI2CSetBaudRateAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.rpioI2CSetBaudRate(
-                    100000
-                );
+                const action: any =
+                    library.api.server.rpioI2CSetBaudRate(100000);
                 const expected = remote(
                     rpioI2CSetBaudRatePin(100000),
                     undefined,
@@ -4882,9 +5026,8 @@ describe('AuxLibrary', () => {
         describe('server.rpioI2CSetClockDivider()', () => {
             it('should send a RpioI2CSetClockDividerAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.rpioI2CSetClockDivider(
-                    2500
-                );
+                const action: any =
+                    library.api.server.rpioI2CSetClockDivider(2500);
                 const expected = remote(
                     rpioI2CSetClockDividerPin(2500),
                     undefined,
@@ -4931,10 +5074,7 @@ describe('AuxLibrary', () => {
             it('should send a RpioI2CWriteAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
                 const action: any = library.api.server.rpioI2CWrite([
-                    0x0b,
-                    0x0e,
-                    0x0e,
-                    0x0f,
+                    0x0b, 0x0e, 0x0e, 0x0f,
                 ]);
                 const expected = remote(
                     rpioI2CWritePin([0x0b, 0x0e, 0x0e, 0x0f]),
@@ -5027,9 +5167,8 @@ describe('AuxLibrary', () => {
         describe('server.rpioPWMSetClockDivider()', () => {
             it('should send a RpioPWMSetClockDividerAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.rpioPWMSetClockDivider(
-                    64
-                );
+                const action: any =
+                    library.api.server.rpioPWMSetClockDivider(64);
                 const expected = remote(
                     rpioPWMSetClockDividerPin(64),
                     undefined,
@@ -5173,9 +5312,8 @@ describe('AuxLibrary', () => {
         describe('server.rpioSPISetClockDivider()', () => {
             it('should send a RpioSPISetClockDividerAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.rpioSPISetClockDivider(
-                    128
-                );
+                const action: any =
+                    library.api.server.rpioSPISetClockDivider(128);
                 const expected = remote(
                     rpioSPISetClockDividerPin(128),
                     undefined,
@@ -5712,9 +5850,8 @@ describe('AuxLibrary', () => {
         describe('server.restoreHistoryMark()', () => {
             it('should emit a restore_history_mark event', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.restoreHistoryMark(
-                    'mark'
-                );
+                const action: any =
+                    library.api.server.restoreHistoryMark('mark');
                 const expected = remote(
                     restoreHistoryMark('mark'),
                     undefined,
@@ -5737,10 +5874,11 @@ describe('AuxLibrary', () => {
         describe('server.restoreHistoryMarkToServer()', () => {
             it('should emit a restore_history_mark event', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.restoreHistoryMarkToServer(
-                    'mark',
-                    'server'
-                );
+                const action: any =
+                    library.api.server.restoreHistoryMarkToServer(
+                        'mark',
+                        'server'
+                    );
                 const expected = remote(
                     restoreHistoryMark('mark', 'server'),
                     undefined,
@@ -5868,9 +6006,8 @@ describe('AuxLibrary', () => {
 
             it('should accept a custom server ID', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const action: any = library.api.server.serverRemoteCount(
-                    'test'
-                );
+                const action: any =
+                    library.api.server.serverRemoteCount('test');
                 const expected = remote(
                     getRemoteCount('test'),
                     undefined,
@@ -6311,6 +6448,24 @@ describe('AuxLibrary', () => {
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    library.api.web.get
+                        .mask('https://example.com')
+                        .returns('masked');
+                    const result: any = library.api.web.get(
+                        'https://example.com'
+                    );
+
+                    expect(result).toEqual('masked');
+                });
+            });
         });
 
         describe('web.post()', () => {
@@ -6334,6 +6489,35 @@ describe('AuxLibrary', () => {
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    library.api.web.post
+                        .mask(
+                            'https://example.com',
+                            { data: true },
+                            {
+                                responseShout: 'test.response()',
+                            }
+                        )
+                        .returns('masked');
+
+                    const result: any = library.api.web.post(
+                        'https://example.com',
+                        { data: true },
+                        {
+                            responseShout: 'test.response()',
+                        }
+                    );
+
+                    expect(result).toEqual('masked');
+                });
+            });
         });
 
         describe('web.hook()', () => {
@@ -6355,6 +6539,32 @@ describe('AuxLibrary', () => {
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    library.api.web.hook
+                        .mask({
+                            method: 'TEST',
+                            data: { myData: 'abc' },
+                            url: 'https://example.com',
+                            responseShout: 'test.response()',
+                        })
+                        .returns('masked');
+                    const result: any = library.api.web.hook({
+                        method: 'TEST',
+                        data: { myData: 'abc' },
+                        url: 'https://example.com',
+                        responseShout: 'test.response()',
+                    });
+
+                    expect(result).toEqual('masked');
+                });
             });
         });
 
@@ -6382,6 +6592,37 @@ describe('AuxLibrary', () => {
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    library.api.webhook
+                        .mask({
+                            method: 'POST',
+                            url: 'https://example.com',
+                            data: {
+                                test: 'abc',
+                            },
+                            responseShout: 'test.response()',
+                        })
+                        .returns('masked');
+
+                    const result: any = library.api.webhook({
+                        method: 'POST',
+                        url: 'https://example.com',
+                        data: {
+                            test: 'abc',
+                        },
+                        responseShout: 'test.response()',
+                    });
+
+                    expect(result).toEqual('masked');
+                });
+            });
         });
 
         describe('webhook.post()', () => {
@@ -6406,6 +6647,34 @@ describe('AuxLibrary', () => {
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            describe('mock', () => {
+                beforeEach(() => {
+                    context.mockAsyncActions = true;
+                    library = createDefaultLibrary(context);
+                });
+
+                it('should return the mocked value when setup to mock', () => {
+                    library.api.webhook.post
+                        .mask(
+                            'https://example.com',
+                            { test: 'abc' },
+                            {
+                                responseShout: 'test.response()',
+                            }
+                        )
+                        .returns('masked');
+                    const result: any = library.api.webhook.post(
+                        'https://example.com',
+                        { test: 'abc' },
+                        {
+                            responseShout: 'test.response()',
+                        }
+                    );
+
+                    expect(result).toEqual('masked');
+                });
             });
         });
 
@@ -7601,11 +7870,12 @@ describe('AuxLibrary', () => {
                         bot1.tags.homeY = pos.y;
                         bot1.tags.homeZ = pos.z;
 
-                        const position = library.api.experiment.getAnchorPointPosition(
-                            bot1,
-                            'home',
-                            anchorPoint
-                        );
+                        const position =
+                            library.api.experiment.getAnchorPointPosition(
+                                bot1,
+                                'home',
+                                anchorPoint
+                            );
 
                         expect(position).toEqual(expected);
                     });
@@ -7616,11 +7886,12 @@ describe('AuxLibrary', () => {
                         bot1.tags.homeZ = pos.z;
                         bot1.tags.scale = 2;
 
-                        const position = library.api.experiment.getAnchorPointPosition(
-                            bot1,
-                            'home',
-                            anchorPoint
-                        );
+                        const position =
+                            library.api.experiment.getAnchorPointPosition(
+                                bot1,
+                                'home',
+                                anchorPoint
+                            );
 
                         const scaled = {
                             x: (expected.x - pos.x) * 2 + pos.x,
@@ -7639,11 +7910,12 @@ describe('AuxLibrary', () => {
                         bot1.tags.scaleY = 3;
                         bot1.tags.scaleZ = 4;
 
-                        const position = library.api.experiment.getAnchorPointPosition(
-                            bot1,
-                            'home',
-                            anchorPoint
-                        );
+                        const position =
+                            library.api.experiment.getAnchorPointPosition(
+                                bot1,
+                                'home',
+                                anchorPoint
+                            );
 
                         const scaled = {
                             x: (expected.x - pos.x) * 2 + pos.x,
@@ -7659,7 +7931,8 @@ describe('AuxLibrary', () => {
 
         describe('experiment.beginAudioRecording()', () => {
             it('should emit a BeginAudioRecordingAction', () => {
-                const action: any = library.api.experiment.beginAudioRecording();
+                const action: any =
+                    library.api.experiment.beginAudioRecording();
                 const expected = beginAudioRecording(context.tasks.size);
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -10838,6 +11111,90 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('assert()', () => {
+        it('should throw an error if the given condition is false', () => {
+            expect(() => {
+                library.api.assert(false);
+            }).toThrowError('Assertion failed.');
+        });
+
+        it('should not throw an error if the given condition is true', () => {
+            expect(() => {
+                library.api.assert(true);
+            }).not.toThrowError('Assertion failed.');
+        });
+
+        it('should throw errors with the given message', () => {
+            expect(() => {
+                library.api.assert(false, 'Failed with reason.');
+            }).toThrowError('Assertion failed. Failed with reason.');
+        });
+    });
+
+    describe('assertEqual()', () => {
+        it('should throw an error if the given values are not equal', () => {
+            // expect(true).toEqual(false);
+            expect(() => {
+                library.api.assertEqual(true, false);
+            }).toThrowError(
+                `Assertion failed.\n\nExpected: false\nReceived: true`
+            );
+        });
+
+        it('should pretty print objects', () => {
+            expect(() => {
+                library.api.assertEqual({ abc: 123 }, { def: 456 });
+            }).toThrowError(
+                `Assertion failed.\n\nExpected: {\n  "def": 456\n}\nReceived: {\n  "abc": 123\n}`
+            );
+        });
+
+        const noThrowCases: [string, any, any][] = [
+            ['objects', { abc: 123 }, { abc: 123 }],
+            ['arrays', [1, 2, 3], [1, 2, 3]],
+            ['numbers', 123, 123],
+            ['booleans', true, true],
+            ['nulls', null, null],
+        ];
+
+        it.each(noThrowCases)(
+            'should not throw when %s serialize to the same value',
+            (name, value1, value2) => {
+                expect(() => {
+                    library.api.assertEqual(value1, value2);
+                }).not.toThrowError();
+            }
+        );
+
+        it('should support bots', () => {
+            let bot1 = createDummyRuntimeBot('test1');
+            let bot2 = createDummyRuntimeBot('test1');
+            let bot3 = createDummyRuntimeBot('test3');
+
+            bot1.tags.abc = 'def';
+            bot2.tags.abc = 'def';
+            bot3.tags.abc = 'def';
+
+            expect(() => {
+                library.api.assertEqual(bot1, bot2);
+            }).not.toThrow();
+            expect(() => {
+                library.api.assertEqual(bot1, bot3);
+            }).toThrow();
+        });
+
+        it('should support errors', () => {
+            expect(() => {
+                library.api.assertEqual(new Error('abc'), new Error('abc'));
+            }).not.toThrow();
+            expect(() => {
+                library.api.assertEqual(new Error('abc'), new Error('def'));
+            }).toThrowError(
+                'Assertion failed.\n\nExpected: "Error: def"\nReceived: "Error: abc"'
+            );
+        });
+    });
+
     describe('os.watchBot()', () => {
         let tagContext: TagSpecificApiOptions;
         let bot1: RuntimeBot;
@@ -11144,17 +11501,14 @@ describe('AuxLibrary', () => {
             );
             addToContext(context, gridPortal, miniGridPortal);
 
-            (<any>globalThis).gridPortalBot = gridPortal;
-            (<any>globalThis).miniGridPortalBot = miniGridPortal;
-        });
-
-        afterEach(() => {
-            delete (<any>globalThis).gridPortalBot;
-            delete (<any>globalThis).miniGridPortalBot;
+            context.global = {
+                gridPortalBot: gridPortal,
+                miniGridPortalBot: miniGridPortal,
+            };
         });
 
         it('should return NaN for x, y, and z if the grid portal bot is null', () => {
-            (<any>globalThis).gridPortalBot = null;
+            context.global.gridPortalBot = null;
             const result = library.api.os.getCameraPosition();
 
             expect(result).toEqual({
@@ -11220,17 +11574,14 @@ describe('AuxLibrary', () => {
             );
             addToContext(context, gridPortal, miniGridPortal);
 
-            (<any>globalThis).gridPortalBot = gridPortal;
-            (<any>globalThis).miniGridPortalBot = miniGridPortal;
-        });
-
-        afterEach(() => {
-            delete (<any>globalThis).gridPortalBot;
-            delete (<any>globalThis).miniGridPortalBot;
+            context.global = {
+                gridPortalBot: gridPortal,
+                miniGridPortalBot: miniGridPortal,
+            };
         });
 
         it('should return NaN for x, y, and z if the grid portal bot is null', () => {
-            delete (<any>globalThis).gridPortalBot;
+            delete context.global.gridPortalBot;
             const result = library.api.os.getCameraRotation();
 
             expect(result).toEqual({
@@ -11296,17 +11647,14 @@ describe('AuxLibrary', () => {
             );
             addToContext(context, gridPortal, miniGridPortal);
 
-            (<any>globalThis).gridPortalBot = gridPortal;
-            (<any>globalThis).miniGridPortalBot = miniGridPortal;
-        });
-
-        afterEach(() => {
-            delete (<any>globalThis).gridPortalBot;
-            delete (<any>globalThis).miniGridPortalBot;
+            context.global = {
+                gridPortalBot: gridPortal,
+                miniGridPortalBot: miniGridPortal,
+            };
         });
 
         it('should return NaN for x, y, and z if the grid portal bot is null', () => {
-            delete (<any>globalThis).gridPortalBot;
+            delete context.global.gridPortalBot;
             const result = library.api.os.getFocusPoint();
 
             expect(result).toEqual({
@@ -12845,9 +13193,8 @@ describe('AuxLibrary', () => {
         });
 
         it('should return false if not given a keypair', () => {
-            const result = library.api.crypto.asymmetric.isKeypair(
-                'v1.abc.def'
-            );
+            const result =
+                library.api.crypto.asymmetric.isKeypair('v1.abc.def');
             expect(result).toBe(false);
         });
     });
@@ -12905,9 +13252,8 @@ describe('AuxLibrary', () => {
         });
 
         it('should return false if not given encrypted data', () => {
-            const result = library.api.crypto.asymmetric.isEncrypted(
-                'v1.abc.def'
-            );
+            const result =
+                library.api.crypto.asymmetric.isEncrypted('v1.abc.def');
             expect(result).toBe(false);
         });
     });

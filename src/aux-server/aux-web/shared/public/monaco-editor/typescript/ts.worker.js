@@ -5,7 +5,7 @@
 'use strict';
 
 import * as edworker from 'monaco-editor/esm/vs/editor/editor.worker.js';
-import { TypeScriptWorker, ICreateData } from './tsWorker';
+import { TypeScriptWorker } from './tsWorker';
 
 // Note: This file needs to be valid JavaScript.
 // worker-loader for some reason does not run ts-loader during its child compilation.
