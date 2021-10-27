@@ -61,6 +61,8 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     private _siteId: string = uuid();
     private _remoteSite: string = uuid();
     private _updateCounter: number = 0;
+    private _botsNamespace: string;
+    private _instNamespace: string;
 
     get realtimeStrategy(): AuxPartitionRealtimeStrategy {
         return 'immediate';
@@ -120,6 +122,8 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     constructor(config: LocalStoragePartitionConfig) {
         this.private = config.private || false;
         this.namespace = config.namespace;
+        this._botsNamespace = `${this.namespace}/bots`;
+        this._instNamespace = `${this.namespace}/inst`;
         this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
             currentSite: this._siteId,
             remoteSite: this._remoteSite,
@@ -176,9 +180,11 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
 
     private _watchLocalStorage() {
         this._sub.add(
-            storedBotUpdated(this.namespace, this.space).subscribe((event) => {
-                this._applyEvents([event], false);
-            })
+            storedBotUpdated(this._botsNamespace, this.space).subscribe(
+                (event) => {
+                    this._applyEvents([event], false);
+                }
+            )
         );
     }
 
@@ -186,13 +192,13 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
         let events = [] as (AddBotAction | UpdateBotAction)[];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key.startsWith(this.namespace + '/')) {
+            if (key.startsWith(this._botsNamespace + '/')) {
                 // it is a bot
                 const stored = getStoredBot(key);
                 if (stored.id) {
                     events.push(botAdded(stored));
                 } else {
-                    const id = key.substring(this.namespace.length + 1);
+                    const id = key.substring(this._botsNamespace.length + 1);
                     events.push(botUpdated(id, stored));
                 }
             }
@@ -212,6 +218,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
         // Flag to record if we have already created a new state object
         // during the update.
         let createdNewState = false;
+        let hasUpdate = false;
         for (let event of events) {
             if (event.type === 'add_bot') {
                 let bot = {
@@ -229,8 +236,8 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                 updatedState[event.bot.id] = bot;
                 addedBots.set(event.bot.id, bot);
                 if (updateStorage) {
-                    const key = botKey(this.namespace, bot.id);
-                    storeBot(key, bot);
+                    const key = botKey(this._botsNamespace, bot.id);
+                    hasUpdate = storeBot(key, bot, this.namespace);
                 }
             } else if (event.type === 'remove_bot') {
                 const id = event.id;
@@ -245,8 +252,8 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                     removedBots.push(event.id);
                 }
                 if (updateStorage) {
-                    const key = botKey(this.namespace, id);
-                    storeBot(key, null);
+                    const key = botKey(this._botsNamespace, id);
+                    hasUpdate = storeBot(key, null, this.namespace);
                 }
                 updatedState[event.id] = null;
             } else if (event.type === 'update_bot') {
@@ -275,16 +282,17 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                                     newVal
                                 );
                                 nextVersion = {
-                                    currentSite: this._onVersionUpdated.value
-                                        .currentSite,
-                                    remoteSite: this._onVersionUpdated.value
-                                        .remoteSite,
+                                    currentSite:
+                                        this._onVersionUpdated.value
+                                            .currentSite,
+                                    remoteSite:
+                                        this._onVersionUpdated.value.remoteSite,
                                     vector: {
                                         ...this._onVersionUpdated.value.vector,
                                         [newVal.isRemote
                                             ? this._remoteSite
-                                            : this
-                                                  ._siteId]: this._updateCounter += 1,
+                                            : this._siteId]:
+                                            (this._updateCounter += 1),
                                     },
                                 };
                                 updatedBot.tags[tag] = edits(
@@ -342,16 +350,17 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                             if (isTagEdit(newVal)) {
                                 masks[tag] = applyEdit(masks[tag], newVal);
                                 nextVersion = {
-                                    currentSite: this._onVersionUpdated.value
-                                        .currentSite,
-                                    remoteSite: this._onVersionUpdated.value
-                                        .remoteSite,
+                                    currentSite:
+                                        this._onVersionUpdated.value
+                                            .currentSite,
+                                    remoteSite:
+                                        this._onVersionUpdated.value.remoteSite,
                                     vector: {
                                         ...this._onVersionUpdated.value.vector,
                                         [newVal.isRemote
                                             ? this._remoteSite
-                                            : this
-                                                  ._siteId]: this._updateCounter += 1,
+                                            : this._siteId]:
+                                            (this._updateCounter += 1),
                                     },
                                 };
                                 updatedBot.masks[this.space][tag] = edits(
@@ -399,8 +408,8 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
             if (updateStorage && updateEvent.updatedBots.length > 0) {
                 for (let id of updateEvent.updatedBots) {
                     let bot = this.state[id];
-                    const key = botKey(this.namespace, id);
-                    storeBot(key, bot);
+                    const key = botKey(this._botsNamespace, id);
+                    hasUpdate = storeBot(key, bot, this.namespace);
                 }
             }
 
@@ -408,6 +417,17 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
         }
         if (nextVersion) {
             this._onVersionUpdated.next(nextVersion);
+        }
+
+        if (hasUpdate) {
+            try {
+                localStorage.setItem(
+                    this._instNamespace,
+                    Date.now().toString()
+                );
+            } catch (err) {
+                console.error(err);
+            }
         }
     }
 }
@@ -480,13 +500,84 @@ function getStoredBot(key: string): Bot {
     }
 }
 
-function storeBot(key: string, bot: Bot) {
-    if (bot) {
-        const json = JSON.stringify(bot);
-        localStorage.setItem(key, json);
-    } else {
-        localStorage.removeItem(key);
+const MAX_ATTEMPTS = 4;
+
+function storeBot(key: string, bot: Bot, namespace: string) {
+    let lastError: any;
+    for (let i = 0; i < MAX_ATTEMPTS; i++) {
+        try {
+            if (bot) {
+                const json = JSON.stringify(bot);
+                localStorage.setItem(key, json);
+            } else {
+                localStorage.removeItem(key);
+            }
+            return true;
+        } catch (err) {
+            lastError = err;
+            if (!clearOldData(namespace)) {
+                // break out of the loop if no data was deleted
+                break;
+            }
+        }
     }
+
+    if (lastError) {
+        console.error(lastError);
+    }
+    console.warn('[LocalStoragePartition] Failed to store bot in local space.');
+    return false;
+}
+
+/**
+ * Searches local storage and deletes the oldest namespace.
+ * Returns whether any data was deleted.
+ * @param namespaceToIgnore The namespace that should not be deleted even if it is the oldest.
+ * @returns
+ */
+function clearOldData(namespaceToIgnore: string): boolean {
+    console.log('[LocalStoragePartition] Clearing old data');
+    let validNamespaces = [] as string[];
+    for (let i = 0; i < localStorage.length; i++) {
+        let k = localStorage.key(i);
+        if (k.endsWith('/inst') && !k.startsWith(namespaceToIgnore)) {
+            validNamespaces.push(k);
+        }
+    }
+    validNamespaces.sort();
+
+    let oldestNamespace: string;
+    let oldestTime: number = Infinity;
+    for (let namespace of validNamespaces) {
+        let time = JSON.parse(localStorage.getItem(namespace));
+        if (time < oldestTime) {
+            oldestTime = time;
+            oldestNamespace = namespace;
+        }
+    }
+
+    if (oldestNamespace) {
+        let namespace = oldestNamespace.substring(
+            0,
+            oldestNamespace.length - 'inst'.length
+        );
+        console.log('[LocalStoragePartition] Deleting namespace', namespace);
+        let keysToDelete = [] as string[];
+        for (let i = 0; i < localStorage.length; i++) {
+            let k = localStorage.key(i);
+            if (k.startsWith(namespace)) {
+                keysToDelete.push(k);
+            }
+        }
+
+        for (let k of keysToDelete) {
+            localStorage.removeItem(k);
+        }
+
+        return keysToDelete.length > 0;
+    }
+
+    return false;
 }
 
 function calculateDifferentTags(newTags: BotTags, oldTags: BotTags) {
