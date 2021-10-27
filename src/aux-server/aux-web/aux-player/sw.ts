@@ -10,16 +10,22 @@ import { ExpirationPlugin } from 'workbox-expiration';
 import '../shared/service-worker';
 
 declare let self: ServiceWorkerGlobalScope;
+declare let GIT_TAG: string;
 
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
 self.addEventListener('install', (event) => {
+    console.log('[sw.ts] Install.');
     self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-    clientsClaim();
+    console.log('[sw.ts] Activate.');
+    if (!GIT_TAG.startsWith('v2.0.14')) {
+        console.log('[sw.ts] Claim Clients');
+        clientsClaim();
+    }
 });
 
 registerRoute(
