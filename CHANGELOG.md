@@ -2,7 +2,7 @@
 
 ## V2.0.14
 
-#### Date: TBD
+#### Date: 10/27/2021
 
 ### :rocket: Improvements
 
