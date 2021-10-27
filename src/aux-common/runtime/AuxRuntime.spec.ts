@@ -7331,6 +7331,20 @@ describe('AuxRuntime', () => {
             const result = runtime.shout('test');
             expect(result.results[0]).toBeUndefined();
         });
+
+        it('should allow defining globalThis properties without affecting everything else', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@Object.defineProperty(globalThis, "testValue", { value: 42, writable: false });',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return globalThis.testValue;`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            expect(result.results[0]).toBeUndefined();
+        });
     });
 });
 

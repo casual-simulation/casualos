@@ -136,7 +136,6 @@ export class AuxRuntime
     private _processingErrors: boolean = false;
     private _portalBots: Map<string, string> = new Map();
     private _builtinPortalBots: string[] = [];
-    private _globalVariables: { [key: string]: () => any } = {};
     private _globalChanges: { [key: string]: any } = {};
     private _globalObject: any;
 
@@ -252,6 +251,13 @@ export class AuxRuntime
             },
             deleteProperty: (target: any, key: string) => {
                 return Reflect.deleteProperty(this._globalChanges, key);
+            },
+            defineProperty: (target: any, key, options: any) => {
+                return Reflect.defineProperty(
+                    this._globalChanges,
+                    key,
+                    options
+                );
             },
             ownKeys: (target: any) => {
                 const addedKeys = Reflect.ownKeys(this._globalChanges);
@@ -534,17 +540,18 @@ export class AuxRuntime
         this._portalBots.set(portalId, botId);
         if (!hadPortalBot) {
             const variableName = `${portalId}Bot`;
-            this._globalVariables[variableName] = () => {
-                const botId = this._portalBots.get(portalId);
-                if (hasValue(botId)) {
-                    return this.context.state[botId];
-                } else {
-                    return undefined;
-                }
-            };
-
-            // recompile all scripts
-            this._recompileScripts();
+            Object.defineProperty(this._globalObject, variableName, {
+                get: () => {
+                    const botId = this._portalBots.get(portalId);
+                    if (hasValue(botId)) {
+                        return this.context.state[botId];
+                    } else {
+                        return undefined;
+                    }
+                },
+                enumerable: false,
+                configurable: true,
+            });
         }
     }
 
@@ -1568,15 +1575,6 @@ export class AuxRuntime
         this._compileTagValue(bot, tag, tagValue);
     }
 
-    private _recompileScripts() {
-        for (let id in this._compiledState) {
-            let bot = this._compiledState[id];
-            for (let listener in bot.listeners) {
-                this._compileTagValue(bot, listener, bot.values[listener]);
-            }
-        }
-    }
-
     private _compileTagValue(bot: CompiledBot, tag: string, tagValue: any) {
         let { value, listener } = this._compileValue(bot, tag, tagValue);
         if (listener) {
@@ -1687,7 +1685,6 @@ export class AuxRuntime
                 globalThis: this._globalObject,
             },
             variables: {
-                ...this._globalVariables,
                 ...this._library.tagSpecificApi,
                 this: (ctx) => (ctx.bot ? ctx.bot.script : null),
                 thisBot: (ctx) => (ctx.bot ? ctx.bot.script : null),
