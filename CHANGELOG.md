@@ -13,6 +13,7 @@
 
 -   Fixed an issue where the built-in portal bots would cause all scripts to be recompiled.
 -   Fixed an issue where functions that retrieve data from portal bots (like `os.getFocusPoint()`) would always return null data.
+-   Fixed an issue where the `.getMoreRecords()` function did not work.
 
 ## V2.0.13
 
