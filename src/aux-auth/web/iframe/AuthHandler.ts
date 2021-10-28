@@ -16,6 +16,8 @@ import { authManager } from '../shared/AuthManager';
  */
 const REFRESH_BUFFER_SECONDS = 5;
 
+const NULL_SERVICE = '(null)';
+
 /**
  * Defines a class that implements the backend for an AuxAuth instance.
  */
@@ -189,10 +191,10 @@ export class AuthHandler implements AuxAuth {
             const auxCode =
                 url.searchParams.get('autoLoad') ??
                 url.searchParams.get('auxCode');
-            return auxCode;
+            return auxCode || NULL_SERVICE;
         } catch (ex) {
             console.error('[AuthSelect] Unable to find auxCode.', ex);
-            return null;
+            return NULL_SERVICE;
         }
     }
 
