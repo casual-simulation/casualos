@@ -4274,6 +4274,16 @@ describe('AuxLibrary', () => {
                     )
                     .then((r) => (result = r));
 
+                expect(context.actions).toEqual([
+                    getRecords(
+                        'authToken',
+                        'myID',
+                        'tempRestricted',
+                        { address: 'myAddress' },
+                        1
+                    ),
+                ]);
+
                 context.resolveTask(
                     1,
                     {
@@ -4307,6 +4317,16 @@ describe('AuxLibrary', () => {
 
                 let otherResult: GetRecordsResult;
                 result.getMoreRecords().then((r) => (otherResult = r));
+
+                expect(context.actions.slice(1)).toEqual([
+                    getRecords(
+                        'authToken',
+                        'myID',
+                        'tempRestricted',
+                        { address: 'myAddress', cursor: 'myCursor' },
+                        2
+                    ),
+                ]);
 
                 context.resolveTask(
                     2,

@@ -2985,7 +2985,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 totalCount: result.totalCount,
                 getMoreRecords: async (): Promise<GetRecordsResult> => {
                     if (result.hasMoreRecords && hasValue(result.cursor)) {
-                        return issueEvent({ cursor: result.cursor });
+                        return issueEvent({ ...query, cursor: result.cursor });
                     } else {
                         throw new Error('No more records to retrieve.');
                     }
