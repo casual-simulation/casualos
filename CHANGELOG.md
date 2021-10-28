@@ -7,6 +7,7 @@
 ### :rocket: Improvements
 
 -   Improved the `local` space to delete the oldest inst when localStorage is full.
+-   Added the `pointerPixelX` and `pointerPixelY` tags to the gridPortalBot to track the mouse pointer position on the screen.
 
 ### :bug: Bug Fixes
 
