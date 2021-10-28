@@ -8,7 +8,7 @@
                 <md-card-content>
                     <div class="md-layout md-gutter">
                         <div class="md-layout-item">
-                            <md-field>
+                            <md-field :class="emailFieldClass">
                                 <label for="email">Email</label>
                                 <md-input
                                     name="email"
@@ -17,6 +17,9 @@
                                     v-model="email"
                                     :disabled="processing"
                                 />
+                                <span v-show="showEmailError" class="md-error"
+                                    >This email is not allowed</span
+                                >
                             </md-field>
                         </div>
                     </div>

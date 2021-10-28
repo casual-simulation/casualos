@@ -78,6 +78,29 @@ Resources:
                     Properties:
                         Path: /api/{token}/metadata
                         Method: PUT
+    handleEmailRules:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: email.handler
+            CodeUri: dist/handlers
+            Runtime: nodejs14.x
+            MemorySize: 128
+            Timeout: 100
+            Description: A function that retreives the email rules.
+            Policies:
+                # Give Create/Read/Update/Delete Permissions to the EmailRulesTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref EmailRulesTable
+            Environment:
+                Variables:
+                    # Make table name accessible as environment variable from function code during execution
+                    EMAIL_TABLE: !Ref EmailRulesTable
+            Events:
+                GetEmailRules:
+                    Type: Api
+                    Properties:
+                        Path: /api/emailRules
+                        Method: GET
 
     # This is a Lambda function config associated with the source code: get-all-items.js
     # putIssuerMetadata:
@@ -248,6 +271,18 @@ Resources:
                 - AttributeName: issuer
                   AttributeType: S
                 - AttributeName: address
+                  AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
+    EmailRulesTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: id
+                  KeyType: HASH
+            AttributeDefinitions:
+                - AttributeName: id
                   AttributeType: S
             ProvisionedThroughput:
                 ReadCapacityUnits: 2

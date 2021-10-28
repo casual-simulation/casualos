@@ -2,6 +2,7 @@ const AWS = require('aws-sdk');
 const { readFileSync } = require('fs');
 const path = require('path');
 const YAML = require('yaml');
+const { v4: uuid } = require('uuid');
 
 AWS.config.update({
     region: 'us-east-1',
@@ -20,6 +21,7 @@ const ddb = new AWS.DynamoDB({
 const USERS_TABLE = 'Users';
 const USER_SERVICES_TABLE = 'UserServices';
 const RECORDS_TABLE = 'Records';
+const EMAIL_TABLE = 'EmailRules';
 
 async function start() {
     const tablesResult = await ddb.listTables({}).promise();
@@ -56,9 +58,8 @@ async function start() {
         console.log('Users Table already exists');
     }
 
-    const hasUserServicesTable = tablesResult.TableNames.includes(
-        USER_SERVICES_TABLE
-    );
+    const hasUserServicesTable =
+        tablesResult.TableNames.includes(USER_SERVICES_TABLE);
     if (!hasUserServicesTable || reset) {
         if (hasUserServicesTable) {
             console.log('Deleting UserServices Table');
@@ -104,6 +105,52 @@ async function start() {
             .promise();
     } else {
         console.log('Records Table already exists');
+    }
+
+    const hasEmailTable = tablesResult.TableNames.includes(EMAIL_TABLE);
+    if (!hasEmailTable || reset) {
+        if (hasEmailTable) {
+            console.log('Deleting Email Table');
+            await ddb
+                .deleteTable({
+                    TableName: EMAIL_TABLE,
+                })
+                .promise();
+        }
+
+        console.log('Creating Email Table');
+
+        const params = template.Resources.EmailRulesTable.Properties;
+        await ddb
+            .createTable({
+                TableName: EMAIL_TABLE,
+                ...params,
+            })
+            .promise();
+
+        await ddb
+            .putItem({
+                TableName: EMAIL_TABLE,
+                Item: {
+                    id: uuid(),
+                    type: 'allow',
+                    pattern: '@casualsimulation\\.org$',
+                },
+            })
+            .promise();
+
+        await ddb
+            .putItem({
+                TableName: EMAIL_TABLE,
+                Item: {
+                    id: uuid(),
+                    type: 'deny',
+                    pattern: '^test@casualsimulation\\.org$',
+                },
+            })
+            .promise();
+    } else {
+        console.log('Email Table already exists');
     }
 }
 

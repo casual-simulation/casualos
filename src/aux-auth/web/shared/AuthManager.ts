@@ -14,6 +14,16 @@ export interface AuthorizedToken {
     token: string;
 }
 
+export interface EmailRule {
+    type: 'allow' | 'deny';
+    pattern: string;
+}
+
+export interface CompiledEmailRule {
+    type: 'allow' | 'deny';
+    pattern: RegExp;
+}
+
 declare const API_ENDPOINT: string;
 
 export class AuthManager {
@@ -26,6 +36,7 @@ export class AuthManager {
 
     private _loginState: Subject<boolean>;
     private _authorizedTokens: Subject<AuthorizedToken>;
+    private _emailRules: CompiledEmailRule[];
 
     constructor(magicApiKey: string) {
         this._magic = new Magic(magicApiKey, {
@@ -64,7 +75,7 @@ export class AuthManager {
     }
 
     get userInfoLoaded() {
-        return !!this._userId && !!this._email && !!this._idToken;
+        return !!this._userId && !!this._idToken;
     }
 
     get loginState(): Observable<boolean> {
@@ -73,6 +84,33 @@ export class AuthManager {
 
     get authorizedTokens(): Observable<AuthorizedToken> {
         return this._authorizedTokens;
+    }
+
+    async validateEmail(email: string): Promise<boolean> {
+        if (!this._emailRules) {
+            const rules = await this._getEmailRules();
+            this._emailRules = rules.map((r) => ({
+                type: r.type,
+                pattern: new RegExp(r.pattern, 'i'),
+            }));
+        }
+
+        let good = true;
+        for (let rule of this._emailRules) {
+            if (rule.type === 'allow') {
+                if (!rule.pattern.test(email)) {
+                    good = false;
+                    break;
+                }
+            } else if (rule.type === 'deny') {
+                if (rule.pattern.test(email)) {
+                    good = false;
+                    break;
+                }
+            }
+        }
+
+        return good;
     }
 
     async loadUserInfo() {
@@ -220,6 +258,11 @@ export class AuthManager {
             `${API_ENDPOINT}/api/${encodeURIComponent(this.idToken)}/metadata`,
             metadata
         );
+        return response.data;
+    }
+
+    private async _getEmailRules(): Promise<EmailRule[]> {
+        const response = await axios.get(`${API_ENDPOINT}/api/emailRules`);
         return response.data;
     }
 }

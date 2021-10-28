@@ -10,7 +10,7 @@
         "watch:web": "vite serve ./web",
         "watch:server": "concurrently --names \"Build,Inst\" \"node ./scripts/dev-auth.js\" \"npm:watch:inst\"",
         "watch:inst": "wait-on server/dist/main.js && nodemon server/dist/main.js",
-        "serverless": "npm run build:servers:dev && npm run merge:secrets && cd serverless/aws && sam local start-api -p 3003 --docker-network docker_default --env-vars env.json --env-vars secrets.env.json",
+        "serverless": "npm run build:servers:dev && npm run merge:secrets && cd serverless/aws && sam local start-api -p 2998 --docker-network docker_default --env-vars env.json --env-vars secrets.env.json",
         "build": "npm run build:web && npm run build:servers",
         "build:web": "vite build ./web",
         "build:servers": "node ./scripts/build-auth.js",

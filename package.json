@@ -13,6 +13,7 @@
         "watch:auth": "lerna exec --no-prefix --scope @casual-simulation/aux-auth -- npm run watch",
         "watch:docs": "cd docs && npm start",
         "watch:portals": "lerna exec --scope @casual-simulation/aux-custom-portals -- npm run watch",
+        "watch:auth:web": "lerna exec --scope @casual-simulation/aux-auth -- npm run watch:web",
         "rebuild": "npm run clean && npm run build",
         "build": "npm run clean && npm run build:portals && npm run build:libs && npm run build:server && npm run build:auth && npm run build:proxy && npm run build:redirector && npm run build:cli",
         "build:tar:docker": "npm run build && npm run tar:docket",

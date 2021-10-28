@@ -34,6 +34,11 @@ interface AppRecord {
     record: any;
 }
 
+export interface EmailRule {
+    type: 'allow' | 'deny';
+    pattern: string;
+}
+
 // see https://stackoverflow.com/a/6969486/1832856
 function escapeRegExp(str: string) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
@@ -73,6 +78,18 @@ async function start() {
                 avatarUrl: user.avatarUrl,
                 avatarPortraitUrl: user.avatarPortraitUrl,
             });
+        } catch (err) {
+            console.error(err);
+            res.sendStatus(500);
+        }
+    });
+
+    app.get('/api/emailRules', async (req, res) => {
+        try {
+            res.send([
+                { type: 'allow', pattern: '@casualsimulation\\.org$' },
+                { type: 'deny', pattern: '^test@casualsimulation\\.org$' },
+            ] as EmailRule[]);
         } catch (err) {
             console.error(err);
             res.sendStatus(500);
