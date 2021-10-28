@@ -200,9 +200,10 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             if (contexts && contexts.length > 0) {
                 for (let i = 0; i < contexts.length; i++) {
                     const dimension = contexts[i];
-                    const colliders = (dimension instanceof DimensionGroup3D
-                        ? dimension.colliders
-                        : []
+                    const colliders = (
+                        dimension instanceof DimensionGroup3D
+                            ? dimension.colliders
+                            : []
                     ).filter((c) => !!c);
 
                     if (dimension instanceof MiniPortalContextGroup3D) {
@@ -593,7 +594,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         }
 
         const input = this._game.getInput();
-        const pagePos = this._game.getInput().getMousePagePos();
+        const pagePos = input.getMousePagePos();
         const draggableGroups = this.getDraggableGroups();
         const viewports = this._game.getViewports();
 

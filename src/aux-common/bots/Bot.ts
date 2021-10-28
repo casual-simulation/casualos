@@ -1646,6 +1646,8 @@ export const KNOWN_TAGS: string[] = [
     'pixelWidth',
     'pixelHeight',
     'pageTitle',
+    'pointerPixelX',
+    'pointerPixelY',
 
     'mousePointerPositionX',
     'mousePointerPositionY',
