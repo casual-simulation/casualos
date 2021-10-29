@@ -110,7 +110,6 @@
         "useragent": "^2.3.0",
         "uuid": "^8.3.2",
         "vhost": "^3.0.2",
-        "vm2": "3.8.2",
         "vue": "^2.5.17",
         "vue-class-component": "^6.3.2",
         "vue-clipboard2": "0.3.1",
