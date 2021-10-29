@@ -104,7 +104,7 @@ export class ServerlessRecordsStore implements RecordsStore {
                     },
                 ],
             };
-        } else {
+        } else if (hasValue(query.prefix)) {
             let startKey = query.prefix;
             let endKey =
                 query.prefix.slice(0, -1) +
@@ -174,6 +174,8 @@ export class ServerlessRecordsStore implements RecordsStore {
                 totalCount: totalCount,
                 records: records.filter((r) => !!r),
             };
+        } else {
+            return null;
         }
     }
 
