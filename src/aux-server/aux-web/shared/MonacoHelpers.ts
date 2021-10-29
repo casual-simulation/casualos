@@ -21,10 +21,11 @@ import {
     DNA_TAG_PREFIX,
     hasPortalScript,
 } from '@casual-simulation/aux-common';
-import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
-import HtmlWorker from 'worker-loader!monaco-editor/esm/vs/language/html/html.worker';
-import CssWorker from 'worker-loader!monaco-editor/esm/vs/language/css/css.worker';
-import JsonWorker from 'worker-loader!monaco-editor/esm/vs/language/json/json.worker';
+import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
+import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
+import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
+import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
+import TypescriptWorker from './public/monaco-editor/typescript/ts.worker?worker';
 import { calculateFormulaDefinitions } from './FormulaHelpers';
 import { libFileMap } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
 import { SimpleEditorModelResolverService } from 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
@@ -76,12 +77,6 @@ import {
 import { triggerMonacoLoaded } from './MonacoAsync';
 import './public/monaco-editor/quick-open-file/quick-open-file';
 import './public/monaco-editor/quick-search-all/quick-search-all';
-
-// load TypescriptWorker by require().
-// For some reason, loading relative imports with worker-loader fails when using the import syntax
-// but the require syntax works.
-const TypescriptWorker = require('./public/monaco-editor/typescript/ts.worker')
-    .default;
 
 export function setup() {
     // Tell monaco how to create the web workers
@@ -404,19 +399,17 @@ export function watchEditor(
         editor
     );
 
-    const modelChangeObservable = new Observable<
-        monaco.editor.IModelChangedEvent
-    >((sub) => {
-        return toSubscription(editor.onDidChangeModel((e) => sub.next(e)));
-    });
+    const modelChangeObservable =
+        new Observable<monaco.editor.IModelChangedEvent>((sub) => {
+            return toSubscription(editor.onDidChangeModel((e) => sub.next(e)));
+        });
 
-    const modelChangeLanguageObservable = new Observable<
-        monaco.editor.IModelLanguageChangedEvent
-    >((sub) => {
-        return toSubscription(
-            editor.onDidChangeModelLanguage((e) => sub.next(e))
-        );
-    });
+    const modelChangeLanguageObservable =
+        new Observable<monaco.editor.IModelLanguageChangedEvent>((sub) => {
+            return toSubscription(
+                editor.onDidChangeModelLanguage((e) => sub.next(e))
+            );
+        });
 
     const decorators = modelChangeObservable.pipe(
         delay(100),
@@ -466,7 +459,8 @@ export function watchEditor(
 
             const botDecorators = debouncedStates.pipe(
                 map((state) => {
-                    let decorators = [] as monaco.editor.IModelDeltaDecoration[];
+                    let decorators =
+                        [] as monaco.editor.IModelDeltaDecoration[];
                     let offset = info.editOffset;
                     for (let bot of getActiveObjects(state)) {
                         const cursorStart = calculateNumericalTagValue(

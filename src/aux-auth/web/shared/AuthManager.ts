@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { Magic } from 'magic-sdk';
 import { Subject, BehaviorSubject, Observable } from 'rxjs';
-import { listenForChannel } from '../../../aux-vm-browser';
 import { AppMetadata } from '../../shared/AuthMetadata';
 
 const EMAIL_KEY = 'userEmail';
@@ -13,6 +12,16 @@ const PERMANENT_TOKEN_LIFESPAN_SECONDS = 1000 * 365 * 24 * 60 * 60;
 export interface AuthorizedToken {
     service: string;
     token: string;
+}
+
+export interface EmailRule {
+    type: 'allow' | 'deny';
+    pattern: string;
+}
+
+export interface CompiledEmailRule {
+    type: 'allow' | 'deny';
+    pattern: RegExp;
 }
 
 declare const API_ENDPOINT: string;
@@ -27,6 +36,7 @@ export class AuthManager {
 
     private _loginState: Subject<boolean>;
     private _authorizedTokens: Subject<AuthorizedToken>;
+    private _emailRules: CompiledEmailRule[];
 
     constructor(magicApiKey: string) {
         this._magic = new Magic(magicApiKey, {
@@ -65,7 +75,7 @@ export class AuthManager {
     }
 
     get userInfoLoaded() {
-        return !!this._userId && !!this._email && !!this._idToken;
+        return !!this._userId && !!this._idToken;
     }
 
     get loginState(): Observable<boolean> {
@@ -76,12 +86,36 @@ export class AuthManager {
         return this._authorizedTokens;
     }
 
+    async validateEmail(email: string): Promise<boolean> {
+        if (!this._emailRules) {
+            const rules = await this._getEmailRules();
+            this._emailRules = rules.map((r) => ({
+                type: r.type,
+                pattern: new RegExp(r.pattern, 'i'),
+            }));
+        }
+
+        let good = true;
+        for (let rule of this._emailRules) {
+            if (rule.type === 'allow') {
+                if (!rule.pattern.test(email)) {
+                    good = false;
+                    break;
+                }
+            } else if (rule.type === 'deny') {
+                if (rule.pattern.test(email)) {
+                    good = false;
+                    break;
+                }
+            }
+        }
+
+        return good;
+    }
+
     async loadUserInfo() {
-        const {
-            email,
-            issuer,
-            publicAddress,
-        } = await this.magic.user.getMetadata();
+        const { email, issuer, publicAddress } =
+            await this.magic.user.getMetadata();
         this._idToken = await this.magic.user.getIdToken();
         this._email = email;
         this._userId = issuer;
@@ -101,16 +135,6 @@ export class AuthManager {
      */
     async isServiceAuthorized(service: string) {
         return true;
-        // try {
-        //     const response = await axios.get(
-        //         `/api/${encodeURIComponent(
-        //             this.userId
-        //         )}/services/${encodeURIComponent(service)}`
-        //     );
-        //     return !!response.data;
-        // } catch {
-        //     return false;
-        // }
     }
 
     async authorizeService(service: string) {
@@ -234,6 +258,11 @@ export class AuthManager {
             `${API_ENDPOINT}/api/${encodeURIComponent(this.idToken)}/metadata`,
             metadata
         );
+        return response.data;
+    }
+
+    private async _getEmailRules(): Promise<EmailRule[]> {
+        const response = await axios.get(`${API_ENDPOINT}/api/emailRules`);
         return response.data;
     }
 }

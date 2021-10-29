@@ -56,5 +56,8 @@
     "javascript.preferences.quoteStyle": "single",
     "typescript.preferences.quoteStyle": "single",
     "workbench.colorCustomizations": {},
-    "deno.enable": false
+    "deno.enable": false,
+    "jest.autoEnable": false,
+    "typescript.tsdk": "node_modules\\typescript\\lib",
+    "typescript.tsserver.maxTsServerMemory": 4096
 }

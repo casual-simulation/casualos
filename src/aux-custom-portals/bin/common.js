@@ -14,10 +14,10 @@ module.exports = [
             outfile: path.resolve(__dirname, '../dist/esbuild/casualos.js'),
             bundle: true,
             format: 'esm',
-            metafile: path.resolve(
-                __dirname,
-                '../dist/esbuild/casualos.meta.json'
-            ),
+            // metafile: path.resolve(
+            //     __dirname,
+            //     '../dist/esbuild/casualos.meta.json'
+            // ),
             plugins: [
                 emptyModulePlugin('@casual-simulation/three'),
                 emptyModulePlugin('@casual-simulation/error-stack-parser'),
@@ -96,10 +96,10 @@ module.exports = [
             outfile: path.resolve(__dirname, '../dist/esbuild/lodash.js'),
             bundle: true,
             format: 'esm',
-            metafile: path.resolve(
-                __dirname,
-                '../dist/esbuild/lodash.meta.json'
-            ),
+            // metafile: path.resolve(
+            //     __dirname,
+            //     '../dist/esbuild/lodash.meta.json'
+            // ),
             external: [],
             logLevel: 'error',
         },
@@ -116,10 +116,10 @@ module.exports = [
             outdir: path.resolve(__dirname, '../dist/esbuild/rxjs'),
             bundle: true,
             format: 'esm',
-            metafile: path.resolve(
-                __dirname,
-                '../dist/esbuild/rxjs/rxjs.meta.json'
-            ),
+            // metafile: path.resolve(
+            //     __dirname,
+            //     '../dist/esbuild/rxjs/rxjs.meta.json'
+            // ),
             logLevel: 'error',
         },
     },
@@ -151,7 +151,7 @@ module.exports = [
             outfile: path.resolve(__dirname, '../dist/esbuild/uuid.js'),
             bundle: true,
             format: 'esm',
-            metafile: path.resolve(__dirname, '../dist/esbuild/uuid.meta.json'),
+            // metafile: path.resolve(__dirname, '../dist/esbuild/uuid.meta.json'),
             logLevel: 'error',
         },
     },

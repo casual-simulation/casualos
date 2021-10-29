@@ -12,10 +12,15 @@ export default class AuthLogin extends Vue {
 
     acceptedTerms: boolean = false;
     showTermsOfServiceError: boolean = false;
+    showEmailError: boolean = false;
 
     @Prop({ default: null }) after: string;
 
     private _loggedIn: boolean;
+
+    get emailFieldClass() {
+        return this.showEmailError ? 'md-invalid' : '';
+    }
 
     async created() {
         this.email = authManager.savedEmail || '';
@@ -57,10 +62,18 @@ export default class AuthLogin extends Vue {
             return;
         }
         if (!this.email) {
+            this.showEmailError = true;
             return;
         }
         this.showTermsOfServiceError = false;
         this.processing = true;
+
+        if (!(await authManager.validateEmail(this.email))) {
+            this.showEmailError = true;
+            this.processing = false;
+            return;
+        }
+        this.showEmailError = false;
 
         try {
             if (await authManager.magic.user.isLoggedIn()) {

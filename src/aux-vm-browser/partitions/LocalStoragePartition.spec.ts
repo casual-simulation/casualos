@@ -10,6 +10,10 @@ import {
 import { first, skip } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 
+console.error = jest.fn();
+console.warn = jest.fn();
+console.log = jest.fn();
+
 describe('LocalStoragePartition', () => {
     beforeAll(() => {
         polyfillEventListenerFunctions();
@@ -92,8 +96,104 @@ describe('LocalStoragePartition', () => {
             const data = getStoredData();
 
             expect(data).toEqual([
-                ['name/space/test', createBot('test', {}, 'local')],
-                ['name/space/test2', createBot('test2', {}, 'local')],
+                ['name/space/bots/test', createBot('test', {}, 'local')],
+                ['name/space/bots/test2', createBot('test2', {}, 'local')],
+                ['name/space/inst', expect.any(Number)],
+            ]);
+        });
+
+        it('should delete the oldest namespace if storing data fails', async () => {
+            globalThis.localStorage.setItem(
+                'other/space/bots/test2',
+                JSON.stringify({
+                    masks: {
+                        local: {
+                            abc: 'def',
+                        },
+                    },
+                })
+            );
+            globalThis.localStorage.setItem(
+                'other/space/inst',
+                (10).toString()
+            );
+
+            globalThis.localStorage.setItem(
+                'new/space/bots/test3',
+                JSON.stringify({
+                    masks: {
+                        local: {
+                            abc: 'def',
+                        },
+                    },
+                })
+            );
+            globalThis.localStorage.setItem('new/space/inst', (11).toString());
+
+            let mock = (globalThis.localStorage.setItem = jest.fn(
+                globalThis.localStorage.setItem.bind(globalThis.localStorage)
+            ));
+            mock.mockImplementationOnce(() => {
+                throw new Error('Failed to store');
+            });
+
+            await partition.applyEvents([botAdded(createBot('test'))]);
+
+            const data = getStoredData();
+
+            expect(data).toEqual([
+                [
+                    'new/space/bots/test3',
+                    {
+                        masks: {
+                            local: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                ],
+                ['new/space/inst', 11],
+                ['name/space/bots/test', createBot('test', {}, 'local')],
+                ['name/space/inst', expect.any(Number)],
+            ]);
+        });
+
+        it('should do nothing if storing data fails and the only namespace is the current one', async () => {
+            globalThis.localStorage.setItem(
+                'name/space/bots/test2',
+                JSON.stringify({
+                    masks: {
+                        local: {
+                            abc: 'def',
+                        },
+                    },
+                })
+            );
+            globalThis.localStorage.setItem('name/space/inst', (10).toString());
+
+            let mock = (globalThis.localStorage.setItem = jest.fn(
+                globalThis.localStorage.setItem.bind(globalThis.localStorage)
+            ));
+            mock.mockImplementation(() => {
+                throw new Error('Failed to store');
+            });
+
+            await partition.applyEvents([botAdded(createBot('test'))]);
+
+            const data = getStoredData();
+
+            expect(data).toEqual([
+                [
+                    'name/space/bots/test2',
+                    {
+                        masks: {
+                            local: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                ],
+                ['name/space/inst', 10],
             ]);
         });
 
@@ -115,7 +215,7 @@ describe('LocalStoragePartition', () => {
 
             expect(data).toEqual([
                 [
-                    'name/space/test',
+                    'name/space/bots/test',
                     createBot(
                         'test',
                         {
@@ -124,7 +224,8 @@ describe('LocalStoragePartition', () => {
                         'local'
                     ),
                 ],
-                ['name/space/test2', createBot('test2', {}, 'local')],
+                ['name/space/bots/test2', createBot('test2', {}, 'local')],
+                ['name/space/inst', expect.any(Number)],
             ]);
         });
 
@@ -148,7 +249,7 @@ describe('LocalStoragePartition', () => {
 
             expect(data).toEqual([
                 [
-                    'name/space/test',
+                    'name/space/bots/test',
                     {
                         id: 'test',
                         space: 'local',
@@ -160,7 +261,8 @@ describe('LocalStoragePartition', () => {
                         },
                     },
                 ],
-                ['name/space/test2', createBot('test2', {}, 'local')],
+                ['name/space/bots/test2', createBot('test2', {}, 'local')],
+                ['name/space/inst', expect.any(Number)],
             ]);
         });
 
@@ -179,7 +281,7 @@ describe('LocalStoragePartition', () => {
 
             expect(data).toEqual([
                 [
-                    'name/space/test',
+                    'name/space/bots/test',
                     {
                         masks: {
                             local: {
@@ -188,12 +290,13 @@ describe('LocalStoragePartition', () => {
                         },
                     },
                 ],
+                ['name/space/inst', expect.any(Number)],
             ]);
         });
 
         it('should load tag masks from local storage when connect() is called', async () => {
             globalThis.localStorage.setItem(
-                'name/space/test',
+                'name/space/bots/test',
                 JSON.stringify({
                     masks: {
                         local: {
@@ -246,7 +349,7 @@ describe('LocalStoragePartition', () => {
             partition.connect();
 
             sendStorageEvent(
-                'name/space/test',
+                'name/space/bots/test',
                 JSON.stringify({
                     masks: {
                         local: {
@@ -304,7 +407,7 @@ describe('LocalStoragePartition', () => {
                 .subscribe((u) => updates.push(u));
 
             sendStorageEvent(
-                'name/space/test',
+                'name/space/bots/test',
                 JSON.stringify(createBot('test')),
                 JSON.stringify(
                     createBot('test', {
@@ -354,7 +457,7 @@ describe('LocalStoragePartition', () => {
                 .subscribe((u) => updates.push(u));
 
             sendStorageEvent(
-                'name/space/test',
+                'name/space/bots/test',
                 JSON.stringify({
                     masks: {
                         local: {},

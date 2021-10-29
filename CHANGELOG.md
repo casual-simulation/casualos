@@ -1,5 +1,23 @@
 # CasualOS Changelog
 
+## V2.0.14
+
+#### Date: 10/29/2021
+
+### :rocket: Improvements
+
+-   Improved the `local` space to delete the oldest inst when localStorage is full.
+-   Added the `pointerPixelX` and `pointerPixelY` tags to the gridPortalBot to track the mouse pointer position on the screen.
+-   Improved the records system to be able to store records larger than 300KB in size.
+    -   Records larger than 300KB will be placed in an S3 bucket.
+    -   Records stored in S3 will now have a `dataURL` instead of `data` that points to where the record can be downloaded from.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the built-in portal bots would cause all scripts to be recompiled.
+-   Fixed an issue where functions that retrieve data from portal bots (like `os.getFocusPoint()`) would always return null data.
+-   Fixed an issue where the `.getMoreRecords()` function did not work.
+
 ## V2.0.13
 
 #### Date: 10/19/2021

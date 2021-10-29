@@ -2,7 +2,9 @@
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "baseUrl": ".",
-        "outDir": "./dist/",
+        "outDir": "../../temp/aux-server/dom/",
+        "composite": true,
+        "incremental": true,
         "paths": {
             "vue-json-tree-view": [
                 "aux-web/shared/public/VueJsonTreeView/index.ts"
@@ -11,11 +13,26 @@
                 "aux-web/shared/public/three-legacy-gltf-loader/index.d.ts"
             ]
         },
-        "lib": ["es2015", "es5", "dom", "webworker"]
+        "lib": ["es2015", "es5", "dom"]
     },
     "include": [
-        "./**/*"
+        "./aux-web/**/*",
+        "./server/**/*",
+        "./shared/**/*",
+        "./typings/**/*"
         // "./node_modules/@casual-simulation/aux-common/**/*"
     ],
-    "exclude": ["node_modules"]
+    "exclude": [
+        "**/node_modules/**",
+        "./aux-web/aux-player/sw.ts",
+        "./aux-web/aux-player/vite.config.ts"
+    ],
+    "references": [
+        { "path": "../aux-common" },
+        { "path": "../aux-vm-browser" },
+        { "path": "../aux-components" },
+        { "path": "../aux-vm-node" },
+        { "path": "../aux-vm-deno" }
+        // { "path": "../aux-custom-portals" }
+    ]
 }

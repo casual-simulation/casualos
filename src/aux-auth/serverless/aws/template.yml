@@ -78,6 +78,29 @@ Resources:
                     Properties:
                         Path: /api/{token}/metadata
                         Method: PUT
+    handleEmailRules:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: email.handler
+            CodeUri: dist/handlers
+            Runtime: nodejs14.x
+            MemorySize: 128
+            Timeout: 100
+            Description: A function that retreives the email rules.
+            Policies:
+                # Give Create/Read/Update/Delete Permissions to the EmailRulesTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref EmailRulesTable
+            Environment:
+                Variables:
+                    # Make table name accessible as environment variable from function code during execution
+                    EMAIL_TABLE: !Ref EmailRulesTable
+            Events:
+                GetEmailRules:
+                    Type: Api
+                    Properties:
+                        Path: /api/emailRules
+                        Method: GET
 
     # This is a Lambda function config associated with the source code: get-all-items.js
     # putIssuerMetadata:
@@ -141,13 +164,15 @@ Resources:
             Handler: records.handleRecords
             CodeUri: dist/handlers
             Runtime: nodejs14.x
-            MemorySize: 128
+            MemorySize: 256
             Timeout: 100
             Description: A function that publishes and retreives records for the user.
             Policies:
                 # Give Create/Read/Update/Delete Permissions to the SampleTable
                 - DynamoDBCrudPolicy:
                       TableName: !Ref RecordsTable
+                - S3CrudPolicy:
+                      BucketName: !Ref RecordsBucket
             Environment:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
@@ -158,6 +183,7 @@ Resources:
                     REDIS_USE_TLS: !Ref RedisUseTLSParameter
                     REDIS_RECORDS_NAMESPACE: !Ref RedisRecordsNamespaceParameter
                     REDIS_PASSWORD: !Ref RedisPasswordParameter
+                    RECORDS_BUCKET: !Ref RecordsBucket
             Events:
                 PostRecord:
                     Type: Api
@@ -252,6 +278,24 @@ Resources:
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
+    EmailRulesTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: id
+                  KeyType: HASH
+            AttributeDefinitions:
+                - AttributeName: id
+                  AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
+
+    RecordsBucket:
+        Type: AWS::S3::Bucket
+        DeletionPolicy: Retain
+        Properties:
+            AccessControl: public-read
 
 Outputs:
     WebEndpoint:

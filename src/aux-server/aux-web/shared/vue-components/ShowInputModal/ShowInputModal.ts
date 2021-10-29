@@ -141,7 +141,7 @@ export default class ShowInputModal extends Vue {
             () => {
                 const field = <Vue>this.$refs.inputModalField;
                 if (field) {
-                    field.$el.focus();
+                    (field.$el as HTMLElement).focus();
                     if (this.autoSelect) {
                         const input = field.$el as HTMLInputElement;
                         input.setSelectionRange(0, input.value.length);

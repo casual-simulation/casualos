@@ -72,6 +72,8 @@ import AuthTerms from './AuthTerms/AuthTerms';
 import AuthPrivacyPolicy from './AuthPrivacyPolicy/AuthPrivacyPolicy';
 import AuthAcceptableUsePolicy from './AuthAcceptableUsePolicy/AuthAcceptableUsePolicy';
 
+import 'virtual:svg-icons-register';
+
 Vue.use(VueRouter);
 Vue.use(MdButton);
 Vue.use(MdCheckbox);

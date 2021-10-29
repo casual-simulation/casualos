@@ -2,9 +2,14 @@ const AWS = require('aws-sdk');
 const { readFileSync } = require('fs');
 const path = require('path');
 const YAML = require('yaml');
+const { v4: uuid } = require('uuid');
 
 AWS.config.update({
     region: 'us-east-1',
+
+    // Dummy credentials
+    accessKeyId: 'xxxx',
+    secretAccessKey: 'xxxx',
 });
 
 const ddb = new AWS.DynamoDB({
@@ -12,10 +17,18 @@ const ddb = new AWS.DynamoDB({
     apiVersion: '2012-08-10',
 });
 
+const s3 = new AWS.S3({
+    endpoint: 'http://localhost:4566',
+    apiVersion: '2006-03-01',
+    s3ForcePathStyle: true,
+});
+
 // See env.json
 const USERS_TABLE = 'Users';
 const USER_SERVICES_TABLE = 'UserServices';
 const RECORDS_TABLE = 'Records';
+const EMAIL_TABLE = 'EmailRules';
+const RECORDS_BUCKET = 'records-bucket';
 
 async function start() {
     const tablesResult = await ddb.listTables({}).promise();
@@ -52,9 +65,8 @@ async function start() {
         console.log('Users Table already exists');
     }
 
-    const hasUserServicesTable = tablesResult.TableNames.includes(
-        USER_SERVICES_TABLE
-    );
+    const hasUserServicesTable =
+        tablesResult.TableNames.includes(USER_SERVICES_TABLE);
     if (!hasUserServicesTable || reset) {
         if (hasUserServicesTable) {
             console.log('Deleting UserServices Table');
@@ -100,6 +112,76 @@ async function start() {
             .promise();
     } else {
         console.log('Records Table already exists');
+    }
+
+    const hasEmailTable = tablesResult.TableNames.includes(EMAIL_TABLE);
+    if (!hasEmailTable || reset) {
+        if (hasEmailTable) {
+            console.log('Deleting Email Table');
+            await ddb
+                .deleteTable({
+                    TableName: EMAIL_TABLE,
+                })
+                .promise();
+        }
+
+        console.log('Creating Email Table');
+
+        const params = template.Resources.EmailRulesTable.Properties;
+        await ddb
+            .createTable({
+                TableName: EMAIL_TABLE,
+                ...params,
+            })
+            .promise();
+
+        await ddb
+            .putItem({
+                TableName: EMAIL_TABLE,
+                Item: {
+                    id: { S: uuid() },
+                    type: { S: 'allow' },
+                    pattern: { S: '@casualsimulation\\.org$' },
+                },
+            })
+            .promise();
+
+        await ddb
+            .putItem({
+                TableName: EMAIL_TABLE,
+                Item: {
+                    id: { S: uuid() },
+                    type: { S: 'deny' },
+                    pattern: { S: '^test@casualsimulation\\.org$' },
+                },
+            })
+            .promise();
+    } else {
+        console.log('Email Table already exists');
+    }
+
+    const buckets = await s3.listBuckets().promise();
+    const hasRecordsBucket = buckets.Buckets.some(
+        (b) => b.Name === RECORDS_BUCKET
+    );
+    if (!hasRecordsBucket || reset) {
+        if (hasRecordsBucket) {
+            console.log('Deleting Records Bucket');
+            await s3
+                .deleteBucket({
+                    Bucket: RECORDS_BUCKET,
+                })
+                .promise();
+        }
+
+        console.log('Creating Records Bucket');
+        await s3
+            .createBucket({
+                Bucket: RECORDS_BUCKET,
+            })
+            .promise();
+    } else {
+        console.log('Records Bucket already exists');
     }
 }
 

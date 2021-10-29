@@ -51,7 +51,7 @@ import { ESBuildPortalBundler } from '@casual-simulation/aux-vm/managers';
 // NOTE: This triggers an "Cannot find module or declarations" error for this
 // during Jest tests but not during builds.
 // @ts-ignore TS2307
-import ESBuildWasmURL from 'esbuild-wasm/esbuild.wasm';
+import ESBuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import { IdePortalManager } from './IdePortalManager';
 import { AuthHelper } from './AuthHelper';
 

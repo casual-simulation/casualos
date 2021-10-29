@@ -202,7 +202,8 @@ export interface Record {
     /**
      * The data that was stored in the record.
      */
-    data: any;
+    data?: any;
+    dataURL?: string;
 }
 
 /**
@@ -1646,6 +1647,8 @@ export const KNOWN_TAGS: string[] = [
     'pixelWidth',
     'pixelHeight',
     'pageTitle',
+    'pointerPixelX',
+    'pointerPixelY',
 
     'mousePointerPositionX',
     'mousePointerPositionY',

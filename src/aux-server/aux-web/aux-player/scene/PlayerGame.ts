@@ -115,7 +115,8 @@ export class PlayerGame extends Game {
     mapViewport: Viewport = null;
     mapCameraRig: CameraRig = null;
     showMiniPortalCameraRigHome: boolean = false;
-    disableCanvasTransparency: boolean = DEFAULT_PORTAL_DISABLE_CANVAS_TRANSPARENCY;
+    disableCanvasTransparency: boolean =
+        DEFAULT_PORTAL_DISABLE_CANVAS_TRANSPARENCY;
 
     startZoom: number;
     startAspect: number;
@@ -585,7 +586,8 @@ export class PlayerGame extends Game {
         this.miniScene.add(miniPortalSim3D);
 
         const mapPortalSim3D = new MapSimulation3D(this, sim);
-        mapPortalSim3D.coordinateTransformer = this.gameView.getMapCoordinateTransformer();
+        mapPortalSim3D.coordinateTransformer =
+            this.gameView.getMapCoordinateTransformer();
         mapPortalSim3D.mapView = this.gameView.getMapView();
         mapPortalSim3D.targetCoordinateSystem = CoordinateSystem.Z_UP;
         mapPortalSim3D.init();
@@ -1116,7 +1118,7 @@ export class PlayerGame extends Game {
         this._updateMiniPortalControls();
         this._updateMainControls();
         this._updateCanvasTransparency();
-        this._updatePixelWidthAndHeight();
+        this._updateGridPortalValues();
 
         this._updateMapPortal();
     }
@@ -1144,7 +1146,8 @@ export class PlayerGame extends Game {
             this.gameView.enableMapView({
                 setup: (context) => {
                     const view = this.gameView.getMapView();
-                    const coordinateTransform = this.gameView.getMapCoordinateTransformer();
+                    const coordinateTransform =
+                        this.gameView.getMapCoordinateTransformer();
                     for (let sim of this.mapSimulations) {
                         sim.coordinateTransformer = coordinateTransform;
                         sim.mapView = view;
@@ -1168,9 +1171,8 @@ export class PlayerGame extends Game {
                     // The ArcGIS API for JavaScript renders to custom offscreen buffers, and not to the default framebuffers.
                     // We have to inject this bit of code into the three.js runtime in order for it to bind those
                     // buffers instead of the default ones.
-                    let originalSetRenderTarget = this.mapRenderer.setRenderTarget.bind(
-                        this.mapRenderer
-                    );
+                    let originalSetRenderTarget =
+                        this.mapRenderer.setRenderTarget.bind(this.mapRenderer);
                     this.mapRenderer.setRenderTarget = (target) => {
                         originalSetRenderTarget(target);
                         if (target == null) {
@@ -1227,23 +1229,39 @@ export class PlayerGame extends Game {
         }
     }
 
-    private _updatePixelWidthAndHeight() {
+    private _updateGridPortalValues() {
         const renderingSize = new Vector2();
         this.renderer.getSize(renderingSize);
 
         for (let [id, sim] of appManager.simulationManager.simulations) {
             const portalConfig = getPortalConfigBot(sim, 'gridPortal');
-            if (
-                portalConfig &&
-                (portalConfig.tags['pixelWidth'] !== renderingSize.x ||
-                    portalConfig.tags['pixelHeight'] !== renderingSize.y)
-            ) {
-                sim.helper.updateBot(portalConfig, {
-                    tags: {
-                        pixelWidth: renderingSize.x,
-                        pixelHeight: renderingSize.y,
-                    },
-                });
+            if (portalConfig) {
+                let update = {} as BotTags;
+                let hasUpdate = false;
+                if (
+                    portalConfig.tags['pixelWidth'] !== renderingSize.x ||
+                    portalConfig.tags['pixelHeight'] !== renderingSize.y
+                ) {
+                    update.pixelWidth = renderingSize.x;
+                    update.pixelHeight = renderingSize.y;
+                    hasUpdate = true;
+                }
+                const pagePos = this.getInput().getMousePagePos();
+                if (
+                    pagePos &&
+                    (portalConfig.tags['pointerPixelX'] !== pagePos.x ||
+                        portalConfig.tags['pointerPixelY'] !== pagePos.y)
+                ) {
+                    update.pointerPixelX = pagePos.x;
+                    update.pointerPixelY = pagePos.y;
+                    hasUpdate = true;
+                }
+
+                if (hasUpdate) {
+                    sim.helper.updateBot(portalConfig, {
+                        tags: update,
+                    });
+                }
             }
         }
     }
@@ -1253,7 +1271,8 @@ export class PlayerGame extends Game {
             this.disableCanvasTransparency !==
             this.getDisableCanvasTransparency()
         ) {
-            this.disableCanvasTransparency = this.getDisableCanvasTransparency();
+            this.disableCanvasTransparency =
+                this.getDisableCanvasTransparency();
             if (this.disableCanvasTransparency) {
                 this.renderer.domElement.style.backgroundColor = '#000';
             } else {
@@ -1332,12 +1351,17 @@ export class PlayerGame extends Game {
 
     private _updateMiniPortalControls() {
         if (this.miniPortalControls != null) {
-            this.miniPortalControls.controls.enablePan = this.getMiniPortalPannable();
-            this.miniPortalControls.controls.enableRotate = this.getMiniPortalRotatable();
-            this.miniPortalControls.controls.enableZoom = this.getMiniPortalZoomable();
+            this.miniPortalControls.controls.enablePan =
+                this.getMiniPortalPannable();
+            this.miniPortalControls.controls.enableRotate =
+                this.getMiniPortalRotatable();
+            this.miniPortalControls.controls.enableZoom =
+                this.getMiniPortalZoomable();
 
-            this.miniPortalControls.controls.minPanX = this.getMiniPortalPanMinX();
-            this.miniPortalControls.controls.maxPanX = this.getMiniPortalPanMaxX();
+            this.miniPortalControls.controls.minPanX =
+                this.getMiniPortalPanMinX();
+            this.miniPortalControls.controls.maxPanX =
+                this.getMiniPortalPanMaxX();
 
             //this.invController.controls.minPanY = this.getPanMinY();
             if (this.getMiniPortalPanMinY() != null) {
@@ -1361,7 +1385,8 @@ export class PlayerGame extends Game {
                     this.miniScene.add(this.miniPortalFocusPoint);
                 }
                 this.miniPortalFocusPoint.visible = true;
-                let targetWorld: Vector3 = this.miniPortalControls.controls.target.clone();
+                let targetWorld: Vector3 =
+                    this.miniPortalControls.controls.target.clone();
                 this.miniPortalControls.rig.cameraParent.localToWorld(
                     targetWorld
                 );
@@ -1552,9 +1577,10 @@ export class PlayerGame extends Game {
 
         if (!this.setupDelay) {
             if (this.miniPortalControls == null) {
-                this.miniPortalControls = this.interaction.cameraRigControllers.find(
-                    (c) => c.rig.name === cameraRig.name
-                );
+                this.miniPortalControls =
+                    this.interaction.cameraRigControllers.find(
+                        (c) => c.rig.name === cameraRig.name
+                    );
             }
         }
     }

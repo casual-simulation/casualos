@@ -4,7 +4,7 @@
     "description": "Common library for AUX Vue components and Misc",
     "main": "index.js",
     "types": "index.d.ts",
-    "module": "index.js",
+    "module": "index",
     "private": true,
     "scripts": {
         "watch": "tsc --build --watch",
@@ -61,7 +61,7 @@
         "@webxr-input-profiles/assets": "1.0.5",
         "@webxr-input-profiles/motion-controllers": "1.0.0",
         "acorn": "^8.0.1",
-        "astring": "1.6.2",
+        "astring": "1.7.5",
         "axios": "^0.21.1",
         "bcryptjs": "2.4.3",
         "cassandra-driver": "4.5.1",
@@ -80,10 +80,9 @@
         "jsbarcode": "3.11.0",
         "jsonwebtoken": "8.5.1",
         "jsqr": "1.2.0",
-        "jszip": "3.2.2",
+        "jszip": "3.7.1",
         "lodash": "4.17.21",
         "mime": "2.4.6",
-        "monaco-editor": "0.22.3",
         "mongodb": "3.6.2",
         "onoff": "6.0.0",
         "quagga": "0.12.1",
@@ -91,7 +90,6 @@
         "rxjs": "^6.5.2",
         "useragent": "^2.3.0",
         "uuid": "^8.3.2",
-        "vm2": "3.8.2",
         "vue": "^2.5.17",
         "vue-class-component": "^6.3.2",
         "vue-clipboard2": "0.3.1",
@@ -100,8 +98,7 @@
         "vue-material": "^1.0.0-beta-10.2",
         "vue-property-decorator": "^7.2.0",
         "vue-router": "^3.0.1",
-        "vue-shortkey": "^3.1.6",
-        "workbox-webpack-plugin": "6.3.0"
+        "vue-shortkey": "^3.1.6"
     },
     "devDependencies": {
         "benchmark": "2.1.4",

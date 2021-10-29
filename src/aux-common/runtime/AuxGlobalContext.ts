@@ -84,6 +84,11 @@ export interface AuxGlobalContext {
     mockAsyncActions: boolean;
 
     /**
+     * The global values that the context is using.
+     */
+    global: any;
+
+    /**
      * Enqueues the given action.
      * @param action The action to enqueue.
      */
@@ -548,6 +553,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      * Whether async API actions should be mocked.
      */
     mockAsyncActions: boolean;
+
+    global: any = {};
 
     uuid = uuidv4;
 

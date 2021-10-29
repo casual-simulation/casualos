@@ -18,7 +18,7 @@ export default class TagValueEditorWrapper extends Vue {
     }
 
     mounted() {
-        const element = this.$el;
+        const element = this.$el as HTMLElement;
         element.onmousedown = this._mouseDown.bind(this);
         element.ondragstart = () => false;
     }

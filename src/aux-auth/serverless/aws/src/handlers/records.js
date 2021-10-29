@@ -7,6 +7,7 @@ const { MagicAuthProvider } = require('../MagicAuthProvider');
 
 // Get the DynamoDB table name from environment variables
 const RECORDS_TABLE = process.env.RECORDS_TABLE;
+const RECORDS_BUCKET = process.env.RECORDS_BUCKET;
 const MAGIC_SECRET_KEY = process.env.MAGIC_SECRET_KEY;
 const REDIS_PORT = process.env.REDIS_PORT;
 const REDIS_HOST = process.env.REDIS_HOST;
@@ -18,6 +19,11 @@ const REDIS_PASSWORD = process.env.REDIS_PASSWORD;
 const dynamodb = require('aws-sdk/clients/dynamodb');
 const docClient = new dynamodb.DocumentClient({
     endpoint: DYNAMODB_ENDPOINT,
+});
+const S3 = require('aws-sdk/clients/s3');
+const s3Client = new S3({
+    endpoint: S3_ENDPOINT,
+    s3ForcePathStyle: DEVELOPMENT,
 });
 
 const redis = require('redis');
@@ -32,7 +38,9 @@ const store = new ServerlessRecordsStore(
     docClient,
     RECORDS_TABLE,
     redisClient,
-    REDIS_RECORDS_NAMESPACE
+    REDIS_RECORDS_NAMESPACE,
+    s3Client,
+    RECORDS_BUCKET
 );
 const auth = new MagicAuthProvider(MAGIC_SECRET_KEY);
 

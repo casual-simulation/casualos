@@ -31,6 +31,6 @@
         </md-dialog>
     </div>
 </template>
-<script src="./Loading.js"></script>
+<script src="./Loading.ts"></script>
 <style src="./Loading.css" scoped></style>
 <style src="./Loading.global.css"></style>

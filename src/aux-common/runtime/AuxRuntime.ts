@@ -103,7 +103,8 @@ import { replaceMacros } from './Transpiler';
  * This means taking state updates events, shouts and whispers, and emitting additional events to affect the future state.
  */
 export class AuxRuntime
-    implements RuntimeBotInterface, RuntimeBotFactory, SubscriptionLike {
+    implements RuntimeBotInterface, RuntimeBotFactory, SubscriptionLike
+{
     private _compiledState: CompiledBotsState = {};
     private _existingMasks: { [id: string]: BotTagMasks } = {};
     private _compiler = new AuxCompiler();
@@ -135,7 +136,6 @@ export class AuxRuntime
     private _processingErrors: boolean = false;
     private _portalBots: Map<string, string> = new Map();
     private _builtinPortalBots: string[] = [];
-    private _globalVariables: { [key: string]: () => any } = {};
     private _globalChanges: { [key: string]: any } = {};
     private _globalObject: any;
 
@@ -173,6 +173,10 @@ export class AuxRuntime
 
     get currentVersion() {
         return this._currentVersion;
+    }
+
+    get globalObject() {
+        return this._globalObject;
     }
 
     /**
@@ -252,6 +256,13 @@ export class AuxRuntime
             deleteProperty: (target: any, key: string) => {
                 return Reflect.deleteProperty(this._globalChanges, key);
             },
+            defineProperty: (target: any, key, options: any) => {
+                return Reflect.defineProperty(
+                    this._globalChanges,
+                    key,
+                    options
+                );
+            },
             ownKeys: (target: any) => {
                 const addedKeys = Reflect.ownKeys(this._globalChanges);
                 const otherKeys = Reflect.ownKeys(target);
@@ -273,6 +284,7 @@ export class AuxRuntime
                 return Reflect.getOwnPropertyDescriptor(target, key);
             },
         });
+        this._globalContext.global = this._globalObject;
     }
 
     getShoutTimers(): { [shout: string]: number } {
@@ -533,23 +545,25 @@ export class AuxRuntime
         this._portalBots.set(portalId, botId);
         if (!hadPortalBot) {
             const variableName = `${portalId}Bot`;
-            this._globalVariables[variableName] = () => {
-                const botId = this._portalBots.get(portalId);
-                if (hasValue(botId)) {
-                    return this.context.state[botId];
-                } else {
-                    return undefined;
-                }
-            };
-
-            // recompile all scripts
-            this._recompileScripts();
+            Object.defineProperty(this._globalObject, variableName, {
+                get: () => {
+                    const botId = this._portalBots.get(portalId);
+                    if (hasValue(botId)) {
+                        return this.context.state[botId];
+                    } else {
+                        return undefined;
+                    }
+                },
+                enumerable: false,
+                configurable: true,
+            });
         }
     }
 
-    private _rejectAction(
-        action: BotAction
-    ): { rejected: boolean; newActions: BotAction[] } {
+    private _rejectAction(action: BotAction): {
+        rejected: boolean;
+        newActions: BotAction[];
+    } {
         const result = this._shout(
             ON_ACTION_ACTION_NAME,
             null,
@@ -675,13 +689,11 @@ export class AuxRuntime
         let newBots = null as [CompiledBot, PrecalculatedBot][];
         let updates = null as UpdatedBot[];
         if (update.addedBots.length > 0) {
-            const {
-                newBots: addedNewBots,
-                newBotIDs: addedBotIds,
-            } = this._addBotsToState(
-                update.addedBots.map((id) => update.state[id] as Bot),
-                nextUpdate
-            );
+            const { newBots: addedNewBots, newBotIDs: addedBotIds } =
+                this._addBotsToState(
+                    update.addedBots.map((id) => update.state[id] as Bot),
+                    nextUpdate
+                );
 
             newBots = addedNewBots;
             newBotIds = addedBotIds;
@@ -916,9 +928,8 @@ export class AuxRuntime
             }
 
             if (hasChange) {
-                const watchers = this._globalContext.getWatchersForPortal(
-                    portal
-                );
+                const watchers =
+                    this._globalContext.getWatchersForPortal(portal);
                 for (let watcher of watchers) {
                     watcher.handler();
                 }
@@ -1569,15 +1580,6 @@ export class AuxRuntime
         this._compileTagValue(bot, tag, tagValue);
     }
 
-    private _recompileScripts() {
-        for (let id in this._compiledState) {
-            let bot = this._compiledState[id];
-            for (let listener in bot.listeners) {
-                this._compileTagValue(bot, listener, bot.values[listener]);
-            }
-        }
-    }
-
     private _compileTagValue(bot: CompiledBot, tag: string, tagValue: any) {
         let { value, listener } = this._compileValue(bot, tag, tagValue);
         if (listener) {
@@ -1649,6 +1651,8 @@ export class AuxRuntime
             }
         }
 
+        script = replaceMacros(script);
+
         let functionName: string;
         let diagnosticFunctionName: string;
         let fileName: string;
@@ -1686,7 +1690,6 @@ export class AuxRuntime
                 globalThis: this._globalObject,
             },
             variables: {
-                ...this._globalVariables,
                 ...this._library.tagSpecificApi,
                 this: (ctx) => (ctx.bot ? ctx.bot.script : null),
                 thisBot: (ctx) => (ctx.bot ? ctx.bot.script : null),

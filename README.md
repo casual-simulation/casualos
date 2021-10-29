@@ -40,7 +40,9 @@ You can try out CasualOS at https://casualos.com.
 
 ## Developing
 
-See [DEVELOPERS.md](./DEVELOPERS.md) for development environment setup instructions.
+[Open this repository in Gitpod.io](https://gitpod.io/#prebuild/https://github.com/casual-simulation/casualos) to get started immediately.
+
+Alternatively, see [DEVELOPERS.md](./DEVELOPERS.md) for development environment setup instructions.
 
 ## License
 

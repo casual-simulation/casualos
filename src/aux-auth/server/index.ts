@@ -34,6 +34,11 @@ interface AppRecord {
     record: any;
 }
 
+export interface EmailRule {
+    type: 'allow' | 'deny';
+    pattern: string;
+}
+
 // see https://stackoverflow.com/a/6969486/1832856
 function escapeRegExp(str: string) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
@@ -73,6 +78,18 @@ async function start() {
                 avatarUrl: user.avatarUrl,
                 avatarPortraitUrl: user.avatarPortraitUrl,
             });
+        } catch (err) {
+            console.error(err);
+            res.sendStatus(500);
+        }
+    });
+
+    app.get('/api/emailRules', async (req, res) => {
+        try {
+            res.send([
+                { type: 'allow', pattern: '@casualsimulation\\.org$' },
+                { type: 'deny', pattern: '^test@casualsimulation\\.org$' },
+            ] as EmailRule[]);
         } catch (err) {
             console.error(err);
             res.sendStatus(500);
@@ -335,7 +352,9 @@ async function start() {
                 if (hasValue(address)) {
                     query.address = address;
                 } else if (hasValue(prefix)) {
-                    query.address = { $regex: `^${escapeRegExp(prefix)}` };
+                    query.address = {
+                        $regex: `^${escapeRegExp(prefix as string)}`,
+                    };
                 }
 
                 if (visibility === 'restricted' && hasValue(authToken)) {
@@ -344,7 +363,7 @@ async function start() {
 
                 let findQuery = { ...query };
                 if (hasValue(cursor)) {
-                    findQuery._id = { $gt: new ObjectId(cursor) };
+                    findQuery._id = { $gt: new ObjectId(cursor as string) };
                 }
 
                 const batchSize = 25;
@@ -391,7 +410,7 @@ async function start() {
                     r.visibility === visibility &&
                     hasValue(address)
                         ? r.address === address
-                        : r.address.startsWith(prefix) &&
+                        : r.address.startsWith(prefix as string) &&
                           (visibility !== 'restricted' ||
                               r.authorizedUsers.includes(authToken))
                 );
@@ -414,7 +433,7 @@ async function start() {
         res.sendFile(path.join(dist, 'index.html'));
     });
 
-    app.listen(3002, () => {
+    app.listen(2998, () => {
         console.log('[AuxAuth] Listening on port 3002');
     });
 

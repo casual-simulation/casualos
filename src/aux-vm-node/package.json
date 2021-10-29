@@ -10,7 +10,7 @@
     "license": "MIT",
     "main": "index.js",
     "types": "index.d.ts",
-    "module": "index.js",
+    "module": "index",
     "files": [
         "/README.md",
         "/LICENSE.txt",
@@ -46,7 +46,6 @@
         "@casual-simulation/crypto-node": "^2.0.12",
         "lodash": "4.17.21",
         "rxjs": "^6.5.2",
-        "uuid": "^8.3.2",
-        "vm2": "3.8.2"
+        "uuid": "^8.3.2"
     }
 }

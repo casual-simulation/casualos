@@ -187,6 +187,10 @@ describe('AuxRuntime', () => {
         }
     }
 
+    it('should share the global object with the context', () => {
+        expect(runtime.globalObject).toBe(runtime.context.global);
+    });
+
     describe('stateUpdated()', () => {
         describe('added bots', () => {
             it('should return a state update for the new bot', () => {
@@ -4362,8 +4366,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            abc:
-                                '@await os.requestAuthBot(); os.toast("Hello");',
+                            abc: '@await os.requestAuthBot(); os.toast("Hello");',
                         }),
                     })
                 );
@@ -4441,6 +4444,22 @@ describe('AuxRuntime', () => {
 
             expect(events).toEqual([[toast('hello')]]);
         });
+
+        const quoteCases = [
+            ['“', '”'],
+            ['‘', '’'],
+        ];
+
+        it.each(quoteCases)(
+            'should replace special quotes (%s%s) in scripts',
+            async (open, close) => {
+                runtime.execute(`os.toast(${open}hello${close})`);
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast('hello')]]);
+            }
+        );
 
         it('should emit an error if the script has a syntax error', async () => {
             runtime.execute('os.toast(');
@@ -4739,8 +4758,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            hello:
-                                '@const abc = setInterval(() => os.toast("abc"), 100); clearInterval(abc);',
+                            hello: '@const abc = setInterval(() => os.toast("abc"), 100); clearInterval(abc);',
                         }),
                     })
                 );
@@ -4780,8 +4798,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            hello:
-                                '@let abc = setTimeout(() => os.toast("abc"), 100); clearTimeout(abc);',
+                            hello: '@let abc = setTimeout(() => os.toast("abc"), 100); clearTimeout(abc);',
                         }),
                     })
                 );
@@ -4849,8 +4866,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        hello:
-                            '@Promise.resolve(0).then(() => os.toast("abc")).then(() => os.toast("abc2"))',
+                        hello: '@Promise.resolve(0).then(() => os.toast("abc")).then(() => os.toast("abc2"))',
                     }),
                 })
             );
@@ -4962,8 +4978,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test1: createBot('test1', {
-                        create:
-                            '@let newBot = create({ test: true }); newBot.tags.abc = 456; setTagMask(newBot, "myTag", 123);',
+                        create: '@let newBot = create({ test: true }); newBot.tags.abc = 456; setTagMask(newBot, "myTag", 123);',
                     }),
                 })
             );
@@ -5173,8 +5188,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            hello:
-                                '@Promise.resolve(0).then(() => create({ abc: "def" })).then(() => create({ abc: "def" }))',
+                            hello: '@Promise.resolve(0).then(() => create({ abc: "def" })).then(() => create({ abc: "def" }))',
                         }),
                     })
                 );
@@ -5262,8 +5276,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            create:
-                                '@create({ abc: "@os.toast(`Hi`);" }); shout("abc");',
+                            create: '@create({ abc: "@os.toast(`Hi`);" }); shout("abc");',
                         }),
                     })
                 );
@@ -5289,8 +5302,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            create:
-                                '@let created = create({ abc: "@os.toast(`Hi`);" }); whisper(created, "abc");',
+                            create: '@let created = create({ abc: "@os.toast(`Hi`);" }); whisper(created, "abc");',
                         }),
                     })
                 );
@@ -5345,8 +5357,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            create:
-                                '@await testPromise; let created = create({ abc: "@os.toast(`Hi`);" }); whisper(created, "abc");',
+                            create: '@await testPromise; let created = create({ abc: "@os.toast(`Hi`);" }); whisper(created, "abc");',
                         }),
                     })
                 );
@@ -5391,8 +5402,7 @@ describe('AuxRuntime', () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
-                                hello:
-                                    '@setTimeout(() => create({ abc: "def" }), 100)',
+                                hello: '@setTimeout(() => create({ abc: "def" }), 100)',
                             }),
                         })
                     );
@@ -5423,8 +5433,7 @@ describe('AuxRuntime', () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
-                                hello:
-                                    '@setInterval(() => create({ abc: "def" }), 100)',
+                                hello: '@setInterval(() => create({ abc: "def" }), 100)',
                             }),
                         })
                     );
@@ -5461,8 +5470,7 @@ describe('AuxRuntime', () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
-                                hello:
-                                    '@setTimeout(() => create({ abc: "def" }), 100)',
+                                hello: '@setTimeout(() => create({ abc: "def" }), 100)',
                             }),
                         })
                     );
@@ -5563,8 +5571,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            hello:
-                                '@Promise.resolve(0).then(() => destroy("test2")).then(() => destroy("test3"))',
+                            hello: '@Promise.resolve(0).then(() => destroy("test2")).then(() => destroy("test3"))',
                         }),
                         test2: createBot('test2'),
                         test3: createBot('test3'),
@@ -5600,8 +5607,7 @@ describe('AuxRuntime', () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
-                                hello:
-                                    '@setInterval(() => destroy("test2"), 100)',
+                                hello: '@setInterval(() => destroy("test2"), 100)',
                             }),
                             test2: createBot('test2'),
                             test3: createBot('test3'),
@@ -5623,8 +5629,7 @@ describe('AuxRuntime', () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
-                                hello:
-                                    '@setTimeout(() => destroy("test2"), 100)',
+                                hello: '@setTimeout(() => destroy("test2"), 100)',
                             }),
                             test2: createBot('test2'),
                             test3: createBot('test3'),
@@ -5912,8 +5917,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            hello:
-                                '@Promise.resolve(0).then(() => tags.hit = 1).then(() => tags.hit = 2)',
+                            hello: '@Promise.resolve(0).then(() => tags.hit = 1).then(() => tags.hit = 2)',
                         }),
                     })
                 );
@@ -6081,8 +6085,7 @@ describe('AuxRuntime', () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
-                                hello:
-                                    '@setInterval(() => tags.count += 1, 100)',
+                                hello: '@setInterval(() => tags.count += 1, 100)',
                                 count: 0,
                             }),
                         })
@@ -6121,8 +6124,7 @@ describe('AuxRuntime', () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
-                                hello:
-                                    '@setTimeout(() => tags.hit = true, 100)',
+                                hello: '@setTimeout(() => tags.hit = true, 100)',
                             }),
                         })
                     );
@@ -7217,8 +7219,7 @@ describe('AuxRuntime', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        error:
-                            '@tags.hasBot = typeof testPortalBot !== "undefined";',
+                        error: '@tags.hasBot = typeof testPortalBot !== "undefined";',
                         test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
                     }),
                 })
@@ -7233,8 +7234,7 @@ describe('AuxRuntime', () => {
                 botAdded(
                     createBot('uuid-1', {
                         hasBot: false,
-                        test:
-                            '@tags.hasBot = typeof testPortalBot !== "undefined";',
+                        test: '@tags.hasBot = typeof testPortalBot !== "undefined";',
                     })
                 ),
             ]);
@@ -7327,6 +7327,20 @@ describe('AuxRuntime', () => {
                 stateUpdatedEvent({
                     test: createBot('test', {
                         error: '@globalThis.testValue = 123;',
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return globalThis.testValue;`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            expect(result.results[0]).toBeUndefined();
+        });
+
+        it('should allow defining globalThis properties without affecting everything else', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        error: '@Object.defineProperty(globalThis, "testValue", { value: 42, writable: false });',
                         test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return globalThis.testValue;`,
                     }),
                 })
@@ -7899,8 +7913,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "hasCreator", creatorBot !== null)',
+                        test: '@setTag(this, "hasCreator", creatorBot !== null)',
                     },
                 },
                 thatBot: {
@@ -7931,8 +7944,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         creator: 'none',
-                        test:
-                            '@setTag(this, "hasCreator", creatorBot !== null)',
+                        test: '@setTag(this, "hasCreator", creatorBot !== null)',
                     },
                 },
                 thatBot: {
@@ -8227,8 +8239,7 @@ describe('original action tests', () => {
                 tags: {
                     _position: { x: 0, y: 0, z: 0 },
                     _workspace: 'abc',
-                    abcdef:
-                        '@setTag(this, "#val", 10); setTag(this, "#nested.value", true)',
+                    abcdef: '@setTag(this, "#val", 10); setTag(this, "#nested.value", true)',
                 },
             },
         };
@@ -8949,8 +8960,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@that[0].tags.hi = "changed"; this.tags.l = that.length',
+                        test: '@that[0].tags.hi = "changed"; this.tags.l = that.length',
                     },
                 },
                 otherBot: {
@@ -9396,8 +9406,7 @@ describe('original action tests', () => {
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        abcdef:
-                            '@let o = { other: getBot("#name", "other") }; shout("sayHello", o)',
+                        abcdef: '@let o = { other: getBot("#name", "other") }; shout("sayHello", o)',
                         sayHello: '@setTag(that.other, "#hello", "test")',
                     },
                 },
@@ -9457,8 +9466,7 @@ describe('original action tests', () => {
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        abcdef:
-                            '@shout("sayHello", getBot("#name", "other")); setTag(this, "#value", getTag(getBot("#name", "other"), "#hello"))',
+                        abcdef: '@shout("sayHello", getBot("#name", "other")); setTag(this, "#value", getTag(getBot("#name", "other"), "#hello"))',
                         sayHello: '@setTag(that, "#hello", "test")',
                     },
                 },
@@ -9496,8 +9504,7 @@ describe('original action tests', () => {
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        abcdef:
-                            '@let results = shout("sayHello", "test"); setTag(this, "result", results);',
+                        abcdef: '@let results = shout("sayHello", "test"); setTag(this, "result", results);',
                         sayHello: '@return "Wrong, " + that;',
                     },
                 },
@@ -9709,8 +9716,7 @@ describe('original action tests', () => {
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        abcdef:
-                            '@let results = whisper(["bBot", "aBot"], "sayHello", "test"); setTag(this, "result", results);',
+                        abcdef: '@let results = whisper(["bBot", "aBot"], "sayHello", "test"); setTag(this, "result", results);',
                         sayHello: '@return "Wrong, " + that',
                     },
                 },
@@ -9846,8 +9852,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        create:
-                            '@let newBot = create({ creator: getID(this) }, { stay: "def", "leaveX": 0, "leaveY": 0 }); removeTags(newBot, "leave");',
+                        create: '@let newBot = create({ creator: getID(this) }, { stay: "def", "leaveX": 0, "leaveY": 0 }); removeTags(newBot, "leave");',
                     },
                 },
             };
@@ -9891,8 +9896,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        create:
-                            '@let bots = getBots("abc", true); removeTags(bots, "abc");',
+                        create: '@let bots = getBots("abc", true); removeTags(bots, "abc");',
                     },
                 },
             };
@@ -10360,8 +10364,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "depth", os.getDimensionalDepth("dimension"))',
+                        test: '@setTag(this, "depth", os.getDimensionalDepth("dimension"))',
                     },
                 },
                 userBot: {
@@ -10395,8 +10398,7 @@ describe('original action tests', () => {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test:
-                                '@setTag(this, "depth", os.getDimensionalDepth("dimension"))',
+                            test: '@setTag(this, "depth", os.getDimensionalDepth("dimension"))',
                         },
                     },
                     userBot: {
@@ -10431,8 +10433,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "depth", os.getDimensionalDepth("dimension"))',
+                        test: '@setTag(this, "depth", os.getDimensionalDepth("dimension"))',
                     },
                 },
                 userBot: {
@@ -10506,8 +10507,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@applyMod(this, { abc: "def", ghi: true, num: 1 })',
+                        test: '@applyMod(this, { abc: "def", ghi: true, num: 1 })',
                     },
                 },
             };
@@ -10533,8 +10533,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@applyMod(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
+                        test: '@applyMod(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
                     },
                 },
             };
@@ -10561,8 +10560,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         abc: 123,
-                        test:
-                            '@applyMod(this, { abc: "def", ghi: true, num: 1 }); applyMod(this, { "abc": getTag(this, "#abc") })',
+                        test: '@applyMod(this, { abc: "def", ghi: true, num: 1 }); applyMod(this, { "abc": getTag(this, "#abc") })',
                     },
                 },
             };
@@ -10590,8 +10588,7 @@ describe('original action tests', () => {
                     tags: {
                         abc: 123,
                         onModDrop: '@setTag(this, "#diffed", true)',
-                        test:
-                            '@applyMod(this, { abc: "def", ghi: true, num: 1 });',
+                        test: '@applyMod(this, { abc: "def", ghi: true, num: 1 });',
                     },
                 },
             };
@@ -10743,8 +10740,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#dimension", os.getMenuDimension())',
+                        test: '@setTag(this, "#dimension", os.getMenuDimension())',
                     },
                 },
                 userBot: {
@@ -10972,8 +10968,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@os.tweenTo("test", undefined, undefined, undefined, 10)',
+                        test: '@os.tweenTo("test", undefined, undefined, undefined, 10)',
                     },
                 },
             };
@@ -11312,8 +11307,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@os.downloadBots(getBots(inDimension("abc")), "test")',
+                        test: '@os.downloadBots(getBots(inDimension("abc")), "test")',
                     },
                 },
                 funBot: {
@@ -11357,8 +11351,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@os.downloadBots(getBots(inDimension("abc")), "test.aux")',
+                        test: '@os.downloadBots(getBots(inDimension("abc")), "test.aux")',
                     },
                 },
                 funBot: {
@@ -11916,8 +11909,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#inDimension", os.isInDimension("dimension"))',
+                        test: '@setTag(this, "#inDimension", os.isInDimension("dimension"))',
                     },
                 },
                 userBot: {
@@ -11947,8 +11939,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#inDimension", os.isInDimension("abc"))',
+                        test: '@setTag(this, "#inDimension", os.isInDimension("abc"))',
                     },
                 },
                 userBot: {
@@ -11978,8 +11969,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#inDimension", os.isInDimension("abc"))',
+                        test: '@setTag(this, "#inDimension", os.isInDimension("abc"))',
                     },
                 },
                 userBot: {
@@ -12009,8 +11999,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#dimension", os.getCurrentDimension())',
+                        test: '@setTag(this, "#dimension", os.getCurrentDimension())',
                     },
                 },
                 userBot: {
@@ -12040,8 +12029,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#dimension", os.getCurrentDimension())',
+                        test: '@setTag(this, "#dimension", os.getCurrentDimension())',
                     },
                 },
                 userBot: {
@@ -12071,8 +12059,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#dimension", os.getCurrentServer())',
+                        test: '@setTag(this, "#dimension", os.getCurrentServer())',
                     },
                 },
                 userBot: {
@@ -12102,8 +12089,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#dimension", os.getCurrentServer())',
+                        test: '@setTag(this, "#dimension", os.getCurrentServer())',
                     },
                 },
                 userBot: {
@@ -12136,8 +12122,7 @@ describe('original action tests', () => {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test:
-                                '@setTag(this, "#dimension", os.getCurrentServer())',
+                            test: '@setTag(this, "#dimension", os.getCurrentServer())',
                         },
                     },
                     userBot: {
@@ -12170,8 +12155,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#dimension", os.getCurrentInst())',
+                        test: '@setTag(this, "#dimension", os.getCurrentInst())',
                     },
                 },
                 userBot: {
@@ -12201,8 +12185,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#dimension", os.getCurrentInst())',
+                        test: '@setTag(this, "#dimension", os.getCurrentInst())',
                     },
                 },
                 userBot: {
@@ -12235,8 +12218,7 @@ describe('original action tests', () => {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test:
-                                '@setTag(this, "#dimension", os.getCurrentInst())',
+                            test: '@setTag(this, "#dimension", os.getCurrentInst())',
                         },
                     },
                     userBot: {
@@ -12361,8 +12343,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@os.showInputForTag("test", "##abc"); os.showInputForTag("test", "#abc")',
+                        test: '@os.showInputForTag("test", "##abc"); os.showInputForTag("test", "#abc")',
                     },
                 },
             };
@@ -12383,8 +12364,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@os.showInputForTag("test", "abc", { backgroundColor: "red", foregroundColor: "green" })',
+                        test: '@os.showInputForTag("test", "abc", { backgroundColor: "red", foregroundColor: "green" })',
                     },
                 },
             };
@@ -12507,8 +12487,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@applyMod(this, getMod(getBot("#name", "bob"), "val", /test\\..+/))',
+                        test: '@applyMod(this, getMod(getBot("#name", "bob"), "val", /test\\..+/))',
                     },
                 },
                 otherBot: {
@@ -12546,8 +12525,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@applyMod(this, getMod(getBots("name", "bob").first()))',
+                        test: '@applyMod(this, getMod(getBots("name", "bob").first()))',
                     },
                 },
                 otherBot: {
@@ -12587,8 +12565,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@applyMod(this, getMod({abc: true, val: 123}, "val"))',
+                        test: '@applyMod(this, getMod({abc: true, val: 123}, "val"))',
                     },
                 },
             };
@@ -12699,8 +12676,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@setTag(this, "#name", "bob"); setTag(this, "#abc", getTag(this, "#name"))',
+                        test: '@setTag(this, "#name", "bob"); setTag(this, "#abc", getTag(this, "#name"))',
                     },
                 },
             };
@@ -12970,8 +12946,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test:
-                            '@server.backupAsDownload({ username: "abc", device: "123", session: "def" })',
+                        test: '@server.backupAsDownload({ username: "abc", device: "123", session: "def" })',
                     },
                 },
             };
