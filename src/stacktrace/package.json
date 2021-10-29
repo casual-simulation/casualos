@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/stacktrace",
-    "version": "2.0.0",
+    "version": "2.0.14",
     "description": "A stacktrace parser",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
