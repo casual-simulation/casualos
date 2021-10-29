@@ -7,6 +7,7 @@ import {
     ServerlessRecord,
 } from './RecordsStore';
 import dynamodb from 'aws-sdk/clients/dynamodb';
+import S3 from 'aws-sdk/clients/s3';
 import { RedisClient } from 'redis';
 import { promisify } from 'util';
 import { AWSError } from 'aws-sdk';
@@ -15,16 +16,25 @@ import {
     hasValue,
     Record,
 } from '@casual-simulation/aux-common';
+import stringify from 'fast-json-stable-stringify';
+import { sha256 } from 'hash.js';
 
 const BATCH_SIZE = 25;
 const REDIS_BATCH_SIZE = (1000).toString();
 const MAX_REDIS_ITERATIONS = 10000;
+const MAX_DYNAMO_DB_RECORD_SIZE = 200000; // 200KB
+
+const CURRENT_REGION = process.env.AWS_REGION;
+
+declare let DEVELOPMENT: boolean;
 
 export class ServerlessRecordsStore implements RecordsStore {
     private _dynamo: dynamodb.DocumentClient;
     private _permanentRecordsTable: string;
     private _redis: RedisClient;
     private _redisNamespace: string;
+    private _s3: S3;
+    private _s3Bucket: string;
 
     private _rHExists: (key: string, field: string) => Promise<boolean>;
     private _rHSet: (
@@ -43,9 +53,13 @@ export class ServerlessRecordsStore implements RecordsStore {
         dynamoClient: dynamodb.DocumentClient,
         permanentRecordsTable: string,
         redis: RedisClient,
-        redisNamespace: string
+        redisNamespace: string,
+        s3Client: S3,
+        s3Bucket: string
     ) {
         this._dynamo = dynamoClient;
+        this._s3 = s3Client;
+        this._s3Bucket = s3Bucket;
         this._permanentRecordsTable = permanentRecordsTable;
         this._redis = redis;
         this._redisNamespace = redisNamespace;
@@ -149,22 +163,34 @@ export class ServerlessRecordsStore implements RecordsStore {
                 totalCount = countResult.Count;
             }
 
-            let records: Record[] = result.Items.map((i) => {
-                const record: ServerlessRecord = i as ServerlessRecord;
+            let records: Record[] = await Promise.all(
+                result.Items.map(async (i) => {
+                    const record: ServerlessRecord = i as ServerlessRecord;
 
-                if (!this._authorizedToAccessRecord(record, query)) {
-                    return null;
-                }
+                    if (!this._authorizedToAccessRecord(record, query)) {
+                        return null;
+                    }
 
-                return {
-                    authID: i.issuer,
-                    address: i.address,
-                    data: JSON.parse(i.record),
-                    space:
-                        'permanent' +
-                        (i.visibility === 'global' ? 'Global' : 'Restricted'),
-                } as Record;
-            });
+                    const data = i.record ? JSON.parse(i.record) : null;
+                    const dataURL = i.record
+                        ? null
+                        : DEVELOPMENT
+                        ? `${this._s3.endpoint.protocol}//localhost:${this._s3.endpoint.port}/${i.recordBucket}/${i.recordKey}`
+                        : `https://${i.recordBucket}.s3.amazonaws.com/${i.recordKey}`;
+
+                    return {
+                        authID: i.issuer,
+                        address: i.address,
+                        data: data,
+                        dataURL: dataURL,
+                        space:
+                            'permanent' +
+                            (i.visibility === 'global'
+                                ? 'Global'
+                                : 'Restricted'),
+                    } as Record;
+                })
+            );
 
             return {
                 hasMoreRecords: result.LastEvaluatedKey !== undefined,
@@ -178,6 +204,22 @@ export class ServerlessRecordsStore implements RecordsStore {
             return null;
         }
     }
+
+    // private async _getRecordFromS3(bucket: string, key: string): Promise<any> {
+    //     console.log('[ServerlessRecordsStore] Getting record from S3.', bucket, key);
+    //     const result = await this._s3.getObject({
+    //         Bucket: bucket,
+    //         Key: key,
+    //     }).promise();
+
+    //     console.log(result.ContentType);
+    //     if (result.ContentType === 'application/json') {
+    //         return JSON.parse(result.Body.toString('utf-8'));
+    //     } else {
+    //         console.error('[ServerlessRecordsStore] Non-JSON records are not currently supported.');
+    //         return null;
+    //     }
+    // }
 
     async getTemporaryRecords(
         query: RecordsQuery
@@ -271,21 +313,74 @@ export class ServerlessRecordsStore implements RecordsStore {
         appRecord: ServerlessRecord
     ): Promise<SaveRecordResult> {
         try {
-            await this._dynamo
-                .put({
-                    TableName: this._permanentRecordsTable,
-                    Item: {
-                        issuer: appRecord.issuer,
-                        address: appRecord.address,
-                        visibility: appRecord.visibility,
-                        authorizedUsers: appRecord.authorizedUsers,
-                        record: JSON.stringify(appRecord.record),
-                        creationDate: appRecord.creationDate,
-                    },
-                    ConditionExpression:
-                        'attribute_not_exists(issuer) AND attribute_not_exists(address)',
-                })
-                .promise();
+            const json = JSON.stringify(appRecord.record);
+            const buffer = Buffer.from(json, 'utf-8');
+            if (buffer.byteLength < MAX_DYNAMO_DB_RECORD_SIZE) {
+                console.log('[ServerlessRecordsStore] Saving in DynamoDB.');
+                await this._dynamo
+                    .put({
+                        TableName: this._permanentRecordsTable,
+                        Item: {
+                            issuer: appRecord.issuer,
+                            address: appRecord.address,
+                            visibility: appRecord.visibility,
+                            authorizedUsers: appRecord.authorizedUsers,
+                            record: json,
+                            creationDate: appRecord.creationDate,
+                        },
+                        ConditionExpression:
+                            'attribute_not_exists(issuer) AND attribute_not_exists(address)',
+                    })
+                    .promise();
+            } else {
+                console.log('[ServerlessRecordsStore] Saving in S3.');
+                const json = stringify(appRecord.record);
+                const hash = sha256().update(json).digest('hex');
+                const filename = `${hash}.json`;
+
+                await this._dynamo
+                    .put({
+                        TableName: this._permanentRecordsTable,
+                        Item: {
+                            issuer: appRecord.issuer,
+                            address: appRecord.address,
+                            visibility: appRecord.visibility,
+                            authorizedUsers: appRecord.authorizedUsers,
+                            recordKey: filename,
+                            recordBucket: this._s3Bucket,
+                            creationDate: appRecord.creationDate,
+                        },
+                        ConditionExpression:
+                            'attribute_not_exists(issuer) AND attribute_not_exists(address)',
+                    })
+                    .promise();
+
+                const listResult = await this._s3
+                    .listObjects({
+                        Bucket: this._s3Bucket,
+                        Prefix: filename,
+                    })
+                    .promise();
+
+                if (listResult.Contents.length <= 0) {
+                    console.log(
+                        '[ServerlessRecordsStore] Saving record data in S3.'
+                    );
+                    // Save to S3
+                    const result = await this._s3
+                        .putObject({
+                            Bucket: this._s3Bucket,
+                            Key: filename,
+                            Body: json,
+                            ContentType: 'application/json',
+                        })
+                        .promise();
+                } else {
+                    console.log(
+                        '[ServerlessRecordsStore] No need to save in S3. Object already exists.'
+                    );
+                }
+            }
 
             return null;
         } catch (err) {

@@ -202,7 +202,8 @@ export interface Record {
     /**
      * The data that was stored in the record.
      */
-    data: any;
+    data?: any;
+    dataURL?: string;
 }
 
 /**

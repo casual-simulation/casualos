@@ -27,3 +27,13 @@ services:
         volumes:
             - './services/data/dynamodb:/home/dynamodblocal/data'
         working_dir: /home/dynamodblocal
+    s3:
+        image: localstack/localstack:latest
+        environment:
+            - SERVICES=s3
+            - DEFAULT_REGION=us-east-1
+            - DATA_DIR=/tmp/s3-data
+        ports:
+            - '4566:4566'
+        volumes:
+            - './services/data/s3:/tmp/s3-data'

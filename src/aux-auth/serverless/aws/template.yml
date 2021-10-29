@@ -164,13 +164,15 @@ Resources:
             Handler: records.handleRecords
             CodeUri: dist/handlers
             Runtime: nodejs14.x
-            MemorySize: 128
+            MemorySize: 256
             Timeout: 100
             Description: A function that publishes and retreives records for the user.
             Policies:
                 # Give Create/Read/Update/Delete Permissions to the SampleTable
                 - DynamoDBCrudPolicy:
                       TableName: !Ref RecordsTable
+                - S3CrudPolicy:
+                      BucketName: !Ref RecordsBucket
             Environment:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
@@ -181,6 +183,7 @@ Resources:
                     REDIS_USE_TLS: !Ref RedisUseTLSParameter
                     REDIS_RECORDS_NAMESPACE: !Ref RedisRecordsNamespaceParameter
                     REDIS_PASSWORD: !Ref RedisPasswordParameter
+                    RECORDS_BUCKET: !Ref RecordsBucket
             Events:
                 PostRecord:
                     Type: Api
@@ -287,6 +290,12 @@ Resources:
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
+
+    RecordsBucket:
+        Type: AWS::S3::Bucket
+        DeletionPolicy: Retain
+        Properties:
+            AccessControl: public-read
 
 Outputs:
     WebEndpoint:

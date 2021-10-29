@@ -2541,8 +2541,15 @@ export interface Record {
 
     /**
      * The data that was stored in the record.
+     * Null if dataURL is specified
      */
-    data: any;
+    data?: any;
+
+    /**
+     * The URL that the data can be retrieved from.
+     * Null if data is specified.
+     */
+    dataURL?: string;
 }
 
 /**

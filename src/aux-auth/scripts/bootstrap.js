@@ -17,11 +17,18 @@ const ddb = new AWS.DynamoDB({
     apiVersion: '2012-08-10',
 });
 
+const s3 = new AWS.S3({
+    endpoint: 'http://localhost:4566',
+    apiVersion: '2006-03-01',
+    s3ForcePathStyle: true,
+});
+
 // See env.json
 const USERS_TABLE = 'Users';
 const USER_SERVICES_TABLE = 'UserServices';
 const RECORDS_TABLE = 'Records';
 const EMAIL_TABLE = 'EmailRules';
+const RECORDS_BUCKET = 'records-bucket';
 
 async function start() {
     const tablesResult = await ddb.listTables({}).promise();
@@ -151,6 +158,30 @@ async function start() {
             .promise();
     } else {
         console.log('Email Table already exists');
+    }
+
+    const buckets = await s3.listBuckets().promise();
+    const hasRecordsBucket = buckets.Buckets.some(
+        (b) => b.Name === RECORDS_BUCKET
+    );
+    if (!hasRecordsBucket || reset) {
+        if (hasRecordsBucket) {
+            console.log('Deleting Records Bucket');
+            await s3
+                .deleteBucket({
+                    Bucket: RECORDS_BUCKET,
+                })
+                .promise();
+        }
+
+        console.log('Creating Records Bucket');
+        await s3
+            .createBucket({
+                Bucket: RECORDS_BUCKET,
+            })
+            .promise();
+    } else {
+        console.log('Records Bucket already exists');
     }
 }
 

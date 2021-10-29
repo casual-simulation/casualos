@@ -4,9 +4,9 @@
     "version": "0.3.0",
     "scripts": {
         "start": "node ./src/aux-server/server/dist/main.js",
-        "bootstrap": "lerna bootstrap --hoist && npm run bootstrap:dynamodb",
-        "bootstrap:dynamodb": "node src/aux-auth/scripts/bootstrap.js",
-        "reset:dynamodb": "node src/aux-auth/scripts/bootstrap.js --reset",
+        "bootstrap": "lerna bootstrap --hoist && npm run bootstrap:aws",
+        "bootstrap:aws": "node src/aux-auth/scripts/bootstrap.js",
+        "reset:aws": "node src/aux-auth/scripts/bootstrap.js --reset",
         "watch": "npm run clean && npm run fastbuild:portals && concurrently --names \"Libs,CustomPortals,Server,Auth\" \"npm run watch:libs\" \"npm run watch:portals\" \"npm run watch:server\" \"npm run watch:auth\"",
         "watch:server": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run watch",
         "watch:libs": "tsc --build --watch",
