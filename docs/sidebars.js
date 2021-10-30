@@ -6,6 +6,10 @@
  */
 
 module.exports = {
+    learn: [
+        'learn/pillars',
+        'learn/glossary'
+    ],
     docs: [
         'tags',
         'listen-tags',

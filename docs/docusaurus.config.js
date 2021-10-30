@@ -22,6 +22,7 @@ module.exports = {
         src: 'img/logo.png',
       },
       items: [
+        { to: 'docs/learn/pillars', label: 'Learn', position: 'left' },
         { to: 'docs/tags', label: 'Docs', position: 'left' },
         {
           href: 'https://github.com/casual-simulation/casualos',
@@ -39,15 +40,6 @@ module.exports = {
             {
               label: 'Docs',
               to: 'docs/tags',
-            },
-          ],
-        },
-        {
-          title: 'Social',
-          items: [
-            {
-              label: 'Chat',
-              to: 'https://spectrum.chat/casual-simulation?tab=posts',
             },
           ],
         },
