@@ -6,22 +6,27 @@
  */
 
 module.exports = {
-    learn: [
-        'learn/pillars',
-        'learn/glossary'
-    ],
     docs: [
-        'tags',
-        'listen-tags',
-        'variables',
-        'actions',
+        'learn/pillars',
         {
             type: 'category',
-            label: 'Custom Executables',
+            label: 'The Basics',
             items: [
-                'custom-executables/introduction',
+                'learn/getting-started',
+                'learn/scripting',
             ]
-        }
+        },
+        {
+            type: 'category',
+            label: 'Reference',
+            items: [
+                'tags',
+                'listen-tags',
+                'variables',
+                'actions',
+                'glossary'
+            ]
+        },
     ],
   };
   

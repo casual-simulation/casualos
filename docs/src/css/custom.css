@@ -21,10 +21,21 @@
 html:not([data-theme="dark"]) .badge.badge--normal {
     --ifm-badge-border-color: var(--ifm-color-black);
     --ifm-badge-color: var(--ifm-color-black);
+    --ifm-tooltip-background-color: #fff;
 }
 html[data-theme="dark"] .badge.badge--normal {
     --ifm-badge-border-color: var(--ifm-color-white);
     --ifm-badge-color: var(--ifm-color-white);
+}
+
+html:not([data-theme="dark"]) .rc-tooltip {
+    --ifm-tooltip-background-color: #fff;
+    --ifm-tooltip-border-color: #333;
+}
+
+html[data-theme="dark"] .rc-tooltip {
+    --ifm-tooltip-background-color: var(--ifm-background-color);
+    --ifm-tooltip-border-color: #fff;
 }
 
   .hero.hero--primary {
@@ -91,4 +102,23 @@ html[data-theme="dark"] .badge.badge--normal {
       border: none;
       width: 100%;
       min-height: 768px;
+  }
+
+  .rc-tooltip {
+      font-size: 16px !important;
+      max-width: 300px;
+      opacity: 1 !important;
+  }
+
+  .rc-tooltip .rc-tooltip-arrow {
+      border-top-color: var(--ifm-tooltip-border-color) !important;
+  }
+
+  .rc-tooltip .rc-tooltip-inner {
+      max-height: 300px;
+      overflow: auto;
+      background-color: var(--ifm-tooltip-background-color);
+      color: var(--ifm-font-color-base);
+      border: solid 1px;
+      border-color: var(--ifm-tooltip-border-color);
   }
