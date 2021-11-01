@@ -24,6 +24,7 @@ import {
   AutomaticBadge,
   GridPortalBadge,
   MiniGridPortalBadge,
+  MiniMapPortalBadge,
   MenuPortalBadge,
   MeetPortalBadge,
   LeftWristPortalBadge,
@@ -34,7 +35,9 @@ import {
   AnyCursorValues,
 } from './components.mdx';
 
-AUX has many tags.
+import { GlossaryRef } from './glossary/index';
+
+CasualOS has many tags.
 
 ## Info Tags
 
@@ -1614,60 +1617,64 @@ Note that when this value is `true`, [iframe forms](#iframe-form) will cease to 
 ### `miniPortalHeight`
 <Badges>
     <MiniGridPortalBadge/>
+    <MiniGridPortalBadge/>
 </Badges>
 
-Sets the initial height of the viewport for the miniGridPortal.
+Sets the initial height of the viewport for the miniGridPortal/miniMapPortal.
 
-This should be the percentage of the "available screen height" that the miniGridPortal should take.
+This should be the percentage of the "available screen height" that the miniGridPortal/miniMapPortal should take.
 The "available screen height" is a portion of the full screen calculated such that when there is some space left between the left and right edges of the screen
-there will be some space at the bottom of the miniGridPortal. However, when the <TagLink tag='miniPortalWidth'/> tag is set to 1, there will be no space between the bottom
-of the screen and the bottom of the miniGridPortal.
+there will be some space at the bottom of the portal. However, when the <TagLink tag='miniPortalWidth'/> tag is set to 1, there will be no space between the bottom
+of the screen and the bottom of the portal.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Numbers >= 0 and <= 1'>
-    The percentage of the screen height that the miniGridPortal should take. (Default is 0.2)
+    The percentage of the screen height that the portal should take. (Default is 0.2)
   </PossibleValue>
 </PossibleValuesTable>
 
 ### `miniPortalWidth`
 <Badges>
     <MiniGridPortalBadge/>
+    <MiniMapPortalBadge/>
 </Badges>
 
-Sets the width of the viewport for the miniGridPortal.
+Sets the width of the viewport for the miniGridPortal/miniMapPortal.
 This should be a percentage between 0 and 1 that specifies how much of the screen width should be taken.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Numbers >= 0 and <= 1'>
-    The percentage of the screen width that the miniGridPortal should take. (Default is 0.8)
+    The percentage of the screen width that the portal should take. (Default is 0.8)
   </PossibleValue>
 </PossibleValuesTable>
 
 ### `miniPortalResizable`
 <Badges>
     <MiniGridPortalBadge/>
+    <MiniMapPortalBadge/>
 </Badges>
 
-Whether the player will be able to resize the viewport for the miniGridPortal.
+Whether the player will be able to resize the viewport for the miniGridPortal/miniMapPortal.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValueCode value='true'>
-    The miniGridPortal is resizable. (Default)
+    The portal is resizable. (Default)
   </PossibleValueCode>
   <PossibleValueCode value='false'>
-    The miniGridPortal is not resizable.
+    The portal is not resizable.
   </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `mapPortalBasemap`
 <Badges>
     <MapPortalBadge/>
+    <MiniMapPortalBadge/>
 </Badges>
 
-Sets the style of the bottom layer of the map in the map portal.
+Sets the style of the bottom layer of the map in the mapPortal/miniMapPortal.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -2398,7 +2405,17 @@ The instance that is loaded into CasualOS.
   <ConfigBotBadge/>
 </Badges>
 
-The dimension that is loaded into the 'grid' portal in CasualOS.
+The dimension that is loaded into the <GlossaryRef term="gridPortal">'grid' portal</GlossaryRef> in CasualOS.
+This is the portal that is loaded by default.
+Only available on the config bot.
+
+### `miniGridPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The dimension that is loaded into the "mini" portal in CasualOS.
 Only available on the config bot.
 
 ### `sheetPortal`
@@ -2419,24 +2436,27 @@ Only available on the config bot.
 The prefix that indicates which tags should be loaded into the "IDE" portal in CasualOS.
 Only available on the config bot.
 
-### `miniGridPortal`
-
-<Badges>
-  <ConfigBotBadge/>
-</Badges>
-
-The dimension that is loaded into the "mini" portal in CasualOS.
-Only available on the config bot.
-
 ### `mapPortal`
 
 <Badges>
   <ConfigBotBadge/>
 </Badges>
 
-The dimension that is loaded into the "map" portal in CasualOS.
+The dimension that is loaded into the <GlossaryRef term="mapPortal">"map" portal</GlossaryRef> in CasualOS.
 
 The map portal displays a 3D globe representing earth. Bots represented in the map portal use longitude for X and latitude for Y and are 10 meters by 10 meters large by default.
+
+Only available on the config bot.
+
+### `miniMapPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The dimension that is loaded into the "mini map" portal in CasualOS.
+
+The mini map portal displays a 3D globe representing earth. Bots represented in the mini map portal use longitude for X and latitude for Y and are 10 meters by 10 meters large by default.
 
 Only available on the config bot.
 

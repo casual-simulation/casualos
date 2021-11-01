@@ -1,5 +1,24 @@
 # CasualOS Changelog
 
+## V2.0.15
+
+#### Date: 11/1/2021
+
+### :rocket: Improvements
+
+-   Added the `miniMapPortal`.
+    -   This is a mini version of the `mapPortal` that works kinda like the `miniGridPortal`.
+-   Added a introductory page to the documentation that links to the "Pillars of Casual Simulation" video tutorials.
+-   Added a "Getting Started" page that contains some written documentation on the basics of CasualOS.
+    -   Thanks to Shane Thornton ([@shane-cpu](https://github.com/shane-cpu)) for contributing this!
+-   Added a glossary page to the documentation.
+    -   This page is incomplete but contains basic descriptions for common terms like "bot", "tag", "portal", "inst", etc.
+    -   There is also a feature where other parts of the documentation can link to the glossary and get Wikipedia-style tooltips for the terms.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the server failed to retrieve permanent records when when `.getMoreRecords()` was called.
+
 ## V2.0.14
 
 #### Date: 10/29/2021

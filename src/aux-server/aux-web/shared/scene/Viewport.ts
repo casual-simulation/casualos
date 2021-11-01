@@ -20,6 +20,20 @@ export class Viewport {
     private _rootElement: HTMLElement = null;
     private _onUpdated: Subject<Viewport> = new Subject<Viewport>();
     private _parentSub: SubscriptionLike;
+    private _targetElement: HTMLElement = null;
+
+    get targetElement() {
+        return this._targetElement;
+    }
+
+    /**
+     * Sets the element that the viewport is representing.
+     * Null if the viewport doesn't represent a specific element or if it represents the root element.
+     * Useful for specifying a passthrough target for viewports.
+     */
+    set targetElement(element: HTMLElement) {
+        this._targetElement = element;
+    }
 
     get x(): number {
         return this._origin.x;
@@ -50,9 +64,8 @@ export class Viewport {
      * @param parent - The parent viewport or html element of this viewport. If no parent, the viewport will inherit the size of the window.
      */
     constructor(name?: string, parent?: Viewport, rootElement?: HTMLElement) {
-        this._onParentViewportUpdated = this._onParentViewportUpdated.bind(
-            this
-        );
+        this._onParentViewportUpdated =
+            this._onParentViewportUpdated.bind(this);
 
         if (name) {
             this.name = name;

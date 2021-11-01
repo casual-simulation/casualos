@@ -57,6 +57,7 @@ import {
     Easing,
     getEasing,
     getDefaultEasing,
+    DEFAULT_MINI_PORTAL_HEIGHT,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -81,6 +82,8 @@ import { Input, MouseButtonId } from '../../shared/scene/Input';
 import { MapSimulation3D } from './MapSimulation3D';
 import { CoordinateSystem } from '../../shared/scene/CoordinateSystem';
 import { ExternalRenderers, SpatialReference } from '../MapUtils';
+import { PlayerMapSimulation3D } from './PlayerMapSimulation3D';
+import { MiniMapSimulation3D } from './MiniMapSimulation3D';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -109,11 +112,14 @@ export class PlayerGame extends Game {
 
     playerSimulations: PlayerPageSimulation3D[] = [];
     miniSimulations: MiniSimulation3D[] = [];
-    mapSimulations: MapSimulation3D[] = [];
+    mapSimulations: PlayerMapSimulation3D[] = [];
+    miniMapSimulations: MiniMapSimulation3D[] = [];
     miniCameraRig: CameraRig = null;
     miniViewport: Viewport = null;
     mapViewport: Viewport = null;
+    miniMapViewport: Viewport = null;
     mapCameraRig: CameraRig = null;
+    miniMapCameraRig: CameraRig = null;
     showMiniPortalCameraRigHome: boolean = false;
     disableCanvasTransparency: boolean =
         DEFAULT_PORTAL_DISABLE_CANVAS_TRANSPARENCY;
@@ -123,6 +129,7 @@ export class PlayerGame extends Game {
 
     private miniScene: Scene;
     private mapScene: Scene;
+    private miniMapScene: Scene;
 
     // /**
     //  * A scene that is used to allow the main scene to render
@@ -130,11 +137,14 @@ export class PlayerGame extends Game {
     //  */
     // private emptyScene: Scene;
 
-    private mapRenderer: WebGLRenderer;
+    // private mapRenderer: WebGLRenderer;
     private mapDirectionalLight: DirectionalLight;
     private mapAmbientLight: AmbientLight;
+    private miniMapAmbientLight: AmbientLight;
+    private miniMapDirectionalLight: DirectionalLight;
 
     private mapPortalVisible: boolean = DEFAULT_MAP_PORTAL_VISIBLE;
+    private miniMapPortalVisible: boolean = false;
 
     private _slider: HTMLElement;
     private _resizingMiniPortal: boolean = false;
@@ -331,6 +341,14 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(this.miniSimulations, 'cursor');
     }
 
+    getMiniMapPortalResizable(): boolean {
+        return this._getSimulationValue(this.miniMapSimulations, 'resizable');
+    }
+
+    getMiniMapPortalCursor(): BotCursorType {
+        return this._getSimulationValue(this.miniMapSimulations, 'cursor');
+    }
+
     getPlayerZoom(): number {
         return this._getSimulationValue(this.playerSimulations, 'playerZoom');
     }
@@ -398,6 +416,26 @@ export class PlayerGame extends Game {
         );
     }
 
+    getMiniMapPortalWidth(): number {
+        return this._getSimulationValue(this.miniMapSimulations, 'width', null);
+    }
+
+    getMiniMapPortalHeight(): number {
+        return this._getSimulationValue(
+            this.miniMapSimulations,
+            'height',
+            null
+        );
+    }
+
+    getMiniMapPortalHeightPadding(): number {
+        const width = this.getMiniMapPortalWidth();
+        if (width >= 1) {
+            return 0;
+        }
+        return MINI_PORTAL_DEFAULT_HEIGHT_PADDING;
+    }
+
     getMapPortalVisible(): boolean {
         return this._getSimulationValue(
             this.mapSimulations,
@@ -406,9 +444,25 @@ export class PlayerGame extends Game {
         );
     }
 
+    getMiniMapPortalVisible(): boolean {
+        return this._getSimulationValue(
+            this.miniMapSimulations,
+            'hasDimension',
+            false
+        );
+    }
+
     getMapPortalBasemap(): string {
         return this._getSimulationValue(
             this.mapSimulations,
+            'basemap',
+            DEFAULT_MAP_PORTAL_BASEMAP
+        );
+    }
+
+    getMiniMapPortalBasemap(): string {
+        return this._getSimulationValue(
+            this.miniMapSimulations,
             'basemap',
             DEFAULT_MAP_PORTAL_BASEMAP
         );
@@ -430,19 +484,28 @@ export class PlayerGame extends Game {
     }
 
     getViewports(): Viewport[] {
-        return [this.mainViewport, this.miniViewport, this.mapViewport];
+        return [
+            this.mainViewport,
+            this.miniViewport,
+            this.mapViewport,
+            this.miniMapViewport,
+        ];
     }
     getCameraRigs(): CameraRig[] {
-        return [this.mainCameraRig, this.miniCameraRig, this.mapCameraRig];
+        return [
+            this.mainCameraRig,
+            this.miniCameraRig,
+            this.mapCameraRig,
+            this.miniMapCameraRig,
+        ];
     }
     getSimulations(): Simulation3D[] {
         return [
             ...this.playerSimulations,
             ...this.miniSimulations,
             ...this.mapSimulations,
+            ...this.miniMapSimulations,
         ];
-        // return [...this.playerSimulations];
-        // return [...this.miniSimulations];
     }
     getUIHtmlElements(): HTMLElement[] {
         return [<HTMLElement>this.gameView.$refs.miniGridPortal, this.slider];
@@ -459,14 +522,21 @@ export class PlayerGame extends Game {
     getMapPortalViewport(): Viewport {
         return this.mapViewport;
     }
+    getMiniMapPortalViewport(): Viewport {
+        return this.miniMapViewport;
+    }
     getMapPortalCameraRig(): CameraRig {
         return this.mapCameraRig;
+    }
+    getMiniMapPortalCameraRig(): CameraRig {
+        return this.miniMapCameraRig;
     }
     findAllBotsById(id: string): AuxBotVisualizer[] {
         return [
             ...flatMap(this.playerSimulations, (s) => s.findBotsById(id)),
             ...flatMap(this.miniSimulations, (s) => s.findBotsById(id)),
             ...flatMap(this.mapSimulations, (s) => s.findBotsById(id)),
+            ...flatMap(this.miniMapSimulations, (s) => s.findBotsById(id)),
         ];
     }
     setGridsVisible(visible: boolean): void {
@@ -516,6 +586,14 @@ export class PlayerGame extends Game {
      */
     findMapSimulation3D(sim: Simulation): MapSimulation3D {
         return this.mapSimulations.find((s) => s.simulation === sim);
+    }
+
+    /**
+     * Find Mini Map Simulation 3D object that is displaying for the given Simulation.
+     * @param sim The simulation to find a simulation 3d for.
+     */
+    findMiniMapSimulation3D(sim: Simulation): MapSimulation3D {
+        return this.miniMapSimulations.find((s) => s.simulation === sim);
     }
 
     dispose(): void {
@@ -585,7 +663,7 @@ export class PlayerGame extends Game {
         this.miniSimulations.push(miniPortalSim3D);
         this.miniScene.add(miniPortalSim3D);
 
-        const mapPortalSim3D = new MapSimulation3D(this, sim);
+        const mapPortalSim3D = new PlayerMapSimulation3D(this, sim);
         mapPortalSim3D.coordinateTransformer =
             this.gameView.getMapCoordinateTransformer();
         mapPortalSim3D.mapView = this.gameView.getMapView();
@@ -597,6 +675,19 @@ export class PlayerGame extends Game {
 
         this.mapSimulations.push(mapPortalSim3D);
         this.mapScene.add(mapPortalSim3D);
+
+        const miniMapPortalSim3D = new MiniMapSimulation3D(this, sim);
+        miniMapPortalSim3D.coordinateTransformer =
+            this.gameView.getMiniMapCoordinateTransformer();
+        miniMapPortalSim3D.mapView = this.gameView.getMiniMapView();
+        miniMapPortalSim3D.targetCoordinateSystem = CoordinateSystem.Z_UP;
+        miniMapPortalSim3D.init();
+        miniMapPortalSim3D.onBotAdded.addListener(this.onBotAdded.invoke);
+        miniMapPortalSim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
+        miniMapPortalSim3D.onBotUpdated.addListener(this.onBotUpdated.invoke);
+
+        this.miniMapSimulations.push(miniMapPortalSim3D);
+        this.miniMapScene.add(miniMapPortalSim3D);
 
         this.subs.push(
             playerSim3D.simulation.localEvents.subscribe((e) => {
@@ -828,7 +919,11 @@ export class PlayerGame extends Game {
         //
         // [miniGridPortal scene]
         //
-        this.renderMiniViewport();
+        if (!this.gameView.hasMiniMap) {
+            this.renderMiniViewport();
+        } else {
+            this.renderMiniMapViewport();
+        }
     }
 
     /**
@@ -884,6 +979,35 @@ export class PlayerGame extends Game {
     }
 
     /**
+     * Renders the mini map scene to the mini map viewport.
+     */
+    protected renderMiniMapViewport() {
+        this.miniMapScene.background = null;
+        this.renderer.setClearColor('#000', 0);
+        this.renderer.setViewport(
+            this.miniMapViewport.x,
+            this.miniMapViewport.y,
+            this.miniMapViewport.width,
+            this.miniMapViewport.height
+        );
+        this.renderer.setScissor(
+            this.miniMapViewport.x,
+            this.miniMapViewport.y,
+            this.miniMapViewport.width,
+            this.miniMapViewport.height
+        );
+
+        this.renderer.setScissorTest(true);
+        this.renderer.clear();
+
+        // Render the miniMapPortal scene with the miniMapPortal main camera.
+        this.renderer.render(
+            this.miniMapScene,
+            this.miniMapCameraRig.mainCamera
+        );
+    }
+
+    /**
      * Render the current frame for XR (AR mode).
      */
     protected renderXR() {
@@ -934,6 +1058,10 @@ export class PlayerGame extends Game {
             this.gameView.gameView
         );
         this.mapViewport.layer = -1;
+
+        this.miniMapViewport = new Viewport('miniMapPortal', this.mapViewport);
+        console.log('Set height initial value: ' + this.miniMapViewport.height);
+        this.miniMapViewport.layer = -1;
     }
 
     protected setupScenes() {
@@ -944,6 +1072,7 @@ export class PlayerGame extends Game {
         //
         this.setupMiniScene();
         this.setupMapScene();
+        this.setupMiniMapScene();
 
         this.setupDelay = true;
 
@@ -980,7 +1109,8 @@ export class PlayerGame extends Game {
             'mapPortal',
             'perspective',
             this.mapScene,
-            this.mapViewport
+            this.mapViewport,
+            () => this.gameView.getMapView()
         );
 
         // miniGridPortal ambient light.
@@ -992,6 +1122,28 @@ export class PlayerGame extends Game {
         this.mapScene.add(this.mapDirectionalLight);
     }
 
+    protected setupMiniMapScene() {
+        this.miniMapScene = new Scene();
+        this.miniMapScene.autoUpdate = false;
+
+        // miniGridPortal camera.
+        this.miniMapCameraRig = this._createMapCameraRig(
+            'miniMapPortal',
+            'perspective',
+            this.miniMapScene,
+            this.miniMapViewport,
+            () => this.gameView.getMiniMapView()
+        );
+
+        // miniGridPortal ambient light.
+        this.miniMapAmbientLight = baseAuxAmbientLight();
+        this.miniMapScene.add(this.miniMapAmbientLight);
+
+        // miniGridPortal direction light.
+        this.miniMapDirectionalLight = baseAuxDirectionalLight();
+        this.miniMapScene.add(this.miniMapDirectionalLight);
+    }
+
     onWindowResize(width: number, height: number) {
         super.onWindowResize(width, height);
 
@@ -1000,7 +1152,24 @@ export class PlayerGame extends Game {
     }
 
     private _updateMiniPortal() {
-        let configuredHeight = this.getMiniPortalHeight();
+        this.miniPortalVisible = this.getMiniPortalVisible();
+
+        if (this.miniPortalVisible === true) {
+            this._showMiniPortal();
+        } else {
+            this._hideMiniPortal();
+        }
+
+        if (!this.miniPortalVisible && !this.miniMapPortalVisible) {
+            return;
+        }
+
+        let configuredHeight: number = DEFAULT_MINI_PORTAL_HEIGHT;
+        if (this.miniMapPortalVisible) {
+            configuredHeight = this.getMiniMapPortalHeight();
+        } else if (this.miniPortalVisible) {
+            configuredHeight = this.getMiniPortalHeight();
+        }
 
         if (this._miniPortalConfiguredHeight != configuredHeight) {
             this._miniPortalConfiguredHeight = configuredHeight;
@@ -1013,17 +1182,15 @@ export class PlayerGame extends Game {
             MINI_PORTAL_MAX_PERCENT
         );
 
-        this.miniPortalVisible = this.getMiniPortalVisible();
-
-        if (this.miniPortalVisible === true) {
-            this._showMiniPortal();
-        } else {
-            this._hideMiniPortal();
-            return;
+        let heightOffset: number = null;
+        let widthPercent: number = null;
+        if (this.miniMapPortalVisible) {
+            heightOffset = this.getMiniMapPortalHeightPadding();
+            widthPercent = this.getMiniMapPortalWidth();
+        } else if (this.miniPortalVisible) {
+            heightOffset = this.getMiniPortalHeightPadding();
+            widthPercent = this.getMiniPortalWidth();
         }
-
-        let heightOffset = this.getMiniPortalHeightPadding();
-        let widthPercent = this.getMiniPortalWidth();
         const hasCustomWidth = widthPercent !== null;
         widthPercent ??= MINI_PORTAL_DEFAULT_WIDTH;
 
@@ -1052,9 +1219,14 @@ export class PlayerGame extends Game {
         }
 
         this.miniViewport.setScale(widthPercent, miniPortalHeightPercent);
+        this.miniMapViewport.setScale(widthPercent, miniPortalHeightPercent);
 
         this.miniViewport.setOrigin(
             mainViewportWidth / 2 - this.miniViewport.getSize().x / 2,
+            heightOffset
+        );
+        this.miniMapViewport.setOrigin(
+            mainViewportWidth / 2 - this.miniMapViewport.getSize().x / 2,
             heightOffset
         );
 
@@ -1066,6 +1238,7 @@ export class PlayerGame extends Game {
         }
 
         this.miniViewport.updateViewport();
+        this.miniMapViewport.updateViewport();
     }
 
     /**
@@ -1095,12 +1268,17 @@ export class PlayerGame extends Game {
         (<HTMLElement>this.slider).style.width = width.toString() + 'px';
     }
 
+    private _showMiniPortal() {}
+
     private _hideMiniPortal() {
         this.miniViewport.setScale(null, 0);
+    }
+
+    private _hideMiniPortalsSlider() {
         (<HTMLElement>this.slider).style.display = 'none';
     }
 
-    private _showMiniPortal() {
+    private _showMiniPortalsSlider() {
         (<HTMLElement>this.slider).style.display = 'block';
     }
 
@@ -1116,16 +1294,19 @@ export class PlayerGame extends Game {
         this._updateDefaultZoomAndRotation();
         this._updateMiniPortalVisibility();
         this._updateMiniPortalControls();
+        this._updateMiniPortalSliderVisibility();
         this._updateMainControls();
         this._updateCanvasTransparency();
         this._updateGridPortalValues();
 
-        this._updateMapPortal();
+        this._updateMapPortals();
     }
 
-    private _updateMapPortal() {
+    private _updateMapPortals() {
         this._updateMapPortalVisibility();
         this._updateMapPortalBasemap();
+        this._updateMiniMapPortalVisibility();
+        this._updateMiniMapPortalBasemap();
     }
 
     private _updateMapPortalBasemap() {
@@ -1153,32 +1334,7 @@ export class PlayerGame extends Game {
                         sim.mapView = view;
                     }
 
-                    this.mapRenderer = new WebGLRenderer({
-                        context: context.gl,
-                        premultipliedAlpha: false,
-                        antialias: true,
-                    });
-                    // this.mapRenderer.setPixelRatio()
-                    this.mapRenderer.setViewport(0, 0, view.width, view.height);
-                    this.mapRenderer.autoClear = false;
-                    // this.mapRenderer.autoClearDepth = false;
-                    // this.mapRenderer.autoClearStencil = false;
-                    // this.mapRenderer.autoClearColor = false;
-                    this.mapRenderer.shadowMap.enabled = false;
-                    this.mapRenderer.outputEncoding = sRGBEncoding;
                     this.mapViewport.layer = 0.5;
-
-                    // The ArcGIS API for JavaScript renders to custom offscreen buffers, and not to the default framebuffers.
-                    // We have to inject this bit of code into the three.js runtime in order for it to bind those
-                    // buffers instead of the default ones.
-                    let originalSetRenderTarget =
-                        this.mapRenderer.setRenderTarget.bind(this.mapRenderer);
-                    this.mapRenderer.setRenderTarget = (target) => {
-                        originalSetRenderTarget(target);
-                        if (target == null) {
-                            context.bindRenderTarget();
-                        }
-                    };
                 },
                 render: (context) => {
                     let contextCam = context.camera;
@@ -1218,14 +1374,98 @@ export class PlayerGame extends Game {
                         context.sunLight.ambient.color
                     );
                     this.mapAmbientLight.updateMatrixWorld(true);
+                },
+                dispose: (context) => {},
+            });
+        } else {
+            for (let sim of this.mapSimulations) {
+                sim.coordinateTransformer = null;
+                sim.mapView = null;
+            }
+            this.gameView.disableMapView();
+            this.mapViewport.layer = -1;
+        }
+    }
 
+    private _updateMiniMapPortalVisibility() {
+        const visible = this.getMiniMapPortalVisible();
+        if (this.miniMapPortalVisible == visible) {
+            return;
+        }
+
+        this.miniMapPortalVisible = visible;
+        if (visible) {
+            this.miniMapViewport.setScale(null, 0);
+            this.gameView.enableMiniMapView({
+                setup: (context) => {
+                    const view = this.gameView.getMiniMapView();
+                    const coordinateTransform =
+                        this.gameView.getMiniMapCoordinateTransformer();
+                    for (let sim of this.miniMapSimulations) {
+                        sim.coordinateTransformer = coordinateTransform;
+                        sim.mapView = view;
+                    }
+
+                    this.miniMapViewport.layer = 1.5;
+                    this.miniMapViewport.targetElement =
+                        this.gameView.getMiniMapViewportTarget();
+                },
+                render: (context) => {
+                    let contextCam = context.camera;
+                    let camera = this.miniMapCameraRig.mainCamera;
+                    camera.position.fromArray(contextCam.eye);
+                    camera.up.fromArray(contextCam.up);
+                    camera.lookAt(
+                        new Vector3(
+                            contextCam.center[0],
+                            contextCam.center[1],
+                            contextCam.center[2]
+                        )
+                    );
+                    camera.projectionMatrix.fromArray(
+                        contextCam.projectionMatrix
+                    );
+                    camera.projectionMatrixInverse
+                        .copy(camera.projectionMatrix)
+                        .invert();
+                    camera.near = contextCam.near;
+                    camera.far = contextCam.far;
+                    camera.updateMatrixWorld(true);
+
+                    this.miniMapDirectionalLight.position.fromArray(
+                        context.sunLight.direction
+                    );
+                    this.miniMapDirectionalLight.intensity =
+                        context.sunLight.diffuse.intensity;
+                    this.miniMapDirectionalLight.color = new Color().fromArray(
+                        context.sunLight.diffuse.color
+                    );
+                    this.miniMapDirectionalLight.updateMatrixWorld(true);
+
+                    this.miniMapAmbientLight.intensity =
+                        context.sunLight.ambient.intensity;
+                    this.miniMapAmbientLight.color = new Color().fromArray(
+                        context.sunLight.ambient.color
+                    );
+                    this.miniMapAmbientLight.updateMatrixWorld(true);
                     // this.renderMapViewport();
                 },
                 dispose: (context) => {},
             });
         } else {
-            this.gameView.disableMapView();
-            this.mapViewport.layer = -1;
+            for (let sim of this.miniMapSimulations) {
+                sim.coordinateTransformer = null;
+                sim.mapView = null;
+            }
+            this.gameView.disableMiniMapView();
+            this.miniMapViewport.layer = -1;
+        }
+    }
+
+    private _updateMiniMapPortalBasemap() {
+        const view = this.gameView.getMiniMapView();
+        if (view) {
+            this.gameView.setMiniMapBasemap(this.getMiniMapPortalBasemap());
         }
     }
 
@@ -1339,13 +1579,23 @@ export class PlayerGame extends Game {
         ) {
             this._updateMiniPortal();
         }
+    }
 
-        if (!this.getMiniPortalResizable() || !this.miniPortalVisible) {
-            // remove dragging areas
-            (<HTMLElement>this.slider).style.display = 'none';
-        } else {
+    private _hasResizableMiniPortal() {
+        const hasResizableMiniPortal =
+            this.getMiniPortalResizable() && this.miniPortalVisible;
+        const hasResizableMiniMapPortal =
+            this.getMiniMapPortalResizable() && this.miniMapPortalVisible;
+        return hasResizableMiniPortal || hasResizableMiniMapPortal;
+    }
+
+    private _updateMiniPortalSliderVisibility() {
+        if (this._hasResizableMiniPortal()) {
             // make sure dragging areas are active
-            (<HTMLElement>this.slider).style.display = 'block';
+            this._showMiniPortalsSlider();
+        } else {
+            // remove dragging areas
+            this._hideMiniPortalsSlider();
         }
     }
 
@@ -1480,13 +1730,23 @@ export class PlayerGame extends Game {
     protected renderCursor() {
         const pagePos = this.getInput().getMousePagePos();
         const miniViewport = this.miniViewport;
+        const miniMapViewport = this.miniMapViewport;
         const isMiniPortal = Input.pagePositionOnViewport(
             pagePos,
             miniViewport,
             this.getViewports()
         );
+        const isMiniMapPortal =
+            !isMiniPortal &&
+            Input.pagePositionOnViewport(
+                pagePos,
+                miniMapViewport,
+                this.getViewports()
+            );
         this.backgroundCursor = isMiniPortal
             ? this.getMiniPortalCursor()
+            : isMiniMapPortal
+            ? this.getMiniMapPortalCursor()
             : this.getCursor();
 
         super.renderCursor();
@@ -1498,7 +1758,7 @@ export class PlayerGame extends Game {
     }
 
     private _updateMiniPortalSize() {
-        if (!this.getMiniPortalResizable() || !this.miniPortalVisible) {
+        if (!this._hasResizableMiniPortal()) {
             return;
         }
 
@@ -1597,7 +1857,8 @@ export class PlayerGame extends Game {
         name: string,
         type: CameraType,
         scene: Scene,
-        viewport: Viewport
+        viewport: Viewport,
+        getMapView: () => __esri.SceneView
     ): CameraRig {
         const rig = createCameraRig(name, type, scene, viewport);
 
@@ -1611,7 +1872,7 @@ export class PlayerGame extends Game {
             }
         };
         rig.focusOnPosition = (position, options) => {
-            const mapView = this.gameView.getMapView();
+            const mapView = getMapView();
             if (mapView && mapView.ready) {
                 const instant = options.duration <= 0;
                 const [lon, lat] = ExternalRenderers.fromRenderCoordinates(

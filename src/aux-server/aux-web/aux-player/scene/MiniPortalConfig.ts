@@ -21,46 +21,40 @@ import {
 import { tap } from 'rxjs/operators';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import { PortalConfig } from './PortalConfig';
+import { MiniPortalConfigHelper } from './MiniPortalConfigHelper';
 
 /**
  * Defines a class that is able to watch dimension confic bots and update values.
  */
 export class MiniPortalConfig extends PortalConfig {
-    private _resizable: boolean;
-    private _height: number;
-    private _width: number;
+    private _helper: MiniPortalConfigHelper;
+
+    private get helper() {
+        if (!this._helper) {
+            this._helper = new MiniPortalConfigHelper();
+        }
+        return this._helper;
+    }
 
     /**
      * Gets whether the portal is resizable.
      */
     get resizable() {
-        if (this._resizable != null) {
-            return this._resizable;
-        } else {
-            return DEFAULT_MINI_PORTAL_RESIZABLE;
-        }
+        return this.helper.resizable;
     }
 
     /**
      * Gets the height of the portal.
      */
     get height() {
-        if (this._height != null) {
-            return this._height;
-        } else {
-            return DEFAULT_MINI_PORTAL_HEIGHT;
-        }
+        return this.helper.height;
     }
 
     /**
      * Gets the width of the portal.
      */
     get width() {
-        if (this._width != null) {
-            return this._width;
-        } else {
-            return null;
-        }
+        return this.helper.width;
     }
 
     constructor(portalTag: string, simulation: BrowserSimulation) {
@@ -69,9 +63,7 @@ export class MiniPortalConfig extends PortalConfig {
 
     protected _clearPortalValues() {
         super._clearPortalValues();
-        this._resizable = null;
-        this._height = null;
-        this._width = null;
+        this.helper.clearPortalValues();
     }
 
     protected _updatePortalValues(
@@ -80,23 +72,6 @@ export class MiniPortalConfig extends PortalConfig {
         portalTag: string
     ) {
         super._updatePortalValues(calc, bot, portalTag);
-        this._resizable = calculateBooleanTagValue(
-            calc,
-            bot,
-            `auxMiniPortalResizable`,
-            DEFAULT_MINI_PORTAL_RESIZABLE
-        );
-        this._height = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxMiniPortalHeight`,
-            DEFAULT_MINI_PORTAL_HEIGHT
-        );
-        this._width = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxMiniPortalWidth`,
-            null
-        );
+        this.helper.updatePortalValues(calc, bot, portalTag);
     }
 }

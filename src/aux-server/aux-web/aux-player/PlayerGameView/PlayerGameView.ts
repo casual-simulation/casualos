@@ -50,10 +50,12 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     showMiniPortalCameraHome: boolean = false;
     miniViewportStyle: any = {};
     mainViewportStyle: any = {};
+    miniMapViewportStyle: any = {};
 
     hasMainViewport: boolean = false;
     hasMiniViewport: boolean = false;
     hasMap: boolean = false;
+    hasMiniMap: boolean = false;
     menu: DimensionItem[] = [];
     extraMenuStyle: Partial<HTMLElement['style']> = {};
 
@@ -63,7 +65,14 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
     lastMenuCount: number = null;
     private _mapView: EsriSceneView;
+    private _miniMapView: EsriSceneView;
     private _coordinateTransformer: (pos: {
+        x: number;
+        y: number;
+        z: number;
+    }) => Matrix4;
+
+    private _miniMapCoordinateTransformer: (pos: {
         x: number;
         y: number;
         z: number;
@@ -77,8 +86,22 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         return 'map-portal';
     }
 
+    get miniMapViewId() {
+        return 'mini-map-portal';
+    }
+
     get mapView(): HTMLElement {
         return <HTMLElement>this.$refs.mapView;
+    }
+
+    get miniMapView(): HTMLElement {
+        return <HTMLElement>this.$refs.miniMapView;
+    }
+
+    getMiniMapViewportTarget(): HTMLElement {
+        return this.miniMapView.querySelector(
+            '.esri-view-root > .esri-view-surface'
+        );
     }
 
     get finalMenuStyle() {
@@ -95,6 +118,10 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         return this._mapView;
     }
 
+    getMiniMapView() {
+        return this._miniMapView;
+    }
+
     /**
      * Gets the matrix that should be used to transform AUX coordinates into Three.js coordinates
      * for the map view.
@@ -105,16 +132,34 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         return this._coordinateTransformer;
     }
 
+    /**
+     * Gets the matrix that should be used to transform AUX coordinates into Three.js coordinates
+     * for the map view.
+     *
+     * See https://developers.arcgis.com/javascript/latest/api-reference/esri-views-3d-externalRenderers.html#renderCoordinateTransformAt
+     */
+    getMiniMapCoordinateTransformer() {
+        return this._miniMapCoordinateTransformer;
+    }
+
     getWebMercatorUtils() {
         return WebMercatorUtils;
     }
 
     setBasemap(basemapId: string) {
-        if (this._mapView) {
+        this._setBasemap(this._mapView, basemapId);
+    }
+
+    setMiniMapBasemap(basemapId: string) {
+        this._setBasemap(this._miniMapView, basemapId);
+    }
+
+    private _setBasemap(view: EsriSceneView, basemapId: string) {
+        if (view) {
             const basemap = Basemap.fromId(basemapId);
-            if (basemap && this._mapView) {
-                if (this._mapView.map.basemap.id !== basemap.id) {
-                    this._mapView.map.basemap = basemap;
+            if (basemap && view) {
+                if (view.map.basemap.id !== basemap.id) {
+                    view.map.basemap = basemap;
                 }
             }
         }
@@ -218,6 +263,33 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                     .subscribe()
             );
         }
+
+        if (this._game.mainViewport && this._game.miniMapViewport) {
+            let style = {
+                bottom: this._game.miniMapViewport.y + 'px',
+                left: this._game.miniMapViewport.x + 'px',
+                width: this._game.miniMapViewport.width + 'px',
+                height: this._game.miniMapViewport.height + 'px',
+            };
+
+            this.miniMapViewportStyle = style;
+
+            this._subscriptions.push(
+                this._game.miniMapViewport.onUpdated
+                    .pipe(
+                        map((viewport) => ({
+                            bottom: viewport.y + 'px',
+                            left: viewport.x + 'px',
+                            width: viewport.width + 'px',
+                            height: viewport.height + 'px',
+                        })),
+                        tap((style) => {
+                            this.miniMapViewportStyle = style;
+                        })
+                    )
+                    .subscribe()
+            );
+        }
     }
 
     centerMiniCamera() {
@@ -282,11 +354,66 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         }
     }
 
+    async enableMiniMapView(externalRenderer?: __esri.ExternalRenderer) {
+        await loadMapModules();
+
+        console.log('[PlayerGameView] Enable Mini Map');
+        if (hasValue(appManager.config.arcGisApiKey)) {
+            Config.apiKey = appManager.config.arcGisApiKey;
+        }
+
+        const map = new GeoMap({
+            basemap: DEFAULT_MAP_PORTAL_BASEMAP,
+        });
+
+        this._miniMapView = new SceneView({
+            map: map,
+            center: [DEFAULT_MAP_PORTAL_LONGITUDE, DEFAULT_MAP_PORTAL_LATITUDE],
+            zoom: DEFAULT_MAP_PORTAL_ZOOM,
+            container: this.miniMapViewId,
+            ui: {
+                components: [],
+            },
+        });
+
+        try {
+            // wait for the map to load
+            await this._miniMapView.when();
+            this.hasMiniMap = true;
+            if (externalRenderer) {
+                this._miniMapCoordinateTransformer = (pos) => {
+                    const matrix = new Matrix4();
+                    ExternalRenderers.renderCoordinateTransformAt(
+                        this._miniMapView,
+                        [pos.x, pos.y, pos.z],
+                        SpatialReference.WGS84,
+                        matrix.elements
+                    );
+                    return matrix;
+                };
+                ExternalRenderers.add(this._miniMapView, {
+                    setup: (context) => {
+                        externalRenderer.setup(context);
+                        context.resetWebGLState();
+                    },
+                    render: (context) => {
+                        externalRenderer.render(context);
+                        ExternalRenderers.requestRender(this._miniMapView);
+                        context.resetWebGLState();
+                    },
+                    dispose: (context) => externalRenderer.dispose(context),
+                });
+            }
+        } catch (err) {
+            console.warn('[PlayerGameView] Failed to load the map view.', err);
+            this.hasMiniMap = false;
+        }
+    }
+
     /**
      * Disables and destroys the map view.
      */
     disableMapView() {
-        // TODO:
         console.log('[PlayerGameView] Disable Map');
         try {
             if (this._mapView) {
@@ -302,8 +429,29 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         }
     }
 
+    /**
+     * Disables and destroys the map view.
+     */
+    disableMiniMapView() {
+        console.log('[PlayerGameView] Disable Mini Map');
+        try {
+            if (this._miniMapView) {
+                this._miniMapView.destroy();
+                this._miniMapView = null;
+            }
+            this.hasMiniMap = false;
+        } catch (err) {
+            console.warn(
+                '[PlayerGameView] Failed to destroy the mini map view.',
+                err
+            );
+        }
+    }
+
     protected setWidthAndHeightCore(width: number, height: number) {
-        this.mapView.style.height = this._game.getRenderer().domElement.style.height;
-        this.mapView.style.width = this._game.getRenderer().domElement.style.width;
+        this.mapView.style.height =
+            this._game.getRenderer().domElement.style.height;
+        this.mapView.style.width =
+            this._game.getRenderer().domElement.style.width;
     }
 }

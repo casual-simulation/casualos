@@ -591,63 +591,85 @@ export class CameraControls {
 
     private updatePassthrough() {
         const input = this._game.getInput();
-        const dom = this.viewport.getRootElement();
 
-        if (dom) {
-            const container = dom.parentElement;
-            const clientPos = input.getMouseClientPos();
-            if (clientPos) {
-                const elements = document.elementsFromPoint(
-                    clientPos.x,
-                    clientPos.y
-                );
+        if (this.viewport.targetElement) {
+            const dom = this.viewport.getRootElement();
+            let events = [] as Event[];
+            for (let event of input.events) {
+                if (
+                    Input.isElementContainedByOrEqual(
+                        event.target as Element,
+                        dom
+                    )
+                ) {
+                    events.push(event);
+                }
+            }
+            sendEvents(events, this.viewport.targetElement);
+        } else {
+            const dom = this.viewport.getRootElement();
+            if (dom) {
+                const container = dom.parentElement;
+                const clientPos = input.getMouseClientPos();
+                if (clientPos) {
+                    const elements = document.elementsFromPoint(
+                        clientPos.x,
+                        clientPos.y
+                    );
 
-                let state = PassthroughStates.Start;
+                    let state = PassthroughStates.Start;
 
-                for (let element of elements) {
-                    if (
-                        state === PassthroughStates.Start ||
-                        state === PassthroughStates.SkippingViewport
-                    ) {
-                        if (Input.isElementContainedByOrEqual(element, dom)) {
-                            if (element === dom) {
-                                state = PassthroughStates.End;
-                            } else {
-                                state = PassthroughStates.SkippingViewport;
-                            }
-                            continue;
-                        } else if (state === PassthroughStates.Start) {
-                            // first element is not the viewport
-                            break;
-                        }
-                    } else {
-                        // we've skipped the viewport and are onto an element that is behind it
+                    for (let element of elements) {
                         if (
-                            element !== container &&
-                            Input.isElementContainedByOrEqual(
-                                element,
-                                container
-                            )
+                            state === PassthroughStates.Start ||
+                            state === PassthroughStates.SkippingViewport
                         ) {
-                            for (let event of input.events) {
-                                const copy = cloneEvent(event, {
-                                    target: element,
-                                    defaultPrevented: false,
-
-                                    // Hack to get Input to ignore the event
-                                    __ignoreForInput: true,
-                                });
-                                element.dispatchEvent(copy);
+                            if (
+                                Input.isElementContainedByOrEqual(element, dom)
+                            ) {
+                                if (element === dom) {
+                                    state = PassthroughStates.End;
+                                } else {
+                                    state = PassthroughStates.SkippingViewport;
+                                }
+                                continue;
+                            } else if (state === PassthroughStates.Start) {
+                                // first element is not the viewport
+                                break;
                             }
-                            break;
+                        } else {
+                            // we've skipped the viewport and are onto an element that is behind it
+                            if (
+                                element !== container &&
+                                Input.isElementContainedByOrEqual(
+                                    element,
+                                    container
+                                )
+                            ) {
+                                sendEvents([...input.events], element);
+                                break;
+                            }
                         }
                     }
                 }
+            } else {
+                console.warn(
+                    '[CameraControls] Trying to passthrough events but the viewport does not have a root element.'
+                );
             }
-        } else {
-            console.warn(
-                '[CameraControls] Trying to passthrough events but the viewport does not have a root element.'
-            );
+        }
+
+        function sendEvents(events: Event[], element: Element) {
+            for (let event of events) {
+                const copy = cloneEvent(event, {
+                    target: element,
+                    defaultPrevented: false,
+
+                    // Hack to get Input to ignore the event
+                    __ignoreForInput: true,
+                });
+                element.dispatchEvent(copy);
+            }
         }
     }
 
@@ -1431,6 +1453,19 @@ function cloneEvent<T extends Event>(event: T, overrides: any): T {
     class ClonedEvent extends Object.getPrototypeOf(event).constructor {
         constructor(type: string, options: any) {
             super(type, options);
+        }
+
+        preventDefault() {
+            // debugger;
+            // super.preventDefault();
+        }
+
+        stopPropagation() {
+            console.log('Stop p');
+        }
+
+        stopImmediatePropagation() {
+            console.log('Stop IP');
         }
     }
     for (let key in overrides) {

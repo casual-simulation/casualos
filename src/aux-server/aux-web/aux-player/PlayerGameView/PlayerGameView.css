@@ -31,6 +31,16 @@ html.ar-app .webxr-sessions canvas {
     pointer-events: none;
 }
 
+.map-viewport {
+    position: absolute;
+    pointer-events: none;
+}
+
+.map-viewport > div {
+    width: 100%;
+    height: 100%;
+}
+
 .game-container {
     position: relative;
     overflow: hidden;

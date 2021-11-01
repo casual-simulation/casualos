@@ -8,6 +8,7 @@ description: Learn about variables in CasualOS
 <!-- All these components are duplicated because importing them  -->
 <!-- breaks the build for some reason -->
 import useBaseUrl from '@docusaurus/useBaseUrl';
+import { GlossaryRef } from './glossary/index';
 
 export const Alert = ({type, children}) => (
     <div className={`alert alert--${type}`} role='alert'>
@@ -221,7 +222,7 @@ configBot.tags.gridPortal = "myDimension";
 
 ### `gridPortalBot`
 
-The bot that is used to configure the <TagLink tag='gridPortal'>grid portal</TagLink>.
+The bot that is used to configure the <GlossaryRef term='gridPortal'>grid portal</GlossaryRef>.
 By default this is a `tempLocal` bot that is generated automatically.
 
 Supports the following tags:
@@ -255,7 +256,7 @@ The bot that should be used to configure the <TagLink tag='sheetPortal'>sheet po
 
 ### `miniGridPortalBot`
 
-The bot that should be used to configure the <TagLink tag='miniGridPortal'>miniGridPortal</TagLink>.
+The bot that should be used to configure the <GlossaryRef term='miniGridPortal'>miniGridPortal</GlossaryRef>.
 
 Supports the following tags:
 
@@ -273,15 +274,27 @@ Supports the following tags:
 - <TagLink tag='portalGridScale'/>
 - <TagLink tag='portalSurfaceScale'/>
 - <TagLink tag='miniPortalHeight'/>
+- <TagLink tag='miniPortalWidth'/>
 - <TagLink tag='miniPortalResizable'/>
 
 ### `mapPortalBot`
 
-The bot that should be used to configure the <TagLink tag='mapPortal'>map portal</TagLink>.
+The bot that should be used to configure the <GlossaryRef term='mapPortal'>map portal</GlossaryRef>.
 
 Supports the following tags:
 
 - <TagLink tag='mapPortalBasemap'/>
+
+### `miniMapPortalBot`
+
+The bot that should be used to configure the <GlossaryRef term='miniMapPortal'>mini map portal</GlossaryRef>.
+
+Supports the following tags:
+
+- <TagLink tag='mapPortalBasemap'/>
+- <TagLink tag='miniPortalHeight'/>
+- <TagLink tag='miniPortalWidth'/>
+- <TagLink tag='miniPortalResizable'/>
 
 ### `menuPortalBot`
 
@@ -322,3 +335,4 @@ Supports the following tags:
 - <TagLink tag='meetPortalVisible'/>
 - <TagLink tag='meetPortalAnchorPoint'/>
 - <TagLink tag='meetPortalStyle'/>
+ 
