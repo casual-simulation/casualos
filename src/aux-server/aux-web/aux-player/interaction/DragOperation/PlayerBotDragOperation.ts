@@ -64,6 +64,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
     protected _miniSimulation3D: MiniSimulation3D;
     protected _mapSimulation3D: MapSimulation3D;
+    protected _miniMapSimulation3D: MapSimulation3D;
 
     // Determines if the bot is in the miniGridPortal currently
     protected _inMiniPortal: boolean;
@@ -76,6 +77,12 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
     // Determines if the bot was in the map portal at the beginning of the drag operation
     protected _originallyInMapPortal: boolean;
+
+    // Determines if the bot is in the mini map portal currently
+    protected _inMiniMapPortal: boolean;
+
+    // Determines if the bot was in the mini map portal at the beginning of the drag operation
+    protected _originallyInMiniMapPortal: boolean;
 
     protected _originalDimension: string;
 
@@ -105,6 +112,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         playerPageSimulation3D: PlayerPageSimulation3D,
         miniSimulation3D: MiniSimulation3D,
         mapSimulation3D: MapSimulation3D,
+        miniMapSimulation3D: MapSimulation3D,
         interaction: PlayerInteractionManager,
         bots: Bot[],
         dimension: string,
@@ -131,11 +139,14 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         this._botsInStack = drop(bots, 1);
         this._miniSimulation3D = miniSimulation3D;
         this._mapSimulation3D = mapSimulation3D;
+        this._miniMapSimulation3D = miniMapSimulation3D;
         this._originalDimension = dimension;
         this._originallyInMiniPortal = this._inMiniPortal =
             dimension && this._miniSimulation3D.miniDimension === dimension;
         this._originallyInMapPortal = this._inMapPortal =
             dimension && this._mapSimulation3D.mapDimension === dimension;
+        this._originallyInMiniMapPortal = this._inMiniMapPortal =
+            dimension && this._miniMapSimulation3D.mapDimension === dimension;
 
         if (this._hit) {
             const obj = this._interaction.findGameObjectForHit(this._hit);
@@ -150,6 +161,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._simulation3D,
             this._miniSimulation3D,
             this._mapSimulation3D,
+            this._miniMapSimulation3D,
             this._interaction,
             [bot],
             this._dimension,
@@ -183,6 +195,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             ? this._miniSimulation3D.grid3D
             : this._inMapPortal
             ? this._mapSimulation3D.grid3D
+            : this._inMiniMapPortal
+            ? this._miniMapSimulation3D.grid3D
             : this._simulation3D.grid3D;
 
         const canDrag = this._canDrag(calc);
@@ -261,30 +275,31 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     }
 
     private _raycastOtherBots(inputRay: Ray) {
-        const viewport = (this._inMiniPortal
-            ? this._miniSimulation3D.getMainCameraRig()
-            : this._inMapPortal
-            ? this._mapSimulation3D.getMainCameraRig()
-            : this._simulation3D.getMainCameraRig()
+        const viewport = (
+            this._inMiniPortal
+                ? this._miniSimulation3D.getMainCameraRig()
+                : this._inMapPortal
+                ? this._mapSimulation3D.getMainCameraRig()
+                : this._inMiniMapPortal
+                ? this._miniMapSimulation3D.getMainCameraRig()
+                : this._simulation3D.getMainCameraRig()
         ).viewport;
-        const {
-            gameObject,
-            hit,
-        } = this._interaction.findHoveredGameObjectFromRay(
-            inputRay,
-            (obj) => {
-                return (
-                    obj.pointable &&
-                    obj instanceof AuxBot3D &&
-                    this._bots.every(
-                        (b) =>
-                            b.id !== obj.bot.id &&
-                            !isBotChildOf(this.simulation, obj.bot, b)
-                    )
-                );
-            },
-            viewport
-        );
+        const { gameObject, hit } =
+            this._interaction.findHoveredGameObjectFromRay(
+                inputRay,
+                (obj) => {
+                    return (
+                        obj.pointable &&
+                        obj instanceof AuxBot3D &&
+                        this._bots.every(
+                            (b) =>
+                                b.id !== obj.bot.id &&
+                                !isBotChildOf(this.simulation, obj.bot, b)
+                        )
+                    );
+                },
+                viewport
+            );
 
         if (gameObject instanceof AuxBot3D) {
             return {
@@ -470,8 +485,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
             let parent = getBotTransformer(calc, snapPointTarget.bot);
             while (parent) {
-                const parentBot = this._simulation3D.simulation.helper
-                    .botsState[parent];
+                const parentBot =
+                    this._simulation3D.simulation.helper.botsState[parent];
                 if (parentBot) {
                     const parentScale = getBotScale(calc, parentBot, 1);
                     halfSnapScale.x /= parentScale.x;
@@ -515,7 +530,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             }
 
             // 8.
-            const snapPointWorld = snapPointTarget.container.matrixWorld.clone();
+            const snapPointWorld =
+                snapPointTarget.container.matrixWorld.clone();
             targetMatrix.premultiply(snapPointWorld);
 
             // 9.
@@ -526,7 +542,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             // 10.
             targetMatrix.premultiply(dimensionMatrix);
 
-            if (!this._inMapPortal) {
+            if (!this._inMapPortal && !this._inMiniMapPortal) {
                 // 11.
                 targetMatrix.premultiply(gridScaleMatrix);
             }
@@ -540,7 +556,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
             let auxMatrix: Matrix4;
 
-            if (!this._inMapPortal) {
+            if (!this._inMapPortal && !this._inMiniMapPortal) {
                 const auxPosition = new Matrix4().makeTranslation(
                     position.x,
                     -position.z,
@@ -576,27 +592,23 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 // for the position, we know that the fromRenderCoordinates() gives us the target lat and lon so we
                 // simply need to remove the transformed coordinates from the target matrix to get our final position.
 
-                const [
-                    lon,
-                    lat,
-                    elevation,
-                ] = ExternalRenderers.fromRenderCoordinates(
-                    this.game.gameView.getMapView(),
-                    [position.x, position.y, position.z],
-                    0,
-                    [0, 0, 0],
-                    0,
-                    SpatialReference.WGS84,
-                    1
-                );
+                const [lon, lat, elevation] =
+                    ExternalRenderers.fromRenderCoordinates(
+                        this.game.gameView.getMapView(),
+                        [position.x, position.y, position.z],
+                        0,
+                        [0, 0, 0],
+                        0,
+                        SpatialReference.WGS84,
+                        1
+                    );
 
-                const coordinateMatrix = this.game.gameView.getMapCoordinateTransformer()(
-                    {
+                const coordinateMatrix =
+                    this.game.gameView.getMapCoordinateTransformer()({
                         x: lon,
                         y: lat,
                         z: elevation,
-                    }
-                );
+                    });
 
                 const renderedPosition = new Vector3().setFromMatrixPosition(
                     coordinateMatrix
@@ -771,7 +783,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         snapPointGrid: Grid3D,
         snapAxes: SnapAxis[]
     ): boolean {
-        if (this._inMapPortal) {
+        if (this._inMapPortal || this._inMiniMapPortal) {
             return false;
         }
         const grid = snapPointGrid ?? grid3D;
@@ -832,9 +844,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             // convert back to grid space for comparing distances
             const closestGridPoint = grid.getGridPosition(targetPoint);
             const closestInputPoint = grid.getGridPosition(inputPoint);
-            const sqrDistance = closestGridPoint.distanceToSquared(
-                closestInputPoint
-            );
+            const sqrDistance =
+                closestGridPoint.distanceToSquared(closestInputPoint);
 
             if (sqrDistance > targetDistance) {
                 continue;
@@ -891,6 +902,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             const pagePos = this.game.getInput().getMousePagePos();
             const miniViewport = this.game.getMiniPortalViewport();
             const mapViewport = this.game.getMapPortalViewport();
+            const miniMapViewport = this.game.getMiniMapPortalViewport();
             const viewports = this.game.getViewports();
             this._inMiniPortal = Input.pagePositionOnViewport(
                 pagePos,
@@ -902,9 +914,15 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 mapViewport,
                 viewports
             );
+            this._inMiniMapPortal = Input.pagePositionOnViewport(
+                pagePos,
+                miniMapViewport,
+                viewports
+            );
         } else {
             this._inMiniPortal = false;
             this._inMapPortal = false;
+            this._inMiniMapPortal = false;
         }
     }
 
@@ -964,6 +982,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         const dimension =
             this._simulation3D.getDimensionForGrid(grid) ||
             this._miniSimulation3D.getDimensionForGrid(grid) ||
+            this._miniMapSimulation3D.getDimensionForGrid(grid) ||
             this._mapSimulation3D.getDimensionForGrid(grid);
         return dimension;
     }
@@ -977,6 +996,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             const pagePos = this.game.getInput().getMousePagePos();
             const miniViewport = this.game.getMiniPortalViewport();
             const mapViewport = this.game.getMapPortalViewport();
+            const miniMapViewport = this.game.getMiniMapPortalViewport();
             if (this._inMiniPortal) {
                 inputRay = Physics.screenPosToRay(
                     Input.screenPositionForViewport(pagePos, miniViewport),
@@ -986,6 +1006,11 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 inputRay = Physics.screenPosToRay(
                     Input.screenPositionForViewport(pagePos, mapViewport),
                     this._mapSimulation3D.getMainCameraRig().mainCamera
+                );
+            } else if (this._inMiniMapPortal) {
+                inputRay = Physics.screenPosToRay(
+                    Input.screenPositionForViewport(pagePos, miniMapViewport),
+                    this._miniMapSimulation3D.getMainCameraRig().mainCamera
                 );
             } else {
                 inputRay = Physics.screenPosToRay(

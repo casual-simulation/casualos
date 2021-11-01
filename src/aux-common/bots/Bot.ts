@@ -1526,6 +1526,11 @@ export const MINI_PORTAL: string = 'miniGridPortal';
 export const MAP_PORTAL: string = 'mapPortal';
 
 /**
+ * The name of the mini map portal.
+ */
+export const MINI_MAP_PORTAL: string = 'miniMapPortal';
+
+/**
  * The name of the meet portal.
  */
 export const MEET_PORTAL: string = 'meetPortal';
@@ -1580,6 +1585,7 @@ export const KNOWN_PORTALS: string[] = [
     MEET_PORTAL,
     TAG_PORTAL,
     MAP_PORTAL,
+    MINI_MAP_PORTAL,
 ];
 
 /**
@@ -1607,6 +1613,7 @@ export const KNOWN_TAGS: string[] = [
     MINI_PORTAL,
     'menuPortal',
     MAP_PORTAL,
+    MINI_MAP_PORTAL,
     'leftWristPortal',
     'rightWristPortal',
 

@@ -79,6 +79,7 @@ import { PlayerBotDragOperation } from './DragOperation/PlayerBotDragOperation';
 import { PlayerModDragOperation } from './DragOperation/PlayerModDragOperation';
 import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 import { MapPortalDimensionGroup3D } from '../scene/MapPortalDimensionGroup3D';
+import { MiniMapPortalDimensionGroup3D } from '../scene/MiniMapPortalDimensionGroup3D';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -136,6 +137,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         const pageSimulation = this._game.findPlayerSimulation3D(simulation);
         const miniSimulation = this._game.findMiniSimulation3D(simulation);
         const mapSimulation = this._game.findMapSimulation3D(simulation);
+        const miniMapSimulation =
+            this._game.findMiniMapSimulation3D(simulation);
         if (isBot(bot)) {
             let tempPos = getBotPosition(null, bot, dimension);
             let startBotPos = new Vector2(
@@ -146,6 +149,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 pageSimulation,
                 miniSimulation,
                 mapSimulation,
+                miniMapSimulation,
                 this,
                 [bot],
                 dimension,
@@ -197,6 +201,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             let miniPortalColliders: Object3D[] = [];
             let otherColliders: Object3D[] = [];
             let mapPortalColliders: Object3D[] = [];
+            let miniMapPortalColliders: Object3D[] = [];
             if (contexts && contexts.length > 0) {
                 for (let i = 0; i < contexts.length; i++) {
                     const dimension = contexts[i];
@@ -210,6 +215,10 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                         miniPortalColliders.push(...colliders);
                     } else if (dimension instanceof MapPortalDimensionGroup3D) {
                         mapPortalColliders.push(...colliders);
+                    } else if (
+                        dimension instanceof MiniMapPortalDimensionGroup3D
+                    ) {
+                        miniMapPortalColliders.push(...colliders);
                     } else {
                         otherColliders.push(...colliders);
                     }
@@ -218,6 +227,11 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
             // Put miniGridPortal colliders in front of other colliders so that they take priority in input testing.
             this._draggableGroups = [
+                {
+                    objects: miniMapPortalColliders,
+                    camera: this._game.getMiniMapPortalCameraRig().mainCamera,
+                    viewport: this._game.getMiniMapPortalCameraRig().viewport,
+                },
                 {
                     objects: miniPortalColliders,
                     camera: this._game.getMiniPortalCameraRig().mainCamera,
@@ -425,10 +439,32 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             mapPortalCameraRigControls.controls.screenSpacePanning = true;
         }
 
+        // mini map portal camera
+        let miniMapPortalCameraRigControls: CameraRigControls = {
+            rig: this._game.getMiniMapPortalCameraRig(),
+            controls: new CameraControls(
+                this._game.getMiniMapPortalCameraRig().mainCamera,
+                this._game,
+                this._game.getMiniMapPortalCameraRig().viewport
+            ),
+        };
+
+        miniMapPortalCameraRigControls.controls.passthroughEvents = true;
+        miniMapPortalCameraRigControls.controls.minZoom = Orthographic_MinZoom;
+        miniMapPortalCameraRigControls.controls.maxZoom = Orthographic_MaxZoom;
+
+        if (
+            miniMapPortalCameraRigControls.rig.mainCamera instanceof
+            OrthographicCamera
+        ) {
+            miniMapPortalCameraRigControls.controls.screenSpacePanning = true;
+        }
+
         return [
             mainCameraRigControls,
             invCameraRigControls,
             mapPortalCameraRigControls,
+            miniMapPortalCameraRigControls,
         ];
     }
 

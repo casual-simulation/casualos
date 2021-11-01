@@ -42,7 +42,7 @@ import type EsriSpatialReference from 'esri/geometry/SpatialReference';
 import type EsriMap from 'esri/Map';
 import { MapPortalGrid3D } from './MapPortalGrid3D';
 
-export class MapSimulation3D extends PlayerSimulation3D {
+export abstract class MapSimulation3D extends PlayerSimulation3D {
     /**
      * The miniGridPortal dimension that this simulation is for.
      */
@@ -53,14 +53,15 @@ export class MapSimulation3D extends PlayerSimulation3D {
      */
     mapView: EsriSceneView;
 
-    private _mapGrid: MapPortalGrid3D;
+    protected _portalTag: string;
+    protected _mapGrid: MapPortalGrid3D;
 
     getDefaultGridScale(): number {
         return this.mapConfig.gridScale;
     }
 
     get mapConfig() {
-        return <MapPortalConfig>this.getPortalConfig(MAP_PORTAL);
+        return <MapPortalConfig>this.getPortalConfig(this._portalTag);
     }
 
     get cameraControlsMode() {
@@ -184,8 +185,9 @@ export class MapSimulation3D extends PlayerSimulation3D {
         return this.mapConfig.basemap;
     }
 
-    constructor(game: Game, simulation: BrowserSimulation) {
-        super(MAP_PORTAL, game, simulation);
+    constructor(portal: string, game: Game, simulation: BrowserSimulation) {
+        super(portal, game, simulation);
+        this._portalTag = portal;
         this._mapGrid = new MapPortalGrid3D(
             this,
             calculateGridScale(
@@ -197,9 +199,7 @@ export class MapSimulation3D extends PlayerSimulation3D {
         );
     }
 
-    getMainCameraRig(): CameraRig {
-        return this._game.getMapPortalCameraRig();
-    }
+    abstract getMainCameraRig(): CameraRig;
 
     init() {
         this._subs.push(
@@ -207,7 +207,8 @@ export class MapSimulation3D extends PlayerSimulation3D {
                 .pipe(
                     filter((bot) => !!bot),
                     tap((bot) => {
-                        const userMiniDimensionValue = bot.values[MAP_PORTAL];
+                        const userMiniDimensionValue =
+                            bot.values[this._portalTag];
                         const previousDimension = this.mapDimension;
                         this.mapDimension = userMiniDimensionValue;
                         if (previousDimension !== userMiniDimensionValue) {
@@ -234,7 +235,7 @@ export class MapSimulation3D extends PlayerSimulation3D {
     }
 
     protected _createPortalConfig(portalTag: string) {
-        if (portalTag === MAP_PORTAL) {
+        if (portalTag === this._portalTag) {
             return new MapPortalConfig(portalTag, this.simulation, this.grid3D);
         } else {
             return super._createPortalConfig(portalTag);
