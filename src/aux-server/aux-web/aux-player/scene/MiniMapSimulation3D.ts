@@ -5,6 +5,7 @@ import { Game } from '../../shared/scene/Game';
 import { MapSimulation3D } from './MapSimulation3D';
 import { MiniMapPortalDimensionGroup3D } from './MiniMapPortalDimensionGroup3D';
 import { MiniMapPortalConfig } from './MiniMapPortalConfig';
+import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 
 export class MiniMapSimulation3D extends MapSimulation3D {
     get miniConfig() {
@@ -52,7 +53,10 @@ export class MiniMapSimulation3D extends MapSimulation3D {
         }
     }
 
-    protected _constructDimensionGroup(portalTag: string, bot: Bot) {
+    protected _constructDimensionGroup(
+        portalTag: string,
+        bot: Bot
+    ): DimensionGroup3D {
         return new MiniMapPortalDimensionGroup3D(
             this,
             bot,

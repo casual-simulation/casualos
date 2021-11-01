@@ -224,7 +224,10 @@ export abstract class MapSimulation3D extends PlayerSimulation3D {
         super.init();
     }
 
-    protected _constructDimensionGroup(portalTag: string, bot: Bot) {
+    protected _constructDimensionGroup(
+        portalTag: string,
+        bot: Bot
+    ): DimensionGroup3D {
         return new MapPortalDimensionGroup3D(
             this,
             bot,
