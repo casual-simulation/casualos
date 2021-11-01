@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V2.0.15
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the server failed to retrieve permanent records when when `.getMoreRecords()` was called.
+
 ## V2.0.14
 
 #### Date: 10/29/2021
