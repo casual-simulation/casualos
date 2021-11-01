@@ -200,6 +200,8 @@ export class ServerlessRecordsManager {
 
         if (hasValue(request.cursor)) {
             query.cursor = request.cursor;
+            query.address = request.address;
+            query.prefix = request.prefix;
         } else if (hasValue(request.address)) {
             query.address = request.address;
         } else if (hasValue(request.prefix)) {
