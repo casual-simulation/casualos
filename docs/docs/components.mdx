@@ -142,6 +142,13 @@ export const Badges = ({children}) => (
   </div>
 );
 
+
+export const VariableLink = ({name, children, ...attrs}) => (
+    <a href={useBaseUrl('docs/variables') + '#' + name.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()} {...attrs}>
+        {children ? children : (<NormalCode>{name}</NormalCode>)}
+    </a>
+);
+
 export const Badge = ({type, title, children}) => (<span title={title} className={`badge badge--${type}`}>{children}</span>);
 
 export const ReadOnlyBadge = ({}) => (<Badge type='warning'>Read-Only</Badge>);
@@ -154,16 +161,21 @@ export const HistoryBotBadge = ({url}) => (<Badge type='primary'>History Bot</Ba
 
 export const AutomaticBadge = ({url}) => (<Badge type='success' title='This tag is automatically set by CasualOS.'>Automatic</Badge>);
 
-export const GridPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the grid portal bot.'>gridPortalBot</Badge>);
-export const MiniGridPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the miniGridPortal bot.'>miniGridPortalBot</Badge>);
-export const MapPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the map portal bot.'>mapPortalBot</Badge>);
-export const MenuPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the menu portal bot.'>menuPortalBot</Badge>);
-export const MeetPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the meet portal bot.'>meetPortalBot</Badge>);
-export const LeftWristPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the left wrist portal bot.'>leftWristPortalBot</Badge>);
-export const RightWristPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the right wrist portal bot.'>rightWristPortalBot</Badge>);
-export const SheetPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the sheet portal bot.'>sheetPortalBot</Badge>);
-export const TagPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the tag portal bot.'>tagPortalBot</Badge>);
-export const ImuPortalBadge = ({url}) => (<Badge type='normal' title='This tag is available on the IMU portal bot.'>imuPortalBot</Badge>);
+export const PortalBadge = ({bot}) => (<VariableLink name={bot} className="portal-badge">
+    <Badge type='normal' title={`This tag is available on the ${bot}.`}>{bot}</Badge>
+</VariableLink>);
+
+export const GridPortalBadge = ({url}) => <PortalBadge bot="gridPortalBot"/>;
+export const MiniGridPortalBadge = ({url}) => <PortalBadge bot="miniGridPortalBot"/>;
+export const MiniMapPortalBadge = ({url}) => <PortalBadge bot="miniMapPortalBot"/>;
+export const MapPortalBadge = ({url}) => <PortalBadge bot="mapPortalBot"/>;
+export const MenuPortalBadge = ({url}) => <PortalBadge bot="menuPortalBot"/>;
+export const MeetPortalBadge = ({url}) => <PortalBadge bot="meetPortalBot"/>;
+export const LeftWristPortalBadge = ({url}) => <PortalBadge bot="leftWristPortalBot"/>;
+export const RightWristPortalBadge = ({url}) => <PortalBadge bot="rightWristPortalBot"/>;
+export const SheetPortalBadge = ({url}) => <PortalBadge bot="sheetPortalBot"/>;
+export const TagPortalBadge = ({url}) => <PortalBadge bot="tagPortalBot"/>;
+export const ImuPortalBadge = ({url}) => <PortalBadge bot="imuPortalBot"/>;
 
 export const Alert = ({type, children}) => (
     <div className={`alert alert--${type}`} role='alert'>

@@ -6,6 +6,10 @@ import Dimension from './Dimension.mdx';
 import Instance from './Instance.mdx';
 import Portal from './Portal.mdx';
 import Tag from './Tag.mdx';
+import GridPortal from './GridPortal.mdx';
+import MapPortal from './MapPortal.mdx';
+import MiniGridPortal from './MiniGridPortal.mdx';
+import MiniMapPortal from './MiniMapPortal.mdx';
 import React, { useState } from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Tooltip from 'rc-tooltip';
@@ -21,6 +25,10 @@ export const Glossary = [
     { id: 'instance', title: 'Instance', content: () => <Instance/> },
     { id: 'portal', title: 'Portal', content: () => <Portal/> },
     { id: 'tag', title: 'Tag', content: () => <Tag/> },
+    { id: 'gridPortal', title: 'gridPortal', content: () => <GridPortal/> },
+    { id: 'mapPortal', title: 'mapPortal', content: () => <MapPortal/> },
+    { id: 'miniGridPortal', title: 'miniGridPortal', content: () => <MiniGridPortal/> },
+    { id: 'miniMapPortal', title: 'miniMapPortal', content: () => <MiniMapPortal/> },
 ];
 
 const GlossaryWindow = ({item}) => (<div className="glossary-window">
@@ -46,4 +54,8 @@ export {
     Instance,
     Portal,
     Tag,
+    GridPortal,
+    MapPortal,
+    MiniGridPortal,
+    MiniMapPortal
 };
