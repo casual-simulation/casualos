@@ -75,6 +75,7 @@ import { AudioRecorder, AudioRecording } from '../../shared/AudioRecorder';
 import { MediaRecording, Recorder } from '../../shared/Recorder';
 import ImuPortal from '../../shared/vue-components/ImuPortal/ImuPortal';
 import HtmlAppContainer from '../../shared/vue-components/HtmlAppContainer/HtmlAppContainer';
+import SystemPortal from '../../shared/vue-components/SystemPortal/SystemPortal';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -116,6 +117,7 @@ if (window.speechSynthesis) {
         authorize: AuthorizePopup,
         'imu-portal': ImuPortal,
         'html-portals': HtmlAppContainer,
+        'system-portal': SystemPortal,
     },
 })
 export default class PlayerApp extends Vue {
@@ -780,7 +782,8 @@ export default class PlayerApp extends Vue {
                         );
                     } else {
                         try {
-                            this._currentAudioRecording = await this._audioRecorder.start();
+                            this._currentAudioRecording =
+                                await this._audioRecorder.start();
                             simulation.helper.transaction(
                                 asyncResult(e.taskId, null)
                             );
@@ -797,7 +800,8 @@ export default class PlayerApp extends Vue {
                         );
                     } else {
                         try {
-                            const blob = await this._currentAudioRecording.stop();
+                            const blob =
+                                await this._currentAudioRecording.stop();
                             this._currentAudioRecording = null;
                             simulation.helper.transaction(
                                 asyncResult(e.taskId, blob)
@@ -837,7 +841,8 @@ export default class PlayerApp extends Vue {
                         );
                     } else {
                         try {
-                            const recording = await this._currentRecording.stop();
+                            const recording =
+                                await this._currentRecording.stop();
                             this._currentRecording = null;
                             simulation.helper.transaction(
                                 asyncResult(e.taskId, recording, false)
@@ -986,7 +991,8 @@ export default class PlayerApp extends Vue {
                     }
                 } else if (e.type === 'request_permanent_auth_token') {
                     try {
-                        const data = await simulation.auth.getPermanentAuthToken();
+                        const data =
+                            await simulation.auth.getPermanentAuthToken();
 
                         simulation.helper.transaction(
                             asyncResult(e.taskId, data, false)

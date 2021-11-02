@@ -54,6 +54,7 @@ import { ESBuildPortalBundler } from '@casual-simulation/aux-vm/managers';
 import ESBuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import { IdePortalManager } from './IdePortalManager';
 import { AuthHelper } from './AuthHelper';
+import { SystemPortalManager } from './SystemPortalManager';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -66,6 +67,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     private _bundler: PortalBundler;
     private _portals: PortalManager;
     private _idePortal: IdePortalManager;
+    private _systemPortal: SystemPortalManager;
     private _authHelper: AuthHelper;
 
     /**
@@ -77,6 +79,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
     get idePortal() {
         return this._idePortal;
+    }
+
+    get systemPortal() {
+        return this._systemPortal;
     }
 
     get login() {
@@ -282,6 +288,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             this._bundler
         );
         this._idePortal = new IdePortalManager(this._watcher, this.helper);
+        this._systemPortal = new SystemPortalManager(
+            this._watcher,
+            this.helper
+        );
 
         this._subscriptions.push(this._portals);
         this._subscriptions.push(
@@ -296,5 +306,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     )
             )
         );
+        this._subscriptions.push(this._idePortal);
+        this._subscriptions.push(this._systemPortal);
     }
 }

@@ -20,6 +20,9 @@ import {
 } from 'rxjs';
 import { bufferTime, distinctUntilChanged, map, skip } from 'rxjs/operators';
 
+/**
+ * Defines a class that is able to manage the state of the system portal.
+ */
 export class SystemPortalManager implements SubscriptionLike {
     private _sub = new Subscription();
     private _watcher: BotWatcher;
