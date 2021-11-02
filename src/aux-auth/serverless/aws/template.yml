@@ -295,7 +295,7 @@ Resources:
         Type: AWS::S3::Bucket
         DeletionPolicy: Retain
         Properties:
-            AccessControl: public-read
+            AccessControl: PublicRead
 
 Outputs:
     WebEndpoint:
