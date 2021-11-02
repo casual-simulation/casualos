@@ -13,13 +13,13 @@ import {
     SHEET_PORTAL,
     CLICK_ACTION_NAME,
     onClickArg,
-    IDE_PORTAL,
+    SYSTEM_PORTAL,
     formatValue,
     DNA_TAG_PREFIX,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
-    IdeTagNode,
+    SystemPortalItem,
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
@@ -34,16 +34,18 @@ import { debounce } from 'lodash';
 import { onMonacoLoaded } from '../../MonacoAsync';
 import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './SystemPortalHelpers';
+import MiniBot from '../MiniBot/MiniBot';
 
 @Component({
     components: {
         'tag-value-editor': TagValueEditor,
         'bot-tag': BotTag,
         hotkey: Hotkey,
+        'mini-bot': MiniBot,
     },
 })
 export default class IdePortal extends Vue {
-    items: IdeTagNode[] = [];
+    items: SystemPortalItem[] = [];
     hasPortal: boolean = false;
 
     showButton: boolean = true;
@@ -105,29 +107,33 @@ export default class IdePortal extends Vue {
             this.isViewingTags = true;
 
             subs.push(
-                this._simulation.idePortal.itemsUpdated.subscribe((e) => {
-                    this.items = e.items;
+                this._simulation.systemPortal.onItemsUpdated.subscribe((e) => {
                     this.hasPortal = e.hasPortal;
-                }),
-                this._simulation.localEvents.subscribe((e) => {
-                    if (e.type === 'go_to_tag') {
-                        const targetBot =
-                            this._simulation.helper.botsState[e.botId];
-                        if (targetBot) {
-                            this.currentBot = targetBot;
-                            this.currentTag = e.tag;
-                            this.currentSpace = e.space;
-                            this.selectedItem =
-                                this.items.find(
-                                    (i) =>
-                                        i.botId === e.botId && i.tag === e.tag
-                                ) ?? this.selectedItem;
-                        }
+                    if (e.hasPortal) {
+                        this.items = e.items;
+                    } else {
+                        this.items = [];
                     }
                 })
+                // this._simulation.localEvents.subscribe((e) => {
+                //     if (e.type === 'go_to_tag') {
+                //         const targetBot =
+                //             this._simulation.helper.botsState[e.botId];
+                //         if (targetBot) {
+                //             this.currentBot = targetBot;
+                //             this.currentTag = e.tag;
+                //             this.currentSpace = e.space;
+                //             this.selectedItem =
+                //                 this.items.find(
+                //                     (i) =>
+                //                         i.botId === e.botId && i.tag === e.tag
+                //                 ) ?? this.selectedItem;
+                //         }
+                //     }
+                // })
             );
             this._currentConfig = new SystemPortalConfig(
-                IDE_PORTAL,
+                SYSTEM_PORTAL,
                 botManager
             );
             subs.push(
@@ -305,14 +311,14 @@ export default class IdePortal extends Vue {
     //     }
     // }
 
-    selectItem(item: IdeTagNode) {
-        if (item.type === 'tag') {
-            this.selectedItem = item;
-            this.currentBot = this._simulation.helper.botsState[item.botId];
-            this.currentTag = item.tag;
-            this.currentSpace = null;
-        }
-    }
+    // selectItem(item: IdeTagNode) {
+    //     if (item.type === 'tag') {
+    //         this.selectedItem = item;
+    //         this.currentBot = this._simulation.helper.botsState[item.botId];
+    //         this.currentTag = item.tag;
+    //         this.currentSpace = null;
+    //     }
+    // }
 
     tagFocusChanged(bot: Bot, tag: string, focused: boolean) {
         this._simulation.helper.setEditingBot(bot, tag);
@@ -336,7 +342,7 @@ export default class IdePortal extends Vue {
 
     private _exitPortal() {
         let tags: BotTags = {
-            idePortal: null,
+            [SYSTEM_PORTAL]: null,
         };
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
             tags: tags,

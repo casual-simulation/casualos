@@ -260,7 +260,7 @@ export interface SystemPortalEmptyUpdate {
 export interface SystemPortalItemsUpdate {
     hasPortal: true;
     selectedBot: string;
-    items: any[];
+    items: SystemPortalItem[];
 }
 
 export interface SystemPortalItem {

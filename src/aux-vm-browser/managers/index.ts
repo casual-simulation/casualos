@@ -4,3 +4,4 @@ export * from './BrowserSimulation';
 export * from './BrowserSimulationCalculations';
 export * from './IdePortalManager';
 export * from './AuthHelper';
+export * from './SystemPortalManager';

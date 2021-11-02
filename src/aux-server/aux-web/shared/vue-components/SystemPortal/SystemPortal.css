@@ -180,3 +180,54 @@
     font-weight: normal;
     font-size: 14px;
 }
+
+.panes {
+    display: flex;
+}
+
+.areas {
+    flex: 0 1 auto;
+    border-right: 1px solid #000;
+    padding: 8px;
+}
+
+.tags {
+    flex: 1 1 auto;
+    border-right: 1px solid #000;
+    padding: 8px;
+}
+
+.editor {
+    flex: 1 0 auto;
+}
+
+.area {
+    /* display: flex;
+    gap: 4px; */
+}
+
+.area-title {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.area-bots {
+    /* flex: 1 1 auto; */
+    /* text-align: end; */
+}
+
+.area-bot {
+    padding-inline-start: 16px;
+    line-height: 32px;
+}
+
+.area-bot:hover {
+    background-color: #eee;
+    cursor: pointer;
+}
+
+.area-bot > .mini-bot {
+    display: inline-block;
+    padding: 0;
+    border-bottom: none;
+}
