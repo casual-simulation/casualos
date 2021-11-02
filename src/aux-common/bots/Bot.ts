@@ -1556,6 +1556,21 @@ export const SHEET_PORTAL: string = 'sheetPortal';
 export const IDE_PORTAL: string = 'idePortal';
 
 /**
+ * The name of the system portal.
+ */
+export const SYSTEM_PORTAL: string = 'systemPortal';
+
+/**
+ * The name of the system tag.
+ */
+export const SYSTEM_TAG: string = 'system';
+
+/**
+ * The name of the tag used to keep track of the selected bot in the system portal..
+ */
+export const SYSTEM_PORTAL_BOT: string = 'systemPortalBot';
+
+/**
  * The name of the IMU portal.
  */
 export const IMU_PORTAL: string = 'imuPortal';
@@ -1578,6 +1593,7 @@ export const KNOWN_PORTALS: string[] = [
     SHEET_PORTAL,
     IDE_PORTAL,
     IMU_PORTAL,
+    SYSTEM_PORTAL,
     MINI_PORTAL,
     'menuPortal',
     'leftWristPortal',
@@ -1609,6 +1625,9 @@ export const KNOWN_TAGS: string[] = [
     'gridPortal',
     SHEET_PORTAL,
     IDE_PORTAL,
+    SYSTEM_PORTAL,
+    SYSTEM_PORTAL_BOT,
+    SYSTEM_TAG,
     'inst',
     MINI_PORTAL,
     'menuPortal',
@@ -1739,6 +1758,9 @@ export const KNOWN_TAGS: string[] = [
     'sheetPortalButtonHint',
     'sheetPortalAllowedTags',
     'sheetPortalAddedTags',
+    'portalShowButton',
+    'portalButtonIcon',
+    'portalButtonHint',
     'menuPortalStyle',
 
     'color',
