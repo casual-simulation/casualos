@@ -214,14 +214,16 @@ export default class IdePortal extends Vue {
     }
 
     changeSearchValue(value: string) {
-        this.searchValue = value;
-        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
-            tags: {
-                [SYSTEM_PORTAL]: hasValue(this.searchValue)
-                    ? this.searchValue
-                    : true,
-            },
-        });
+        if (this.isFocusingSearch) {
+            this.searchValue = value;
+            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+                tags: {
+                    [SYSTEM_PORTAL]: hasValue(this.searchValue)
+                        ? this.searchValue
+                        : true,
+                },
+            });
+        }
     }
 
     // showTags() {
