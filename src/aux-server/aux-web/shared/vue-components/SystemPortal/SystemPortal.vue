@@ -8,7 +8,12 @@
                         <div class="search">
                             <md-field>
                                 <label>Search Bots</label>
-                                <md-input v-model="searchValue"></md-input>
+                                <md-input
+                                    @input="changeSearchValue"
+                                    :value="searchValue"
+                                    @focus="onFocusSearch"
+                                    @blur="onUnfocusSearch"
+                                ></md-input>
                             </md-field>
                         </div>
                         <div class="areas-list">

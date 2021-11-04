@@ -17,6 +17,7 @@ import {
     formatValue,
     DNA_TAG_PREFIX,
     SYSTEM_PORTAL_BOT,
+    calculateBotValue,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
@@ -50,7 +51,6 @@ import BotValue from '../BotValue/BotValue';
     },
 })
 export default class IdePortal extends Vue {
-    searchValue: string = '';
     items: SystemPortalItem[] = [];
 
     hasPortal: boolean = false;
@@ -66,6 +66,9 @@ export default class IdePortal extends Vue {
     buttonHint: string = null;
 
     isViewingTags: boolean = true;
+
+    searchValue: string = '';
+    isFocusingSearch: boolean = false;
 
     private _subs: SubscriptionLike[] = [];
     private _simulation: BrowserSimulation;
@@ -137,23 +140,20 @@ export default class IdePortal extends Vue {
                             this.selectedTag = null;
                         }
                     }
-                )
-                // this._simulation.localEvents.subscribe((e) => {
-                //     if (e.type === 'go_to_tag') {
-                //         const targetBot =
-                //             this._simulation.helper.botsState[e.botId];
-                //         if (targetBot) {
-                //             this.currentBot = targetBot;
-                //             this.currentTag = e.tag;
-                //             this.currentSpace = e.space;
-                //             this.selectedItem =
-                //                 this.items.find(
-                //                     (i) =>
-                //                         i.botId === e.botId && i.tag === e.tag
-                //                 ) ?? this.selectedItem;
-                //         }
-                //     }
-                // })
+                ),
+                this._simulation.watcher
+                    .botChanged(this._simulation.helper.userId)
+                    .subscribe((bot) => {
+                        if (!this.isFocusingSearch) {
+                            const value = calculateBotValue(
+                                null,
+                                bot,
+                                SYSTEM_PORTAL
+                            );
+                            this.searchValue =
+                                typeof value === 'string' ? value : '';
+                        }
+                    })
             );
             this._currentConfig = new SystemPortalConfig(
                 SYSTEM_PORTAL,
@@ -203,6 +203,25 @@ export default class IdePortal extends Vue {
         if (focused) {
             this.selectTag(tag);
         }
+    }
+
+    onFocusSearch() {
+        this.isFocusingSearch = true;
+    }
+
+    onUnfocusSearch() {
+        this.isFocusingSearch = false;
+    }
+
+    changeSearchValue(value: string) {
+        this.searchValue = value;
+        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+            tags: {
+                [SYSTEM_PORTAL]: hasValue(this.searchValue)
+                    ? this.searchValue
+                    : true,
+            },
+        });
     }
 
     // showTags() {
