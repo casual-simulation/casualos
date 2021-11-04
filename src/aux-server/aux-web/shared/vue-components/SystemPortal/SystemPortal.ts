@@ -193,8 +193,8 @@ export default class IdePortal extends Vue {
     }
 
     selectTag(tag: SystemPortalSelectionTag) {
-        console.log('select', tag);
         this.selectedTag = tag.name;
+        this.selectedTagSpace = tag.space;
     }
 
     // showTags() {

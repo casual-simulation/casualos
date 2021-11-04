@@ -61,6 +61,7 @@
                             ref="multilineEditor"
                             :bot="selectedBot"
                             :tag="selectedTag"
+                            :space="selectedTagSpace"
                             :showDesktopEditor="true"
                             :showResize="false"
                         >

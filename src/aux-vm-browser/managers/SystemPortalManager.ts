@@ -2,12 +2,14 @@ import {
     Bot,
     calculateBotValue,
     calculateStringTagValue,
+    getBotTag,
     hasValue,
     isScript,
     SYSTEM_PORTAL,
     SYSTEM_PORTAL_BOT,
     SYSTEM_TAG,
     tagsOnBot,
+    getTagMask,
 } from '@casual-simulation/aux-common';
 import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
 import { isEqual, sortBy } from 'lodash';
@@ -195,20 +197,40 @@ export class SystemPortalManager implements SubscriptionLike {
             };
         }
 
-        let tags = tagsOnBot(bot).map((t) => {
+        let normalTags = Object.keys(bot.tags).map((t) => {
             let tag: SystemPortalSelectionTag = {
                 name: t,
             };
 
-            if (isScript(calculateBotValue(null, bot, t))) {
+            if (isScript(getBotTag(bot, t))) {
                 tag.isScript = true;
             }
 
             return tag;
         });
 
-        tags = sortBy(
-            tags,
+        let maskTags = [] as SystemPortalSelectionTag[];
+        for (let space in bot.masks) {
+            const tags = Object.keys(bot.masks[space]);
+
+            maskTags.push(
+                ...tags.map((t) => {
+                    let tag: SystemPortalSelectionTag = {
+                        name: t,
+                        space,
+                    };
+
+                    if (isScript(getTagMask(bot, t, space))) {
+                        tag.isScript = true;
+                    }
+
+                    return tag;
+                })
+            );
+        }
+
+        const tags = sortBy(
+            [...normalTags, ...maskTags],
             (t) => !t.isScript,
             (t) => t.name
         );
@@ -285,6 +307,7 @@ export interface SystemPortalHasSelectionUpdate {
 
 export interface SystemPortalSelectionTag {
     name: string;
+    space?: string;
     isScript?: boolean;
 }
 

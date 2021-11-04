@@ -26,10 +26,10 @@ import {
     BotAction,
     SYSTEM_PORTAL,
     SYSTEM_PORTAL_BOT,
+    TEMPORARY_BOT_PARTITION_ID,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { Subject, Subscription } from 'rxjs';
-import { locale } from 'faker';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { skip } from 'rxjs/operators';
 
@@ -376,6 +376,81 @@ describe('SystemPortalManager', () => {
                     tags: [
                         { name: 'onClick', isScript: true },
                         { name: 'color' },
+                        { name: 'system' },
+                    ],
+                },
+            ]);
+        });
+
+        it('should include tag masks', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botAdded(
+                    createBot('test4', {
+                        system: 'core.other.test4',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        system: 'core.other.test3',
+                    })
+                ),
+            ]);
+            await vm.sendEvents([
+                botUpdated('test2', {
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            color: 'blue',
+                        },
+                    },
+                }),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(selectionUpdates).toEqual([
+                {
+                    hasSelection: true,
+                    bot: {
+                        id: 'test2',
+                        precalculated: true,
+                        values: {
+                            system: 'core.game.test2',
+                            color: 'blue',
+                            onClick: '@os.toast("Cool!");',
+                        },
+                        tags: {
+                            system: 'core.game.test2',
+                            color: 'red',
+                            onClick: '@os.toast("Cool!");',
+                        },
+                        masks: {
+                            [TEMPORARY_BOT_PARTITION_ID]: {
+                                color: 'blue',
+                            },
+                        },
+                    },
+                    tags: [
+                        { name: 'onClick', isScript: true },
+                        { name: 'color' },
+                        { name: 'color', space: TEMPORARY_BOT_PARTITION_ID },
                         { name: 'system' },
                     ],
                 },
