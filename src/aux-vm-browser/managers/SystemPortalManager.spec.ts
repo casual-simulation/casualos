@@ -328,6 +328,113 @@ describe('SystemPortalManager', () => {
                 },
             ]);
         });
+
+        it('should include all bots when the portal is set to true', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botAdded(
+                    createBot('test4', {
+                        system: 'core.other.test4',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        system: 'core.other.test3',
+                    })
+                ),
+                botAdded(
+                    createBot('test6', {
+                        system: 'wrong.other.test6',
+                    })
+                ),
+                botAdded(
+                    createBot('test5', {
+                        system: 'wrong.other.test5',
+                    })
+                ),
+                botAdded(
+                    createBot('test7', {
+                        notSystem: 'value',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: true,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(updates).toEqual([
+                {
+                    hasPortal: true,
+                    selectedBot: null,
+                    items: [
+                        {
+                            area: 'core.game',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test1', {
+                                        system: 'core.game.test1',
+                                    }),
+                                    title: 'test1',
+                                },
+                                {
+                                    bot: createPrecalculatedBot('test2', {
+                                        system: 'core.game.test2',
+                                    }),
+                                    title: 'test2',
+                                },
+                            ],
+                        },
+                        {
+                            area: 'core.other',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test3', {
+                                        system: 'core.other.test3',
+                                    }),
+                                    title: 'test3',
+                                },
+                                {
+                                    bot: createPrecalculatedBot('test4', {
+                                        system: 'core.other.test4',
+                                    }),
+                                    title: 'test4',
+                                },
+                            ],
+                        },
+                        {
+                            area: 'wrong.other',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test5', {
+                                        system: 'wrong.other.test5',
+                                    }),
+                                    title: 'test5',
+                                },
+                                {
+                                    bot: createPrecalculatedBot('test6', {
+                                        system: 'wrong.other.test6',
+                                    }),
+                                    title: 'test6',
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
     });
 
     describe('onSelectionUpdated', () => {

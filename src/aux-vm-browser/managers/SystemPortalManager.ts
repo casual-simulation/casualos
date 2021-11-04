@@ -10,6 +10,7 @@ import {
     SYSTEM_TAG,
     tagsOnBot,
     getTagMask,
+    calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
 import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
 import { isEqual, sortBy } from 'lodash';
@@ -108,8 +109,14 @@ export class SystemPortalManager implements SubscriptionLike {
             SYSTEM_PORTAL,
             null
         );
+        const showAllSystemBots = calculateBooleanTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_PORTAL,
+            false
+        );
 
-        if (hasValue(systemPortal)) {
+        if (showAllSystemBots || hasValue(systemPortal)) {
             let selectedBot: string = calculateStringTagValue(
                 null,
                 this._helper.userBot,
@@ -132,7 +139,8 @@ export class SystemPortalManager implements SubscriptionLike {
 
                 if (
                     bot.id === selectedBot ||
-                    (hasValue(system) && system.startsWith(systemPortal))
+                    (hasValue(system) &&
+                        (showAllSystemBots || system.startsWith(systemPortal)))
                 ) {
                     const area = getSystemArea(system);
                     const title = system
