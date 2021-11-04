@@ -65,15 +65,6 @@
     margin-bottom: 16px;
 }
 
-.portal-content {
-    flex: 1 1;
-}
-
-.portal-content .editor-wrapper {
-    height: 100%;
-    margin-top: 0;
-}
-
 .items-list {
     flex: 0 0 200px;
     border-right: 1px solid var(--bot-cell-border-color);
@@ -183,6 +174,7 @@
 
 .panes {
     display: flex;
+    width: 100%;
 }
 
 .areas {
@@ -192,7 +184,7 @@
 }
 
 .tags {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     border-right: 1px solid #000;
     padding: 8px;
 }
@@ -230,4 +222,23 @@
     display: inline-block;
     padding: 0;
     border-bottom: none;
+}
+
+.area-bot.selected {
+    background-color: #ddd;
+}
+
+.sort-option-button {
+    min-width: 33px;
+}
+
+.tags-list-tag:hover {
+    background-color: #eee;
+    cursor: pointer;
+}
+
+.editor .editor-wrapper {
+    height: 100%;
+    margin-top: 0;
+    border-top: 0;
 }

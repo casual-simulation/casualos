@@ -16,10 +16,13 @@ import {
     SYSTEM_PORTAL,
     formatValue,
     DNA_TAG_PREFIX,
+    SYSTEM_PORTAL_BOT,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
+    SystemPortalBot,
     SystemPortalItem,
+    SystemPortalSelectionTag,
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
@@ -45,25 +48,30 @@ import MiniBot from '../MiniBot/MiniBot';
     },
 })
 export default class IdePortal extends Vue {
+    searchValue: string = '';
     items: SystemPortalItem[] = [];
+
     hasPortal: boolean = false;
+    hasSelection: boolean = false;
+
+    tags: SystemPortalSelectionTag[] = [];
+    selectedBot: Bot = null;
+    selectedTag: string = null;
+    selectedTagSpace: string = null;
 
     showButton: boolean = true;
     buttonIcon: string = null;
     buttonHint: string = null;
 
-    currentBot: Bot = null;
-    currentTag: string = null;
-    currentSpace: string = null;
-    selectedItem: IdeNode = null;
-    searchItems: SearchItem[] = [];
-
     isViewingTags: boolean = true;
 
     private _subs: SubscriptionLike[] = [];
-
     private _simulation: BrowserSimulation;
     private _currentConfig: SystemPortalConfig;
+
+    get selectedBotId() {
+        return this.selectedBot?.id;
+    }
 
     get finalButtonIcon() {
         if (hasValue(this.buttonIcon)) {
@@ -98,12 +106,12 @@ export default class IdePortal extends Vue {
             let subs: SubscriptionLike[] = [];
             this._simulation = appManager.simulationManager.primary;
             this.items = [];
-            this.searchItems = [];
+            this.tags = [];
             this.hasPortal = false;
-            this.currentBot = null;
-            this.currentTag = null;
-            this.currentSpace = null;
-            this.selectedItem = null;
+            this.hasSelection = false;
+            this.selectedBot = null;
+            this.selectedTag = null;
+            this.selectedTagSpace = null;
             this.isViewingTags = true;
 
             subs.push(
@@ -114,7 +122,20 @@ export default class IdePortal extends Vue {
                     } else {
                         this.items = [];
                     }
-                })
+                }),
+                this._simulation.systemPortal.onSelectionUpdated.subscribe(
+                    (e) => {
+                        this.hasSelection = e.hasSelection;
+                        if (e.hasSelection) {
+                            this.tags = e.tags;
+                            this.selectedBot = e.bot;
+                        } else {
+                            this.tags = [];
+                            this.selectedBot = null;
+                            this.selectedTag = null;
+                        }
+                    }
+                )
                 // this._simulation.localEvents.subscribe((e) => {
                 //     if (e.type === 'go_to_tag') {
                 //         const targetBot =
@@ -160,6 +181,20 @@ export default class IdePortal extends Vue {
         for (let s of this._subs) {
             s.unsubscribe();
         }
+    }
+
+    selectBot(bot: SystemPortalBot) {
+        let tags: BotTags = {
+            [SYSTEM_PORTAL_BOT]: bot.bot.id,
+        };
+        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+            tags: tags,
+        });
+    }
+
+    selectTag(tag: SystemPortalSelectionTag) {
+        console.log('select', tag);
+        this.selectedTag = tag.name;
     }
 
     // showTags() {
