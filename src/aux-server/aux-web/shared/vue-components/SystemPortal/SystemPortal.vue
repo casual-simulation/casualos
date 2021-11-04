@@ -33,26 +33,47 @@
                         </div>
                     </div>
                     <div class="tags" v-if="hasSelection">
-                        <div class="tags-sort-options">
-                            <md-button class="sort-option-button md-dense md-raised md-primary">
-                                A-Z
-                            </md-button>
-                            <md-button class="sort-option-button md-dense md-raised md-primary">
-                                Recent
-                            </md-button>
-                            <md-button class="sort-option-button md-dense md-raised md-primary">
-                                @
-                            </md-button>
-                        </div>
                         <div class="tags-list">
                             <div
                                 v-for="tag of tags"
                                 :key="tag.name"
                                 class="tags-list-tag"
+                                :class="{
+                                    selected:
+                                        selectedTag === tag.name && selectedTagSpace === tag.space,
+                                }"
                                 @click="selectTag(tag)"
                             >
-                                <bot-tag :tag="tag.name" :isScript="tag.isScript"></bot-tag>
+                                <div class="tags-list-tag-header">
+                                    <bot-tag
+                                        :tag="tag.name"
+                                        :isScript="tag.isScript"
+                                        :allowCloning="false"
+                                    ></bot-tag>
+                                    <span v-show="!!tag.space" class="tag-space">{{
+                                        tag.space
+                                    }}</span>
+                                </div>
+                                <div class="tags-list-tag-value">
+                                    <bot-value
+                                        :bot="selectedBot"
+                                        :tag="tag.name"
+                                        :space="tag.space"
+                                        :alwaysShowRealValue="true"
+                                        :showSpace="false"
+                                        @focusChanged="onTagFocusChanged(tag, $event)"
+                                    ></bot-value>
+                                </div>
                             </div>
+                        </div>
+                        <div class="tags-sort-options">
+                            <md-button class="sort-option-button md-dense md-raised">
+                                A-Z
+                            </md-button>
+                            <md-button class="sort-option-button md-dense md-raised">
+                                Recent
+                            </md-button>
+                            <md-button class="sort-option-button md-dense md-raised"> @ </md-button>
                         </div>
                     </div>
                     <div class="editor">

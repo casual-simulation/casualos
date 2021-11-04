@@ -38,11 +38,13 @@ import { onMonacoLoaded } from '../../MonacoAsync';
 import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './SystemPortalHelpers';
 import MiniBot from '../MiniBot/MiniBot';
+import BotValue from '../BotValue/BotValue';
 
 @Component({
     components: {
         'tag-value-editor': TagValueEditor,
         'bot-tag': BotTag,
+        'bot-value': BotValue,
         hotkey: Hotkey,
         'mini-bot': MiniBot,
     },
@@ -195,6 +197,12 @@ export default class IdePortal extends Vue {
     selectTag(tag: SystemPortalSelectionTag) {
         this.selectedTag = tag.name;
         this.selectedTagSpace = tag.space;
+    }
+
+    onTagFocusChanged(tag: SystemPortalSelectionTag, focused: boolean) {
+        if (focused) {
+            this.selectTag(tag);
+        }
     }
 
     // showTags() {
