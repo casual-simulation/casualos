@@ -33,6 +33,19 @@ export class SystemPortalManager implements SubscriptionLike {
     private _itemsUpdated: BehaviorSubject<SystemPortalUpdate>;
     private _selectionUpdated: BehaviorSubject<SystemPortalSelectionUpdate>;
     private _buffer: boolean;
+    private _tagSortMode: TagSortMode = 'scripts-first';
+
+    get tagSortMode(): TagSortMode {
+        return this._tagSortMode;
+    }
+
+    set tagSortMode(mode: TagSortMode) {
+        this._tagSortMode = mode;
+        const result = this._findSelection(this._itemsUpdated.value);
+        if (!isEqual(result, this._selectionUpdated.value)) {
+            this._selectionUpdated.next(result);
+        }
+    }
 
     unsubscribe(): void {
         return this._sub.unsubscribe();
@@ -237,14 +250,19 @@ export class SystemPortalManager implements SubscriptionLike {
             );
         }
 
-        const tags = sortBy(
-            [...normalTags, ...maskTags],
-            (t) => !t.isScript,
-            (t) => t.name
-        );
+        const sortMode = this.tagSortMode;
+        const tags =
+            sortMode === 'scripts-first'
+                ? sortBy(
+                      [...normalTags, ...maskTags],
+                      (t) => !t.isScript,
+                      (t) => t.name
+                  )
+                : sortBy([...normalTags, ...maskTags], (t) => t.name);
 
         return {
             hasSelection: true,
+            sortMode,
             bot,
             tags,
         };
@@ -310,6 +328,7 @@ export type SystemPortalSelectionUpdate =
 export interface SystemPortalHasSelectionUpdate {
     hasSelection: true;
     bot: Bot;
+    sortMode: TagSortMode;
     tags: SystemPortalSelectionTag[];
 }
 
@@ -322,3 +341,5 @@ export interface SystemPortalSelectionTag {
 export interface SystemPortalNoSelectionUpdate {
     hasSelection: false;
 }
+
+export type TagSortMode = 'alphabetical' | 'scripts-first';

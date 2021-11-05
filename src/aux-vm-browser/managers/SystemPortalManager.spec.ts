@@ -563,6 +563,58 @@ describe('SystemPortalManager', () => {
                 },
             ]);
         });
+
+        it('should sort alphabetically if specified', async () => {
+            manager.tagSortMode = 'alphabetical';
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botAdded(
+                    createBot('test4', {
+                        system: 'core.other.test4',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        system: 'core.other.test3',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(selectionUpdates).toEqual([
+                {
+                    hasSelection: true,
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        { name: 'color' },
+                        { name: 'onClick', isScript: true },
+                        { name: 'system' },
+                    ],
+                },
+            ]);
+        });
     });
 });
 

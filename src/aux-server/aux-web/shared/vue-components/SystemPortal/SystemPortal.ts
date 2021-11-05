@@ -24,6 +24,7 @@ import {
     SystemPortalBot,
     SystemPortalItem,
     SystemPortalSelectionTag,
+    TagSortMode,
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
@@ -69,6 +70,7 @@ export default class IdePortal extends Vue {
 
     searchValue: string = '';
     isFocusingSearch: boolean = false;
+    sortMode: TagSortMode = 'scripts-first';
 
     private _subs: SubscriptionLike[] = [];
     private _simulation: BrowserSimulation;
@@ -132,6 +134,7 @@ export default class IdePortal extends Vue {
                     (e) => {
                         this.hasSelection = e.hasSelection;
                         if (e.hasSelection) {
+                            this.sortMode = e.sortMode;
                             this.tags = e.tags;
                             this.selectedBot = e.bot;
                         } else {
@@ -224,6 +227,10 @@ export default class IdePortal extends Vue {
                 },
             });
         }
+    }
+
+    setSortMode(mode: TagSortMode) {
+        this._simulation.systemPortal.tagSortMode = mode;
     }
 
     // showTags() {

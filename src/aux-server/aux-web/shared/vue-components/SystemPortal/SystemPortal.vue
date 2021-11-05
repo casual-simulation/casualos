@@ -72,13 +72,22 @@
                             </div>
                         </div>
                         <div class="tags-sort-options">
-                            <md-button class="sort-option-button md-dense md-raised">
+                            <md-button
+                                :class="{ 'md-primary': sortMode === 'scripts-first' }"
+                                class="sort-option-button md-dense md-raised"
+                                @click="setSortMode('scripts-first')"
+                            >
+                                <md-tooltip>Sort script tags first</md-tooltip>
+                                @
+                            </md-button>
+                            <md-button
+                                :class="{ 'md-primary': sortMode === 'alphabetical' }"
+                                class="sort-option-button md-dense md-raised"
+                                @click="setSortMode('alphabetical')"
+                            >
+                                <md-tooltip>Sort tags Alphabetically</md-tooltip>
                                 A-Z
                             </md-button>
-                            <md-button class="sort-option-button md-dense md-raised">
-                                Recent
-                            </md-button>
-                            <md-button class="sort-option-button md-dense md-raised"> @ </md-button>
                         </div>
                     </div>
                     <div class="editor">
