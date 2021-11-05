@@ -4,15 +4,24 @@ import {
     calculateStringTagValue,
     getBotTag,
     hasValue,
-    isScript,
     SYSTEM_PORTAL,
     SYSTEM_PORTAL_BOT,
     SYSTEM_TAG,
     tagsOnBot,
     getTagMask,
     calculateBooleanTagValue,
+    EDITING_BOT,
+    EDITING_TAG,
+    getShortId,
+    isScript,
+    EDITING_TAG_SPACE,
+    getTagValueForSpace,
 } from '@casual-simulation/aux-common';
-import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
+import {
+    BotHelper,
+    BotWatcher,
+    UpdatedBotInfo,
+} from '@casual-simulation/aux-vm';
 import { isEqual, sortBy } from 'lodash';
 import {
     BehaviorSubject,
@@ -21,7 +30,13 @@ import {
     Subscription,
     SubscriptionLike,
 } from 'rxjs';
-import { bufferTime, distinctUntilChanged, map, skip } from 'rxjs/operators';
+import {
+    bufferTime,
+    distinctUntilChanged,
+    filter,
+    map,
+    skip,
+} from 'rxjs/operators';
 
 /**
  * Defines a class that is able to manage the state of the system portal.
@@ -32,7 +47,9 @@ export class SystemPortalManager implements SubscriptionLike {
     private _helper: BotHelper;
     private _itemsUpdated: BehaviorSubject<SystemPortalUpdate>;
     private _selectionUpdated: BehaviorSubject<SystemPortalSelectionUpdate>;
+    private _recentsUpdated: BehaviorSubject<SystemPortalRecentsUpdate>;
     private _buffer: boolean;
+    private _recentTags: SystemPortalRecentTag[] = [];
     private _tagSortMode: TagSortMode = 'scripts-first';
 
     get tagSortMode(): TagSortMode {
@@ -63,6 +80,10 @@ export class SystemPortalManager implements SubscriptionLike {
         return this._selectionUpdated;
     }
 
+    get onRecentsUpdated(): Observable<SystemPortalRecentsUpdate> {
+        return this._recentsUpdated;
+    }
+
     /**
      * Creates a new bot panel manager.
      * @param watcher The bot watcher to use.
@@ -84,12 +105,18 @@ export class SystemPortalManager implements SubscriptionLike {
             new BehaviorSubject<SystemPortalSelectionUpdate>({
                 hasSelection: false,
             });
+        this._recentsUpdated = new BehaviorSubject<SystemPortalRecentsUpdate>({
+            hasRecents: false,
+        });
 
         this._sub.add(
             this._calculateItemsUpdated().subscribe(this._itemsUpdated)
         );
         this._sub.add(
             this._calculateSelectionUpdated().subscribe(this._selectionUpdated)
+        );
+        this._sub.add(
+            this._calculateRecentsUpdated().subscribe(this._recentsUpdated)
         );
     }
 
@@ -267,6 +294,112 @@ export class SystemPortalManager implements SubscriptionLike {
             tags,
         };
     }
+
+    private _calculateRecentsUpdated(): Observable<SystemPortalRecentsUpdate> {
+        const changes = this._watcher.botTagsChanged(this._helper.userId);
+
+        return changes.pipe(
+            filter((c) => c.tags.has(EDITING_BOT) || c.tags.has(EDITING_TAG)),
+            map(() => this._updateRecentsList())
+        );
+    }
+
+    private _updateRecentsList(): SystemPortalRecentsUpdate {
+        const newBotId = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            EDITING_BOT,
+            null
+        );
+        const newTag = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            EDITING_TAG,
+            null
+        );
+        const newSpace = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            EDITING_TAG_SPACE,
+            null
+        );
+
+        if (!newBotId || !newTag) {
+            return this._recentsUpdated.value;
+        }
+
+        const newBot = this._helper.botsState[newBotId];
+
+        if (!newBotId || !newTag) {
+            return this._recentsUpdated.value;
+        }
+
+        const recentTagsCounts = new Map<string, number>();
+
+        recentTagsCounts.set(`${newTag}.${newSpace}`, 1);
+
+        for (let tag of this._recentTags) {
+            const key = `${tag.tag}.${tag.space}`;
+            recentTagsCounts.set(key, (recentTagsCounts.get(key) ?? 0) + 1);
+        }
+
+        let newTags = [] as SystemPortalRecentTag[];
+
+        newTags.push({
+            name: getTagName(newTag, newBot, newSpace),
+            botId: newBot.id,
+            tag: newTag,
+            space: newSpace,
+        });
+
+        for (let recent of this._recentTags) {
+            if (
+                recent.tag === newTag &&
+                recent.botId === newBot.id &&
+                recent.space === newSpace
+            ) {
+                continue;
+            } else {
+                newTags.push({
+                    name: getTagName(
+                        recent.tag,
+                        this._helper.botsState[recent.botId],
+                        recent.space
+                    ),
+                    tag: recent.tag,
+                    botId: recent.botId,
+                    space: recent.space,
+                });
+            }
+        }
+
+        this._recentTags = newTags;
+
+        if (this._recentTags.length > 0) {
+            return {
+                hasRecents: true,
+                recentTags: this._recentTags,
+            };
+        }
+
+        function getTagName(tag: string, bot: Bot, space: string | null) {
+            const tagValue = getTagValueForSpace(bot, tag, space);
+            const isTagScript = isScript(tagValue);
+            const prefix = isTagScript ? '@' : '';
+            const tagName = prefix + tag;
+            if ((recentTagsCounts.get(`${tag}.${space}`) ?? 0) > 1) {
+                const system = calculateStringTagValue(
+                    null,
+                    bot,
+                    SYSTEM_TAG,
+                    null
+                );
+                return `${system ?? getShortId(bot)} ${tagName}`;
+            }
+
+            return tagName;
+        }
+    }
 }
 
 /**
@@ -343,3 +476,23 @@ export interface SystemPortalNoSelectionUpdate {
 }
 
 export type TagSortMode = 'alphabetical' | 'scripts-first';
+
+export type SystemPortalRecentsUpdate =
+    | SystemPortalHasRecentsUpdate
+    | SystemPortalNoRecentsUpdate;
+
+export interface SystemPortalHasRecentsUpdate {
+    hasRecents: true;
+    recentTags: SystemPortalRecentTag[];
+}
+
+export interface SystemPortalNoRecentsUpdate {
+    hasRecents: false;
+}
+
+export interface SystemPortalRecentTag {
+    name: string;
+    botId: string;
+    tag: string;
+    space: string;
+}

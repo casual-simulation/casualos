@@ -23,6 +23,9 @@ import {
     CREATE_ANY_ACTION_NAME,
     BotSpace,
     hasValue,
+    EDITING_TAG_SPACE,
+    EDITING_TAG,
+    EDITING_BOT,
 } from '@casual-simulation/aux-common';
 import { BaseHelper } from './BaseHelper';
 import { AuxVM } from '../vm/AuxVM';
@@ -236,11 +239,12 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * Sets the bot that the user is editing.
      * @param bot The bot.
      */
-    setEditingBot(bot: Bot, tag: string) {
+    setEditingBot(bot: Bot, tag: string, space?: string) {
         return this.updateBot(this.userBot, {
             tags: {
-                editingBot: bot.id,
-                editingTag: tag,
+                [EDITING_BOT]: bot.id,
+                [EDITING_TAG]: tag,
+                [EDITING_TAG_SPACE]: space ?? null,
                 cursorStartIndex: null,
                 cursorEndIndex: null,
             },

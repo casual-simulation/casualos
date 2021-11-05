@@ -1,6 +1,7 @@
 import {
     getSystemArea,
     SystemPortalManager,
+    SystemPortalRecentsUpdate,
     SystemPortalSelectionUpdate,
     SystemPortalUpdate,
 } from './SystemPortalManager';
@@ -27,6 +28,9 @@ import {
     SYSTEM_PORTAL,
     SYSTEM_PORTAL_BOT,
     TEMPORARY_BOT_PARTITION_ID,
+    EDITING_TAG,
+    EDITING_BOT,
+    EDITING_TAG_SPACE,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { Subject, Subscription } from 'rxjs';
@@ -44,6 +48,7 @@ describe('SystemPortalManager', () => {
     let localEvents: Subject<BotAction[]>;
     let updates: SystemPortalUpdate[];
     let selectionUpdates: SystemPortalSelectionUpdate[];
+    let recentsUpdates: SystemPortalRecentsUpdate[];
     let sub: Subscription;
 
     beforeEach(async () => {
@@ -66,6 +71,7 @@ describe('SystemPortalManager', () => {
 
         updates = [];
         selectionUpdates = [];
+        recentsUpdates = [];
         manager = new SystemPortalManager(watcher, helper, false);
         sub.add(
             manager.onItemsUpdated
@@ -76,6 +82,11 @@ describe('SystemPortalManager', () => {
             manager.onSelectionUpdated
                 .pipe(skip(1))
                 .subscribe((u) => selectionUpdates.push(u))
+        );
+        sub.add(
+            manager.onRecentsUpdated
+                .pipe(skip(1))
+                .subscribe((u) => recentsUpdates.push(u))
         );
     });
 
@@ -475,6 +486,7 @@ describe('SystemPortalManager', () => {
             expect(selectionUpdates).toEqual([
                 {
                     hasSelection: true,
+                    sortMode: 'scripts-first',
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -535,6 +547,7 @@ describe('SystemPortalManager', () => {
             expect(selectionUpdates).toEqual([
                 {
                     hasSelection: true,
+                    sortMode: 'scripts-first',
                     bot: {
                         id: 'test2',
                         precalculated: true,
@@ -602,6 +615,7 @@ describe('SystemPortalManager', () => {
             expect(selectionUpdates).toEqual([
                 {
                     hasSelection: true,
+                    sortMode: 'alphabetical',
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -611,6 +625,207 @@ describe('SystemPortalManager', () => {
                         { name: 'color' },
                         { name: 'onClick', isScript: true },
                         { name: 'system' },
+                    ],
+                },
+            ]);
+        });
+    });
+
+    describe('onRecentsUpdate', () => {
+        it('should resolve when the editingTag tag changes', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: 'test2',
+                        [EDITING_TAG]: 'onClick',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: 'test2',
+                        [EDITING_TAG]: 'color',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(recentsUpdates).toEqual([
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            name: '@onClick',
+                            botId: 'test2',
+                            tag: 'onClick',
+                            space: null,
+                        },
+                    ],
+                },
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            name: 'color',
+                            botId: 'test2',
+                            tag: 'color',
+                            space: null,
+                        },
+                        {
+                            name: '@onClick',
+                            botId: 'test2',
+                            tag: 'onClick',
+                            space: null,
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should support tag masks', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: 'test2',
+                        [EDITING_TAG]: 'onClick',
+                    },
+                }),
+            ]);
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: 'test2',
+                        [EDITING_TAG]: 'onClick',
+                        [EDITING_TAG_SPACE]: 'tempLocal',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(recentsUpdates).toEqual([
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            name: '@onClick',
+                            botId: 'test2',
+                            tag: 'onClick',
+                            space: null,
+                        },
+                    ],
+                },
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            name: 'onClick',
+                            botId: 'test2',
+                            tag: 'onClick',
+                            space: 'tempLocal',
+                        },
+                        {
+                            name: '@onClick',
+                            botId: 'test2',
+                            tag: 'onClick',
+                            space: null,
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should update the name on other tags if there are two of the same tag name', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                        onClick: '@os.toast("Test!");',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: 'test2',
+                        [EDITING_TAG]: 'onClick',
+                    },
+                }),
+            ]);
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: 'test1',
+                        [EDITING_TAG]: 'onClick',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(recentsUpdates).toEqual([
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            name: '@onClick',
+                            botId: 'test2',
+                            tag: 'onClick',
+                            space: null,
+                        },
+                    ],
+                },
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            name: 'core.game.test1 @onClick',
+                            botId: 'test1',
+                            tag: 'onClick',
+                            space: null,
+                        },
+                        {
+                            name: 'core.game.test2 @onClick',
+                            botId: 'test2',
+                            tag: 'onClick',
+                            space: null,
+                        },
                     ],
                 },
             ]);

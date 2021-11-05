@@ -1571,6 +1571,21 @@ export const SYSTEM_TAG: string = 'system';
 export const SYSTEM_PORTAL_BOT: string = 'systemPortalBot';
 
 /**
+ * The name of the tag that is used to indicate which bot the player is currently editing.
+ */
+export const EDITING_BOT: string = 'editingBot';
+
+/**
+ * The name of the tag that is used to indiciate which tag the player is currently editing.
+ */
+export const EDITING_TAG: string = 'editingTag';
+
+/**
+ * The name of the tag that is used to indiciate which space the tag the player is currently editing is in.
+ */
+export const EDITING_TAG_SPACE: string = 'editingTagSpace';
+
+/**
  * The name of the IMU portal.
  */
 export const IMU_PORTAL: string = 'imuPortal';
@@ -1709,8 +1724,9 @@ export const KNOWN_TAGS: string[] = [
     'rightPointer_squeeze',
     'forceSignedScripts',
 
-    'editingBot',
-    'editingTag',
+    EDITING_BOT,
+    EDITING_TAG,
+    EDITING_TAG_SPACE,
     'cursorStartIndex',
     'cursorEndIndex',
 
