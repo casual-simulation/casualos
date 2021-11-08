@@ -170,9 +170,10 @@ export default class MonacoTagEditor extends Vue {
                     sim.portals.prefixesDiscovered
                         .pipe(flatMap((a) => a))
                         .subscribe((portal) => {
-                            this.scriptPrefixes = sim.portals.scriptPrefixes.filter(
-                                (p) => !p.isDefault
-                            );
+                            this.scriptPrefixes =
+                                sim.portals.scriptPrefixes.filter(
+                                    (p) => !p.isDefault
+                                );
                         })
                 );
 
@@ -180,9 +181,10 @@ export default class MonacoTagEditor extends Vue {
                     sim.portals.prefixesRemoved
                         .pipe(flatMap((a) => a))
                         .subscribe((portal) => {
-                            this.scriptPrefixes = sim.portals.scriptPrefixes.filter(
-                                (p) => !p.isDefault
-                            );
+                            this.scriptPrefixes =
+                                sim.portals.scriptPrefixes.filter(
+                                    (p) => !p.isDefault
+                                );
                         })
                 );
 
@@ -209,10 +211,12 @@ export default class MonacoTagEditor extends Vue {
 
     editorFocused() {
         setActiveModel(this._model);
+        this.$emit('onFocused', true);
     }
 
     editorBlured() {
         setActiveModel(null);
+        this.$emit('onFocused', false);
     }
 
     makeNormalTag() {
@@ -327,9 +331,8 @@ export default class MonacoTagEditor extends Vue {
         }
 
         if (bot.signatures) {
-            this.signed = !!bot.signatures[
-                tagValueHash(bot.id, tag, bot.tags[tag])
-            ];
+            this.signed =
+                !!bot.signatures[tagValueHash(bot.id, tag, bot.tags[tag])];
         } else {
             this.signed = false;
         }

@@ -216,10 +216,33 @@ export default class IdePortal extends Vue {
         this.selectedTagSpace = tag.space;
     }
 
+    selectRecentTag(recent: SystemPortalRecentTag) {
+        let tags: BotTags = {
+            [SYSTEM_PORTAL_BOT]: recent.botId,
+        };
+        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+            tags: tags,
+        });
+        this.selectedTag = recent.tag;
+        this.selectedTagSpace = recent.space ?? undefined;
+    }
+
     onTagFocusChanged(tag: SystemPortalSelectionTag, focused: boolean) {
         if (focused) {
             this.selectTag(tag);
 
+            if (this.selectedBot && this.selectedTag) {
+                this._simulation.helper.setEditingBot(
+                    this.selectedBot,
+                    this.selectedTag,
+                    this.selectedTagSpace
+                );
+            }
+        }
+    }
+
+    onEditorFocused(focused: boolean) {
+        if (focused) {
             if (this.selectedBot && this.selectedTag) {
                 this._simulation.helper.setEditingBot(
                     this.selectedBot,

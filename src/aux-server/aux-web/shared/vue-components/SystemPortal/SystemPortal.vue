@@ -92,13 +92,28 @@
                     </div>
                     <div class="editor">
                         <div class="editor-recents">
-                            <div
-                                class="editor-recents-item"
+                            <md-button
+                                class="editor-recents-item md-raised md-dense"
+                                :class="{
+                                    selected:
+                                        recent.botId === selectedBotId &&
+                                        recent.tag === selectedTag &&
+                                        recent.space == selectedTagSpace,
+                                }"
                                 v-for="recent of recents"
                                 :key="`${recent.botId}.${recent.tag}.${recent.space}`"
+                                @click="selectRecentTag(recent)"
                             >
-                                {{ recent.name }}
-                            </div>
+                                {{ recent.prefix }}
+                                <bot-tag
+                                    :tag="recent.tag"
+                                    :isScript="recent.isScript"
+                                    :allowCloning="false"
+                                ></bot-tag>
+                                <span v-show="!!recent.space" class="tag-space">{{
+                                    recent.space
+                                }}</span>
+                            </md-button>
                         </div>
                         <div class="editor-code">
                             <tag-value-editor
@@ -109,6 +124,7 @@
                                 :space="selectedTagSpace"
                                 :showDesktopEditor="true"
                                 :showResize="false"
+                                @onFocused="onEditorFocused($event)"
                             >
                             </tag-value-editor>
                         </div>

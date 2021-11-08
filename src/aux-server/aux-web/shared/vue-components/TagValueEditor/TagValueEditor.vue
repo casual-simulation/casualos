@@ -7,6 +7,7 @@
         :space="space"
         :showResize="showResize"
         ref="monacoEditor"
+        @onFocused="onFocused"
     ></monaco-editor>
 </template>
 <script src="./TagValueEditor.ts"></script>

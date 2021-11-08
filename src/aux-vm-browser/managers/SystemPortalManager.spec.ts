@@ -672,7 +672,8 @@ describe('SystemPortalManager', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            name: '@onClick',
+                            prefix: '',
+                            isScript: true,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -683,13 +684,15 @@ describe('SystemPortalManager', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            name: 'color',
+                            prefix: '',
+                            isScript: false,
                             botId: 'test2',
                             tag: 'color',
                             space: null,
                         },
                         {
-                            name: '@onClick',
+                            prefix: '',
+                            isScript: true,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -738,7 +741,8 @@ describe('SystemPortalManager', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            name: '@onClick',
+                            prefix: '',
+                            isScript: true,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -749,13 +753,15 @@ describe('SystemPortalManager', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            name: 'onClick',
+                            prefix: '',
+                            isScript: false,
                             botId: 'test2',
                             tag: 'onClick',
                             space: 'tempLocal',
                         },
                         {
-                            name: '@onClick',
+                            prefix: '',
+                            isScript: true,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -804,7 +810,8 @@ describe('SystemPortalManager', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            name: '@onClick',
+                            prefix: '',
+                            isScript: true,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -815,13 +822,15 @@ describe('SystemPortalManager', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            name: 'core.game.test1 @onClick',
+                            prefix: 'core.game.test1',
+                            isScript: true,
                             botId: 'test1',
                             tag: 'onClick',
                             space: null,
                         },
                         {
-                            name: 'core.game.test2 @onClick',
+                            prefix: 'core.game.test2',
+                            isScript: true,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -829,6 +838,134 @@ describe('SystemPortalManager', () => {
                     ],
                 },
             ]);
+        });
+
+        it('should not add a prefix if just moving a tag to the front', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: 'test2',
+                        [EDITING_TAG]: 'onClick',
+                    },
+                }),
+            ]);
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: 'test2',
+                        [EDITING_TAG]: 'color',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: 'test2',
+                        [EDITING_TAG]: 'onClick',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(recentsUpdates).toEqual([
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            prefix: '',
+                            isScript: true,
+                            botId: 'test2',
+                            tag: 'onClick',
+                            space: null,
+                        },
+                    ],
+                },
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            prefix: '',
+                            isScript: false,
+                            botId: 'test2',
+                            tag: 'color',
+                            space: null,
+                        },
+                        {
+                            prefix: '',
+                            isScript: true,
+                            botId: 'test2',
+                            tag: 'onClick',
+                            space: null,
+                        },
+                    ],
+                },
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            prefix: '',
+                            isScript: true,
+                            botId: 'test2',
+                            tag: 'onClick',
+                            space: null,
+                        },
+                        {
+                            prefix: '',
+                            isScript: false,
+                            botId: 'test2',
+                            tag: 'color',
+                            space: null,
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should limit recent items to 10 items', async () => {
+            let tags = {} as any;
+            for (let i = 0; i < 20; i++) {
+                tags['tag' + i] = 'abc';
+            }
+
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        ...tags,
+                    })
+                ),
+            ]);
+
+            for (let tag in tags) {
+                await vm.sendEvents([
+                    botUpdated('user', {
+                        tags: {
+                            [EDITING_BOT]: 'test2',
+                            [EDITING_TAG]: tag,
+                        },
+                    }),
+                ]);
+                await waitAsync();
+            }
+
+            const lastUpdate = recentsUpdates[recentsUpdates.length - 1];
+
+            expect(lastUpdate.hasRecents).toBe(true);
+            expect(
+                (lastUpdate as SystemPortalHasRecentsUpdate).recentTags
+            ).toHaveLength(10);
         });
     });
 });

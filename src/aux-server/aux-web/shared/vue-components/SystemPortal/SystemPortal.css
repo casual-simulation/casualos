@@ -303,16 +303,22 @@
     background-color: var(--disabled-cell-color);
     display: flex;
     flex-direction: row;
-    padding: 8px;
+    padding: 4px;
     gap: 4px;
     overflow-x: hidden;
 }
 
 .editor-recents-item {
-    border: 1px solid #000;
-    border-radius: 8px;
-    padding: 0 4px;
+    flex: 0 0 auto;
+    margin: 0;
     white-space: nowrap;
+    text-transform: none;
+}
+
+.editor-recents-item.selected {
+    border-bottom: 1px solid #2f8dfe;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
 }
 
 .editor-code {
