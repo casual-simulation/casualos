@@ -1,5 +1,6 @@
 import {
     getSystemArea,
+    SystemPortalHasRecentsUpdate,
     SystemPortalManager,
     SystemPortalRecentsUpdate,
     SystemPortalSelectionUpdate,
@@ -625,6 +626,62 @@ describe('SystemPortalManager', () => {
                         { name: 'color' },
                         { name: 'onClick', isScript: true },
                         { name: 'system' },
+                    ],
+                },
+            ]);
+        });
+
+        it('should resolve when a tag is added', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            manager.addTag('test');
+
+            await waitAsync();
+
+            expect(selectionUpdates).toEqual([
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true },
+                        { name: 'color' },
+                        { name: 'system' },
+                    ],
+                },
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true },
+                        { name: 'color' },
+                        { name: 'system' },
+                        { name: 'test', focusValue: true },
                     ],
                 },
             ]);

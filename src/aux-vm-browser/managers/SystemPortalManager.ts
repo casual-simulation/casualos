@@ -52,6 +52,7 @@ export class SystemPortalManager implements SubscriptionLike {
     private _recentTags: SystemPortalRecentTag[] = [];
     private _recentTagsListSize: number = 10;
     private _tagSortMode: TagSortMode = 'scripts-first';
+    private _extraTags: SystemPortalSelectionTag[] = [];
 
     get tagSortMode(): TagSortMode {
         return this._tagSortMode;
@@ -119,6 +120,21 @@ export class SystemPortalManager implements SubscriptionLike {
         this._sub.add(
             this._calculateRecentsUpdated().subscribe(this._recentsUpdated)
         );
+    }
+
+    addTag(tag: string) {
+        for (let t of this._extraTags) {
+            delete t.focusValue;
+        }
+        this._extraTags.push({
+            name: tag,
+            focusValue: true,
+        });
+        const update = this._findSelection(this._itemsUpdated.value);
+
+        if (!isEqual(update, this._selectionUpdated.value)) {
+            this._selectionUpdated.next(update);
+        }
     }
 
     private _calculateItemsUpdated(): Observable<SystemPortalUpdate> {
@@ -282,7 +298,7 @@ export class SystemPortalManager implements SubscriptionLike {
         const tags =
             sortMode === 'scripts-first'
                 ? sortBy(
-                      [...normalTags, ...maskTags],
+                      [...normalTags, ...maskTags, ...this._extraTags],
                       (t) => !t.isScript,
                       (t) => t.name
                   )
@@ -487,6 +503,11 @@ export interface SystemPortalSelectionTag {
     name: string;
     space?: string;
     isScript?: boolean;
+
+    /**
+     * Whether the tag value should be focused once rendered into view.
+     */
+    focusValue?: boolean;
 }
 
 export interface SystemPortalNoSelectionUpdate {
@@ -509,7 +530,8 @@ export interface SystemPortalNoRecentsUpdate {
 }
 
 export interface SystemPortalRecentTag {
-    name: string;
+    prefix: string;
+    isScript: boolean;
     botId: string;
     tag: string;
     space: string;
