@@ -91,16 +91,27 @@
                         </div>
                     </div>
                     <div class="editor">
-                        <tag-value-editor
-                            v-if="selectedBot && selectedTag"
-                            ref="multilineEditor"
-                            :bot="selectedBot"
-                            :tag="selectedTag"
-                            :space="selectedTagSpace"
-                            :showDesktopEditor="true"
-                            :showResize="false"
-                        >
-                        </tag-value-editor>
+                        <div class="editor-recents">
+                            <div
+                                class="editor-recents-item"
+                                v-for="recent of recents"
+                                :key="`${recent.botId}.${recent.tag}.${recent.space}`"
+                            >
+                                {{ recent.name }}
+                            </div>
+                        </div>
+                        <div class="editor-code">
+                            <tag-value-editor
+                                v-if="selectedBot && selectedTag"
+                                ref="multilineEditor"
+                                :bot="selectedBot"
+                                :tag="selectedTag"
+                                :space="selectedTagSpace"
+                                :showDesktopEditor="true"
+                                :showResize="false"
+                            >
+                            </tag-value-editor>
+                        </div>
                     </div>
                 </div>
 

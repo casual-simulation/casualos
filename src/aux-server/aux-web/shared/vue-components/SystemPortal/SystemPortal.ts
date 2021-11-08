@@ -41,6 +41,10 @@ import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './SystemPortalHelpers';
 import MiniBot from '../MiniBot/MiniBot';
 import BotValue from '../BotValue/BotValue';
+import {
+    SystemPortalRecentsUpdate,
+    SystemPortalRecentTag,
+} from '@casual-simulation/aux-vm-browser/managers/SystemPortalManager';
 
 @Component({
     components: {
@@ -61,6 +65,8 @@ export default class IdePortal extends Vue {
     selectedBot: Bot = null;
     selectedTag: string = null;
     selectedTagSpace: string = null;
+
+    recents: SystemPortalRecentTag[] = [];
 
     showButton: boolean = true;
     buttonIcon: string = null;
@@ -114,6 +120,7 @@ export default class IdePortal extends Vue {
             this._simulation = appManager.simulationManager.primary;
             this.items = [];
             this.tags = [];
+            this.recents = [];
             this.hasPortal = false;
             this.hasSelection = false;
             this.selectedBot = null;
@@ -141,6 +148,13 @@ export default class IdePortal extends Vue {
                             this.tags = [];
                             this.selectedBot = null;
                             this.selectedTag = null;
+                        }
+                    }
+                ),
+                this._simulation.systemPortal.onRecentsUpdated.subscribe(
+                    (e) => {
+                        if (e.hasRecents) {
+                            this.recents = e.recentTags;
                         }
                     }
                 ),
@@ -205,6 +219,14 @@ export default class IdePortal extends Vue {
     onTagFocusChanged(tag: SystemPortalSelectionTag, focused: boolean) {
         if (focused) {
             this.selectTag(tag);
+
+            if (this.selectedBot && this.selectedTag) {
+                this._simulation.helper.setEditingBot(
+                    this.selectedBot,
+                    this.selectedTag,
+                    this.selectedTagSpace
+                );
+            }
         }
     }
 
@@ -390,10 +412,6 @@ export default class IdePortal extends Vue {
     //         this.currentSpace = null;
     //     }
     // }
-
-    tagFocusChanged(bot: Bot, tag: string, focused: boolean) {
-        this._simulation.helper.setEditingBot(bot, tag);
-    }
 
     async exitPortal() {
         if (this._currentConfig) {
