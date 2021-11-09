@@ -869,6 +869,48 @@ describe('SystemPortalManager', () => {
                 },
             ]);
         });
+
+        it('should do nothing if the new tag is already pinned', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            manager.addPinnedTag('onClick');
+            manager.addPinnedTag('onClick');
+
+            await waitAsync();
+
+            expect(selectionUpdates.slice(1)).toEqual([
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true },
+                        { name: 'system' },
+                    ],
+                    pinnedTags: [
+                        { name: 'onClick', isScript: true, focusValue: true },
+                    ],
+                },
+            ]);
+        });
     });
 
     describe('onRecentsUpdate', () => {

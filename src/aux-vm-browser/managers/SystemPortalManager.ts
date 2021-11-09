@@ -123,6 +123,10 @@ export class SystemPortalManager implements SubscriptionLike {
     }
 
     addPinnedTag(tag: string) {
+        if (this._extraTags.includes(tag)) {
+            return;
+        }
+
         const update = this._findSelection(this._itemsUpdated.value, [tag]);
 
         if (!isEqual(update, this._selectionUpdated.value)) {
