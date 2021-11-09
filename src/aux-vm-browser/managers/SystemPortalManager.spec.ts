@@ -621,8 +621,10 @@ describe('SystemPortalManager', () => {
                 },
             ]);
         });
+    });
 
-        it('should resolve when a tag is added', async () => {
+    describe('addPinnedTag()', () => {
+        it('should add the new tag to a pinned tags list', async () => {
             await vm.sendEvents([
                 botAdded(
                     createBot('test2', {
@@ -641,7 +643,7 @@ describe('SystemPortalManager', () => {
 
             await waitAsync();
 
-            manager.addTag('test');
+            manager.addPinnedTag('test');
 
             await waitAsync();
 
@@ -672,8 +674,198 @@ describe('SystemPortalManager', () => {
                         { name: 'onClick', isScript: true },
                         { name: 'color' },
                         { name: 'system' },
-                        { name: 'test', focusValue: true },
                     ],
+                    pinnedTags: [{ name: 'test', focusValue: true }],
+                },
+            ]);
+        });
+
+        it('should be able to add tags that already exist on bot', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            manager.addPinnedTag('onClick');
+
+            await waitAsync();
+
+            expect(selectionUpdates).toEqual([
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true },
+                        { name: 'color' },
+                        { name: 'system' },
+                    ],
+                },
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true },
+                        { name: 'color' },
+                        { name: 'system' },
+                    ],
+                    pinnedTags: [
+                        { name: 'onClick', isScript: true, focusValue: true },
+                    ],
+                },
+            ]);
+        });
+
+        it('should focus the new tag and unfocus the other pinned tags', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            manager.addPinnedTag('onClick');
+
+            await waitAsync();
+
+            manager.addPinnedTag('other');
+
+            await waitAsync();
+
+            expect(selectionUpdates).toEqual([
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true },
+                        { name: 'color' },
+                        { name: 'system' },
+                    ],
+                },
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true },
+                        { name: 'color' },
+                        { name: 'system' },
+                    ],
+                    pinnedTags: [
+                        { name: 'onClick', isScript: true, focusValue: true },
+                    ],
+                },
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true },
+                        { name: 'color' },
+                        { name: 'system' },
+                    ],
+                    pinnedTags: [
+                        { name: 'onClick', isScript: true },
+                        { name: 'other', focusValue: true },
+                    ],
+                },
+            ]);
+        });
+
+        it('should preserve pinned tags across bots', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        system: 'core.game.test3',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            manager.addPinnedTag('onClick');
+
+            await waitAsync();
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test3',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(selectionUpdates.slice(2)).toEqual([
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test3', {
+                        system: 'core.game.test3',
+                    }),
+                    tags: [{ name: 'system' }],
+                    pinnedTags: [{ name: 'onClick' }],
                 },
             ]);
         });
