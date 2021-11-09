@@ -155,6 +155,8 @@ export default class SystemPortal extends Vue {
                             this.tags = e.tags;
                             this.pinnedTags = e.pinnedTags;
                             this.selectedBot = e.bot;
+                            this.selectedTag = e.tag;
+                            this.selectedTagSpace = e.space ?? undefined;
                         } else {
                             this.tags = [];
                             this.pinnedTags = [];
@@ -239,19 +241,31 @@ export default class SystemPortal extends Vue {
     }
 
     selectTag(tag: SystemPortalSelectionTag) {
-        this.selectedTag = tag.name;
-        this.selectedTagSpace = tag.space;
+        let tags: BotTags = {
+            [SYSTEM_PORTAL_TAG]: tag.name,
+            [SYSTEM_PORTAL_TAG_SPACE]: tag.space ?? null
+        };
+        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+            tags
+        });
+        // this.selectedTag = tag.name;
+        // this.selectedTagSpace = tag.space;
+    }
+
+    closeTag(tag: SystemPortalSelectionTag) {
+        this._simulation.systemPortal.removePinnedTag(tag);
     }
 
     selectRecentTag(recent: SystemPortalRecentTag) {
+        this._focusEditorOnSelectionUpdate = true;
         let tags: BotTags = {
             [SYSTEM_PORTAL_BOT]: recent.botId,
+            [SYSTEM_PORTAL_TAG]: recent.tag,
+            [SYSTEM_PORTAL_TAG_SPACE]: recent.space ?? null
         };
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
             tags: tags,
         });
-        this.selectedTag = recent.tag;
-        this.selectedTagSpace = recent.space ?? undefined;
     }
 
     onTagFocusChanged(tag: SystemPortalSelectionTag, focused: boolean) {

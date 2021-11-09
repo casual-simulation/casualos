@@ -28,7 +28,10 @@ import {
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { Subject, Subscription } from 'rxjs';
-import { wait, waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
+import {
+    wait,
+    waitAsync,
+} from '@casual-simulation/aux-common/test/TestHelpers';
 import { skip } from 'rxjs/operators';
 
 describe('SystemPortalManager', () => {
@@ -449,7 +452,7 @@ describe('SystemPortalManager', () => {
                         system: 'core.game.test2',
                         color: 'red',
                         onClick: '@os.toast("Cool!");',
-                        mod: '🧬{}'
+                        mod: '🧬{}',
                     })
                 ),
                 botAdded(
@@ -481,17 +484,21 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
-                    bot: createPrecalculatedBot('test2', {
-                        system: 'core.game.test2',
-                        color: 'red',
-                        onClick: '@os.toast("Cool!");',
-                        mod: {}
-                    }, {
-                        system: 'core.game.test2',
-                        color: 'red',
-                        onClick: '@os.toast("Cool!");',
-                        mod: '🧬{}'
-                    }),
+                    bot: createPrecalculatedBot(
+                        'test2',
+                        {
+                            system: 'core.game.test2',
+                            color: 'red',
+                            onClick: '@os.toast("Cool!");',
+                            mod: {},
+                        },
+                        {
+                            system: 'core.game.test2',
+                            color: 'red',
+                            onClick: '@os.toast("Cool!");',
+                            mod: '🧬{}',
+                        }
+                    ),
                     tags: [
                         { name: 'onClick', isScript: true },
                         { name: 'color' },
@@ -627,6 +634,117 @@ describe('SystemPortalManager', () => {
                         { name: 'onClick', isScript: true },
                         { name: 'system' },
                     ],
+                },
+            ]);
+        });
+
+        it('should resolve when a tag is selected via the user bot', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botAdded(
+                    createBot('test4', {
+                        system: 'core.other.test4',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        system: 'core.other.test3',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL_TAG]: 'onClick',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(selectionUpdates.slice(1)).toEqual([
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tag: 'onClick',
+                    space: null,
+                    tags: [
+                        { name: 'onClick', isScript: true },
+                        { name: 'color' },
+                        { name: 'system' },
+                    ],
+                },
+            ]);
+        });
+
+        it('should include the selected tag in the tags list even if the bot doesnt have the tag', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botAdded(
+                    createBot('test4', {
+                        system: 'core.other.test4',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        system: 'core.other.test3',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                        [SYSTEM_PORTAL_TAG]: 'onClick',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(selectionUpdates.slice(1)).toEqual([
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                    }),
+                    tag: 'onClick',
+                    space: null,
+                    tags: [{ name: 'onClick' }, { name: 'system' }],
                 },
             ]);
         });
@@ -942,10 +1060,12 @@ describe('SystemPortalManager', () => {
 
             await waitAsync();
 
-            expect(helper.botsState['test2']).toEqual(createPrecalculatedBot('test2', {
-                system: 'core.game.test2',
-                onClick: '@',
-            }));
+            expect(helper.botsState['test2']).toEqual(
+                createPrecalculatedBot('test2', {
+                    system: 'core.game.test2',
+                    onClick: '@',
+                })
+            );
 
             expect(selectionUpdates.slice(1)).toEqual([
                 {
@@ -999,25 +1119,35 @@ describe('SystemPortalManager', () => {
 
             await waitAsync();
 
-            expect(helper.botsState['test2']).toEqual(createPrecalculatedBot('test2', {
-                system: 'core.game.test2',
-                mod: expect.any(String),
-            }, {
-                system: 'core.game.test2',
-                mod: '🧬',
-            }));
+            expect(helper.botsState['test2']).toEqual(
+                createPrecalculatedBot(
+                    'test2',
+                    {
+                        system: 'core.game.test2',
+                        mod: expect.any(String),
+                    },
+                    {
+                        system: 'core.game.test2',
+                        mod: '🧬',
+                    }
+                )
+            );
 
             expect(selectionUpdates.slice(1)).toEqual([
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
-                    bot: createPrecalculatedBot('test2', {
-                        system: 'core.game.test2',
-                        mod: expect.any(String),
-                    }, {
-                        system: 'core.game.test2',
-                        mod: '🧬',
-                    }),
+                    bot: createPrecalculatedBot(
+                        'test2',
+                        {
+                            system: 'core.game.test2',
+                            mod: expect.any(String),
+                        },
+                        {
+                            system: 'core.game.test2',
+                            mod: '🧬',
+                        }
+                    ),
                     tags: [
                         { name: 'mod', isFormula: true },
                         { name: 'system' },
@@ -1026,19 +1156,23 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
-                    bot: createPrecalculatedBot('test2', {
-                        system: 'core.game.test2',
-                        mod: expect.any(String),
-                    }, {
-                        system: 'core.game.test2',
-                        mod: '🧬',
-                    }),
+                    bot: createPrecalculatedBot(
+                        'test2',
+                        {
+                            system: 'core.game.test2',
+                            mod: expect.any(String),
+                        },
+                        {
+                            system: 'core.game.test2',
+                            mod: '🧬',
+                        }
+                    ),
                     tags: [
-                        { name: 'mod', isFormula: true, },
+                        { name: 'mod', isFormula: true },
                         { name: 'system' },
                     ],
                     pinnedTags: [
-                        { name: 'mod', focusValue: true, isFormula: true, },
+                        { name: 'mod', focusValue: true, isFormula: true },
                     ],
                 },
             ]);
