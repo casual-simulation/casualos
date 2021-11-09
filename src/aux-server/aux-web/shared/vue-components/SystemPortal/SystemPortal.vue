@@ -41,7 +41,8 @@
                         <div class="tags-list">
                             <system-portal-tag
                                 v-for="tag of tags"
-                                :key="'tag-' + tag.name"
+                                :key="`tag-${tag.name}.${tag.space}`"
+                                ref="tagEditors"
                                 :bot="selectedBot"
                                 :tag="tag"
                                 :selected="isTagSelected(tag)"
@@ -53,15 +54,20 @@
                                 <h3>Pinned Tags</h3>
                                 <system-portal-tag
                                     v-for="tag of pinnedTags"
-                                    :key="'pin-' + tag.name"
+                                    :key="`pin-${tag.name}.${tag.space}`"
+                                    ref="pinnedTagEditors"
                                     :bot="selectedBot"
                                     :tag="tag"
                                     :selected="isTagSelected(tag)"
+                                    :showCloseButton="true"
                                     @click="selectTag(tag)"
+                                    @close="closeTag(tag)"
                                     @focusChanged="onTagFocusChanged(tag, $event)"
                                 >
                                 </system-portal-tag>
                             </div>
+                        </div>
+                        <div class="tags-add-tag">
                             <md-button class="md-raised pin-tag-button" @click="openNewTag">
                                 <picture>
                                     <source
@@ -120,10 +126,10 @@
                         </div>
                         <div class="editor-code">
                             <tag-value-editor
-                                v-if="selectedBot && selectedTag"
+                                v-if="selectedBot && hasTag()"
                                 ref="multilineEditor"
                                 :bot="selectedBot"
-                                :tag="selectedTag"
+                                :tag="selectedTag || getFirstTag()"
                                 :space="selectedTagSpace"
                                 :showDesktopEditor="true"
                                 :showResize="false"

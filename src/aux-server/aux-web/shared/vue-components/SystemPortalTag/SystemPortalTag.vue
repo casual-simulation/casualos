@@ -7,11 +7,25 @@
         @click="onClick"
     >
         <div class="tags-list-tag-header">
-            <bot-tag :tag="tag.name" :isScript="tag.isScript" :allowCloning="false"></bot-tag>
+            <bot-tag
+                :tag="tag.name"
+                :isScript="tag.isScript"
+                :isFormula="tag.isFormula"
+                :allowCloning="false"
+            ></bot-tag>
             <span v-show="!!tag.space" class="tag-space">{{ tag.space }}</span>
+            <md-button
+                v-show="showCloseButton"
+                class="md-dense md-icon-button remove-tag"
+                @click="onClose"
+            >
+                <md-icon>close</md-icon>
+                <md-tooltip md-delay="1000" md-direction="top">Remove #{{ tag.name }}</md-tooltip>
+            </md-button>
         </div>
         <div class="tags-list-tag-value">
             <bot-value
+                ref="valueEditor"
                 :bot="bot"
                 :tag="tag.name"
                 :space="tag.space"

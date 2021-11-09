@@ -23,6 +23,7 @@ export default class SystemPortalTag extends Vue {
     @Prop({}) tag: SystemPortalSelectionTag;
     @Prop({}) selected: boolean;
     @Prop({}) bot: Bot;
+    @Prop({ default: false }) showCloseButton: boolean;
 
     focusChanged(focused: boolean) {
         this.$emit('focusChanged', focused);
@@ -30,5 +31,13 @@ export default class SystemPortalTag extends Vue {
 
     onClick() {
         this.$emit('click');
+    }
+
+    onClose() {
+        this.$emit('close');
+    }
+
+    focus() {
+        (this.$refs.valueEditor as BotValue)?.focus();
     }
 }

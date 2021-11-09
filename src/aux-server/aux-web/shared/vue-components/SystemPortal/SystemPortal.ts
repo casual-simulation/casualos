@@ -18,6 +18,8 @@ import {
     DNA_TAG_PREFIX,
     SYSTEM_PORTAL_BOT,
     calculateBotValue,
+    SYSTEM_PORTAL_TAG,
+    SYSTEM_PORTAL_TAG_SPACE,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
@@ -85,6 +87,7 @@ export default class SystemPortal extends Vue {
     isMakingNewTag: boolean = false;
     newTag: string = '';
 
+    private _focusEditorOnSelectionUpdate: boolean = false;
     private _subs: SubscriptionLike[] = [];
     private _simulation: BrowserSimulation;
     private _currentConfig: SystemPortalConfig;
@@ -157,11 +160,25 @@ export default class SystemPortal extends Vue {
                             this.selectedBot = e.bot;
                             this.selectedTag = e.tag;
                             this.selectedTagSpace = e.space ?? undefined;
+
+                            for (let tag of [
+                                ...e.tags,
+                                ...(e.pinnedTags ?? []),
+                            ]) {
+                                if (tag.focusValue) {
+                                    this._focusTag(tag);
+                                    break;
+                                }
+                            }
                         } else {
                             this.tags = [];
                             this.pinnedTags = [];
                             this.selectedBot = null;
                             this.selectedTag = null;
+                        }
+
+                        if (this._focusEditorOnSelectionUpdate) {
+                            this._focusEditor();
                         }
                     }
                 ),
@@ -210,6 +227,28 @@ export default class SystemPortal extends Vue {
         );
     }
 
+    private _tagEditors() {
+        return this.$refs.tagEditors as SystemPortalTag[];
+    }
+
+    private _pinnedTagEditors() {
+        return this.$refs.pinnedTagEditors as SystemPortalTag[];
+    }
+
+    private _focusEditor() {
+        this._focusEditorOnSelectionUpdate = false;
+        this.$nextTick(() => {
+            (<TagValueEditor>this.$refs.multilineEditor)?.focusEditor();
+        });
+    }
+
+    private _focusTag(tag: SystemPortalSelectionTag) {
+        this.$nextTick(() => {
+            this._focusEditorOnSelectionUpdate = true;
+            this.selectTag(tag);
+        });
+    }
+
     isTagSelected(tag: SystemPortalSelectionTag | SystemPortalRecentTag) {
         if ('name' in tag) {
             return (
@@ -243,10 +282,10 @@ export default class SystemPortal extends Vue {
     selectTag(tag: SystemPortalSelectionTag) {
         let tags: BotTags = {
             [SYSTEM_PORTAL_TAG]: tag.name,
-            [SYSTEM_PORTAL_TAG_SPACE]: tag.space ?? null
+            [SYSTEM_PORTAL_TAG_SPACE]: tag.space ?? null,
         };
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
-            tags
+            tags,
         });
         // this.selectedTag = tag.name;
         // this.selectedTagSpace = tag.space;
@@ -261,7 +300,7 @@ export default class SystemPortal extends Vue {
         let tags: BotTags = {
             [SYSTEM_PORTAL_BOT]: recent.botId,
             [SYSTEM_PORTAL_TAG]: recent.tag,
-            [SYSTEM_PORTAL_TAG_SPACE]: recent.space ?? null
+            [SYSTEM_PORTAL_TAG_SPACE]: recent.space ?? null,
         };
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
             tags: tags,
@@ -410,163 +449,18 @@ export default class SystemPortal extends Vue {
         }
     }
 
-    // showTags() {
-    //     this.isViewingTags = true;
-    // }
+    hasTag() {
+        return this.tags.length > 0 || this.pinnedTags.length > 0;
+    }
 
-    // async showSearch() {
-    //     this.isViewingTags = false;
-    //     await this.$nextTick();
-    //     if (this.searchInput) {
-    //         this.searchInput.focus();
-    //         this.searchInput.select();
-    //     }
-    // }
-
-    // updateSearch(event: InputEvent) {
-    //     this.search();
-    // }
-
-    // search() {
-    //     const searchText = this.searchInput?.value;
-
-    //     if (searchText) {
-    //         let nextItems = [] as SearchItem[];
-
-    //         for (let node of this.items) {
-    //             const bot = this._simulation.helper.botsState[node.botId];
-    //             const value = formatValue(bot.tags[node.tag]);
-
-    //             let i = 0;
-    //             while (i < value.length) {
-    //                 const match = value.indexOf(searchText, i);
-
-    //                 if (match >= 0) {
-    //                     i = match + searchText.length;
-
-    //                     let lineStart = match;
-    //                     let distance = 0;
-    //                     const maxSearchDistance = 40;
-    //                     for (
-    //                         ;
-    //                         lineStart > 0 && distance <= maxSearchDistance;
-    //                         lineStart -= 1
-    //                     ) {
-    //                         const char = value[lineStart];
-    //                         if (char === '\n') {
-    //                             lineStart += 1;
-    //                             break;
-    //                         } else if (char !== ' ' && char !== '\t') {
-    //                             distance += 1;
-    //                         }
-    //                     }
-
-    //                     let lineEnd = match + searchText.length;
-    //                     for (
-    //                         ;
-    //                         lineEnd < value.length &&
-    //                         distance <= maxSearchDistance;
-    //                         lineEnd += 1
-    //                     ) {
-    //                         const char = value[lineEnd];
-    //                         if (char === '\n') {
-    //                             lineEnd -= 1;
-    //                             break;
-    //                         } else if (char !== ' ' && char !== '\t') {
-    //                             distance += 1;
-    //                         }
-    //                     }
-
-    //                     const line = value.substring(lineStart, lineEnd);
-
-    //                     nextItems.push({
-    //                         key: `${node.key}@${match}`,
-    //                         botId: node.botId,
-    //                         tag: node.tag,
-    //                         index: match,
-    //                         endIndex: match + searchText.length,
-    //                         text: line,
-    //                         isScript: node.isScript,
-    //                         isFormula: node.isFormula,
-    //                         prefix: node.prefix,
-    //                     });
-    //                 } else {
-    //                     break;
-    //                 }
-    //             }
-    //         }
-
-    //         this.searchItems = nextItems;
-    //     } else {
-    //         this.searchItems = [];
-    //     }
-    // }
-
-    // async selectSearchItem(item: SearchItem) {
-    //     this.currentBot = this._simulation.helper.botsState[item.botId];
-    //     this.currentTag = item.tag;
-    //     this.currentSpace = null;
-
-    //     const _this = this;
-    //     await onMonacoLoaded;
-    //     await this.$nextTick();
-
-    //     const monacoEditor = _this.multilineEditor()?.monacoEditor()?.editor;
-    //     let loaded = false;
-    //     if (monacoEditor) {
-    //         const model = monacoEditor.getModel();
-    //         if (model) {
-    //             const uri = model.uri.toString();
-    //             // TODO: implement better check for ensuring the loaded model
-    //             // is for the given item
-    //             if (
-    //                 uri.indexOf(item.botId) >= 0 &&
-    //                 uri.indexOf(item.tag) >= 0
-    //             ) {
-    //                 const offset = item.isScript
-    //                     ? 1
-    //                     : item.isFormula
-    //                     ? DNA_TAG_PREFIX.length
-    //                     : item.prefix
-    //                     ? item.prefix.length
-    //                     : 0;
-    //                 const position = model.getPositionAt(item.index - offset);
-    //                 const endPosition = model.getPositionAt(
-    //                     item.endIndex - offset
-    //                 );
-    //                 monacoEditor.setSelection({
-    //                     startLineNumber: position.lineNumber,
-    //                     startColumn: position.column,
-    //                     endLineNumber: endPosition.lineNumber,
-    //                     endColumn: endPosition.column,
-    //                 });
-    //                 monacoEditor.revealLinesInCenter(
-    //                     position.lineNumber,
-    //                     endPosition.lineNumber,
-    //                     1 /* Immediate scrolling */
-    //                 );
-    //                 monacoEditor.focus();
-    //             }
-    //         }
-    //         loaded = true;
-    //     }
-
-    //     // TODO: implement better way to wait for the editor the be fully loaded.
-    //     if (!loaded) {
-    //         setTimeout(() => {
-    //             this.selectSearchItem(item);
-    //         }, 100);
-    //     }
-    // }
-
-    // selectItem(item: IdeTagNode) {
-    //     if (item.type === 'tag') {
-    //         this.selectedItem = item;
-    //         this.currentBot = this._simulation.helper.botsState[item.botId];
-    //         this.currentTag = item.tag;
-    //         this.currentSpace = null;
-    //     }
-    // }
+    getFirstTag(): string {
+        if (this.tags.length > 0) {
+            return this.tags[0].name;
+        } else if (this.pinnedTags.length > 0) {
+            return this.pinnedTags[0].name;
+        }
+        return null;
+    }
 
     async exitPortal() {
         if (this._currentConfig) {

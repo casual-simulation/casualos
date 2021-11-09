@@ -241,30 +241,13 @@
     overflow: auto;
 }
 
-.tags-list-tag {
-    border-bottom: 1px solid var(--bot-cell-border-color);
+.tags-add-tag {
+    flex: 99 0 auto;
 }
 
-/* .tags-list-tag:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-} */
-
-.tags-list-tag-header {
-    padding: 2px 4px;
-    display: flex;
-}
-
-.tags-list-tag-header > .tag.bot-tag {
-    flex: 1 1 auto;
-}
-
-.tags-list-tag-value {
-    border-top: 1px solid var(--bot-cell-border-color);
-}
-
-.tags-list-tag.selected > .tags-list-tag-header {
-    background-color: rgba(0, 0, 0, 0.1);
+.tags-sort-options {
+    flex: 0 0 auto;
+    border-top: 1px solid #000;
 }
 
 /* .tags-list-tag > .tags-list-tag-value {
