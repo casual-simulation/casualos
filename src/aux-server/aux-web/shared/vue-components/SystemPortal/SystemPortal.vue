@@ -39,37 +39,32 @@
                     </div>
                     <div class="tags" v-if="hasSelection">
                         <div class="tags-list">
-                            <div
+                            <system-portal-tag
                                 v-for="tag of tags"
-                                :key="tag.name"
-                                class="tags-list-tag"
-                                :class="{
-                                    selected:
-                                        selectedTag === tag.name && selectedTagSpace === tag.space,
-                                }"
+                                :key="'tag-' + tag.name"
+                                :bot="selectedBot"
+                                :tag="tag"
+                                :selected="isTagSelected(tag)"
                                 @click="selectTag(tag)"
+                                @focusChanged="onTagFocusChanged(tag, $event)"
                             >
-                                <div class="tags-list-tag-header">
-                                    <bot-tag
-                                        :tag="tag.name"
-                                        :isScript="tag.isScript"
-                                        :allowCloning="false"
-                                    ></bot-tag>
-                                    <span v-show="!!tag.space" class="tag-space">{{
-                                        tag.space
-                                    }}</span>
-                                </div>
-                                <div class="tags-list-tag-value">
-                                    <bot-value
-                                        :bot="selectedBot"
-                                        :tag="tag.name"
-                                        :space="tag.space"
-                                        :alwaysShowRealValue="true"
-                                        :showSpace="false"
-                                        @focusChanged="onTagFocusChanged(tag, $event)"
-                                    ></bot-value>
-                                </div>
+                            </system-portal-tag>
+                            <div v-if="pinnedTags && pinnedTags.length > 0">
+                                <h3>Pinned Tags</h3>
+                                <system-portal-tag
+                                    v-for="tag of pinnedTags"
+                                    :key="'pin-' + tag.name"
+                                    :bot="selectedBot"
+                                    :tag="tag"
+                                    :selected="isTagSelected(tag)"
+                                    @click="selectTag(tag)"
+                                    @focusChanged="onTagFocusChanged(tag, $event)"
+                                >
+                                </system-portal-tag>
                             </div>
+                            <md-button class="md-raised pin-tag-button" @click="openNewTag"
+                                >+tag</md-button
+                            >
                         </div>
                         <div class="tags-sort-options">
                             <md-button
@@ -95,10 +90,7 @@
                             <md-button
                                 class="editor-recents-item md-raised md-dense"
                                 :class="{
-                                    selected:
-                                        recent.botId === selectedBotId &&
-                                        recent.tag === selectedTag &&
-                                        recent.space == selectedTagSpace,
+                                    selected: isTagSelected(recent),
                                 }"
                                 v-for="recent of recents"
                                 :key="`${recent.botId}.${recent.tag}.${recent.space}`"
@@ -147,6 +139,31 @@
                 </md-button>
             </md-card-content>
         </md-card>
+
+        <md-dialog :md-active.sync="isMakingNewTag" class="new-tag-dialog">
+            <md-dialog-title>Add New Tag</md-dialog-title>
+            <md-dialog-content>
+                <form class="bot-table-form" @submit.prevent="addTag()">
+                    <tag-editor
+                        ref="tagEditor"
+                        :useMaterialInput="true"
+                        v-model="newTag"
+                        :isAction="false"
+                    ></tag-editor>
+                    <!-- <div class="finish-tag-button-wrapper">
+                        <md-button class="md-icon-button md-dense finish-tag-button" type="submit">
+                            <md-icon class="done">check</md-icon>
+                        </md-button>
+                        <md-button
+                            class="md-icon-button md-dense finish-tag-button"
+                            @click="cancelNewTag()"
+                        >
+                            <md-icon class="cancel">cancel</md-icon>
+                        </md-button>
+                    </div> -->
+                </form>
+            </md-dialog-content>
+        </md-dialog>
     </div>
 </template>
 <script src="./SystemPortal.ts"></script>

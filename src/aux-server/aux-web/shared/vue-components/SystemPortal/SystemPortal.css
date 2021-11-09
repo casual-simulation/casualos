@@ -324,3 +324,8 @@
 .editor-code {
     flex: 1 1 auto;
 }
+
+.pin-tag-button {
+    width: calc(100% - 16px);
+    margin: 8px;
+}

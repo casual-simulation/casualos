@@ -45,6 +45,8 @@ import {
     SystemPortalRecentsUpdate,
     SystemPortalRecentTag,
 } from '@casual-simulation/aux-vm-browser/managers/SystemPortalManager';
+import SystemPortalTag from '../SystemPortalTag/SystemPortalTag';
+import TagEditor from '../TagEditor/TagEditor';
 
 @Component({
     components: {
@@ -53,6 +55,8 @@ import {
         'bot-value': BotValue,
         hotkey: Hotkey,
         'mini-bot': MiniBot,
+        'system-portal-tag': SystemPortalTag,
+        'tag-editor': TagEditor,
     },
 })
 export default class IdePortal extends Vue {
@@ -62,6 +66,7 @@ export default class IdePortal extends Vue {
     hasSelection: boolean = false;
 
     tags: SystemPortalSelectionTag[] = [];
+    pinnedTags: SystemPortalSelectionTag[] = [];
     selectedBot: Bot = null;
     selectedTag: string = null;
     selectedTagSpace: string = null;
@@ -77,6 +82,8 @@ export default class IdePortal extends Vue {
     searchValue: string = '';
     isFocusingSearch: boolean = false;
     sortMode: TagSortMode = 'scripts-first';
+    isMakingNewTag: boolean = false;
+    newTag: string = '';
 
     private _subs: SubscriptionLike[] = [];
     private _simulation: BrowserSimulation;
@@ -120,7 +127,10 @@ export default class IdePortal extends Vue {
             this._simulation = appManager.simulationManager.primary;
             this.items = [];
             this.tags = [];
+            this.pinnedTags = [];
             this.recents = [];
+            this.isMakingNewTag = false;
+            this.newTag = '';
             this.hasPortal = false;
             this.hasSelection = false;
             this.selectedBot = null;
@@ -143,9 +153,11 @@ export default class IdePortal extends Vue {
                         if (e.hasSelection) {
                             this.sortMode = e.sortMode;
                             this.tags = e.tags;
+                            this.pinnedTags = e.pinnedTags;
                             this.selectedBot = e.bot;
                         } else {
                             this.tags = [];
+                            this.pinnedTags = [];
                             this.selectedBot = null;
                             this.selectedTag = null;
                         }
@@ -194,6 +206,21 @@ export default class IdePortal extends Vue {
                 // this.showSearch();
             })
         );
+    }
+
+    isTagSelected(tag: SystemPortalSelectionTag | SystemPortalRecentTag) {
+        if ('name' in tag) {
+            return (
+                this.selectedTag === tag.name &&
+                this.selectedTagSpace === tag.space
+            );
+        } else {
+            return (
+                tag.botId === this.selectedBotId &&
+                tag.tag === this.selectedTag &&
+                tag.space == this.selectedTagSpace
+            );
+        }
     }
 
     beforeDestroy() {
@@ -276,6 +303,93 @@ export default class IdePortal extends Vue {
 
     setSortMode(mode: TagSortMode) {
         this._simulation.systemPortal.tagSortMode = mode;
+    }
+
+    openNewTag() {
+        this.isMakingNewTag = true;
+        this.newTag = '';
+    }
+
+    addTag() {
+        // if (this.dropDownUsed) {
+        //     return;
+        // }
+
+        if (this.isMakingNewTag) {
+            this._simulation.systemPortal.addPinnedTag(this.newTag);
+            this.newTag = '';
+            this.isMakingNewTag = false;
+            // const { tag, isScript } = this._formatNewTag(this.newTag);
+            // this.newTag = tag;
+
+            // this.dropDownUsed = true;
+            // this.newTagOpen = true;
+
+            // this.$nextTick(() => {
+            //     this.$nextTick(() => {
+            //         this.dropDownUsed = false;
+            //         this.isMakingNewTag = false;
+            //         this.newTag = '';
+            //         this.newTagOpen = false;
+            //     });
+            // });
+
+            // // Check to make sure that the tag is unique.
+            // if (this.tagExists(this.newTag)) {
+            //     var options = new AlertDialogOptions();
+            //     options.title = 'Tag already exists';
+            //     options.body =
+            //         "Tag '" + this.newTag + "' already exists on this bot.";
+            //     options.confirmText = 'Close';
+
+            //     // Emit dialog event.
+            //     EventBus.$emit('showAlertDialog', options);
+            //     return;
+            // }
+
+            // if (!this.tagNotEmpty(this.newTag)) {
+            //     var options = new AlertDialogOptions();
+            //     options.title = 'Tag cannot be empty';
+            //     options.body = 'Tag is empty or contains only whitespace......';
+            //     options.confirmText = 'Close';
+
+            //     // Emit dialog event.
+            //     EventBus.$emit('showAlertDialog', options);
+            //     return;
+            // }
+
+            // this.wasLastEmpty = this.isEmptyDiff();
+            // if (this.isEmptyDiff()) {
+            //     this.lastTag = this.newTag;
+            // }
+
+            // if (this.newTagPlacement === 'top') {
+            //     this.addedTags.unshift(this.newTag);
+            //     this.tags.unshift({ tag: this.newTag, space: null });
+            // } else {
+            //     this.addedTags.push(this.newTag);
+            //     this.tags.push({ tag: this.newTag, space: null });
+            // }
+
+            // const addedTag = this.newTag;
+
+            // this._updateTags();
+            // this.$nextTick(() => {
+            //     const tags = this.$refs.tagValues as BotValue[];
+            //     for (let tag of tags) {
+            //         if (tag.tag === addedTag) {
+            //             tag.focus();
+            //             // This is a super hacky way to pre-fill the first bot's tag with an @ symbol
+            //             if (isScript) {
+            //                 tag.setInitialValue('@');
+            //             }
+            //             break;
+            //         }
+            //     }
+            // });
+        } else {
+            this.newTag = '';
+        }
     }
 
     // showTags() {

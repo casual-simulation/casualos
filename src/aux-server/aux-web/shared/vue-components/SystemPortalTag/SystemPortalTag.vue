@@ -1,0 +1,26 @@
+<template>
+    <div
+        class="tags-list-tag"
+        :class="{
+            selected: selected,
+        }"
+        @click="onClick"
+    >
+        <div class="tags-list-tag-header">
+            <bot-tag :tag="tag.name" :isScript="tag.isScript" :allowCloning="false"></bot-tag>
+            <span v-show="!!tag.space" class="tag-space">{{ tag.space }}</span>
+        </div>
+        <div class="tags-list-tag-value">
+            <bot-value
+                :bot="bot"
+                :tag="tag.name"
+                :space="tag.space"
+                :alwaysShowRealValue="true"
+                :showSpace="false"
+                @focusChanged="focusChanged"
+            ></bot-value>
+        </div>
+    </div>
+</template>
+<script src="./SystemPortalTag.ts"></script>
+<style src="./SystemPortalTag.css" scoped></style>
