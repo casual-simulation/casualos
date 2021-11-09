@@ -336,3 +336,11 @@
     height: 24px;
 }
 
+.bot-table-actions .finish-tag-button {
+    text-transform: none;
+    margin: 0;
+}
+
+.finish-tag-button-wrapper {
+    display: inline-block;
+}

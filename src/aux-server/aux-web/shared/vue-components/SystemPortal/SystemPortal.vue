@@ -161,7 +161,7 @@
                         v-model="newTag"
                         :isAction="false"
                     ></tag-editor>
-                    <!-- <div class="finish-tag-button-wrapper">
+                    <div class="finish-tag-button-wrapper">
                         <md-button class="md-icon-button md-dense finish-tag-button" type="submit">
                             <md-icon class="done">check</md-icon>
                         </md-button>
@@ -171,7 +171,7 @@
                         >
                             <md-icon class="cancel">cancel</md-icon>
                         </md-button>
-                    </div> -->
+                    </div>
                 </form>
             </md-dialog-content>
         </md-dialog>

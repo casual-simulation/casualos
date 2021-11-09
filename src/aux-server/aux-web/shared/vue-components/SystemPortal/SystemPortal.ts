@@ -310,6 +310,10 @@ export default class SystemPortal extends Vue {
         this.newTag = '';
     }
 
+    cancelNewTag() {
+        this.isMakingNewTag = false;
+    }
+
     addTag() {
         // if (this.dropDownUsed) {
         //     return;
