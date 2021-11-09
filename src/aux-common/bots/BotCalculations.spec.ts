@@ -33,6 +33,7 @@ import {
     getSpaceForTag,
     getUpdateForTagAndSpace,
     hasMaskForTag,
+    parseNewTag,
 } from './BotCalculations';
 import { Bot, BotsState, DNA_TAG_PREFIX } from './Bot';
 import { v4 as uuid } from 'uuid';
@@ -2077,6 +2078,30 @@ describe('BotCalculations', () => {
                     },
                 },
             });
+        });
+    });
+
+    describe('parseNewTag()', () => {
+        const cases = [
+            [
+                'parse normal tags',
+                'onClick',
+                { name: 'onClick', isScript: false, isFormula: false },
+            ] as const,
+            [
+                'parse script tags',
+                '@onClick',
+                { name: 'onClick', isScript: true, isFormula: false },
+            ] as const,
+            [
+                'parse mod tags',
+                '🧬dna',
+                { name: 'dna', isScript: false, isFormula: true },
+            ] as const,
+        ];
+
+        it.each(cases)('should %s', (desc, tag, expected) => {
+            expect(parseNewTag(tag)).toEqual(expected);
         });
     });
 

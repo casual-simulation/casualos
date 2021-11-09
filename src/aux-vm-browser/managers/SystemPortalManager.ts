@@ -122,12 +122,45 @@ export class SystemPortalManager implements SubscriptionLike {
         );
     }
 
+    /**
+     * Adds the given tag as a pinned tag.
+     * Pinned tags are a separate list of tags that are persisted across multiple selections.
+     * @param tag The name of the tag to pin.
+     */
     addPinnedTag(tag: string) {
-        if (this._extraTags.includes(tag)) {
+        const parsed = parseNewTag(tag);
+        if (this._extraTags.includes(parsed.name)) {
             return;
         }
 
-        const update = this._findSelection(this._itemsUpdated.value, [tag]);
+        const selectedBotId = calculateStringTagValue(null, this._helper.userBot, SYSTEM_PORTAL_BOT, null);
+        const selectedBot = selectedBotId ? this._helper.botsState[selectedBotId] : null;
+        if ((parsed.isScript || parsed.isFormula) && selectedBot) {
+            if (!hasValue(selectedBot.tags[parsed.name])) {
+                this._helper.updateBot(selectedBot, {
+                    tags: {
+                        [parsed.name]: parsed.isScript ? '@' 
+                            :  parsed.isFormula ? DNA_TAG_PREFIX : ''
+                    }
+                });
+            }
+        }
+
+        this._updateSelection([parsed.name]);
+    }
+
+    removePinnedTag(tag: SystemPortalSelectionTag) {
+        const index = this._extraTags.findIndex(t => t === tag.name);
+
+        if (index >= 0) {
+            this._extraTags.splice(index, 1);
+        }
+
+        this._updateSelection();
+    }
+
+    private _updateSelection(extraTags?: string[]) {
+        const update = this._findSelection(this._itemsUpdated.value, extraTags);
 
         if (!isEqual(update, this._selectionUpdated.value)) {
             this._selectionUpdated.next(update);
@@ -320,8 +353,13 @@ export class SystemPortalManager implements SubscriptionLike {
                 name: tag,
             };
 
-            if (isScript(getBotTag(bot, tag))) {
+            const tagValue = !hasValue(space) ? getBotTag(bot, tag) : getTagMask(bot, space, tag);
+            if (isScript(tagValue)) {
                 selectionTag.isScript = true;
+            }
+
+            if (isFormula(tagValue)) {
+                selectionTag.isFormula = true;
             }
 
             if (hasValue(space)) {

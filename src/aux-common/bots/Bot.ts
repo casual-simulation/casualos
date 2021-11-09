@@ -1571,6 +1571,16 @@ export const SYSTEM_TAG: string = 'system';
 export const SYSTEM_PORTAL_BOT: string = 'systemPortalBot';
 
 /**
+ * The name of the tag that is selected in the system portal.
+ */
+export const SYSTEM_PORTAL_TAG: string = 'systemPortalTag';
+
+/**
+ * The space of the tag that is selected in the system portal.
+ */
+export const SYSTEM_PORTAL_TAG_SPACE: string = 'systemPortalTagSpace';
+
+/**
  * The name of the tag that is used to indicate which bot the player is currently editing.
  */
 export const EDITING_BOT: string = 'editingBot';

@@ -24,10 +24,11 @@ import {
     EDITING_TAG,
     EDITING_BOT,
     EDITING_TAG_SPACE,
+    SYSTEM_PORTAL_TAG,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { Subject, Subscription } from 'rxjs';
-import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
+import { wait, waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { skip } from 'rxjs/operators';
 
 describe('SystemPortalManager', () => {
@@ -448,6 +449,7 @@ describe('SystemPortalManager', () => {
                         system: 'core.game.test2',
                         color: 'red',
                         onClick: '@os.toast("Cool!");',
+                        mod: '🧬{}'
                     })
                 ),
                 botAdded(
@@ -483,10 +485,17 @@ describe('SystemPortalManager', () => {
                         system: 'core.game.test2',
                         color: 'red',
                         onClick: '@os.toast("Cool!");',
+                        mod: {}
+                    }, {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                        mod: '🧬{}'
                     }),
                     tags: [
                         { name: 'onClick', isScript: true },
                         { name: 'color' },
+                        { name: 'mod', isFormula: true },
                         { name: 'system' },
                     ],
                 },
@@ -910,6 +919,217 @@ describe('SystemPortalManager', () => {
                     ],
                 },
             ]);
+        });
+
+        it('should create an empty script if the tag is prefixed with @', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            manager.addPinnedTag('@onClick');
+
+            await waitAsync();
+
+            expect(helper.botsState['test2']).toEqual(createPrecalculatedBot('test2', {
+                system: 'core.game.test2',
+                onClick: '@',
+            }));
+
+            expect(selectionUpdates.slice(1)).toEqual([
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        onClick: '@',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true },
+                        { name: 'system' },
+                    ],
+                },
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        onClick: '@',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true },
+                        { name: 'system' },
+                    ],
+                    pinnedTags: [
+                        { name: 'onClick', isScript: true, focusValue: true },
+                    ],
+                },
+            ]);
+        });
+
+        it('should create an empty mod if the tag is prefixed with the DNA emoji', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            manager.addPinnedTag('🧬mod');
+
+            await waitAsync();
+
+            expect(helper.botsState['test2']).toEqual(createPrecalculatedBot('test2', {
+                system: 'core.game.test2',
+                mod: expect.any(String),
+            }, {
+                system: 'core.game.test2',
+                mod: '🧬',
+            }));
+
+            expect(selectionUpdates.slice(1)).toEqual([
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        mod: expect.any(String),
+                    }, {
+                        system: 'core.game.test2',
+                        mod: '🧬',
+                    }),
+                    tags: [
+                        { name: 'mod', isFormula: true },
+                        { name: 'system' },
+                    ],
+                },
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        mod: expect.any(String),
+                    }, {
+                        system: 'core.game.test2',
+                        mod: '🧬',
+                    }),
+                    tags: [
+                        { name: 'mod', isFormula: true, },
+                        { name: 'system' },
+                    ],
+                    pinnedTags: [
+                        { name: 'mod', focusValue: true, isFormula: true, },
+                    ],
+                },
+            ]);
+        });
+    });
+
+    describe('removePinnedTag()', () => {
+        it('should remove the given tag from the pinned tags list', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            manager.addPinnedTag('test');
+
+            await waitAsync();
+
+            manager.removePinnedTag({ name: 'test' });
+
+            await waitAsync();
+
+            expect(selectionUpdates.slice(1)).toEqual([
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true },
+                        { name: 'color' },
+                        { name: 'system' },
+                    ],
+                    pinnedTags: [{ name: 'test', focusValue: true }],
+                },
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true },
+                        { name: 'color' },
+                        { name: 'system' },
+                    ],
+                },
+            ]);
+        });
+
+        it('should do nothing if given a tag that is not pinned', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            manager.removePinnedTag({ name: 'test' });
+
+            await waitAsync();
+
+            expect(selectionUpdates.slice(1)).toEqual([]);
         });
     });
 
