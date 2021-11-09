@@ -56,7 +56,7 @@ Registry.as(Extensions.Quickaccess).registerQuickAccessProvider({
 export class GotoLineAction extends EditorAction {
     constructor() {
         super({
-            id: 'editor.action.quickOutline',
+            id: 'editor.action.quickOutline2',
             label: 'Go to tag...',
             alias: 'Go to tag...',
             precondition: EditorContextKeys.hasDocumentSymbolProvider,
