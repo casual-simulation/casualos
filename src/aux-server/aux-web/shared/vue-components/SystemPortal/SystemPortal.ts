@@ -59,7 +59,7 @@ import TagEditor from '../TagEditor/TagEditor';
         'tag-editor': TagEditor,
     },
 })
-export default class IdePortal extends Vue {
+export default class SystemPortal extends Vue {
     items: SystemPortalItem[] = [];
 
     hasPortal: boolean = false;

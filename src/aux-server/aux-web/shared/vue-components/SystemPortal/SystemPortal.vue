@@ -62,9 +62,20 @@
                                 >
                                 </system-portal-tag>
                             </div>
-                            <md-button class="md-raised pin-tag-button" @click="openNewTag"
-                                >+tag</md-button
-                            >
+                            <md-button class="md-raised pin-tag-button" @click="openNewTag">
+                                <picture>
+                                    <source
+                                        srcset="../../public/icons/tag-add.webp"
+                                        type="image/webp"
+                                    />
+                                    <source
+                                        srcset="../../public/icons/tag-add.png"
+                                        type="image/png"
+                                    />
+                                    <img alt="Add Tag" src="../../public/icons/tag-add.png" />
+                                </picture>
+                                <md-tooltip>Add Tag</md-tooltip>
+                            </md-button>
                         </div>
                         <div class="tags-sort-options">
                             <md-button

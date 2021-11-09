@@ -329,3 +329,10 @@
     width: calc(100% - 16px);
     margin: 8px;
 }
+
+.pin-tag-button img,
+.pin-tag-button picture {
+    width: 24px;
+    height: 24px;
+}
+
