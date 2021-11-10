@@ -21,11 +21,6 @@ import {
     asyncResult,
     addDebugApi,
     RuntimeStateVersion,
-    OpenCustomPortalAction,
-    asyncError,
-    RegisterPrefixAction,
-    OpenCustomPortalOptions,
-    DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
     stateUpdatedEvent,
     registerBuiltinPortal,
     defineGlobalBot,
@@ -256,9 +251,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         });
 
         this._partitions = <any>{};
-        this._partitionEditModeProvider = new AuxPartitionRealtimeEditModeProvider(
-            this._partitions
-        );
+        this._partitionEditModeProvider =
+            new AuxPartitionRealtimeEditModeProvider(this._partitions);
         let partitions: AuxPartition[] = [];
         for (let key in this._config.partitions) {
             if (!this._config.partitions.hasOwnProperty(key)) {

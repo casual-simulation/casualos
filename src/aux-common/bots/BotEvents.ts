@@ -118,8 +118,6 @@ export type AsyncActions =
     | ShowInputAction
     | ShareAction
     | RegisterBuiltinPortalAction
-    | OpenCustomPortalAction
-    | BuildBundleAction
     | RegisterPrefixAction
     | RunScriptAction
     | LoadBotsAction
@@ -2529,23 +2527,6 @@ export interface ShareAction extends AsyncAction, ShareOptions {
 }
 
 /**
- * The possible options for a custom portal.
- */
-export interface OpenCustomPortalOptions {
-    /**
-     * The CSS styles that should be used for the portal.
-     */
-    style?: any;
-
-    /**
-     * The mode that the portal should be opened in.
-     * "Tag" indicates that the portal should watch the given tag and automatically produce bundles for the portal.
-     * "source" indicates that the portal should load the given source directly.
-     */
-    mode?: 'tag' | 'source';
-}
-
-/**
  * Defines an event that ensures a portal bot has been created for a portal.
  */
 export interface RegisterBuiltinPortalAction {
@@ -2555,32 +2536,6 @@ export interface RegisterBuiltinPortalAction {
      * The ID of the portal.
      */
     portalId: string;
-}
-
-/**
- * Defines an event that creates a custom portal using the given source code.
- */
-export interface OpenCustomPortalAction extends AsyncAction {
-    type: 'open_custom_portal';
-    /**
-     * The ID of the portal.
-     */
-    portalId: string;
-
-    /**
-     * The ID of the bot that should be used to configure this portal.
-     */
-    botId: string;
-
-    /**
-     * The tag or bundle that the portal should use.
-     */
-    tagOrSource: string | null;
-
-    /**
-     * The options for the portal.
-     */
-    options: OpenCustomPortalOptions;
 }
 
 /**
@@ -2742,17 +2697,6 @@ export interface SerializableMutationRecord {
 
 export interface NodeReference {
     __id: string;
-}
-
-/**
- * Defines an event that builds a bundle from a specified tag.
- */
-export interface BuildBundleAction extends AsyncAction {
-    type: 'build_bundle';
-    /**
-     * The tag that the bundle should use.
-     */
-    tag: string;
 }
 
 /**
@@ -5643,47 +5587,6 @@ export function registerBuiltinPortal(
     return {
         type: 'register_builtin_portal',
         portalId,
-    };
-}
-
-/**
- * Creates an action that registers a custom portal.
- * @param portalId The ID of the portal,
- * @param botId The ID of the bot that should be used to configure the portal.
- * @param tagOrSource The tag or bundle of source that the portal should use.
- * @param options The options for the portal.
- * @param taskId The ID of the task.
- */
-export function openCustomPortal(
-    portalId: string,
-    botId: string,
-    tagOrSource: string | null,
-    options: OpenCustomPortalOptions,
-    taskId?: number | string
-): OpenCustomPortalAction {
-    return {
-        type: 'open_custom_portal',
-        portalId,
-        botId,
-        tagOrSource,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates an action that builds a bundle from the specified tag.
- * @param tag The tag that the bundle should be built from.
- * @param taskId The ID of the task.
- */
-export function buildBundle(
-    tag: string,
-    taskId?: number | string
-): BuildBundleAction {
-    return {
-        type: 'build_bundle',
-        tag,
-        taskId,
     };
 }
 

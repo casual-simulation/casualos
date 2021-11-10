@@ -15,15 +15,6 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import CustomPortal from '../CustomPortal/CustomPortal';
-import CasualOSLibraryCode from '@casual-simulation/aux-custom-portals/dist/esbuild/casualos.js?raw';
-import CasualOSDeclarations from '@casual-simulation/aux-custom-portals/dist/rollup/casualos/casualos.d.ts?raw';
-import RxjsLibraryCode from '@casual-simulation/aux-custom-portals/dist/esbuild/rxjs/rxjs.js?raw';
-import RxjsDeclarations from '@casual-simulation/aux-custom-portals/dist/rollup/rxjs/rxjs.d.ts?raw';
-import RxjsOperatorsLibraryCode from '@casual-simulation/aux-custom-portals/dist/esbuild/rxjs/rxjs-operators.js?raw';
-import LodashLibraryCode from '@casual-simulation/aux-custom-portals/dist/esbuild/lodash.js?raw';
-import UuidLibraryCode from '@casual-simulation/aux-custom-portals/dist/esbuild/uuid.js?raw';
-import { onMonacoLoaded } from '../../MonacoAsync';
-import { addDefinitionsForLibrary } from '../../MonacoHelpers';
 import { hasValue } from '@casual-simulation/aux-common/bots/BotCalculations';
 
 @Component({
@@ -67,61 +58,6 @@ export default class CustomPortals extends Vue {
     private _onSimulationAdded(sim: BrowserSimulation) {
         let sub = new Subscription();
         this._simulations.set(sim, sub);
-
-        let libraries = [
-            {
-                id: 'casualos',
-                language: 'javascript',
-                source: CasualOSLibraryCode,
-                typescriptDefinitions: CasualOSDeclarations,
-            },
-            {
-                id: 'lodash',
-                language: 'javascript',
-                source: LodashLibraryCode,
-            },
-            {
-                id: 'rxjs',
-                language: 'javascript',
-                source: RxjsLibraryCode,
-                typescriptDefinitions: RxjsDeclarations,
-            },
-            {
-                id: 'rxjs/operators',
-                language: 'javascript',
-                source: RxjsOperatorsLibraryCode,
-            },
-            {
-                id: 'uuid',
-                language: 'javascript',
-                source: UuidLibraryCode,
-            },
-        ] as LibraryModule[];
-
-        for (let lib of libraries) {
-            sim.portals.addLibrary(lib);
-            onMonacoLoaded
-                .then(() => import('../../MonacoHelpers'))
-                .then((monaco) => monaco.addDefinitionsForLibrary(lib));
-        }
-
-        sub.add(
-            sim.portals.portalsDiscovered
-                .pipe(
-                    concatMap((p) => p),
-                    tap((portal) => this._onPortalDiscovered(sim, portal))
-                )
-                .subscribe()
-        );
-
-        sub.add(
-            sim.portals.portalsUpdated
-                .pipe(
-                    concatMap((u) => u),
-                    tap((update) => this._onPortalUpdated(sim, update))
-                )
-                .subscribe()
-        );
     }
 
     private _onSimulationRemoved(sim: BrowserSimulation) {

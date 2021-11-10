@@ -1,13 +1,5 @@
 import { IdeNode, IdePortalManager } from './IdePortalManager';
-import {
-    BotHelper,
-    BotWatcher,
-    buildVersionNumber,
-    CodeBundle,
-    LibraryModule,
-    PortalManager,
-    ScriptPrefix,
-} from '@casual-simulation/aux-vm';
+import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
 import {
     createBot,
     createPrecalculatedBot,
@@ -28,7 +20,6 @@ import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 describe('IdePortalManager', () => {
     let manager: IdePortalManager;
     let watcher: BotWatcher;
-    let portals: PortalManager;
     let helper: BotHelper;
     let index: BotIndex;
     let vm: TestAuxVM;

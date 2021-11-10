@@ -35,7 +35,6 @@
     },
     "dependencies": {
         "@casual-simulation/aux-common": "^2.0.15",
-        "@casual-simulation/aux-custom-portals": "^2.0.15",
         "@casual-simulation/aux-vm": "^2.0.15",
         "@casual-simulation/aux-vm-browser": "^2.0.15",
         "@casual-simulation/aux-vm-client": "^2.0.15",

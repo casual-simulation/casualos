@@ -132,16 +132,12 @@ import {
     cancelSound,
     localPositionTween,
     localRotationTween,
-    getAnchorPointOffset,
-    calculateAnchorPointOffset,
     RuntimeBot,
     SET_TAG_MASK_SYMBOL,
     CLEAR_CHANGES_SYMBOL,
-    openCustomPortal,
     animateTag,
     showUploadFiles,
     registerPrefix,
-    buildBundle,
     circleWipe,
     animateToPosition,
     beginAudioRecording,
@@ -3317,127 +3313,9 @@ describe('AuxLibrary', () => {
         });
 
         describe('os.getGeolocation()', () => {
-            it('should return a OpenCustomPortal action', () => {
+            it('should return a GetGeolocationAction action', () => {
                 const promise: any = library.api.os.getGeolocation();
                 const expected = getGeolocation(context.tasks.size);
-                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-        });
-
-        describe('portal.open()', () => {
-            it('should return a OpenCustomPortal action', () => {
-                const promise: any = library.api.portal.open(
-                    'test',
-                    bot1,
-                    'tag'
-                );
-                const expected = openCustomPortal(
-                    'test',
-                    bot1.id,
-                    'tag',
-                    {
-                        style: {},
-                        mode: 'tag',
-                    },
-                    context.tasks.size
-                );
-                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should include the specified options', () => {
-                const promise: any = library.api.portal.open(
-                    'test',
-                    bot1,
-                    'tag',
-                    {
-                        style: {
-                            abc: 'def',
-                        },
-                        mode: 'source',
-                    }
-                );
-                const expected = openCustomPortal(
-                    'test',
-                    bot1.id,
-                    'tag',
-                    {
-                        style: {
-                            abc: 'def',
-                        },
-                        mode: 'source',
-                    },
-                    context.tasks.size
-                );
-                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-        });
-
-        describe('os.registerExecutable()', () => {
-            it('should return a OpenCustomPortal action', () => {
-                const promise: any = library.api.os.registerExecutable(
-                    'test',
-                    bot1,
-                    'tag'
-                );
-                const expected = openCustomPortal(
-                    'test',
-                    bot1.id,
-                    'tag',
-                    {
-                        style: {},
-                        mode: 'tag',
-                    },
-                    context.tasks.size
-                );
-                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should include the specified options', () => {
-                const promise: any = library.api.os.registerExecutable(
-                    'test',
-                    bot1,
-                    'tag',
-                    {
-                        style: {
-                            abc: 'def',
-                        },
-                        mode: 'source',
-                    }
-                );
-                const expected = openCustomPortal(
-                    'test',
-                    bot1.id,
-                    'tag',
-                    {
-                        style: {
-                            abc: 'def',
-                        },
-                        mode: 'source',
-                    },
-                    context.tasks.size
-                );
-                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-        });
-
-        describe('portal.buildBundle()', () => {
-            it('should return a BuildBundleAction', () => {
-                const promise: any = library.api.portal.buildBundle('tag');
-                const expected = buildBundle('tag', context.tasks.size);
-                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-        });
-
-        describe('os.buildExecutable()', () => {
-            it('should return a BuildBundleAction', () => {
-                const promise: any = library.api.os.buildExecutable('tag');
-                const expected = buildBundle('tag', context.tasks.size);
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

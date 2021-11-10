@@ -6,15 +6,7 @@ import {
     SystemPortalSelectionUpdate,
     SystemPortalUpdate,
 } from './SystemPortalManager';
-import {
-    BotHelper,
-    BotWatcher,
-    buildVersionNumber,
-    CodeBundle,
-    LibraryModule,
-    PortalManager,
-    ScriptPrefix,
-} from '@casual-simulation/aux-vm';
+import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
 import {
     createBot,
     createPrecalculatedBot,
@@ -41,7 +33,6 @@ import { skip } from 'rxjs/operators';
 describe('SystemPortalManager', () => {
     let manager: SystemPortalManager;
     let watcher: BotWatcher;
-    let portals: PortalManager;
     let helper: BotHelper;
     let index: BotIndex;
     let vm: TestAuxVM;

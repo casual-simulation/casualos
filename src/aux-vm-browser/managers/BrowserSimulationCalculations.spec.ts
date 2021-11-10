@@ -14,12 +14,9 @@ import {
     createPrecalculatedBot,
     Bot,
     PrecalculatedBot,
-    botUpdated,
-    BotsState,
-    stateUpdatedEvent,
-    openCustomPortal,
     LocalActions,
     registerBuiltinPortal,
+    defineGlobalBot,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import {
@@ -43,13 +40,6 @@ describe('BrowserSimulationCalculations', () => {
     let portals: PortalManager;
     let index: BotIndex;
     let vm: TestAuxVM;
-    let bundler: {
-        bundleTag: jest.Mock<
-            Promise<CodeBundle>,
-            [BotsState, string, ScriptPrefix[]]
-        >;
-        addLibrary: jest.Mock<void, [LibraryModule]>;
-    };
     let localEvents: Subject<LocalActions[]>;
 
     let userId = 'user';
@@ -68,11 +58,7 @@ describe('BrowserSimulationCalculations', () => {
             vm.stateUpdated,
             vm.versionUpdated
         );
-        bundler = {
-            bundleTag: jest.fn(),
-            addLibrary: jest.fn(),
-        };
-        portals = new PortalManager(vm, helper, watcher, bundler);
+        portals = new PortalManager(vm);
     });
 
     describe('userBotChangedCore()', () => {
@@ -186,7 +172,7 @@ describe('BrowserSimulationCalculations', () => {
                 },
             });
 
-            localEvents.next([openCustomPortal('auxPortal', 'test', null, {})]);
+            localEvents.next([defineGlobalBot('auxPortal', 'test')]);
 
             const update = await watchPortalConfigBotCore(
                 watcher,
@@ -225,7 +211,7 @@ describe('BrowserSimulationCalculations', () => {
                 },
             });
 
-            localEvents.next([openCustomPortal('auxPortal', 'test', null, {})]);
+            localEvents.next([defineGlobalBot('auxPortal', 'test')]);
 
             await waitAsync();
 
@@ -265,7 +251,7 @@ describe('BrowserSimulationCalculations', () => {
                 },
             });
 
-            localEvents.next([openCustomPortal('auxPortal', 'test', null, {})]);
+            localEvents.next([defineGlobalBot('auxPortal', 'test')]);
 
             await waitAsync();
 
@@ -279,7 +265,7 @@ describe('BrowserSimulationCalculations', () => {
 
             expect(update).not.toEqual(null);
 
-            localEvents.next([openCustomPortal('auxPortal', null, null, {})]);
+            localEvents.next([defineGlobalBot('auxPortal', null)]);
 
             await waitAsync();
 
