@@ -20,6 +20,9 @@ import {
     calculateBotValue,
     SYSTEM_PORTAL_TAG,
     SYSTEM_PORTAL_TAG_SPACE,
+    SYSTEM_TAG,
+    calculateStringListTagValue,
+    calculateStringTagValue,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
@@ -28,6 +31,7 @@ import {
     SystemPortalSelectionTag,
     TagSortMode,
     userBotChanged,
+    getSystemArea,
 } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import { Subject, SubscriptionLike } from 'rxjs';
@@ -37,7 +41,7 @@ import { SystemPortalConfig } from './SystemPortalConfig';
 import { IdeNode } from '@casual-simulation/aux-vm-browser';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import BotTag from '../BotTag/BotTag';
-import { debounce } from 'lodash';
+import { debounce, uniq } from 'lodash';
 import { onMonacoLoaded } from '../../MonacoAsync';
 import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './SystemPortalHelpers';
@@ -49,6 +53,7 @@ import {
 } from '@casual-simulation/aux-vm-browser/managers/SystemPortalManager';
 import SystemPortalTag from '../SystemPortalTag/SystemPortalTag';
 import TagEditor from '../TagEditor/TagEditor';
+import { SvgIcon } from '@casual-simulation/aux-components';
 
 @Component({
     components: {
@@ -59,6 +64,7 @@ import TagEditor from '../TagEditor/TagEditor';
         'mini-bot': MiniBot,
         'system-portal-tag': SystemPortalTag,
         'tag-editor': TagEditor,
+        'svg-icon': SvgIcon,
     },
 })
 export default class SystemPortal extends Vue {
@@ -86,6 +92,8 @@ export default class SystemPortal extends Vue {
     sortMode: TagSortMode = 'scripts-first';
     isMakingNewTag: boolean = false;
     newTag: string = '';
+    isMakingNewBot: boolean = false;
+    newBotSystem: string = '';
 
     private _focusEditorOnSelectionUpdate: boolean = false;
     private _subs: SubscriptionLike[] = [];
@@ -134,6 +142,8 @@ export default class SystemPortal extends Vue {
             this.recents = [];
             this.isMakingNewTag = false;
             this.newTag = '';
+            this.isMakingNewBot = false;
+            this.newBotSystem = '';
             this.hasPortal = false;
             this.hasSelection = false;
             this.selectedBot = null;
@@ -367,6 +377,27 @@ export default class SystemPortal extends Vue {
         this.isMakingNewTag = false;
     }
 
+    openNewBot() {
+        this.isMakingNewBot = true;
+        this.newBotSystem = hasValue(this.searchValue) ? this.searchValue : '';
+    }
+
+    cancelNewBot() {
+        this.isMakingNewBot = false;
+    }
+
+    getBotSystems() {
+        return uniq(
+            this.items
+                .flatMap((i) => i.bots)
+                .map((b) =>
+                    calculateStringTagValue(null, b.bot, SYSTEM_TAG, null)
+                )
+                .filter((s) => hasValue(s))
+                .map((s) => getSystemArea(s))
+        );
+    }
+
     addTag() {
         // if (this.dropDownUsed) {
         //     return;
@@ -376,77 +407,25 @@ export default class SystemPortal extends Vue {
             this._simulation.systemPortal.addPinnedTag(this.newTag);
             this.newTag = '';
             this.isMakingNewTag = false;
-            // const { tag, isScript } = this._formatNewTag(this.newTag);
-            // this.newTag = tag;
-
-            // this.dropDownUsed = true;
-            // this.newTagOpen = true;
-
-            // this.$nextTick(() => {
-            //     this.$nextTick(() => {
-            //         this.dropDownUsed = false;
-            //         this.isMakingNewTag = false;
-            //         this.newTag = '';
-            //         this.newTagOpen = false;
-            //     });
-            // });
-
-            // // Check to make sure that the tag is unique.
-            // if (this.tagExists(this.newTag)) {
-            //     var options = new AlertDialogOptions();
-            //     options.title = 'Tag already exists';
-            //     options.body =
-            //         "Tag '" + this.newTag + "' already exists on this bot.";
-            //     options.confirmText = 'Close';
-
-            //     // Emit dialog event.
-            //     EventBus.$emit('showAlertDialog', options);
-            //     return;
-            // }
-
-            // if (!this.tagNotEmpty(this.newTag)) {
-            //     var options = new AlertDialogOptions();
-            //     options.title = 'Tag cannot be empty';
-            //     options.body = 'Tag is empty or contains only whitespace......';
-            //     options.confirmText = 'Close';
-
-            //     // Emit dialog event.
-            //     EventBus.$emit('showAlertDialog', options);
-            //     return;
-            // }
-
-            // this.wasLastEmpty = this.isEmptyDiff();
-            // if (this.isEmptyDiff()) {
-            //     this.lastTag = this.newTag;
-            // }
-
-            // if (this.newTagPlacement === 'top') {
-            //     this.addedTags.unshift(this.newTag);
-            //     this.tags.unshift({ tag: this.newTag, space: null });
-            // } else {
-            //     this.addedTags.push(this.newTag);
-            //     this.tags.push({ tag: this.newTag, space: null });
-            // }
-
-            // const addedTag = this.newTag;
-
-            // this._updateTags();
-            // this.$nextTick(() => {
-            //     const tags = this.$refs.tagValues as BotValue[];
-            //     for (let tag of tags) {
-            //         if (tag.tag === addedTag) {
-            //             tag.focus();
-            //             // This is a super hacky way to pre-fill the first bot's tag with an @ symbol
-            //             if (isScript) {
-            //                 tag.setInitialValue('@');
-            //             }
-            //             break;
-            //         }
-            //     }
-            // });
         } else {
             this.newTag = '';
         }
+    }
+
+    addBot() {
+        if (!this.isMakingNewBot) {
+            this.newBotSystem = '';
+            return;
+        }
+
+        if (hasValue(this.newBotSystem)) {
+            this._simulation.helper.createBot(undefined, {
+                [SYSTEM_TAG]: this.newBotSystem,
+            });
+        }
+
+        this.newBotSystem = '';
+        this.isMakingNewBot = false;
     }
 
     hasTag() {

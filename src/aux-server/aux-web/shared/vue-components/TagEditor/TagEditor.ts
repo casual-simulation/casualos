@@ -18,6 +18,11 @@ export default class TagEditor extends Vue {
     @Prop({ default: false })
     useMaterialInput: boolean;
 
+    @Prop({ default: KNOWN_TAGS }) autoCompleteItems: string[];
+
+    @Prop({ default: 'newTag' }) placeholder: string;
+    @Prop({ default: false }) stopAutoCompleteKeyboardEvents: boolean;
+
     changed: boolean = false;
     focused: boolean = false;
 
@@ -27,6 +32,8 @@ export default class TagEditor extends Vue {
     results: string[] = [];
     lastResultCount: number = 0;
 
+    private _lastAutoFillTime: number = 0;
+
     get botManager() {
         return appManager.simulationManager.primary;
     }
@@ -34,7 +41,7 @@ export default class TagEditor extends Vue {
     get showMenu() {
         if (this.value.length > 0) {
             // call the sort applicable tags function here
-            this.results = this.sortTags();
+            this.results = this._sortAutoCompleteItems();
             if (this.results.length != this.lastResultCount) {
                 this.isOpen = false;
                 this.lastResultCount = this.results.length;
@@ -50,10 +57,6 @@ export default class TagEditor extends Vue {
             this.changed &&
             (this.errorMessage || this.results.length > 0)
         );
-    }
-
-    get placeholder() {
-        return 'newTag';
     }
 
     get errorMessage() {
@@ -85,13 +88,24 @@ export default class TagEditor extends Vue {
         });
     }
 
-    sortTags(): string[] {
-        let tagsToSort = KNOWN_TAGS.sort(); // and tags on bots
+    // TODO: Improve to be able to prevent the form submision when using the enter key.
+    // Need to prevent onAutoFill from being called by VueJS. (it is keeping the element highlighted even though the autocomplete menu is gone)
+    // Solution is probably to handle the keyboard navigation events manually/
+    // handleKeyEvent(event: KeyboardEvent) {
+    //     if (this.stopAutoCompleteKeyboardEvents) {
+    //         if ((Date.now() - this._lastAutoFillTime) < 100) {
+    //             event.preventDefault();
+    //         }
+    //     }
+    // }
+
+    private _sortAutoCompleteItems(): string[] {
+        let itemsToSort = this.autoCompleteItems.slice().sort(); // and tags on bots
 
         let finalTags = [];
 
-        for (let i = 0; i < tagsToSort.length; i++) {
-            const tag = tagsToSort[i];
+        for (let i = 0; i < itemsToSort.length; i++) {
+            const tag = itemsToSort[i];
             if (
                 tag.toLowerCase().startsWith(this.value.toLowerCase()) &&
                 (!this.tagExists || tag !== this.value)
@@ -110,9 +124,9 @@ export default class TagEditor extends Vue {
     }
 
     onAutoFill(fillValue: string) {
-        //this.$emit('input', this._convertToFinalValue(fillValue));
+        this._lastAutoFillTime = Date.now();
         this.changed = true;
-        EventBus.$emit('AutoFill', fillValue);
+        this.$emit('autoFill', fillValue);
     }
 
     focus() {

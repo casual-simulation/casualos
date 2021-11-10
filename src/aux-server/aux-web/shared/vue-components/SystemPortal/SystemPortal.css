@@ -183,6 +183,9 @@
     padding: 8px;
     background-color: var(--disabled-cell-color);
     min-width: 200px;
+
+    display: flex;
+    flex-direction: column;
 }
 
 .tags {
@@ -210,6 +213,25 @@
 .area-bots {
     /* flex: 1 1 auto; */
     /* text-align: end; */
+}
+
+.areas-list {
+    flex: 1 1 auto;
+    overflow: auto;
+}
+
+.search {
+    flex: 0 0 auto;
+}
+
+.areas-add-bot {
+    flex: 99 0 auto;
+}
+
+.md-button.create-bot {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 .area-bot {

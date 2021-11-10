@@ -36,6 +36,12 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="areas-add-bot">
+                            <md-button class="md-raised create-bot" @click="openNewBot">
+                                <svg-icon name="NewBot" width="640" height="640"></svg-icon>
+                                <md-tooltip>Create Empty Bot</md-tooltip>
+                            </md-button>
+                        </div>
                     </div>
                     <div class="tags" v-if="hasSelection">
                         <div class="tags-list">
@@ -174,6 +180,35 @@
                         <md-button
                             class="md-icon-button md-dense finish-tag-button"
                             @click="cancelNewTag()"
+                        >
+                            <md-icon class="cancel">cancel</md-icon>
+                        </md-button>
+                    </div>
+                </form>
+            </md-dialog-content>
+        </md-dialog>
+
+        <md-dialog :md-active.sync="isMakingNewBot" class="new-bot-dialog">
+            <md-dialog-title>Enter New Bot System</md-dialog-title>
+            <md-dialog-content>
+                <form class="bot-table-form" @submit.prevent="addBot()">
+                    <tag-editor
+                        ref="tagEditor"
+                        :useMaterialInput="true"
+                        v-model="newBotSystem"
+                        :isAction="false"
+                        placeholder="#system"
+                        @autoFill="newBotSystem = $event"
+                        :stopAutoCompleteKeyboardEvents="true"
+                        :autoCompleteItems="getBotSystems()"
+                    ></tag-editor>
+                    <div class="finish-tag-button-wrapper">
+                        <md-button class="md-icon-button md-dense finish-tag-button" type="submit">
+                            <md-icon class="done">check</md-icon>
+                        </md-button>
+                        <md-button
+                            class="md-icon-button md-dense finish-tag-button"
+                            @click="cancelNewBot()"
                         >
                             <md-icon class="cancel">cancel</md-icon>
                         </md-button>

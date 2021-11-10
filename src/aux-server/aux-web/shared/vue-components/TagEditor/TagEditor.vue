@@ -38,7 +38,6 @@
                     v-for="(result, i) in results"
                     :key="i"
                     @click="onAutoFill(result)"
-                    @keyup.enter="onAutoFill(result)"
                 >
                     {{ result }}
                 </md-menu-item>
