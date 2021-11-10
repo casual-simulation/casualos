@@ -1254,6 +1254,18 @@ export default class PlayerApp extends Vue {
         );
     }
 
+    onDialogConfirm() {
+        if (this.confirmDialogOptions) {
+            EventBus.$emit(this.confirmDialogOptions.okEvent);
+        }
+    }
+
+    onDialogCancel() {
+        if (this.confirmDialogOptions) {
+            EventBus.$emit(this.confirmDialogOptions.cancelEvent);
+        }
+    }
+
     private onShowAlertDialog(options: AlertDialogOptions) {
         if (options == undefined) {
             console.error(

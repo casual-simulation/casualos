@@ -53,7 +53,8 @@ import {
 } from '@casual-simulation/aux-vm-browser/managers/SystemPortalManager';
 import SystemPortalTag from '../SystemPortalTag/SystemPortalTag';
 import TagEditor from '../TagEditor/TagEditor';
-import { SvgIcon } from '@casual-simulation/aux-components';
+import { EventBus, SvgIcon } from '@casual-simulation/aux-components';
+import ConfirmDialogOptions from '../../ConfirmDialogOptions';
 
 @Component({
     components: {
@@ -439,6 +440,31 @@ export default class SystemPortal extends Vue {
             return this.pinnedTags[0].name;
         }
         return null;
+    }
+
+    deleteSelectedBot() {
+        if (this.selectedBot) {
+            const options = new ConfirmDialogOptions();
+            options.title = 'Destroy bot?';
+
+            const systemTag = calculateStringTagValue(
+                null,
+                this.selectedBot,
+                SYSTEM_TAG,
+                null
+            );
+            options.body = `Are you sure you want to destroy ${systemTag} (${this.selectedBotId})?`;
+            options.okText = 'Destroy';
+            options.cancelText = 'Keep';
+
+            EventBus.$once(options.okEvent, () => {
+                this._simulation.helper.destroyBot(this.selectedBot);
+            });
+            EventBus.$once(options.cancelEvent, () => {
+                EventBus.$off(options.okEvent);
+            });
+            EventBus.$emit('showConfirmDialog', options);
+        }
     }
 
     async exitPortal() {

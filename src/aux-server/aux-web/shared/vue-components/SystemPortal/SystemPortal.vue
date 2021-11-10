@@ -106,6 +106,16 @@
                                 <md-tooltip>Sort tags Alphabetically</md-tooltip>
                                 A-Z
                             </md-button>
+                            <div class="tags-sort-spacer"></div>
+                            <md-button
+                                class="sort-option-button delete-bot-button md-raised md-dense"
+                                @click="deleteSelectedBot()"
+                            >
+                                <md-icon class="delete-bot-icon">delete_forever</md-icon>
+                                <md-tooltip md-delay="1000" md-direction="top"
+                                    >Destroy Bot</md-tooltip
+                                >
+                            </md-button>
                         </div>
                     </div>
                     <div class="editor">

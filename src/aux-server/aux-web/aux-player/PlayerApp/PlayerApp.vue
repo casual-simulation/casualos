@@ -101,10 +101,13 @@
 
             <md-dialog-confirm
                 :md-active.sync="showConfirmDialog"
+                class="confirm-dialog"
                 v-bind:md-title="confirmDialogOptions.title"
                 v-bind:md-content="confirmDialogOptions.body"
                 v-bind:md-confirm-text="confirmDialogOptions.okText"
                 v-bind:md-cancel-text="confirmDialogOptions.cancelText"
+                @md-confirm="onDialogConfirm()"
+                @md-cancel="onDialogCancel()"
             />
 
             <md-dialog-alert

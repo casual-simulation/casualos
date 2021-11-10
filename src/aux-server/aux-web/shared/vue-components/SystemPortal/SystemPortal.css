@@ -256,6 +256,11 @@
 
 .sort-option-button {
     min-width: 33px;
+    flex: 0 0 auto;
+}
+
+.delete-bot-button {
+    background-color: #f00000 !important;
 }
 
 .tags-list {
@@ -270,6 +275,11 @@
 .tags-sort-options {
     flex: 0 0 auto;
     border-top: 1px solid #000;
+    display: flex;
+}
+
+.tags-sort-spacer {
+    flex: 1 1 auto;
 }
 
 /* .tags-list-tag > .tags-list-tag-value {
