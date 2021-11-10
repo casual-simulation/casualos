@@ -36,6 +36,10 @@ export default class TagValueEditor extends Vue {
         return this.$refs.monacoEditor as MonacoTagEditor;
     }
 
+    onFocused(focused: boolean) {
+        this.$emit('onFocused', focused);
+    }
+
     constructor() {
         super();
     }

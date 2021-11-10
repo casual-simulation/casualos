@@ -25,7 +25,7 @@ import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
 import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
-import TypescriptWorker from './public/monaco-editor/typescript/ts.worker?worker';
+import TypescriptWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import { calculateFormulaDefinitions } from './FormulaHelpers';
 import { libFileMap } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
 import { SimpleEditorModelResolverService } from 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
@@ -62,18 +62,10 @@ import {
     preserve,
     TagEditOp,
 } from '@casual-simulation/aux-common/aux-format-2';
-import { CurrentVersion } from '@casual-simulation/causal-trees';
 import { Color } from '@casual-simulation/three';
 import { invertColor } from './scene/ColorUtils';
 import { getCursorColorClass, getCursorLabelClass } from './StyleHelpers';
 import MonacoJSXHighlighter from './public/monaco-jsx-highlighter/index';
-import axios from 'axios';
-import { customPortalLanguageId } from './public/monaco-editor/custom-portal-typescript/custom-portal-typescript.contribution';
-import {
-    customPortalJavaScriptDefaults,
-    customPortalTypescriptDefaults,
-    getCustomPortalWorker,
-} from './public/monaco-editor/languages.contribution';
 import { triggerMonacoLoaded } from './MonacoAsync';
 import './public/monaco-editor/quick-open-file/quick-open-file';
 import './public/monaco-editor/quick-search-all/quick-search-all';
@@ -82,11 +74,7 @@ export function setup() {
     // Tell monaco how to create the web workers
     (<any>self).MonacoEnvironment = {
         getWorker: function (moduleId: string, label: string) {
-            if (
-                label === 'typescript' ||
-                label === 'javascript' ||
-                label === customPortalLanguageId
-            ) {
+            if (label === 'typescript' || label === 'javascript') {
                 return new TypescriptWorker();
             } else if (label === 'html') {
                 return new HtmlWorker();
@@ -287,36 +275,6 @@ export function watchSimulation(
     });
 
     sub.add(
-        simulation.portals.externalsDiscovered
-            .pipe(
-                flatMap((e) => e),
-                filter((e) => !!e.typescriptDefinitionsURL),
-                flatMap((e) => axios.get(e.typescriptDefinitionsURL)),
-                tap((request) => {
-                    if (typeof request.data === 'string') {
-                        customPortalJavaScriptDefaults.addExtraLib(
-                            request.data,
-                            request.config.url
-                        );
-                        customPortalTypescriptDefaults.addExtraLib(
-                            request.data,
-                            request.config.url
-                        );
-                    }
-                })
-            )
-            .subscribe()
-    );
-
-    monaco.languages.onLanguage(customPortalLanguageId, () => {
-        sub.add(
-            simulation.portals.prefixesDiscovered
-                .pipe(flatMap((prefix) => addPrefixesToLanguageService(prefix)))
-                .subscribe()
-        );
-    });
-
-    sub.add(
         simulation.portals.portalBotIdUpdated
             .pipe(
                 flatMap((b) => b),
@@ -375,19 +333,6 @@ declare global {
     }
 
     defaults.setExtraLibs(libs);
-}
-
-export function addDefinitionsForLibrary(lib: LibraryModule) {
-    if (lib.typescriptDefinitions) {
-        customPortalJavaScriptDefaults.addExtraLib(
-            lib.typescriptDefinitions,
-            `file:///${lib.id}.d.ts`
-        );
-        customPortalTypescriptDefaults.addExtraLib(
-            lib.typescriptDefinitions,
-            `file:///${lib.id}.d.ts`
-        );
-    }
 }
 
 export function watchEditor(
@@ -713,14 +658,7 @@ function tagScriptLanguage(
 
     const prefix = getScriptPrefix(simulation, script);
     if (prefix) {
-        return prefix.language === 'text'
-            ? 'plaintext'
-            : prefix.language === 'jsx' ||
-              prefix.language === 'tsx' ||
-              prefix.language === 'typescript' ||
-              prefix.language === 'javascript'
-            ? customPortalLanguageId
-            : prefix.language;
+        return prefix.language;
     }
 
     return 'plaintext';
@@ -1027,12 +965,6 @@ function watchModel(
     }
 
     subs.push(sub);
-}
-
-async function addPrefixesToLanguageService(prefixes: ScriptPrefix[]) {
-    const workerFactory = await getCustomPortalWorker();
-    const worker = await workerFactory();
-    (<any>worker).addScriptPrefixes(prefixes.map((p) => p.prefix));
 }
 
 function offsetSelections(

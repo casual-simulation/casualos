@@ -11,7 +11,6 @@ import {
     BotAction,
     BotActions,
     BotIndex,
-    BuildBundleAction,
     DNA_TAG_PREFIX,
     enqueueAsyncError,
     enqueueAsyncResult,
@@ -22,17 +21,7 @@ import {
     trimPortalScript,
     DefineGlobalBotAction,
 } from '@casual-simulation/aux-common';
-import {
-    BundleModules,
-    CodeBundle,
-    ExternalModule,
-    LibraryModule,
-    PortalBundler,
-    ScriptPrefix,
-} from './PortalBundler';
-import { BotHelper } from './BotHelper';
-import { BotWatcher, UpdatedBotInfo } from './BotWatcher';
-import { pick, values } from 'lodash';
+import { ScriptPrefix } from './PortalBundler';
 
 /**
  * The list of default script prefixes.
@@ -66,40 +55,14 @@ export const DEFAULT_SCRIPT_PREFIXES: ScriptPrefix[] = [
  */
 export class PortalManager implements SubscriptionLike {
     private _portals: Map<string, PortalData>;
-    private _registeredPortals: Map<string, PortalRegistration>;
     private _prefixes: Map<string, ScriptPrefix>;
 
-    private _portalsDiscovered: Subject<PortalData[]>;
-    private _portalsUpdated: Subject<PortalUpdate[]>;
     private _prefixesDiscovered: Subject<ScriptPrefix[]>;
     private _prefixesRemoved: Subject<string[]>;
-    private _externalsDiscovered: Subject<ExternalModule[]>;
-    private _librariesDiscovered: Subject<LibraryModule[]>;
     private _globalBotsDiscovered: Subject<DefineGlobalBotAction[]>;
-    private _externalModules: CodeBundle['externals'];
-    private _libraryModules: CodeBundle['libraries'];
     private _globalBots: Map<string, DefineGlobalBotAction> = new Map();
     private _vm: AuxVM;
-    private _helper: BotHelper;
-    private _watcher: BotWatcher;
-    private _bundler: PortalBundler;
     private _sub: Subscription;
-
-    /**
-     * Gets an observable that resolves when a new portal is discovered.
-     */
-    get portalsDiscovered(): Observable<PortalData[]> {
-        return this._portalsDiscovered.pipe(
-            startWith([...this._portals.values()])
-        );
-    }
-
-    /**
-     * Gets an observable that resolves when a portal is updated.
-     */
-    get portalsUpdated(): Observable<PortalUpdate[]> {
-        return this._portalsUpdated;
-    }
 
     /**
      * Gets an observable that resolves when a script prefix has been discovered.
@@ -117,24 +80,6 @@ export class PortalManager implements SubscriptionLike {
         return this._prefixesRemoved;
     }
 
-    /**
-     * Gets an observable that resolves when an external script has been discovered.
-     */
-    get externalsDiscovered(): Observable<ExternalModule[]> {
-        return this._externalsDiscovered.pipe(
-            startWith(values(this.externalModules))
-        );
-    }
-
-    /**
-     * Gets an observable that resolves when an external script has been discovered.
-     */
-    get librariesDiscovered(): Observable<LibraryModule[]> {
-        return this._librariesDiscovered.pipe(
-            startWith(values(this._libraryModules))
-        );
-    }
-
     get globalBotsDiscovered(): Observable<DefineGlobalBotAction[]> {
         return this._globalBotsDiscovered.pipe(
             startWith([...this._globalBots.values()])
@@ -145,28 +90,6 @@ export class PortalManager implements SubscriptionLike {
      * Gets an observable that resolves when a portal's bot ID has been updated.
      */
     get portalBotIdUpdated(): Observable<PortalBotData[]> {
-        const updatedBotIds = this.portalsUpdated.pipe(
-            map((portals) =>
-                portals.map(
-                    (p) =>
-                        ({
-                            portalId: p.portal.id,
-                            botId: p.portal.botId,
-                        } as PortalBotData)
-                )
-            )
-        );
-        const newBotIds = this.portalsDiscovered.pipe(
-            map((portals) =>
-                portals.map(
-                    (p) =>
-                        ({
-                            portalId: p.id,
-                            botId: p.botId,
-                        } as PortalBotData)
-                )
-            )
-        );
         const globalBots = this.globalBotsDiscovered.pipe(
             map((bots) =>
                 bots.map(
@@ -176,7 +99,7 @@ export class PortalManager implements SubscriptionLike {
             )
         );
 
-        return merge(newBotIds, updatedBotIds, globalBots);
+        return merge(globalBots);
     }
 
     /**
@@ -187,48 +110,19 @@ export class PortalManager implements SubscriptionLike {
     }
 
     /**
-     * Gets a map of external modules that have been loaded.
-     */
-    get externalModules() {
-        return this._externalModules;
-    }
-
-    /**
-     * Gets a map of library modules that have been loaded.
-     */
-    get libraryModules() {
-        return this._libraryModules;
-    }
-
-    /**
      * Gets the map of portals that have been opened.
      */
     get portals() {
         return this._portals;
     }
 
-    constructor(
-        vm: AuxVM,
-        helper: BotHelper,
-        watcher: BotWatcher,
-        bundler: PortalBundler
-    ) {
+    constructor(vm: AuxVM) {
         this._vm = vm;
-        this._helper = helper;
-        this._watcher = watcher;
         this._portals = new Map();
-        this._registeredPortals = new Map();
         this._prefixes = new Map();
-        this._portalsDiscovered = new Subject();
-        this._portalsUpdated = new Subject();
         this._prefixesDiscovered = new Subject();
         this._prefixesRemoved = new Subject();
-        this._externalsDiscovered = new Subject();
-        this._librariesDiscovered = new Subject();
         this._globalBotsDiscovered = new Subject();
-        this._externalModules = {};
-        this._libraryModules = {};
-        this._bundler = bundler;
         this._sub = new Subscription();
 
         for (let p of DEFAULT_SCRIPT_PREFIXES) {
@@ -238,133 +132,6 @@ export class PortalManager implements SubscriptionLike {
         this._sub.add(
             vm.localEvents.pipe(tap((e) => this._onLocalEvents(e))).subscribe()
         );
-        this._sub.add(
-            this._watcher.botsDiscovered
-                .pipe(tap((b) => this._onBotsDiscovered(b)))
-                .subscribe()
-        );
-        this._sub.add(
-            this._watcher.botsRemoved
-                .pipe(tap((b) => this._onBotsRemoved(b)))
-                .subscribe()
-        );
-        this._sub.add(
-            this._watcher.botTagsUpdated
-                .pipe(tap((b) => this._onBotsUpdated(b)))
-                .subscribe()
-        );
-    }
-
-    addLibrary(module: LibraryModule) {
-        return this._bundler.addLibrary(module);
-    }
-
-    private _onBotsUpdated(updates: UpdatedBotInfo[]): void {
-        let updatedTags = new Set<string>();
-        for (let update of updates) {
-            updatedTags = new Set([...updatedTags, ...update.tags]);
-        }
-
-        for (let [id, portal] of this._registeredPortals) {
-            this._checkPortalAgainstUpdatedTags(portal, updatedTags);
-        }
-    }
-
-    private _onBotsRemoved(removedBots: string[]): void {
-        let updatedBots = new Set<string>(removedBots);
-
-        for (let [id, portal] of this._registeredPortals) {
-            this._checkPortalAgainstUpdatedBots(portal, updatedBots);
-        }
-    }
-
-    private _onBotsDiscovered(bots: PrecalculatedBot[]): void {
-        let updatedTags = new Set<string>();
-        for (let bot of bots) {
-            updatedTags = new Set([...updatedTags, ...tagsOnBot(bot)]);
-        }
-
-        for (let [id, portal] of this._registeredPortals) {
-            this._checkPortalAgainstUpdatedTags(portal, updatedTags);
-        }
-    }
-
-    private _checkPortalAgainstUpdatedTags(
-        portal: PortalRegistration,
-        updatedTags: Set<string>
-    ) {
-        if (portal.tag === null) {
-            return false;
-        }
-
-        let hasUpdate = false;
-        if (!portal.buildInProcess && portal.modules) {
-            for (let tag of updatedTags) {
-                const botIds = Object.keys(portal.modules);
-                if (botIds.length <= 0) {
-                    hasUpdate = tag === portal.tag;
-                } else {
-                    for (let botId of botIds) {
-                        const moduleTags = portal.modules[botId];
-                        hasUpdate = moduleTags.has(tag);
-                        if (hasUpdate) {
-                            break;
-                        }
-                    }
-                }
-
-                if (hasUpdate) {
-                    break;
-                }
-            }
-        } else if (!portal.modules) {
-            hasUpdate = true;
-        } else if (portal.buildInProcess) {
-            portal.unprocessedTags = new Set([
-                ...portal.unprocessedTags,
-                ...updatedTags,
-            ]);
-        }
-
-        if (hasUpdate) {
-            this._triggerUpdateForPortal(portal);
-        }
-    }
-
-    private _checkPortalAgainstUpdatedBots(
-        portal: PortalRegistration,
-        updatedBots: Set<string>
-    ) {
-        if (portal.tag === null) {
-            return false;
-        }
-        let hasUpdate = false;
-        if (!portal.buildInProcess && portal.modules) {
-            for (let botId of updatedBots) {
-                if (botId in portal.modules) {
-                    const moduleTags = portal.modules[botId];
-                    hasUpdate = moduleTags.size > 0;
-                    if (hasUpdate) {
-                        break;
-                    }
-                }
-
-                if (hasUpdate) {
-                    break;
-                }
-            }
-        } else if (!portal.modules) {
-            hasUpdate = true;
-        } else if (portal.buildInProcess) {
-            portal.unprocessedBots = new Set([
-                ...portal.unprocessedBots,
-                ...updatedBots,
-            ]);
-        }
-
-        if (hasUpdate) {
-            this._triggerUpdateForPortal(portal);
-        }
     }
 
     private _onLocalEvents(events: LocalActions[]): void {
@@ -374,44 +141,7 @@ export class PortalManager implements SubscriptionLike {
         let newGlobalBots: DefineGlobalBotAction[] = [];
 
         for (let event of events) {
-            if (event.type === 'open_custom_portal') {
-                try {
-                    const currentPortal: PortalRegistration = this._registeredPortals.get(
-                        event.portalId
-                    );
-
-                    const isSource = event.options.mode === 'source';
-                    if (currentPortal) {
-                        currentPortal.entrypoint = event.tagOrSource;
-                        currentPortal.botId = event.botId;
-                        currentPortal.tag = isSource
-                            ? null
-                            : this._getTrimmedPortalTag(event.tagOrSource);
-                        currentPortal.style = event.options.style;
-                        this._triggerUpdateForPortal(currentPortal);
-                    } else {
-                        const newPortal: PortalRegistration = {
-                            id: event.portalId,
-                            entrypoint: event.tagOrSource,
-                            botId: event.botId,
-                            tag: isSource
-                                ? null
-                                : this._getTrimmedPortalTag(event.tagOrSource),
-                            style: event.options.style,
-                            buildInProcess: false,
-                            modules: null,
-                            unprocessedTags: new Set(),
-                            unprocessedBots: new Set(),
-                        };
-                        this._registeredPortals.set(event.portalId, newPortal);
-                        this._triggerUpdateForPortal(newPortal);
-                    }
-
-                    enqueueAsyncResult(nextEvents, event, undefined);
-                } catch (err) {
-                    enqueueAsyncError(nextEvents, event, err);
-                }
-            } else if (event.type === 'register_prefix') {
+            if (event.type === 'register_prefix') {
                 try {
                     const eventPrefix = event.prefix;
                     if (
@@ -430,8 +160,6 @@ export class PortalManager implements SubscriptionLike {
                 } catch (err) {
                     enqueueAsyncError(nextEvents, event, err);
                 }
-            } else if (event.type === 'build_bundle') {
-                this._buildBundle(event);
             } else if (event.type === 'define_global_bot') {
                 this._globalBots.set(event.name, event);
                 newGlobalBots.push(event);
@@ -441,12 +169,6 @@ export class PortalManager implements SubscriptionLike {
         if (nextEvents.length > 0) {
             this._vm.sendEvents(nextEvents);
         }
-        // if (newPortals.length > 0) {
-        //     this._portalsDiscovered.next(newPortals);
-        // }
-        // if (updatedPortals.size > 0) {
-        //     this._portalsUpdated.next([...updatedPortals.values()]);
-        // }
         if (newPrefixes.length > 0) {
             this._prefixesDiscovered.next(newPrefixes);
         }
@@ -456,149 +178,6 @@ export class PortalManager implements SubscriptionLike {
         if (newGlobalBots.length > 0) {
             this._globalBotsDiscovered.next(newGlobalBots);
         }
-    }
-
-    private async _triggerUpdateForPortal(portal: PortalRegistration) {
-        if (portal.tag === null) {
-            // portal has no tag to build - it can be loaded directly as source
-
-            portal.unprocessedBots.clear();
-            portal.unprocessedTags.clear();
-            portal.modules = null;
-
-            this._sendPortalData(portal, {
-                id: portal.id,
-                botId: portal.botId,
-                error: null,
-                source: portal.entrypoint,
-                style: portal.style,
-            });
-        } else if (!portal.buildInProcess) {
-            try {
-                portal.buildInProcess = true;
-                portal.unprocessedTags.clear();
-                portal.unprocessedBots.clear();
-                await this._buildPortal(portal);
-            } finally {
-                portal.buildInProcess = false;
-
-                if (portal.unprocessedTags.size > 0) {
-                    this._checkPortalAgainstUpdatedTags(
-                        portal,
-                        portal.unprocessedTags
-                    );
-                }
-                if (portal.unprocessedBots.size > 0) {
-                    this._checkPortalAgainstUpdatedBots(
-                        portal,
-                        portal.unprocessedBots
-                    );
-                }
-            }
-        }
-    }
-
-    private async _buildPortal(portal: PortalRegistration) {
-        const bundle = await this._bundler.bundleTag(
-            this._helper.botsState,
-            portal.entrypoint,
-            this.scriptPrefixes
-        );
-
-        if (portal.tag !== null) {
-            portal.modules = bundle?.modules || null;
-
-            let data: PortalData = {
-                id: portal.id,
-                botId: portal.botId,
-                style: portal.style,
-                error: bundle?.error || null,
-                source: bundle?.source || null,
-            };
-
-            if (this._vm.createEndpoint && bundle?.libraries?.casualos) {
-                const port = await this._vm.createEndpoint();
-                data.ports = {
-                    ...(data.ports || {}),
-                    casualos: port,
-                };
-            }
-
-            this._sendPortalData(portal, data);
-
-            if (bundle?.externals) {
-                let newModules: ExternalModule[] = [];
-                for (let mod of values(bundle.externals)) {
-                    if (!this._externalModules[mod.id]) {
-                        this._externalModules[mod.id] = mod;
-                        newModules.push(mod);
-                    }
-                }
-
-                if (newModules.length > 0) {
-                    this._externalsDiscovered.next(newModules);
-                }
-            }
-
-            if (bundle?.libraries) {
-                let newModules: LibraryModule[] = [];
-                for (let mod of values(bundle.libraries)) {
-                    if (!this._libraryModules[mod.id]) {
-                        this._libraryModules[mod.id] = mod;
-                        newModules.push(mod);
-                    }
-                }
-
-                if (newModules.length > 0) {
-                    this._librariesDiscovered.next(newModules);
-                }
-            }
-        }
-    }
-
-    private _sendPortalData(
-        portal: PortalRegistration,
-        portalData: PortalData
-    ) {
-        const oldPortal = this._portals.get(portal.id);
-
-        if (!this._portals.has(portal.id)) {
-            this._portals.set(portal.id, portalData);
-            this._portalsDiscovered.next([portalData]);
-        } else {
-            this._portalsUpdated.next([
-                {
-                    oldPortal,
-                    portal: portalData,
-                },
-            ]);
-        }
-    }
-
-    private async _buildBundle(event: BuildBundleAction) {
-        let events: BotAction[] = [];
-        try {
-            const bundle = await this._bundler.bundleTag(
-                this._helper.botsState,
-                event.tag,
-                this.scriptPrefixes
-            );
-            enqueueAsyncResult(events, event, bundle);
-        } catch (err) {
-            enqueueAsyncError(events, event, err);
-        }
-
-        if (events.length > 0) {
-            this._vm.sendEvents(events);
-        }
-    }
-
-    private _getTrimmedPortalTag(
-        tag: string,
-        scriptPrefixes = this.scriptPrefixes
-    ) {
-        const prefixes = scriptPrefixes.map((p) => p.prefix);
-        return trimPortalScript(prefixes, tag);
     }
 
     unsubscribe(): void {
@@ -680,31 +259,6 @@ export interface PortalRegistration {
      * The CSS styles that the portal iframe should have.
      */
     style: any;
-
-    /**
-     * The modules that affect this portal.
-     * Useful for determining which tags will affect the bundle results.
-     * If null then the portal has not been built yet.
-     */
-    modules: BundleModules | null;
-
-    /**
-     * The list of tags that have not yet been processed for this portal.
-     * Used to keep track of the tags that have changed in between builds.
-     */
-    unprocessedTags: Set<string>;
-
-    /**
-     * The list of bot IDs that have not yet been processed for this portal.
-     * Used to keep track of bots that have been removed in between builds.
-     */
-    unprocessedBots: Set<string>;
-
-    /**
-     * Whether there is a build for the portal in progress.
-     * Automatically set to false when the current build finishes.
-     */
-    buildInProcess: boolean;
 }
 
 /**

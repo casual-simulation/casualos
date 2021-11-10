@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V2.0.16
+
+#### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Removed Custom Executables.
+    -   This means the following functions are no longer available:
+        -   `os.registerExecutable()`
+        -   `os.buildExecutable()`
+    -   If you have use for this type of functionality, we recommend that you look into [Custom Apps](https://docs.casualos.com/docs/actions/#app-actions).
+        They are easier to use and allow you to use more built-in CasualOS functionality than Custom Executables.
+
 ## V2.0.15
 
 #### Date: 11/1/2021

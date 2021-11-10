@@ -17,7 +17,8 @@ import {
  */
 export class RemoteSimulationImpl
     extends BaseSimulation
-    implements RemoteSimulation {
+    implements RemoteSimulation
+{
     private _login: LoginManager;
     private _portals: PortalManager;
 
@@ -41,13 +42,7 @@ export class RemoteSimulationImpl
 
     protected _initManagers() {
         super._initManagers();
-        const bundler = new ESBuildPortalBundler({});
-        this._portals = new PortalManager(
-            this._vm,
-            this.helper,
-            this.watcher,
-            bundler
-        );
+        this._portals = new PortalManager(this._vm);
 
         this._subscriptions.push(this._portals);
     }

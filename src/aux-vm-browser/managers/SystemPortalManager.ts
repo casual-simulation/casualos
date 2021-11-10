@@ -50,7 +50,9 @@ export class SystemPortalManager implements SubscriptionLike {
     private _recentsUpdated: BehaviorSubject<SystemPortalRecentsUpdate>;
     private _buffer: boolean;
     private _recentTags: SystemPortalRecentTag[] = [];
+    private _recentTagsListSize: number = 10;
     private _tagSortMode: TagSortMode = 'scripts-first';
+    private _extraTags: SystemPortalSelectionTag[] = [];
 
     get tagSortMode(): TagSortMode {
         return this._tagSortMode;
@@ -118,6 +120,21 @@ export class SystemPortalManager implements SubscriptionLike {
         this._sub.add(
             this._calculateRecentsUpdated().subscribe(this._recentsUpdated)
         );
+    }
+
+    addTag(tag: string) {
+        for (let t of this._extraTags) {
+            delete t.focusValue;
+        }
+        this._extraTags.push({
+            name: tag,
+            focusValue: true,
+        });
+        const update = this._findSelection(this._itemsUpdated.value);
+
+        if (!isEqual(update, this._selectionUpdated.value)) {
+            this._selectionUpdated.next(update);
+        }
     }
 
     private _calculateItemsUpdated(): Observable<SystemPortalUpdate> {
@@ -281,7 +298,7 @@ export class SystemPortalManager implements SubscriptionLike {
         const tags =
             sortMode === 'scripts-first'
                 ? sortBy(
-                      [...normalTags, ...maskTags],
+                      [...normalTags, ...maskTags, ...this._extraTags],
                       (t) => !t.isScript,
                       (t) => t.name
                   )
@@ -339,6 +356,13 @@ export class SystemPortalManager implements SubscriptionLike {
         recentTagsCounts.set(`${newTag}.${newSpace}`, 1);
 
         for (let tag of this._recentTags) {
+            if (
+                tag.botId === newBot.id &&
+                tag.tag === newTag &&
+                tag.space === newSpace
+            ) {
+                continue;
+            }
             const key = `${tag.tag}.${tag.space}`;
             recentTagsCounts.set(key, (recentTagsCounts.get(key) ?? 0) + 1);
         }
@@ -346,7 +370,7 @@ export class SystemPortalManager implements SubscriptionLike {
         let newTags = [] as SystemPortalRecentTag[];
 
         newTags.push({
-            name: getTagName(newTag, newBot, newSpace),
+            ...getTagPrefix(newTag, newBot, newSpace),
             botId: newBot.id,
             tag: newTag,
             space: newSpace,
@@ -359,9 +383,9 @@ export class SystemPortalManager implements SubscriptionLike {
                 recent.space === newSpace
             ) {
                 continue;
-            } else {
+            } else if (newTags.length < this._recentTagsListSize) {
                 newTags.push({
-                    name: getTagName(
+                    ...getTagPrefix(
                         recent.tag,
                         this._helper.botsState[recent.botId],
                         recent.space
@@ -370,6 +394,8 @@ export class SystemPortalManager implements SubscriptionLike {
                     botId: recent.botId,
                     space: recent.space,
                 });
+            } else {
+                break;
             }
         }
 
@@ -382,11 +408,13 @@ export class SystemPortalManager implements SubscriptionLike {
             };
         }
 
-        function getTagName(tag: string, bot: Bot, space: string | null) {
+        function getTagPrefix(
+            tag: string,
+            bot: Bot,
+            space: string | null
+        ): Pick<SystemPortalRecentTag, 'prefix' | 'isScript'> {
             const tagValue = getTagValueForSpace(bot, tag, space);
             const isTagScript = isScript(tagValue);
-            const prefix = isTagScript ? '@' : '';
-            const tagName = prefix + tag;
             if ((recentTagsCounts.get(`${tag}.${space}`) ?? 0) > 1) {
                 const system = calculateStringTagValue(
                     null,
@@ -394,10 +422,16 @@ export class SystemPortalManager implements SubscriptionLike {
                     SYSTEM_TAG,
                     null
                 );
-                return `${system ?? getShortId(bot)} ${tagName}`;
+                return {
+                    prefix: system ?? getShortId(bot),
+                    isScript: isTagScript,
+                };
             }
 
-            return tagName;
+            return {
+                prefix: '',
+                isScript: isTagScript,
+            };
         }
     }
 }
@@ -469,6 +503,11 @@ export interface SystemPortalSelectionTag {
     name: string;
     space?: string;
     isScript?: boolean;
+
+    /**
+     * Whether the tag value should be focused once rendered into view.
+     */
+    focusValue?: boolean;
 }
 
 export interface SystemPortalNoSelectionUpdate {
@@ -491,7 +530,8 @@ export interface SystemPortalNoRecentsUpdate {
 }
 
 export interface SystemPortalRecentTag {
-    name: string;
+    prefix: string;
+    isScript: boolean;
     botId: string;
     tag: string;
     space: string;

@@ -44,9 +44,7 @@ import {
     DNA_TAG_PREFIX,
     UpdateBotAction,
     isRuntimeBot,
-    OpenCustomPortalAction,
     createBot,
-    openCustomPortal,
     ON_ERROR,
     action,
     isBotInDimension,
@@ -54,6 +52,7 @@ import {
     BotActions,
     registerBuiltinPortal,
     botAdded,
+    defineGlobalBot,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -502,9 +501,6 @@ export class AuxRuntime
             ) {
                 this._actionBatch.push(action);
             }
-        } else if (action.type === 'open_custom_portal') {
-            this._registerPortalBot(action.portalId, action.botId);
-            this._actionBatch.push(action);
         } else if (action.type === 'register_custom_app') {
             this._registerPortalBot(action.appId, action.botId);
             this._actionBatch.push(action);
@@ -516,12 +512,13 @@ export class AuxRuntime
                 this._builtinPortalBots.push(action.portalId);
                 this._registerPortalBot(action.portalId, newBot.id);
                 this._actionBatch.push(
-                    openCustomPortal(action.portalId, newBot.id, null, {})
+                    defineGlobalBot(action.portalId, newBot.id)
                 );
             }
         } else if (action.type === 'define_global_bot') {
             if (this._portalBots.get(action.name) !== action.botId) {
                 this._registerPortalBot(action.name, action.botId);
+                this._actionBatch.push(action);
             }
             if (hasValue(action.taskId)) {
                 this._processCore([asyncResult(action.taskId, null)]);

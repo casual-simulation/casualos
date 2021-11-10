@@ -57,7 +57,8 @@ export interface DenoSimulation extends RemoteSimulation {
  */
 export class DenoSimulationImpl
     extends BaseSimulation
-    implements DenoSimulation {
+    implements DenoSimulation
+{
     private _login: LoginManager;
     private _progress: ProgressManager;
     private _portals: PortalManager;
@@ -130,12 +131,6 @@ export class DenoSimulationImpl
 
     protected _initManagers() {
         super._initManagers();
-        const bundler = new ESBuildPortalBundler();
-        this._portals = new PortalManager(
-            this._vm,
-            this._helper,
-            this._watcher,
-            bundler
-        );
+        this._portals = new PortalManager(this._vm);
     }
 }

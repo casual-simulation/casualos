@@ -23,10 +23,6 @@ import {
     isScript,
     isFormula,
 } from '@casual-simulation/aux-common';
-import {
-    PortalManager,
-    UpdatedBotInfo,
-} from '@casual-simulation/aux-vm/managers';
 import { sortBy } from 'lodash';
 
 export type IdeNode = IdeFolderNode | IdeTagNode;

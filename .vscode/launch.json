@@ -60,13 +60,6 @@
             "program": "${workspaceFolder}/src/causal-tree-cli/bin/causal-tree-cli.js",
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen"
-        },
-        {
-            "name": "Debug Custom Portals",
-            "program": "${workspaceFolder}/src/aux-custom-portals/bin/build.js",
-            "request": "launch",
-            "skipFiles": ["<node_internals>/**"],
-            "type": "pwa-node"
         }
     ]
 }
