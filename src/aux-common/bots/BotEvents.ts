@@ -2550,8 +2550,6 @@ export type CustomPortalOutputMode = 'push' | 'pull';
 
 /**
  * Defines an event that registers a custom portal.
- * This functions similarly to OpenCustomPortalAction except that it is more
- * tightly integrated into CasualOS.
  */
 export interface RegisterCustomAppAction extends AsyncAction {
     type: 'register_custom_app';

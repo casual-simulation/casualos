@@ -251,7 +251,6 @@ declare type AsyncActions =
     | BufferSoundAction
     | PlaySoundAction
     | CancelSoundAction
-    | OpenCustomPortalAction
     | RegisterPrefixAction
     | FocusOnBotAction
     | FocusOnPositionAction
@@ -1912,47 +1911,6 @@ declare type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint | Snap
 }
 
 /**
- * The possible options for a custom portal.
- */
- declare interface OpenCustomPortalOptions {
-    /**
-     * The mode that the portal should be opened in.
-     * "Tag" indicates that the portal should watch the given tag and automatically produce bundles for the portal.
-     * "source" indicates that the portal should load the given source directly.
-     * 
-     * Defaults to "tag".
-     */
-    mode?: 'tag' | 'source';
-
-    /**
-     * The CSS styles that should be used for the portal.
-     */
-    style?: any;
-}
-
-/**
- * Defines an event that creates a custom portal using the given source code.
- */
- declare interface OpenCustomPortalAction extends AsyncAction {
-    type: 'open_custom_portal';
-    /**
-     * The ID of the portal.
-     */
-    portalId: string;
-
-    /**
-     * The tag that the portal should use.
-     */
-    tag: string;
-
-    /**
-     * The options for the portal.
-     */
-    options: OpenCustomPortalOptions;
-}
-
-
-/**
  * The list of types of output that custom portals support.
  */
  export type CustomAppOutputType = 'html';
@@ -1964,8 +1922,6 @@ declare type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint | Snap
  
  /**
   * Defines an event that registers a custom portal.
-  * This functions similarly to OpenCustomPortalAction except that it is more
-  * tightly integrated into CasualOS.
   */
  export interface RegisterCustomAppAction extends AsyncAction {
      type: 'register_custom_app';
@@ -4989,29 +4945,6 @@ interface Os {
       * @param options The options that should be used for the prefix.
       */
       registerTagPrefix(prefix: string, options?: RegisterPrefixOptions): Promise<void>;
-
-     /**
-      * Registers a custom executable with the given source code.
-      * Executables can contain arbitrary code that can run anywhere.
-      * As such, executables allow you to add custom functionality that is not deeply integrated into the CasualOS platform.
-      * 
-      * @param id The ID of the executable.
-      * @param bot The bot that should be used to configure the executable.
-      * @param tagOrSource The tag or source code that the executable should be created from.
-      * @param options The options for the executable.
-      */
-     registerExecutable(
-         id: string,
-         bot: Bot | string,
-         tagOrSource?: string,
-         options?: OpenCustomPortalOptions
-     ): Promise<void>;
-
-     /**
-      * Builds an executable bundle from the given tag.
-      * @param tag The tag that the bundle should be created from.
-      */
-     buildExecutable(tag: string): Promise<CodeBundle>;
 
      /**
       * Gets the number of devices that are viewing the current inst.
