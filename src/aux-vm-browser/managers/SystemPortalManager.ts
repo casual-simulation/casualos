@@ -245,7 +245,7 @@ export class SystemPortalManager implements SubscriptionLike {
                 if (
                     bot.id === selectedBot ||
                     (hasValue(system) &&
-                        (showAllSystemBots || system.startsWith(systemPortal)))
+                        (showAllSystemBots || system.includes(systemPortal)))
                 ) {
                     const area = getSystemArea(system);
                     const title = system

@@ -122,7 +122,7 @@ describe('SystemPortalManager', () => {
             ]);
         });
 
-        it('should include bots where the portal matches prefixes of the bot system tag', async () => {
+        it('should include bots where the portal is contained in the bot system tag', async () => {
             await vm.sendEvents([
                 botAdded(
                     createBot('test2', {
@@ -152,6 +152,11 @@ describe('SystemPortalManager', () => {
                 botAdded(
                     createBot('test5', {
                         system: 'wrong.other.test3',
+                    })
+                ),
+                botAdded(
+                    createBot('test6', {
+                        system: 'different.core.test6',
                     })
                 ),
                 botUpdated('user', {
@@ -199,6 +204,17 @@ describe('SystemPortalManager', () => {
                                         system: 'core.other.test4',
                                     }),
                                     title: 'test4',
+                                },
+                            ],
+                        },
+                        {
+                            area: 'different.core',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test6', {
+                                        system: 'different.core.test6',
+                                    }),
+                                    title: 'test6',
                                 },
                             ],
                         },
