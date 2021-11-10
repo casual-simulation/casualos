@@ -735,7 +735,7 @@ describe('SystemPortalManager', () => {
 
             await waitAsync();
 
-            expect(selectionUpdates.slice(1)).toEqual([
+            expect(selectionUpdates).toEqual([
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
