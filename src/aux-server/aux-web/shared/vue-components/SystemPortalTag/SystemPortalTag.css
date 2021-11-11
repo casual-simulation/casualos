@@ -2,6 +2,26 @@
     float: right;
 }
 
+.tags-list-tag:hover .pin-tag {
+    display: inline-block;
+}
+
+.pin-tag {
+    float: right;
+    display: none;
+}
+
+.pin-tag.md-button {
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
+    margin: 0;
+}
+
+.pin-tag .md-icon {
+    font-size: 16px !important;
+}
+
 .tags-list-tag {
     border-bottom: 1px solid var(--bot-cell-border-color);
 }
@@ -26,4 +46,14 @@
 
 .tags-list-tag-header > .tag.bot-tag {
     flex: 1 1 auto;
+}
+
+.tags-list-tag-value.read-only {
+    background-color: var(--disabled-cell-color);
+    padding: 4px;
+}
+
+.tags-list-tag-value.id {
+    font-weight: 600;
+    cursor: pointer;
 }

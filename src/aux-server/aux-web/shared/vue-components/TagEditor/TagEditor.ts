@@ -18,7 +18,7 @@ export default class TagEditor extends Vue {
     @Prop({ default: false })
     useMaterialInput: boolean;
 
-    @Prop({ default: KNOWN_TAGS }) autoCompleteItems: string[];
+    @Prop({ default: () => KNOWN_TAGS.slice() }) autoCompleteItems: string[];
 
     @Prop({ default: 'newTag' }) placeholder: string;
     @Prop({ default: false }) stopAutoCompleteKeyboardEvents: boolean;

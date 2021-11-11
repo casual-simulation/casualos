@@ -23,6 +23,7 @@ import {
     SYSTEM_TAG,
     calculateStringListTagValue,
     calculateStringTagValue,
+    getShortId,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
@@ -55,12 +56,14 @@ import SystemPortalTag from '../SystemPortalTag/SystemPortalTag';
 import TagEditor from '../TagEditor/TagEditor';
 import { EventBus, SvgIcon } from '@casual-simulation/aux-components';
 import ConfirmDialogOptions from '../../ConfirmDialogOptions';
+import BotID from '../BotID/BotID';
 
 @Component({
     components: {
         'tag-value-editor': TagValueEditor,
         'bot-tag': BotTag,
         'bot-value': BotValue,
+        'bot-id': BotID,
         hotkey: Hotkey,
         'mini-bot': MiniBot,
         'system-portal-tag': SystemPortalTag,
@@ -95,6 +98,8 @@ export default class SystemPortal extends Vue {
     newTag: string = '';
     isMakingNewBot: boolean = false;
     newBotSystem: string = '';
+    tagsVisible: boolean = true;
+    pinnedTagsVisible: boolean = true;
 
     private _focusEditorOnSelectionUpdate: boolean = false;
     private _subs: SubscriptionLike[] = [];
@@ -121,6 +126,17 @@ export default class SystemPortal extends Vue {
 
     get searchInput() {
         return this.$refs.searchInput as HTMLInputElement;
+    }
+
+    get tagsToShow() {
+        return this.tags.filter((t) => {
+            return (
+                !this.pinnedTags ||
+                !this.pinnedTags.some(
+                    (p) => p.name === t.name && p.space === t.space
+                )
+            );
+        });
     }
 
     multilineEditor() {
@@ -151,6 +167,8 @@ export default class SystemPortal extends Vue {
             this.selectedTag = null;
             this.selectedTagSpace = null;
             this.isViewingTags = true;
+            this.tagsVisible = true;
+            this.pinnedTagsVisible = true;
 
             subs.push(
                 this._simulation.systemPortal.onItemsUpdated.subscribe((e) => {
@@ -397,6 +415,30 @@ export default class SystemPortal extends Vue {
                 .filter((s) => hasValue(s))
                 .map((s) => getSystemArea(s))
         );
+    }
+
+    getShortId(bot: Bot) {
+        return getShortId(bot);
+    }
+
+    copyId() {
+        const id = this.selectedBotId;
+        if (id) {
+            copyToClipboard(id);
+            this._simulation.helper.transaction(toast('Copied!'));
+        }
+    }
+
+    toggleTags() {
+        this.tagsVisible = !this.tagsVisible;
+    }
+
+    togglePinnedTags() {
+        this.pinnedTagsVisible = !this.pinnedTagsVisible;
+    }
+
+    pinTag(tag: SystemPortalSelectionTag) {
+        this._simulation.systemPortal.addPinnedTag(tag.name);
     }
 
     addTag() {

@@ -45,20 +45,50 @@
                     </div>
                     <div class="tags" v-if="hasSelection">
                         <div class="tags-list">
+                            <div @click="toggleTags()" class="tags-toggle">
+                                <md-icon>{{ tagsVisible ? 'expand_less' : 'expand_more' }}</md-icon>
+                                Tags
+                            </div>
                             <system-portal-tag
-                                v-for="tag of tags"
+                                v-show="tagsVisible"
+                                :bot="selectedBot"
+                                :tag="{ name: 'id' }"
+                                :isReadOnly="true"
+                                :showPinButton="false"
+                                @click="copyId()"
+                            >
+                            </system-portal-tag>
+                            <system-portal-tag
+                                v-show="tagsVisible"
+                                :bot="selectedBot"
+                                :tag="{ name: 'space' }"
+                                :showPinButton="false"
+                                :isReadOnly="true"
+                            >
+                            </system-portal-tag>
+
+                            <system-portal-tag
+                                v-show="tagsVisible"
+                                v-for="tag of tagsToShow"
                                 :key="`tag-${tag.name}.${tag.space}`"
                                 ref="tagEditors"
                                 :bot="selectedBot"
                                 :tag="tag"
                                 :selected="isTagSelected(tag)"
                                 @click="selectTag(tag)"
+                                @pin="pinTag(tag)"
                                 @focusChanged="onTagFocusChanged(tag, $event)"
                             >
                             </system-portal-tag>
                             <div v-if="pinnedTags && pinnedTags.length > 0">
-                                <h3>Pinned Tags</h3>
+                                <div @click="togglePinnedTags()" class="tags-toggle">
+                                    <md-icon>{{
+                                        pinnedTagsVisible ? 'expand_less' : 'expand_more'
+                                    }}</md-icon>
+                                    Pinned Tags
+                                </div>
                                 <system-portal-tag
+                                    v-show="pinnedTagsVisible"
                                     v-for="tag of pinnedTags"
                                     :key="`pin-${tag.name}.${tag.space}`"
                                     ref="pinnedTagEditors"
@@ -67,6 +97,7 @@
                                     :selected="isTagSelected(tag)"
                                     :showCloseButton="true"
                                     @click="selectTag(tag)"
+                                    @pin="pinTag(tag)"
                                     @close="closeTag(tag)"
                                     @focusChanged="onTagFocusChanged(tag, $event)"
                                 >

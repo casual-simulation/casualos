@@ -11,7 +11,7 @@ import {
     TagSortMode,
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
-import { Bot } from '@casual-simulation/aux-common';
+import { Bot, getBotTag, getShortId } from '@casual-simulation/aux-common';
 
 @Component({
     components: {
@@ -24,6 +24,8 @@ export default class SystemPortalTag extends Vue {
     @Prop({}) selected: boolean;
     @Prop({}) bot: Bot;
     @Prop({ default: false }) showCloseButton: boolean;
+    @Prop({ default: true }) showPinButton: boolean;
+    @Prop({ default: false }) isReadOnly: boolean;
 
     focusChanged(focused: boolean) {
         this.$emit('focusChanged', focused);
@@ -37,7 +39,19 @@ export default class SystemPortalTag extends Vue {
         this.$emit('close');
     }
 
+    onPin() {
+        this.$emit('pin');
+    }
+
     focus() {
         (this.$refs.valueEditor as BotValue)?.focus();
+    }
+
+    getBotValue() {
+        if (this.tag.name === 'id') {
+            return getShortId(this.bot);
+        } else {
+            return getBotTag(this.bot, this.tag.name);
+        }
     }
 }
