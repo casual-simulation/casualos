@@ -124,9 +124,8 @@ export default class PlayerHome extends Vue {
                     update.server = null;
                 } else {
                     // Generate a random inst name
-                    const randomName: string = uniqueNamesGenerator(
-                        namesConfig
-                    );
+                    const randomName: string =
+                        uniqueNamesGenerator(namesConfig);
                     if (!appManager.config.disableCollaboration) {
                         update.inst = randomName;
                     }
