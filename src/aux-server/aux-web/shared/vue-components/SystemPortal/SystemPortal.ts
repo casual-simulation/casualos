@@ -18,6 +18,12 @@ import {
     DNA_TAG_PREFIX,
     SYSTEM_PORTAL_BOT,
     calculateBotValue,
+    SYSTEM_PORTAL_TAG,
+    SYSTEM_PORTAL_TAG_SPACE,
+    SYSTEM_TAG,
+    calculateStringListTagValue,
+    calculateStringTagValue,
+    getShortId,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
@@ -26,6 +32,7 @@ import {
     SystemPortalSelectionTag,
     TagSortMode,
     userBotChanged,
+    getSystemArea,
 } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import { Subject, SubscriptionLike } from 'rxjs';
@@ -35,7 +42,7 @@ import { SystemPortalConfig } from './SystemPortalConfig';
 import { IdeNode } from '@casual-simulation/aux-vm-browser';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import BotTag from '../BotTag/BotTag';
-import { debounce } from 'lodash';
+import { debounce, uniq } from 'lodash';
 import { onMonacoLoaded } from '../../MonacoAsync';
 import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './SystemPortalHelpers';
@@ -45,23 +52,33 @@ import {
     SystemPortalRecentsUpdate,
     SystemPortalRecentTag,
 } from '@casual-simulation/aux-vm-browser/managers/SystemPortalManager';
+import SystemPortalTag from '../SystemPortalTag/SystemPortalTag';
+import TagEditor from '../TagEditor/TagEditor';
+import { EventBus, SvgIcon } from '@casual-simulation/aux-components';
+import ConfirmDialogOptions from '../../ConfirmDialogOptions';
+import BotID from '../BotID/BotID';
 
 @Component({
     components: {
         'tag-value-editor': TagValueEditor,
         'bot-tag': BotTag,
         'bot-value': BotValue,
+        'bot-id': BotID,
         hotkey: Hotkey,
         'mini-bot': MiniBot,
+        'system-portal-tag': SystemPortalTag,
+        'tag-editor': TagEditor,
+        'svg-icon': SvgIcon,
     },
 })
-export default class IdePortal extends Vue {
+export default class SystemPortal extends Vue {
     items: SystemPortalItem[] = [];
 
     hasPortal: boolean = false;
     hasSelection: boolean = false;
 
     tags: SystemPortalSelectionTag[] = [];
+    pinnedTags: SystemPortalSelectionTag[] = [];
     selectedBot: Bot = null;
     selectedTag: string = null;
     selectedTagSpace: string = null;
@@ -77,7 +94,14 @@ export default class IdePortal extends Vue {
     searchValue: string = '';
     isFocusingSearch: boolean = false;
     sortMode: TagSortMode = 'scripts-first';
+    isMakingNewTag: boolean = false;
+    newTag: string = '';
+    isMakingNewBot: boolean = false;
+    newBotSystem: string = '';
+    tagsVisible: boolean = true;
+    pinnedTagsVisible: boolean = true;
 
+    private _focusEditorOnSelectionUpdate: boolean = false;
     private _subs: SubscriptionLike[] = [];
     private _simulation: BrowserSimulation;
     private _currentConfig: SystemPortalConfig;
@@ -104,6 +128,17 @@ export default class IdePortal extends Vue {
         return this.$refs.searchInput as HTMLInputElement;
     }
 
+    get tagsToShow() {
+        return this.tags.filter((t) => {
+            return (
+                !this.pinnedTags ||
+                !this.pinnedTags.some(
+                    (p) => p.name === t.name && p.space === t.space
+                )
+            );
+        });
+    }
+
     multilineEditor() {
         return this.$refs.multilineEditor as TagValueEditor;
     }
@@ -120,13 +155,20 @@ export default class IdePortal extends Vue {
             this._simulation = appManager.simulationManager.primary;
             this.items = [];
             this.tags = [];
+            this.pinnedTags = [];
             this.recents = [];
+            this.isMakingNewTag = false;
+            this.newTag = '';
+            this.isMakingNewBot = false;
+            this.newBotSystem = '';
             this.hasPortal = false;
             this.hasSelection = false;
             this.selectedBot = null;
             this.selectedTag = null;
             this.selectedTagSpace = null;
             this.isViewingTags = true;
+            this.tagsVisible = true;
+            this.pinnedTagsVisible = true;
 
             subs.push(
                 this._simulation.systemPortal.onItemsUpdated.subscribe((e) => {
@@ -143,11 +185,29 @@ export default class IdePortal extends Vue {
                         if (e.hasSelection) {
                             this.sortMode = e.sortMode;
                             this.tags = e.tags;
+                            this.pinnedTags = e.pinnedTags;
                             this.selectedBot = e.bot;
+                            this.selectedTag = e.tag;
+                            this.selectedTagSpace = e.space ?? undefined;
+
+                            for (let tag of [
+                                ...e.tags,
+                                ...(e.pinnedTags ?? []),
+                            ]) {
+                                if (tag.focusValue) {
+                                    this._focusTag(tag);
+                                    break;
+                                }
+                            }
                         } else {
                             this.tags = [];
+                            this.pinnedTags = [];
                             this.selectedBot = null;
                             this.selectedTag = null;
+                        }
+
+                        if (this._focusEditorOnSelectionUpdate) {
+                            this._focusEditor();
                         }
                     }
                 ),
@@ -196,6 +256,43 @@ export default class IdePortal extends Vue {
         );
     }
 
+    private _tagEditors() {
+        return this.$refs.tagEditors as SystemPortalTag[];
+    }
+
+    private _pinnedTagEditors() {
+        return this.$refs.pinnedTagEditors as SystemPortalTag[];
+    }
+
+    private _focusEditor() {
+        this._focusEditorOnSelectionUpdate = false;
+        this.$nextTick(() => {
+            (<TagValueEditor>this.$refs.multilineEditor)?.focusEditor();
+        });
+    }
+
+    private _focusTag(tag: SystemPortalSelectionTag) {
+        this.$nextTick(() => {
+            this._focusEditorOnSelectionUpdate = true;
+            this.selectTag(tag);
+        });
+    }
+
+    isTagSelected(tag: SystemPortalSelectionTag | SystemPortalRecentTag) {
+        if ('name' in tag) {
+            return (
+                this.selectedTag === tag.name &&
+                this.selectedTagSpace === tag.space
+            );
+        } else {
+            return (
+                tag.botId === this.selectedBotId &&
+                tag.tag === this.selectedTag &&
+                tag.space == this.selectedTagSpace
+            );
+        }
+    }
+
     beforeDestroy() {
         for (let s of this._subs) {
             s.unsubscribe();
@@ -212,19 +309,31 @@ export default class IdePortal extends Vue {
     }
 
     selectTag(tag: SystemPortalSelectionTag) {
-        this.selectedTag = tag.name;
-        this.selectedTagSpace = tag.space;
+        let tags: BotTags = {
+            [SYSTEM_PORTAL_TAG]: tag.name,
+            [SYSTEM_PORTAL_TAG_SPACE]: tag.space ?? null,
+        };
+        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+            tags,
+        });
+        // this.selectedTag = tag.name;
+        // this.selectedTagSpace = tag.space;
+    }
+
+    closeTag(tag: SystemPortalSelectionTag) {
+        this._simulation.systemPortal.removePinnedTag(tag);
     }
 
     selectRecentTag(recent: SystemPortalRecentTag) {
+        this._focusEditorOnSelectionUpdate = true;
         let tags: BotTags = {
             [SYSTEM_PORTAL_BOT]: recent.botId,
+            [SYSTEM_PORTAL_TAG]: recent.tag,
+            [SYSTEM_PORTAL_TAG_SPACE]: recent.space ?? null,
         };
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
             tags: tags,
         });
-        this.selectedTag = recent.tag;
-        this.selectedTagSpace = recent.space ?? undefined;
     }
 
     onTagFocusChanged(tag: SystemPortalSelectionTag, focused: boolean) {
@@ -278,163 +387,127 @@ export default class IdePortal extends Vue {
         this._simulation.systemPortal.tagSortMode = mode;
     }
 
-    // showTags() {
-    //     this.isViewingTags = true;
-    // }
+    openNewTag() {
+        this.isMakingNewTag = true;
+        this.newTag = '';
+    }
 
-    // async showSearch() {
-    //     this.isViewingTags = false;
-    //     await this.$nextTick();
-    //     if (this.searchInput) {
-    //         this.searchInput.focus();
-    //         this.searchInput.select();
-    //     }
-    // }
+    cancelNewTag() {
+        this.isMakingNewTag = false;
+    }
 
-    // updateSearch(event: InputEvent) {
-    //     this.search();
-    // }
+    openNewBot() {
+        this.isMakingNewBot = true;
+        this.newBotSystem = hasValue(this.searchValue) ? this.searchValue : '';
+    }
 
-    // search() {
-    //     const searchText = this.searchInput?.value;
+    cancelNewBot() {
+        this.isMakingNewBot = false;
+    }
 
-    //     if (searchText) {
-    //         let nextItems = [] as SearchItem[];
+    getBotSystems() {
+        return uniq(
+            this.items
+                .flatMap((i) => i.bots)
+                .map((b) =>
+                    calculateStringTagValue(null, b.bot, SYSTEM_TAG, null)
+                )
+                .filter((s) => hasValue(s))
+                .map((s) => getSystemArea(s))
+        );
+    }
 
-    //         for (let node of this.items) {
-    //             const bot = this._simulation.helper.botsState[node.botId];
-    //             const value = formatValue(bot.tags[node.tag]);
+    getShortId(bot: Bot) {
+        return getShortId(bot);
+    }
 
-    //             let i = 0;
-    //             while (i < value.length) {
-    //                 const match = value.indexOf(searchText, i);
+    copyId() {
+        const id = this.selectedBotId;
+        if (id) {
+            copyToClipboard(id);
+            this._simulation.helper.transaction(toast('Copied!'));
+        }
+    }
 
-    //                 if (match >= 0) {
-    //                     i = match + searchText.length;
+    toggleTags() {
+        this.tagsVisible = !this.tagsVisible;
+    }
 
-    //                     let lineStart = match;
-    //                     let distance = 0;
-    //                     const maxSearchDistance = 40;
-    //                     for (
-    //                         ;
-    //                         lineStart > 0 && distance <= maxSearchDistance;
-    //                         lineStart -= 1
-    //                     ) {
-    //                         const char = value[lineStart];
-    //                         if (char === '\n') {
-    //                             lineStart += 1;
-    //                             break;
-    //                         } else if (char !== ' ' && char !== '\t') {
-    //                             distance += 1;
-    //                         }
-    //                     }
+    togglePinnedTags() {
+        this.pinnedTagsVisible = !this.pinnedTagsVisible;
+    }
 
-    //                     let lineEnd = match + searchText.length;
-    //                     for (
-    //                         ;
-    //                         lineEnd < value.length &&
-    //                         distance <= maxSearchDistance;
-    //                         lineEnd += 1
-    //                     ) {
-    //                         const char = value[lineEnd];
-    //                         if (char === '\n') {
-    //                             lineEnd -= 1;
-    //                             break;
-    //                         } else if (char !== ' ' && char !== '\t') {
-    //                             distance += 1;
-    //                         }
-    //                     }
+    pinTag(tag: SystemPortalSelectionTag) {
+        this._simulation.systemPortal.addPinnedTag(tag.name);
+    }
 
-    //                     const line = value.substring(lineStart, lineEnd);
+    addTag() {
+        // if (this.dropDownUsed) {
+        //     return;
+        // }
 
-    //                     nextItems.push({
-    //                         key: `${node.key}@${match}`,
-    //                         botId: node.botId,
-    //                         tag: node.tag,
-    //                         index: match,
-    //                         endIndex: match + searchText.length,
-    //                         text: line,
-    //                         isScript: node.isScript,
-    //                         isFormula: node.isFormula,
-    //                         prefix: node.prefix,
-    //                     });
-    //                 } else {
-    //                     break;
-    //                 }
-    //             }
-    //         }
+        if (this.isMakingNewTag) {
+            this._simulation.systemPortal.addPinnedTag(this.newTag);
+            this.newTag = '';
+            this.isMakingNewTag = false;
+        } else {
+            this.newTag = '';
+        }
+    }
 
-    //         this.searchItems = nextItems;
-    //     } else {
-    //         this.searchItems = [];
-    //     }
-    // }
+    addBot() {
+        if (!this.isMakingNewBot) {
+            this.newBotSystem = '';
+            return;
+        }
 
-    // async selectSearchItem(item: SearchItem) {
-    //     this.currentBot = this._simulation.helper.botsState[item.botId];
-    //     this.currentTag = item.tag;
-    //     this.currentSpace = null;
+        if (hasValue(this.newBotSystem)) {
+            this._simulation.helper.createBot(undefined, {
+                [SYSTEM_TAG]: this.newBotSystem,
+            });
+        }
 
-    //     const _this = this;
-    //     await onMonacoLoaded;
-    //     await this.$nextTick();
+        this.newBotSystem = '';
+        this.isMakingNewBot = false;
+    }
 
-    //     const monacoEditor = _this.multilineEditor()?.monacoEditor()?.editor;
-    //     let loaded = false;
-    //     if (monacoEditor) {
-    //         const model = monacoEditor.getModel();
-    //         if (model) {
-    //             const uri = model.uri.toString();
-    //             // TODO: implement better check for ensuring the loaded model
-    //             // is for the given item
-    //             if (
-    //                 uri.indexOf(item.botId) >= 0 &&
-    //                 uri.indexOf(item.tag) >= 0
-    //             ) {
-    //                 const offset = item.isScript
-    //                     ? 1
-    //                     : item.isFormula
-    //                     ? DNA_TAG_PREFIX.length
-    //                     : item.prefix
-    //                     ? item.prefix.length
-    //                     : 0;
-    //                 const position = model.getPositionAt(item.index - offset);
-    //                 const endPosition = model.getPositionAt(
-    //                     item.endIndex - offset
-    //                 );
-    //                 monacoEditor.setSelection({
-    //                     startLineNumber: position.lineNumber,
-    //                     startColumn: position.column,
-    //                     endLineNumber: endPosition.lineNumber,
-    //                     endColumn: endPosition.column,
-    //                 });
-    //                 monacoEditor.revealLinesInCenter(
-    //                     position.lineNumber,
-    //                     endPosition.lineNumber,
-    //                     1 /* Immediate scrolling */
-    //                 );
-    //                 monacoEditor.focus();
-    //             }
-    //         }
-    //         loaded = true;
-    //     }
+    hasTag() {
+        return this.tags.length > 0 || this.pinnedTags.length > 0;
+    }
 
-    //     // TODO: implement better way to wait for the editor the be fully loaded.
-    //     if (!loaded) {
-    //         setTimeout(() => {
-    //             this.selectSearchItem(item);
-    //         }, 100);
-    //     }
-    // }
+    getFirstTag(): string {
+        if (this.tags.length > 0) {
+            return this.tags[0].name;
+        } else if (this.pinnedTags.length > 0) {
+            return this.pinnedTags[0].name;
+        }
+        return null;
+    }
 
-    // selectItem(item: IdeTagNode) {
-    //     if (item.type === 'tag') {
-    //         this.selectedItem = item;
-    //         this.currentBot = this._simulation.helper.botsState[item.botId];
-    //         this.currentTag = item.tag;
-    //         this.currentSpace = null;
-    //     }
-    // }
+    deleteSelectedBot() {
+        if (this.selectedBot) {
+            const options = new ConfirmDialogOptions();
+            options.title = 'Destroy bot?';
+
+            const systemTag = calculateStringTagValue(
+                null,
+                this.selectedBot,
+                SYSTEM_TAG,
+                null
+            );
+            options.body = `Are you sure you want to destroy ${systemTag} (${this.selectedBotId})?`;
+            options.okText = 'Destroy';
+            options.cancelText = 'Keep';
+
+            EventBus.$once(options.okEvent, () => {
+                this._simulation.helper.destroyBot(this.selectedBot);
+            });
+            EventBus.$once(options.cancelEvent, () => {
+                EventBus.$off(options.okEvent);
+            });
+            EventBus.$emit('showConfirmDialog', options);
+        }
+    }
 
     async exitPortal() {
         if (this._currentConfig) {

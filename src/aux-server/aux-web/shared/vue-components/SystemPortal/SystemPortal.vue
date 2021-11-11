@@ -36,40 +36,89 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="areas-add-bot">
+                            <md-button class="md-raised create-bot" @click="openNewBot">
+                                <svg-icon name="NewBot" width="640" height="640"></svg-icon>
+                                <md-tooltip>Create Empty Bot</md-tooltip>
+                            </md-button>
+                        </div>
                     </div>
                     <div class="tags" v-if="hasSelection">
                         <div class="tags-list">
-                            <div
-                                v-for="tag of tags"
-                                :key="tag.name"
-                                class="tags-list-tag"
-                                :class="{
-                                    selected:
-                                        selectedTag === tag.name && selectedTagSpace === tag.space,
-                                }"
-                                @click="selectTag(tag)"
-                            >
-                                <div class="tags-list-tag-header">
-                                    <bot-tag
-                                        :tag="tag.name"
-                                        :isScript="tag.isScript"
-                                        :allowCloning="false"
-                                    ></bot-tag>
-                                    <span v-show="!!tag.space" class="tag-space">{{
-                                        tag.space
-                                    }}</span>
-                                </div>
-                                <div class="tags-list-tag-value">
-                                    <bot-value
-                                        :bot="selectedBot"
-                                        :tag="tag.name"
-                                        :space="tag.space"
-                                        :alwaysShowRealValue="true"
-                                        :showSpace="false"
-                                        @focusChanged="onTagFocusChanged(tag, $event)"
-                                    ></bot-value>
-                                </div>
+                            <div @click="toggleTags()" class="tags-toggle">
+                                <md-icon>{{ tagsVisible ? 'expand_less' : 'expand_more' }}</md-icon>
+                                Tags
                             </div>
+                            <system-portal-tag
+                                v-show="tagsVisible"
+                                :bot="selectedBot"
+                                :tag="{ name: 'id' }"
+                                :isReadOnly="true"
+                                :showPinButton="false"
+                                @click="copyId()"
+                            >
+                            </system-portal-tag>
+                            <system-portal-tag
+                                v-show="tagsVisible"
+                                :bot="selectedBot"
+                                :tag="{ name: 'space' }"
+                                :showPinButton="false"
+                                :isReadOnly="true"
+                            >
+                            </system-portal-tag>
+
+                            <system-portal-tag
+                                v-show="tagsVisible"
+                                v-for="tag of tagsToShow"
+                                :key="`tag-${tag.name}.${tag.space}`"
+                                ref="tagEditors"
+                                :bot="selectedBot"
+                                :tag="tag"
+                                :selected="isTagSelected(tag)"
+                                @click="selectTag(tag)"
+                                @pin="pinTag(tag)"
+                                @focusChanged="onTagFocusChanged(tag, $event)"
+                            >
+                            </system-portal-tag>
+                            <div v-if="pinnedTags && pinnedTags.length > 0">
+                                <div @click="togglePinnedTags()" class="tags-toggle">
+                                    <md-icon>{{
+                                        pinnedTagsVisible ? 'expand_less' : 'expand_more'
+                                    }}</md-icon>
+                                    Pinned Tags
+                                </div>
+                                <system-portal-tag
+                                    v-show="pinnedTagsVisible"
+                                    v-for="tag of pinnedTags"
+                                    :key="`pin-${tag.name}.${tag.space}`"
+                                    ref="pinnedTagEditors"
+                                    :bot="selectedBot"
+                                    :tag="tag"
+                                    :selected="isTagSelected(tag)"
+                                    :showCloseButton="true"
+                                    @click="selectTag(tag)"
+                                    @pin="pinTag(tag)"
+                                    @close="closeTag(tag)"
+                                    @focusChanged="onTagFocusChanged(tag, $event)"
+                                >
+                                </system-portal-tag>
+                            </div>
+                        </div>
+                        <div class="tags-add-tag">
+                            <md-button class="md-raised pin-tag-button" @click="openNewTag">
+                                <picture>
+                                    <source
+                                        srcset="../../public/icons/tag-add.webp"
+                                        type="image/webp"
+                                    />
+                                    <source
+                                        srcset="../../public/icons/tag-add.png"
+                                        type="image/png"
+                                    />
+                                    <img alt="Add Tag" src="../../public/icons/tag-add.png" />
+                                </picture>
+                                <md-tooltip>Add Tag</md-tooltip>
+                            </md-button>
                         </div>
                         <div class="tags-sort-options">
                             <md-button
@@ -88,6 +137,16 @@
                                 <md-tooltip>Sort tags Alphabetically</md-tooltip>
                                 A-Z
                             </md-button>
+                            <div class="tags-sort-spacer"></div>
+                            <md-button
+                                class="sort-option-button delete-bot-button md-raised md-dense"
+                                @click="deleteSelectedBot()"
+                            >
+                                <md-icon class="delete-bot-icon">delete_forever</md-icon>
+                                <md-tooltip md-delay="1000" md-direction="top"
+                                    >Destroy Bot</md-tooltip
+                                >
+                            </md-button>
                         </div>
                     </div>
                     <div class="editor">
@@ -95,16 +154,12 @@
                             <md-button
                                 class="editor-recents-item md-raised md-dense"
                                 :class="{
-                                    selected:
-                                        recent.botId === selectedBotId &&
-                                        recent.tag === selectedTag &&
-                                        recent.space == selectedTagSpace,
+                                    selected: isTagSelected(recent),
                                 }"
                                 v-for="recent of recents"
                                 :key="`${recent.botId}.${recent.tag}.${recent.space}`"
                                 @click="selectRecentTag(recent)"
                             >
-                                {{ recent.prefix }}
                                 <bot-tag
                                     :tag="recent.tag"
                                     :isScript="recent.isScript"
@@ -113,14 +168,20 @@
                                 <span v-show="!!recent.space" class="tag-space">{{
                                     recent.space
                                 }}</span>
+                                <span class="tag-owner">
+                                    {{ recent.hint }}
+                                </span>
+                                <md-tooltip>
+                                    {{ recent.system }}
+                                </md-tooltip>
                             </md-button>
                         </div>
                         <div class="editor-code">
                             <tag-value-editor
-                                v-if="selectedBot && selectedTag"
+                                v-if="selectedBot && hasTag()"
                                 ref="multilineEditor"
                                 :bot="selectedBot"
-                                :tag="selectedTag"
+                                :tag="selectedTag || getFirstTag()"
                                 :space="selectedTagSpace"
                                 :showDesktopEditor="true"
                                 :showResize="false"
@@ -147,6 +208,60 @@
                 </md-button>
             </md-card-content>
         </md-card>
+
+        <md-dialog :md-active.sync="isMakingNewTag" class="new-tag-dialog">
+            <md-dialog-title>Add New Tag</md-dialog-title>
+            <md-dialog-content>
+                <form class="bot-table-form" @submit.prevent="addTag()">
+                    <tag-editor
+                        ref="tagEditor"
+                        :useMaterialInput="true"
+                        v-model="newTag"
+                        :isAction="false"
+                    ></tag-editor>
+                    <div class="finish-tag-button-wrapper">
+                        <md-button class="md-icon-button md-dense finish-tag-button" type="submit">
+                            <md-icon class="done">check</md-icon>
+                        </md-button>
+                        <md-button
+                            class="md-icon-button md-dense finish-tag-button"
+                            @click="cancelNewTag()"
+                        >
+                            <md-icon class="cancel">cancel</md-icon>
+                        </md-button>
+                    </div>
+                </form>
+            </md-dialog-content>
+        </md-dialog>
+
+        <md-dialog :md-active.sync="isMakingNewBot" class="new-bot-dialog">
+            <md-dialog-title>Enter New Bot System</md-dialog-title>
+            <md-dialog-content>
+                <form class="bot-table-form" @submit.prevent="addBot()">
+                    <tag-editor
+                        ref="tagEditor"
+                        :useMaterialInput="true"
+                        v-model="newBotSystem"
+                        :isAction="false"
+                        placeholder="#system"
+                        @autoFill="newBotSystem = $event"
+                        :stopAutoCompleteKeyboardEvents="true"
+                        :autoCompleteItems="getBotSystems()"
+                    ></tag-editor>
+                    <div class="finish-tag-button-wrapper">
+                        <md-button class="md-icon-button md-dense finish-tag-button" type="submit">
+                            <md-icon class="done">check</md-icon>
+                        </md-button>
+                        <md-button
+                            class="md-icon-button md-dense finish-tag-button"
+                            @click="cancelNewBot()"
+                        >
+                            <md-icon class="cancel">cancel</md-icon>
+                        </md-button>
+                    </div>
+                </form>
+            </md-dialog-content>
+        </md-dialog>
     </div>
 </template>
 <script src="./SystemPortal.ts"></script>

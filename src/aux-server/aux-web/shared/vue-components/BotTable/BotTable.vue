@@ -200,6 +200,7 @@
                         :tagExists="newTagExists"
                         :isAction="false"
                         @valid="newTagValidityUpdated"
+                        @autoFill="finishAddTag"
                     ></tag-editor>
                     <div class="finish-tag-button-wrapper">
                         <md-button class="md-icon-button md-dense finish-tag-button" type="submit">

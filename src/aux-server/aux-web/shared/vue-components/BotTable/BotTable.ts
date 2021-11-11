@@ -20,6 +20,7 @@ import {
     PrecalculatedBot,
     isScript,
     parseScript,
+    parseNewTag,
     BOT_SPACE_TAG,
     getBotSpace,
     getBotTag,
@@ -468,10 +469,10 @@ export default class BotTable extends Vue {
     }
 
     private _formatNewTag(newTag: string) {
-        const parsed = parseScript(newTag);
+        const parsed = parseNewTag(newTag);
         return {
-            tag: parsed !== null ? parsed : newTag,
-            isScript: isScript(newTag),
+            tag: parsed.name,
+            isScript: parsed.isScript,
         };
     }
 
@@ -499,8 +500,6 @@ export default class BotTable extends Vue {
                 this.isMakingNewTag = false;
                 this.newTag = '';
                 this.newTagOpen = false;
-                EventBus.$off('AutoFill');
-                EventBus.$once('AutoFill', this.finishAddTag);
             });
         });
 
@@ -738,10 +737,6 @@ export default class BotTable extends Vue {
 
         EventBus.$on('addTag', this.openNewTag);
         EventBus.$on('closeNewTag', this.cancelNewTag);
-
-        EventBus.$off('AutoFill');
-
-        EventBus.$once('AutoFill', this.finishAddTag);
     }
 
     mounted() {

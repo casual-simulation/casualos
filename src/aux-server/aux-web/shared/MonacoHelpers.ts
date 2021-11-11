@@ -190,7 +190,7 @@ export function watchSimulation(
         .subscribe((f) => {
             for (let tag of tagsOnBot(f)) {
                 if (
-                    shouldKeepModelWithTagLoaded(tag) ||
+                    isScript(f.tags[tag]) ||
                     isFormula(f.tags[tag]) ||
                     isCustomPortalScript(
                         simulation,
@@ -697,18 +697,10 @@ export function shouldKeepModelLoaded(
 ): boolean {
     let info = models.get(model.uri.toString());
     if (info) {
-        return (
-            shouldKeepModelWithTagLoaded(info.tag) ||
-            info.isFormula ||
-            info.isCustomPortalScript
-        );
+        return info.isScript || info.isFormula || info.isCustomPortalScript;
     } else {
         return true;
     }
-}
-
-function shouldKeepModelWithTagLoaded(tag: string): boolean {
-    return isScript(tag);
 }
 
 function watchModel(

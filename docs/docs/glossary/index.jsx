@@ -10,6 +10,7 @@ import GridPortal from './GridPortal.mdx';
 import MapPortal from './MapPortal.mdx';
 import MiniGridPortal from './MiniGridPortal.mdx';
 import MiniMapPortal from './MiniMapPortal.mdx';
+import SystemPortal from './SystemPortal.mdx';
 import React, { useState } from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Tooltip from 'rc-tooltip';
@@ -29,6 +30,7 @@ export const Glossary = [
     { id: 'mapPortal', title: 'mapPortal', content: () => <MapPortal/> },
     { id: 'miniGridPortal', title: 'miniGridPortal', content: () => <MiniGridPortal/> },
     { id: 'miniMapPortal', title: 'miniMapPortal', content: () => <MiniMapPortal/> },
+    { id: 'systemPortal', title: 'systemPortal', content: () => <SystemPortal/> },
 ];
 
 const GlossaryWindow = ({item}) => (<div className="glossary-window">
@@ -57,5 +59,6 @@ export {
     GridPortal,
     MapPortal,
     MiniGridPortal,
-    MiniMapPortal
+    MiniMapPortal,
+    SystemPortal,
 };

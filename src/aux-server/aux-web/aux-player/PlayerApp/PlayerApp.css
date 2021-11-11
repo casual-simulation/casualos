@@ -148,10 +148,18 @@
     z-index: 15;
 }
 
-.md-dialog.alert-dialog + .md-overlay.md-dialog-overlay {
+.md-dialog.alert-dialog ~ .md-overlay.md-dialog-overlay {
     z-index: 14;
 }
 
 .md-tooltip {
     z-index: 20;
+}
+
+.confirm-dialog {
+    z-index: 20;
+}
+
+.md-dialog.confirm-dialog ~ .md-overlay.md-fixed.md-dialog-overlay {
+    z-index: 19;
 }

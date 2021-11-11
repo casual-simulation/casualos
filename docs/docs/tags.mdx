@@ -140,6 +140,8 @@ The creator bot must be in the same space as this bot.
 
 ## Behavior Tags
 
+These tags affect how CasualOS allows the users to interact with bots.
+
 ### `draggable`
 
 <Badges>
@@ -243,7 +245,28 @@ Determines whether this bot responds to whispers or shouts. If this tag is set t
   </PossibleValueCode>
 </PossibleValuesTable>
 
+### `system`
+
+The "system" that this bot represents. Bots with a `#system` tag will be able to appear in the <GlossaryRef term='systemPortal'>systemPortal</GlossaryRef>.
+The you can kinda think of the `#system` tag as the name that the systemPortal uses for bots.
+`#system` tag values should ideally be three sections separated by a `.`.
+
+For example, the first section might be the name of the app bundle, the second section would be the area that the bot belongs in, and the third section would be the name of the bot.
+e.g. `myAppBundle.managers.timeline` would specify that a bot belongs in `myAppBundle` and is one of the manager bots.
+The systemPortal would then show each bot organized by `#system` tag.
+
+![Image of bots in the systemPortal](../static/img/glossary/systemPortal_02.png)
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>(default)</PossibleValueCode>
+  <PossibleValue value='Any String'>The system that this bot belongs to.</PossibleValue>
+</PossibleValuesTable>
+
 ## Visualization Tags
+
+These tags change how CasualOS displays bots.
 
 ### `color`
 
@@ -2425,6 +2448,44 @@ Only available on the config bot.
 </Badges>
 
 The dimension that is loaded into the "sheet" portal in CasualOS.
+Only available on the config bot.
+
+### `systemPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The search value that is loaded into the <GlossaryRef term="systemPortal">"system" portal</GlossaryRef> in CasualOS.
+Setting this to `true` will show every bot that has a <TagLink tag='system'/> tag in the system portal.
+Only available on the config bot.
+
+### `systemPortalBot`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The ID of the bot that is selected in the <GlossaryRef term="systemPortal">systemPortal</GlossaryRef>.
+Only available on the config bot.
+
+### `systemPortalTag`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The name of the tag that is selected in the <GlossaryRef term="systemPortal">systemPortal</GlossaryRef>.
+Only available on the config bot.
+
+### `systemPortalTagSpace`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The space of the tag that is selected in the <GlossaryRef term="systemPortal">systemPortal</GlossaryRef>.
+If null, then the tag space is the same as the <TagLink tag='systemPortalBot'/> space.
 Only available on the config bot.
 
 ### `idePortal`

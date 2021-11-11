@@ -1571,6 +1571,16 @@ export const SYSTEM_TAG: string = 'system';
 export const SYSTEM_PORTAL_BOT: string = 'systemPortalBot';
 
 /**
+ * The name of the tag that is selected in the system portal.
+ */
+export const SYSTEM_PORTAL_TAG: string = 'systemPortalTag';
+
+/**
+ * The space of the tag that is selected in the system portal.
+ */
+export const SYSTEM_PORTAL_TAG_SPACE: string = 'systemPortalTagSpace';
+
+/**
  * The name of the tag that is used to indicate which bot the player is currently editing.
  */
 export const EDITING_BOT: string = 'editingBot';
@@ -1630,7 +1640,28 @@ export const QUERY_PORTALS: string[] = [
     TAG_PORTAL,
     TAG_PORTAL_SPACE,
     MAP_PORTAL,
+    SYSTEM_PORTAL,
 ];
+
+/**
+ * The list of portal tags that should cause a new browser history entry to be added
+ * when it is updated.
+ */
+export const QUERY_FULL_HISTORY_TAGS: Set<string> = new Set([
+    'gridPortal',
+    SHEET_PORTAL,
+    IDE_PORTAL,
+    MEET_PORTAL,
+    TAG_PORTAL,
+    TAG_PORTAL_SPACE,
+    MAP_PORTAL,
+]);
+
+/**
+ * The list of portal tags that should cause a new browser history entry to be added
+ * only when the tag itself is added or removed from the query.
+ */
+export const QUERY_PARTIAL_HISTORY_TAGS: Set<string> = new Set([SYSTEM_PORTAL]);
 
 /*
  * The list of all tags that have existing functionality in casual sim
@@ -1642,6 +1673,8 @@ export const KNOWN_TAGS: string[] = [
     IDE_PORTAL,
     SYSTEM_PORTAL,
     SYSTEM_PORTAL_BOT,
+    SYSTEM_PORTAL_TAG,
+    SYSTEM_PORTAL_TAG_SPACE,
     SYSTEM_TAG,
     'inst',
     MINI_PORTAL,

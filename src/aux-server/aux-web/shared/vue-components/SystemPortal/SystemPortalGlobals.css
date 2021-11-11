@@ -17,3 +17,15 @@
     border-radius: 4px;
     padding: 0;
 }
+
+.md-dialog.new-bot-dialog {
+    z-index: 14;
+}
+
+.md-dialog.new-bot-dialog ~ .md-overlay {
+    z-index: 13;
+}
+
+.delete-bot-button .md-icon.md-theme-default {
+    color: #fff;
+}

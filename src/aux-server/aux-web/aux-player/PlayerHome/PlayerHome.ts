@@ -15,6 +15,8 @@ import {
     calculateStringTagValue,
     calculateStringListTagValue,
     ON_PORTAL_CHANGED_ACTION_NAME,
+    QUERY_FULL_HISTORY_TAGS,
+    QUERY_PARTIAL_HISTORY_TAGS,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { appManager } from '../../shared/AppManager';
@@ -62,7 +64,7 @@ export default class PlayerHome extends Vue {
     }
 
     @Watch('query')
-    async onQueryChanged() {
+    async onQueryChanged(newValue: any, oldQuery: any) {
         const inst = this.query['inst'] as string | string[];
         if (hasValue(inst)) {
             await this._setServer(inst);
@@ -70,7 +72,7 @@ export default class PlayerHome extends Vue {
         for (let [sim, sub] of this._simulations) {
             getUserBotAsync(sim).subscribe(
                 (bot) => {
-                    this._updatePlayerTags(sim, bot);
+                    this._updatePlayerTags(sim, bot, Object.keys(oldQuery));
                 },
                 (err) => console.error(err)
             );
@@ -122,9 +124,8 @@ export default class PlayerHome extends Vue {
                     update.server = null;
                 } else {
                     // Generate a random inst name
-                    const randomName: string = uniqueNamesGenerator(
-                        namesConfig
-                    );
+                    const randomName: string =
+                        uniqueNamesGenerator(namesConfig);
                     if (!appManager.config.disableCollaboration) {
                         update.inst = randomName;
                     }
@@ -256,7 +257,8 @@ export default class PlayerHome extends Vue {
 
     private async _updatePlayerTags(
         botManager: BrowserSimulation,
-        bot: PrecalculatedBot
+        bot: PrecalculatedBot,
+        oldTags?: string[]
     ) {
         const calc = botManager.helper.createContext();
         const tags = Object.keys(this.query);
@@ -268,6 +270,13 @@ export default class PlayerHome extends Vue {
             if (newValue !== oldValue) {
                 changes[tag] = newValue;
                 hasChange = true;
+            }
+        }
+        if (oldTags) {
+            for (let tag of oldTags) {
+                if (!tags.includes(tag)) {
+                    changes[tag] = null;
+                }
             }
         }
         if (bot.tags.url !== location.href) {
@@ -331,7 +340,27 @@ export default class PlayerHome extends Vue {
                 },
             };
 
-            window.history.pushState({}, window.document.title);
+            let pushState = false;
+            for (let tag in changes) {
+                if (QUERY_FULL_HISTORY_TAGS.has(tag)) {
+                    pushState = true;
+                    break;
+                } else if (QUERY_PARTIAL_HISTORY_TAGS.has(tag)) {
+                    const value = changes[tag];
+                    const url = new URL(location.href);
+                    const hasSearch = url.searchParams.has(tag);
+                    pushState =
+                        (!hasValue(value) && hasSearch) ||
+                        (hasValue(value) && !hasSearch);
+                    if (pushState) {
+                        break;
+                    }
+                }
+            }
+
+            if (pushState) {
+                window.history.pushState({}, window.document.title);
+            }
             this.$router.replace(final).then(undefined, (err: Error) => {
                 // Ignore navigation duplicated errors
                 if (err.name !== 'NavigationDuplicated') {

@@ -16,15 +16,22 @@ import {
     isScript,
     EDITING_TAG_SPACE,
     getTagValueForSpace,
+    parseNewTag,
+    hasTagOrMask,
+    DNA_TAG_PREFIX,
+    isFormula,
+    SYSTEM_PORTAL_TAG,
+    SYSTEM_PORTAL_TAG_SPACE,
 } from '@casual-simulation/aux-common';
 import {
     BotHelper,
     BotWatcher,
     UpdatedBotInfo,
 } from '@casual-simulation/aux-vm';
-import { isEqual, sortBy } from 'lodash';
+import { isEqual, sortBy, unionBy } from 'lodash';
 import {
     BehaviorSubject,
+    combineLatest,
     merge,
     Observable,
     Subscription,
@@ -36,6 +43,7 @@ import {
     filter,
     map,
     skip,
+    startWith,
 } from 'rxjs/operators';
 
 /**
@@ -52,7 +60,7 @@ export class SystemPortalManager implements SubscriptionLike {
     private _recentTags: SystemPortalRecentTag[] = [];
     private _recentTagsListSize: number = 10;
     private _tagSortMode: TagSortMode = 'scripts-first';
-    private _extraTags: SystemPortalSelectionTag[] = [];
+    private _extraTags: string[] = [];
 
     get tagSortMode(): TagSortMode {
         return this._tagSortMode;
@@ -122,15 +130,55 @@ export class SystemPortalManager implements SubscriptionLike {
         );
     }
 
-    addTag(tag: string) {
-        for (let t of this._extraTags) {
-            delete t.focusValue;
+    /**
+     * Adds the given tag as a pinned tag.
+     * Pinned tags are a separate list of tags that are persisted across multiple selections.
+     * @param tag The name of the tag to pin.
+     */
+    addPinnedTag(tag: string) {
+        const parsed = parseNewTag(tag);
+        if (this._extraTags.includes(parsed.name)) {
+            return;
         }
-        this._extraTags.push({
-            name: tag,
-            focusValue: true,
-        });
-        const update = this._findSelection(this._itemsUpdated.value);
+
+        const selectedBotId = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_PORTAL_BOT,
+            null
+        );
+        const selectedBot = selectedBotId
+            ? this._helper.botsState[selectedBotId]
+            : null;
+        if ((parsed.isScript || parsed.isFormula) && selectedBot) {
+            if (!hasValue(selectedBot.tags[parsed.name])) {
+                this._helper.updateBot(selectedBot, {
+                    tags: {
+                        [parsed.name]: parsed.isScript
+                            ? '@'
+                            : parsed.isFormula
+                            ? DNA_TAG_PREFIX
+                            : '',
+                    },
+                });
+            }
+        }
+
+        this._updateSelection([parsed.name]);
+    }
+
+    removePinnedTag(tag: SystemPortalSelectionTag) {
+        const index = this._extraTags.findIndex((t) => t === tag.name);
+
+        if (index >= 0) {
+            this._extraTags.splice(index, 1);
+        }
+
+        this._updateSelection();
+    }
+
+    private _updateSelection(extraTags?: string[]) {
+        const update = this._findSelection(this._itemsUpdated.value, extraTags);
 
         if (!isEqual(update, this._selectionUpdated.value)) {
             this._selectionUpdated.next(update);
@@ -197,7 +245,7 @@ export class SystemPortalManager implements SubscriptionLike {
                 if (
                     bot.id === selectedBot ||
                     (hasValue(system) &&
-                        (showAllSystemBots || system.startsWith(systemPortal)))
+                        (showAllSystemBots || system.includes(systemPortal)))
                 ) {
                     const area = getSystemArea(system);
                     const title = system
@@ -240,14 +288,26 @@ export class SystemPortalManager implements SubscriptionLike {
     }
 
     private _calculateSelectionUpdated(): Observable<SystemPortalSelectionUpdate> {
-        return this._itemsUpdated.pipe(
-            skip(1),
-            map((update) => this._findSelection(update))
+        return combineLatest([
+            this._itemsUpdated.pipe(skip(1)),
+            this._watcher.botTagsChanged(this._helper.userId).pipe(
+                filter(
+                    (change) =>
+                        change.tags.has(SYSTEM_PORTAL_TAG) ||
+                        change.tags.has(SYSTEM_PORTAL_TAG_SPACE)
+                ),
+                startWith(1)
+            ),
+        ]).pipe(
+            map(([update, _]) => update),
+            map((update) => this._findSelection(update)),
+            distinctUntilChanged((first, second) => isEqual(first, second))
         );
     }
 
     private _findSelection(
-        update: SystemPortalUpdate
+        update: SystemPortalUpdate,
+        tagsToPin?: string[]
     ): SystemPortalSelectionUpdate {
         if (!update.hasPortal || !update.selectedBot) {
             return {
@@ -262,54 +322,123 @@ export class SystemPortalManager implements SubscriptionLike {
             };
         }
 
-        let normalTags = Object.keys(bot.tags).map((t) => {
-            let tag: SystemPortalSelectionTag = {
-                name: t,
-            };
+        const selectedTag = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_PORTAL_TAG,
+            null
+        );
+        const selectedSpace = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_PORTAL_TAG_SPACE,
+            null
+        );
 
-            if (isScript(getBotTag(bot, t))) {
-                tag.isScript = true;
-            }
-
-            return tag;
-        });
+        let normalTags = Object.keys(bot.tags).map((t) =>
+            createSelectionTag(bot, t)
+        );
 
         let maskTags = [] as SystemPortalSelectionTag[];
         for (let space in bot.masks) {
             const tags = Object.keys(bot.masks[space]);
 
             maskTags.push(
-                ...tags.map((t) => {
-                    let tag: SystemPortalSelectionTag = {
-                        name: t,
-                        space,
-                    };
-
-                    if (isScript(getTagMask(bot, t, space))) {
-                        tag.isScript = true;
-                    }
-
-                    return tag;
-                })
+                ...tags.map((t) => createSelectionTag(bot, t, space))
             );
         }
 
-        const sortMode = this.tagSortMode;
-        const tags =
-            sortMode === 'scripts-first'
-                ? sortBy(
-                      [...normalTags, ...maskTags, ...this._extraTags],
-                      (t) => !t.isScript,
-                      (t) => t.name
-                  )
-                : sortBy([...normalTags, ...maskTags], (t) => t.name);
+        if (hasValue(selectedTag)) {
+            if (hasValue(selectedSpace)) {
+                maskTags.push(
+                    createSelectionTag(bot, selectedTag, selectedSpace)
+                );
+            } else {
+                maskTags.push(createSelectionTag(bot, selectedTag));
+            }
+        }
 
-        return {
+        const sortMode = this.tagSortMode;
+        const inputTags = unionBy(
+            [...normalTags, ...maskTags],
+            (t) => `${t.name}.${t.space}`
+        );
+        const tags = sortTags(inputTags);
+
+        let ret: SystemPortalHasSelectionUpdate = {
             hasSelection: true,
             sortMode,
             bot,
             tags,
         };
+
+        let pinnedTags = [] as SystemPortalSelectionTag[];
+        if (hasValue(tagsToPin)) {
+            pinnedTags.push(
+                ...tagsToPin.map((t, i) => ({
+                    ...createSelectionTag(bot, t),
+                    focusValue: i === 0,
+                }))
+            );
+        }
+
+        pinnedTags.push(
+            ...this._extraTags.map((t) => createSelectionTag(bot, t))
+        );
+        if (hasValue(tagsToPin)) {
+            this._extraTags.push(...tagsToPin);
+        }
+        pinnedTags = sortTags(pinnedTags);
+
+        if (pinnedTags.length > 0) {
+            ret.pinnedTags = pinnedTags;
+        }
+
+        if (hasValue(selectedTag)) {
+            ret.tag = selectedTag;
+            ret.space = selectedSpace;
+        }
+
+        return ret;
+
+        function createSelectionTag(
+            bot: Bot,
+            tag: string,
+            space?: string
+        ): SystemPortalSelectionTag {
+            let selectionTag: SystemPortalSelectionTag = {
+                name: tag,
+            };
+
+            const tagValue = !hasValue(space)
+                ? getBotTag(bot, tag)
+                : getTagMask(bot, space, tag);
+            if (isScript(tagValue)) {
+                selectionTag.isScript = true;
+            }
+
+            if (isFormula(tagValue)) {
+                selectionTag.isFormula = true;
+            }
+
+            if (hasValue(space)) {
+                selectionTag.space = space;
+            }
+
+            return selectionTag;
+        }
+
+        function sortTags(
+            input: SystemPortalSelectionTag[]
+        ): SystemPortalSelectionTag[] {
+            return sortMode === 'scripts-first'
+                ? sortBy(
+                      input,
+                      (t) => !t.isScript,
+                      (t) => t.name
+                  )
+                : sortBy(input, (t) => t.name);
+        }
     }
 
     private _calculateRecentsUpdated(): Observable<SystemPortalRecentsUpdate> {
@@ -412,24 +541,23 @@ export class SystemPortalManager implements SubscriptionLike {
             tag: string,
             bot: Bot,
             space: string | null
-        ): Pick<SystemPortalRecentTag, 'prefix' | 'isScript'> {
+        ): Pick<SystemPortalRecentTag, 'hint' | 'isScript' | 'system'> {
             const tagValue = getTagValueForSpace(bot, tag, space);
             const isTagScript = isScript(tagValue);
+            const system = calculateStringTagValue(null, bot, SYSTEM_TAG, null);
             if ((recentTagsCounts.get(`${tag}.${space}`) ?? 0) > 1) {
-                const system = calculateStringTagValue(
-                    null,
-                    bot,
-                    SYSTEM_TAG,
-                    null
-                );
+                const area = getSystemArea(system);
+                const prefix = system.substring(area.length + 1);
                 return {
-                    prefix: system ?? getShortId(bot),
+                    hint: prefix ?? getShortId(bot),
+                    system,
                     isScript: isTagScript,
                 };
             }
 
             return {
-                prefix: '',
+                hint: '',
+                system,
                 isScript: isTagScript,
             };
         }
@@ -495,14 +623,22 @@ export type SystemPortalSelectionUpdate =
 export interface SystemPortalHasSelectionUpdate {
     hasSelection: true;
     bot: Bot;
+    tag?: string;
+    space?: string;
     sortMode: TagSortMode;
     tags: SystemPortalSelectionTag[];
+
+    /**
+     * The list of tags that should be pinned to a section at the bottom of the tags list.
+     */
+    pinnedTags?: SystemPortalSelectionTag[];
 }
 
 export interface SystemPortalSelectionTag {
     name: string;
     space?: string;
     isScript?: boolean;
+    isFormula?: boolean;
 
     /**
      * Whether the tag value should be focused once rendered into view.
@@ -530,7 +666,8 @@ export interface SystemPortalNoRecentsUpdate {
 }
 
 export interface SystemPortalRecentTag {
-    prefix: string;
+    hint: string;
+    system: string;
     isScript: boolean;
     botId: string;
     tag: string;

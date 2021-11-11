@@ -183,6 +183,9 @@
     padding: 8px;
     background-color: var(--disabled-cell-color);
     min-width: 200px;
+
+    display: flex;
+    flex-direction: column;
 }
 
 .tags {
@@ -212,6 +215,25 @@
     /* text-align: end; */
 }
 
+.areas-list {
+    flex: 1 1 auto;
+    overflow: auto;
+}
+
+.search {
+    flex: 0 0 auto;
+}
+
+.areas-add-bot {
+    flex: 99 0 auto;
+}
+
+.md-button.create-bot {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
 .area-bot {
     padding-inline-start: 16px;
     line-height: 32px;
@@ -234,6 +256,11 @@
 
 .sort-option-button {
     min-width: 33px;
+    flex: 0 0 auto;
+}
+
+.delete-bot-button {
+    background-color: #f00000 !important;
 }
 
 .tags-list {
@@ -241,30 +268,25 @@
     overflow: auto;
 }
 
-.tags-list-tag {
-    border-bottom: 1px solid var(--bot-cell-border-color);
+.tags-add-tag {
+    flex: 99 0 auto;
 }
 
-/* .tags-list-tag:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-} */
-
-.tags-list-tag-header {
-    padding: 2px 4px;
+.tags-sort-options {
+    flex: 0 0 auto;
+    border-top: 1px solid #000;
     display: flex;
 }
 
-.tags-list-tag-header > .tag.bot-tag {
+.tags-sort-spacer {
     flex: 1 1 auto;
 }
 
-.tags-list-tag-value {
-    border-top: 1px solid var(--bot-cell-border-color);
-}
-
-.tags-list-tag.selected > .tags-list-tag-header {
-    background-color: rgba(0, 0, 0, 0.1);
+.tags-toggle {
+    cursor: pointer;
+    border-bottom: 1px solid #000;
+    background-color: rgba(0, 0, 0, 0.12);
+    font-weight: 700;
 }
 
 /* .tags-list-tag > .tags-list-tag-value {
@@ -279,8 +301,8 @@
     flex: 0 0 auto;
     font-size: 12px;
     color: #000;
-    margin: -2px -4px;
-    padding: 0 4px;
+    margin: -2px 4px;
+    padding: 0 1px;
     background-color: rgba(0, 0, 0, 0.1);
     line-height: 26px;
 }
@@ -321,6 +343,31 @@
     border-bottom-right-radius: 0px;
 }
 
+.tag-owner {
+    font-weight: 400;
+    color: #999;
+}
+
 .editor-code {
     flex: 1 1 auto;
+}
+
+.pin-tag-button {
+    width: calc(100% - 16px);
+    margin: 8px;
+}
+
+.pin-tag-button img,
+.pin-tag-button picture {
+    width: 24px;
+    height: 24px;
+}
+
+.bot-table-actions .finish-tag-button {
+    text-transform: none;
+    margin: 0;
+}
+
+.finish-tag-button-wrapper {
+    display: inline-block;
 }

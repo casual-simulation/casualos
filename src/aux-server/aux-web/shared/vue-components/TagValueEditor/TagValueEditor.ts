@@ -40,6 +40,21 @@ export default class TagValueEditor extends Vue {
         this.$emit('onFocused', focused);
     }
 
+    /**
+     * Attempts to focus this editor.
+     * Returns true if successful.
+     * Returns false if unable to focus the editor.
+     * @returns
+     */
+    focusEditor(): boolean {
+        const editor = this.monacoEditor();
+        if (editor) {
+            editor.editor.focus();
+            return true;
+        }
+        return false;
+    }
+
     constructor() {
         super();
     }
