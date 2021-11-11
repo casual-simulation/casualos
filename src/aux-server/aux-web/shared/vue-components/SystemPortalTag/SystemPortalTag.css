@@ -49,11 +49,21 @@
 }
 
 .tags-list-tag-value.read-only {
-    background-color: rgba(0, 0, 0, 0.2);
     padding: 4px;
+    background-color: #fff;
+    color: #999;
 }
 
 .tags-list-tag-value.id {
-    font-weight: 600;
     cursor: pointer;
+}
+
+.tag-space {
+    flex: 0 0 auto;
+    font-size: 12px;
+    color: #000;
+    margin: -2px 4px;
+    padding: 0 1px;
+    background-color: rgba(0, 0, 0, 0.1);
+    line-height: 26px;
 }
