@@ -15,6 +15,8 @@ import {
     calculateStringTagValue,
     calculateStringListTagValue,
     ON_PORTAL_CHANGED_ACTION_NAME,
+    QUERY_FULL_HISTORY_TAGS,
+    QUERY_PARTIAL_HISTORY_TAGS,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { appManager } from '../../shared/AppManager';
@@ -339,7 +341,27 @@ export default class PlayerHome extends Vue {
                 },
             };
 
-            window.history.pushState({}, window.document.title);
+            let pushState = false;
+            for (let tag in changes) {
+                if (QUERY_FULL_HISTORY_TAGS.has(tag)) {
+                    pushState = true;
+                    break;
+                } else if (QUERY_PARTIAL_HISTORY_TAGS.has(tag)) {
+                    const value = changes[tag];
+                    const url = new URL(location.href);
+                    const hasSearch = url.searchParams.has(tag);
+                    pushState =
+                        (!hasValue(value) && hasSearch) ||
+                        (hasValue(value) && !hasSearch);
+                    if (pushState) {
+                        break;
+                    }
+                }
+            }
+
+            if (pushState) {
+                window.history.pushState({}, window.document.title);
+            }
             this.$router.replace(final).then(undefined, (err: Error) => {
                 // Ignore navigation duplicated errors
                 if (err.name !== 'NavigationDuplicated') {
