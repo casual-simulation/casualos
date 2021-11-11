@@ -260,14 +260,6 @@ export class DenoVM implements AuxVM {
         this._localEvents.unsubscribe();
         this._localEvents = null;
     }
-
-    openCustomPortal(id: string): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-
-    updatePortalSource(id: string, source: string): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
 }
 
 function waitForInit(worker: DenoWorker): Promise<void> {

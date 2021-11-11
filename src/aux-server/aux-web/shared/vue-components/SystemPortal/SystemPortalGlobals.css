@@ -1,0 +1,31 @@
+.area-bot .mini-bot-search {
+    width: 32px;
+    height: 32px;
+}
+
+.tags-list-tag-value textarea {
+    width: 100%;
+    height: 30px;
+    max-height: 30px;
+    padding: 2px;
+    vertical-align: top;
+    border: none;
+}
+
+.tags-list-tag.selected > .tags-list-tag-value textarea {
+    border: 2px solid #000;
+    border-radius: 4px;
+    padding: 0;
+}
+
+.md-dialog.new-bot-dialog {
+    z-index: 14;
+}
+
+.md-dialog.new-bot-dialog ~ .md-overlay {
+    z-index: 13;
+}
+
+.delete-bot-button .md-icon.md-theme-default {
+    color: #fff;
+}

@@ -1,8 +1,6 @@
 import {
     createBot,
     createPrecalculatedBot,
-    OpenCustomPortalOptions,
-    stateUpdatedEvent,
 } from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subscription } from 'rxjs';

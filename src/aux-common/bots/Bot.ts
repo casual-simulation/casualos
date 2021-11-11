@@ -1556,6 +1556,46 @@ export const SHEET_PORTAL: string = 'sheetPortal';
 export const IDE_PORTAL: string = 'idePortal';
 
 /**
+ * The name of the system portal.
+ */
+export const SYSTEM_PORTAL: string = 'systemPortal';
+
+/**
+ * The name of the system tag.
+ */
+export const SYSTEM_TAG: string = 'system';
+
+/**
+ * The name of the tag used to keep track of the selected bot in the system portal..
+ */
+export const SYSTEM_PORTAL_BOT: string = 'systemPortalBot';
+
+/**
+ * The name of the tag that is selected in the system portal.
+ */
+export const SYSTEM_PORTAL_TAG: string = 'systemPortalTag';
+
+/**
+ * The space of the tag that is selected in the system portal.
+ */
+export const SYSTEM_PORTAL_TAG_SPACE: string = 'systemPortalTagSpace';
+
+/**
+ * The name of the tag that is used to indicate which bot the player is currently editing.
+ */
+export const EDITING_BOT: string = 'editingBot';
+
+/**
+ * The name of the tag that is used to indiciate which tag the player is currently editing.
+ */
+export const EDITING_TAG: string = 'editingTag';
+
+/**
+ * The name of the tag that is used to indiciate which space the tag the player is currently editing is in.
+ */
+export const EDITING_TAG_SPACE: string = 'editingTagSpace';
+
+/**
  * The name of the IMU portal.
  */
 export const IMU_PORTAL: string = 'imuPortal';
@@ -1578,6 +1618,7 @@ export const KNOWN_PORTALS: string[] = [
     SHEET_PORTAL,
     IDE_PORTAL,
     IMU_PORTAL,
+    SYSTEM_PORTAL,
     MINI_PORTAL,
     'menuPortal',
     'leftWristPortal',
@@ -1599,7 +1640,28 @@ export const QUERY_PORTALS: string[] = [
     TAG_PORTAL,
     TAG_PORTAL_SPACE,
     MAP_PORTAL,
+    SYSTEM_PORTAL,
 ];
+
+/**
+ * The list of portal tags that should cause a new browser history entry to be added
+ * when it is updated.
+ */
+export const QUERY_FULL_HISTORY_TAGS: Set<string> = new Set([
+    'gridPortal',
+    SHEET_PORTAL,
+    IDE_PORTAL,
+    MEET_PORTAL,
+    TAG_PORTAL,
+    TAG_PORTAL_SPACE,
+    MAP_PORTAL,
+]);
+
+/**
+ * The list of portal tags that should cause a new browser history entry to be added
+ * only when the tag itself is added or removed from the query.
+ */
+export const QUERY_PARTIAL_HISTORY_TAGS: Set<string> = new Set([SYSTEM_PORTAL]);
 
 /*
  * The list of all tags that have existing functionality in casual sim
@@ -1609,6 +1671,11 @@ export const KNOWN_TAGS: string[] = [
     'gridPortal',
     SHEET_PORTAL,
     IDE_PORTAL,
+    SYSTEM_PORTAL,
+    SYSTEM_PORTAL_BOT,
+    SYSTEM_PORTAL_TAG,
+    SYSTEM_PORTAL_TAG_SPACE,
+    SYSTEM_TAG,
     'inst',
     MINI_PORTAL,
     'menuPortal',
@@ -1690,8 +1757,9 @@ export const KNOWN_TAGS: string[] = [
     'rightPointer_squeeze',
     'forceSignedScripts',
 
-    'editingBot',
-    'editingTag',
+    EDITING_BOT,
+    EDITING_TAG,
+    EDITING_TAG_SPACE,
     'cursorStartIndex',
     'cursorEndIndex',
 
@@ -1739,6 +1807,9 @@ export const KNOWN_TAGS: string[] = [
     'sheetPortalButtonHint',
     'sheetPortalAllowedTags',
     'sheetPortalAddedTags',
+    'portalShowButton',
+    'portalButtonIcon',
+    'portalButtonHint',
     'menuPortalStyle',
 
     'color',

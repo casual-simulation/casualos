@@ -1,5 +1,32 @@
 # CasualOS Changelog
 
+## V2.0.16
+
+#### Date: 11/11/2021
+
+### :boom: Breaking Changes
+
+-   Removed Custom Executables.
+    -   This means the following functions are no longer available:
+        -   `os.registerExecutable()`
+        -   `os.buildExecutable()`
+    -   If you have use for this type of functionality, we recommend that you look into [Custom Apps](https://docs.casualos.com/docs/actions/#app-actions).
+        They are easier to use and allow you to use more built-in CasualOS functionality than Custom Executables.
+
+### :rocket: Improvements
+
+-   Added the `systemPortal`.
+    -   The systemPortal is a new way to organize and edit a set of bots and their scripts.
+    -   The systemPortal works by displaying bots that have a `#system` tag.
+    -   When `#systemPortal` on the `configBot` is set to `true`, all bots that have a `#system` tag will be displayed in the system portal.
+    -   When `#systemPortal` is set to a string, then only bots where their `#system` tag contains the value in `#systemPortal` will be shown.
+    -   It also contains some other useful features not found in the sheetPortal like a list of recently edited tags and a search box that lets you easily change the `#systemPortal` tag value.
+    -   See the glossary page on the `systemPortal` for more info.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the forward/back browser buttons would not delete tags from the config bot if the related query parameter was deleted.
+
 ## V2.0.15
 
 #### Date: 11/1/2021

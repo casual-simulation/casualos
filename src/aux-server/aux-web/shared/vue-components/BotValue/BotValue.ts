@@ -27,6 +27,9 @@ export default class BotValue extends Vue {
     @Prop({ default: true })
     showFormulaWhenFocused: boolean;
 
+    @Prop({ default: true })
+    showSpace: boolean;
+
     value: string = '';
     isFormula: boolean = false;
     isScript: boolean = false;

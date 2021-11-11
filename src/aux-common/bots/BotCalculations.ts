@@ -501,10 +501,20 @@ export function parseScript(value: unknown): string | null {
  * @param value The value to parse.
  */
 export function parseScriptSafe(value: string): string {
-    if (isScript(value)) {
-        return value.substring(1);
+    return parseScript(value) ?? value;
+}
+
+/**
+ * Parses the given value into a formula.
+ * Returns the formula if the value is a formula.
+ * Returns null if the value is not a formula.
+ * @param value The value to parse.
+ */
+export function parseFormula(value: string): string | null {
+    if (isFormula(value)) {
+        return value.substring(DNA_TAG_PREFIX.length);
     }
-    return value;
+    return null;
 }
 
 /**
@@ -514,10 +524,7 @@ export function parseScriptSafe(value: string): string {
  * @param value The value to parse.
  */
 export function parseFormulaSafe(value: string): string {
-    if (isFormula(value)) {
-        return value.substring(DNA_TAG_PREFIX.length);
-    }
-    return value;
+    return parseFormula(value) ?? value;
 }
 
 /**
@@ -2215,9 +2222,8 @@ export function getBuilderDimensionGrid(
 
     let val: { [key: string]: number } = {};
     for (let tag of gridTags) {
-        val[
-            tag.substr('auxDimensionConfig.surface.grid.'.length)
-        ] = calculateNumericalTagValue(calc, bot, tag, undefined);
+        val[tag.substr('auxDimensionConfig.surface.grid.'.length)] =
+            calculateNumericalTagValue(calc, bot, tag, undefined);
     }
 
     return val;
@@ -2978,4 +2984,19 @@ export function getUpdateForTagAndSpace(
             },
         };
     }
+}
+
+/**
+ * Parses the given tag to determine if it represents a script or formula.
+ * @param tag The tag to parse.
+ */
+export function parseNewTag(tag: string) {
+    const script = parseScript(tag);
+    const formula = parseFormula(tag);
+    const name = script ?? formula ?? tag;
+    return {
+        name,
+        isScript: !!script,
+        isFormula: !!formula,
+    };
 }

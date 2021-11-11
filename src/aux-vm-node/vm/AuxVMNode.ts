@@ -123,12 +123,4 @@ export class AuxVMNode implements AuxVM {
         this._channel.unsubscribe();
     }
     closed: boolean;
-
-    openCustomPortal(id: string): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-
-    updatePortalSource(id: string, source: string): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
 }

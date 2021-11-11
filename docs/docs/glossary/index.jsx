@@ -10,6 +10,7 @@ import GridPortal from './GridPortal.mdx';
 import MapPortal from './MapPortal.mdx';
 import MiniGridPortal from './MiniGridPortal.mdx';
 import MiniMapPortal from './MiniMapPortal.mdx';
+import SystemPortal from './SystemPortal.mdx';
 import React, { useState } from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Tooltip from 'rc-tooltip';
@@ -29,6 +30,7 @@ export const Glossary = [
     { id: 'mapPortal', title: 'mapPortal', content: () => <MapPortal/> },
     { id: 'miniGridPortal', title: 'miniGridPortal', content: () => <MiniGridPortal/> },
     { id: 'miniMapPortal', title: 'miniMapPortal', content: () => <MiniMapPortal/> },
+    { id: 'systemPortal', title: 'systemPortal', content: () => <SystemPortal/> },
 ];
 
 const GlossaryWindow = ({item}) => (<div className="glossary-window">
@@ -40,7 +42,7 @@ export const GlossaryRef = ({term, children}) => {
     const item = Glossary.find(i => i.id === term);
     return (
         <Tooltip placement="top" overlay={<GlossaryWindow item={item}/>}>
-            <a href={useBaseUrl('docs/glossary') + `#${item.id}`}>{children}</a>
+            <a href={useBaseUrl('docs/glossary') + `#${item.id.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}`}>{children}</a>
         </Tooltip>
     )
 };
@@ -57,5 +59,6 @@ export {
     GridPortal,
     MapPortal,
     MiniGridPortal,
-    MiniMapPortal
+    MiniMapPortal,
+    SystemPortal,
 };

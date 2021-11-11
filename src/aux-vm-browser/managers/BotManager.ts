@@ -46,14 +46,9 @@ import { Observable, fromEventPattern, Subscription } from 'rxjs';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';
 import { LocalStoragePartitionImpl } from '../partitions/LocalStoragePartition';
 import { getBotsStateFromStoredAux } from '@casual-simulation/aux-vm/StoredAux';
-import { ESBuildPortalBundler } from '@casual-simulation/aux-vm/managers';
-
-// NOTE: This triggers an "Cannot find module or declarations" error for this
-// during Jest tests but not during builds.
-// @ts-ignore TS2307
-import ESBuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import { IdePortalManager } from './IdePortalManager';
 import { AuthHelper } from './AuthHelper';
+import { SystemPortalManager } from './SystemPortalManager';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -63,9 +58,9 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     private _botPanel: BotPanelManager;
     private _login: LoginManager;
     private _progress: ProgressManager;
-    private _bundler: PortalBundler;
     private _portals: PortalManager;
     private _idePortal: IdePortalManager;
+    private _systemPortal: SystemPortalManager;
     private _authHelper: AuthHelper;
 
     /**
@@ -77,6 +72,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
     get idePortal() {
         return this._idePortal;
+    }
+
+    get systemPortal() {
+        return this._systemPortal;
     }
 
     get login() {
@@ -272,16 +271,12 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     protected async _initManagers() {
         super._initManagers();
         this._botPanel = new BotPanelManager(this._watcher, this._helper);
-        this._bundler = new ESBuildPortalBundler({
-            esbuildWasmUrl: ESBuildWasmURL,
-        });
-        this._portals = new PortalManager(
-            this._vm,
-            this.helper,
-            this.watcher,
-            this._bundler
-        );
+        this._portals = new PortalManager(this._vm);
         this._idePortal = new IdePortalManager(this._watcher, this.helper);
+        this._systemPortal = new SystemPortalManager(
+            this._watcher,
+            this.helper
+        );
 
         this._subscriptions.push(this._portals);
         this._subscriptions.push(
@@ -296,5 +291,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     )
             )
         );
+        this._subscriptions.push(this._idePortal);
+        this._subscriptions.push(this._systemPortal);
     }
 }

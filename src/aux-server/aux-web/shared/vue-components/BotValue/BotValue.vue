@@ -19,7 +19,7 @@
             autocorrect="off"
             @keydown.enter.prevent="triggerNewTag()"
         />
-        <md-button v-if="!!space" class="space-indicator md-dense">
+        <md-button v-if="showSpace && !!space" class="space-indicator md-dense">
             {{ spaceAbbreviation }}
             <md-tooltip>{{ space }}</md-tooltip>
         </md-button>

@@ -6,6 +6,7 @@ import { Bot } from '@casual-simulation/aux-common';
 import { Observable } from 'rxjs';
 import { IdePortalManager } from './IdePortalManager';
 import { AuthHelper } from './AuthHelper';
+import { SystemPortalManager } from './SystemPortalManager';
 
 /**
  * Defines an interface for objects that represent bot simulations.
@@ -20,6 +21,11 @@ export interface BrowserSimulation extends RemoteSimulation {
      * Gets the IDE portal manager.
      */
     idePortal: IdePortalManager;
+
+    /**
+     * Gets the System portal manager.
+     */
+    systemPortal: SystemPortalManager;
 
     /**
      * Gets the progress manager.

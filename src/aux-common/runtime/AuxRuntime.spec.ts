@@ -71,7 +71,6 @@ import {
     DNA_TAG_PREFIX,
     tagsOnBot,
     TEMPORARY_BOT_PARTITION_ID,
-    openCustomPortal,
     registerBuiltinPortal,
     isRuntimeBot,
     registerCustomApp,
@@ -4010,7 +4009,7 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(allEvents).toEqual([
-                    openCustomPortal('grid', 'uuid', null, {}),
+                    defineGlobalBot('grid', 'uuid'),
                     botAdded(createBot('uuid', {}, 'tempLocal')),
                 ]);
 
@@ -4029,9 +4028,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.process([
-                    openCustomPortal('grid', 'test1', 'myTag', {}),
-                ]);
+                runtime.process([defineGlobalBot('grid', 'test1')]);
 
                 const result = runtime.execute('return gridBot;');
                 expect(result.result).toBe(runtime.context.state['test1']);
@@ -4040,9 +4037,7 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                expect(allEvents).toEqual([
-                    openCustomPortal('grid', 'test1', 'myTag', {}),
-                ]);
+                expect(allEvents).toEqual([defineGlobalBot('grid', 'test1')]);
 
                 const result2 = runtime.execute('return gridBot;');
                 expect(result2.result).toBe(runtime.context.state['test1']);
@@ -4078,103 +4073,6 @@ describe('AuxRuntime', () => {
 
                 const result2 = runtime.shout('run');
                 expect(result2.results[0]).toBe(runtime.context.state['uuid']);
-            });
-        });
-
-        describe('open_custom_portal', () => {
-            it('should add a global variable for the bot included in a open portal action', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                    })
-                );
-                runtime.process([
-                    openCustomPortal('grid', 'test1', 'myTag', {}),
-                ]);
-
-                const result = runtime.execute('return gridBot;');
-                expect(result.result).toBe(runtime.context.state['test1']);
-            });
-
-            it('should override previous variables', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                        test2: createBot('test2', {
-                            abc: 'other',
-                        }),
-                    })
-                );
-                runtime.process([
-                    openCustomPortal('grid', 'test1', 'myTag', {}),
-                ]);
-
-                const result = runtime.execute('return gridBot;');
-                expect(result.result).toBe(runtime.context.state['test1']);
-
-                runtime.process([
-                    openCustomPortal('grid', 'test2', 'myTag', {}),
-                ]);
-
-                const result2 = runtime.execute('return gridBot;');
-                expect(result2.result).toBe(runtime.context.state['test2']);
-            });
-
-            it('should remove the variable if given no bot to use for configuration', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                    })
-                );
-                runtime.process([
-                    openCustomPortal('grid', 'test1', 'myTag', {}),
-                ]);
-
-                const result = runtime.execute('return gridBot;');
-                expect(result.result).toBe(runtime.context.state['test1']);
-
-                runtime.process([openCustomPortal('grid', null, 'myTag', {})]);
-
-                const result2 = runtime.execute('return gridBot;');
-                expect(result2.result).toBeUndefined();
-            });
-
-            it('should not create variables on globalThis', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                    })
-                );
-                runtime.process([
-                    openCustomPortal('grid', 'test1', 'myTag', {}),
-                ]);
-
-                expect(
-                    Object.getOwnPropertyDescriptor(globalThis, 'gridBot')
-                ).toBeUndefined();
-            });
-
-            it('should emit open portal actions', async () => {
-                let actions = [] as BotAction[];
-                runtime.onActions.subscribe((a) => actions.push(...a));
-
-                runtime.process([
-                    openCustomPortal('grid', 'test1', 'myTag', {}),
-                ]);
-
-                await waitAsync();
-
-                expect(actions).toEqual([
-                    openCustomPortal('grid', 'test1', 'myTag', {}),
-                ]);
             });
         });
 
@@ -4390,8 +4288,8 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                expect(actions.length).toBe(3);
-                expect(actions[2]).toEqual(toast('Hello'));
+                expect(actions.length).toBe(4);
+                expect(actions[3]).toEqual(toast('Hello'));
             });
         });
 

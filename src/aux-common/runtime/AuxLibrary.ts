@@ -60,7 +60,6 @@ import {
     webhook as calcWebhook,
     superShout as calcSuperShout,
     share as calcShare,
-    openCustomPortal as calcOpenCustomPortal,
     registerPrefix as calcRegisterPrefix,
     createCertificate as calcCreateCertificate,
     signTag as calcSignTag,
@@ -69,9 +68,6 @@ import {
     localRotationTween as calcLocalRotationTween,
     animateTag as calcAnimateTag,
     showUploadFiles as calcShowUploadFiles,
-    buildBundle as calcBuildBundle,
-    clearSpace,
-    loadBots,
     BotAction,
     download,
     BotsState,
@@ -170,7 +166,6 @@ import {
     EDIT_TAG_MASK_SYMBOL,
     AnimateTagOptions,
     EaseType,
-    OpenCustomPortalOptions,
     RegisterPrefixOptions,
     OpenCircleWipeOptions,
     circleWipe,
@@ -906,9 +901,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getInputState,
                 getInputList,
 
-                registerExecutable: openCustomPortal,
-                buildExecutable: buildBundle,
-
                 registerTagPrefix: registerPrefix,
 
                 registerApp: registerApp,
@@ -939,8 +931,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             },
 
             portal: {
-                open: openCustomPortal,
-                buildBundle,
                 registerPrefix,
             },
 
@@ -2704,43 +2694,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getGeolocation(): Promise<Geolocation> {
         const task = context.createTask();
         const event = calcGetGeolocation(task.taskId);
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Registers a custom portal with the given source code.
-     * @param portalId The ID of the portal.
-     * @param bot The bot that should be used to configure the portal.
-     * @param tagOrSource The tag or source code that the portal should be created from.
-     * @param options The options for the portal.
-     */
-    function openCustomPortal(
-        portalId: string,
-        bot: Bot | string,
-        tagOrSource: string = null,
-        options: OpenCustomPortalOptions = {}
-    ): Promise<void> {
-        const task = context.createTask();
-        const event = calcOpenCustomPortal(
-            portalId,
-            getID(bot),
-            tagOrSource,
-            {
-                mode: options?.mode || 'tag',
-                style: options?.style || {},
-            },
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Builds a script bundle from the given tag.
-     * @param tag The tag that the bundle should be created from.
-     */
-    function buildBundle(tag: string): Promise<CodeBundle> {
-        const task = context.createTask();
-        const event = calcBuildBundle(tag, task.taskId);
         return addAsyncAction(task, event);
     }
 
