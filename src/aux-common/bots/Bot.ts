@@ -1640,7 +1640,28 @@ export const QUERY_PORTALS: string[] = [
     TAG_PORTAL,
     TAG_PORTAL_SPACE,
     MAP_PORTAL,
+    SYSTEM_PORTAL,
 ];
+
+/**
+ * The list of portal tags that should cause a new browser history entry to be added
+ * when it is updated.
+ */
+export const QUERY_FULL_HISTORY_TAGS: Set<string> = new Set([
+    'gridPortal',
+    SHEET_PORTAL,
+    IDE_PORTAL,
+    MEET_PORTAL,
+    TAG_PORTAL,
+    TAG_PORTAL_SPACE,
+    MAP_PORTAL,
+]);
+
+/**
+ * The list of portal tags that should cause a new browser history entry to be added
+ * only when the tag itself is added or removed from the query.
+ */
+export const QUERY_PARTIAL_HISTORY_TAGS: Set<string> = new Set([SYSTEM_PORTAL]);
 
 /*
  * The list of all tags that have existing functionality in casual sim
