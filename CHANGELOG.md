@@ -23,6 +23,10 @@
     -   It also contains some other useful features not found in the sheetPortal like a list of recently edited tags and a search box that lets you easily change the `#systemPortal` tag value.
     -   See the glossary page on the `systemPortal` for more info.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where the forward/back browser buttons would not delete tags from the config bot if the related query parameter was deleted.
+
 ## V2.0.15
 
 #### Date: 11/1/2021
