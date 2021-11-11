@@ -341,6 +341,11 @@
     border-bottom-right-radius: 0px;
 }
 
+.tag-owner {
+    font-weight: 400;
+    color: #999;
+}
+
 .editor-code {
     flex: 1 1 auto;
 }

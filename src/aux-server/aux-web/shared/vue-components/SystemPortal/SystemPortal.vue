@@ -160,7 +160,6 @@
                                 :key="`${recent.botId}.${recent.tag}.${recent.space}`"
                                 @click="selectRecentTag(recent)"
                             >
-                                {{ recent.prefix }}
                                 <bot-tag
                                     :tag="recent.tag"
                                     :isScript="recent.isScript"
@@ -169,6 +168,12 @@
                                 <span v-show="!!recent.space" class="tag-space">{{
                                     recent.space
                                 }}</span>
+                                <span class="tag-owner">
+                                    {{ recent.hint }}
+                                </span>
+                                <md-tooltip>
+                                    {{ recent.system }}
+                                </md-tooltip>
                             </md-button>
                         </div>
                         <div class="editor-code">

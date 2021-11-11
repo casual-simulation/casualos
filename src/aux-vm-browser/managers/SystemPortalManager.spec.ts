@@ -1324,7 +1324,8 @@ describe('SystemPortalManager', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            prefix: '',
+                            hint: '',
+                            system: 'core.game.test2',
                             isScript: true,
                             botId: 'test2',
                             tag: 'onClick',
@@ -1336,14 +1337,16 @@ describe('SystemPortalManager', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            prefix: '',
+                            hint: '',
+                            system: 'core.game.test2',
                             isScript: false,
                             botId: 'test2',
                             tag: 'color',
                             space: null,
                         },
                         {
-                            prefix: '',
+                            hint: '',
+                            system: 'core.game.test2',
                             isScript: true,
                             botId: 'test2',
                             tag: 'onClick',
@@ -1393,7 +1396,8 @@ describe('SystemPortalManager', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            prefix: '',
+                            hint: '',
+                            system: 'core.game.test2',
                             isScript: true,
                             botId: 'test2',
                             tag: 'onClick',
@@ -1405,14 +1409,16 @@ describe('SystemPortalManager', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            prefix: '',
+                            hint: '',
+                            system: 'core.game.test2',
                             isScript: false,
                             botId: 'test2',
                             tag: 'onClick',
                             space: 'tempLocal',
                         },
                         {
-                            prefix: '',
+                            hint: '',
+                            system: 'core.game.test2',
                             isScript: true,
                             botId: 'test2',
                             tag: 'onClick',
@@ -1462,7 +1468,8 @@ describe('SystemPortalManager', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            prefix: '',
+                            hint: '',
+                            system: 'core.game.test2',
                             isScript: true,
                             botId: 'test2',
                             tag: 'onClick',
@@ -1474,14 +1481,16 @@ describe('SystemPortalManager', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            prefix: 'core.game.test1',
+                            hint: 'test1',
+                            system: 'core.game.test1',
                             isScript: true,
                             botId: 'test1',
                             tag: 'onClick',
                             space: null,
                         },
                         {
-                            prefix: 'core.game.test2',
+                            hint: 'test2',
+                            system: 'core.game.test2',
                             isScript: true,
                             botId: 'test2',
                             tag: 'onClick',
@@ -1492,7 +1501,7 @@ describe('SystemPortalManager', () => {
             ]);
         });
 
-        it('should not add a prefix if just moving a tag to the front', async () => {
+        it('should not add a hint if just moving a tag to the front', async () => {
             await vm.sendEvents([
                 botAdded(
                     createBot('test2', {
@@ -1536,7 +1545,8 @@ describe('SystemPortalManager', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            prefix: '',
+                            hint: '',
+                            system: 'core.game.test2',
                             isScript: true,
                             botId: 'test2',
                             tag: 'onClick',
@@ -1548,14 +1558,16 @@ describe('SystemPortalManager', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            prefix: '',
+                            hint: '',
+                            system: 'core.game.test2',
                             isScript: false,
                             botId: 'test2',
                             tag: 'color',
                             space: null,
                         },
                         {
-                            prefix: '',
+                            hint: '',
+                            system: 'core.game.test2',
                             isScript: true,
                             botId: 'test2',
                             tag: 'onClick',
@@ -1567,14 +1579,16 @@ describe('SystemPortalManager', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            prefix: '',
+                            hint: '',
+                            system: 'core.game.test2',
                             isScript: true,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
                         },
                         {
-                            prefix: '',
+                            hint: '',
+                            system: 'core.game.test2',
                             isScript: false,
                             botId: 'test2',
                             tag: 'color',

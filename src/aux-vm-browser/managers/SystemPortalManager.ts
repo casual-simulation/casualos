@@ -541,24 +541,23 @@ export class SystemPortalManager implements SubscriptionLike {
             tag: string,
             bot: Bot,
             space: string | null
-        ): Pick<SystemPortalRecentTag, 'prefix' | 'isScript'> {
+        ): Pick<SystemPortalRecentTag, 'hint' | 'isScript' | 'system'> {
             const tagValue = getTagValueForSpace(bot, tag, space);
             const isTagScript = isScript(tagValue);
+            const system = calculateStringTagValue(null, bot, SYSTEM_TAG, null);
             if ((recentTagsCounts.get(`${tag}.${space}`) ?? 0) > 1) {
-                const system = calculateStringTagValue(
-                    null,
-                    bot,
-                    SYSTEM_TAG,
-                    null
-                );
+                const area = getSystemArea(system);
+                const prefix = system.substring(area.length + 1);
                 return {
-                    prefix: system ?? getShortId(bot),
+                    hint: prefix ?? getShortId(bot),
+                    system,
                     isScript: isTagScript,
                 };
             }
 
             return {
-                prefix: '',
+                hint: '',
+                system,
                 isScript: isTagScript,
             };
         }
@@ -667,7 +666,8 @@ export interface SystemPortalNoRecentsUpdate {
 }
 
 export interface SystemPortalRecentTag {
-    prefix: string;
+    hint: string;
+    system: string;
     isScript: boolean;
     botId: string;
     tag: string;
