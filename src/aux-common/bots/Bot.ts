@@ -1673,6 +1673,8 @@ export const KNOWN_TAGS: string[] = [
     IDE_PORTAL,
     SYSTEM_PORTAL,
     SYSTEM_PORTAL_BOT,
+    SYSTEM_PORTAL_TAG,
+    SYSTEM_PORTAL_TAG_SPACE,
     SYSTEM_TAG,
     'inst',
     MINI_PORTAL,
