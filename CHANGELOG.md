@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V2.0.18
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where deleting a tag in the multiline editor would cause the tag to remain in the data.
+
 ## V2.0.17
 
 #### Date: 11/12/2021
