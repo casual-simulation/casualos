@@ -77,7 +77,7 @@ export function getPortalConfigBot(
     simulation: RemoteSimulation,
     portal: PortalType
 ): PrecalculatedBot {
-    const data = simulation.portals.portals.get(portal);
+    const data = simulation.portals.portalBots.get(portal);
 
     if (data && data.botId) {
         return simulation.helper.botsState[data.botId] ?? null;

@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V2.0.17
+
+#### Date: 11/12/2021
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where built-in portal bots were not being updated by CasualOS.
+    -   This also fixes an issue where camera position and rotation offsets didn't work.
+
 ## V2.0.16
 
 #### Date: 11/11/2021
