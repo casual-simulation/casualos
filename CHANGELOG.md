@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added some minor visual improvements to the systemPortal.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where deleting a tag in the multiline editor would cause the tag to remain in the data.
