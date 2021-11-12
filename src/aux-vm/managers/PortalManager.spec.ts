@@ -187,6 +187,19 @@ describe('PortalManager', () => {
                     botId: 'test',
                 },
             ]);
+            expect(manager.portalBots).toEqual(
+                new Map([
+                    [
+                        'my',
+                        {
+                            type: 'define_global_bot',
+                            botId: 'test',
+                            name: 'my',
+                            taskId: 'task1',
+                        },
+                    ],
+                ])
+            );
         });
     });
 });

@@ -54,7 +54,6 @@ export const DEFAULT_SCRIPT_PREFIXES: ScriptPrefix[] = [
  * Defines a class that is able to manage portals and their interactions.
  */
 export class PortalManager implements SubscriptionLike {
-    private _portals: Map<string, PortalData>;
     private _prefixes: Map<string, ScriptPrefix>;
 
     private _prefixesDiscovered: Subject<ScriptPrefix[]>;
@@ -112,13 +111,12 @@ export class PortalManager implements SubscriptionLike {
     /**
      * Gets the map of portals that have been opened.
      */
-    get portals() {
-        return this._portals;
+    get portalBots() {
+        return this._globalBots;
     }
 
     constructor(vm: AuxVM) {
         this._vm = vm;
-        this._portals = new Map();
         this._prefixes = new Map();
         this._prefixesDiscovered = new Subject();
         this._prefixesRemoved = new Subject();
